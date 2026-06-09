@@ -29,10 +29,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate prototype files
-        run: |
-          test -f index.html
-          test -f src/game.js
-          test -f src/styles.css
+        run: node scripts/verify-mvp.mjs
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

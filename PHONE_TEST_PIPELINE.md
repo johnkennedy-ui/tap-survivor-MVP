@@ -27,12 +27,38 @@ Publishing is configured through:
 The workflow:
 
 1. Checks out the repo.
-2. Validates that the prototype files exist.
+2. Runs `node scripts/verify-mvp.mjs` to validate the prototype files and required MVP loop markers.
 3. Configures GitHub Pages.
 4. Uploads the repository root as the static site artifact.
 5. Deploys the artifact to GitHub Pages.
 
 No build step is required because the prototype is plain HTML, CSS, and JavaScript.
+
+## Reusable Local Debug Scripts
+
+Run the no-dependency MVP verification checks with:
+
+```text
+npm test
+```
+
+Run a local static server for desktop debugging with:
+
+```text
+npm run serve
+```
+
+Then open:
+
+```text
+http://localhost:4173/
+```
+
+For LAN testing from another device on the same network, run:
+
+```text
+HOST=0.0.0.0 npm run serve
+```
 
 ## Branch That Triggers Publishing
 
