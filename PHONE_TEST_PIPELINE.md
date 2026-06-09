@@ -34,8 +34,8 @@ The workflow:
 
 1. Checks out the repo.
 2. Runs `node scripts/verify-mvp.mjs` to validate the prototype files and required MVP loop markers.
-3. Uploads the repository root as the static site artifact.
-4. Deploys the artifact to GitHub Pages.
+3. Copies the static site files into a temporary publish directory.
+4. Force-pushes those files to the `gh-pages` branch used by GitHub Pages.
 
 No build step is required because the prototype is plain HTML, CSS, and JavaScript.
 

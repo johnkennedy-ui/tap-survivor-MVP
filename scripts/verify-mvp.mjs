@@ -47,8 +47,8 @@ check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.g
 check("pipeline documents Android flow", pipeline.includes("Android Test Steps"));
 check("game plan documents MVP loop", plan.includes("Laser") && plan.includes("Quest Point"));
 
-check("workflow deploys Pages", workflow.includes("actions/deploy-pages@v4"));
-check("workflow publishes repo root", workflow.includes("path: ."));
+check("workflow publishes gh-pages", workflow.includes("git push --force origin gh-pages"));
+check("workflow writes nojekyll marker", workflow.includes("touch .nojekyll"));
 check("workflow runs reusable MVP test", workflow.includes("node scripts/verify-mvp.mjs"));
 
 const failed = checks.filter((item) => !item.pass);

@@ -10,9 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: tap-survivor-pages
@@ -21,21 +19,28 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate prototype files
         run: node scripts/verify-mvp.mjs
 
-      - name: Upload static site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish gh-pages branch
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp index.html "$publish_dir/"
+          cp README.md MVP_GAME_PLAN.md PHONE_TEST_PIPELINE.md package.json "$publish_dir/"
+          cp -R src scripts "$publish_dir/"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan gh-pages
+          git rm -rf .
+          cp -R "$publish_dir"/. .
+          touch .nojekyll
+          git add .
+          git commit -m "Deploy Pages site for ${GITHUB_SHA}" || exit 0
+          git push --force origin gh-pages
