@@ -42,6 +42,12 @@ Run the no-dependency MVP verification checks with:
 npm test
 ```
 
+Check the latest GitHub Actions and Pages status with:
+
+```text
+npm run check:deploy
+```
+
 Run a local static server for desktop debugging with:
 
 ```text
