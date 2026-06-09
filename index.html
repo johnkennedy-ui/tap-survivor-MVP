@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tap Survivor MVP Prototype</title>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="game-panel">
+        <canvas id="game" width="960" height="540" aria-label="Tap Survivor MVP game canvas"></canvas>
+        <div id="levelUp" class="modal hidden">
+          <div class="modal-box">
+            <h2>Level Up</h2>
+            <p>Choose one upgrade.</p>
+            <div id="choices" class="choice-list"></div>
+          </div>
+        </div>
+        <div id="endScreen" class="modal hidden">
+          <div class="modal-box">
+            <h2>Run Complete</h2>
+            <div id="runStats" class="stats"></div>
+            <button id="closeEnd">Return to Menu</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="hud">
+        <h1>Tap Survivor MVP</h1>
+        <div class="actions">
+          <button id="startRun">Start Run</button>
+          <button id="resetSave">Reset Save</button>
+        </div>
+
+        <section>
+          <h2>Run</h2>
+          <p id="runHud">Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.</p>
+        </section>
+
+        <section>
+          <h2>Progression Tree</h2>
+          <p id="qpHud"></p>
+          <div id="tree" class="tree"></div>
+        </section>
+
+        <section>
+          <h2>Quests</h2>
+          <div id="quests" class="quests"></div>
+        </section>
+
+        <section>
+          <h2>Manual Test Goal</h2>
+          <p>Unlock Laser, start a run, click/tap to move, collect XP, pick Prism Beam, use it, earn 1 Quest Point, buy Laser Damage I, and confirm the Laser damage quest opens.</p>
+        </section>
+      </aside>
+    </main>
+
+    <script src="src/game.js"></script>
+  </body>
+</html>
