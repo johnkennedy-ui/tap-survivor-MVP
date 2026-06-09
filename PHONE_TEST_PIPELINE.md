@@ -2,9 +2,7 @@
 
 ## Test URL
 
-Pending until the first GitHub Pages deployment completes.
-
-Once the project is pushed to a GitHub repository with Pages enabled through GitHub Actions, the expected URL format is:
+Expected GitHub Pages URL after the first deployment completes:
 
 ```text
 https://johnkennedy-ui.github.io/tap-survivor-MVP/
@@ -43,10 +41,7 @@ The workflow runs on pushes to:
 - `main`
 - `master`
 
-It only auto-runs when one of these paths changes:
-
-- `tap-survivor-mvp/**`
-- `.github/workflows/tap-survivor-pages.yml`
+It auto-runs for changes anywhere in this repo, including prototype files and the Pages workflow.
 
 It can also be started manually from GitHub Actions through `workflow_dispatch`.
 
@@ -98,9 +93,9 @@ It can also be started manually from GitHub Actions through `workflow_dispatch`.
 2. If the workflow did not run, confirm the push was to `main` or `master`.
 3. If Pages says it is not enabled, set Pages source to GitHub Actions in the repository settings.
 4. If the page loads blank, open Android Chrome dev tools through remote debugging and check for JavaScript errors.
-5. If touch input fails, test desktop click input first, then inspect the `touchstart` and `touchmove` handlers in `tap-survivor-mvp/src/game.js`.
+5. If touch input fails, test desktop click input first, then inspect the pointer handlers in `src/game.js`.
 6. If save state looks wrong, use `Reset Save` in the prototype and repeat the test flow.
 
 ## Current Blocker
 
-None after the repository is pushed and the first GitHub Pages workflow run succeeds.
+None expected after the repository is pushed and the first GitHub Pages workflow run succeeds.
