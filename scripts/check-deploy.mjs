@@ -3,6 +3,9 @@ import { request } from "node:https";
 const owner = process.env.GITHUB_OWNER || "johnkennedy-ui";
 const repo = process.env.GITHUB_REPO || "tap-survivor-MVP";
 const pagesUrl = process.env.PAGES_URL || `https://${owner}.github.io/${repo}/`;
+const previewUrl =
+  process.env.PREVIEW_URL ||
+  `https://htmlpreview.github.io/?https://github.com/${owner}/${repo}/blob/main/index.html`;
 
 function fetchJson(url) {
   return new Promise((resolve) => {
@@ -39,12 +42,15 @@ function head(url) {
 }
 
 const runs = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/actions/runs?per_page=1`);
+const repoInfo = await fetchJson(`https://api.github.com/repos/${owner}/${repo}`);
 const pages = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/pages`);
 const site = await head(pagesUrl);
+const preview = await head(previewUrl);
 
 console.log("# Tap Survivor Deploy Check");
 console.log(`Repo: ${owner}/${repo}`);
 console.log(`Pages URL: ${pagesUrl}`);
+console.log(`Preview fallback URL: ${previewUrl}`);
 
 if (runs.status === 200 && runs.data.workflow_runs?.length) {
   const latest = runs.data.workflow_runs[0];
@@ -57,6 +63,12 @@ if (runs.status === 200 && runs.data.workflow_runs?.length) {
   console.log(`Latest workflow: unavailable (HTTP ${runs.status})`);
 }
 
+if (repoInfo.status === 200) {
+  console.log(`Repository has_pages: ${repoInfo.data.has_pages}`);
+} else {
+  console.log(`Repository has_pages: unavailable (HTTP ${repoInfo.status})`);
+}
+
 if (pages.status === 200) {
   console.log(`Pages configured: yes`);
   console.log(`Pages status: ${pages.data.status || "unknown"}`);
@@ -65,6 +77,7 @@ if (pages.status === 200) {
 }
 
 console.log(`Pages URL HTTP status: ${site.status}${site.error ? ` (${site.error})` : ""}`);
+console.log(`Preview fallback HTTP status: ${preview.status}${preview.error ? ` (${preview.error})` : ""}`);
 
 if (site.status !== 200) {
   process.exitCode = 1;

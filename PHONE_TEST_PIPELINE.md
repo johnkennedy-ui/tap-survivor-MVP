@@ -10,6 +10,12 @@ https://johnkennedy-ui.github.io/tap-survivor-MVP/
 
 The workflow publishes this project folder as the site root, so `index.html` should load directly at the Pages URL.
 
+Temporary fallback URL while GitHub Pages is not enabled for the repository:
+
+```text
+https://htmlpreview.github.io/?https://github.com/johnkennedy-ui/tap-survivor-MVP/blob/main/index.html
+```
+
 ## Prototype Path Used
 
 Used Option B: lightweight web prototype.
@@ -28,9 +34,8 @@ The workflow:
 
 1. Checks out the repo.
 2. Runs `node scripts/verify-mvp.mjs` to validate the prototype files and required MVP loop markers.
-3. Configures GitHub Pages.
-4. Uploads the repository root as the static site artifact.
-5. Deploys the artifact to GitHub Pages.
+3. Uploads the repository root as the static site artifact.
+4. Deploys the artifact to GitHub Pages.
 
 No build step is required because the prototype is plain HTML, CSS, and JavaScript.
 
@@ -79,7 +84,7 @@ It can also be started manually from GitHub Actions through `workflow_dispatch`.
 
 ## Android Test Steps
 
-1. Open `https://johnkennedy-ui.github.io/tap-survivor-MVP/` in Android Chrome.
+1. Open `https://johnkennedy-ui.github.io/tap-survivor-MVP/` in Android Chrome, or use the temporary fallback URL above until Pages is enabled.
 2. Tap `Unlock Laser` in the progression tree.
 3. Tap `Start Run`.
 4. Tap the arena to move the player.
