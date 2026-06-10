@@ -401,6 +401,13 @@ const questDefs = {
     description: "Survive for 300 seconds.",
     target: 300,
     rewardQp: 3,
+    opensQuest: "survivor_420",
+  },
+  survivor_420: {
+    name: "Overtime Stand",
+    description: "Survive for 420 seconds.",
+    target: 420,
+    rewardQp: 6,
   },
   exterminator: {
     name: "Exterminator",
@@ -414,6 +421,13 @@ const questDefs = {
     description: "Defeat 350 enemies.",
     target: 350,
     rewardQp: 4,
+    opensQuest: "warlord",
+  },
+  warlord: {
+    name: "Warlord",
+    description: "Defeat 600 enemies.",
+    target: 600,
+    rewardQp: 7,
   },
   power_climb: {
     name: "Power Climb",
@@ -427,6 +441,13 @@ const questDefs = {
     description: "Gain 12 levels.",
     target: 12,
     rewardQp: 4,
+    opensQuest: "transcendent_growth",
+  },
+  transcendent_growth: {
+    name: "Transcendent Growth",
+    description: "Gain 16 levels.",
+    target: 16,
+    rewardQp: 6,
   },
   damage_dealer: {
     name: "Damage Dealer",
@@ -440,6 +461,13 @@ const questDefs = {
     description: "Deal 25,000 total weapon damage.",
     target: 25000,
     rewardQp: 4,
+    opensQuest: "worldbreaker_damage",
+  },
+  worldbreaker_damage: {
+    name: "Worldbreaker Damage",
+    description: "Deal 50,000 total weapon damage.",
+    target: 50000,
+    rewardQp: 7,
   },
   gem_hoarder: {
     name: "Gem Hoarder",
@@ -453,6 +481,13 @@ const questDefs = {
     description: "Collect 150 XP gems.",
     target: 150,
     rewardQp: 3,
+    opensQuest: "gem_storm",
+  },
+  gem_storm: {
+    name: "Gem Storm",
+    description: "Collect 300 XP gems.",
+    target: 300,
+    rewardQp: 5,
   },
   use_laser_run: {
     name: "Use Laser in a run",
@@ -543,15 +578,30 @@ const questDefs = {
     description: "Defeat the 6-minute boss.",
     target: 1,
     rewardQp: 4,
+    opensQuest: "boss_slayer",
+  },
+  boss_slayer: {
+    name: "Boss Slayer",
+    description: "Defeat 3 bosses.",
+    target: 3,
+    rewardQp: 6,
+    opensQuest: "boss_reaper",
+  },
+  boss_reaper: {
+    name: "Boss Reaper",
+    description: "Defeat 5 bosses.",
+    target: 5,
+    rewardQp: 8,
   },
 };
 
 const starterQuestIds = ["spark_bolt_mastery", "first_blood", "gatherer", "survivor_60"];
-const killQuestIds = ["first_blood", "crowd_control", "exterminator", "reaper"];
-const damageQuestIds = ["heavy_hits", "damage_dealer", "apocalypse_damage"];
-const survivalQuestIds = ["survivor_60", "survivor_180", "survivor_300"];
-const xpQuestIds = ["gatherer", "gem_hoarder", "gem_flood"];
-const levelQuestIds = ["rapid_growth", "power_climb", "apex_growth"];
+const killQuestIds = ["first_blood", "crowd_control", "exterminator", "reaper", "warlord"];
+const damageQuestIds = ["heavy_hits", "damage_dealer", "apocalypse_damage", "worldbreaker_damage"];
+const survivalQuestIds = ["survivor_60", "survivor_180", "survivor_300", "survivor_420"];
+const xpQuestIds = ["gatherer", "gem_hoarder", "gem_flood", "gem_storm"];
+const levelQuestIds = ["rapid_growth", "power_climb", "apex_growth", "transcendent_growth"];
+const bossQuestIds = ["boss_hunter", "boss_slayer", "boss_reaper"];
 
 const runUpgradeDefs = [
   {
@@ -1473,7 +1523,7 @@ function reapEnemies() {
     spawnLootDrops(enemy);
     if (enemy.boss) {
       game.bossDefeated = true;
-      addQuestProgress("boss_hunter", 1);
+      addQuestProgressGroup(bossQuestIds, 1);
       endRun("Boss defeated");
     }
   });

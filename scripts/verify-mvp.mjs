@@ -51,7 +51,9 @@ check("Laser use quest exists", game.includes("use_laser_run"));
 check("Quest Points are awarded", game.includes("rewardQp") && game.includes("save.questPoints += reward"));
 check("more quest types exist", ["first_blood", "gatherer", "survivor_60", "crowd_control", "rapid_growth", "heavy_hits", "boss_hunter"].every((id) => game.includes(id)));
 check("extended milestone quests exist", ["survivor_180", "survivor_300", "exterminator", "reaper", "power_climb", "apex_growth", "damage_dealer", "apocalypse_damage", "gem_hoarder", "gem_flood"].every((id) => game.includes(id)));
-check("quest progress groups feed milestone chains", ["killQuestIds", "damageQuestIds", "survivalQuestIds", "xpQuestIds", "levelQuestIds", "addQuestProgressGroup"].every((id) => game.includes(id)));
+check("higher-tier milestone quests exist", ["survivor_420", "warlord", "transcendent_growth", "worldbreaker_damage", "gem_storm", "boss_slayer", "boss_reaper"].every((id) => game.includes(id)));
+check("higher-tier quests reward more QP", ["rewardQp: 5", "rewardQp: 6", "rewardQp: 7", "rewardQp: 8"].every((reward) => game.includes(reward)));
+check("quest progress groups feed milestone chains", ["killQuestIds", "damageQuestIds", "survivalQuestIds", "xpQuestIds", "levelQuestIds", "bossQuestIds", "addQuestProgressGroup"].every((id) => game.includes(id)));
 check("quests can open multiple follow-ups", game.includes("opensQuests") && game.includes("questOpenIds"));
 check("quest chains can open follow-up quests", game.includes("opensQuest") && game.includes("questOpenIds(questDefs[id]).forEach(openQuest)"));
 check("combat stats feed quest progress", game.includes("addQuestProgressGroup(killQuestIds, 1)") && game.includes("addQuestProgressGroup(xpQuestIds, value)") && game.includes("addQuestProgressGroup(damageQuestIds, dealt)"));
@@ -68,6 +70,7 @@ check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].ever
 check("follow-up Laser quest opens", game.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", game.includes("duration: 360") && game.includes("spawnBoss"));
 check("boss death completes run", game.includes('endRun("Boss defeated")') && game.includes("enemy.boss"));
+check("boss kills feed boss quest chain", game.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", game.includes("updateBossSpecials") && game.includes("drawBossAttack") && game.includes('type: "shockwave"'));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
 
