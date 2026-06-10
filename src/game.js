@@ -1230,6 +1230,29 @@ function draw() {
   drawGameHud();
 }
 
+function roundedRectPath(x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  if (!ctx.quadraticCurveTo) {
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + width, y);
+    ctx.lineTo(x + width, y + height);
+    ctx.lineTo(x, y + height);
+    ctx.closePath();
+    return;
+  }
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 function drawArena() {
   ctx.fillStyle = "#17202c";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1400,19 +1423,123 @@ function drawBossAttack(attack) {
 }
 
 function drawGameHud() {
-  const p = game.player;
-  const boss = game.enemies.find((enemy) => enemy.boss);
-  ctx.fillStyle = "rgba(10, 14, 20, 0.74)";
-  ctx.fillRect(16, 16, 430, boss ? 128 : 106);
-  ctx.fillStyle = "#f3f6fb";
-  ctx.font = "14px sans-serif";
-  ctx.fillText(`Time: ${formatTime(game.elapsed)} / ${formatTime(game.duration)}`, 28, 40);
-  ctx.fillText(`HP: ${Math.max(0, Math.ceil(p.hp))}/${p.maxHp}`, 28, 62);
-  ctx.fillText(`Speed: x${gameSpeed} | Level: ${p.level} | XP: ${p.xp}/${p.xpToLevel} | Kills: ${game.kills}`, 28, 84);
-  ctx.fillText(`Coins: ${save.coins} | Weapons: ${p.equippedWeapons.map((id) => weaponDefs[id].name).join(", ")}`, 28, 106);
-  if (boss) {
-    ctx.fillText(`Boss HP: ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}`, 28, 128);
+  drawSkillRail();
+}
+
+function drawSkillRail() {
+  const equipped = game.player.equippedWeapons.filter((weaponId) => weaponDefs[weaponId]);
+  if (!equipped.length) return;
+
+  const maxRailHeight = canvas.height - 120;
+  const gap = 8;
+  const size = Math.max(32, Math.min(48, Math.floor((maxRailHeight - (equipped.length - 1) * gap - 16) / equipped.length)));
+  const x = 18;
+  const y = 78;
+  const railHeight = equipped.length * size + (equipped.length - 1) * gap + 16;
+
+  roundedRectPath(x - 8, y - 8, size + 16, railHeight, 8);
+  ctx.fillStyle = "rgba(10, 14, 20, 0.78)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(243, 246, 251, 0.14)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  equipped.forEach((weaponId, index) => {
+    const weapon = weaponDefs[weaponId];
+    const top = y + index * (size + gap);
+    drawSkillIcon(weaponId, weapon, x, top, size);
+  });
+}
+
+function drawSkillIcon(weaponId, weapon, x, y, size) {
+  const centerX = x + size / 2;
+  const centerY = y + size / 2;
+  const color = weapon.color || "#f3f6fb";
+
+  roundedRectPath(x, y, size, size, 7);
+  ctx.fillStyle = "rgba(18, 24, 34, 0.94)";
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.16;
+  roundedRectPath(x + 5, y + 5, size - 10, size - 10, 5);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  if (drawSprite(`weapon:${weapon.assetId || weaponId}`, centerX, centerY, size * 0.62)) return;
+  drawWeaponGlyph(weapon.kind, centerX, centerY, size, color);
+}
+
+function drawWeaponGlyph(kind, x, y, size, color) {
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  if (kind === "beam") {
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.22, y + size * 0.18);
+    ctx.lineTo(x + size * 0.22, y - size * 0.18);
+    ctx.stroke();
+    return;
   }
+  if (kind === "cone") {
+    ctx.beginPath();
+    ctx.moveTo(x, y - size * 0.22);
+    ctx.lineTo(x + size * 0.24, y + size * 0.2);
+    ctx.lineTo(x - size * 0.24, y + size * 0.2);
+    ctx.closePath();
+    ctx.fill();
+    return;
+  }
+  if (kind === "radial") {
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+  if (kind === "chain") {
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.18, y - size * 0.2);
+    ctx.lineTo(x + size * 0.02, y - size * 0.02);
+    ctx.lineTo(x - size * 0.04, y + size * 0.02);
+    ctx.lineTo(x + size * 0.18, y + size * 0.2);
+    ctx.stroke();
+    return;
+  }
+  if (kind === "target_area" || kind === "lingering_area") {
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.25, y);
+    ctx.lineTo(x + size * 0.25, y);
+    ctx.moveTo(x, y - size * 0.25);
+    ctx.lineTo(x, y + size * 0.25);
+    ctx.stroke();
+    return;
+  }
+  if (kind === "mine") {
+    ctx.beginPath();
+    ctx.moveTo(x, y - size * 0.24);
+    ctx.lineTo(x + size * 0.24, y);
+    ctx.lineTo(x, y + size * 0.24);
+    ctx.lineTo(x - size * 0.24, y);
+    ctx.closePath();
+    ctx.fill();
+    return;
+  }
+
+  ctx.beginPath();
+  ctx.arc(x, y, size * 0.16, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function updateRunHud() {
