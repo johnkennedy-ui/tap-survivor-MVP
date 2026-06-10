@@ -27,9 +27,9 @@ const workflow = readRequired(".github/workflows/tap-survivor-pages.yml");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
 
-check("index loads stylesheet", index.includes('href="src/styles.css"'));
-check("index loads generated content", index.includes('src="src/content.generated.js"'));
-check("index loads game script", index.includes('src="src/game.js"'));
+check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index));
+check("index loads generated content", /src="src\/content\.generated\.js(\?[^"]+)?"/.test(index));
+check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
 check("speed controls exist", ["data-speed=\"1\"", "data-speed=\"2\"", "data-speed=\"5\""].every((id) => index.includes(id)) && styles.includes(".speed-controls"));

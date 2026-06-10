@@ -596,19 +596,19 @@
       }
     ],
     "sprites": {
-      "player": "assets/kenney/desert-shooter/player.png",
+      "player": "assets/kenney/desert-shooter/player.png?v=kenney-20260610",
       "enemies": {
-        "drifter": "assets/kenney/desert-shooter/enemy-drifter.png",
-        "skitter": "assets/kenney/desert-shooter/enemy-skitter.png",
-        "bulwark": "assets/kenney/desert-shooter/enemy-bulwark.png",
-        "boss": "assets/kenney/desert-shooter/enemy-bulwark.png"
+        "drifter": "assets/kenney/desert-shooter/enemy-drifter.png?v=kenney-20260610",
+        "skitter": "assets/kenney/desert-shooter/enemy-skitter.png?v=kenney-20260610",
+        "bulwark": "assets/kenney/desert-shooter/enemy-bulwark.png?v=kenney-20260610",
+        "boss": "assets/kenney/desert-shooter/enemy-bulwark.png?v=kenney-20260610"
       },
       "weapons": {
-        "spark_bolt": "assets/kenney/desert-shooter/weapon-spark.png",
-        "prism_beam": "assets/kenney/desert-shooter/weapon-prism.png"
+        "spark_bolt": "assets/kenney/desert-shooter/weapon-spark.png?v=kenney-20260610",
+        "prism_beam": "assets/kenney/desert-shooter/weapon-prism.png?v=kenney-20260610"
       },
       "ui": {
-        "quest": "assets/kenney/desert-shooter/ui-quest.png"
+        "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
       }
     }
   }

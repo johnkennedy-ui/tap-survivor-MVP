@@ -128,7 +128,8 @@ export function validateContent(content) {
 
   function validateSpritePath(value, owner) {
     if (typeof value === "string") {
-      if (!existsSync(join(root, value))) fail(`${owner} references missing asset ${value}`);
+      const localPath = value.split("?")[0];
+      if (!existsSync(join(root, localPath))) fail(`${owner} references missing asset ${value}`);
       return;
     }
     if (value && typeof value === "object" && !Array.isArray(value)) {
