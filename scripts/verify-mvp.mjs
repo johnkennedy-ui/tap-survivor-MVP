@@ -49,6 +49,7 @@ check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") &&
 check("auto attack loop exists", game.includes("updateWeapons") && game.includes("fireWeapon"));
 check("XP drops exist", game.includes("xpDrops") && game.includes("collectXp"));
 check("coin and heart drops exist", game.includes("lootDrops") && game.includes("spawnLootDrops") && game.includes('type: "coin"') && game.includes('type: "heart"'));
+check("pickup attraction scales with speed", game.includes("pullDropTowardPlayer") && game.includes("updateXpDrops(dt)") && game.includes("updateLootDrops(dt)") && game.includes("pullDropTowardPlayer(drop, p, 480, dt)") && game.includes("pullDropTowardPlayer(drop, p, 540, dt)"));
 check("coins persist in save", game.includes("coins: 0") && game.includes("save.coins +=") && game.includes("persist()"));
 check("heart drops heal player", game.includes('drop.type === "heart"') && game.includes("game.player.hp = Math.min(game.player.maxHp"));
 check("player HP bar renders above sprite", game.includes("drawPlayerHpBar") && game.includes("p.y - p.radius - 16"));

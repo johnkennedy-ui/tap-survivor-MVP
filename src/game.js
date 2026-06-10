@@ -577,8 +577,8 @@ function update(dt) {
   updateBolts(dt);
   updateAreas(dt);
   updateBeams(dt);
-  updateXpDrops();
-  updateLootDrops();
+  updateXpDrops(dt);
+  updateLootDrops(dt);
 
   if (p.hp <= 0) endRun("Player defeated");
 }
@@ -1057,15 +1057,20 @@ function spawnLootDrops(enemy) {
   }
 }
 
-function updateXpDrops() {
+function pullDropTowardPlayer(drop, player, speed, dt) {
+  const dx = player.x - drop.x;
+  const dy = player.y - drop.y;
+  const dist = Math.max(1, Math.hypot(dx, dy));
+  const step = Math.min(dist, speed * dt);
+  drop.x += (dx / dist) * step;
+  drop.y += (dy / dist) * step;
+}
+
+function updateXpDrops(dt) {
   const p = game.player;
   game.xpDrops.forEach((drop) => {
     if (distance(p, drop) < p.pickupRadius) {
-      const dx = p.x - drop.x;
-      const dy = p.y - drop.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      drop.x += (dx / dist) * 8;
-      drop.y += (dy / dist) * 8;
+      pullDropTowardPlayer(drop, p, 480, dt);
     }
     if (distance(p, drop) < p.radius + drop.radius) {
       drop.collected = true;
@@ -1075,15 +1080,11 @@ function updateXpDrops() {
   game.xpDrops = game.xpDrops.filter((drop) => !drop.collected);
 }
 
-function updateLootDrops() {
+function updateLootDrops(dt) {
   const p = game.player;
   game.lootDrops.forEach((drop) => {
     if (distance(p, drop) < p.pickupRadius) {
-      const dx = p.x - drop.x;
-      const dy = p.y - drop.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      drop.x += (dx / dist) * 9;
-      drop.y += (dy / dist) * 9;
+      pullDropTowardPlayer(drop, p, 540, dt);
     }
     if (distance(p, drop) < p.radius + drop.radius) {
       drop.collected = true;
