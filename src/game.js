@@ -6,6 +6,7 @@ const ui = {
   resetSave: document.getElementById("resetSave"),
   openMenu: document.getElementById("openMenu"),
   closeMenu: document.getElementById("closeMenu"),
+  closeLevelUp: document.getElementById("closeLevelUp"),
   runMenu: document.getElementById("runMenu"),
   runHud: document.getElementById("runHud"),
   qpHud: document.getElementById("qpHud"),
@@ -19,6 +20,7 @@ const ui = {
   endScreen: document.getElementById("endScreen"),
   runStats: document.getElementById("runStats"),
   closeEnd: document.getElementById("closeEnd"),
+  closeEndX: document.getElementById("closeEndX"),
 };
 
 const saveKey = "tap-survivor-mvp-save-v2";
@@ -1819,6 +1821,18 @@ function closeRunMenu(resume = true) {
   }
 }
 
+function closeLevelUpMenu() {
+  ui.levelUp.classList.add("hidden");
+  if (game?.pauseReason === "level") {
+    game.paused = false;
+    game.pauseReason = "";
+  }
+}
+
+function closeEndScreen() {
+  ui.endScreen.classList.add("hidden");
+}
+
 function setTargetFromEvent(event) {
   if (!game || !game.running || game.paused) return;
   const rect = canvas.getBoundingClientRect();
@@ -1858,6 +1872,7 @@ function formatTime(seconds) {
 ui.startRun.addEventListener("click", startRun);
 ui.openMenu.addEventListener("click", openRunMenu);
 ui.closeMenu.addEventListener("click", () => closeRunMenu(true));
+ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
 ui.resetSave.addEventListener("click", () => {
   localStorage.removeItem(saveKey);
   localStorage.removeItem("tap-survivor-mvp-save-v1");
@@ -1869,7 +1884,8 @@ ui.resetSave.addEventListener("click", () => {
   persist();
   renderMeta();
 });
-ui.closeEnd.addEventListener("click", () => ui.endScreen.classList.add("hidden"));
+ui.closeEnd.addEventListener("click", closeEndScreen);
+ui.closeEndX.addEventListener("click", closeEndScreen);
 
 canvas.addEventListener("mousedown", setTargetFromEvent);
 canvas.addEventListener("mousemove", (event) => {

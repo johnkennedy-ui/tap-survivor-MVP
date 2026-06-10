@@ -50,6 +50,8 @@ button:disabled {
 .game-panel {
   position: relative;
   min-height: 0;
+  display: grid;
+  place-items: start center;
 }
 
 .menu-button {
@@ -61,9 +63,11 @@ button:disabled {
 }
 
 #game {
-  width: 100%;
-  height: calc(100vh - 36px);
-  min-height: 420px;
+  width: min(100%, calc((100vh - 36px) * 16 / 9));
+  height: auto;
+  max-height: calc(100vh - 36px);
+  aspect-ratio: 16 / 9;
+  min-height: 0;
   border: 1px solid #394556;
   border-radius: 8px;
   background: #17202c;
@@ -207,6 +211,16 @@ section + section {
   margin-bottom: 0;
 }
 
+.modal-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
 .choice-list button {
   display: block;
   width: 100%;
@@ -219,7 +233,8 @@ section + section {
   }
 
   #game {
-    height: 58vh;
+    width: 100%;
+    min-height: 0;
   }
 
   .hud {

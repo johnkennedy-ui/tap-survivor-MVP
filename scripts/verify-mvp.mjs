@@ -26,6 +26,7 @@ const workflow = readRequired(".github/workflows/tap-survivor-pages.yml");
 check("index loads stylesheet", index.includes('href="src/styles.css"'));
 check("index loads game script", index.includes('src="src/game.js"'));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
+check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
 check("mobile viewport exists", index.includes('name="viewport"'));
 
 check("tap/click target handler exists", game.includes("setTargetFromEvent"));
@@ -61,6 +62,7 @@ check("level-up choices are limited to 3 random options", game.includes("shuffle
 check("active quest weapons are offered on level-up", game.includes("activeQuestWeaponIds") && game.includes("questWeaponChoices"));
 check("new combat upgrade types exist", game.includes("attack_radius") && game.includes("fire_rate") && game.includes("flat_damage") && game.includes("percent_damage"));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
+check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", game.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", game.includes("duration: 360") && game.includes("spawnBoss"));
 check("boss death completes run", game.includes('endRun("Boss defeated")') && game.includes("enemy.boss"));

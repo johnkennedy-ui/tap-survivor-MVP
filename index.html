@@ -15,7 +15,7 @@
           <div class="modal-box menu-box">
             <div class="modal-header">
               <h2>Run Menu</h2>
-              <button id="closeMenu" type="button">Resume</button>
+              <button id="closeMenu" class="modal-close" type="button" aria-label="Close run menu">&times;</button>
             </div>
             <p>Spend Quest Points, unlock weapons, and review quests.</p>
             <h3>Progression Tree</h3>
@@ -27,14 +27,20 @@
         </div>
         <div id="levelUp" class="modal hidden">
           <div class="modal-box">
-            <h2>Level Up</h2>
+            <div class="modal-header">
+              <h2>Level Up</h2>
+              <button id="closeLevelUp" class="modal-close" type="button" aria-label="Close level up menu">&times;</button>
+            </div>
             <p>Choose one upgrade.</p>
             <div id="choices" class="choice-list"></div>
           </div>
         </div>
         <div id="endScreen" class="modal hidden">
           <div class="modal-box">
-            <h2>Run Complete</h2>
+            <div class="modal-header">
+              <h2>Run Complete</h2>
+              <button id="closeEndX" class="modal-close" type="button" aria-label="Close end screen">&times;</button>
+            </div>
             <div id="runStats" class="stats"></div>
             <button id="closeEnd">Return to Menu</button>
           </div>
