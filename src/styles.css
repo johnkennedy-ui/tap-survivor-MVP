@@ -151,6 +151,15 @@ section + section {
   margin-top: 8px;
 }
 
+.node.available {
+  border-color: #4f9b6d;
+}
+
+.node.locked {
+  border-color: #516174;
+  opacity: 0.78;
+}
+
 .quest.complete {
   border-color: #4f9b6d;
 }

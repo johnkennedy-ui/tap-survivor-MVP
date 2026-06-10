@@ -157,17 +157,104 @@ const weaponDefs = {
 };
 
 const weaponUnlocks = [
-  { id: "unlock_laser", weaponId: "prism_beam", cost: 0, opensQuest: "use_laser_run" },
-  { id: "unlock_frost_orb", weaponId: "frost_orb", cost: 0 },
-  { id: "unlock_flame_wave", weaponId: "flame_wave", cost: 0 },
-  { id: "unlock_saw_drone", weaponId: "saw_drone", cost: 0 },
-  { id: "unlock_void_mine", weaponId: "void_mine", cost: 0 },
-  { id: "unlock_chain_spark", weaponId: "chain_spark", cost: 0 },
-  { id: "unlock_moon_glaive", weaponId: "moon_glaive", cost: 0 },
-  { id: "unlock_meteor_pin", weaponId: "meteor_pin", cost: 0 },
-  { id: "unlock_acid_pool", weaponId: "acid_pool", cost: 0 },
-  { id: "unlock_shield_pulse", weaponId: "shield_pulse", cost: 0 },
-  { id: "unlock_nova_burst", weaponId: "nova_burst", cost: 0 },
+  {
+    id: "unlock_laser",
+    weaponId: "prism_beam",
+    cost: 1,
+    branch: "Core",
+    requiresQuest: "spark_bolt_mastery",
+    opensQuest: "use_laser_run",
+  },
+  {
+    id: "unlock_frost_orb",
+    weaponId: "frost_orb",
+    cost: 1,
+    branch: "Control",
+    requiresNode: "unlock_laser",
+    requiresQuest: "use_laser_run",
+    opensQuest: "frost_orb_mastery",
+  },
+  {
+    id: "unlock_flame_wave",
+    weaponId: "flame_wave",
+    cost: 1,
+    branch: "Area",
+    requiresNode: "unlock_laser",
+    requiresQuest: "use_laser_run",
+    opensQuest: "flame_wave_mastery",
+  },
+  {
+    id: "unlock_chain_spark",
+    weaponId: "chain_spark",
+    cost: 1,
+    branch: "Arc",
+    requiresNode: "unlock_laser",
+    requiresQuest: "use_laser_run",
+    opensQuest: "chain_spark_mastery",
+  },
+  {
+    id: "unlock_void_mine",
+    weaponId: "void_mine",
+    cost: 2,
+    branch: "Control",
+    requiresNode: "unlock_frost_orb",
+    requiresQuest: "frost_orb_mastery",
+    opensQuest: "void_mine_mastery",
+  },
+  {
+    id: "unlock_acid_pool",
+    weaponId: "acid_pool",
+    cost: 2,
+    branch: "Control",
+    requiresNode: "unlock_frost_orb",
+    requiresQuest: "frost_orb_mastery",
+    opensQuest: "acid_pool_mastery",
+  },
+  {
+    id: "unlock_saw_drone",
+    weaponId: "saw_drone",
+    cost: 2,
+    branch: "Area",
+    requiresNode: "unlock_flame_wave",
+    requiresQuest: "flame_wave_mastery",
+    opensQuest: "saw_drone_mastery",
+  },
+  {
+    id: "unlock_shield_pulse",
+    weaponId: "shield_pulse",
+    cost: 2,
+    branch: "Area",
+    requiresNode: "unlock_flame_wave",
+    requiresQuest: "flame_wave_mastery",
+    opensQuest: "shield_pulse_mastery",
+  },
+  {
+    id: "unlock_moon_glaive",
+    weaponId: "moon_glaive",
+    cost: 2,
+    branch: "Arc",
+    requiresNode: "unlock_chain_spark",
+    requiresQuest: "chain_spark_mastery",
+    opensQuest: "moon_glaive_mastery",
+  },
+  {
+    id: "unlock_meteor_pin",
+    weaponId: "meteor_pin",
+    cost: 3,
+    branch: "Arc",
+    requiresNode: "unlock_moon_glaive",
+    requiresQuest: "moon_glaive_mastery",
+    opensQuest: "meteor_pin_mastery",
+  },
+  {
+    id: "unlock_nova_burst",
+    weaponId: "nova_burst",
+    cost: 3,
+    branch: "Core",
+    requiresNode: "unlock_shield_pulse",
+    requiresQuest: "shield_pulse_mastery",
+    opensQuest: "nova_burst_mastery",
+  },
 ];
 
 const upgradeDefs = [
@@ -178,6 +265,8 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresWeapon: Object.keys(weaponDefs).find((id) => weaponDefs[id] === weapon),
+    requiresQuest:
+      weapon.upgradeId === "laser_damage" ? "use_laser_run" : `${Object.keys(weaponDefs).find((id) => weaponDefs[id] === weapon)}_mastery`,
     opensQuest: weapon.upgradeId === "laser_damage" ? "laser_damage_5000" : null,
   })),
   {
@@ -186,6 +275,8 @@ const upgradeDefs = [
     description: "Move faster during runs.",
     cost: [1, 2, 3],
     maxTier: 3,
+    requiresNode: "unlock_laser",
+    requiresQuest: "use_laser_run",
   },
   {
     id: "pickup_radius",
@@ -193,6 +284,8 @@ const upgradeDefs = [
     description: "Collect XP from farther away.",
     cost: [1, 2, 3],
     maxTier: 3,
+    requiresNode: "unlock_frost_orb",
+    requiresQuest: "frost_orb_mastery",
   },
   {
     id: "max_hp",
@@ -200,23 +293,178 @@ const upgradeDefs = [
     description: "Start each run with more health.",
     cost: [1, 2, 3],
     maxTier: 3,
+    requiresNode: "unlock_shield_pulse",
+    requiresQuest: "shield_pulse_mastery",
+  },
+  {
+    id: "attack_radius",
+    name: "Attack Radius",
+    description: "Increase projectile size and area weapon reach.",
+    cost: [1, 2, 3],
+    maxTier: 3,
+    requiresNode: "unlock_flame_wave",
+    requiresQuest: "flame_wave_mastery",
+  },
+  {
+    id: "fire_rate",
+    name: "Fire Rate",
+    description: "Reduce weapon cooldowns.",
+    cost: [1, 2, 3],
+    maxTier: 3,
+    requiresNode: "unlock_chain_spark",
+    requiresQuest: "chain_spark_mastery",
+  },
+  {
+    id: "flat_damage",
+    name: "Flat Damage",
+    description: "Add fixed damage to every weapon hit.",
+    cost: [1, 2, 3],
+    maxTier: 3,
+    requiresNode: "unlock_saw_drone",
+    requiresQuest: "saw_drone_mastery",
+  },
+  {
+    id: "percent_damage",
+    name: "Percent Damage",
+    description: "Multiply all weapon damage.",
+    cost: [1, 2, 3],
+    maxTier: 3,
+    requiresNode: "unlock_meteor_pin",
+    requiresQuest: "meteor_pin_mastery",
   },
 ];
 
 const questDefs = {
+  spark_bolt_mastery: {
+    name: "Spark Basics",
+    description: "Deal 300 damage with Spark Bolt.",
+    target: 300,
+    rewardQp: 1,
+  },
   use_laser_run: {
     name: "Use Laser in a run",
     description: "Fire Prism Beam during a run.",
     target: 1,
-    rewardQp: 1,
+    rewardQp: 2,
   },
   laser_damage_5000: {
     name: "Deal 5,000 damage with Laser",
     description: "Deal 5,000 total damage with Prism Beam.",
     target: 5000,
-    rewardQp: 1,
+    rewardQp: 2,
+  },
+  frost_orb_mastery: {
+    name: "Frost Control",
+    description: "Deal 350 damage with Frost Orb.",
+    target: 350,
+    rewardQp: 2,
+  },
+  flame_wave_mastery: {
+    name: "Flame Sweep",
+    description: "Deal 350 damage with Flame Wave.",
+    target: 350,
+    rewardQp: 2,
+  },
+  chain_spark_mastery: {
+    name: "Arc Current",
+    description: "Deal 350 damage with Chain Spark.",
+    target: 350,
+    rewardQp: 2,
+  },
+  void_mine_mastery: {
+    name: "Trap Field",
+    description: "Deal 500 damage with Void Mine.",
+    target: 500,
+    rewardQp: 2,
+  },
+  acid_pool_mastery: {
+    name: "Corrosion Field",
+    description: "Deal 500 damage with Acid Pool.",
+    target: 500,
+    rewardQp: 2,
+  },
+  saw_drone_mastery: {
+    name: "Close Orbit",
+    description: "Deal 500 damage with Saw Drone.",
+    target: 500,
+    rewardQp: 2,
+  },
+  shield_pulse_mastery: {
+    name: "Pulse Guard",
+    description: "Deal 500 damage with Shield Pulse.",
+    target: 500,
+    rewardQp: 2,
+  },
+  moon_glaive_mastery: {
+    name: "Lunar Cut",
+    description: "Deal 650 damage with Moon Glaive.",
+    target: 650,
+    rewardQp: 3,
+  },
+  meteor_pin_mastery: {
+    name: "Meteor Mark",
+    description: "Deal 800 damage with Meteor Pin.",
+    target: 800,
+    rewardQp: 3,
+  },
+  nova_burst_mastery: {
+    name: "Nova Core",
+    description: "Deal 1,000 damage with Nova Burst.",
+    target: 1000,
+    rewardQp: 4,
   },
 };
+
+const runUpgradeDefs = [
+  {
+    id: "run_move_speed",
+    name: "Move Speed",
+    description: "Move faster for this run.",
+    maxTier: 3,
+    apply: () => (game.player.speed += 32),
+  },
+  {
+    id: "run_pickup_radius",
+    name: "Pickup Radius",
+    description: "Collect XP from farther away this run.",
+    maxTier: 3,
+    apply: () => (game.player.pickupRadius += 22),
+  },
+  {
+    id: "run_max_hp",
+    name: "Max HP",
+    description: "Recover and increase HP for this run.",
+    maxTier: 3,
+    apply: () => {
+      game.player.maxHp += 18;
+      game.player.hp = Math.min(game.player.maxHp, game.player.hp + 36);
+    },
+  },
+  {
+    id: "run_attack_radius",
+    name: "Attack Radius",
+    description: "Increase projectile size and area reach for this run.",
+    maxTier: 3,
+  },
+  {
+    id: "run_fire_rate",
+    name: "Fire Rate",
+    description: "Reduce weapon cooldowns for this run.",
+    maxTier: 3,
+  },
+  {
+    id: "run_flat_damage",
+    name: "Flat Damage",
+    description: "Add fixed damage to every weapon hit this run.",
+    maxTier: 3,
+  },
+  {
+    id: "run_percent_damage",
+    name: "Percent Damage",
+    description: "Multiply all weapon damage this run.",
+    maxTier: 3,
+  },
+];
 
 let save = loadSave();
 let game = null;
@@ -230,7 +478,7 @@ function defaultSave() {
     unlockedWeapons: ["spark_bolt"],
     upgradeTiers: {},
     unlockedUpgrades: [],
-    activeQuests: [],
+    activeQuests: ["spark_bolt_mastery"],
     completedQuests: [],
     questProgress: {},
   };
@@ -251,6 +499,14 @@ function normalizeSave(input) {
   normalized.unlockedWeapons = [...new Set(["spark_bolt", ...(normalized.unlockedWeapons || [])])];
   normalized.unlockedNodes = normalized.unlockedNodes || [];
   normalized.upgradeTiers = normalized.upgradeTiers || {};
+  normalized.activeQuests = normalized.activeQuests || [];
+  normalized.completedQuests = normalized.completedQuests || [];
+  if (
+    !normalized.activeQuests.includes("spark_bolt_mastery") &&
+    !normalized.completedQuests.includes("spark_bolt_mastery")
+  ) {
+    normalized.activeQuests.push("spark_bolt_mastery");
+  }
   (normalized.unlockedUpgrades || []).forEach((id) => {
     normalized.upgradeTiers[id] = Math.max(normalized.upgradeTiers[id] || 0, 1);
   });
@@ -273,6 +529,40 @@ function hasNode(id) {
 
 function getUpgradeTier(id) {
   return Math.min(3, save.upgradeTiers[id] || 0);
+}
+
+function isQuestComplete(id) {
+  return !id || save.completedQuests.includes(id);
+}
+
+function weaponUnlockFor(weaponId) {
+  return weaponUnlocks.find((unlock) => unlock.weaponId === weaponId);
+}
+
+function isNodeVisible(node) {
+  return !node.requiresNode || hasNode(node.requiresNode);
+}
+
+function nodeGateStatus(node) {
+  if (node.requiresNode && !hasNode(node.requiresNode)) {
+    return `Requires ${labelUnlock(node.requiresNode)}`;
+  }
+  if (node.requiresQuest && !isQuestComplete(node.requiresQuest)) {
+    return `Complete quest: ${questDefs[node.requiresQuest]?.name || node.requiresQuest}`;
+  }
+  if (save.questPoints < node.cost) {
+    return `Needs ${node.cost} QP`;
+  }
+  return "";
+}
+
+function canBuyNode(node) {
+  return !nodeGateStatus(node);
+}
+
+function labelUnlock(id) {
+  const unlock = weaponUnlocks.find((node) => node.id === id);
+  return unlock ? weaponDefs[unlock.weaponId].name : id;
 }
 
 function hasQuest(id) {
@@ -307,7 +597,7 @@ function addQuestProgress(id, amount) {
 }
 
 function buyWeaponUnlock(unlock) {
-  if (hasNode(unlock.id) || save.questPoints < unlock.cost) return;
+  if (hasNode(unlock.id) || !canBuyNode(unlock)) return;
   save.questPoints -= unlock.cost;
   save.unlockedNodes.push(unlock.id);
   if (!save.unlockedWeapons.includes(unlock.weaponId)) {
@@ -322,6 +612,8 @@ function buyUpgrade(upgrade) {
   const tier = getUpgradeTier(upgrade.id);
   if (tier >= upgrade.maxTier) return;
   if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return;
+  if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return;
+  if (upgrade.requiresQuest && !isQuestComplete(upgrade.requiresQuest)) return;
   const cost = upgrade.cost[tier];
   if (save.questPoints < cost) return;
   save.questPoints -= cost;
@@ -345,43 +637,57 @@ function renderMeta() {
 
 function renderTree(container) {
   container.innerHTML = "";
-  weaponUnlocks.forEach((unlock) => {
+  const availableWeaponUnlocks = weaponUnlocks.filter((unlock) => !hasNode(unlock.id) && isNodeVisible(unlock));
+  const availableUpgrades = upgradeDefs.filter((upgrade) => {
+    const tier = getUpgradeTier(upgrade.id);
+    if (tier >= upgrade.maxTier) return false;
+    if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return false;
+    if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return false;
+    return !upgrade.requiresQuest || isQuestComplete(upgrade.requiresQuest);
+  });
+
+  if (!availableWeaponUnlocks.length && !availableUpgrades.length) {
+    const empty = document.createElement("div");
+    empty.className = "node";
+    empty.textContent = "No available skill nodes. Complete active quests to reveal the next branch.";
+    container.appendChild(empty);
+    return;
+  }
+
+  availableWeaponUnlocks.forEach((unlock) => {
     const weapon = weaponDefs[unlock.weaponId];
-    const bought = hasNode(unlock.id);
-    const canBuy = !bought && save.questPoints >= unlock.cost;
+    const gateStatus = nodeGateStatus(unlock);
     const el = document.createElement("div");
-    el.className = "node";
+    el.className = `node ${gateStatus ? "locked" : "available"}`;
     el.innerHTML = `
       <strong>Unlock ${weapon.name}</strong>
       <span>${weapon.description}</span><br />
-      <span>Cost: ${unlock.cost} QP</span>
+      <span>Branch: ${unlock.branch} | Cost: ${unlock.cost} QP</span><br />
+      <span>${gateStatus || "Ready to unlock"}</span>
     `;
     const button = document.createElement("button");
-    button.textContent = bought ? "Unlocked" : "Unlock";
-    button.disabled = bought || !canBuy;
+    button.textContent = gateStatus ? "Locked" : "Unlock";
+    button.disabled = Boolean(gateStatus);
     button.addEventListener("click", () => buyWeaponUnlock(unlock));
     el.appendChild(button);
     container.appendChild(el);
   });
 
-  upgradeDefs.forEach((upgrade) => {
+  availableUpgrades.forEach((upgrade) => {
     const tier = getUpgradeTier(upgrade.id);
-    const maxed = tier >= upgrade.maxTier;
-    const lockedByWeapon =
-      upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon);
-    const nextCost = maxed ? 0 : upgrade.cost[tier];
-    const canBuy = !maxed && !lockedByWeapon && save.questPoints >= nextCost;
+    const nextCost = upgrade.cost[tier];
+    const canBuy = save.questPoints >= nextCost;
     const el = document.createElement("div");
-    el.className = "node";
+    el.className = `node ${canBuy ? "available" : "locked"}`;
     el.innerHTML = `
       <strong>${upgrade.name}</strong>
       <span>${upgrade.description}</span><br />
-      <span>Tier: ${tier}/${upgrade.maxTier}${lockedByWeapon ? ` | Requires: ${weaponDefs[upgrade.requiresWeapon].name}` : ""}</span><br />
-      <span>${maxed ? "Maxed" : `Next cost: ${nextCost} QP`}</span>
+      <span>Tier: ${tier}/${upgrade.maxTier}</span><br />
+      <span>${canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`}</span>
     `;
     const button = document.createElement("button");
-    button.textContent = maxed ? "Max Tier" : lockedByWeapon ? "Weapon locked" : `Buy Tier ${tier + 1}`;
-    button.disabled = maxed || lockedByWeapon || !canBuy;
+    button.textContent = `Buy Tier ${tier + 1}`;
+    button.disabled = !canBuy;
     button.addEventListener("click", () => buyUpgrade(upgrade));
     el.appendChild(button);
     container.appendChild(el);
@@ -390,16 +696,24 @@ function renderTree(container) {
 
 function renderQuests(container) {
   container.innerHTML = "";
-  Object.entries(questDefs).forEach(([id, quest]) => {
-    const complete = save.completedQuests.includes(id);
-    const active = save.activeQuests.includes(id);
+  const activeQuestIds = Object.keys(questDefs).filter((id) => save.activeQuests.includes(id));
+  if (!activeQuestIds.length) {
+    const empty = document.createElement("div");
+    empty.className = "quest";
+    empty.textContent = "No active quests. Unlock the next available skill node to reveal one.";
+    container.appendChild(empty);
+    return;
+  }
+
+  activeQuestIds.forEach((id) => {
+    const quest = questDefs[id];
     const progress = save.questProgress[id] || 0;
     const el = document.createElement("div");
-    el.className = `quest ${complete ? "complete" : active ? "active" : ""}`;
+    el.className = "quest active";
     el.innerHTML = `
       <strong>${quest.name}</strong>
       <span>${quest.description}</span><br />
-      <span>Status: ${complete ? "Completed" : active ? "Active" : "Locked"}</span><br />
+      <span>Status: Active</span><br />
       <span>Progress: ${Math.floor(progress)} / ${quest.target}</span><br />
       <span>Reward: ${quest.rewardQp} QP</span>
     `;
@@ -440,6 +754,7 @@ function resetGameState() {
     beams: [],
     areas: [],
     weaponTimers: {},
+    runUpgradeTiers: {},
     spawnTimer: 0,
     kills: 0,
     xpCollected: 0,
@@ -545,15 +860,44 @@ function updateWeapons(dt) {
     const weapon = weaponDefs[weaponId];
     game.weaponTimers[weaponId] = (game.weaponTimers[weaponId] || 0) - dt;
     if (game.weaponTimers[weaponId] <= 0) {
-      game.weaponTimers[weaponId] = weapon.cooldown;
+      game.weaponTimers[weaponId] = weaponCooldown(weapon);
       fireWeapon(weaponId);
     }
   });
 }
 
+function getRunUpgradeTier(id) {
+  return Math.min(3, game?.runUpgradeTiers?.[id] || 0);
+}
+
+function weaponCooldown(weapon) {
+  const rateTier = getUpgradeTier("fire_rate") + getRunUpgradeTier("run_fire_rate");
+  return weapon.cooldown / (1 + rateTier * 0.12);
+}
+
+function weaponReach(weapon) {
+  const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius");
+  return (weapon.range || 0) * (1 + radiusTier * 0.12);
+}
+
+function weaponWidth(weapon) {
+  const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius");
+  return (weapon.width || 0) * (1 + radiusTier * 0.1);
+}
+
+function projectileRadius(weapon) {
+  const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius");
+  return (weapon.radius || 0) * (1 + radiusTier * 0.12);
+}
+
 function weaponDamage(weaponId) {
   const weapon = weaponDefs[weaponId];
-  return weapon.damage * (1 + getUpgradeTier(weapon.upgradeId) * 0.25);
+  const flatTier = getUpgradeTier("flat_damage") + getRunUpgradeTier("run_flat_damage");
+  const percentTier =
+    getUpgradeTier("percent_damage") +
+    getRunUpgradeTier("run_percent_damage") +
+    getUpgradeTier(weapon.upgradeId) * 2;
+  return (weapon.damage + flatTier * 4) * (1 + percentTier * 0.12);
 }
 
 function fireWeapon(weaponId) {
@@ -583,7 +927,7 @@ function fireProjectile(weaponId) {
     y: p.y,
     vx: (dx / dist) * weapon.speed,
     vy: (dy / dist) * weapon.speed,
-    radius: weapon.radius,
+    radius: projectileRadius(weapon),
     damage: weaponDamage(weaponId),
     life: 1.8,
     pierce: weapon.pierce || 0,
@@ -608,9 +952,10 @@ function fireBeam(weaponId) {
     const toEnemyX = enemy.x - p.x;
     const toEnemyY = enemy.y - p.y;
     const along = toEnemyX * dirX + toEnemyY * dirY;
-    if (along < 0 || along > weapon.range) return;
+    const reach = weaponReach(weapon);
+    if (along < 0 || along > reach) return;
     const side = Math.abs(toEnemyX * dirY - toEnemyY * dirX);
-    if (side <= weapon.width + enemy.radius) {
+    if (side <= weaponWidth(weapon) + enemy.radius) {
       dealt += damageEnemy(enemy, weaponDamage(weaponId), weaponId);
     }
   });
@@ -624,8 +969,8 @@ function fireBeam(weaponId) {
   game.beams.push({
     x: p.x,
     y: p.y,
-    endX: p.x + dirX * weapon.range,
-    endY: p.y + dirY * weapon.range,
+    endX: p.x + dirX * weaponReach(weapon),
+    endY: p.y + dirY * weaponReach(weapon),
     width: 10,
     color: weapon.color,
     life: 0.16,
@@ -647,16 +992,17 @@ function fireCone(weaponId) {
     const toEnemyX = enemy.x - p.x;
     const toEnemyY = enemy.y - p.y;
     const along = toEnemyX * dirX + toEnemyY * dirY;
-    if (along < 0 || along > weapon.range) return;
+    const reach = weaponReach(weapon);
+    if (along < 0 || along > reach) return;
     const side = Math.abs(toEnemyX * dirY - toEnemyY * dirX);
-    if (side <= weapon.width) damageEnemy(enemy, weaponDamage(weaponId), weaponId);
+    if (side <= weaponWidth(weapon)) damageEnemy(enemy, weaponDamage(weaponId), weaponId);
   });
   game.beams.push({
     x: p.x,
     y: p.y,
-    endX: p.x + dirX * weapon.range,
-    endY: p.y + dirY * weapon.range,
-    width: weapon.width,
+    endX: p.x + dirX * weaponReach(weapon),
+    endY: p.y + dirY * weaponReach(weapon),
+    width: weaponWidth(weapon),
     color: weapon.color,
     life: 0.14,
   });
@@ -667,14 +1013,14 @@ function fireRadial(weaponId) {
   const weapon = weaponDefs[weaponId];
   const p = game.player;
   game.enemies.forEach((enemy) => {
-    if (distance(p, enemy) <= weapon.range + enemy.radius) {
+    if (distance(p, enemy) <= weaponReach(weapon) + enemy.radius) {
       damageEnemy(enemy, weaponDamage(weaponId), weaponId);
     }
   });
   game.areas.push({
     x: p.x,
     y: p.y,
-    radius: weapon.range,
+    radius: weaponReach(weapon),
     color: weapon.color,
     life: 0.24,
     visualOnly: true,
@@ -690,7 +1036,7 @@ function fireChain(weaponId) {
     .slice(0, weapon.jumps);
   let from = p;
   targets.forEach((enemy) => {
-    if (distance(from, enemy) > weapon.range) return;
+    if (distance(from, enemy) > weaponReach(weapon)) return;
     damageEnemy(enemy, weaponDamage(weaponId), weaponId);
     game.beams.push({
       x: from.x,
@@ -711,14 +1057,14 @@ function fireTargetArea(weaponId) {
   const target = nearestEnemy();
   if (!target) return;
   game.enemies.forEach((enemy) => {
-    if (distance(target, enemy) <= weapon.range + enemy.radius) {
+    if (distance(target, enemy) <= weaponReach(weapon) + enemy.radius) {
       damageEnemy(enemy, weaponDamage(weaponId), weaponId);
     }
   });
   game.areas.push({
     x: target.x,
     y: target.y,
-    radius: weapon.range,
+    radius: weaponReach(weapon),
     color: weapon.color,
     life: 0.28,
     visualOnly: true,
@@ -734,7 +1080,7 @@ function fireLingeringArea(weaponId) {
     weaponId,
     x: target.x,
     y: target.y,
-    radius: weapon.range,
+    radius: weaponReach(weapon),
     color: weapon.color,
     life: weapon.duration,
     tick: weapon.tick,
@@ -750,7 +1096,7 @@ function fireMine(weaponId) {
     weaponId,
     x: p.x,
     y: p.y,
-    radius: weapon.range,
+    radius: weaponReach(weapon),
     color: weapon.color,
     life: 1.1,
     tick: 1.1,
@@ -809,6 +1155,7 @@ function damageEnemy(enemy, amount, weaponId) {
   enemy.hp -= amount;
   const dealt = Math.max(0, Math.min(before, amount));
   game.weaponDamage[weaponId] = (game.weaponDamage[weaponId] || 0) + dealt;
+  addQuestProgress(`${weaponId}_mastery`, dealt);
   return dealt;
 }
 
@@ -856,33 +1203,37 @@ function showLevelUp() {
   game.paused = true;
   game.pauseReason = "level";
   ui.choices.innerHTML = "";
-  const choices = [
-    ...save.unlockedWeapons
-      .filter((weaponId) => !game.player.equippedWeapons.includes(weaponId))
-      .map((weaponId) => ({
-        name: weaponDefs[weaponId].name,
-        description: `Equip ${weaponDefs[weaponId].name} for this run.`,
-        apply: () => game.player.equippedWeapons.push(weaponId),
-      })),
-    {
-      name: "Move Speed",
-      description: "Move faster for this run.",
-      apply: () => (game.player.speed += 32),
-    },
-    {
-      name: "Pickup Radius",
-      description: "Collect XP from farther away this run.",
-      apply: () => (game.player.pickupRadius += 22),
-    },
-    {
-      name: "Max HP",
-      description: "Recover and increase HP for this run.",
+  const weaponChoices = save.unlockedWeapons
+    .filter((weaponId) => !game.player.equippedWeapons.includes(weaponId))
+    .map((weaponId) => ({
+      name: weaponDefs[weaponId].name,
+      description: `Equip ${weaponDefs[weaponId].name} for this run.`,
+      apply: () => game.player.equippedWeapons.push(weaponId),
+    }));
+  const runUpgradeChoices = runUpgradeDefs
+    .filter((upgrade) => getRunUpgradeTier(upgrade.id) < upgrade.maxTier)
+    .map((upgrade) => {
+      const tier = getRunUpgradeTier(upgrade.id);
+      return {
+        name: `${upgrade.name} ${tier + 1}`,
+        description: `${upgrade.description} Tier ${tier + 1}/${upgrade.maxTier}.`,
+        apply: () => {
+          game.runUpgradeTiers[upgrade.id] = tier + 1;
+          upgrade.apply?.();
+        },
+      };
+    });
+  const choices = shuffleChoices([...weaponChoices, ...runUpgradeChoices]).slice(0, 3);
+
+  if (!choices.length) {
+    choices.push({
+      name: "Repair",
+      description: "Recover 30 HP.",
       apply: () => {
-        game.player.maxHp += 18;
-        game.player.hp = Math.min(game.player.maxHp, game.player.hp + 36);
+        game.player.hp = Math.min(game.player.maxHp, game.player.hp + 30);
       },
-    },
-  ].slice(0, 6);
+    });
+  }
 
   choices.forEach((choice) => {
     const button = document.createElement("button");
@@ -896,6 +1247,13 @@ function showLevelUp() {
     ui.choices.appendChild(button);
   });
   ui.levelUp.classList.remove("hidden");
+}
+
+function shuffleChoices(choices) {
+  return choices
+    .map((choice) => ({ choice, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ choice }) => choice);
 }
 
 function applyRunMetaUpgrades() {

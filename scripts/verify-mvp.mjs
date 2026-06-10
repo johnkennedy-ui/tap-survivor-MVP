@@ -36,11 +36,15 @@ check("auto attack loop exists", game.includes("updateWeapons") && game.includes
 check("XP drops exist", game.includes("xpDrops") && game.includes("collectXp"));
 check("level-up choices exist", game.includes("showLevelUp") && game.includes("Prism Beam"));
 check("Laser weapon exists", game.includes("fireBeam") && game.includes("prism_beam"));
-check("10 new weapons exist", (game.match(/unlock_(frost_orb|flame_wave|saw_drone|void_mine|chain_spark|moon_glaive|meteor_pin|acid_pool|shield_pulse|nova_burst)/g) || []).length === 10);
+check("10 new weapons exist", (game.match(/id: "unlock_(frost_orb|flame_wave|saw_drone|void_mine|chain_spark|moon_glaive|meteor_pin|acid_pool|shield_pulse|nova_burst)"/g) || []).length === 10);
 check("Laser use quest exists", game.includes("use_laser_run"));
 check("Quest Points are awarded", game.includes("rewardQp") && game.includes("save.questPoints += reward"));
 check("Laser Damage upgrade exists", game.includes("laser_damage") && game.includes("maxTier: 3"));
 check("upgrade tiers are tracked", game.includes("upgradeTiers") && game.includes("Buy Tier"));
+check("skill tree gates by prerequisite and quest", game.includes("requiresNode") && game.includes("requiresQuest") && game.includes("nodeGateStatus"));
+check("completed quests disappear from quest list", game.includes("activeQuestIds") && !game.includes("Status: ${complete"));
+check("level-up choices are limited to 3 random options", game.includes("shuffleChoices") && game.includes(".slice(0, 3)"));
+check("new combat upgrade types exist", game.includes("attack_radius") && game.includes("fire_rate") && game.includes("flat_damage") && game.includes("percent_damage"));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
 check("follow-up Laser quest opens", game.includes("laser_damage_5000"));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
