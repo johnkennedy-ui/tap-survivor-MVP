@@ -603,19 +603,31 @@ function normalizeSave(input) {
   normalized.upgradeTiers = normalized.upgradeTiers || {};
   normalized.activeQuests = normalized.activeQuests || [];
   normalized.completedQuests = normalized.completedQuests || [];
-  starterQuestIds.forEach((questId) => {
+  const ensureQuestOpen = (questId) => {
+    if (!questId || !questDefs[questId]) return;
     if (!normalized.activeQuests.includes(questId) && !normalized.completedQuests.includes(questId)) {
       normalized.activeQuests.push(questId);
     }
+    normalized.questProgress[questId] = normalized.questProgress[questId] || 0;
+  };
+  starterQuestIds.forEach((questId) => {
+    ensureQuestOpen(questId);
   });
   normalized.completedQuests.forEach((questId) => {
-    const nextQuest = questDefs[questId]?.opensQuest;
-    if (nextQuest && !normalized.activeQuests.includes(nextQuest) && !normalized.completedQuests.includes(nextQuest)) {
-      normalized.activeQuests.push(nextQuest);
-    }
+    ensureQuestOpen(questDefs[questId]?.opensQuest);
+  });
+  normalized.unlockedNodes.forEach((nodeId) => {
+    const unlock = weaponUnlocks.find((node) => node.id === nodeId);
+    ensureQuestOpen(unlock?.opensQuest);
   });
   (normalized.unlockedUpgrades || []).forEach((id) => {
     normalized.upgradeTiers[id] = Math.max(normalized.upgradeTiers[id] || 0, 1);
+  });
+  Object.entries(normalized.upgradeTiers).forEach(([upgradeId, tier]) => {
+    if (tier > 0) {
+      const upgrade = upgradeDefs.find((item) => item.id === upgradeId);
+      ensureQuestOpen(upgrade?.opensQuest);
+    }
   });
   normalized.unlockedUpgrades = Object.entries(normalized.upgradeTiers)
     .filter(([, tier]) => tier > 0)

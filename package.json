@@ -1,7 +1,8 @@
 {
   "scripts": {
     "check:deploy": "node scripts/check-deploy.mjs",
-    "test": "node scripts/verify-mvp.mjs",
+    "audit:quests": "node scripts/audit-quests.mjs",
+    "test": "npm run audit:quests && node scripts/verify-mvp.mjs",
     "serve": "node scripts/serve-local.mjs"
   },
   "devDependencies": {}
