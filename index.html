@@ -10,6 +10,21 @@
     <main class="shell">
       <section class="game-panel">
         <canvas id="game" width="960" height="540" aria-label="Tap Survivor MVP game canvas"></canvas>
+        <button id="openMenu" class="menu-button" type="button">Menu</button>
+        <div id="runMenu" class="modal hidden">
+          <div class="modal-box menu-box">
+            <div class="modal-header">
+              <h2>Run Menu</h2>
+              <button id="closeMenu" type="button">Resume</button>
+            </div>
+            <p>Spend Quest Points, unlock weapons, and review quests.</p>
+            <h3>Progression Tree</h3>
+            <p id="menuQpHud"></p>
+            <div id="menuTree" class="tree"></div>
+            <h3>Quests</h3>
+            <div id="menuQuests" class="quests"></div>
+          </div>
+        </div>
         <div id="levelUp" class="modal hidden">
           <div class="modal-box">
             <h2>Level Up</h2>
