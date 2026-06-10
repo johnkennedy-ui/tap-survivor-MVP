@@ -54,6 +54,7 @@ upgradeDefs.forEach((upgrade) => {
 Object.entries(questDefs).forEach(([questId, quest]) => {
   requireWeapon(quest.weaponId, questId);
   requireQuest(quest.opensQuest, questId);
+  (quest.opensQuests || []).forEach((nextQuestId) => requireQuest(nextQuestId, questId));
   if (!Number.isFinite(quest.target) || quest.target <= 0) errors.push(`${questId} has invalid target`);
   if (!Number.isFinite(quest.rewardQp) || quest.rewardQp < 0) errors.push(`${questId} has invalid rewardQp`);
 });

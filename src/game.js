@@ -356,30 +356,100 @@ const questDefs = {
     target: 25,
     rewardQp: 1,
     opensQuest: "rapid_growth",
+    opensQuests: ["gem_hoarder"],
   },
   survivor_60: {
     name: "Hold the Line",
     description: "Survive for 60 seconds.",
     target: 60,
     rewardQp: 1,
+    opensQuest: "survivor_180",
   },
   crowd_control: {
     name: "Crowd Control",
     description: "Defeat 50 enemies.",
     target: 50,
     rewardQp: 2,
+    opensQuest: "exterminator",
   },
   rapid_growth: {
     name: "Rapid Growth",
     description: "Gain 4 levels.",
     target: 4,
     rewardQp: 2,
+    opensQuest: "power_climb",
   },
   heavy_hits: {
     name: "Heavy Hits",
     description: "Deal 2,500 total weapon damage.",
     target: 2500,
     rewardQp: 2,
+    opensQuest: "damage_dealer",
+  },
+  survivor_180: {
+    name: "Long Stand",
+    description: "Survive for 180 seconds.",
+    target: 180,
+    rewardQp: 2,
+    opensQuest: "survivor_300",
+  },
+  survivor_300: {
+    name: "Five-Minute Stand",
+    description: "Survive for 300 seconds.",
+    target: 300,
+    rewardQp: 3,
+  },
+  exterminator: {
+    name: "Exterminator",
+    description: "Defeat 150 enemies.",
+    target: 150,
+    rewardQp: 3,
+    opensQuest: "reaper",
+  },
+  reaper: {
+    name: "Reaper",
+    description: "Defeat 350 enemies.",
+    target: 350,
+    rewardQp: 4,
+  },
+  power_climb: {
+    name: "Power Climb",
+    description: "Gain 8 levels.",
+    target: 8,
+    rewardQp: 3,
+    opensQuest: "apex_growth",
+  },
+  apex_growth: {
+    name: "Apex Growth",
+    description: "Gain 12 levels.",
+    target: 12,
+    rewardQp: 4,
+  },
+  damage_dealer: {
+    name: "Damage Dealer",
+    description: "Deal 10,000 total weapon damage.",
+    target: 10000,
+    rewardQp: 3,
+    opensQuest: "apocalypse_damage",
+  },
+  apocalypse_damage: {
+    name: "Apocalypse Damage",
+    description: "Deal 25,000 total weapon damage.",
+    target: 25000,
+    rewardQp: 4,
+  },
+  gem_hoarder: {
+    name: "Gem Hoarder",
+    description: "Collect 75 XP gems.",
+    target: 75,
+    rewardQp: 2,
+    opensQuest: "gem_flood",
+  },
+  gem_flood: {
+    name: "Gem Flood",
+    description: "Collect 150 XP gems.",
+    target: 150,
+    rewardQp: 3,
   },
   use_laser_run: {
     name: "Use Laser in a run",
@@ -474,6 +544,11 @@ const questDefs = {
 };
 
 const starterQuestIds = ["spark_bolt_mastery", "first_blood", "gatherer", "survivor_60"];
+const killQuestIds = ["first_blood", "crowd_control", "exterminator", "reaper"];
+const damageQuestIds = ["heavy_hits", "damage_dealer", "apocalypse_damage"];
+const survivalQuestIds = ["survivor_60", "survivor_180", "survivor_300"];
+const xpQuestIds = ["gatherer", "gem_hoarder", "gem_flood"];
+const levelQuestIds = ["rapid_growth", "power_climb", "apex_growth"];
 
 const runUpgradeDefs = [
   {
@@ -603,6 +678,7 @@ function normalizeSave(input) {
   normalized.upgradeTiers = normalized.upgradeTiers || {};
   normalized.activeQuests = normalized.activeQuests || [];
   normalized.completedQuests = normalized.completedQuests || [];
+  normalized.questProgress = normalized.questProgress || {};
   const ensureQuestOpen = (questId) => {
     if (!questId || !questDefs[questId]) return;
     if (!normalized.activeQuests.includes(questId) && !normalized.completedQuests.includes(questId)) {
@@ -614,7 +690,7 @@ function normalizeSave(input) {
     ensureQuestOpen(questId);
   });
   normalized.completedQuests.forEach((questId) => {
-    ensureQuestOpen(questDefs[questId]?.opensQuest);
+    questOpenIds(questDefs[questId]).forEach(ensureQuestOpen);
   });
   normalized.unlockedNodes.forEach((nodeId) => {
     const unlock = weaponUnlocks.find((node) => node.id === nodeId);
@@ -652,6 +728,10 @@ function getUpgradeTier(id) {
 
 function isQuestComplete(id) {
   return !id || save.completedQuests.includes(id);
+}
+
+function questOpenIds(quest) {
+  return [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean);
 }
 
 function weaponUnlockFor(weaponId) {
@@ -702,7 +782,7 @@ function completeQuest(id) {
   const reward = questDefs[id].rewardQp || 0;
   save.questPoints += reward;
   save.totalQuestPoints += reward;
-  if (questDefs[id].opensQuest) openQuest(questDefs[id].opensQuest);
+  questOpenIds(questDefs[id]).forEach(openQuest);
   persist();
   renderMeta();
 }
@@ -714,6 +794,10 @@ function addQuestProgress(id, amount) {
     (save.questProgress[id] || 0) + amount,
   );
   if (save.questProgress[id] >= questDefs[id].target) completeQuest(id);
+}
+
+function addQuestProgressGroup(ids, amount) {
+  ids.forEach((questId) => addQuestProgress(questId, amount));
 }
 
 function buyWeaponUnlock(unlock) {
@@ -916,7 +1000,7 @@ function update(dt) {
   if (!game || !game.running || game.paused) return;
   const p = game.player;
   game.elapsed += dt;
-  addQuestProgress("survivor_60", dt);
+  addQuestProgressGroup(survivalQuestIds, dt);
   if (game.elapsed >= game.duration) {
     spawnBoss();
   }
@@ -1332,7 +1416,7 @@ function damageEnemy(enemy, amount, weaponId) {
   enemy.hp -= amount;
   const dealt = Math.max(0, Math.min(before, amount));
   game.weaponDamage[weaponId] = (game.weaponDamage[weaponId] || 0) + dealt;
-  addQuestProgress("heavy_hits", dealt);
+  addQuestProgressGroup(damageQuestIds, dealt);
   addQuestProgress(`${weaponId}_mastery`, dealt);
   return dealt;
 }
@@ -1341,8 +1425,7 @@ function reapEnemies() {
   const dead = game.enemies.filter((enemy) => enemy.hp <= 0);
   dead.forEach((enemy) => {
     game.kills += 1;
-    addQuestProgress("first_blood", 1);
-    addQuestProgress("crowd_control", 1);
+    addQuestProgressGroup(killQuestIds, 1);
     game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: enemy.boss ? 12 : 7, value: enemy.boss ? 8 : enemy.xp });
     if (enemy.boss) {
       game.bossDefeated = true;
@@ -1375,13 +1458,13 @@ function collectXp(value) {
   const p = game.player;
   p.xp += value;
   game.xpCollected += value;
-  addQuestProgress("gatherer", value);
+  addQuestProgressGroup(xpQuestIds, value);
   if (p.xp >= p.xpToLevel) {
     p.xp -= p.xpToLevel;
     p.level += 1;
     p.xpToLevel += 4;
     game.levelUps += 1;
-    addQuestProgress("rapid_growth", 1);
+    addQuestProgressGroup(levelQuestIds, 1);
     showLevelUp();
   }
 }

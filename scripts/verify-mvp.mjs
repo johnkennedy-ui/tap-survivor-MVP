@@ -43,8 +43,11 @@ check("10 new weapons exist", (game.match(/id: "unlock_(frost_orb|flame_wave|saw
 check("Laser use quest exists", game.includes("use_laser_run"));
 check("Quest Points are awarded", game.includes("rewardQp") && game.includes("save.questPoints += reward"));
 check("more quest types exist", ["first_blood", "gatherer", "survivor_60", "crowd_control", "rapid_growth", "heavy_hits", "boss_hunter"].every((id) => game.includes(id)));
-check("quest chains can open follow-up quests", game.includes("opensQuest") && game.includes("openQuest(questDefs[id].opensQuest)"));
-check("combat stats feed quest progress", game.includes('addQuestProgress("first_blood", 1)') && game.includes('addQuestProgress("gatherer", value)') && game.includes('addQuestProgress("heavy_hits", dealt)'));
+check("extended milestone quests exist", ["survivor_180", "survivor_300", "exterminator", "reaper", "power_climb", "apex_growth", "damage_dealer", "apocalypse_damage", "gem_hoarder", "gem_flood"].every((id) => game.includes(id)));
+check("quest progress groups feed milestone chains", ["killQuestIds", "damageQuestIds", "survivalQuestIds", "xpQuestIds", "levelQuestIds", "addQuestProgressGroup"].every((id) => game.includes(id)));
+check("quests can open multiple follow-ups", game.includes("opensQuests") && game.includes("questOpenIds"));
+check("quest chains can open follow-up quests", game.includes("opensQuest") && game.includes("questOpenIds(questDefs[id]).forEach(openQuest)"));
+check("combat stats feed quest progress", game.includes("addQuestProgressGroup(killQuestIds, 1)") && game.includes("addQuestProgressGroup(xpQuestIds, value)") && game.includes("addQuestProgressGroup(damageQuestIds, dealt)"));
 check("meta upgrades are quest-gated", game.includes('requiresQuest: "first_blood"') && game.includes('requiresQuest: "boss_hunter"'));
 check("Laser Damage upgrade exists", game.includes("laser_damage") && game.includes("maxTier: 3"));
 check("upgrade tiers are tracked", game.includes("upgradeTiers") && game.includes("Buy Tier"));
