@@ -42,6 +42,10 @@ check("Laser weapon exists", game.includes("fireBeam") && game.includes("prism_b
 check("10 new weapons exist", (game.match(/id: "unlock_(frost_orb|flame_wave|saw_drone|void_mine|chain_spark|moon_glaive|meteor_pin|acid_pool|shield_pulse|nova_burst)"/g) || []).length === 10);
 check("Laser use quest exists", game.includes("use_laser_run"));
 check("Quest Points are awarded", game.includes("rewardQp") && game.includes("save.questPoints += reward"));
+check("more quest types exist", ["first_blood", "gatherer", "survivor_60", "crowd_control", "rapid_growth", "heavy_hits", "boss_hunter"].every((id) => game.includes(id)));
+check("quest chains can open follow-up quests", game.includes("opensQuest") && game.includes("openQuest(questDefs[id].opensQuest)"));
+check("combat stats feed quest progress", game.includes('addQuestProgress("first_blood", 1)') && game.includes('addQuestProgress("gatherer", value)') && game.includes('addQuestProgress("heavy_hits", dealt)'));
+check("meta upgrades are quest-gated", game.includes('requiresQuest: "first_blood"') && game.includes('requiresQuest: "boss_hunter"'));
 check("Laser Damage upgrade exists", game.includes("laser_damage") && game.includes("maxTier: 3"));
 check("upgrade tiers are tracked", game.includes("upgradeTiers") && game.includes("Buy Tier"));
 check("skill tree gates by prerequisite and quest", game.includes("requiresNode") && game.includes("requiresQuest") && game.includes("nodeGateStatus"));

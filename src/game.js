@@ -276,7 +276,7 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresNode: "unlock_laser",
-    requiresQuest: "use_laser_run",
+    requiresQuest: "first_blood",
   },
   {
     id: "pickup_radius",
@@ -285,7 +285,7 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresNode: "unlock_frost_orb",
-    requiresQuest: "frost_orb_mastery",
+    requiresQuest: "gatherer",
   },
   {
     id: "max_hp",
@@ -294,7 +294,7 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresNode: "unlock_shield_pulse",
-    requiresQuest: "shield_pulse_mastery",
+    requiresQuest: "survivor_60",
   },
   {
     id: "attack_radius",
@@ -303,7 +303,7 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresNode: "unlock_flame_wave",
-    requiresQuest: "flame_wave_mastery",
+    requiresQuest: "crowd_control",
   },
   {
     id: "fire_rate",
@@ -312,7 +312,7 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresNode: "unlock_chain_spark",
-    requiresQuest: "chain_spark_mastery",
+    requiresQuest: "rapid_growth",
   },
   {
     id: "flat_damage",
@@ -321,7 +321,7 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresNode: "unlock_saw_drone",
-    requiresQuest: "saw_drone_mastery",
+    requiresQuest: "heavy_hits",
   },
   {
     id: "percent_damage",
@@ -330,7 +330,7 @@ const upgradeDefs = [
     cost: [1, 2, 3],
     maxTier: 3,
     requiresNode: "unlock_meteor_pin",
-    requiresQuest: "meteor_pin_mastery",
+    requiresQuest: "boss_hunter",
   },
 ];
 
@@ -341,6 +341,45 @@ const questDefs = {
     weaponId: "spark_bolt",
     target: 300,
     rewardQp: 1,
+    opensQuest: "heavy_hits",
+  },
+  first_blood: {
+    name: "First Blood",
+    description: "Defeat 15 enemies.",
+    target: 15,
+    rewardQp: 1,
+    opensQuest: "crowd_control",
+  },
+  gatherer: {
+    name: "Field Gatherer",
+    description: "Collect 25 XP gems.",
+    target: 25,
+    rewardQp: 1,
+    opensQuest: "rapid_growth",
+  },
+  survivor_60: {
+    name: "Hold the Line",
+    description: "Survive for 60 seconds.",
+    target: 60,
+    rewardQp: 1,
+  },
+  crowd_control: {
+    name: "Crowd Control",
+    description: "Defeat 50 enemies.",
+    target: 50,
+    rewardQp: 2,
+  },
+  rapid_growth: {
+    name: "Rapid Growth",
+    description: "Gain 4 levels.",
+    target: 4,
+    rewardQp: 2,
+  },
+  heavy_hits: {
+    name: "Heavy Hits",
+    description: "Deal 2,500 total weapon damage.",
+    target: 2500,
+    rewardQp: 2,
   },
   use_laser_run: {
     name: "Use Laser in a run",
@@ -426,7 +465,15 @@ const questDefs = {
     target: 1000,
     rewardQp: 4,
   },
+  boss_hunter: {
+    name: "Boss Hunter",
+    description: "Defeat the 6-minute boss.",
+    target: 1,
+    rewardQp: 4,
+  },
 };
+
+const starterQuestIds = ["spark_bolt_mastery", "first_blood", "gatherer", "survivor_60"];
 
 const runUpgradeDefs = [
   {
@@ -533,7 +580,7 @@ function defaultSave() {
     unlockedWeapons: ["spark_bolt"],
     upgradeTiers: {},
     unlockedUpgrades: [],
-    activeQuests: ["spark_bolt_mastery"],
+    activeQuests: [...starterQuestIds],
     completedQuests: [],
     questProgress: {},
   };
@@ -556,12 +603,17 @@ function normalizeSave(input) {
   normalized.upgradeTiers = normalized.upgradeTiers || {};
   normalized.activeQuests = normalized.activeQuests || [];
   normalized.completedQuests = normalized.completedQuests || [];
-  if (
-    !normalized.activeQuests.includes("spark_bolt_mastery") &&
-    !normalized.completedQuests.includes("spark_bolt_mastery")
-  ) {
-    normalized.activeQuests.push("spark_bolt_mastery");
-  }
+  starterQuestIds.forEach((questId) => {
+    if (!normalized.activeQuests.includes(questId) && !normalized.completedQuests.includes(questId)) {
+      normalized.activeQuests.push(questId);
+    }
+  });
+  normalized.completedQuests.forEach((questId) => {
+    const nextQuest = questDefs[questId]?.opensQuest;
+    if (nextQuest && !normalized.activeQuests.includes(nextQuest) && !normalized.completedQuests.includes(nextQuest)) {
+      normalized.activeQuests.push(nextQuest);
+    }
+  });
   (normalized.unlockedUpgrades || []).forEach((id) => {
     normalized.upgradeTiers[id] = Math.max(normalized.upgradeTiers[id] || 0, 1);
   });
@@ -638,12 +690,13 @@ function completeQuest(id) {
   const reward = questDefs[id].rewardQp || 0;
   save.questPoints += reward;
   save.totalQuestPoints += reward;
+  if (questDefs[id].opensQuest) openQuest(questDefs[id].opensQuest);
   persist();
   renderMeta();
 }
 
 function addQuestProgress(id, amount) {
-  if (!save.activeQuests.includes(id)) return;
+  if (!questDefs[id] || !save.activeQuests.includes(id)) return;
   save.questProgress[id] = Math.min(
     questDefs[id].target,
     (save.questProgress[id] || 0) + amount,
@@ -851,6 +904,7 @@ function update(dt) {
   if (!game || !game.running || game.paused) return;
   const p = game.player;
   game.elapsed += dt;
+  addQuestProgress("survivor_60", dt);
   if (game.elapsed >= game.duration) {
     spawnBoss();
   }
@@ -1266,6 +1320,7 @@ function damageEnemy(enemy, amount, weaponId) {
   enemy.hp -= amount;
   const dealt = Math.max(0, Math.min(before, amount));
   game.weaponDamage[weaponId] = (game.weaponDamage[weaponId] || 0) + dealt;
+  addQuestProgress("heavy_hits", dealt);
   addQuestProgress(`${weaponId}_mastery`, dealt);
   return dealt;
 }
@@ -1274,9 +1329,12 @@ function reapEnemies() {
   const dead = game.enemies.filter((enemy) => enemy.hp <= 0);
   dead.forEach((enemy) => {
     game.kills += 1;
+    addQuestProgress("first_blood", 1);
+    addQuestProgress("crowd_control", 1);
     game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: enemy.boss ? 12 : 7, value: enemy.boss ? 8 : enemy.xp });
     if (enemy.boss) {
       game.bossDefeated = true;
+      addQuestProgress("boss_hunter", 1);
       endRun("Boss defeated");
     }
   });
@@ -1305,11 +1363,13 @@ function collectXp(value) {
   const p = game.player;
   p.xp += value;
   game.xpCollected += value;
+  addQuestProgress("gatherer", value);
   if (p.xp >= p.xpToLevel) {
     p.xp -= p.xpToLevel;
     p.level += 1;
     p.xpToLevel += 4;
     game.levelUps += 1;
+    addQuestProgress("rapid_growth", 1);
     showLevelUp();
   }
 }
