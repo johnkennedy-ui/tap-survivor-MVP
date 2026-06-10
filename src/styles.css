@@ -160,7 +160,9 @@ section + section {
 .quest {
   border: 1px solid #334052;
   border-radius: 6px;
-  background: #1d2735;
+  background:
+    linear-gradient(rgba(29, 39, 53, 0.93), rgba(29, 39, 53, 0.93)),
+    url("../assets/kenney/desert-shooter/ui-quest.png") right 10px top 10px / 24px 24px no-repeat;
   padding: 10px;
 }
 

@@ -11,7 +11,8 @@ globalThis.TapSurvivorContent = {
       "kind": "projectile",
       "speed": 420,
       "radius": 5,
-      "color": "#ffd166"
+      "color": "#ffd166",
+      "assetId": "spark_bolt"
     },
     "prism_beam": {
       "name": "Prism Beam",
@@ -23,7 +24,8 @@ globalThis.TapSurvivorContent = {
       "range": 430,
       "width": 24,
       "color": "#b794ff",
-      "opensQuest": "use_laser_run"
+      "opensQuest": "use_laser_run",
+      "assetId": "prism_beam"
     },
     "frost_orb": {
       "name": "Frost Orb",
@@ -548,7 +550,8 @@ globalThis.TapSurvivorContent = {
       "speedScale": 0.08,
       "damage": 9,
       "touchCooldown": 0.55,
-      "xp": 1
+      "xp": 1,
+      "assetId": "drifter"
     },
     {
       "id": "skitter",
@@ -561,7 +564,8 @@ globalThis.TapSurvivorContent = {
       "speedScale": 0.12,
       "damage": 7,
       "touchCooldown": 0.38,
-      "xp": 1
+      "xp": 1,
+      "assetId": "skitter"
     },
     {
       "id": "bulwark",
@@ -574,9 +578,39 @@ globalThis.TapSurvivorContent = {
       "speedScale": 0.04,
       "damage": 14,
       "touchCooldown": 0.75,
-      "xp": 2
+      "xp": 2,
+      "assetId": "bulwark"
     }
   ],
   "shopItems": [],
-  "levels": []
+  "levels": [],
+  "assets": {
+    "sources": [
+      {
+        "id": "kenney_desert_shooter_pack",
+        "name": "Kenney Desert Shooter Pack 1.0",
+        "license": "CC0",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "https://kenney.nl/assets/desert-shooter-pack",
+        "localLicense": "assets/kenney/desert-shooter/License.txt"
+      }
+    ],
+    "sprites": {
+      "player": "assets/kenney/desert-shooter/player.png",
+      "enemies": {
+        "drifter": "assets/kenney/desert-shooter/enemy-drifter.png",
+        "skitter": "assets/kenney/desert-shooter/enemy-skitter.png",
+        "bulwark": "assets/kenney/desert-shooter/enemy-bulwark.png",
+        "boss": "assets/kenney/desert-shooter/enemy-bulwark.png"
+      },
+      "weapons": {
+        "spark_bolt": "assets/kenney/desert-shooter/weapon-spark.png",
+        "prism_beam": "assets/kenney/desert-shooter/weapon-prism.png"
+      },
+      "ui": {
+        "quest": "assets/kenney/desert-shooter/ui-quest.png"
+      }
+    }
+  }
 };

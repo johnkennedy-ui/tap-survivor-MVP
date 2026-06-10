@@ -29,6 +29,34 @@ const saveKey = "tap-survivor-mvp-save-v2";
 const content = globalThis.TapSurvivorContent || {};
 const weaponDefs = content.weapons || {};
 const weaponUnlocks = content.weaponUnlocks || [];
+const spriteDefs = content.assets?.sprites || {};
+const sprites = {};
+
+function registerSprite(id, src) {
+  if (!src || typeof Image === "undefined") return;
+  const image = new Image();
+  image.src = src;
+  sprites[id] = image;
+}
+
+function loadSprites() {
+  registerSprite("player", spriteDefs.player);
+  Object.entries(spriteDefs.enemies || {}).forEach(([id, src]) => registerSprite(`enemy:${id}`, src));
+  Object.entries(spriteDefs.weapons || {}).forEach(([id, src]) => registerSprite(`weapon:${id}`, src));
+  Object.entries(spriteDefs.ui || {}).forEach(([id, src]) => registerSprite(`ui:${id}`, src));
+}
+
+function drawSprite(id, x, y, size, rotation = 0) {
+  const image = sprites[id];
+  if (!image?.complete || !image.naturalWidth) return false;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotation);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(image, -size / 2, -size / 2, size, size);
+  ctx.restore();
+  return true;
+}
 
 const upgradeDefs = [
   ...Object.values(weaponDefs).map((weapon) => ({
@@ -609,6 +637,7 @@ function spawnEnemy(type, position) {
     type: type.id,
     name: type.name,
     color: type.color,
+    assetId: type.assetId || type.id,
     x: position.x,
     y: position.y,
     radius: type.radius,
@@ -626,6 +655,7 @@ function spawnBoss() {
   game.bossSpawned = true;
   game.enemies.push({
     boss: true,
+    assetId: "boss",
     x: canvas.width / 2,
     y: -52,
     radius: 38,
@@ -1229,10 +1259,13 @@ function drawMenuHint() {
 
 function drawPlayer(p) {
   drawPlayerHpBar(p);
-  ctx.fillStyle = "#69d2ff";
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-  ctx.fill();
+  const playerDrawn = drawSprite("player", p.x, p.y, p.radius * 2.7);
+  if (!playerDrawn) {
+    ctx.fillStyle = "#69d2ff";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
   ctx.strokeStyle = "rgba(105, 210, 255, 0.28)";
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -1261,10 +1294,14 @@ function drawPlayerHpBar(p) {
 }
 
 function drawEnemy(enemy) {
-  ctx.fillStyle = enemy.boss ? "#ff4f8b" : enemy.color;
-  ctx.beginPath();
-  ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
-  ctx.fill();
+  const enemySprite = enemy.boss ? "enemy:boss" : `enemy:${enemy.assetId || enemy.type}`;
+  const enemyDrawn = drawSprite(enemySprite, enemy.x, enemy.y, enemy.radius * (enemy.boss ? 2.2 : 2.4));
+  if (!enemyDrawn) {
+    ctx.fillStyle = enemy.boss ? "#ff4f8b" : enemy.color;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
   if (enemy.boss) {
     ctx.strokeStyle = "#ffd166";
     ctx.lineWidth = 4;
@@ -1315,10 +1352,15 @@ function drawLoot(drop) {
 }
 
 function drawBolt(bolt) {
-  ctx.fillStyle = bolt.color;
-  ctx.beginPath();
-  ctx.arc(bolt.x, bolt.y, bolt.radius, 0, Math.PI * 2);
-  ctx.fill();
+  const weapon = weaponDefs[bolt.weaponId];
+  const rotation = Math.atan2(bolt.vy || 0, bolt.vx || 1);
+  const boltDrawn = drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`, bolt.x, bolt.y, bolt.radius * 3.2, rotation);
+  if (!boltDrawn) {
+    ctx.fillStyle = bolt.color;
+    ctx.beginPath();
+    ctx.arc(bolt.x, bolt.y, bolt.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function drawBeam(beam) {
@@ -1495,5 +1537,6 @@ canvas.addEventListener("touchmove", (event) => {
   setTargetFromEvent(event);
 });
 
+loadSprites();
 renderMeta();
 requestAnimationFrame(loop);

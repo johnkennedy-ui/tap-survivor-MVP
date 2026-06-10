@@ -40,6 +40,8 @@ check("mouse movement input exists", game.includes('addEventListener("mousedown"
 check("touch movement input exists", game.includes('addEventListener("touchstart"'));
 check("enemy chase loop exists", game.includes("updateEnemies") && game.includes("enemy.speed"));
 check("content source exists", contentSource.includes('"schemaVersion"') && generatedContent.includes("TapSurvivorContent"));
+check("Kenney asset manifest exists", content.assets?.sources?.some((source) => source.id === "kenney_desert_shooter_pack" && source.commercialUse === true && source.attributionRequired === false));
+check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "spark_bolt", "prism_beam"].every((id) => contentText.includes(id)) && game.includes("drawSprite"));
 check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
 check("enemy types unlock every 30 seconds", game.includes("Math.floor(game.elapsed / 30)") && game.includes("availableEnemyTypes"));
 check("enemy spawns are doubled and patterned", game.includes("spawnPatternPositions(2)") && game.includes("spawnEnemy(type, position)"));

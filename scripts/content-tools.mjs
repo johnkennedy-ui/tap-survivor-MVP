@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const root = new URL("..", import.meta.url).pathname;
@@ -21,6 +21,7 @@ export function validateContent(content) {
   const enemyTypes = content.enemyTypes || [];
   const shopItems = content.shopItems || [];
   const levels = content.levels || [];
+  const assets = content.assets || {};
 
   const seenUnlocks = new Set();
   const seenEnemies = new Set();
@@ -55,6 +56,7 @@ export function validateContent(content) {
   requireArray(enemyTypes, "enemyTypes");
   requireArray(shopItems, "shopItems");
   requireArray(levels, "levels");
+  if (content.assets) requireObject(assets, "assets");
 
   Object.entries(weapons).forEach(([id, weapon]) => {
     requireString(id, "weapon id");
@@ -109,6 +111,32 @@ export function validateContent(content) {
     ["name", "color"].forEach((field) => requireString(enemy[field], `enemy ${enemy.id}.${field}`));
     ["radius", "hp", "speed", "damage", "xp"].forEach((field) => requireNumber(enemy[field], `enemy ${enemy.id}.${field}`, 0));
   });
+
+  (assets.sources || []).forEach((source) => {
+    requireString(source.id, "asset source.id");
+    requireString(source.name, `asset source ${source.id}.name`);
+    requireString(source.license, `asset source ${source.id}.license`);
+    if (source.commercialUse !== true) fail(`asset source ${source.id} must explicitly allow commercial use`);
+    if (source.attributionRequired !== false) {
+      fail(`asset source ${source.id} must explicitly say attribution is not required`);
+    }
+    requireString(source.localLicense, `asset source ${source.id}.localLicense`);
+    if (!existsSync(join(root, source.localLicense))) {
+      fail(`asset source ${source.id} local license file is missing: ${source.localLicense}`);
+    }
+  });
+
+  function validateSpritePath(value, owner) {
+    if (typeof value === "string") {
+      if (!existsSync(join(root, value))) fail(`${owner} references missing asset ${value}`);
+      return;
+    }
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      Object.entries(value).forEach(([key, child]) => validateSpritePath(child, `${owner}.${key}`));
+    }
+  }
+
+  validateSpritePath(assets.sprites, "assets.sprites");
 
   shopItems.forEach((item) => {
     requireString(item.id, "shopItem.id");
