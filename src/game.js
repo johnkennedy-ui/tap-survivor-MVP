@@ -746,7 +746,9 @@ function resetGameState() {
     paused: false,
     pauseReason: "",
     elapsed: 0,
-    duration: 120,
+    duration: 360,
+    bossSpawned: false,
+    bossDefeated: false,
     player,
     enemies: [],
     xpDrops: [],
@@ -795,8 +797,7 @@ function update(dt) {
   const p = game.player;
   game.elapsed += dt;
   if (game.elapsed >= game.duration) {
-    endRun("Timer complete");
-    return;
+    spawnBoss();
   }
 
   movePlayer(p, dt);
@@ -839,6 +840,21 @@ function spawnEnemies(dt) {
   });
 }
 
+function spawnBoss() {
+  if (game.bossSpawned) return;
+  game.bossSpawned = true;
+  game.enemies.push({
+    boss: true,
+    x: canvas.width / 2,
+    y: -52,
+    radius: 38,
+    hp: 1400 + game.kills * 6,
+    maxHp: 1400 + game.kills * 6,
+    speed: 42,
+    touchTimer: 0,
+  });
+}
+
 function updateEnemies(dt) {
   const p = game.player;
   game.enemies.forEach((enemy) => {
@@ -849,8 +865,8 @@ function updateEnemies(dt) {
     enemy.y += (dy / dist) * enemy.speed * dt;
     enemy.touchTimer -= dt;
     if (dist < p.radius + enemy.radius && enemy.touchTimer <= 0) {
-      p.hp -= 9;
-      enemy.touchTimer = 0.55;
+      p.hp -= enemy.boss ? 22 : 9;
+      enemy.touchTimer = enemy.boss ? 0.8 : 0.55;
     }
   });
 }
@@ -1163,7 +1179,11 @@ function reapEnemies() {
   const dead = game.enemies.filter((enemy) => enemy.hp <= 0);
   dead.forEach((enemy) => {
     game.kills += 1;
-    game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: 7, value: 1 });
+    game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: enemy.boss ? 12 : 7, value: enemy.boss ? 8 : 1 });
+    if (enemy.boss) {
+      game.bossDefeated = true;
+      endRun("Boss defeated");
+    }
   });
   game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
 }
@@ -1338,10 +1358,18 @@ function drawPlayer(p) {
 }
 
 function drawEnemy(enemy) {
-  ctx.fillStyle = "#f06a78";
+  ctx.fillStyle = enemy.boss ? "#ff4f8b" : "#f06a78";
   ctx.beginPath();
   ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
   ctx.fill();
+  if (enemy.boss) {
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.fillStyle = "#f3f6fb";
+    ctx.font = "700 14px sans-serif";
+    ctx.fillText("BOSS", enemy.x - 19, enemy.y - enemy.radius - 10);
+  }
 }
 
 function drawXp(drop) {
@@ -1383,19 +1411,25 @@ function drawArea(area) {
 
 function drawGameHud() {
   const p = game.player;
+  const boss = game.enemies.find((enemy) => enemy.boss);
   ctx.fillStyle = "rgba(10, 14, 20, 0.74)";
-  ctx.fillRect(16, 16, 390, 106);
+  ctx.fillRect(16, 16, 430, boss ? 128 : 106);
   ctx.fillStyle = "#f3f6fb";
   ctx.font = "14px sans-serif";
   ctx.fillText(`Time: ${formatTime(game.elapsed)} / ${formatTime(game.duration)}`, 28, 40);
   ctx.fillText(`HP: ${Math.max(0, Math.ceil(p.hp))}/${p.maxHp}`, 28, 62);
   ctx.fillText(`Level: ${p.level} | XP: ${p.xp}/${p.xpToLevel} | Kills: ${game.kills}`, 28, 84);
   ctx.fillText(`Weapons: ${p.equippedWeapons.map((id) => weaponDefs[id].name).join(", ")}`, 28, 106);
+  if (boss) {
+    ctx.fillText(`Boss HP: ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}`, 28, 128);
+  }
 }
 
 function updateRunHud() {
   if (!game) return;
-  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}`;
+  const boss = game.enemies.find((enemy) => enemy.boss);
+  const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
+  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}`;
 }
 
 function openRunMenu() {

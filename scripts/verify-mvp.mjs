@@ -47,6 +47,8 @@ check("level-up choices are limited to 3 random options", game.includes("shuffle
 check("new combat upgrade types exist", game.includes("attack_radius") && game.includes("fire_rate") && game.includes("flat_damage") && game.includes("percent_damage"));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
 check("follow-up Laser quest opens", game.includes("laser_damage_5000"));
+check("run lasts 6 minutes before boss", game.includes("duration: 360") && game.includes("spawnBoss"));
+check("boss death completes run", game.includes('endRun("Boss defeated")') && game.includes("enemy.boss"));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
