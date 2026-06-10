@@ -69,6 +69,7 @@ button:disabled {
   z-index: 2;
   display: flex;
   gap: 6px;
+  pointer-events: auto;
 }
 
 .speed-button {

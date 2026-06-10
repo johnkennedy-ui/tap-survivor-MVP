@@ -1,0 +1,163 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import vm from "node:vm";
+
+const root = new URL("..", import.meta.url).pathname;
+const source = readFileSync(join(root, "src/game.js"), "utf8");
+const listeners = new Map();
+
+function makeClassList() {
+  const classes = new Set();
+  return {
+    add: (...names) => names.forEach((name) => classes.add(name)),
+    remove: (...names) => names.forEach((name) => classes.delete(name)),
+    contains: (name) => classes.has(name),
+    toggle: (name, force) => {
+      const shouldAdd = force ?? !classes.has(name);
+      if (shouldAdd) classes.add(name);
+      else classes.delete(name);
+      return shouldAdd;
+    },
+  };
+}
+
+function makeElement(id = "") {
+  return {
+    id,
+    dataset: {},
+    classList: makeClassList(),
+    children: [],
+    disabled: false,
+    innerHTML: "",
+    textContent: "",
+    style: {},
+    appendChild(child) {
+      this.children.push(child);
+    },
+    addEventListener(type, handler) {
+      listeners.set(`${id}:${type}`, handler);
+    },
+    setAttribute(name, value) {
+      this[name] = value;
+    },
+    click() {
+      listeners.get(`${id}:click`)?.({ target: this });
+    },
+  };
+}
+
+const elements = new Map();
+const ids = [
+  "game",
+  "startRun",
+  "resetSave",
+  "openMenu",
+  "closeMenu",
+  "closeLevelUp",
+  "runMenu",
+  "runHud",
+  "qpHud",
+  "menuQpHud",
+  "tree",
+  "menuTree",
+  "quests",
+  "menuQuests",
+  "levelUp",
+  "choices",
+  "endScreen",
+  "runStats",
+  "closeEnd",
+  "closeEndX",
+];
+
+ids.forEach((id) => elements.set(id, makeElement(id)));
+
+const context2d = {
+  clearRect() {},
+  fillRect() {},
+  strokeRect() {},
+  beginPath() {},
+  arc() {},
+  fill() {},
+  stroke() {},
+  moveTo() {},
+  lineTo() {},
+  closePath() {},
+  fillText() {},
+};
+
+const canvas = elements.get("game");
+canvas.width = 960;
+canvas.height = 540;
+canvas.getContext = () => context2d;
+canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 960, height: 540 });
+
+const speedButtons = [1, 2, 5].map((speed) => {
+  const button = makeElement(`speed-${speed}`);
+  button.dataset.speed = String(speed);
+  return button;
+});
+
+let rafCallback = null;
+const context = {
+  console,
+  Math,
+  Number,
+  performance: { now: () => 0 },
+  requestAnimationFrame: (callback) => {
+    rafCallback = callback;
+    return 1;
+  },
+  localStorage: {
+    store: new Map(),
+    getItem(key) {
+      return this.store.get(key) || null;
+    },
+    setItem(key, value) {
+      this.store.set(key, value);
+    },
+    removeItem(key) {
+      this.store.delete(key);
+    },
+  },
+  document: {
+    body: { dataset: {} },
+    getElementById(id) {
+      return elements.get(id);
+    },
+    querySelectorAll(selector) {
+      return selector === "[data-speed]" ? speedButtons : [];
+    },
+    createElement(tag) {
+      return makeElement(tag);
+    },
+  },
+};
+
+vm.createContext(context);
+vm.runInContext(source, context);
+
+function check(name, pass) {
+  console.log(`${pass ? "PASS" : "FAIL"} ${name}`);
+  if (!pass) process.exitCode = 1;
+}
+
+check("initial speed is x1", context.document.body.dataset.gameSpeed === "1");
+
+speedButtons[2].click();
+check("x5 click updates body speed", context.document.body.dataset.gameSpeed === "5");
+check("x5 click marks button pressed", speedButtons[2]["aria-pressed"] === "true");
+
+elements.get("startRun").click();
+for (let frame = 0; frame < 20; frame += 1) {
+  rafCallback(1000 + frame * 50);
+}
+check("x5 advances run HUD speed", elements.get("runHud").textContent.includes("Speed x5"));
+check("x5 advances elapsed game time", elements.get("runHud").textContent.includes("Time 0:05"));
+
+if (process.exitCode) {
+  console.error("\nSpeed control verification failed.");
+  process.exit(process.exitCode);
+}
+
+console.log("\nSpeed control click path verified.");

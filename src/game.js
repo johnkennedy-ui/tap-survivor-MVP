@@ -1848,7 +1848,10 @@ function drawGameHud() {
 }
 
 function updateRunHud() {
-  if (!game) return;
+  if (!game) {
+    ui.runHud.textContent = `Speed x${gameSpeed} | Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.`;
+    return;
+  }
   const boss = game.enemies.find((enemy) => enemy.boss);
   const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
   ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}`;
@@ -1901,10 +1904,15 @@ function loop(now) {
 }
 
 function setGameSpeed(speed) {
+  if (![1, 2, 5].includes(speed)) return;
   gameSpeed = speed;
+  document.body.dataset.gameSpeed = String(speed);
   ui.speedButtons.forEach((button) => {
-    button.classList.toggle("active", Number(button.dataset.speed) === speed);
+    const active = Number(button.dataset.speed) === speed;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
   });
+  updateRunHud();
 }
 
 function distance(a, b) {
@@ -1933,6 +1941,7 @@ ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
 ui.speedButtons.forEach((button) => {
   button.addEventListener("click", () => setGameSpeed(Number(button.dataset.speed)));
 });
+setGameSpeed(1);
 ui.resetSave.addEventListener("click", () => {
   localStorage.removeItem(saveKey);
   localStorage.removeItem("tap-survivor-mvp-save-v1");

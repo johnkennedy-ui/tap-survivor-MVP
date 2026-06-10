@@ -2,7 +2,8 @@
   "scripts": {
     "check:deploy": "node scripts/check-deploy.mjs",
     "audit:quests": "node scripts/audit-quests.mjs",
-    "test": "npm run audit:quests && node scripts/verify-mvp.mjs",
+    "test:speed": "node scripts/verify-speed-controls.mjs",
+    "test": "npm run audit:quests && node scripts/verify-mvp.mjs && npm run test:speed",
     "serve": "node scripts/serve-local.mjs"
   },
   "devDependencies": {}
