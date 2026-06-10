@@ -6,6 +6,28 @@ This folder contains the MVP plan and a small no-dependency browser prototype fo
 
 Open `index.html` in a browser.
 
+## Content Tooling
+
+Game content now lives in `content/tap-survivor-content.json`.
+Do not hand-edit `src/content.generated.js`; rebuild it from the JSON source.
+
+```bash
+npm run build:content
+npm run validate:content
+npm test
+```
+
+Scaffold common additions:
+
+```bash
+npm run add:content -- quest reaper_plus --name "Reaper Plus" --description "Defeat 900 enemies." --target 900 --reward 9 --group kill
+npm run add:content -- weapon star_lance --name "Star Lance" --description "Piercing lance projectile." --kind projectile --damage 34 --cooldown 1.1 --color "#ffffff" --unlock-cost 3 --branch Core --requires-node unlock_laser --requires-quest use_laser_run
+npm run add:content -- shop-item coin_magnet --name "Coin Magnet" --description "Pull coins from farther away." --kind upgrade --cost 250
+npm run add:content -- level late_swarm --name "Late Swarm" --starts-at 240 --enemies drifter,skitter,bulwark
+```
+
+After adding content, run `npm run build:content && npm test`.
+
 ## Phone Test
 
 The GitHub Pages workflow is defined in `.github/workflows/tap-survivor-pages.yml`.

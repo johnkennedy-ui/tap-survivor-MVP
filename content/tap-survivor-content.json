@@ -1,0 +1,581 @@
+{
+  "schemaVersion": 1,
+  "weapons": {
+    "spark_bolt": {
+      "name": "Spark Bolt",
+      "description": "Fast single-target projectile.",
+      "upgradeId": "spark_damage",
+      "cooldown": 0.55,
+      "damage": 12,
+      "kind": "projectile",
+      "speed": 420,
+      "radius": 5,
+      "color": "#ffd166"
+    },
+    "prism_beam": {
+      "name": "Prism Beam",
+      "description": "Piercing laser line.",
+      "upgradeId": "laser_damage",
+      "cooldown": 1.2,
+      "damage": 32,
+      "kind": "beam",
+      "range": 430,
+      "width": 24,
+      "color": "#b794ff",
+      "opensQuest": "use_laser_run"
+    },
+    "frost_orb": {
+      "name": "Frost Orb",
+      "description": "Slow projectile with heavier impact.",
+      "upgradeId": "frost_damage",
+      "cooldown": 0.95,
+      "damage": 22,
+      "kind": "projectile",
+      "speed": 300,
+      "radius": 8,
+      "color": "#8de7ff"
+    },
+    "flame_wave": {
+      "name": "Flame Wave",
+      "description": "Short cone that burns nearby enemies.",
+      "upgradeId": "flame_damage",
+      "cooldown": 1.15,
+      "damage": 26,
+      "kind": "cone",
+      "range": 210,
+      "width": 62,
+      "color": "#ff8a4c"
+    },
+    "saw_drone": {
+      "name": "Saw Drone",
+      "description": "Close-range rotating damage pulse.",
+      "upgradeId": "saw_damage",
+      "cooldown": 0.75,
+      "damage": 18,
+      "kind": "radial",
+      "range": 92,
+      "color": "#d8dde8"
+    },
+    "void_mine": {
+      "name": "Void Mine",
+      "description": "Drops a delayed trap at your feet.",
+      "upgradeId": "void_damage",
+      "cooldown": 1.65,
+      "damage": 36,
+      "kind": "mine",
+      "range": 86,
+      "color": "#7964ff"
+    },
+    "chain_spark": {
+      "name": "Chain Spark",
+      "description": "Jumps through several nearby enemies.",
+      "upgradeId": "chain_damage",
+      "cooldown": 1.05,
+      "damage": 18,
+      "kind": "chain",
+      "jumps": 4,
+      "range": 280,
+      "color": "#f6f871"
+    },
+    "moon_glaive": {
+      "name": "Moon Glaive",
+      "description": "Large piercing blade projectile.",
+      "upgradeId": "glaive_damage",
+      "cooldown": 1.35,
+      "damage": 30,
+      "kind": "projectile",
+      "speed": 250,
+      "radius": 12,
+      "pierce": 3,
+      "color": "#b7f7d4"
+    },
+    "meteor_pin": {
+      "name": "Meteor Pin",
+      "description": "Calls a strike on the nearest enemy.",
+      "upgradeId": "meteor_damage",
+      "cooldown": 1.8,
+      "damage": 44,
+      "kind": "target_area",
+      "range": 72,
+      "color": "#ff5f56"
+    },
+    "acid_pool": {
+      "name": "Acid Pool",
+      "description": "Leaves a damaging patch under enemies.",
+      "upgradeId": "acid_damage",
+      "cooldown": 1.55,
+      "damage": 12,
+      "kind": "lingering_area",
+      "range": 86,
+      "duration": 2.4,
+      "tick": 0.45,
+      "color": "#9be564"
+    },
+    "shield_pulse": {
+      "name": "Shield Pulse",
+      "description": "Reliable personal-space burst.",
+      "upgradeId": "shield_damage",
+      "cooldown": 1.25,
+      "damage": 24,
+      "kind": "radial",
+      "range": 128,
+      "color": "#64b5ff"
+    },
+    "nova_burst": {
+      "name": "Nova Burst",
+      "description": "Slow, wide blast around the player.",
+      "upgradeId": "nova_damage",
+      "cooldown": 2.2,
+      "damage": 42,
+      "kind": "radial",
+      "range": 170,
+      "color": "#ff74c8"
+    }
+  },
+  "weaponUnlocks": [
+    {
+      "id": "unlock_laser",
+      "weaponId": "prism_beam",
+      "cost": 1,
+      "branch": "Core",
+      "requiresQuest": "spark_bolt_mastery",
+      "opensQuest": "use_laser_run"
+    },
+    {
+      "id": "unlock_frost_orb",
+      "weaponId": "frost_orb",
+      "cost": 1,
+      "branch": "Control",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "frost_orb_mastery"
+    },
+    {
+      "id": "unlock_flame_wave",
+      "weaponId": "flame_wave",
+      "cost": 1,
+      "branch": "Area",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "flame_wave_mastery"
+    },
+    {
+      "id": "unlock_chain_spark",
+      "weaponId": "chain_spark",
+      "cost": 1,
+      "branch": "Arc",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "chain_spark_mastery"
+    },
+    {
+      "id": "unlock_void_mine",
+      "weaponId": "void_mine",
+      "cost": 2,
+      "branch": "Control",
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "frost_orb_mastery",
+      "opensQuest": "void_mine_mastery"
+    },
+    {
+      "id": "unlock_acid_pool",
+      "weaponId": "acid_pool",
+      "cost": 2,
+      "branch": "Control",
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "frost_orb_mastery",
+      "opensQuest": "acid_pool_mastery"
+    },
+    {
+      "id": "unlock_saw_drone",
+      "weaponId": "saw_drone",
+      "cost": 2,
+      "branch": "Area",
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "flame_wave_mastery",
+      "opensQuest": "saw_drone_mastery"
+    },
+    {
+      "id": "unlock_shield_pulse",
+      "weaponId": "shield_pulse",
+      "cost": 2,
+      "branch": "Area",
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "flame_wave_mastery",
+      "opensQuest": "shield_pulse_mastery"
+    },
+    {
+      "id": "unlock_moon_glaive",
+      "weaponId": "moon_glaive",
+      "cost": 2,
+      "branch": "Arc",
+      "requiresNode": "unlock_chain_spark",
+      "requiresQuest": "chain_spark_mastery",
+      "opensQuest": "moon_glaive_mastery"
+    },
+    {
+      "id": "unlock_meteor_pin",
+      "weaponId": "meteor_pin",
+      "cost": 3,
+      "branch": "Arc",
+      "requiresNode": "unlock_moon_glaive",
+      "requiresQuest": "moon_glaive_mastery",
+      "opensQuest": "meteor_pin_mastery"
+    },
+    {
+      "id": "unlock_nova_burst",
+      "weaponId": "nova_burst",
+      "cost": 3,
+      "branch": "Core",
+      "requiresNode": "unlock_shield_pulse",
+      "requiresQuest": "shield_pulse_mastery",
+      "opensQuest": "nova_burst_mastery"
+    }
+  ],
+  "quests": {
+    "spark_bolt_mastery": {
+      "name": "Spark Basics",
+      "description": "Deal 300 damage with Spark Bolt.",
+      "weaponId": "spark_bolt",
+      "target": 300,
+      "rewardQp": 1,
+      "opensQuest": "heavy_hits"
+    },
+    "first_blood": {
+      "name": "First Blood",
+      "description": "Defeat 15 enemies.",
+      "target": 15,
+      "rewardQp": 1,
+      "opensQuest": "crowd_control"
+    },
+    "gatherer": {
+      "name": "Field Gatherer",
+      "description": "Collect 25 XP gems.",
+      "target": 25,
+      "rewardQp": 1,
+      "opensQuest": "rapid_growth",
+      "opensQuests": [
+        "gem_hoarder"
+      ]
+    },
+    "survivor_60": {
+      "name": "Hold the Line",
+      "description": "Survive for 60 seconds.",
+      "target": 60,
+      "rewardQp": 1,
+      "opensQuest": "survivor_180"
+    },
+    "crowd_control": {
+      "name": "Crowd Control",
+      "description": "Defeat 50 enemies.",
+      "target": 50,
+      "rewardQp": 2,
+      "opensQuest": "exterminator"
+    },
+    "rapid_growth": {
+      "name": "Rapid Growth",
+      "description": "Gain 4 levels.",
+      "target": 4,
+      "rewardQp": 2,
+      "opensQuest": "power_climb"
+    },
+    "heavy_hits": {
+      "name": "Heavy Hits",
+      "description": "Deal 2,500 total weapon damage.",
+      "target": 2500,
+      "rewardQp": 2,
+      "opensQuest": "damage_dealer"
+    },
+    "survivor_180": {
+      "name": "Long Stand",
+      "description": "Survive for 180 seconds.",
+      "target": 180,
+      "rewardQp": 2,
+      "opensQuest": "survivor_300"
+    },
+    "survivor_300": {
+      "name": "Five-Minute Stand",
+      "description": "Survive for 300 seconds.",
+      "target": 300,
+      "rewardQp": 3,
+      "opensQuest": "survivor_420"
+    },
+    "survivor_420": {
+      "name": "Overtime Stand",
+      "description": "Survive for 420 seconds.",
+      "target": 420,
+      "rewardQp": 6
+    },
+    "exterminator": {
+      "name": "Exterminator",
+      "description": "Defeat 150 enemies.",
+      "target": 150,
+      "rewardQp": 3,
+      "opensQuest": "reaper"
+    },
+    "reaper": {
+      "name": "Reaper",
+      "description": "Defeat 350 enemies.",
+      "target": 350,
+      "rewardQp": 4,
+      "opensQuest": "warlord"
+    },
+    "warlord": {
+      "name": "Warlord",
+      "description": "Defeat 600 enemies.",
+      "target": 600,
+      "rewardQp": 7
+    },
+    "power_climb": {
+      "name": "Power Climb",
+      "description": "Gain 8 levels.",
+      "target": 8,
+      "rewardQp": 3,
+      "opensQuest": "apex_growth"
+    },
+    "apex_growth": {
+      "name": "Apex Growth",
+      "description": "Gain 12 levels.",
+      "target": 12,
+      "rewardQp": 4,
+      "opensQuest": "transcendent_growth"
+    },
+    "transcendent_growth": {
+      "name": "Transcendent Growth",
+      "description": "Gain 16 levels.",
+      "target": 16,
+      "rewardQp": 6
+    },
+    "damage_dealer": {
+      "name": "Damage Dealer",
+      "description": "Deal 10,000 total weapon damage.",
+      "target": 10000,
+      "rewardQp": 3,
+      "opensQuest": "apocalypse_damage"
+    },
+    "apocalypse_damage": {
+      "name": "Apocalypse Damage",
+      "description": "Deal 25,000 total weapon damage.",
+      "target": 25000,
+      "rewardQp": 4,
+      "opensQuest": "worldbreaker_damage"
+    },
+    "worldbreaker_damage": {
+      "name": "Worldbreaker Damage",
+      "description": "Deal 50,000 total weapon damage.",
+      "target": 50000,
+      "rewardQp": 7
+    },
+    "gem_hoarder": {
+      "name": "Gem Hoarder",
+      "description": "Collect 75 XP gems.",
+      "target": 75,
+      "rewardQp": 2,
+      "opensQuest": "gem_flood"
+    },
+    "gem_flood": {
+      "name": "Gem Flood",
+      "description": "Collect 150 XP gems.",
+      "target": 150,
+      "rewardQp": 3,
+      "opensQuest": "gem_storm"
+    },
+    "gem_storm": {
+      "name": "Gem Storm",
+      "description": "Collect 300 XP gems.",
+      "target": 300,
+      "rewardQp": 5
+    },
+    "use_laser_run": {
+      "name": "Use Laser in a run",
+      "description": "Fire Prism Beam during a run.",
+      "weaponId": "prism_beam",
+      "target": 1,
+      "rewardQp": 2
+    },
+    "laser_damage_5000": {
+      "name": "Deal 5,000 damage with Laser",
+      "description": "Deal 5,000 total damage with Prism Beam.",
+      "weaponId": "prism_beam",
+      "target": 5000,
+      "rewardQp": 2
+    },
+    "frost_orb_mastery": {
+      "name": "Frost Control",
+      "description": "Deal 350 damage with Frost Orb.",
+      "weaponId": "frost_orb",
+      "target": 350,
+      "rewardQp": 2
+    },
+    "flame_wave_mastery": {
+      "name": "Flame Sweep",
+      "description": "Deal 350 damage with Flame Wave.",
+      "weaponId": "flame_wave",
+      "target": 350,
+      "rewardQp": 2
+    },
+    "chain_spark_mastery": {
+      "name": "Arc Current",
+      "description": "Deal 350 damage with Chain Spark.",
+      "weaponId": "chain_spark",
+      "target": 350,
+      "rewardQp": 2
+    },
+    "void_mine_mastery": {
+      "name": "Trap Field",
+      "description": "Deal 500 damage with Void Mine.",
+      "weaponId": "void_mine",
+      "target": 500,
+      "rewardQp": 2
+    },
+    "acid_pool_mastery": {
+      "name": "Corrosion Field",
+      "description": "Deal 500 damage with Acid Pool.",
+      "weaponId": "acid_pool",
+      "target": 500,
+      "rewardQp": 2
+    },
+    "saw_drone_mastery": {
+      "name": "Close Orbit",
+      "description": "Deal 500 damage with Saw Drone.",
+      "weaponId": "saw_drone",
+      "target": 500,
+      "rewardQp": 2
+    },
+    "shield_pulse_mastery": {
+      "name": "Pulse Guard",
+      "description": "Deal 500 damage with Shield Pulse.",
+      "weaponId": "shield_pulse",
+      "target": 500,
+      "rewardQp": 2
+    },
+    "moon_glaive_mastery": {
+      "name": "Lunar Cut",
+      "description": "Deal 650 damage with Moon Glaive.",
+      "weaponId": "moon_glaive",
+      "target": 650,
+      "rewardQp": 3
+    },
+    "meteor_pin_mastery": {
+      "name": "Meteor Mark",
+      "description": "Deal 800 damage with Meteor Pin.",
+      "weaponId": "meteor_pin",
+      "target": 800,
+      "rewardQp": 3
+    },
+    "nova_burst_mastery": {
+      "name": "Nova Core",
+      "description": "Deal 1,000 damage with Nova Burst.",
+      "weaponId": "nova_burst",
+      "target": 1000,
+      "rewardQp": 4
+    },
+    "boss_hunter": {
+      "name": "Boss Hunter",
+      "description": "Defeat the 6-minute boss.",
+      "target": 1,
+      "rewardQp": 4,
+      "opensQuest": "boss_slayer"
+    },
+    "boss_slayer": {
+      "name": "Boss Slayer",
+      "description": "Defeat 3 bosses.",
+      "target": 3,
+      "rewardQp": 6,
+      "opensQuest": "boss_reaper"
+    },
+    "boss_reaper": {
+      "name": "Boss Reaper",
+      "description": "Defeat 5 bosses.",
+      "target": 5,
+      "rewardQp": 8
+    }
+  },
+  "questGroups": {
+    "starter": [
+      "spark_bolt_mastery",
+      "first_blood",
+      "gatherer",
+      "survivor_60"
+    ],
+    "kill": [
+      "first_blood",
+      "crowd_control",
+      "exterminator",
+      "reaper",
+      "warlord"
+    ],
+    "damage": [
+      "heavy_hits",
+      "damage_dealer",
+      "apocalypse_damage",
+      "worldbreaker_damage"
+    ],
+    "survival": [
+      "survivor_60",
+      "survivor_180",
+      "survivor_300",
+      "survivor_420"
+    ],
+    "xp": [
+      "gatherer",
+      "gem_hoarder",
+      "gem_flood",
+      "gem_storm"
+    ],
+    "level": [
+      "rapid_growth",
+      "power_climb",
+      "apex_growth",
+      "transcendent_growth"
+    ],
+    "boss": [
+      "boss_hunter",
+      "boss_slayer",
+      "boss_reaper"
+    ]
+  },
+  "enemyTypes": [
+    {
+      "id": "drifter",
+      "name": "Drifter",
+      "color": "#f06a78",
+      "radius": 13,
+      "hp": 18,
+      "hpScale": 0.12,
+      "speed": 52,
+      "speedScale": 0.08,
+      "damage": 9,
+      "touchCooldown": 0.55,
+      "xp": 1
+    },
+    {
+      "id": "skitter",
+      "name": "Skitter",
+      "color": "#ffd166",
+      "radius": 9,
+      "hp": 11,
+      "hpScale": 0.08,
+      "speed": 94,
+      "speedScale": 0.12,
+      "damage": 7,
+      "touchCooldown": 0.38,
+      "xp": 1
+    },
+    {
+      "id": "bulwark",
+      "name": "Bulwark",
+      "color": "#8de7ff",
+      "radius": 20,
+      "hp": 56,
+      "hpScale": 0.2,
+      "speed": 34,
+      "speedScale": 0.04,
+      "damage": 14,
+      "touchCooldown": 0.75,
+      "xp": 2
+    }
+  ],
+  "shopItems": [],
+  "levels": []
+}

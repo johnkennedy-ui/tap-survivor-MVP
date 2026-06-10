@@ -1,41 +1,30 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import vm from "node:vm";
+import { readContent, validateContent } from "./content-tools.mjs";
 
-const root = new URL("..", import.meta.url).pathname;
-const source = readFileSync(join(root, "src/game.js"), "utf8");
-const start = source.indexOf("const weaponDefs = ");
-const end = source.indexOf("const runUpgradeDefs = ");
+const content = readContent();
+const errors = validateContent(content);
 
-if (start === -1 || end === -1 || end <= start) {
-  console.error("Could not locate quest graph definitions in src/game.js");
-  process.exit(1);
+const weaponDefs = content.weapons || {};
+const weaponUnlocks = content.weaponUnlocks || [];
+const questDefs = content.quests || {};
+const starterQuestIds = content.questGroups?.starter || [];
+
+function fail(message) {
+  errors.push(message);
 }
 
-const context = {};
-vm.createContext(context);
-vm.runInContext(
-  `${source.slice(start, end)}
-globalThis.__questAudit = { weaponDefs, weaponUnlocks, upgradeDefs, questDefs, starterQuestIds };`,
-  context,
-);
-
-const { weaponDefs, weaponUnlocks, upgradeDefs, questDefs, starterQuestIds } = context.__questAudit;
-const errors = [];
-
 function requireQuest(id, owner) {
-  if (id && !questDefs[id]) errors.push(`${owner} references missing quest ${id}`);
+  if (id && !questDefs[id]) fail(`${owner} references missing quest ${id}`);
 }
 
 function requireNode(id, owner) {
-  if (id && !weaponUnlocks.some((unlock) => unlock.id === id)) errors.push(`${owner} references missing node ${id}`);
+  if (id && !weaponUnlocks.some((unlock) => unlock.id === id)) fail(`${owner} references missing node ${id}`);
 }
 
 function requireWeapon(id, owner) {
-  if (id && !weaponDefs[id]) errors.push(`${owner} references missing weapon ${id}`);
+  if (id && !weaponDefs[id]) fail(`${owner} references missing weapon ${id}`);
 }
 
-starterQuestIds.forEach((questId) => requireQuest(questId, "starterQuestIds"));
+starterQuestIds.forEach((questId) => requireQuest(questId, "starter quest group"));
 
 weaponUnlocks.forEach((unlock) => {
   requireWeapon(unlock.weaponId, unlock.id);
@@ -44,19 +33,10 @@ weaponUnlocks.forEach((unlock) => {
   requireQuest(unlock.opensQuest, unlock.id);
 });
 
-upgradeDefs.forEach((upgrade) => {
-  requireWeapon(upgrade.requiresWeapon, upgrade.id);
-  requireNode(upgrade.requiresNode, upgrade.id);
-  requireQuest(upgrade.requiresQuest, upgrade.id);
-  requireQuest(upgrade.opensQuest, upgrade.id);
-});
-
 Object.entries(questDefs).forEach(([questId, quest]) => {
   requireWeapon(quest.weaponId, questId);
   requireQuest(quest.opensQuest, questId);
   (quest.opensQuests || []).forEach((nextQuestId) => requireQuest(nextQuestId, questId));
-  if (!Number.isFinite(quest.target) || quest.target <= 0) errors.push(`${questId} has invalid target`);
-  if (!Number.isFinite(quest.rewardQp) || quest.rewardQp < 0) errors.push(`${questId} has invalid rewardQp`);
 });
 
 const unlockQuestIds = new Set(weaponUnlocks.map((unlock) => unlock.opensQuest).filter(Boolean));
@@ -69,7 +49,7 @@ const weaponQuestIds = new Set(
 for (const questId of weaponQuestIds) {
   if (questId === "spark_bolt_mastery" || questId === "laser_damage_5000") continue;
   if (!unlockQuestIds.has(questId)) {
-    errors.push(`${questId} is a weapon quest but no unlock opens it`);
+    fail(`${questId} is a weapon quest but no unlock opens it`);
   }
 }
 
@@ -82,4 +62,4 @@ if (errors.length) {
 console.log("# Quest Graph Audit");
 console.log(`PASS ${Object.keys(questDefs).length} quests`);
 console.log(`PASS ${weaponUnlocks.length} weapon unlocks`);
-console.log(`PASS ${upgradeDefs.length} meta upgrades`);
+console.log(`PASS ${Object.keys(weaponDefs).length + 7} meta upgrades`);

@@ -1,0 +1,150 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+export const root = new URL("..", import.meta.url).pathname;
+export const contentPath = join(root, "content/tap-survivor-content.json");
+
+export function readContent() {
+  return JSON.parse(readFileSync(contentPath, "utf8"));
+}
+
+export function writeContent(content) {
+  writeFileSync(contentPath, `${JSON.stringify(content, null, 2)}\n`);
+}
+
+export function validateContent(content) {
+  const errors = [];
+  const weapons = content.weapons || {};
+  const weaponUnlocks = content.weaponUnlocks || [];
+  const quests = content.quests || {};
+  const questGroups = content.questGroups || {};
+  const enemyTypes = content.enemyTypes || [];
+  const shopItems = content.shopItems || [];
+  const levels = content.levels || [];
+
+  const seenUnlocks = new Set();
+  const seenEnemies = new Set();
+  const seenShopItems = new Set();
+  const seenLevels = new Set();
+
+  function fail(message) {
+    errors.push(message);
+  }
+
+  function requireObject(value, owner) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${owner} must be an object`);
+  }
+
+  function requireArray(value, owner) {
+    if (!Array.isArray(value)) fail(`${owner} must be an array`);
+  }
+
+  function requireNumber(value, owner, min = 0) {
+    if (!Number.isFinite(value) || value < min) fail(`${owner} must be a number >= ${min}`);
+  }
+
+  function requireString(value, owner) {
+    if (!value || typeof value !== "string") fail(`${owner} must be a non-empty string`);
+  }
+
+  requireObject(content, "content");
+  requireObject(weapons, "weapons");
+  requireArray(weaponUnlocks, "weaponUnlocks");
+  requireObject(quests, "quests");
+  requireObject(questGroups, "questGroups");
+  requireArray(enemyTypes, "enemyTypes");
+  requireArray(shopItems, "shopItems");
+  requireArray(levels, "levels");
+
+  Object.entries(weapons).forEach(([id, weapon]) => {
+    requireString(id, "weapon id");
+    requireString(weapon.name, `weapon ${id}.name`);
+    requireString(weapon.description, `weapon ${id}.description`);
+    requireString(weapon.kind, `weapon ${id}.kind`);
+    requireString(weapon.upgradeId, `weapon ${id}.upgradeId`);
+    requireNumber(weapon.cooldown, `weapon ${id}.cooldown`, 0.01);
+    requireNumber(weapon.damage, `weapon ${id}.damage`, 0);
+  });
+
+  weaponUnlocks.forEach((unlock) => {
+    requireString(unlock.id, "weaponUnlock.id");
+    if (seenUnlocks.has(unlock.id)) fail(`duplicate weapon unlock ${unlock.id}`);
+    seenUnlocks.add(unlock.id);
+    if (!weapons[unlock.weaponId]) fail(`${unlock.id} references missing weapon ${unlock.weaponId}`);
+    if (unlock.requiresNode && !weaponUnlocks.some((item) => item.id === unlock.requiresNode)) {
+      fail(`${unlock.id} references missing requiresNode ${unlock.requiresNode}`);
+    }
+    if (unlock.requiresQuest && !quests[unlock.requiresQuest]) {
+      fail(`${unlock.id} references missing requiresQuest ${unlock.requiresQuest}`);
+    }
+    if (unlock.opensQuest && !quests[unlock.opensQuest]) {
+      fail(`${unlock.id} references missing opensQuest ${unlock.opensQuest}`);
+    }
+    requireNumber(unlock.cost, `${unlock.id}.cost`, 0);
+  });
+
+  Object.entries(quests).forEach(([id, quest]) => {
+    requireString(quest.name, `quest ${id}.name`);
+    requireString(quest.description, `quest ${id}.description`);
+    requireNumber(quest.target, `quest ${id}.target`, 1);
+    requireNumber(quest.rewardQp, `quest ${id}.rewardQp`, 0);
+    if (quest.weaponId && !weapons[quest.weaponId]) fail(`${id} references missing weapon ${quest.weaponId}`);
+    if (quest.opensQuest && !quests[quest.opensQuest]) fail(`${id} references missing opensQuest ${quest.opensQuest}`);
+    (quest.opensQuests || []).forEach((nextQuestId) => {
+      if (!quests[nextQuestId]) fail(`${id} references missing opensQuests item ${nextQuestId}`);
+    });
+  });
+
+  Object.entries(questGroups).forEach(([group, ids]) => {
+    requireArray(ids, `questGroups.${group}`);
+    ids.forEach((questId) => {
+      if (!quests[questId]) fail(`questGroups.${group} references missing quest ${questId}`);
+    });
+  });
+
+  enemyTypes.forEach((enemy) => {
+    requireString(enemy.id, "enemy.id");
+    if (seenEnemies.has(enemy.id)) fail(`duplicate enemy ${enemy.id}`);
+    seenEnemies.add(enemy.id);
+    ["name", "color"].forEach((field) => requireString(enemy[field], `enemy ${enemy.id}.${field}`));
+    ["radius", "hp", "speed", "damage", "xp"].forEach((field) => requireNumber(enemy[field], `enemy ${enemy.id}.${field}`, 0));
+  });
+
+  shopItems.forEach((item) => {
+    requireString(item.id, "shopItem.id");
+    if (seenShopItems.has(item.id)) fail(`duplicate shop item ${item.id}`);
+    seenShopItems.add(item.id);
+    ["name", "description", "kind"].forEach((field) => requireString(item[field], `shopItem ${item.id}.${field}`));
+    requireNumber(item.cost, `shopItem ${item.id}.cost`, 0);
+  });
+
+  levels.forEach((level) => {
+    requireString(level.id, "level.id");
+    if (seenLevels.has(level.id)) fail(`duplicate level ${level.id}`);
+    seenLevels.add(level.id);
+    requireString(level.name, `level ${level.id}.name`);
+    requireNumber(level.startsAt, `level ${level.id}.startsAt`, 0);
+  });
+
+  return errors;
+}
+
+export function parseArgs(args) {
+  const parsed = { _: [] };
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (!arg.startsWith("--")) {
+      parsed._.push(arg);
+      continue;
+    }
+    const key = arg.slice(2);
+    const next = args[index + 1];
+    if (!next || next.startsWith("--")) {
+      parsed[key] = true;
+      continue;
+    }
+    parsed[key] = next;
+    index += 1;
+  }
+  return parsed;
+}

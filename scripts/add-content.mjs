@@ -1,0 +1,119 @@
+import { readContent, writeContent, parseArgs, validateContent } from "./content-tools.mjs";
+
+const args = parseArgs(process.argv.slice(2));
+const [type, id] = args._;
+
+function usage() {
+  console.log(`Usage:
+  node scripts/add-content.mjs quest <id> --name "Name" --description "Do thing" --target 100 --reward 2 --group kill [--weapon spark_bolt] [--opens next_id]
+  node scripts/add-content.mjs weapon <id> --name "Name" --description "Weapon text" --kind projectile --damage 20 --cooldown 1 --color "#ffffff" --unlock-cost 2 --branch Core [--requires-node unlock_laser] [--requires-quest use_laser_run]
+  node scripts/add-content.mjs shop-item <id> --name "Name" --description "Item text" --kind upgrade --cost 100
+  node scripts/add-content.mjs level <id> --name "Name" --starts-at 120`);
+}
+
+function requireValue(name) {
+  const value = args[name];
+  if (value === undefined || value === true || value === "") {
+    throw new Error(`Missing --${name}`);
+  }
+  return value;
+}
+
+function numberValue(name, fallback = undefined) {
+  const raw = args[name];
+  if (raw === undefined) return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) throw new Error(`--${name} must be a number`);
+  return value;
+}
+
+try {
+  if (!type || !id || args.help) {
+    usage();
+    process.exit(type || args.help ? 0 : 1);
+  }
+
+  const content = readContent();
+  content.weapons ||= {};
+  content.weaponUnlocks ||= [];
+  content.quests ||= {};
+  content.questGroups ||= {};
+  content.enemyTypes ||= [];
+  content.shopItems ||= [];
+  content.levels ||= [];
+
+  if (type === "quest") {
+    if (content.quests[id]) throw new Error(`Quest already exists: ${id}`);
+    const group = args.group;
+    content.quests[id] = {
+      name: requireValue("name"),
+      description: requireValue("description"),
+      ...(args.weapon ? { weaponId: args.weapon } : {}),
+      target: numberValue("target"),
+      rewardQp: numberValue("reward"),
+      ...(args.opens ? { opensQuest: args.opens } : {}),
+    };
+    if (group) {
+      content.questGroups[group] ||= [];
+      if (!content.questGroups[group].includes(id)) content.questGroups[group].push(id);
+    }
+  } else if (type === "weapon") {
+    if (content.weapons[id]) throw new Error(`Weapon already exists: ${id}`);
+    const unlockId = args["unlock-id"] || `unlock_${id}`;
+    content.weapons[id] = {
+      name: requireValue("name"),
+      description: requireValue("description"),
+      upgradeId: args["upgrade-id"] || `${id}_damage`,
+      cooldown: numberValue("cooldown", 1),
+      damage: numberValue("damage", 10),
+      kind: requireValue("kind"),
+      speed: numberValue("speed", 320),
+      radius: numberValue("radius", 8),
+      color: args.color || "#ffffff",
+    };
+    content.weaponUnlocks.push({
+      id: unlockId,
+      weaponId: id,
+      cost: numberValue("unlock-cost", 1),
+      branch: args.branch || "Core",
+      ...(args["requires-node"] ? { requiresNode: args["requires-node"] } : {}),
+      ...(args["requires-quest"] ? { requiresQuest: args["requires-quest"] } : {}),
+      ...(args["opens-quest"] ? { opensQuest: args["opens-quest"] } : {}),
+    });
+  } else if (type === "shop-item") {
+    if (content.shopItems.some((item) => item.id === id)) throw new Error(`Shop item already exists: ${id}`);
+    content.shopItems.push({
+      id,
+      name: requireValue("name"),
+      description: requireValue("description"),
+      kind: requireValue("kind"),
+      cost: numberValue("cost"),
+      effect: args.effect || "",
+      value: numberValue("value", 0),
+    });
+  } else if (type === "level") {
+    if (content.levels.some((level) => level.id === id)) throw new Error(`Level already exists: ${id}`);
+    content.levels.push({
+      id,
+      name: requireValue("name"),
+      startsAt: numberValue("starts-at"),
+      enemyIds: args.enemies ? args.enemies.split(",").filter(Boolean) : [],
+      notes: args.notes || "",
+    });
+  } else {
+    throw new Error(`Unknown content type: ${type}`);
+  }
+
+  const errors = validateContent(content);
+  if (errors.length) {
+    throw new Error(errors.join("\n"));
+  }
+
+  writeContent(content);
+  console.log(`PASS added ${type} ${id}`);
+  console.log("Run: npm run build:content && npm test");
+} catch (error) {
+  console.error(`FAIL ${error.message}`);
+  usage();
+  process.exit(1);
+}
