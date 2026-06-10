@@ -37,6 +37,10 @@ check("enemy types unlock every 30 seconds", game.includes("Math.floor(game.elap
 check("enemy spawns are doubled and patterned", game.includes("spawnPatternPositions(2)") && game.includes("spawnEnemy(type, position)"));
 check("auto attack loop exists", game.includes("updateWeapons") && game.includes("fireWeapon"));
 check("XP drops exist", game.includes("xpDrops") && game.includes("collectXp"));
+check("coin and heart drops exist", game.includes("lootDrops") && game.includes("spawnLootDrops") && game.includes('type: "coin"') && game.includes('type: "heart"'));
+check("coins persist in save", game.includes("coins: 0") && game.includes("save.coins +=") && game.includes("persist()"));
+check("heart drops heal player", game.includes('drop.type === "heart"') && game.includes("game.player.hp = Math.min(game.player.maxHp"));
+check("player HP bar renders above sprite", game.includes("drawPlayerHpBar") && game.includes("p.y - p.radius - 16"));
 check("level-up choices exist", game.includes("showLevelUp") && game.includes("Prism Beam"));
 check("Laser weapon exists", game.includes("fireBeam") && game.includes("prism_beam"));
 check("10 new weapons exist", (game.match(/id: "unlock_(frost_orb|flame_wave|saw_drone|void_mine|chain_spark|moon_glaive|meteor_pin|acid_pool|shield_pulse|nova_burst)"/g) || []).length === 10);

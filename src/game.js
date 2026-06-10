@@ -649,6 +649,7 @@ let lastFrame = performance.now();
 
 function defaultSave() {
   return {
+    coins: 0,
     questPoints: 0,
     totalQuestPoints: 0,
     unlockedNodes: [],
@@ -674,6 +675,7 @@ function loadSave() {
 function normalizeSave(input) {
   const normalized = { ...defaultSave(), ...input };
   normalized.unlockedWeapons = [...new Set(["spark_bolt", ...(normalized.unlockedWeapons || [])])];
+  normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
   normalized.unlockedNodes = normalized.unlockedNodes || [];
   normalized.upgradeTiers = normalized.upgradeTiers || {};
   normalized.activeQuests = normalized.activeQuests || [];
@@ -829,7 +831,7 @@ function buyUpgrade(upgrade) {
 }
 
 function renderMeta() {
-  const qpText = `Quest Points: ${save.questPoints} available, ${save.totalQuestPoints} earned.`;
+  const qpText = `Coins: ${save.coins} | Quest Points: ${save.questPoints} available, ${save.totalQuestPoints} earned.`;
   ui.qpHud.textContent = qpText;
   ui.menuQpHud.textContent = qpText;
 
@@ -956,6 +958,7 @@ function resetGameState() {
     player,
     enemies: [],
     xpDrops: [],
+    lootDrops: [],
     bolts: [],
     beams: [],
     areas: [],
@@ -988,6 +991,7 @@ function endRun(reason) {
     <p>Enemies defeated: ${game.kills}</p>
     <p>Level reached: ${game.player.level}</p>
     <p>XP collected: ${game.xpCollected}</p>
+    <p>Coins banked: ${save.coins}</p>
     <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
     <p>Quest Points: ${save.questPoints} available</p>
   `;
@@ -1013,6 +1017,7 @@ function update(dt) {
   updateAreas(dt);
   updateBeams(dt);
   updateXpDrops();
+  updateLootDrops();
 
   if (p.hp <= 0) endRun("Player defeated");
 }
@@ -1427,6 +1432,7 @@ function reapEnemies() {
     game.kills += 1;
     addQuestProgressGroup(killQuestIds, 1);
     game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: enemy.boss ? 12 : 7, value: enemy.boss ? 8 : enemy.xp });
+    spawnLootDrops(enemy);
     if (enemy.boss) {
       game.bossDefeated = true;
       addQuestProgress("boss_hunter", 1);
@@ -1434,6 +1440,27 @@ function reapEnemies() {
     }
   });
   game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
+}
+
+function spawnLootDrops(enemy) {
+  if (enemy.boss || Math.random() < 0.34) {
+    game.lootDrops.push({
+      type: "coin",
+      x: enemy.x + randomRange(-10, 10),
+      y: enemy.y + randomRange(-10, 10),
+      radius: enemy.boss ? 10 : 7,
+      value: enemy.boss ? 12 : 1,
+    });
+  }
+  if (enemy.boss || Math.random() < 0.12) {
+    game.lootDrops.push({
+      type: "heart",
+      x: enemy.x + randomRange(-12, 12),
+      y: enemy.y + randomRange(-12, 12),
+      radius: enemy.boss ? 11 : 8,
+      value: enemy.boss ? 40 : 22,
+    });
+  }
 }
 
 function updateXpDrops() {
@@ -1452,6 +1479,35 @@ function updateXpDrops() {
     }
   });
   game.xpDrops = game.xpDrops.filter((drop) => !drop.collected);
+}
+
+function updateLootDrops() {
+  const p = game.player;
+  game.lootDrops.forEach((drop) => {
+    if (distance(p, drop) < p.pickupRadius) {
+      const dx = p.x - drop.x;
+      const dy = p.y - drop.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      drop.x += (dx / dist) * 9;
+      drop.y += (dy / dist) * 9;
+    }
+    if (distance(p, drop) < p.radius + drop.radius) {
+      drop.collected = true;
+      collectLoot(drop);
+    }
+  });
+  game.lootDrops = game.lootDrops.filter((drop) => !drop.collected);
+}
+
+function collectLoot(drop) {
+  if (drop.type === "coin") {
+    save.coins += drop.value;
+    persist();
+    renderMeta();
+  }
+  if (drop.type === "heart") {
+    game.player.hp = Math.min(game.player.maxHp, game.player.hp + drop.value);
+  }
 }
 
 function collectXp(value) {
@@ -1571,6 +1627,7 @@ function draw() {
 
   game.areas.forEach(drawArea);
   game.xpDrops.forEach(drawXp);
+  game.lootDrops.forEach(drawLoot);
   game.bolts.forEach(drawBolt);
   game.enemies.forEach(drawEnemy);
   game.beams.forEach(drawBeam);
@@ -1606,6 +1663,7 @@ function drawMenuHint() {
 }
 
 function drawPlayer(p) {
+  drawPlayerHpBar(p);
   ctx.fillStyle = "#69d2ff";
   ctx.beginPath();
   ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
@@ -1620,6 +1678,21 @@ function drawPlayer(p) {
   ctx.moveTo(p.x, p.y);
   ctx.lineTo(p.targetX, p.targetY);
   ctx.stroke();
+}
+
+function drawPlayerHpBar(p) {
+  const width = 44;
+  const height = 6;
+  const x = p.x - width / 2;
+  const y = p.y - p.radius - 16;
+  const fillWidth = width * clamp(p.hp / p.maxHp, 0, 1);
+  ctx.fillStyle = "rgba(10, 14, 20, 0.82)";
+  ctx.fillRect(x, y, width, height);
+  ctx.fillStyle = fillWidth > width * 0.35 ? "#78e08f" : "#ff6b6b";
+  ctx.fillRect(x, y, fillWidth, height);
+  ctx.strokeStyle = "#f3f6fb";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, width, height);
 }
 
 function drawEnemy(enemy) {
@@ -1650,6 +1723,29 @@ function drawXp(drop) {
   ctx.fillStyle = "#78e08f";
   ctx.beginPath();
   ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawLoot(drop) {
+  if (drop.type === "coin") {
+    ctx.fillStyle = "#ffd166";
+    ctx.beginPath();
+    ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#fff0a8";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    return;
+  }
+
+  ctx.fillStyle = "#ff5f7a";
+  ctx.beginPath();
+  ctx.arc(drop.x - drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
+  ctx.arc(drop.x + drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
+  ctx.moveTo(drop.x - drop.radius, drop.y);
+  ctx.lineTo(drop.x, drop.y + drop.radius);
+  ctx.lineTo(drop.x + drop.radius, drop.y);
+  ctx.closePath();
   ctx.fill();
 }
 
@@ -1693,7 +1789,7 @@ function drawGameHud() {
   ctx.fillText(`Time: ${formatTime(game.elapsed)} / ${formatTime(game.duration)}`, 28, 40);
   ctx.fillText(`HP: ${Math.max(0, Math.ceil(p.hp))}/${p.maxHp}`, 28, 62);
   ctx.fillText(`Level: ${p.level} | XP: ${p.xp}/${p.xpToLevel} | Kills: ${game.kills}`, 28, 84);
-  ctx.fillText(`Weapons: ${p.equippedWeapons.map((id) => weaponDefs[id].name).join(", ")}`, 28, 106);
+  ctx.fillText(`Coins: ${save.coins} | Weapons: ${p.equippedWeapons.map((id) => weaponDefs[id].name).join(", ")}`, 28, 106);
   if (boss) {
     ctx.fillText(`Boss HP: ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}`, 28, 128);
   }
@@ -1703,7 +1799,7 @@ function updateRunHud() {
   if (!game) return;
   const boss = game.enemies.find((enemy) => enemy.boss);
   const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
-  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}`;
+  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}`;
 }
 
 function openRunMenu() {
@@ -1746,6 +1842,10 @@ function distance(a, b) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function randomRange(min, max) {
+  return min + Math.random() * (max - min);
 }
 
 function formatTime(seconds) {
