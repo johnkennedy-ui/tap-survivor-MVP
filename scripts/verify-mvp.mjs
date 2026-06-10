@@ -27,6 +27,7 @@ check("index loads stylesheet", index.includes('href="src/styles.css"'));
 check("index loads game script", index.includes('src="src/game.js"'));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
+check("speed controls exist", ["data-speed=\"1\"", "data-speed=\"2\"", "data-speed=\"5\""].every((id) => index.includes(id)) && styles.includes(".speed-controls"));
 check("mobile viewport exists", index.includes('name="viewport"'));
 
 check("tap/click target handler exists", game.includes("setTargetFromEvent"));
@@ -36,6 +37,7 @@ check("enemy chase loop exists", game.includes("updateEnemies") && game.includes
 check("three enemy types exist", game.includes("enemyTypes") && (game.match(/id: "(drifter|skitter|bulwark)"/g) || []).length === 3);
 check("enemy types unlock every 30 seconds", game.includes("Math.floor(game.elapsed / 30)") && game.includes("availableEnemyTypes"));
 check("enemy spawns are doubled and patterned", game.includes("spawnPatternPositions(2)") && game.includes("spawnEnemy(type, position)"));
+check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") && game.includes("update(dt * gameSpeed)") && game.includes("setGameSpeed"));
 check("auto attack loop exists", game.includes("updateWeapons") && game.includes("fireWeapon"));
 check("XP drops exist", game.includes("xpDrops") && game.includes("collectXp"));
 check("coin and heart drops exist", game.includes("lootDrops") && game.includes("spawnLootDrops") && game.includes('type: "coin"') && game.includes('type: "heart"'));
@@ -66,6 +68,7 @@ check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].ever
 check("follow-up Laser quest opens", game.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", game.includes("duration: 360") && game.includes("spawnBoss"));
 check("boss death completes run", game.includes('endRun("Boss defeated")') && game.includes("enemy.boss"));
+check("boss shockwave special exists", game.includes("updateBossSpecials") && game.includes("drawBossAttack") && game.includes('type: "shockwave"'));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));

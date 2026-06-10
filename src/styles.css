@@ -62,6 +62,26 @@ button:disabled {
   min-width: 76px;
 }
 
+.speed-controls {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+.speed-button {
+  width: 44px;
+  padding: 8px 0;
+}
+
+.speed-button.active {
+  border-color: #ffd166;
+  background: #4a3f22;
+  color: #fff4c2;
+}
+
 #game {
   width: min(100%, calc((100vh - 36px) * 16 / 9));
   height: auto;

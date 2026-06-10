@@ -7,6 +7,7 @@ const ui = {
   openMenu: document.getElementById("openMenu"),
   closeMenu: document.getElementById("closeMenu"),
   closeLevelUp: document.getElementById("closeLevelUp"),
+  speedButtons: [...document.querySelectorAll("[data-speed]")],
   runMenu: document.getElementById("runMenu"),
   runHud: document.getElementById("runHud"),
   qpHud: document.getElementById("qpHud"),
@@ -648,6 +649,7 @@ const enemyTypes = [
 let save = loadSave();
 let game = null;
 let lastFrame = performance.now();
+let gameSpeed = 1;
 
 function defaultSave() {
   return {
@@ -964,9 +966,11 @@ function resetGameState() {
     bolts: [],
     beams: [],
     areas: [],
+    bossAttacks: [],
     weaponTimers: {},
     runUpgradeTiers: {},
     spawnTimer: 0,
+    bossAttackTimer: 3.8,
     kills: 0,
     xpCollected: 0,
     laserDamage: 0,
@@ -1014,6 +1018,7 @@ function update(dt) {
   movePlayer(p, dt);
   spawnEnemies(dt);
   updateEnemies(dt);
+  updateBossSpecials(dt);
   updateWeapons(dt);
   updateBolts(dt);
   updateAreas(dt);
@@ -1105,6 +1110,37 @@ function spawnBoss() {
     touchCooldown: 0.8,
     touchTimer: 0,
   });
+}
+
+function updateBossSpecials(dt) {
+  const boss = game.enemies.find((enemy) => enemy.boss);
+  if (!boss) return;
+  game.bossAttackTimer -= dt;
+  if (game.bossAttackTimer <= 0) {
+    game.bossAttackTimer = 4.6;
+    game.bossAttacks.push({
+      type: "shockwave",
+      x: boss.x,
+      y: boss.y,
+      radius: 165,
+      damage: 26,
+      age: 0,
+      windup: 0.9,
+      hit: false,
+    });
+  }
+
+  const p = game.player;
+  game.bossAttacks.forEach((attack) => {
+    attack.age += dt;
+    if (!attack.hit && attack.age >= attack.windup) {
+      attack.hit = true;
+      if (distance(p, attack) <= p.radius + attack.radius) {
+        p.hp -= attack.damage;
+      }
+    }
+  });
+  game.bossAttacks = game.bossAttacks.filter((attack) => attack.age <= attack.windup + 0.35);
 }
 
 function updateEnemies(dt) {
@@ -1628,6 +1664,7 @@ function draw() {
   }
 
   game.areas.forEach(drawArea);
+  game.bossAttacks.forEach(drawBossAttack);
   game.xpDrops.forEach(drawXp);
   game.lootDrops.forEach(drawLoot);
   game.bolts.forEach(drawBolt);
@@ -1781,6 +1818,19 @@ function drawArea(area) {
   ctx.globalAlpha = 1;
 }
 
+function drawBossAttack(attack) {
+  const charging = attack.age < attack.windup;
+  const progress = clamp(attack.age / attack.windup, 0, 1);
+  const radius = charging ? attack.radius * progress : attack.radius;
+  ctx.strokeStyle = charging ? "#ffd166" : "#ff5f7a";
+  ctx.fillStyle = charging ? "rgba(255, 209, 102, 0.12)" : "rgba(255, 95, 122, 0.2)";
+  ctx.lineWidth = charging ? 3 : 5;
+  ctx.beginPath();
+  ctx.arc(attack.x, attack.y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+}
+
 function drawGameHud() {
   const p = game.player;
   const boss = game.enemies.find((enemy) => enemy.boss);
@@ -1790,7 +1840,7 @@ function drawGameHud() {
   ctx.font = "14px sans-serif";
   ctx.fillText(`Time: ${formatTime(game.elapsed)} / ${formatTime(game.duration)}`, 28, 40);
   ctx.fillText(`HP: ${Math.max(0, Math.ceil(p.hp))}/${p.maxHp}`, 28, 62);
-  ctx.fillText(`Level: ${p.level} | XP: ${p.xp}/${p.xpToLevel} | Kills: ${game.kills}`, 28, 84);
+  ctx.fillText(`Speed: x${gameSpeed} | Level: ${p.level} | XP: ${p.xp}/${p.xpToLevel} | Kills: ${game.kills}`, 28, 84);
   ctx.fillText(`Coins: ${save.coins} | Weapons: ${p.equippedWeapons.map((id) => weaponDefs[id].name).join(", ")}`, 28, 106);
   if (boss) {
     ctx.fillText(`Boss HP: ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}`, 28, 128);
@@ -1801,7 +1851,7 @@ function updateRunHud() {
   if (!game) return;
   const boss = game.enemies.find((enemy) => enemy.boss);
   const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
-  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}`;
+  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}`;
 }
 
 function openRunMenu() {
@@ -1844,10 +1894,17 @@ function setTargetFromEvent(event) {
 function loop(now) {
   const dt = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  update(dt);
+  update(dt * gameSpeed);
   draw();
   updateRunHud();
   requestAnimationFrame(loop);
+}
+
+function setGameSpeed(speed) {
+  gameSpeed = speed;
+  ui.speedButtons.forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.speed) === speed);
+  });
 }
 
 function distance(a, b) {
@@ -1873,6 +1930,9 @@ ui.startRun.addEventListener("click", startRun);
 ui.openMenu.addEventListener("click", openRunMenu);
 ui.closeMenu.addEventListener("click", () => closeRunMenu(true));
 ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
+ui.speedButtons.forEach((button) => {
+  button.addEventListener("click", () => setGameSpeed(Number(button.dataset.speed)));
+});
 ui.resetSave.addEventListener("click", () => {
   localStorage.removeItem(saveKey);
   localStorage.removeItem("tap-survivor-mvp-save-v1");
