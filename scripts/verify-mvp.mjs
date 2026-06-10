@@ -88,6 +88,7 @@ check("pipeline documents Android flow", pipeline.includes("Android Test Steps")
 check("game plan documents MVP loop", plan.includes("Laser") && plan.includes("Quest Point"));
 
 check("workflow publishes gh-pages", workflow.includes("git push --force origin gh-pages"));
+check("workflow publishes content and assets", workflow.includes("cp -R assets content src scripts"));
 check("workflow writes nojekyll marker", workflow.includes("touch .nojekyll"));
 check("workflow runs reusable MVP test", workflow.includes("node scripts/verify-mvp.mjs"));
 
