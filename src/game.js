@@ -338,78 +338,91 @@ const questDefs = {
   spark_bolt_mastery: {
     name: "Spark Basics",
     description: "Deal 300 damage with Spark Bolt.",
+    weaponId: "spark_bolt",
     target: 300,
     rewardQp: 1,
   },
   use_laser_run: {
     name: "Use Laser in a run",
     description: "Fire Prism Beam during a run.",
+    weaponId: "prism_beam",
     target: 1,
     rewardQp: 2,
   },
   laser_damage_5000: {
     name: "Deal 5,000 damage with Laser",
     description: "Deal 5,000 total damage with Prism Beam.",
+    weaponId: "prism_beam",
     target: 5000,
     rewardQp: 2,
   },
   frost_orb_mastery: {
     name: "Frost Control",
     description: "Deal 350 damage with Frost Orb.",
+    weaponId: "frost_orb",
     target: 350,
     rewardQp: 2,
   },
   flame_wave_mastery: {
     name: "Flame Sweep",
     description: "Deal 350 damage with Flame Wave.",
+    weaponId: "flame_wave",
     target: 350,
     rewardQp: 2,
   },
   chain_spark_mastery: {
     name: "Arc Current",
     description: "Deal 350 damage with Chain Spark.",
+    weaponId: "chain_spark",
     target: 350,
     rewardQp: 2,
   },
   void_mine_mastery: {
     name: "Trap Field",
     description: "Deal 500 damage with Void Mine.",
+    weaponId: "void_mine",
     target: 500,
     rewardQp: 2,
   },
   acid_pool_mastery: {
     name: "Corrosion Field",
     description: "Deal 500 damage with Acid Pool.",
+    weaponId: "acid_pool",
     target: 500,
     rewardQp: 2,
   },
   saw_drone_mastery: {
     name: "Close Orbit",
     description: "Deal 500 damage with Saw Drone.",
+    weaponId: "saw_drone",
     target: 500,
     rewardQp: 2,
   },
   shield_pulse_mastery: {
     name: "Pulse Guard",
     description: "Deal 500 damage with Shield Pulse.",
+    weaponId: "shield_pulse",
     target: 500,
     rewardQp: 2,
   },
   moon_glaive_mastery: {
     name: "Lunar Cut",
     description: "Deal 650 damage with Moon Glaive.",
+    weaponId: "moon_glaive",
     target: 650,
     rewardQp: 3,
   },
   meteor_pin_mastery: {
     name: "Meteor Mark",
     description: "Deal 800 damage with Meteor Pin.",
+    weaponId: "meteor_pin",
     target: 800,
     rewardQp: 3,
   },
   nova_burst_mastery: {
     name: "Nova Core",
     description: "Deal 1,000 damage with Nova Burst.",
+    weaponId: "nova_burst",
     target: 1000,
     rewardQp: 4,
   },
@@ -1219,6 +1232,12 @@ function collectXp(value) {
   }
 }
 
+function activeQuestWeaponIds() {
+  return save.activeQuests
+    .map((questId) => questDefs[questId]?.weaponId)
+    .filter(Boolean);
+}
+
 function showLevelUp() {
   game.paused = true;
   game.pauseReason = "level";
@@ -1226,10 +1245,16 @@ function showLevelUp() {
   const weaponChoices = save.unlockedWeapons
     .filter((weaponId) => !game.player.equippedWeapons.includes(weaponId))
     .map((weaponId) => ({
+      weaponId,
       name: weaponDefs[weaponId].name,
       description: `Equip ${weaponDefs[weaponId].name} for this run.`,
       apply: () => game.player.equippedWeapons.push(weaponId),
     }));
+  const questWeaponIds = activeQuestWeaponIds();
+  const questWeaponChoices = weaponChoices.filter((choice) =>
+    questWeaponIds.includes(choice.weaponId),
+  );
+  const otherWeaponChoices = weaponChoices.filter((choice) => !questWeaponChoices.includes(choice));
   const runUpgradeChoices = runUpgradeDefs
     .filter((upgrade) => getRunUpgradeTier(upgrade.id) < upgrade.maxTier)
     .map((upgrade) => {
@@ -1243,7 +1268,10 @@ function showLevelUp() {
         },
       };
     });
-  const choices = shuffleChoices([...weaponChoices, ...runUpgradeChoices]).slice(0, 3);
+  const choices = [
+    ...questWeaponChoices,
+    ...shuffleChoices([...otherWeaponChoices, ...runUpgradeChoices]),
+  ].slice(0, 3);
 
   if (!choices.length) {
     choices.push({

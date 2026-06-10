@@ -44,6 +44,7 @@ check("upgrade tiers are tracked", game.includes("upgradeTiers") && game.include
 check("skill tree gates by prerequisite and quest", game.includes("requiresNode") && game.includes("requiresQuest") && game.includes("nodeGateStatus"));
 check("completed quests disappear from quest list", game.includes("activeQuestIds") && !game.includes("Status: ${complete"));
 check("level-up choices are limited to 3 random options", game.includes("shuffleChoices") && game.includes(".slice(0, 3)"));
+check("active quest weapons are offered on level-up", game.includes("activeQuestWeaponIds") && game.includes("questWeaponChoices"));
 check("new combat upgrade types exist", game.includes("attack_radius") && game.includes("fire_rate") && game.includes("flat_damage") && game.includes("percent_damage"));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
 check("follow-up Laser quest opens", game.includes("laser_damage_5000"));
