@@ -479,6 +479,48 @@ const runUpgradeDefs = [
   },
 ];
 
+const enemyTypes = [
+  {
+    id: "drifter",
+    name: "Drifter",
+    color: "#f06a78",
+    radius: 13,
+    hp: 18,
+    hpScale: 0.12,
+    speed: 52,
+    speedScale: 0.08,
+    damage: 9,
+    touchCooldown: 0.55,
+    xp: 1,
+  },
+  {
+    id: "skitter",
+    name: "Skitter",
+    color: "#ffd166",
+    radius: 9,
+    hp: 11,
+    hpScale: 0.08,
+    speed: 94,
+    speedScale: 0.12,
+    damage: 7,
+    touchCooldown: 0.38,
+    xp: 1,
+  },
+  {
+    id: "bulwark",
+    name: "Bulwark",
+    color: "#8de7ff",
+    radius: 20,
+    hp: 56,
+    hpScale: 0.2,
+    speed: 34,
+    speedScale: 0.04,
+    damage: 14,
+    touchCooldown: 0.75,
+    xp: 2,
+  },
+];
+
 let save = loadSave();
 let game = null;
 let lastFrame = performance.now();
@@ -842,13 +884,51 @@ function spawnEnemies(dt) {
   game.spawnTimer -= dt;
   if (game.spawnTimer > 0) return;
   game.spawnTimer = Math.max(0.35, 1.1 - game.elapsed / 150);
-  const edge = Math.floor(Math.random() * 4);
+  spawnPatternPositions(2).forEach((position, index) => {
+    const type = chooseEnemyType(index);
+    spawnEnemy(type, position);
+  });
+}
+
+function availableEnemyTypes() {
+  return enemyTypes.slice(0, Math.min(enemyTypes.length, 1 + Math.floor(game.elapsed / 30)));
+}
+
+function chooseEnemyType(offset = 0) {
+  const available = availableEnemyTypes();
+  return available[(Math.floor(Math.random() * available.length) + offset) % available.length];
+}
+
+function spawnPatternPositions(count) {
+  const p = game.player;
+  const baseAngle = Math.random() * Math.PI * 2;
+  const pattern = Math.floor(Math.random() * 4);
+  return Array.from({ length: count }, (_, index) => {
+    const mirrored = index % 2 === 0 ? 0 : Math.PI;
+    const angleOffsets = [mirrored, index * 0.85, (index - 0.5) * 0.55, index * 1.7];
+    const radiusOffsets = [0, index * 42, index % 2 === 0 ? -45 : 70, index * 95];
+    const angle = baseAngle + angleOffsets[pattern];
+    const radius = 220 + Math.random() * 110 + radiusOffsets[pattern];
+    return {
+      x: clamp(p.x + Math.cos(angle) * radius, 18, canvas.width - 18),
+      y: clamp(p.y + Math.sin(angle) * radius, 18, canvas.height - 18),
+    };
+  });
+}
+
+function spawnEnemy(type, position) {
   game.enemies.push({
-    x: edge === 0 ? -20 : edge === 1 ? canvas.width + 20 : Math.random() * canvas.width,
-    y: edge === 2 ? -20 : edge === 3 ? canvas.height + 20 : Math.random() * canvas.height,
-    radius: 13,
-    hp: 18 + game.elapsed * 0.12,
-    speed: 52 + game.elapsed * 0.08,
+    type: type.id,
+    name: type.name,
+    color: type.color,
+    x: position.x,
+    y: position.y,
+    radius: type.radius,
+    hp: type.hp + game.elapsed * type.hpScale,
+    speed: type.speed + game.elapsed * type.speedScale,
+    damage: type.damage,
+    touchCooldown: type.touchCooldown,
+    xp: type.xp,
     touchTimer: 0,
   });
 }
@@ -864,6 +944,8 @@ function spawnBoss() {
     hp: 1400 + game.kills * 6,
     maxHp: 1400 + game.kills * 6,
     speed: 42,
+    damage: 22,
+    touchCooldown: 0.8,
     touchTimer: 0,
   });
 }
@@ -878,8 +960,8 @@ function updateEnemies(dt) {
     enemy.y += (dy / dist) * enemy.speed * dt;
     enemy.touchTimer -= dt;
     if (dist < p.radius + enemy.radius && enemy.touchTimer <= 0) {
-      p.hp -= enemy.boss ? 22 : 9;
-      enemy.touchTimer = enemy.boss ? 0.8 : 0.55;
+      p.hp -= enemy.damage;
+      enemy.touchTimer = enemy.touchCooldown;
     }
   });
 }
@@ -1192,7 +1274,7 @@ function reapEnemies() {
   const dead = game.enemies.filter((enemy) => enemy.hp <= 0);
   dead.forEach((enemy) => {
     game.kills += 1;
-    game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: enemy.boss ? 12 : 7, value: enemy.boss ? 8 : 1 });
+    game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: enemy.boss ? 12 : 7, value: enemy.boss ? 8 : enemy.xp });
     if (enemy.boss) {
       game.bossDefeated = true;
       endRun("Boss defeated");
@@ -1386,7 +1468,7 @@ function drawPlayer(p) {
 }
 
 function drawEnemy(enemy) {
-  ctx.fillStyle = enemy.boss ? "#ff4f8b" : "#f06a78";
+  ctx.fillStyle = enemy.boss ? "#ff4f8b" : enemy.color;
   ctx.beginPath();
   ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
   ctx.fill();
@@ -1397,6 +1479,15 @@ function drawEnemy(enemy) {
     ctx.fillStyle = "#f3f6fb";
     ctx.font = "700 14px sans-serif";
     ctx.fillText("BOSS", enemy.x - 19, enemy.y - enemy.radius - 10);
+  } else if (enemy.type === "skitter") {
+    ctx.fillStyle = "#17202c";
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (enemy.type === "bulwark") {
+    ctx.strokeStyle = "#dff6ff";
+    ctx.lineWidth = 3;
+    ctx.stroke();
   }
 }
 
