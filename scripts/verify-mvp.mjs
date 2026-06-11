@@ -90,9 +90,9 @@ check("quest chains can open follow-up quests", quests.includes("opensQuest") &&
 check("combat stats feed quest progress", runtime.includes("addQuestProgressGroup(killQuestIds, 1)") && runtime.includes("addQuestProgressGroup(xpQuestIds, value)") && runtime.includes("addQuestProgressGroup(damageQuestIds, dealt)"));
 check("meta upgrades are quest-gated", upgrades.includes('requiresQuest: "first_blood"') && upgrades.includes('requiresQuest: "boss_hunter"'));
 check("Laser Damage upgrade exists", upgrades.includes("laser_damage") && upgrades.includes("maxTier: 3"));
-check("upgrade tiers are tracked", game.includes("upgradeTiers") && game.includes("Buy Tier"));
+check("upgrade tiers are tracked", game.includes("upgradeTiers") && ui.includes("Buy Tier"));
 check("skill tree gates by prerequisite and quest", game.includes("requiresNode") && game.includes("requiresQuest") && game.includes("nodeGateStatus"));
-check("completed quests disappear from quest list", game.includes("activeQuestIds") && !game.includes("Status: ${complete"));
+check("completed quests disappear from quest list", ui.includes("activeQuestIds") && !ui.includes("Status: ${complete"));
 check("level-up choices are limited to 3 random options", game.includes("shuffleChoices") && game.includes(".slice(0, 3)"));
 check("active quest weapons are offered on level-up", game.includes("activeQuestWeaponIds") && game.includes("questWeaponChoices"));
 check("new combat upgrade types exist", upgrades.includes("attack_radius") && upgrades.includes("fire_rate") && upgrades.includes("flat_damage") && upgrades.includes("percent_damage"));
@@ -108,7 +108,7 @@ check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game
 check("shared save helpers exist", save.includes("TapSurvivorSave") && game.includes("TapSurvivorSave"));
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
-check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi"));
+check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));
