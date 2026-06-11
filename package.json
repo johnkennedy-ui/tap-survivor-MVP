@@ -9,6 +9,7 @@
     "validate:content": "node scripts/validate-content.mjs",
     "add:content": "node scripts/add-content.mjs",
     "check:deploy": "node scripts/check-deploy.mjs",
+    "smoke:quest-flow": "node scripts/smoke-quest-flow.mjs",
     "audit:quests": "npm run build:content && npm run validate:content && node scripts/audit-quests.mjs",
     "test:speed": "node scripts/verify-speed-controls.mjs",
     "test": "npm run audit:quests && node scripts/verify-mvp.mjs && npm run test:speed",

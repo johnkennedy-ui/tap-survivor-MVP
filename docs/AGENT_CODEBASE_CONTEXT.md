@@ -75,6 +75,7 @@ The project is mixed but mostly registry-driven:
 - Validate content only: `npm run validate:content`
 - Audit quest graph: `npm run audit:quests`
 - Full local validation: `npm test`
+- Quest flow smoke test: `npm run smoke:quest-flow`
 - Speed-control VM smoke test: `npm run test:speed`
 - Local server: `npm run serve`
 - Deployment check: `npm run check:deploy`

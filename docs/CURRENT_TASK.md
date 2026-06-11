@@ -4,34 +4,31 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract quest helper module
+Add quest flow smoke test
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T11:53:59.669Z
+- Started: 2026-06-11T12:02:45.187Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `src/quests.js`
-- `src/game.js`
-- `index.html`
-- `scripts/verify-mvp.mjs`
-- `scripts/verify-speed-controls.mjs`
+- `scripts/smoke-quest-flow.mjs`
+- `package.json`
+- `docs/MAINTENANCE.md`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `src/quests.js`: added quest opening, completion, progress, group progress, and active quest weapon helpers.
-- `src/game.js`: delegates quest helper behavior to `TapSurvivorQuests`.
-- `index.html`: loads `src/quests.js` before save/game modules that use it.
-- `scripts/verify-mvp.mjs`: validates quest module load and quest helper wiring.
-- `scripts/verify-speed-controls.mjs`: loads the quest module in the VM smoke test.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/quests.js`.
-- `docs/CHANGELOG_AGENT.md`: logs the extraction.
+- `scripts/smoke-quest-flow.mjs`: added focused VM smoke test for quest progress, completion, follow-up opening, rewards, and inactive group handling.
+- `package.json`: added `smoke:quest-flow`.
+- `scripts/agent-check.mjs`: added the quest smoke to the standard agent validation lane.
+- `docs/MAINTENANCE.md`: documented the focused quest smoke command.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the quest smoke command.
+- `docs/CHANGELOG_AGENT.md`: logged the new smoke test.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
 ## Validation Plan
@@ -39,17 +36,17 @@ Extract quest helper module
 Run the smallest command that proves the change:
 
 ```bash
+npm run smoke:quest-flow
 npm run agent:check
 ```
 
 Result:
 
-- `node --check src/quests.js`: passed.
-- `node --check src/game.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed, 96 checks.
-- `npm run test:speed`: passed.
-- `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor quest helper extraction"`: passed and wrote `../Shane training/20260611T115703Z_tap-survivor-quest-helper-extraction/result.md`.
+- `node --check scripts/smoke-quest-flow.mjs`: passed.
+- `npm run smoke:quest-flow`: passed.
+- `node --check scripts/agent-check.mjs`: passed.
+- `npm run agent:check`: passed, including `smoke:quest-flow` and `npm test`.
+- `npm run agent:evidence -- --task "tap survivor quest flow smoke"`: passed and wrote `../Shane training/20260611T120505Z_tap-survivor-quest-flow-smoke/result.md`.
 
 ## Evidence Required
 

@@ -7,6 +7,7 @@ const checks = [
   ["node", ["--check", "scripts/agent-status.mjs"]],
   ["node", ["--check", "scripts/agent-check.mjs"]],
   ["node", ["--check", "scripts/agent-evidence.mjs"]],
+  ["npm", ["run", "smoke:quest-flow"]],
   ["npm", ["test"]],
 ];
 

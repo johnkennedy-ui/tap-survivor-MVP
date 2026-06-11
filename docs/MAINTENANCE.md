@@ -41,6 +41,7 @@ For focused checks:
 ```bash
 node --check <changed-script>
 npm run validate:content
+npm run smoke:quest-flow
 npm run test:speed
 ```
 

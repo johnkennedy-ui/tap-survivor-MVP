@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added `npm run smoke:quest-flow` for focused quest progress/completion/follow-up debugging.
 - Added `src/quests.js` for quest opening, completion, progress, and active quest weapon helpers outside `src/game.js`.
 - Added `src/save.js` for save defaults, loading, migration/normalization, and persistence outside `src/game.js`.
 - Added `src/sprites.js` for shared sprite loading and drawing outside `src/game.js`.
