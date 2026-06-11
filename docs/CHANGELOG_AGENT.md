@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added optional `npm run smoke:browser` for real headless-browser UI smoke coverage.
 - Added `weapon_polish` as a content-driven shop upgrade that feeds a flat weapon damage shop bonus into combat.
 - Added a basic coin shop through `src/shop.js`, `shopItems` content, and `npm run smoke:shop`.
 - Changed heart pickups to heal 20% of max HP.

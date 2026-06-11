@@ -15,6 +15,7 @@
     "smoke:start-run": "node scripts/smoke-start-run.mjs",
     "smoke:boss-run": "node scripts/smoke-boss-run.mjs",
     "smoke:shop": "node scripts/smoke-shop.mjs",
+    "smoke:browser": "node scripts/smoke-browser.mjs",
     "smoke:quest-flow": "node scripts/smoke-quest-flow.mjs",
     "audit:quests": "npm run build:content && npm run validate:content && node scripts/audit-quests.mjs",
     "test:speed": "node scripts/verify-speed-controls.mjs",

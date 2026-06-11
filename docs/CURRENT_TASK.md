@@ -4,41 +4,32 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add one content-driven shop damage upgrade
+Add optional browser smoke test
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T16:28:53.778Z
+- Started: 2026-06-11T17:04:59.587Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/shop.js`
-- `src/combat.js`
-- `src/game.js`
-- `scripts/content-tools.mjs`
-- `scripts/content-summary.mjs`
-- `scripts/smoke-shop.mjs`
-- `scripts/verify-mvp.mjs`
+- `package.json`
+- `scripts/smoke-browser.mjs`
+- `scripts/browser-smoke.html`
+- `scripts/agent-check.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/shop.js`
-- `src/combat.js`
-- `src/game.js`
-- `scripts/content-tools.mjs`
-- `scripts/smoke-shop.mjs`
-- `scripts/verify-mvp.mjs`
+- `package.json`
+- `scripts/smoke-browser.mjs`
+- `scripts/browser-smoke.html`
+- `scripts/agent-check.mjs`
 - `docs/CURRENT_TASK.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Validation Plan
@@ -46,18 +37,14 @@ Add one content-driven shop damage upgrade
 Run the smallest command that proves the change:
 
 ```bash
-npm run build:content
+npm run smoke:browser
 npm run agent:prepush
 ```
 
 Result:
 
-- `npm run build:content`: passed.
-- `node --check src/shop.js`: passed.
-- `node --check src/combat.js`: passed.
-- `node --check scripts/smoke-shop.mjs`: passed.
-- `npm run agent:prepush`: passed, including `content:summary`, all smoke tests, and `npm test`.
-- `npm run agent:evidence -- --task "tap survivor weapon polish shop upgrade"`: passed and wrote `../Shane training/20260611T163234Z_tap-survivor-weapon-polish-shop-upgrade/result.md`.
+- `npm run smoke:browser`: passed as optional skip because the local Chromium wrapper cannot run in this environment.
+- `npm run agent:prepush`: passed, including `node --check scripts/smoke-browser.mjs`, optional `npm run smoke:browser`, focused smoke tests, and `npm test`.
 
 ## Evidence Required
 

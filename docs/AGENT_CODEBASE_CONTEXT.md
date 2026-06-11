@@ -88,11 +88,12 @@ The project is mixed but mostly registry-driven:
 - Save smoke test: `npm run smoke:save`
 - Start-run smoke test: `npm run smoke:start-run`
 - Boss-run smoke test: `npm run smoke:boss-run`
+- Optional real-browser smoke test: `npm run smoke:browser`
 - Quest flow smoke test: `npm run smoke:quest-flow`
 - Speed-control VM smoke test: `npm run test:speed`
 - Local server: `npm run serve`
 - Deployment check: `npm run check:deploy`
-- CI validation: GitHub Actions runs `npm run agent:check` via `.github/workflows/agent-check.yml`.
+- CI validation: GitHub Actions runs `npm run agent:check` via `.github/workflows/agent-check.yml`; browser smoke is optional unless `SMOKE_BROWSER_REQUIRED=1`.
 - Agent task checkpoint writer: `npm run agent:start -- --goal "<task>"`
 - Agent status overview: `npm run agent:status`
 - Agent handoff summary: `npm run agent:handoff`
