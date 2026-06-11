@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added `src/level-up.js` for level-up choice generation and modal behavior outside `src/game.js`.
 - Moved run upgrades into `content/tap-survivor-content.json`; `src/upgrades.js` now only maps content entries to the small runtime effect interpreter.
 - Moved static meta upgrades into `content/tap-survivor-content.json`; `src/upgrades.js` now combines generated weapon upgrades with content-driven meta upgrades.
 - Added `src/ui.js` for DOM lookup outside `src/game.js`.

@@ -13,6 +13,7 @@ const upgradeSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const renderingSource = readFileSync(join(root, "src/rendering.js"), "utf8");
 const combatSource = readFileSync(join(root, "src/combat.js"), "utf8");
 const uiSource = readFileSync(join(root, "src/ui.js"), "utf8");
+const levelUpSource = readFileSync(join(root, "src/level-up.js"), "utf8");
 const listeners = new Map();
 
 function makeClassList() {
@@ -153,6 +154,7 @@ vm.runInContext(upgradeSource, context);
 vm.runInContext(renderingSource, context);
 vm.runInContext(combatSource, context);
 vm.runInContext(uiSource, context);
+vm.runInContext(levelUpSource, context);
 vm.runInContext(source, context);
 
 function check(name, pass) {

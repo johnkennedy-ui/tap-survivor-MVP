@@ -4,39 +4,37 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Move run upgrade definitions into content
+Split another bounded helper out of game.js
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T15:28:08.752Z
+- Started: 2026-06-11T15:41:18.338Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `content/tap-survivor-content.json`
-- `src/upgrades.js`
+- `src/game.js`
+- `src/level-up.js`
+- `src/ui.js`
+- `src/combat.js`
 - `src/content.generated.js`
-- `scripts/content-tools.mjs`
-- `scripts/content-summary.mjs`
-- `scripts/audit-quests.mjs`
+- `index.html`
 - `scripts/verify-mvp.mjs`
+- `scripts/smoke-game-harness.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `content/tap-survivor-content.json`
-- `src/upgrades.js`
-- `src/content.generated.js`
-- `scripts/content-tools.mjs`
-- `scripts/content-summary.mjs`
-- `scripts/audit-quests.mjs`
+- `src/level-up.js`
+- `src/game.js`
+- `index.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
 
@@ -45,18 +43,18 @@ Move run upgrade definitions into content
 Run the smallest command that proves the change:
 
 ```bash
-npm run build:content
 npm run agent:prepush
 ```
 
 Result:
 
-- `npm run build:content`: passed.
-- `node --check src/upgrades.js`: passed.
-- `node --check scripts/content-tools.mjs`: passed.
-- `node --check scripts/content-summary.mjs`: passed.
+- `node --check src/level-up.js`: passed.
+- `node --check src/game.js`: passed.
+- `node --check scripts/smoke-game-harness.mjs`: passed.
+- `node --check scripts/verify-speed-controls.mjs`: passed.
+- `node scripts/verify-mvp.mjs`: passed, 105 checks.
 - `npm run agent:prepush`: passed, including `content:summary`, all smoke tests, and `npm test`.
-- `npm run agent:evidence -- --task "tap survivor run upgrades content"`: passed and wrote `../Shane training/20260611T153348Z_tap-survivor-run-upgrades-content/result.md`.
+- `npm run agent:evidence -- --task "tap survivor level up extraction"`: passed and wrote `../Shane training/20260611T154549Z_tap-survivor-level-up-extraction/result.md`.
 
 ## Evidence Required
 

@@ -192,6 +192,7 @@ export function createGameHarness({ fakeCombat = false } = {}) {
   }
 
   vm.runInContext(readSource("src/ui.js"), context);
+  vm.runInContext(readSource("src/level-up.js"), context);
   vm.runInContext(readSource("src/game.js"), context);
 
   return {
