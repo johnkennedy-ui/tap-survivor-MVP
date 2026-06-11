@@ -489,7 +489,14 @@ globalThis.TapSurvivorContent = {
       "name": "Warlord",
       "description": "Defeat 600 enemies.",
       "target": 600,
-      "rewardQp": 7
+      "rewardQp": 7,
+      "opensQuest": "legion_breaker"
+    },
+    "legion_breaker": {
+      "name": "Legion Breaker",
+      "description": "Defeat 1,000 enemies.",
+      "target": 1000,
+      "rewardQp": 9
     },
     "power_climb": {
       "name": "Power Climb",
@@ -509,7 +516,14 @@ globalThis.TapSurvivorContent = {
       "name": "Transcendent Growth",
       "description": "Gain 16 levels.",
       "target": 16,
-      "rewardQp": 6
+      "rewardQp": 6,
+      "opensQuest": "limitless_growth"
+    },
+    "limitless_growth": {
+      "name": "Limitless Growth",
+      "description": "Gain 20 levels.",
+      "target": 20,
+      "rewardQp": 8
     },
     "damage_dealer": {
       "name": "Damage Dealer",
@@ -529,7 +543,14 @@ globalThis.TapSurvivorContent = {
       "name": "Worldbreaker Damage",
       "description": "Deal 50,000 total weapon damage.",
       "target": 50000,
-      "rewardQp": 7
+      "rewardQp": 7,
+      "opensQuest": "cataclysm_damage"
+    },
+    "cataclysm_damage": {
+      "name": "Cataclysm Damage",
+      "description": "Deal 100,000 total weapon damage.",
+      "target": 100000,
+      "rewardQp": 9
     },
     "gem_hoarder": {
       "name": "Gem Hoarder",
@@ -549,7 +570,14 @@ globalThis.TapSurvivorContent = {
       "name": "Gem Storm",
       "description": "Collect 300 XP gems.",
       "target": 300,
-      "rewardQp": 5
+      "rewardQp": 5,
+      "opensQuest": "gem_typhoon"
+    },
+    "gem_typhoon": {
+      "name": "Gem Typhoon",
+      "description": "Collect 500 XP gems.",
+      "target": 500,
+      "rewardQp": 8
     },
     "use_laser_run": {
       "name": "Use Laser in a run",
@@ -653,7 +681,14 @@ globalThis.TapSurvivorContent = {
       "name": "Boss Reaper",
       "description": "Defeat 5 bosses.",
       "target": 5,
-      "rewardQp": 8
+      "rewardQp": 8,
+      "opensQuest": "boss_legend"
+    },
+    "boss_legend": {
+      "name": "Boss Legend",
+      "description": "Defeat 10 bosses.",
+      "target": 10,
+      "rewardQp": 10
     }
   },
   "questGroups": {
@@ -668,13 +703,15 @@ globalThis.TapSurvivorContent = {
       "crowd_control",
       "exterminator",
       "reaper",
-      "warlord"
+      "warlord",
+      "legion_breaker"
     ],
     "damage": [
       "heavy_hits",
       "damage_dealer",
       "apocalypse_damage",
-      "worldbreaker_damage"
+      "worldbreaker_damage",
+      "cataclysm_damage"
     ],
     "survival": [
       "survivor_60",
@@ -686,18 +723,21 @@ globalThis.TapSurvivorContent = {
       "gatherer",
       "gem_hoarder",
       "gem_flood",
-      "gem_storm"
+      "gem_storm",
+      "gem_typhoon"
     ],
     "level": [
       "rapid_growth",
       "power_climb",
       "apex_growth",
-      "transcendent_growth"
+      "transcendent_growth",
+      "limitless_growth"
     ],
     "boss": [
       "boss_hunter",
       "boss_slayer",
-      "boss_reaper"
+      "boss_reaper",
+      "boss_legend"
     ]
   },
   "enemyTypes": [

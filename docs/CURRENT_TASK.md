@@ -4,32 +4,28 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add optional browser smoke test
+Add more quest content
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T17:04:59.587Z
+- Started: 2026-06-11T17:38:46.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `package.json`
-- `scripts/smoke-browser.mjs`
-- `scripts/browser-smoke.html`
-- `scripts/agent-check.mjs`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `package.json`
-- `scripts/smoke-browser.mjs`
-- `scripts/browser-smoke.html`
-- `scripts/agent-check.mjs`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Validation Plan
@@ -37,14 +33,19 @@ Add optional browser smoke test
 Run the smallest command that proves the change:
 
 ```bash
-npm run smoke:browser
+npm run build:content
+npm run validate:content
+npm run audit:quests
 npm run agent:prepush
 ```
 
 Result:
 
-- `npm run smoke:browser`: passed as optional skip because the local Chromium wrapper cannot run in this environment.
-- `npm run agent:prepush`: passed, including `node --check scripts/smoke-browser.mjs`, optional `npm run smoke:browser`, focused smoke tests, and `npm test`.
+- `npm run build:content`: passed.
+- `npm run validate:content`: passed; content now has 42 quests.
+- `npm run audit:quests`: passed.
+- `node --check scripts/verify-mvp.mjs`: passed.
+- `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required
 
