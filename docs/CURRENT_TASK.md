@@ -4,62 +4,61 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add an `agent:start` helper that initializes `docs/CURRENT_TASK.md` for the active task.
+Add agent handoff summary helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11 08:07 BST
+- Started: 2026-06-11T08:23:58.485Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
+- `package.json`
+- `scripts/agent-handoff.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/AGENT_TASK_TEMPLATE.md`
 - `docs/CHANGELOG_AGENT.md`
-- `package.json`
-- `scripts/agent-start.mjs`
 
 ## Files Changed
 
-- `docs/CURRENT_TASK.md`: updated this checkpoint for the `agent:start` pass.
-- `scripts/agent-start.mjs`: added CLI writer for `docs/CURRENT_TASK.md`, with dry-run support.
-- `package.json`: added `agent:start`.
-- `AGENTS.md`: documented the start helper in the opening workflow.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the start helper in commands and rules.
-- `docs/AGENT_TASK_TEMPLATE.md`: added the start-helper shortcut and dry-run inspection command.
+- `scripts/agent-handoff.mjs`: added compact branch, commit, dirty status, recent commits, current task, and standard command summary.
+- `package.json`: added `agent:handoff`.
+- `scripts/agent-status.mjs`: included `agent:handoff` in available command output.
+- `scripts/agent-check.mjs`: added syntax validation for `scripts/agent-handoff.mjs`.
+- `AGENTS.md`: documented when to use the handoff command.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the handoff command.
+- `docs/AGENT_TASK_TEMPLATE.md`: added handoff to inspection and evidence guidance.
 - `docs/CHANGELOG_AGENT.md`: logged the new command.
-- `scripts/agent-status.mjs`: included `agent:start` in the command summary.
-- `scripts/agent-check.mjs`: added syntax validation for `scripts/agent-start.mjs`.
+- `docs/CURRENT_TASK.md`: updated this checkpoint.
 
 ## Validation Plan
 
-Run the targeted helper checks:
+Run the smallest command that proves the change:
 
 ```bash
-git diff --check
-npm run agent:start -- --goal "Example checkpoint" --status "example only" --dry-run
+npm run agent:handoff
 npm run agent:check
 ```
 
 Result:
 
 - `git diff --check`: passed.
-- `node --check scripts/agent-start.mjs`: passed.
-- `npm run agent:start -- --goal "Example checkpoint" --status "example only" --dry-run`: passed.
-- `npm run agent:status`: passed.
+- `node --check scripts/agent-handoff.mjs`: passed.
+- `npm run agent:handoff`: passed.
+- `npm run agent:status`: passed and listed `agent:handoff`.
 - `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor agent start helper"`: passed and wrote `../Shane training/20260611T073118Z_tap-survivor-agent-start-helper/result.md`.
+- `npm run agent:evidence -- --task "tap survivor agent handoff helper"`: passed and wrote `../Shane training/20260611T082532Z_tap-survivor-agent-handoff-helper/result.md`.
 
 ## Evidence Required
 
 - Files inspected.
 - Files changed.
 - Validation commands and results.
+- Evidence stub when useful.
 - Remaining risks or follow-up tasks.
 
 ## Stop Condition
 
-Stop after `agent:start` exists, docs reference it, validation passes, evidence is saved, changes are pushed, and the result is reported.
+Stop after the requested single change is implemented, validated, documented, and reported.

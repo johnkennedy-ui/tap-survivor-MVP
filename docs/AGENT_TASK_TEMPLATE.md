@@ -30,6 +30,7 @@ sed -n '1,260p' docs/CONTENT_EXTENSION_GUIDE.md
 sed -n '1,220p' docs/CURRENT_TASK.md
 sed -n '1,220p' docs/CHANGELOG_AGENT.md
 npm run agent:status
+npm run agent:handoff
 npm run agent:start -- --goal "<short task goal>" --dry-run
 sed -n '1,220p' content/tap-survivor-content.json
 rg -n "<content_id>|<function_name>|<asset_id>" content src scripts docs
@@ -57,6 +58,7 @@ npm run agent:check
 - Files changed or created.
 - Validation command and result.
 - Evidence stub from `npm run agent:evidence -- --task "<short task name>"` when useful.
+- Handoff snapshot from `npm run agent:handoff` for resumed or delegated work.
 - Any generated files updated.
 - Any known risk or limitation.
 

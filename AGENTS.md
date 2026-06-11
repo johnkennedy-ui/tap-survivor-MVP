@@ -10,7 +10,8 @@ Before editing this repo:
 6. Do not edit `src/content.generated.js` by hand.
 7. Do not rewrite the game loop, renderer, or combat system unless the task specifically requires it.
 8. Use `npm run agent:status` for a quick repo overview when needed.
-9. Run `npm run agent:check` before reporting code or structure changes.
-10. Use `npm run agent:evidence -- --task "<short task name>"` to create a replayable evidence stub.
+9. Use `npm run agent:handoff` when handing the repo to another agent or resuming later.
+10. Run `npm run agent:check` before reporting code or structure changes.
+11. Use `npm run agent:evidence -- --task "<short task name>"` to create a replayable evidence stub.
 
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.

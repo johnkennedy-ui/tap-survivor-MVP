@@ -75,6 +75,7 @@ The project is mixed but mostly registry-driven:
 - Deployment check: `npm run check:deploy`
 - Agent task checkpoint writer: `npm run agent:start -- --goal "<task>"`
 - Agent status overview: `npm run agent:status`
+- Agent handoff summary: `npm run agent:handoff`
 - Agent validation lane: `npm run agent:check`
 - Agent evidence stub: `npm run agent:evidence -- --task "<short task name>"`
 
