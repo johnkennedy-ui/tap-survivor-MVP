@@ -1102,19 +1102,19 @@ globalThis.TapSurvivorContent = {
       }
     ],
     "sprites": {
-      "player": "assets/generated/tower/sprites/player-tower-mage.svg?v=generated-20260611",
+      "player": "assets/generated/tower/sprites/player-tower-mage.svg?v=generated-20260611-quality",
       "backgrounds": {
         "tower_floor": "assets/generated/tower/tower-floor-bg.png?v=generated-20260611"
       },
       "enemies": {
-        "drifter": "assets/generated/tower/sprites/enemy-drifter-shade.svg?v=generated-20260611",
-        "skitter": "assets/generated/tower/sprites/enemy-skitter-rune.svg?v=generated-20260611",
-        "bulwark": "assets/generated/tower/sprites/enemy-bulwark-guardian.svg?v=generated-20260611",
-        "boss": "assets/generated/tower/sprites/enemy-boss-tower-warden.svg?v=generated-20260611"
+        "drifter": "assets/generated/tower/sprites/enemy-drifter-shade.svg?v=generated-20260611-quality",
+        "skitter": "assets/generated/tower/sprites/enemy-skitter-rune.svg?v=generated-20260611-quality",
+        "bulwark": "assets/generated/tower/sprites/enemy-bulwark-guardian.svg?v=generated-20260611-quality",
+        "boss": "assets/generated/tower/sprites/enemy-boss-tower-warden.svg?v=generated-20260611-quality"
       },
       "weapons": {
-        "spark_bolt": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260611",
-        "prism_beam": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260611"
+        "spark_bolt": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260611-quality",
+        "prism_beam": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260611-quality"
       },
       "ui": {
         "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"

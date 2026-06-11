@@ -1,5 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <circle cx="64" cy="64" r="42" fill="#17202c" stroke="#69d2ff" stroke-width="5"/>
-  <path d="M69 16 L34 69 H61 L53 112 L95 55 H68 Z" fill="#ffd166" stroke="#f3f6fb" stroke-width="4" stroke-linejoin="round"/>
-  <circle cx="64" cy="64" r="50" fill="none" stroke="#69d2ff" stroke-width="3" stroke-dasharray="8 8"/>
+  <defs>
+    <radialGradient id="ring" cx="50%" cy="50%" r="58%">
+      <stop offset="0" stop-color="#26364e"/>
+      <stop offset="1" stop-color="#0e1522"/>
+    </radialGradient>
+    <filter id="sparkGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <circle cx="64" cy="64" r="47" fill="url(#ring)" stroke="#69d2ff" stroke-width="5"/>
+  <circle cx="64" cy="64" r="55" fill="none" stroke="#ffd166" stroke-width="3" stroke-dasharray="9 7"/>
+  <path d="M70 14 L33 68 H59 L52 114 L96 56 H70 Z" fill="#ffd166" stroke="#f3f6fb" stroke-width="5" stroke-linejoin="round" filter="url(#sparkGlow)"/>
+  <path d="M47 38 L58 46 M84 83 L74 75 M38 91 L50 85 M89 34 L79 45" stroke="#69d2ff" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="64" cy="64" r="7" fill="#f3f6fb"/>
 </svg>

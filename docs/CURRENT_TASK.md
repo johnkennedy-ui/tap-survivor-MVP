@@ -4,39 +4,33 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract shell UI controller from game.js
+Improve tower sprite quality
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T20:28:36.000Z
+- Started: 2026-06-11T20:59:07.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `index.html`
-- `src/ui.js`
-- `src/shell-ui.js`
-- `src/game.js`
-- `src/styles.css`
-- `scripts/browser-smoke.html`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
-- `scripts/verify-mvp.mjs`
+- `assets/generated/tower/sprites/*.svg`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `index.html`
-- `src/ui.js`
-- `src/shell-ui.js`
-- `src/game.js`
-- `src/styles.css`
-- `scripts/browser-smoke.html`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
-- `scripts/verify-mvp.mjs`
+- `assets/generated/tower/sprites/player-tower-mage.svg`
+- `assets/generated/tower/sprites/enemy-drifter-shade.svg`
+- `assets/generated/tower/sprites/enemy-skitter-rune.svg`
+- `assets/generated/tower/sprites/enemy-bulwark-guardian.svg`
+- `assets/generated/tower/sprites/enemy-boss-tower-warden.svg`
+- `assets/generated/tower/sprites/weapon-spark-rune.svg`
+- `assets/generated/tower/sprites/weapon-prism-rune.svg`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
@@ -45,20 +39,18 @@ Extract shell UI controller from game.js
 Run the smallest command that proves the change:
 
 ```bash
-node --check src/game.js
+npm run build:content
+node --check src/content.generated.js
 node scripts/verify-mvp.mjs
-npm run smoke:browser
 npm run agent:prepush
 ```
 
 Result:
 
-- `node --check src/game.js`: passed.
-- `node --check src/shell-ui.js`: passed.
-- `node --check scripts/verify-mvp.mjs`: passed.
+- `npm run build:content`: passed.
+- `node --check src/content.generated.js`: passed.
+- `npm run validate:content`: passed.
 - `node scripts/verify-mvp.mjs`: passed 143 checks.
-- `npm run smoke:start-run`: passed.
-- `npm run smoke:shop`: passed.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

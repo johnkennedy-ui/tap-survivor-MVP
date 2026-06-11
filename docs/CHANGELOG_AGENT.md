@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Reworked generated tower SVG sprites with richer tower-fantasy styling and refreshed cache keys.
 - Extracted start/menu/shop/fullscreen event wiring from `game.js` into `src/shell-ui.js`.
 - Added a start menu overlay, bottom shop close control, shared modal scrolling, and an in-run exit action.
 - Added a fullscreen control and changed the in-run Menu button to toggle the menu open and closed.
