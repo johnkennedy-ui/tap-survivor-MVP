@@ -211,6 +211,7 @@ function resetGameState() {
     pauseReason: "",
     elapsed: 0,
     duration: 360,
+    towerFloor: save.towerFloor || 1,
     bossSpawned: false,
     bossDefeated: false,
     player,
@@ -284,8 +285,12 @@ function endRun(reason) {
   if (!game) return;
   game.running = false;
   game.endReason = reason;
+  if (reason === "Boss defeated") {
+    save.towerFloor = Math.max(save.towerFloor || 1, game.towerFloor + 1);
+  }
   ui.runStats.innerHTML = `
     <p>Result: ${reason}</p>
+    <p>Tower floor: ${game.towerFloor}</p>
     <p>Time survived: ${formatTime(game.elapsed)}</p>
     <p>Enemies defeated: ${game.kills}</p>
     <p>Level reached: ${game.player.level}</p>
@@ -405,6 +410,7 @@ function applyRunMetaUpgrades() {
 const renderer = globalThis.TapSurvivorRendering.createRenderer({
   canvas,
   ctx,
+  drawImage: spriteSystem.drawImage,
   drawSprite: spriteSystem.drawSprite,
   weaponDefs,
 });

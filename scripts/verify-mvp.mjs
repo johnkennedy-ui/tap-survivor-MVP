@@ -73,6 +73,8 @@ check("enemy chase loop exists", runtime.includes("updateEnemies") && runtime.in
 check("content source exists", contentSource.includes('"schemaVersion"') && generatedContent.includes("TapSurvivorContent"));
 check("Kenney asset manifest exists", content.assets?.sources?.some((source) => source.id === "kenney_desert_shooter_pack" && source.commercialUse === true && source.attributionRequired === false));
 check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "spark_bolt", "prism_beam"].every((id) => contentText.includes(id)) && sprites.includes("drawSprite"));
+check("generated tower background asset exists", content.assets?.sources?.some((source) => source.id === "generated_tower_floor" && source.commercialUse === true && source.attributionRequired === false) && content.assets?.sprites?.backgrounds?.tower_floor);
+check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));
 check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
 check("default character registry entry exists", (content.characters || []).some((character) => character.id === "character_default" && character.spriteId === "player"));
 check("enemy types unlock every 30 seconds", runtime.includes("Math.floor(game.elapsed / 30)") && runtime.includes("availableEnemyTypes"));
@@ -127,6 +129,7 @@ check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].ever
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", runtime.includes("duration: 360") && runtime.includes("spawnBoss"));
 check("boss death completes run", runtime.includes('endRun("Boss defeated")') && runtime.includes("enemy.boss"));
+check("tower floor progresses after boss clear", save.includes("towerFloor: 1") && game.includes("save.towerFloor") && game.includes("Tower floor:") && rendering.includes("Tower Floor"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));

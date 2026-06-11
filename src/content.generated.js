@@ -1013,10 +1013,22 @@ globalThis.TapSurvivorContent = {
         "attributionRequired": false,
         "url": "https://kenney.nl/assets/desert-shooter-pack",
         "localLicense": "assets/kenney/desert-shooter/License.txt"
+      },
+      {
+        "id": "generated_tower_floor",
+        "name": "Generated Tower Floor Background",
+        "license": "Generated original asset",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "local",
+        "localLicense": "assets/generated/tower/License.txt"
       }
     ],
     "sprites": {
       "player": "assets/kenney/desert-shooter/player.png?v=kenney-20260610",
+      "backgrounds": {
+        "tower_floor": "assets/generated/tower/tower-floor-bg.png?v=generated-20260611"
+      },
       "enemies": {
         "drifter": "assets/kenney/desert-shooter/enemy-drifter.png?v=kenney-20260610",
         "skitter": "assets/kenney/desert-shooter/enemy-skitter.png?v=kenney-20260610",

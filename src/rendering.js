@@ -1,10 +1,10 @@
 (() => {
 const { clamp } = globalThis.TapSurvivorMath;
 
-function createRenderer({ canvas, ctx, drawSprite, weaponDefs }) {
+function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   function draw(game) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawArena();
+    drawArena(game);
     if (!game) {
       drawMenuHint();
       return;
@@ -44,10 +44,15 @@ function createRenderer({ canvas, ctx, drawSprite, weaponDefs }) {
     ctx.closePath();
   }
 
-  function drawArena() {
-    ctx.fillStyle = "#17202c";
+  function drawArena(game) {
+    const backgroundDrawn = drawImage?.("background:tower_floor", 0, 0, canvas.width, canvas.height);
+    if (!backgroundDrawn) {
+      ctx.fillStyle = "#17202c";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.fillStyle = "rgba(10, 14, 20, 0.16)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "#243244";
+    ctx.strokeStyle = backgroundDrawn ? "rgba(223, 246, 255, 0.08)" : "#243244";
     ctx.lineWidth = 1;
     for (let x = 0; x < canvas.width; x += 48) {
       ctx.beginPath();
@@ -61,6 +66,26 @@ function createRenderer({ canvas, ctx, drawSprite, weaponDefs }) {
       ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
+    drawTowerFloorBadge(game);
+  }
+
+  function drawTowerFloorBadge(game) {
+    const floor = game?.towerFloor || 1;
+    const width = 132;
+    const height = 34;
+    const x = canvas.width / 2 - width / 2;
+    const y = 12;
+    roundedRectPath(x, y, width, height, 8);
+    ctx.fillStyle = "rgba(10, 14, 20, 0.76)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 209, 102, 0.7)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "700 15px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`Tower Floor ${floor}`, canvas.width / 2, y + 22);
+    ctx.textAlign = "start";
   }
 
   function drawMenuHint() {

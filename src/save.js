@@ -11,6 +11,7 @@ function createSaveSystem({
   function defaultSave() {
     return {
       coins: 0,
+      towerFloor: 1,
       questPoints: 0,
       totalQuestPoints: 0,
       unlockedNodes: [],
@@ -38,6 +39,7 @@ function createSaveSystem({
     const normalized = { ...defaultSave(), ...input };
     normalized.unlockedWeapons = [...new Set(["spark_bolt", ...(normalized.unlockedWeapons || [])])];
     normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
+    normalized.towerFloor = Math.max(1, Math.floor(normalized.towerFloor || 1));
     normalized.unlockedNodes = normalized.unlockedNodes || [];
     normalized.upgradeTiers = normalized.upgradeTiers || {};
     normalized.shopPurchases = normalized.shopPurchases || {};
