@@ -10,6 +10,7 @@ const questGroups = content.questGroups || {};
 const enemyTypes = content.enemyTypes || [];
 const characters = content.characters || [];
 const shopItems = content.shopItems || [];
+const relics = content.relics || [];
 const levels = content.levels || [];
 const validationErrors = validateContent(content);
 
@@ -81,6 +82,7 @@ console.log(`- quest groups: ${Object.keys(questGroups).length}`);
 console.log(`- enemy types: ${enemyTypes.length}`);
 console.log(`- characters: ${characters.length}`);
 console.log(`- shop items: ${shopItems.length}`);
+console.log(`- relics: ${relics.length}`);
 console.log(`- levels: ${levels.length}`);
 
 printList(
@@ -123,6 +125,11 @@ printList(
       .join(", ");
     return `${upgrade.id} | max tier ${upgrade.maxTier}${effects ? ` | ${effects}` : ""}`;
   }),
+);
+
+printList(
+  "Relics",
+  relics.map((relic) => `${relic.id} -> ${relic.targetUpgradeId} | weight +${relic.selectionWeightBonus} | max tier +${relic.maxTierBonus}`),
 );
 
 console.log("\n## Quest Groups");

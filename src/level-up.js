@@ -20,6 +20,7 @@ function createLevelUpSystem({
   ui,
   weaponDefs,
   runUpgradeDefs,
+  relicDefs,
   getSave,
   getGame,
   getRunUpgradeTier,
@@ -45,14 +46,24 @@ function createLevelUpSystem({
       questWeaponIds.includes(choice.weaponId),
     );
     const otherWeaponChoices = weaponChoices.filter((choice) => !questWeaponChoices.includes(choice));
+    const activeRelics = (save.equippedRelics || [])
+      .map((id) => (relicDefs || []).find((relic) => relic.id === id))
+      .filter(Boolean);
+    function relicBonusFor(upgradeId, field) {
+      return activeRelics
+        .filter((relic) => relic.targetUpgradeId === upgradeId)
+        .reduce((total, relic) => total + (relic[field] || 0), 0);
+    }
     const runUpgradeChoices = runUpgradeDefs
-      .filter((upgrade) => getRunUpgradeTier(upgrade.id) < upgrade.maxTier)
+      .filter((upgrade) => getRunUpgradeTier(upgrade.id) < upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus"))
       .map((upgrade) => {
         const tier = getRunUpgradeTier(upgrade.id);
+        const maxTier = upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus");
         return {
           name: `${upgrade.name} ${tier + 1}`,
-          description: `${upgrade.description} Tier ${tier + 1}/${upgrade.maxTier}.`,
+          description: `${upgrade.description} Tier ${tier + 1}/${maxTier}.`,
           family: upgrade.family || upgrade.id,
+          relicWeightBonus: relicBonusFor(upgrade.id, "selectionWeightBonus"),
           runUpgradeId: upgrade.id,
           apply: () => {
             game.runUpgradeTiers[upgrade.id] = tier + 1;
@@ -67,7 +78,8 @@ function createLevelUpSystem({
     }, {});
     const otherChoices = weightedChoices([...otherWeaponChoices, ...runUpgradeChoices], (choice) => {
       if (!choice.runUpgradeId) return 1;
-      return 1 + (familyTiers[choice.family] || 0) * 1.4 + getRunUpgradeTier(choice.runUpgradeId) * 0.8;
+      const shopFocus = shopFocusBonus(save);
+      return 1 + (familyTiers[choice.family] || 0) * 1.4 + getRunUpgradeTier(choice.runUpgradeId) * 0.8 + choice.relicWeightBonus + shopFocus;
     });
     const choices = [
       ...questWeaponChoices,
@@ -96,6 +108,10 @@ function createLevelUpSystem({
       ui.choices.appendChild(button);
     });
     ui.levelUp.classList.remove("hidden");
+  }
+
+  function shopFocusBonus(save) {
+    return (save.shopPurchases?.relic_compass || 0) * 0.5;
   }
 
   function closeLevelUpMenu() {

@@ -56,6 +56,7 @@ console.log(`- quests: ${countMap(content.quests)}`);
 console.log(`- enemy types: ${countList(content.enemyTypes)}`);
 console.log(`- characters: ${countList(content.characters)}`);
 console.log(`- shop items: ${countList(content.shopItems)}`);
+console.log(`- relics: ${countList(content.relics)}`);
 console.log(`- levels: ${countList(content.levels)}`);
 
 console.log("\n## Current Task Snapshot");

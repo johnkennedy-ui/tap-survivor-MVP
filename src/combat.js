@@ -161,22 +161,26 @@ function createCombatSystem({
   }
 
   function weaponCooldown(weapon) {
-    const rateTier = getUpgradeTier("fire_rate") + getRunUpgradeTier("run_fire_rate");
+    const shopBonuses = getShopBonuses?.() || {};
+    const rateTier = getUpgradeTier("fire_rate") + getRunUpgradeTier("run_fire_rate") + (shopBonuses.fireRate || 0);
     return weapon.cooldown / (1 + rateTier * 0.12);
   }
 
   function weaponReach(weapon) {
-    const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius");
+    const shopBonuses = getShopBonuses?.() || {};
+    const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
     return (weapon.range || 0) * (1 + radiusTier * 0.12);
   }
 
   function weaponWidth(weapon) {
-    const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius");
+    const shopBonuses = getShopBonuses?.() || {};
+    const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
     return (weapon.width || 0) * (1 + radiusTier * 0.1);
   }
 
   function projectileRadius(weapon) {
-    const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius");
+    const shopBonuses = getShopBonuses?.() || {};
+    const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
     return (weapon.radius || 0) * (1 + radiusTier * 0.12);
   }
 
@@ -187,7 +191,8 @@ function createCombatSystem({
     const percentTier =
       getUpgradeTier("percent_damage") +
       getRunUpgradeTier("run_percent_damage") +
-      getUpgradeTier(weapon.upgradeId) * 2;
+      getUpgradeTier(weapon.upgradeId) * 2 +
+      (shopBonuses.percentDamage || 0);
     return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12);
   }
 

@@ -19,6 +19,8 @@ function createSaveSystem({
       upgradeTiers: {},
       unlockedUpgrades: [],
       shopPurchases: {},
+      unlockedRelics: [],
+      equippedRelics: [],
       activeQuests: [...starterQuestIds],
       completedQuests: [],
       questProgress: {},
@@ -43,6 +45,8 @@ function createSaveSystem({
     normalized.unlockedNodes = normalized.unlockedNodes || [];
     normalized.upgradeTiers = normalized.upgradeTiers || {};
     normalized.shopPurchases = normalized.shopPurchases || {};
+    normalized.unlockedRelics = [...new Set(normalized.unlockedRelics || [])];
+    normalized.equippedRelics = [...new Set(normalized.equippedRelics || normalized.unlockedRelics)];
     normalized.activeQuests = normalized.activeQuests || [];
     normalized.completedQuests = normalized.completedQuests || [];
     normalized.questProgress = normalized.questProgress || {};

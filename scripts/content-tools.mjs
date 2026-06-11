@@ -23,6 +23,7 @@ export function validateContent(content) {
   const enemyTypes = content.enemyTypes || [];
   const characters = content.characters || [];
   const shopItems = content.shopItems || [];
+  const relics = content.relics || [];
   const levels = content.levels || [];
   const assets = content.assets || {};
 
@@ -32,6 +33,7 @@ export function validateContent(content) {
   const seenEnemies = new Set();
   const seenCharacters = new Set();
   const seenShopItems = new Set();
+  const seenRelics = new Set();
   const seenLevels = new Set();
 
   function fail(message) {
@@ -64,6 +66,7 @@ export function validateContent(content) {
   requireArray(enemyTypes, "enemyTypes");
   requireArray(characters, "characters");
   requireArray(shopItems, "shopItems");
+  requireArray(relics, "relics");
   requireArray(levels, "levels");
   if (content.assets) requireObject(assets, "assets");
 
@@ -217,11 +220,23 @@ export function validateContent(content) {
     }
     if (item.effect) {
       requireString(item.effect.stat, `shopItem ${item.id}.effect.stat`);
-      if (!["speed", "pickupRadius", "maxHp", "flatDamage"].includes(item.effect.stat)) {
+      if (!["speed", "pickupRadius", "maxHp", "flatDamage", "attackRadius", "fireRate", "percentDamage", "relicFocus"].includes(item.effect.stat)) {
         fail(`shopItem ${item.id} has unsupported effect stat ${item.effect.stat}`);
       }
       requireNumber(item.effect.value, `shopItem ${item.id}.effect.value`, 0);
     }
+  });
+
+  relics.forEach((relic) => {
+    requireString(relic.id, "relic.id");
+    if (seenRelics.has(relic.id)) fail(`duplicate relic ${relic.id}`);
+    seenRelics.add(relic.id);
+    ["name", "description", "targetUpgradeId"].forEach((field) => requireString(relic[field], `relic ${relic.id}.${field}`));
+    if (!runUpgrades.some((upgrade) => upgrade.id === relic.targetUpgradeId)) {
+      fail(`relic ${relic.id} references missing run upgrade ${relic.targetUpgradeId}`);
+    }
+    requireNumber(relic.selectionWeightBonus, `relic ${relic.id}.selectionWeightBonus`, 0);
+    requireNumber(relic.maxTierBonus, `relic ${relic.id}.maxTierBonus`, 0);
   });
 
   levels.forEach((level) => {

@@ -30,6 +30,7 @@ const runUpgradeDefs = upgradeContent.runUpgradeDefs || [];
 
 const enemyTypes = content.enemyTypes || [];
 const shopItemDefs = content.shopItems || [];
+const relicDefs = content.relics || [];
 const levelDefs = content.levels || [];
 
 const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
@@ -268,6 +269,7 @@ const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
   ui,
   weaponDefs,
   runUpgradeDefs,
+  relicDefs,
   getSave: () => save,
   getGame: () => game,
   getRunUpgradeTier,
@@ -285,6 +287,7 @@ function endRun(reason) {
   if (!game) return;
   game.running = false;
   game.endReason = reason;
+  const awardedRelic = reason === "Boss defeated" ? grantRandomRelic() : null;
   if (reason === "Boss defeated") {
     save.towerFloor = Math.max(save.towerFloor || 1, game.towerFloor + 1);
   }
@@ -296,12 +299,23 @@ function endRun(reason) {
     <p>Level reached: ${game.player.level}</p>
     <p>XP collected: ${game.xpCollected}</p>
     <p>Coins banked: ${save.coins}</p>
+    ${awardedRelic ? `<p>Relic unlocked: ${awardedRelic.name}</p>` : ""}
     <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
     <p>Quest Points: ${save.questPoints} available</p>
   `;
   ui.endScreen.classList.remove("hidden");
   persist();
   renderMeta();
+}
+
+function grantRandomRelic() {
+  const unlocked = new Set(save.unlockedRelics || []);
+  const locked = relicDefs.filter((relic) => !unlocked.has(relic.id));
+  if (!locked.length) return null;
+  const relic = locked[Math.floor(Math.random() * locked.length)];
+  save.unlockedRelics = [...unlocked, relic.id];
+  save.equippedRelics = [...new Set([...(save.equippedRelics || []), relic.id])];
+  return relic;
 }
 
 function update(dt) {

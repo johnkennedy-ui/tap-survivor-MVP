@@ -999,6 +999,74 @@
         "stat": "flatDamage",
         "value": 2
       }
+    },
+    {
+      "id": "arcane_lens",
+      "name": "Arcane Lens",
+      "description": "Start each run with wider attack reach.",
+      "kind": "stat_upgrade",
+      "cost": [
+        28,
+        46,
+        72
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 1
+      }
+    },
+    {
+      "id": "clockwork_trigger",
+      "name": "Clockwork Trigger",
+      "description": "Start each run with faster auto-attacks.",
+      "kind": "stat_upgrade",
+      "cost": [
+        34,
+        56,
+        84
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 1
+      }
+    },
+    {
+      "id": "tower_grimoire",
+      "name": "Tower Grimoire",
+      "description": "Start each run with stronger percentage damage.",
+      "kind": "stat_upgrade",
+      "cost": [
+        40,
+        66,
+        98
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 1
+      }
+    },
+    {
+      "id": "relic_compass",
+      "name": "Relic Compass",
+      "description": "Boss relics push their linked skills harder in level-up choices.",
+      "kind": "stat_upgrade",
+      "cost": [
+        45,
+        75,
+        110
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.5
+      }
     }
   ],
   "levels": [],
@@ -1051,5 +1119,199 @@
         "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
       }
     }
-  }
+  },
+  "relics": [
+    {
+      "id": "move_speed_focus_relic",
+      "name": "Move Speed Focus Relic",
+      "description": "Move Speed appears more often in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "move_speed_mastery_relic",
+      "name": "Move Speed Mastery Relic",
+      "description": "Move Speed gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "pickup_radius_focus_relic",
+      "name": "Pickup Radius Focus Relic",
+      "description": "Pickup Radius appears more often in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "pickup_radius_mastery_relic",
+      "name": "Pickup Radius Mastery Relic",
+      "description": "Pickup Radius gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "max_hp_focus_relic",
+      "name": "Max HP Focus Relic",
+      "description": "Max HP appears more often in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "max_hp_mastery_relic",
+      "name": "Max HP Mastery Relic",
+      "description": "Max HP gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "attack_radius_focus_relic",
+      "name": "Attack Radius Focus Relic",
+      "description": "Attack Radius appears more often in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "attack_radius_mastery_relic",
+      "name": "Attack Radius Mastery Relic",
+      "description": "Attack Radius gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "fire_rate_focus_relic",
+      "name": "Fire Rate Focus Relic",
+      "description": "Fire Rate appears more often in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "fire_rate_mastery_relic",
+      "name": "Fire Rate Mastery Relic",
+      "description": "Fire Rate gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "flat_damage_focus_relic",
+      "name": "Flat Damage Focus Relic",
+      "description": "Flat Damage appears more often in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "flat_damage_mastery_relic",
+      "name": "Flat Damage Mastery Relic",
+      "description": "Flat Damage gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "percent_damage_focus_relic",
+      "name": "Percent Damage Focus Relic",
+      "description": "Percent Damage appears more often in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "percent_damage_mastery_relic",
+      "name": "Percent Damage Mastery Relic",
+      "description": "Percent Damage gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "projectile_pierce_focus_relic",
+      "name": "Piercing Shots Focus Relic",
+      "description": "Piercing Shots appears more often in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "projectile_pierce_mastery_relic",
+      "name": "Piercing Shots Mastery Relic",
+      "description": "Piercing Shots gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "wall_bounce_focus_relic",
+      "name": "Ricochet Shots Focus Relic",
+      "description": "Ricochet Shots appears more often in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "wall_bounce_mastery_relic",
+      "name": "Ricochet Shots Mastery Relic",
+      "description": "Ricochet Shots gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "split_shot_focus_relic",
+      "name": "Split Fire Focus Relic",
+      "description": "Split Fire appears more often in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "split_shot_mastery_relic",
+      "name": "Split Fire Mastery Relic",
+      "description": "Split Fire gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "explosive_hit_focus_relic",
+      "name": "Explosive Hits Focus Relic",
+      "description": "Explosive Hits appears more often in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "explosive_hit_mastery_relic",
+      "name": "Explosive Hits Mastery Relic",
+      "description": "Explosive Hits gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    },
+    {
+      "id": "split_on_hit_focus_relic",
+      "name": "Splinter Shots Focus Relic",
+      "description": "Splinter Shots appears more often in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 0
+    },
+    {
+      "id": "split_on_hit_mastery_relic",
+      "name": "Splinter Shots Mastery Relic",
+      "description": "Splinter Shots gains an extra possible tier and appears more often.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1
+    }
+  ]
 }

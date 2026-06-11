@@ -94,6 +94,10 @@ function createShopSystem({
       pickupRadius: 0,
       maxHp: 0,
       flatDamage: 0,
+      attackRadius: 0,
+      fireRate: 0,
+      percentDamage: 0,
+      relicFocus: 0,
     };
     shopItemDefs.forEach((item) => {
       const tier = save.shopPurchases?.[item.id] || 0;
