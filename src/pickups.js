@@ -25,7 +25,7 @@ function createPickupSystem({
         x: enemy.x + randomRange(-12, 12),
         y: enemy.y + randomRange(-12, 12),
         radius: enemy.boss ? 11 : 8,
-        value: enemy.boss ? 40 : 22,
+        healPercent: 0.2,
       });
     }
   }
@@ -78,7 +78,8 @@ function createPickupSystem({
       renderMeta();
     }
     if (drop.type === "heart") {
-      game.player.hp = Math.min(game.player.maxHp, game.player.hp + drop.value);
+      const healAmount = Math.ceil(game.player.maxHp * drop.healPercent);
+      game.player.hp = Math.min(game.player.maxHp, game.player.hp + healAmount);
     }
   }
 

@@ -141,7 +141,14 @@ printList("Ungrouped Quests", ungroupedQuestIds);
 printList("Terminal Quests", terminalQuestIds);
 printList("Enemy Types", idsFromList(enemyTypes));
 printList("Characters", idsFromList(characters));
-printList("Shop Items", idsFromList(shopItems));
+printList(
+  "Shop Items",
+  shopItems.map((item) => {
+    const costs = Array.isArray(item.cost) ? item.cost.join(", ") : item.cost;
+    const effect = item.effect ? ` | ${item.effect.stat}+${item.effect.value}` : "";
+    return `${item.id} | ${item.kind} | costs ${costs}${effect}`;
+  }),
+);
 printList("Levels", idsFromList(levels));
 
 printList("Missing Or Dangling References", [...validationErrors, ...missingReferences]);

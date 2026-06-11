@@ -70,16 +70,21 @@ function readSource(path) {
   return readFileSync(join(root, path), "utf8");
 }
 
-export function createGameHarness({ fakeCombat = false } = {}) {
+export function createGameHarness({ fakeCombat = false, initialSave = null } = {}) {
   const elements = new Map();
   const ids = [
     "game",
     "startRun",
+    "openShop",
     "resetSave",
     "openMenu",
     "closeMenu",
+    "closeShop",
     "closeLevelUp",
     "runMenu",
+    "shopModal",
+    "shopCoinHud",
+    "shopItems",
     "runHud",
     "qpHud",
     "menuQpHud",
@@ -144,6 +149,10 @@ export function createGameHarness({ fakeCombat = false } = {}) {
     },
   };
 
+  if (initialSave) {
+    context.localStorage.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
+  }
+
   vm.createContext(context);
   [
     "src/content.generated.js",
@@ -195,6 +204,7 @@ export function createGameHarness({ fakeCombat = false } = {}) {
   vm.runInContext(readSource("src/level-up.js"), context);
   vm.runInContext(readSource("src/input.js"), context);
   vm.runInContext(readSource("src/pickups.js"), context);
+  vm.runInContext(readSource("src/shop.js"), context);
   vm.runInContext(readSource("src/game.js"), context);
 
   return {

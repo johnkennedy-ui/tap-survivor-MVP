@@ -14,6 +14,7 @@ const checks = [
   ["npm", ["run", "smoke:save"]],
   ["npm", ["run", "smoke:start-run"]],
   ["npm", ["run", "smoke:boss-run"]],
+  ["npm", ["run", "smoke:shop"]],
   ["npm", ["run", "smoke:quest-flow"]],
   ["npm", ["test"]],
 ];

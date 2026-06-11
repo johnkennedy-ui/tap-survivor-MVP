@@ -16,6 +16,16 @@
           <button class="speed-button" type="button" data-speed="5">x5</button>
         </div>
         <button id="openMenu" class="menu-button" type="button">Menu</button>
+        <div id="shopModal" class="modal hidden">
+          <div class="modal-box menu-box">
+            <div class="modal-header">
+              <h2>Coin Shop</h2>
+              <button id="closeShop" class="modal-close" type="button" aria-label="Close shop">&times;</button>
+            </div>
+            <p id="shopCoinHud"></p>
+            <div id="shopItems" class="shop-grid"></div>
+          </div>
+        </div>
         <div id="runMenu" class="modal hidden">
           <div class="modal-box menu-box">
             <div class="modal-header">
@@ -56,6 +66,7 @@
         <h1>Tap Survivor MVP</h1>
         <div class="actions">
           <button id="startRun">Start Run</button>
+          <button id="openShop">Shop</button>
           <button id="resetSave">Reset Save</button>
         </div>
 
@@ -94,6 +105,7 @@
     <script src="src/level-up.js?v=maintenance-20260611"></script>
     <script src="src/input.js?v=maintenance-20260611"></script>
     <script src="src/pickups.js?v=maintenance-20260611"></script>
+    <script src="src/shop.js?v=maintenance-20260611"></script>
     <script src="src/game.js?v=combat-20260611"></script>
   </body>
 </html>

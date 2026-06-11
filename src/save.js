@@ -17,6 +17,7 @@ function createSaveSystem({
       unlockedWeapons: ["spark_bolt"],
       upgradeTiers: {},
       unlockedUpgrades: [],
+      shopPurchases: {},
       activeQuests: [...starterQuestIds],
       completedQuests: [],
       questProgress: {},
@@ -39,6 +40,7 @@ function createSaveSystem({
     normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
     normalized.unlockedNodes = normalized.unlockedNodes || [];
     normalized.upgradeTiers = normalized.upgradeTiers || {};
+    normalized.shopPurchases = normalized.shopPurchases || {};
     normalized.activeQuests = normalized.activeQuests || [];
     normalized.completedQuests = normalized.completedQuests || [];
     normalized.questProgress = normalized.questProgress || {};

@@ -45,8 +45,8 @@ node scripts/add-content.mjs weapon frost_example --name "Frost Example" --descr
 ## Add An Item
 
 1. Add the item to `shopItems` in `content/tap-survivor-content.json`.
-2. Include `id`, `name`, `description`, `kind`, `cost`, and optional `effect`/`value`.
-3. Do not wire new item behavior into `src/game.js` unless the task explicitly asks for it.
+2. Include `id`, `name`, `description`, `kind`, `cost`, `maxTier`, and optional `effect`.
+3. `stat_upgrade` items with `speed`, `pickupRadius`, or `maxHp` effects are applied by `src/shop.js` at run start.
 4. Run `npm run build:content && npm run validate:content`.
 
 Shortcut:

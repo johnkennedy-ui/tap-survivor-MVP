@@ -151,13 +151,15 @@ section + section {
 
 .tree,
 .quests,
-.choice-list {
+.choice-list,
+.shop-grid {
   display: grid;
   gap: 8px;
 }
 
 .node,
-.quest {
+.quest,
+.shop-item {
   border: 1px solid #334052;
   border-radius: 6px;
   background:
@@ -167,13 +169,15 @@ section + section {
 }
 
 .node strong,
-.quest strong {
+.quest strong,
+.shop-item strong {
   display: block;
   margin-bottom: 4px;
   color: #ffffff;
 }
 
-.node button {
+.node button,
+.shop-item button {
   width: 100%;
   margin-top: 8px;
 }
@@ -193,6 +197,14 @@ section + section {
 
 .quest.active {
   border-color: #bba24d;
+}
+
+.shop-item.available {
+  border-color: #4f9b6d;
+}
+
+.shop-item.locked {
+  border-color: #516174;
 }
 
 .modal {

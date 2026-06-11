@@ -16,6 +16,7 @@ const uiSource = readFileSync(join(root, "src/ui.js"), "utf8");
 const levelUpSource = readFileSync(join(root, "src/level-up.js"), "utf8");
 const inputSource = readFileSync(join(root, "src/input.js"), "utf8");
 const pickupsSource = readFileSync(join(root, "src/pickups.js"), "utf8");
+const shopSource = readFileSync(join(root, "src/shop.js"), "utf8");
 const listeners = new Map();
 
 function makeClassList() {
@@ -62,11 +63,16 @@ const elements = new Map();
 const ids = [
   "game",
   "startRun",
+  "openShop",
   "resetSave",
   "openMenu",
   "closeMenu",
+  "closeShop",
   "closeLevelUp",
   "runMenu",
+  "shopModal",
+  "shopCoinHud",
+  "shopItems",
   "runHud",
   "qpHud",
   "menuQpHud",
@@ -159,6 +165,7 @@ vm.runInContext(uiSource, context);
 vm.runInContext(levelUpSource, context);
 vm.runInContext(inputSource, context);
 vm.runInContext(pickupsSource, context);
+vm.runInContext(shopSource, context);
 vm.runInContext(source, context);
 
 function check(name, pass) {

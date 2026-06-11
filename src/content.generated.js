@@ -753,7 +753,59 @@ globalThis.TapSurvivorContent = {
       "notes": "Reserved content-registry entry for future character selection. Current gameplay still uses the default player directly."
     }
   ],
-  "shopItems": [],
+  "shopItems": [
+    {
+      "id": "training_boots",
+      "name": "Training Boots",
+      "description": "Start each run with more movement speed.",
+      "kind": "stat_upgrade",
+      "cost": [
+        20,
+        35,
+        55
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 10
+      }
+    },
+    {
+      "id": "coin_magnet",
+      "name": "Coin Magnet",
+      "description": "Start each run with a larger pickup radius.",
+      "kind": "stat_upgrade",
+      "cost": [
+        18,
+        32,
+        50
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 10
+      }
+    },
+    {
+      "id": "reinforced_vest",
+      "name": "Reinforced Vest",
+      "description": "Start each run with more maximum HP.",
+      "kind": "stat_upgrade",
+      "cost": [
+        24,
+        42,
+        66
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 15
+      }
+    }
+  ],
   "levels": [],
   "assets": {
     "sources": [

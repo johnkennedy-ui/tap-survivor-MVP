@@ -4,6 +4,8 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added a basic coin shop through `src/shop.js`, `shopItems` content, and `npm run smoke:shop`.
+- Changed heart pickups to heal 20% of max HP.
 - Added `src/pickups.js` for XP, coin, and heart drop behavior outside `src/game.js`.
 - Added `src/input.js` for canvas pointer/touch movement binding outside `src/game.js`.
 - Added `src/level-up.js` for level-up choice generation and modal behavior outside `src/game.js`.

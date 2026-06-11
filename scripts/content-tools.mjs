@@ -206,7 +206,22 @@ export function validateContent(content) {
     if (seenShopItems.has(item.id)) fail(`duplicate shop item ${item.id}`);
     seenShopItems.add(item.id);
     ["name", "description", "kind"].forEach((field) => requireString(item[field], `shopItem ${item.id}.${field}`));
-    requireNumber(item.cost, `shopItem ${item.id}.cost`, 0);
+    if (Array.isArray(item.cost)) {
+      item.cost.forEach((cost, index) => requireNumber(cost, `shopItem ${item.id}.cost[${index}]`, 0));
+    } else {
+      requireNumber(item.cost, `shopItem ${item.id}.cost`, 0);
+    }
+    if (item.maxTier) requireNumber(item.maxTier, `shopItem ${item.id}.maxTier`, 1);
+    if (Array.isArray(item.cost) && item.maxTier && item.cost.length !== item.maxTier) {
+      fail(`shopItem ${item.id}.cost length must match maxTier`);
+    }
+    if (item.effect) {
+      requireString(item.effect.stat, `shopItem ${item.id}.effect.stat`);
+      if (!["speed", "pickupRadius", "maxHp"].includes(item.effect.stat)) {
+        fail(`shopItem ${item.id} has unsupported effect stat ${item.effect.stat}`);
+      }
+      requireNumber(item.effect.value, `shopItem ${item.id}.effect.value`, 0);
+    }
   });
 
   levels.forEach((level) => {
