@@ -73,6 +73,7 @@ The project is mixed but mostly registry-driven:
 
 - Build generated content: `npm run build:content`
 - Validate content only: `npm run validate:content`
+- Content map summary: `npm run content:summary`
 - Audit quest graph: `npm run audit:quests`
 - Full local validation: `npm test`
 - Save smoke test: `npm run smoke:save`

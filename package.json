@@ -8,6 +8,7 @@
     "build:content": "node scripts/build-content.mjs",
     "validate:content": "node scripts/validate-content.mjs",
     "add:content": "node scripts/add-content.mjs",
+    "content:summary": "node scripts/content-summary.mjs",
     "check:deploy": "node scripts/check-deploy.mjs",
     "smoke:save": "node scripts/smoke-save.mjs",
     "smoke:start-run": "node scripts/smoke-start-run.mjs",

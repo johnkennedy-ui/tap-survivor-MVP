@@ -7,6 +7,7 @@ Use this as the short path for routine Tap Survivor updates. Keep changes small,
 ```bash
 npm run agent:start -- --goal "<short task goal>"
 npm run agent:status
+npm run content:summary
 ```
 
 Read:
@@ -21,6 +22,7 @@ Use this for weapons, quests, levels, characters, shop items, and asset registry
 
 ```bash
 npm run add:content -- <type> <id> ...
+npm run content:summary
 npm run build:content
 npm run validate:content
 ```

@@ -8,6 +8,8 @@ const checks = [
   ["node", ["--check", "scripts/agent-check.mjs"]],
   ["node", ["--check", "scripts/agent-evidence.mjs"]],
   ["node", ["--check", "scripts/smoke-game-harness.mjs"]],
+  ["node", ["--check", "scripts/content-summary.mjs"]],
+  ["npm", ["run", "content:summary"]],
   ["npm", ["run", "smoke:save"]],
   ["npm", ["run", "smoke:start-run"]],
   ["npm", ["run", "smoke:boss-run"]],
