@@ -4,6 +4,10 @@
 
 State the single requested gameplay, content, asset, or maintenance change.
 
+## Current Task File
+
+Update `docs/CURRENT_TASK.md` with the active goal, status, likely files, validation plan, evidence required, and stop condition before editing code or content.
+
 ## Files Likely Involved
 
 - Content: `content/tap-survivor-content.json`
@@ -17,6 +21,7 @@ State the single requested gameplay, content, asset, or maintenance change.
 ```bash
 sed -n '1,220p' docs/AGENT_CODEBASE_CONTEXT.md
 sed -n '1,260p' docs/CONTENT_EXTENSION_GUIDE.md
+sed -n '1,220p' docs/CURRENT_TASK.md
 sed -n '1,220p' content/tap-survivor-content.json
 rg -n "<content_id>|<function_name>|<asset_id>" content src scripts docs
 ```
