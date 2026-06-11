@@ -203,6 +203,7 @@ function resetGameState() {
     xp: 0,
     level: 1,
     xpToLevel: 5,
+    maxWeapons: maxEquippedWeapons(),
     equippedWeapons: ["spark_bolt"],
   };
 
@@ -222,6 +223,7 @@ function resetGameState() {
     bolts: [],
     beams: [],
     areas: [],
+    weaponBursts: [],
     bossAttacks: [],
     weaponTimers: {},
     runUpgradeTiers: {},
@@ -260,6 +262,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   damageQuestIds,
   bossQuestIds,
   spawnLootDrops: pickupSystem.spawnLootDrops,
+  getWeaponDamageMultiplier,
   advanceTowerFloor,
   endRun,
   distance,
@@ -274,6 +277,7 @@ const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
   getSave: () => save,
   getGame: () => game,
   getRunUpgradeTier,
+  maxEquippedWeapons,
   activeQuestWeaponIds: () => questSystem.activeQuestWeaponIds(),
 });
 
@@ -344,6 +348,23 @@ function grantRandomRelic() {
   return relic;
 }
 
+function equippedRelics() {
+  const equipped = new Set(save.equippedRelics || []);
+  return relicDefs.filter((relic) => equipped.has(relic.id));
+}
+
+function relicNumber(field) {
+  return equippedRelics().reduce((total, relic) => total + (relic[field] || 0), 0);
+}
+
+function maxEquippedWeapons() {
+  return Math.max(1, 4 + relicNumber("weaponSlotBonus"));
+}
+
+function getWeaponDamageMultiplier() {
+  return equippedRelics().reduce((multiplier, relic) => multiplier * (relic.weaponDamageMultiplier || 1), 1);
+}
+
 function update(dt) {
   if (!game || !game.running || game.paused) return;
   const p = game.player;
@@ -361,6 +382,7 @@ function update(dt) {
   updateBolts(dt);
   updateAreas(dt);
   updateBeams(dt);
+  updateWeaponBursts(dt);
   pickupSystem.updateXpDrops(dt);
   pickupSystem.updateLootDrops(dt);
 
@@ -416,6 +438,10 @@ function updateBeams(dt) {
   combat.updateBeams(dt);
 }
 
+function updateWeaponBursts(dt) {
+  combat.updateWeaponBursts(dt);
+}
+
 function collectXp(value) {
   const p = game.player;
   p.xp += value;
@@ -467,7 +493,7 @@ function updateRunHud() {
   const boss = game.enemies.find((enemy) => enemy.boss);
   const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
   const floorText = game.lastFloorClear ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}` : "";
-  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Floor ${game.towerFloor} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}${floorText}`;
+  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Floor ${game.towerFloor} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}/${maxEquippedWeapons()}${bossText}${floorText}`;
 }
 
 function closeLevelUpMenu() {

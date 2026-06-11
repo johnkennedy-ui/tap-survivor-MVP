@@ -24,6 +24,7 @@ function createLevelUpSystem({
   getSave,
   getGame,
   getRunUpgradeTier,
+  maxEquippedWeapons,
   activeQuestWeaponIds,
 }) {
   function showLevelUp() {
@@ -33,14 +34,18 @@ function createLevelUpSystem({
     game.paused = true;
     game.pauseReason = "level";
     ui.choices.innerHTML = "";
-    const weaponChoices = save.unlockedWeapons
-      .filter((weaponId) => !game.player.equippedWeapons.includes(weaponId))
-      .map((weaponId) => ({
-        weaponId,
-        name: weaponDefs[weaponId].name,
-        description: `Equip ${weaponDefs[weaponId].name} for this run.`,
-        apply: () => game.player.equippedWeapons.push(weaponId),
-      }));
+    const maxWeapons = maxEquippedWeapons?.() || 4;
+    const canEquipWeapon = game.player.equippedWeapons.length < maxWeapons;
+    const weaponChoices = canEquipWeapon
+      ? save.unlockedWeapons
+        .filter((weaponId) => !game.player.equippedWeapons.includes(weaponId))
+        .map((weaponId) => ({
+          weaponId,
+          name: weaponDefs[weaponId].name,
+          description: `Equip ${weaponDefs[weaponId].name} for this run. Weapon ${game.player.equippedWeapons.length + 1}/${maxWeapons}.`,
+          apply: () => game.player.equippedWeapons.push(weaponId),
+        }))
+      : [];
     const questWeaponIds = activeQuestWeaponIds();
     const questWeaponChoices = weaponChoices.filter((choice) =>
       questWeaponIds.includes(choice.weaponId),

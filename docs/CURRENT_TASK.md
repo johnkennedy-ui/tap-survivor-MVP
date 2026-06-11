@@ -4,33 +4,37 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Improve tower sprite quality
+Add weapon animation and weapon slot relics
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T20:59:07.000Z
+- Started: 2026-06-11T21:50:19.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `assets/generated/tower/sprites/*.svg`
+- `src/game.js`
+- `src/combat.js`
+- `src/rendering.js`
+- `src/level-up.js`
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
+- `scripts/content-summary.mjs`
+- `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `assets/generated/tower/sprites/player-tower-mage.svg`
-- `assets/generated/tower/sprites/enemy-drifter-shade.svg`
-- `assets/generated/tower/sprites/enemy-skitter-rune.svg`
-- `assets/generated/tower/sprites/enemy-bulwark-guardian.svg`
-- `assets/generated/tower/sprites/enemy-boss-tower-warden.svg`
-- `assets/generated/tower/sprites/weapon-spark-rune.svg`
-- `assets/generated/tower/sprites/weapon-prism-rune.svg`
+- `src/game.js`
+- `src/combat.js`
+- `src/rendering.js`
+- `src/level-up.js`
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
+- `scripts/content-summary.mjs`
+- `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
@@ -40,7 +44,10 @@ Run the smallest command that proves the change:
 
 ```bash
 npm run build:content
-node --check src/content.generated.js
+node --check src/game.js
+node --check src/combat.js
+node --check src/rendering.js
+node --check src/level-up.js
 node scripts/verify-mvp.mjs
 npm run agent:prepush
 ```
@@ -48,9 +55,13 @@ npm run agent:prepush
 Result:
 
 - `npm run build:content`: passed.
-- `node --check src/content.generated.js`: passed.
+- `node --check src/game.js`: passed.
+- `node --check src/combat.js`: passed.
+- `node --check src/rendering.js`: passed.
+- `node --check src/level-up.js`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 143 checks.
+- `node scripts/verify-mvp.mjs`: passed 146 checks.
+- `npm run smoke:start-run`: passed.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

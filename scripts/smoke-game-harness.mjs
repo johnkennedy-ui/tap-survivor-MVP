@@ -200,6 +200,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
           updateBolts() {},
           updateAreas() {},
           updateBeams() {},
+          updateWeaponBursts() {},
         };
       },
     };

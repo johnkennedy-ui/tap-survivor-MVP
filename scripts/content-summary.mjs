@@ -129,7 +129,11 @@ printList(
 
 printList(
   "Relics",
-  relics.map((relic) => `${relic.id} -> ${relic.targetUpgradeId} | weight +${relic.selectionWeightBonus} | max tier +${relic.maxTierBonus}`),
+  relics.map((relic) => {
+    const slot = relic.weaponSlotBonus ? ` | weapon slots ${relic.weaponSlotBonus > 0 ? "+" : ""}${relic.weaponSlotBonus}` : "";
+    const damage = relic.weaponDamageMultiplier ? ` | damage x${relic.weaponDamageMultiplier}` : "";
+    return `${relic.id} -> ${relic.targetUpgradeId} | weight +${relic.selectionWeightBonus} | max tier +${relic.maxTierBonus}${slot}${damage}`;
+  }),
 );
 
 console.log("\n## Quest Groups");

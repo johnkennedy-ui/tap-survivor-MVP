@@ -11,6 +11,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     }
 
     game.areas.forEach(drawArea);
+    game.weaponBursts.forEach(drawWeaponBurst);
     game.bossAttacks.forEach(drawBossAttack);
     game.xpDrops.forEach(drawXp);
     game.lootDrops.forEach(drawLoot);
@@ -225,6 +226,23 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.globalAlpha = 1;
   }
 
+  function drawWeaponBurst(burst) {
+    const progress = 1 - burst.life / burst.maxLife;
+    const radius = burst.radius + progress * 26;
+    ctx.globalAlpha = Math.max(0, burst.life / burst.maxLife) * 0.78;
+    ctx.strokeStyle = burst.color;
+    ctx.lineWidth = 3 + progress * 4;
+    ctx.beginPath();
+    ctx.arc(burst.x, burst.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha *= 0.22;
+    ctx.fillStyle = burst.color;
+    ctx.beginPath();
+    ctx.arc(burst.x, burst.y, Math.max(8, radius * 0.46), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
   function drawBossAttack(attack) {
     const charging = attack.age < attack.windup;
     const progress = clamp(attack.age / attack.windup, 0, 1);
@@ -263,11 +281,11 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     equipped.forEach((weaponId, index) => {
       const weapon = weaponDefs[weaponId];
       const top = y + index * (size + gap);
-      drawSkillIcon(weaponId, weapon, x, top, size);
+      drawSkillIcon(weaponId, weapon, x, top, size, game.weaponBursts.some((burst) => burst.weaponId === weaponId));
     });
   }
 
-  function drawSkillIcon(weaponId, weapon, x, y, size) {
+  function drawSkillIcon(weaponId, weapon, x, y, size, active = false) {
     const centerX = x + size / 2;
     const centerY = y + size / 2;
     const color = weapon.color || "#f3f6fb";
@@ -275,17 +293,26 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     roundedRectPath(x, y, size, size, 7);
     ctx.fillStyle = "rgba(18, 24, 34, 0.94)";
     ctx.fill();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = active ? "#ffd166" : color;
+    ctx.lineWidth = active ? 4 : 3;
     ctx.stroke();
 
     ctx.fillStyle = color;
-    ctx.globalAlpha = 0.16;
+    ctx.globalAlpha = active ? 0.3 : 0.16;
     roundedRectPath(x + 5, y + 5, size - 10, size - 10, 5);
     ctx.fill();
     ctx.globalAlpha = 1;
 
-    if (drawSprite(`weapon:${weapon.assetId || weaponId}`, centerX, centerY, size * 0.62)) return;
+    if (active) {
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.55;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, size * 0.42, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    if (drawSprite(`weapon:${weapon.assetId || weaponId}`, centerX, centerY, size * (active ? 0.72 : 0.62))) return;
     drawWeaponGlyph(weapon.kind, centerX, centerY, size, color);
   }
 

@@ -1312,6 +1312,25 @@
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 1,
       "maxTierBonus": 1
+    },
+    {
+      "id": "tower_arsenal_relic",
+      "name": "Tower Arsenal Relic",
+      "description": "Carry one extra unique weapon during each run.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 0,
+      "maxTierBonus": 0,
+      "weaponSlotBonus": 1
+    },
+    {
+      "id": "focused_channel_relic",
+      "name": "Focused Channel Relic",
+      "description": "Carry one fewer unique weapon, but all weapon damage is doubled.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 0,
+      "maxTierBonus": 0,
+      "weaponSlotBonus": -1,
+      "weaponDamageMultiplier": 2
     }
   ]
 }

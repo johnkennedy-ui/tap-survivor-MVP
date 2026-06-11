@@ -13,6 +13,7 @@ function createCombatSystem({
   damageQuestIds,
   bossQuestIds,
   spawnLootDrops,
+  getWeaponDamageMultiplier,
   advanceTowerFloor,
   endRun,
   distance,
@@ -207,12 +208,13 @@ function createCombatSystem({
       getRunUpgradeTier("run_percent_damage") +
       getUpgradeTier(weapon.upgradeId) * 2 +
       (shopBonuses.percentDamage || 0);
-    return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12);
+    return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12) * (getWeaponDamageMultiplier?.() || 1);
   }
 
   function fireWeapon(weaponId) {
     const weapon = weaponDefs[weaponId];
     if (!weapon) return;
+    addWeaponBurst(weaponId, weapon);
     if (weapon.kind === "radial") fireRadial(weaponId);
     if (weapon.kind === "beam") fireBeam(weaponId);
     if (weapon.kind === "cone") fireCone(weaponId);
@@ -221,6 +223,20 @@ function createCombatSystem({
     if (weapon.kind === "target_area") fireTargetArea(weaponId);
     if (weapon.kind === "lingering_area") fireLingeringArea(weaponId);
     if (weapon.kind === "mine") fireMine(weaponId);
+  }
+
+  function addWeaponBurst(weaponId, weapon) {
+    const game = getGame();
+    const p = game.player;
+    game.weaponBursts.push({
+      weaponId,
+      x: p.x,
+      y: p.y,
+      radius: Math.max(20, weapon.radius || weapon.width || 26),
+      color: weapon.color,
+      life: 0.32,
+      maxLife: 0.32,
+    });
   }
 
   function fireProjectile(weaponId) {
@@ -552,6 +568,12 @@ function createCombatSystem({
     game.beams = game.beams.filter((beam) => beam.life > 0);
   }
 
+  function updateWeaponBursts(dt) {
+    const game = getGame();
+    game.weaponBursts.forEach((burst) => (burst.life -= dt));
+    game.weaponBursts = game.weaponBursts.filter((burst) => burst.life > 0);
+  }
+
   function damageEnemy(enemy, amount, weaponId) {
     const game = getGame();
     const before = enemy.hp;
@@ -598,6 +620,7 @@ function createCombatSystem({
     updateBolts,
     updateAreas,
     updateBeams,
+    updateWeaponBursts,
     getRunUpgradeTier,
   };
 }
