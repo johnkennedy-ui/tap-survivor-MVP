@@ -128,6 +128,8 @@ check("shop purchases persist", save.includes("shopPurchases") && shop.includes(
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && game.includes("shopBonuses.speed") && game.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => combat.includes(token)) && game.includes("getShopBonuses"));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
+check("run menu button toggles menu", game.includes("function toggleRunMenu") && game.includes("ui.openMenu.addEventListener(\"click\", toggleRunMenu)") && index.includes('aria-expanded="false"'));
+check("fullscreen button exists", index.includes('id="fullscreenButton"') && game.includes("function toggleFullscreen") && game.includes("requestFullscreen"));
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", runtime.includes("duration: 360") && runtime.includes("spawnBoss"));

@@ -4,26 +4,36 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Loop tower floors after boss clears
+Tighten menu and fullscreen UI
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T19:44:27.000Z
+- Started: 2026-06-11T19:55:18.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
+- `index.html`
+- `src/ui.js`
 - `src/game.js`
-- `src/combat.js`
+- `src/styles.css`
+- `scripts/browser-smoke.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
+- `index.html`
+- `src/ui.js`
 - `src/game.js`
-- `src/combat.js`
+- `src/styles.css`
+- `scripts/browser-smoke.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -33,18 +43,20 @@ Loop tower floors after boss clears
 Run the smallest command that proves the change:
 
 ```bash
-npm run build:content
-npm run validate:content
-npm run smoke:boss-run
+node --check src/game.js
+node scripts/verify-mvp.mjs
+npm run smoke:browser
 npm run agent:prepush
 ```
 
 Result:
 
-- `node --check src/combat.js`: passed.
 - `node --check src/game.js`: passed.
+- `node --check src/ui.js`: passed.
 - `node --check scripts/verify-mvp.mjs`: passed.
-- `node scripts/verify-mvp.mjs`: passed 134 checks.
+- `node scripts/verify-mvp.mjs`: passed 136 checks.
+- `npm run smoke:browser`: passed as optional; local Chromium unavailable in this sandbox, so it skipped non-required real-browser execution.
+- `npm run smoke:start-run`: passed.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

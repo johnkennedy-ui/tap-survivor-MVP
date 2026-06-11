@@ -65,6 +65,7 @@ const ids = [
   "startRun",
   "openShop",
   "resetSave",
+  "fullscreenButton",
   "openMenu",
   "closeMenu",
   "closeShop",

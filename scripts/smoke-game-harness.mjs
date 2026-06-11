@@ -77,6 +77,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "startRun",
     "openShop",
     "resetSave",
+    "fullscreenButton",
     "openMenu",
     "closeMenu",
     "closeShop",

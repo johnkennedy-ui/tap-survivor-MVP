@@ -5,6 +5,7 @@ function createUi() {
     startRun: document.getElementById("startRun"),
     openShop: document.getElementById("openShop"),
     resetSave: document.getElementById("resetSave"),
+    fullscreenButton: document.getElementById("fullscreenButton"),
     openMenu: document.getElementById("openMenu"),
     closeMenu: document.getElementById("closeMenu"),
     closeShop: document.getElementById("closeShop"),

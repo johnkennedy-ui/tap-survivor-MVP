@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added a fullscreen control and changed the in-run Menu button to toggle the menu open and closed.
 - Changed boss clears to advance the tower floor, reset run-only skills, grant relics, and continue into harder floors instead of ending the run.
 - Added expanded shop options and boss-granted relics that auto-equip, raise linked skill max tiers, and weight linked skills in level-up choices.
 - Added generated tower-themed SVG sprites for player, enemies, boss, and primary weapon icons.

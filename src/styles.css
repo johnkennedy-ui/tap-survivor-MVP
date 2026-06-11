@@ -62,6 +62,14 @@ button:disabled {
   min-width: 76px;
 }
 
+.fullscreen-button {
+  position: absolute;
+  top: 12px;
+  right: 96px;
+  z-index: 2;
+  min-width: 112px;
+}
+
 .speed-controls {
   position: absolute;
   top: 12px;

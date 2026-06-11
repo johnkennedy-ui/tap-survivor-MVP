@@ -47,6 +47,7 @@
         check("canvas exists", Boolean(app.getElementById("game")));
         check("start button exists", Boolean(app.getElementById("startRun")));
         check("shop button exists", Boolean(app.getElementById("openShop")));
+        check("fullscreen button exists", Boolean(app.getElementById("fullscreenButton")));
 
         app.getElementById("openShop").click();
         await wait(100);
@@ -54,6 +55,13 @@
         check("shop renders items", app.getElementById("shopItems").children.length >= 4);
         check("shop shows coins", app.getElementById("shopCoinHud").textContent.includes("Coins: 35"));
         app.getElementById("closeShop").click();
+
+        app.getElementById("openMenu").click();
+        await wait(50);
+        check("menu button opens menu", !app.getElementById("runMenu").classList.contains("hidden"));
+        app.getElementById("openMenu").click();
+        await wait(50);
+        check("menu button closes menu", app.getElementById("runMenu").classList.contains("hidden"));
 
         app.getElementById("startRun").click();
         await wait(100);

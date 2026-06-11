@@ -457,6 +457,7 @@ function updateRunHud() {
 
 function openRunMenu() {
   ui.runMenu.classList.remove("hidden");
+  ui.openMenu.setAttribute("aria-expanded", "true");
   if (game?.running && !game.paused) {
     game.paused = true;
     game.pauseReason = "menu";
@@ -466,10 +467,43 @@ function openRunMenu() {
 
 function closeRunMenu(resume = true) {
   ui.runMenu.classList.add("hidden");
+  ui.openMenu.setAttribute("aria-expanded", "false");
   if (resume && game?.pauseReason === "menu") {
     game.paused = false;
     game.pauseReason = "";
   }
+}
+
+function toggleRunMenu() {
+  if (ui.runMenu.classList.contains("hidden")) {
+    openRunMenu();
+    return;
+  }
+  closeRunMenu(true);
+}
+
+function isFullscreen() {
+  return document.fullscreenElement || document.webkitFullscreenElement;
+}
+
+function updateFullscreenButton() {
+  const fullscreen = Boolean(isFullscreen());
+  ui.fullscreenButton.textContent = fullscreen ? "Exit Full Screen" : "Full Screen";
+  ui.fullscreenButton.setAttribute("aria-pressed", String(fullscreen));
+}
+
+function toggleFullscreen() {
+  const target = ui.canvas.parentElement || document.documentElement;
+  if (isFullscreen()) {
+    const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen;
+    const result = exitFullscreen?.call(document);
+    result?.catch?.(() => {});
+    return;
+  }
+
+  const requestFullscreen = target.requestFullscreen || target.webkitRequestFullscreen;
+  const result = requestFullscreen?.call(target);
+  result?.catch?.(() => {});
 }
 
 function closeLevelUpMenu() {
@@ -504,13 +538,17 @@ function setGameSpeed(speed) {
 ui.startRun.addEventListener("click", startRun);
 ui.openShop.addEventListener("click", shopSystem.openShop);
 ui.closeShop.addEventListener("click", shopSystem.closeShop);
-ui.openMenu.addEventListener("click", openRunMenu);
+ui.openMenu.addEventListener("click", toggleRunMenu);
 ui.closeMenu.addEventListener("click", () => closeRunMenu(true));
 ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
+ui.fullscreenButton.addEventListener("click", toggleFullscreen);
+document.addEventListener?.("fullscreenchange", updateFullscreenButton);
+document.addEventListener?.("webkitfullscreenchange", updateFullscreenButton);
 ui.speedButtons.forEach((button) => {
   button.addEventListener("click", () => setGameSpeed(Number(button.dataset.speed)));
 });
 setGameSpeed(1);
+updateFullscreenButton();
 ui.resetSave.addEventListener("click", () => {
   localStorage.removeItem(saveKey);
   localStorage.removeItem(legacySaveKey);
