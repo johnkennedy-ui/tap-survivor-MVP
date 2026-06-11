@@ -94,10 +94,12 @@ check("more quest types exist", ["first_blood", "gatherer", "survivor_60", "crow
 check("extended milestone quests exist", ["survivor_180", "survivor_300", "exterminator", "reaper", "power_climb", "apex_growth", "damage_dealer", "apocalypse_damage", "gem_hoarder", "gem_flood"].every((id) => content.quests?.[id]));
 check("higher-tier milestone quests exist", ["survivor_420", "warlord", "transcendent_growth", "worldbreaker_damage", "gem_storm", "boss_slayer", "boss_reaper"].every((id) => content.quests?.[id]));
 check("end-chain milestone quests exist", ["legion_breaker", "limitless_growth", "cataclysm_damage", "gem_typhoon", "boss_legend"].every((id) => content.quests?.[id]));
+check("second-tier weapon quests exist", ["spark_bolt_expert", "prism_beam_expert", "frost_orb_expert", "flame_wave_expert", "chain_spark_expert", "void_mine_expert", "acid_pool_expert", "saw_drone_expert", "shield_pulse_expert", "moon_glaive_expert", "meteor_pin_expert", "nova_burst_expert"].every((id) => content.quests?.[id]));
 check("higher-tier quests reward more QP", [5, 6, 7, 8].every((reward) => Object.values(content.quests || {}).some((quest) => quest.rewardQp === reward)));
 check("quest progress groups feed milestone chains", ["killQuestIds", "damageQuestIds", "survivalQuestIds", "xpQuestIds", "levelQuestIds", "bossQuestIds", "addQuestProgressGroup"].every((id) => runtime.includes(id)));
 check("quests can open multiple follow-ups", quests.includes("opensQuests") && quests.includes("questOpenIds"));
 check("quest chains can open follow-up quests", quests.includes("opensQuest") && quests.includes("questOpenIds(questDefs[id]).forEach(openQuest)"));
+check("weapon quests progress by weapon ID", quests.includes("addQuestProgressForWeapon") && combat.includes("addQuestProgressForWeapon(weaponId, dealt)"));
 check("combat stats feed quest progress", runtime.includes("addQuestProgressGroup(killQuestIds, 1)") && runtime.includes("addQuestProgressGroup(xpQuestIds, value)") && runtime.includes("addQuestProgressGroup(damageQuestIds, dealt)"));
 check("meta upgrades are content-driven", (content.metaUpgrades || []).length === 7 && upgrades.includes("metaUpgradeDefs"));
 check("run upgrades are content-driven", (content.runUpgrades || []).length === 7 && upgrades.includes("applyRunUpgradeEffects"));

@@ -252,6 +252,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   getUpgradeTier,
   getShopBonuses: () => shopSystem.getShopBonuses(),
   addQuestProgress,
+  addQuestProgressForWeapon: questSystem.addQuestProgressForWeapon,
   addQuestProgressGroup,
   killQuestIds,
   damageQuestIds,

@@ -44,6 +44,13 @@ function createQuestSystem({ questDefs, getSave, persist, renderMeta }) {
     ids.forEach((questId) => addQuestProgress(questId, amount));
   }
 
+  function addQuestProgressForWeapon(weaponId, amount) {
+    const save = getSave();
+    save.activeQuests
+      .filter((questId) => questDefs[questId]?.weaponId === weaponId)
+      .forEach((questId) => addQuestProgress(questId, amount));
+  }
+
   function activeQuestWeaponIds() {
     const save = getSave();
     return save.activeQuests
@@ -54,6 +61,7 @@ function createQuestSystem({ questDefs, getSave, persist, renderMeta }) {
   return {
     activeQuestWeaponIds,
     addQuestProgress,
+    addQuestProgressForWeapon,
     addQuestProgressGroup,
     completeQuest,
     hasQuest,

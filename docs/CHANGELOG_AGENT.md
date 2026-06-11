@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added second-tier weapon mastery quests and generic weapon-ID quest progress.
 - Added five end-chain milestone quests for kills, levels, damage, XP gems, and boss clears.
 - Added optional `npm run smoke:browser` for real headless-browser UI smoke coverage.
 - Added `weapon_polish` as a content-driven shop upgrade that feeds a flat weapon damage shop bonus into combat.

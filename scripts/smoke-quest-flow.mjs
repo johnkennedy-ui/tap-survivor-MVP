@@ -13,7 +13,7 @@ vm.runInContext(questsSource, context);
 const save = {
   questPoints: 0,
   totalQuestPoints: 0,
-  activeQuests: ["spark_bolt_mastery", "gatherer"],
+  activeQuests: ["spark_bolt_mastery", "spark_bolt_expert", "gatherer"],
   completedQuests: [],
   questProgress: {},
 };
@@ -37,6 +37,9 @@ function check(name, pass) {
 }
 
 check("active quest weapons include Spark Bolt", questSystem.activeQuestWeaponIds().includes("spark_bolt"));
+questSystem.addQuestProgressForWeapon("spark_bolt", 100);
+check("weapon-id quest progress is tracked", save.questProgress.spark_bolt_expert === 100);
+check("unmatched weapon quests are ignored", !save.questProgress.frost_orb_mastery);
 
 questSystem.addQuestProgress("gatherer", 24);
 check("partial quest progress is tracked", save.questProgress.gatherer === 24);

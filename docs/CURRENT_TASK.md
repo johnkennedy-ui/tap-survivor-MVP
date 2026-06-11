@@ -4,18 +4,22 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add more quest content
+Add second-tier weapon mastery quests
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T17:38:46.000Z
+- Started: 2026-06-11T17:46:52.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
+- `src/quests.js`
+- `src/combat.js`
+- `src/game.js`
+- `scripts/smoke-quest-flow.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -24,6 +28,10 @@ Add more quest content
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
+- `src/quests.js`
+- `src/combat.js`
+- `src/game.js`
+- `scripts/smoke-quest-flow.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -42,9 +50,10 @@ npm run agent:prepush
 Result:
 
 - `npm run build:content`: passed.
-- `npm run validate:content`: passed; content now has 42 quests.
+- `npm run validate:content`: passed; content now has 54 quests.
 - `npm run audit:quests`: passed.
-- `node --check scripts/verify-mvp.mjs`: passed.
+- `npm run smoke:quest-flow`: passed.
+- `node scripts/verify-mvp.mjs`: passed 122 checks.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

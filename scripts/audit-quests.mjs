@@ -41,7 +41,11 @@ Object.entries(questDefs).forEach(([questId, quest]) => {
   (quest.opensQuests || []).forEach((nextQuestId) => requireQuest(nextQuestId, questId));
 });
 
-const unlockQuestIds = new Set(weaponUnlocks.map((unlock) => unlock.opensQuest).filter(Boolean));
+const openedQuestIds = new Set(weaponUnlocks.map((unlock) => unlock.opensQuest).filter(Boolean));
+Object.values(questDefs).forEach((quest) => {
+  if (quest.opensQuest) openedQuestIds.add(quest.opensQuest);
+  (quest.opensQuests || []).forEach((questId) => openedQuestIds.add(questId));
+});
 const weaponQuestIds = new Set(
   Object.entries(questDefs)
     .filter(([, quest]) => quest.weaponId)
@@ -50,8 +54,8 @@ const weaponQuestIds = new Set(
 
 for (const questId of weaponQuestIds) {
   if (questId === "spark_bolt_mastery" || questId === "laser_damage_5000") continue;
-  if (!unlockQuestIds.has(questId)) {
-    fail(`${questId} is a weapon quest but no unlock opens it`);
+  if (!openedQuestIds.has(questId)) {
+    fail(`${questId} is a weapon quest but no unlock or quest opens it`);
   }
 }
 

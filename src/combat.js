@@ -7,6 +7,7 @@ function createCombatSystem({
   getUpgradeTier,
   getShopBonuses,
   addQuestProgress,
+  addQuestProgressForWeapon,
   addQuestProgressGroup,
   killQuestIds,
   damageQuestIds,
@@ -255,7 +256,6 @@ function createCombatSystem({
     if (dealt > 0 && weaponId === "prism_beam") {
       game.laserDamage += dealt;
       addQuestProgress("use_laser_run", 1);
-      addQuestProgress("laser_damage_5000", dealt);
     }
 
     game.beams.push({
@@ -458,7 +458,7 @@ function createCombatSystem({
     const dealt = Math.max(0, Math.min(before, amount));
     game.weaponDamage[weaponId] = (game.weaponDamage[weaponId] || 0) + dealt;
     addQuestProgressGroup(damageQuestIds, dealt);
-    addQuestProgress(`${weaponId}_mastery`, dealt);
+    addQuestProgressForWeapon(weaponId, dealt);
     return dealt;
   }
 

@@ -404,7 +404,17 @@ globalThis.TapSurvivorContent = {
       "weaponId": "spark_bolt",
       "target": 300,
       "rewardQp": 1,
-      "opensQuest": "heavy_hits"
+      "opensQuest": "heavy_hits",
+      "opensQuests": [
+        "spark_bolt_expert"
+      ]
+    },
+    "spark_bolt_expert": {
+      "name": "Spark Specialist",
+      "description": "Deal 1,500 damage with Spark Bolt.",
+      "weaponId": "spark_bolt",
+      "target": 1500,
+      "rewardQp": 3
     },
     "first_blood": {
       "name": "First Blood",
@@ -591,77 +601,165 @@ globalThis.TapSurvivorContent = {
       "description": "Deal 5,000 total damage with Prism Beam.",
       "weaponId": "prism_beam",
       "target": 5000,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "prism_beam_expert"
+    },
+    "prism_beam_expert": {
+      "name": "Prism Specialist",
+      "description": "Deal 15,000 damage with Prism Beam.",
+      "weaponId": "prism_beam",
+      "target": 15000,
+      "rewardQp": 4
     },
     "frost_orb_mastery": {
       "name": "Frost Control",
       "description": "Deal 350 damage with Frost Orb.",
       "weaponId": "frost_orb",
       "target": 350,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "frost_orb_expert"
+    },
+    "frost_orb_expert": {
+      "name": "Frost Specialist",
+      "description": "Deal 2,000 damage with Frost Orb.",
+      "weaponId": "frost_orb",
+      "target": 2000,
+      "rewardQp": 3
     },
     "flame_wave_mastery": {
       "name": "Flame Sweep",
       "description": "Deal 350 damage with Flame Wave.",
       "weaponId": "flame_wave",
       "target": 350,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "flame_wave_expert"
+    },
+    "flame_wave_expert": {
+      "name": "Flame Specialist",
+      "description": "Deal 2,000 damage with Flame Wave.",
+      "weaponId": "flame_wave",
+      "target": 2000,
+      "rewardQp": 3
     },
     "chain_spark_mastery": {
       "name": "Arc Current",
       "description": "Deal 350 damage with Chain Spark.",
       "weaponId": "chain_spark",
       "target": 350,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "chain_spark_expert"
+    },
+    "chain_spark_expert": {
+      "name": "Arc Specialist",
+      "description": "Deal 2,000 damage with Chain Spark.",
+      "weaponId": "chain_spark",
+      "target": 2000,
+      "rewardQp": 3
     },
     "void_mine_mastery": {
       "name": "Trap Field",
       "description": "Deal 500 damage with Void Mine.",
       "weaponId": "void_mine",
       "target": 500,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "void_mine_expert"
+    },
+    "void_mine_expert": {
+      "name": "Mine Specialist",
+      "description": "Deal 2,500 damage with Void Mine.",
+      "weaponId": "void_mine",
+      "target": 2500,
+      "rewardQp": 3
     },
     "acid_pool_mastery": {
       "name": "Corrosion Field",
       "description": "Deal 500 damage with Acid Pool.",
       "weaponId": "acid_pool",
       "target": 500,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "acid_pool_expert"
+    },
+    "acid_pool_expert": {
+      "name": "Acid Specialist",
+      "description": "Deal 2,500 damage with Acid Pool.",
+      "weaponId": "acid_pool",
+      "target": 2500,
+      "rewardQp": 3
     },
     "saw_drone_mastery": {
       "name": "Close Orbit",
       "description": "Deal 500 damage with Saw Drone.",
       "weaponId": "saw_drone",
       "target": 500,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "saw_drone_expert"
+    },
+    "saw_drone_expert": {
+      "name": "Drone Specialist",
+      "description": "Deal 2,500 damage with Saw Drone.",
+      "weaponId": "saw_drone",
+      "target": 2500,
+      "rewardQp": 3
     },
     "shield_pulse_mastery": {
       "name": "Pulse Guard",
       "description": "Deal 500 damage with Shield Pulse.",
       "weaponId": "shield_pulse",
       "target": 500,
-      "rewardQp": 2
+      "rewardQp": 2,
+      "opensQuest": "shield_pulse_expert"
+    },
+    "shield_pulse_expert": {
+      "name": "Pulse Specialist",
+      "description": "Deal 2,500 damage with Shield Pulse.",
+      "weaponId": "shield_pulse",
+      "target": 2500,
+      "rewardQp": 3
     },
     "moon_glaive_mastery": {
       "name": "Lunar Cut",
       "description": "Deal 650 damage with Moon Glaive.",
       "weaponId": "moon_glaive",
       "target": 650,
-      "rewardQp": 3
+      "rewardQp": 3,
+      "opensQuest": "moon_glaive_expert"
+    },
+    "moon_glaive_expert": {
+      "name": "Glaive Specialist",
+      "description": "Deal 3,000 damage with Moon Glaive.",
+      "weaponId": "moon_glaive",
+      "target": 3000,
+      "rewardQp": 4
     },
     "meteor_pin_mastery": {
       "name": "Meteor Mark",
       "description": "Deal 800 damage with Meteor Pin.",
       "weaponId": "meteor_pin",
       "target": 800,
-      "rewardQp": 3
+      "rewardQp": 3,
+      "opensQuest": "meteor_pin_expert"
+    },
+    "meteor_pin_expert": {
+      "name": "Meteor Specialist",
+      "description": "Deal 4,000 damage with Meteor Pin.",
+      "weaponId": "meteor_pin",
+      "target": 4000,
+      "rewardQp": 4
     },
     "nova_burst_mastery": {
       "name": "Nova Core",
       "description": "Deal 1,000 damage with Nova Burst.",
       "weaponId": "nova_burst",
       "target": 1000,
-      "rewardQp": 4
+      "rewardQp": 4,
+      "opensQuest": "nova_burst_expert"
+    },
+    "nova_burst_expert": {
+      "name": "Nova Specialist",
+      "description": "Deal 5,000 damage with Nova Burst.",
+      "weaponId": "nova_burst",
+      "target": 5000,
+      "rewardQp": 5
     },
     "boss_hunter": {
       "name": "Boss Hunter",
