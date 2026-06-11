@@ -30,6 +30,7 @@ const legacySaveKey = "tap-survivor-mvp-save-v1";
 const content = globalThis.TapSurvivorContent || {};
 const upgradeContent = globalThis.TapSurvivorUpgrades || {};
 const { clamp, distance, formatTime, randomRange } = globalThis.TapSurvivorMath;
+const { questOpenIds } = globalThis.TapSurvivorQuests;
 const weaponDefs = content.weapons || {};
 const weaponUnlocks = content.weaponUnlocks || [];
 const spriteDefs = content.assets?.sprites || {};
@@ -64,6 +65,12 @@ const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
 });
 
 let save = saveSystem.loadSave();
+const questSystem = globalThis.TapSurvivorQuests.createQuestSystem({
+  questDefs,
+  getSave: () => save,
+  persist,
+  renderMeta,
+});
 let game = null;
 let lastFrame = performance.now();
 let gameSpeed = 1;
@@ -82,10 +89,6 @@ function getUpgradeTier(id) {
 
 function isQuestComplete(id) {
   return !id || save.completedQuests.includes(id);
-}
-
-function questOpenIds(quest) {
-  return [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean);
 }
 
 function weaponUnlockFor(weaponId) {
@@ -119,39 +122,23 @@ function labelUnlock(id) {
 }
 
 function hasQuest(id) {
-  return save.activeQuests.includes(id) || save.completedQuests.includes(id);
+  return questSystem.hasQuest(id);
 }
 
 function openQuest(id) {
-  if (!questDefs[id] || hasQuest(id)) return;
-  save.activeQuests.push(id);
-  save.questProgress[id] = save.questProgress[id] || 0;
-  persist();
+  questSystem.openQuest(id);
 }
 
 function completeQuest(id) {
-  if (!save.activeQuests.includes(id) || save.completedQuests.includes(id)) return;
-  save.activeQuests = save.activeQuests.filter((questId) => questId !== id);
-  save.completedQuests.push(id);
-  const reward = questDefs[id].rewardQp || 0;
-  save.questPoints += reward;
-  save.totalQuestPoints += reward;
-  questOpenIds(questDefs[id]).forEach(openQuest);
-  persist();
-  renderMeta();
+  questSystem.completeQuest(id);
 }
 
 function addQuestProgress(id, amount) {
-  if (!questDefs[id] || !save.activeQuests.includes(id)) return;
-  save.questProgress[id] = Math.min(
-    questDefs[id].target,
-    (save.questProgress[id] || 0) + amount,
-  );
-  if (save.questProgress[id] >= questDefs[id].target) completeQuest(id);
+  questSystem.addQuestProgress(id, amount);
 }
 
 function addQuestProgressGroup(ids, amount) {
-  ids.forEach((questId) => addQuestProgress(questId, amount));
+  questSystem.addQuestProgressGroup(ids, amount);
 }
 
 function buyWeaponUnlock(unlock) {
@@ -528,9 +515,7 @@ function collectXp(value) {
 }
 
 function activeQuestWeaponIds() {
-  return save.activeQuests
-    .map((questId) => questDefs[questId]?.weaponId)
-    .filter(Boolean);
+  return questSystem.activeQuestWeaponIds();
 }
 
 function showLevelUp() {

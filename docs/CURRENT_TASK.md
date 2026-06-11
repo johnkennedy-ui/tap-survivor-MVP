@@ -4,17 +4,17 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract save state helper
+Extract quest helper module
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T11:46:14.778Z
+- Started: 2026-06-11T11:53:59.669Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `src/save.js`
+- `src/quests.js`
 - `src/game.js`
 - `index.html`
 - `scripts/verify-mvp.mjs`
@@ -25,12 +25,12 @@ Extract save state helper
 
 ## Files Changed
 
-- `src/save.js`: added save defaults, load/migration normalization, and persistence helper.
-- `src/game.js`: delegates save creation/loading/persistence to `TapSurvivorSave`.
-- `index.html`: loads `src/save.js` before `src/game.js`.
-- `scripts/verify-mvp.mjs`: validates save module load and helper wiring.
-- `scripts/verify-speed-controls.mjs`: loads the save module in the VM smoke test.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/save.js`.
+- `src/quests.js`: added quest opening, completion, progress, group progress, and active quest weapon helpers.
+- `src/game.js`: delegates quest helper behavior to `TapSurvivorQuests`.
+- `index.html`: loads `src/quests.js` before save/game modules that use it.
+- `scripts/verify-mvp.mjs`: validates quest module load and quest helper wiring.
+- `scripts/verify-speed-controls.mjs`: loads the quest module in the VM smoke test.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/quests.js`.
 - `docs/CHANGELOG_AGENT.md`: logs the extraction.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
@@ -44,12 +44,12 @@ npm run agent:check
 
 Result:
 
-- `node --check src/save.js`: passed.
+- `node --check src/quests.js`: passed.
 - `node --check src/game.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed, 93 checks.
+- `node scripts/verify-mvp.mjs`: passed, 96 checks.
 - `npm run test:speed`: passed.
 - `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor save helper extraction"`: passed and wrote `../Shane training/20260611T114850Z_tap-survivor-save-helper-extraction/result.md`.
+- `npm run agent:evidence -- --task "tap survivor quest helper extraction"`: passed and wrote `../Shane training/20260611T115703Z_tap-survivor-quest-helper-extraction/result.md`.
 
 ## Evidence Required
 
