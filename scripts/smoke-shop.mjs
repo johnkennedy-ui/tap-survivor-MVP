@@ -18,7 +18,7 @@ harness.elements.get("openShop").click();
 
 check("shop opens from main menu", !harness.elements.get("shopModal").classList.contains("hidden"));
 check("shop renders coin balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 25"));
-check("shop renders content items", harness.elements.get("shopItems").children.length >= 3);
+check("shop renders content items", harness.elements.get("shopItems").children.length >= 4);
 
 const firstItem = harness.elements.get("shopItems").children[0];
 const buyButton = firstItem.children[0];

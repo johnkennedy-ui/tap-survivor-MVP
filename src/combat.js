@@ -5,6 +5,7 @@ function createCombatSystem({
   weaponDefs,
   getGame,
   getUpgradeTier,
+  getShopBonuses,
   addQuestProgress,
   addQuestProgressGroup,
   killQuestIds,
@@ -181,11 +182,12 @@ function createCombatSystem({
   function weaponDamage(weaponId) {
     const weapon = weaponDefs[weaponId];
     const flatTier = getUpgradeTier("flat_damage") + getRunUpgradeTier("run_flat_damage");
+    const shopBonuses = getShopBonuses?.() || {};
     const percentTier =
       getUpgradeTier("percent_damage") +
       getRunUpgradeTier("run_percent_damage") +
       getUpgradeTier(weapon.upgradeId) * 2;
-    return (weapon.damage + flatTier * 4) * (1 + percentTier * 0.12);
+    return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12);
   }
 
   function fireWeapon(weaponId) {

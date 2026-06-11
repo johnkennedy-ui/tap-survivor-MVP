@@ -93,6 +93,7 @@ function createShopSystem({
       speed: 0,
       pickupRadius: 0,
       maxHp: 0,
+      flatDamage: 0,
     };
     shopItemDefs.forEach((item) => {
       const tier = save.shopPurchases?.[item.id] || 0;

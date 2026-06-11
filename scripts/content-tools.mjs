@@ -217,7 +217,7 @@ export function validateContent(content) {
     }
     if (item.effect) {
       requireString(item.effect.stat, `shopItem ${item.id}.effect.stat`);
-      if (!["speed", "pickupRadius", "maxHp"].includes(item.effect.stat)) {
+      if (!["speed", "pickupRadius", "maxHp", "flatDamage"].includes(item.effect.stat)) {
         fail(`shopItem ${item.id} has unsupported effect stat ${item.effect.stat}`);
       }
       requireNumber(item.effect.value, `shopItem ${item.id}.effect.value`, 0);

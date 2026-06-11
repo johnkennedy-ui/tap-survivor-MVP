@@ -110,9 +110,10 @@ check("active quest weapons are offered on level-up", levelUp.includes("activeQu
 check("new combat upgrade types exist", ["attack_radius", "fire_rate", "flat_damage", "percent_damage"].every((id) => metaUpgradeIds.has(id)));
 check("new run upgrade types exist", ["run_attack_radius", "run_fire_rate", "run_flat_damage", "run_percent_damage"].every((id) => runUpgradeIds.has(id)));
 check("coin shop exists", index.includes('id="openShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
-check("shop items are content-driven", (content.shopItems || []).length >= 3 && shop.includes("shopItemDefs"));
+check("shop items are content-driven", (content.shopItems || []).length >= 4 && shop.includes("shopItemDefs"));
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && game.includes("shopBonuses.speed") && game.includes("shopBonuses.maxHp"));
+check("shop damage bonus affects combat", combat.includes("shopBonuses.flatDamage") && game.includes("getShopBonuses"));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));

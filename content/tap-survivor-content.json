@@ -803,6 +803,23 @@
         "stat": "maxHp",
         "value": 15
       }
+    },
+    {
+      "id": "weapon_polish",
+      "name": "Weapon Polish",
+      "description": "Start each run with more flat weapon damage.",
+      "kind": "stat_upgrade",
+      "cost": [
+        30,
+        50,
+        75
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 2
+      }
     }
   ],
   "levels": [],
