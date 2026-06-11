@@ -73,6 +73,7 @@ The project is mixed but mostly registry-driven:
 - Speed-control VM smoke test: `npm run test:speed`
 - Local server: `npm run serve`
 - Deployment check: `npm run check:deploy`
+- CI validation: GitHub Actions runs `npm run agent:check` via `.github/workflows/agent-check.yml`.
 - Agent task checkpoint writer: `npm run agent:start -- --goal "<task>"`
 - Agent status overview: `npm run agent:status`
 - Agent handoff summary: `npm run agent:handoff`

@@ -4,33 +4,26 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add agent handoff summary helper
+Add CI validation for agent check
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T08:23:58.485Z
+- Started: 2026-06-11T09:20:07.410Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
+- `.github/workflows/agent-check.yml`
 - `docs/CURRENT_TASK.md`
-- `package.json`
-- `scripts/agent-handoff.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/AGENT_TASK_TEMPLATE.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `scripts/agent-handoff.mjs`: added compact branch, commit, dirty status, recent commits, current task, and standard command summary.
-- `package.json`: added `agent:handoff`.
-- `scripts/agent-status.mjs`: included `agent:handoff` in available command output.
-- `scripts/agent-check.mjs`: added syntax validation for `scripts/agent-handoff.mjs`.
-- `AGENTS.md`: documented when to use the handoff command.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the handoff command.
-- `docs/AGENT_TASK_TEMPLATE.md`: added handoff to inspection and evidence guidance.
-- `docs/CHANGELOG_AGENT.md`: logged the new command.
+- `.github/workflows/agent-check.yml`: added GitHub Actions workflow for `npm run agent:check` on push, pull request, and manual dispatch.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the CI validation workflow.
+- `docs/CHANGELOG_AGENT.md`: logged the new workflow.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
 ## Validation Plan
@@ -38,18 +31,13 @@ Add agent handoff summary helper
 Run the smallest command that proves the change:
 
 ```bash
-npm run agent:handoff
 npm run agent:check
 ```
 
 Result:
 
-- `git diff --check`: passed.
-- `node --check scripts/agent-handoff.mjs`: passed.
-- `npm run agent:handoff`: passed.
-- `npm run agent:status`: passed and listed `agent:handoff`.
 - `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor agent handoff helper"`: passed and wrote `../Shane training/20260611T082532Z_tap-survivor-agent-handoff-helper/result.md`.
+- `npm run agent:evidence -- --task "tap survivor agent check ci"`: passed and wrote `../Shane training/20260611T092130Z_tap-survivor-agent-check-ci/result.md`.
 
 ## Evidence Required
 

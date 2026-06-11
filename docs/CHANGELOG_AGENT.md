@@ -10,3 +10,4 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added `npm run agent:handoff` for a compact resume/delegation snapshot.
 - Added `npm run agent:check` for the standard pre-report validation path.
 - Added `npm run agent:evidence` to create a replayable evidence stub under `../Shane training/`.
+- Added `.github/workflows/agent-check.yml` so pushes and pull requests run `npm run agent:check`.
