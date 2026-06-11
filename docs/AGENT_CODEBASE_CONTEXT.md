@@ -73,6 +73,7 @@ The project is mixed but mostly registry-driven:
 - Speed-control VM smoke test: `npm run test:speed`
 - Local server: `npm run serve`
 - Deployment check: `npm run check:deploy`
+- Agent task checkpoint writer: `npm run agent:start -- --goal "<task>"`
 - Agent status overview: `npm run agent:status`
 - Agent validation lane: `npm run agent:check`
 - Agent evidence stub: `npm run agent:evidence -- --task "<short task name>"`
@@ -88,7 +89,7 @@ The project is mixed but mostly registry-driven:
 ## Rules For Future Agents
 
 - Read this file and `docs/CONTENT_EXTENSION_GUIDE.md` first.
-- Read and update `docs/CURRENT_TASK.md` for the active request before editing.
+- Read and update `docs/CURRENT_TASK.md` for the active request before editing; use `npm run agent:start -- --goal "<task>"` for a clean checkpoint.
 - Check `docs/CHANGELOG_AGENT.md` when changing structure or command workflows.
 - Make one content or structure change at a time.
 - Prefer `content/tap-survivor-content.json` and `scripts/add-content.mjs` over manual code edits.

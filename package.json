@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "agent:start": "node scripts/agent-start.mjs",
     "agent:status": "node scripts/agent-status.mjs",
     "agent:check": "node scripts/agent-check.mjs",
     "agent:evidence": "node scripts/agent-evidence.mjs",

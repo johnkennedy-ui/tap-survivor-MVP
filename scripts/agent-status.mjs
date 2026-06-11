@@ -43,7 +43,7 @@ if (status) {
 }
 
 console.log("\n## Available Agent Commands");
-for (const name of ["agent:status", "agent:check", "agent:evidence", "build:content", "validate:content", "test"]) {
+for (const name of ["agent:start", "agent:status", "agent:check", "agent:evidence", "build:content", "validate:content", "test"]) {
   if (pkg.scripts?.[name]) {
     console.log(`- npm run ${name}: ${pkg.scripts[name]}`);
   }

@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 
 const checks = [
   ["git", ["diff", "--check"]],
+  ["node", ["--check", "scripts/agent-start.mjs"]],
   ["node", ["--check", "scripts/agent-status.mjs"]],
   ["node", ["--check", "scripts/agent-check.mjs"]],
   ["node", ["--check", "scripts/agent-evidence.mjs"]],

@@ -8,6 +8,12 @@ State the single requested gameplay, content, asset, or maintenance change.
 
 Update `docs/CURRENT_TASK.md` with the active goal, status, likely files, validation plan, evidence required, and stop condition before editing code or content.
 
+Shortcut:
+
+```bash
+npm run agent:start -- --goal "<short task goal>" --files "content/tap-survivor-content.json,src/content.generated.js" --validation "npm run validate:content"
+```
+
 ## Files Likely Involved
 
 - Content: `content/tap-survivor-content.json`
@@ -24,6 +30,7 @@ sed -n '1,260p' docs/CONTENT_EXTENSION_GUIDE.md
 sed -n '1,220p' docs/CURRENT_TASK.md
 sed -n '1,220p' docs/CHANGELOG_AGENT.md
 npm run agent:status
+npm run agent:start -- --goal "<short task goal>" --dry-run
 sed -n '1,220p' content/tap-survivor-content.json
 rg -n "<content_id>|<function_name>|<asset_id>" content src scripts docs
 ```
