@@ -13,12 +13,13 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 ## Folder Map
 
 - `index.html`: DOM shell, canvas, menus, script load order.
-- `src/game.js`: run loop, loot/XP collection, and high-level orchestration.
+- `src/game.js`: run loop and high-level orchestration.
 - `src/quests.js`: quest opening, completion, progress, and active quest weapon helpers.
 - `src/save.js`: save defaults, loading, migration/normalization, and persistence.
 - `src/ui.js`: DOM lookup helper for game UI elements.
 - `src/level-up.js`: level-up choice generation and level-up modal behavior.
 - `src/input.js`: canvas pointer/touch movement input binding.
+- `src/pickups.js`: XP, coin, and heart drop spawning, attraction, and collection.
 - `src/combat.js`: enemy spawning, boss specials, weapon firing, damage, combat effects.
 - `src/rendering.js`: canvas drawing for arena, entities, effects, HUD, skill rail.
 - `src/math.js`: shared math and formatting helpers for runtime modules.

@@ -4,18 +4,18 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract movement input helper from game.js
+Extract pickup and loot helper from game.js
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T15:48:35.880Z
+- Started: 2026-06-11T15:58:49.764Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `src/game.js`
-- `src/input.js`
+- `src/pickups.js`
 - `index.html`
 - `scripts/verify-mvp.mjs`
 - `scripts/smoke-game-harness.mjs`
@@ -26,7 +26,7 @@ Extract movement input helper from game.js
 
 ## Files Changed
 
-- `src/input.js`
+- `src/pickups.js`
 - `src/game.js`
 - `index.html`
 - `scripts/smoke-game-harness.mjs`
@@ -46,12 +46,12 @@ npm run agent:prepush
 
 Result:
 
-- `node --check src/input.js`: passed.
+- `node --check src/pickups.js`: passed.
 - `node --check src/game.js`: passed.
 - `node --check scripts/smoke-game-harness.mjs`: passed.
 - `node --check scripts/verify-speed-controls.mjs`: passed.
 - `npm run agent:prepush`: passed, including `content:summary`, all smoke tests, and `npm test`.
-- `npm run agent:evidence -- --task "tap survivor input extraction"`: passed and wrote `../Shane training/20260611T155120Z_tap-survivor-input-extraction/result.md`.
+- `npm run agent:evidence -- --task "tap survivor pickups extraction"`: passed and wrote `../Shane training/20260611T160219Z_tap-survivor-pickups-extraction/result.md`.
 
 ## Evidence Required
 

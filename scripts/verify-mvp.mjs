@@ -31,6 +31,7 @@ const combat = readRequired("src/combat.js");
 const ui = readRequired("src/ui.js");
 const levelUp = readRequired("src/level-up.js");
 const input = readRequired("src/input.js");
+const pickups = readRequired("src/pickups.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
 const agentContext = readRequired("docs/AGENT_CODEBASE_CONTEXT.md");
@@ -56,6 +57,7 @@ check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index)
 check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
 check("index loads level-up module", /src="src\/level-up\.js(\?[^"]+)?"/.test(index));
 check("index loads input module", /src="src\/input\.js(\?[^"]+)?"/.test(index));
+check("index loads pickup module", /src="src\/pickups\.js(\?[^"]+)?"/.test(index));
 check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
@@ -76,10 +78,10 @@ check("enemy spawns are doubled and patterned", runtime.includes("spawnPatternPo
 check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") && game.includes("update(dt * gameSpeed)") && game.includes("setGameSpeed"));
 check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.includes("fireWeapon"));
 check("XP drops exist", game.includes("xpDrops") && game.includes("collectXp"));
-check("coin and heart drops exist", game.includes("lootDrops") && game.includes("spawnLootDrops") && game.includes('type: "coin"') && game.includes('type: "heart"'));
-check("pickup attraction scales with speed", game.includes("pullDropTowardPlayer") && game.includes("updateXpDrops(dt)") && game.includes("updateLootDrops(dt)") && game.includes("pullDropTowardPlayer(drop, p, 480, dt)") && game.includes("pullDropTowardPlayer(drop, p, 540, dt)"));
-check("coins persist in save", save.includes("coins: 0") && game.includes("save.coins +=") && game.includes("persist()"));
-check("heart drops heal player", game.includes('drop.type === "heart"') && game.includes("game.player.hp = Math.min(game.player.maxHp"));
+check("coin and heart drops exist", game.includes("lootDrops") && pickups.includes("spawnLootDrops") && pickups.includes('type: "coin"') && pickups.includes('type: "heart"'));
+check("pickup attraction scales with speed", pickups.includes("pullDropTowardPlayer") && game.includes("pickupSystem.updateXpDrops(dt)") && game.includes("pickupSystem.updateLootDrops(dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 480, dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 540, dt)"));
+check("coins persist in save", save.includes("coins: 0") && pickups.includes("save.coins +=") && pickups.includes("persist()"));
+check("heart drops heal player", pickups.includes('drop.type === "heart"') && pickups.includes("game.player.hp = Math.min(game.player.maxHp"));
 check("player HP bar renders above sprite", rendering.includes("drawPlayerHpBar") && rendering.includes("p.y - p.radius - 16"));
 check("level-up choices exist", game.includes("showLevelUp") && levelUp.includes("createLevelUpSystem") && contentText.includes("Prism Beam"));
 check("Laser weapon exists", runtime.includes("fireBeam") && contentText.includes("prism_beam"));
@@ -120,6 +122,7 @@ check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && g
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && game.includes("TapSurvivorLevelUp"));
 check("shared input helper exists", input.includes("TapSurvivorInput") && game.includes("TapSurvivorInput"));
+check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && game.includes("TapSurvivorPickups"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));

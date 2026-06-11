@@ -224,6 +224,16 @@ function resetGameState() {
   };
 }
 
+const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
+  getGame: () => game,
+  getSave: () => save,
+  persist,
+  renderMeta,
+  collectXp,
+  distance,
+  randomRange,
+});
+
 const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   canvas,
   enemyTypes,
@@ -235,7 +245,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   killQuestIds,
   damageQuestIds,
   bossQuestIds,
-  spawnLootDrops,
+  spawnLootDrops: pickupSystem.spawnLootDrops,
   endRun,
   distance,
   clamp,
@@ -294,8 +304,8 @@ function update(dt) {
   updateBolts(dt);
   updateAreas(dt);
   updateBeams(dt);
-  updateXpDrops(dt);
-  updateLootDrops(dt);
+  pickupSystem.updateXpDrops(dt);
+  pickupSystem.updateLootDrops(dt);
 
   if (p.hp <= 0) endRun("Player defeated");
 }
@@ -347,75 +357,6 @@ function updateAreas(dt) {
 
 function updateBeams(dt) {
   combat.updateBeams(dt);
-}
-
-function spawnLootDrops(enemy) {
-  if (enemy.boss || Math.random() < 0.34) {
-    game.lootDrops.push({
-      type: "coin",
-      x: enemy.x + randomRange(-10, 10),
-      y: enemy.y + randomRange(-10, 10),
-      radius: enemy.boss ? 10 : 7,
-      value: enemy.boss ? 12 : 1,
-    });
-  }
-  if (enemy.boss || Math.random() < 0.12) {
-    game.lootDrops.push({
-      type: "heart",
-      x: enemy.x + randomRange(-12, 12),
-      y: enemy.y + randomRange(-12, 12),
-      radius: enemy.boss ? 11 : 8,
-      value: enemy.boss ? 40 : 22,
-    });
-  }
-}
-
-function pullDropTowardPlayer(drop, player, speed, dt) {
-  const dx = player.x - drop.x;
-  const dy = player.y - drop.y;
-  const dist = Math.max(1, Math.hypot(dx, dy));
-  const step = Math.min(dist, speed * dt);
-  drop.x += (dx / dist) * step;
-  drop.y += (dy / dist) * step;
-}
-
-function updateXpDrops(dt) {
-  const p = game.player;
-  game.xpDrops.forEach((drop) => {
-    if (distance(p, drop) < p.pickupRadius) {
-      pullDropTowardPlayer(drop, p, 480, dt);
-    }
-    if (distance(p, drop) < p.radius + drop.radius) {
-      drop.collected = true;
-      collectXp(drop.value);
-    }
-  });
-  game.xpDrops = game.xpDrops.filter((drop) => !drop.collected);
-}
-
-function updateLootDrops(dt) {
-  const p = game.player;
-  game.lootDrops.forEach((drop) => {
-    if (distance(p, drop) < p.pickupRadius) {
-      pullDropTowardPlayer(drop, p, 540, dt);
-    }
-    if (distance(p, drop) < p.radius + drop.radius) {
-      drop.collected = true;
-      collectLoot(drop);
-    }
-  });
-  game.lootDrops = game.lootDrops.filter((drop) => !drop.collected);
-}
-
-function collectLoot(drop) {
-  if (drop.type === "coin") {
-    save.coins += drop.value;
-    persist();
-    renderMeta();
-  }
-  if (drop.type === "heart") {
-    game.player.hp = Math.min(game.player.maxHp, game.player.hp + drop.value);
-  }
 }
 
 function collectXp(value) {
