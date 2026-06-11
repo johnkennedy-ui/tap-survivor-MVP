@@ -102,9 +102,9 @@ check("quest chains can open follow-up quests", quests.includes("opensQuest") &&
 check("weapon quests progress by weapon ID", quests.includes("addQuestProgressForWeapon") && combat.includes("addQuestProgressForWeapon(weaponId, dealt)"));
 check("combat stats feed quest progress", runtime.includes("addQuestProgressGroup(killQuestIds, 1)") && runtime.includes("addQuestProgressGroup(xpQuestIds, value)") && runtime.includes("addQuestProgressGroup(damageQuestIds, dealt)"));
 check("meta upgrades are content-driven", (content.metaUpgrades || []).length === 7 && upgrades.includes("metaUpgradeDefs"));
-check("run upgrades are content-driven", (content.runUpgrades || []).length === 7 && upgrades.includes("applyRunUpgradeEffects"));
+check("run upgrades are content-driven", (content.runUpgrades || []).length >= 12 && upgrades.includes("applyRunUpgradeEffects"));
 check("meta upgrades are quest-gated", (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "first_blood") && (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "boss_hunter"));
-check("Laser Damage upgrade exists", upgrades.includes("laser_damage") && upgrades.includes("maxTier: 3"));
+check("Laser Damage upgrade exists", upgrades.includes("laser_damage") && upgrades.includes("maxTier: 5"));
 check("upgrade tiers are tracked", game.includes("upgradeTiers") && ui.includes("Buy Tier"));
 check("skill tree gates by prerequisite and quest", game.includes("requiresNode") && game.includes("requiresQuest") && game.includes("nodeGateStatus"));
 check("completed quests disappear from quest list", ui.includes("activeQuestIds") && !ui.includes("Status: ${complete"));
@@ -112,6 +112,11 @@ check("level-up choices are limited to 3 random options", levelUp.includes("shuf
 check("active quest weapons are offered on level-up", levelUp.includes("activeQuestWeaponIds") && levelUp.includes("questWeaponChoices"));
 check("new combat upgrade types exist", ["attack_radius", "fire_rate", "flat_damage", "percent_damage"].every((id) => metaUpgradeIds.has(id)));
 check("new run upgrade types exist", ["run_attack_radius", "run_fire_rate", "run_flat_damage", "run_percent_damage"].every((id) => runUpgradeIds.has(id)));
+check("projectile behavior run upgrades exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit"].every((id) => runUpgradeIds.has(id)));
+check("more attack speed and damage levels exist", content.runUpgrades?.find((upgrade) => upgrade.id === "run_fire_rate")?.maxTier === 8 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_percent_damage")?.maxTier === 8 && content.metaUpgrades?.find((upgrade) => upgrade.id === "fire_rate")?.maxTier === 5 && content.metaUpgrades?.find((upgrade) => upgrade.id === "percent_damage")?.maxTier === 5);
+check("weapon damage upgrades have more tiers", upgrades.includes("cost: [1, 2, 3, 4, 5]") && upgrades.includes("maxTier: 5"));
+check("projectile behavior hooks exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit", "spawnProjectileBolt", "splitBoltOnHit", "explodeBolt"].every((token) => combat.includes(token)));
+check("level-up choices favor started upgrade families", levelUp.includes("weightedChoices") && levelUp.includes("familyTiers") && levelUp.includes("choice.runUpgradeId"));
 check("coin shop exists", index.includes('id="openShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
 check("shop items are content-driven", (content.shopItems || []).length >= 4 && shop.includes("shopItemDefs"));
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));

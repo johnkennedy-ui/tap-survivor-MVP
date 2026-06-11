@@ -4,22 +4,21 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add second-tier weapon mastery quests
+Add projectile skill upgrades and specialization weighting
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T17:46:52.000Z
+- Started: 2026-06-11T18:33:25.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
-- `src/quests.js`
 - `src/combat.js`
-- `src/game.js`
-- `scripts/smoke-quest-flow.mjs`
+- `src/level-up.js`
+- `src/upgrades.js`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -28,10 +27,9 @@ Add second-tier weapon mastery quests
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
-- `src/quests.js`
 - `src/combat.js`
-- `src/game.js`
-- `scripts/smoke-quest-flow.mjs`
+- `src/level-up.js`
+- `src/upgrades.js`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -43,17 +41,17 @@ Run the smallest command that proves the change:
 ```bash
 npm run build:content
 npm run validate:content
-npm run audit:quests
 npm run agent:prepush
 ```
 
 Result:
 
 - `npm run build:content`: passed.
-- `npm run validate:content`: passed; content now has 54 quests.
-- `npm run audit:quests`: passed.
-- `npm run smoke:quest-flow`: passed.
-- `node scripts/verify-mvp.mjs`: passed 122 checks.
+- `npm run validate:content`: passed.
+- `node --check src/combat.js`: passed.
+- `node --check src/level-up.js`: passed.
+- `node --check src/upgrades.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed 127 checks.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

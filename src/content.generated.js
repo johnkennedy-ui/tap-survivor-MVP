@@ -295,9 +295,11 @@ globalThis.TapSurvivorContent = {
       "cost": [
         1,
         2,
-        3
+        3,
+        4,
+        5
       ],
-      "maxTier": 3,
+      "maxTier": 5,
       "requiresNode": "unlock_chain_spark",
       "requiresQuest": "rapid_growth"
     },
@@ -321,9 +323,11 @@ globalThis.TapSurvivorContent = {
       "cost": [
         1,
         2,
-        3
+        3,
+        4,
+        5
       ],
-      "maxTier": 3,
+      "maxTier": 5,
       "requiresNode": "unlock_meteor_pin",
       "requiresQuest": "boss_hunter"
     }
@@ -382,7 +386,8 @@ globalThis.TapSurvivorContent = {
       "id": "run_fire_rate",
       "name": "Fire Rate",
       "description": "Reduce weapon cooldowns for this run.",
-      "maxTier": 3
+      "maxTier": 8,
+      "family": "attack_speed"
     },
     {
       "id": "run_flat_damage",
@@ -394,7 +399,43 @@ globalThis.TapSurvivorContent = {
       "id": "run_percent_damage",
       "name": "Percent Damage",
       "description": "Multiply all weapon damage this run.",
-      "maxTier": 3
+      "maxTier": 8,
+      "family": "damage"
+    },
+    {
+      "id": "run_projectile_pierce",
+      "name": "Piercing Shots",
+      "description": "Projectiles pierce extra enemies.",
+      "maxTier": 3,
+      "family": "projectile"
+    },
+    {
+      "id": "run_wall_bounce",
+      "name": "Ricochet Shots",
+      "description": "Projectiles bounce off arena walls.",
+      "maxTier": 2,
+      "family": "projectile"
+    },
+    {
+      "id": "run_split_shot",
+      "name": "Split Fire",
+      "description": "Projectile weapons fire extra angled shots.",
+      "maxTier": 2,
+      "family": "projectile"
+    },
+    {
+      "id": "run_explosive_hit",
+      "name": "Explosive Hits",
+      "description": "Projectile hits burst for area damage.",
+      "maxTier": 3,
+      "family": "projectile"
+    },
+    {
+      "id": "run_split_on_hit",
+      "name": "Splinter Shots",
+      "description": "Projectile hits split into two smaller arrows.",
+      "maxTier": 2,
+      "family": "projectile"
     }
   ],
   "quests": {

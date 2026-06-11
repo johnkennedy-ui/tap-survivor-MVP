@@ -6,6 +6,16 @@ function shuffleChoices(choices) {
     .map(({ choice }) => choice);
 }
 
+function weightedChoices(choices, weightForChoice) {
+  return choices
+    .map((choice) => ({
+      choice,
+      sort: Math.random() / Math.max(1, weightForChoice(choice)),
+    }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ choice }) => choice);
+}
+
 function createLevelUpSystem({
   ui,
   weaponDefs,
@@ -42,15 +52,26 @@ function createLevelUpSystem({
         return {
           name: `${upgrade.name} ${tier + 1}`,
           description: `${upgrade.description} Tier ${tier + 1}/${upgrade.maxTier}.`,
+          family: upgrade.family || upgrade.id,
+          runUpgradeId: upgrade.id,
           apply: () => {
             game.runUpgradeTiers[upgrade.id] = tier + 1;
             upgrade.apply?.(game);
           },
         };
       });
+    const familyTiers = runUpgradeDefs.reduce((totals, upgrade) => {
+      const family = upgrade.family || upgrade.id;
+      totals[family] = (totals[family] || 0) + getRunUpgradeTier(upgrade.id);
+      return totals;
+    }, {});
+    const otherChoices = weightedChoices([...otherWeaponChoices, ...runUpgradeChoices], (choice) => {
+      if (!choice.runUpgradeId) return 1;
+      return 1 + (familyTiers[choice.family] || 0) * 1.4 + getRunUpgradeTier(choice.runUpgradeId) * 0.8;
+    });
     const choices = [
       ...questWeaponChoices,
-      ...shuffleChoices([...otherWeaponChoices, ...runUpgradeChoices]),
+      ...otherChoices,
     ].slice(0, 3);
 
     if (!choices.length) {
