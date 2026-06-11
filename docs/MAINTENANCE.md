@@ -53,6 +53,7 @@ npm run test:speed
 ## Before Reporting
 
 ```bash
+npm run agent:prepush
 npm run agent:handoff
 npm run agent:evidence -- --task "<short task name>"
 git status --short

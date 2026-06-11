@@ -4,31 +4,32 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add content summary tooling
+Add agent prepush helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T12:26:48.308Z
+- Started: 2026-06-11T12:32:09.924Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `scripts/content-summary.mjs`
+- `scripts/agent-prepush.mjs`
 - `package.json`
 - `docs/MAINTENANCE.md`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
+- `scripts/agent-status.mjs`
 
 ## Files Changed
 
-- `scripts/content-summary.mjs`: added content map summary for counts, weapons, unlock gates, quest groups, quest follow-ups, ungrouped/terminal quests, missing references, and safe next additions.
-- `package.json`: added `content:summary`.
-- `scripts/agent-check.mjs`: validates and runs `content:summary`.
-- `scripts/agent-status.mjs`: lists `content:summary`.
-- `docs/MAINTENANCE.md`: added `content:summary` to routine start/content update paths.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the content summary command.
+- `scripts/agent-prepush.mjs`: added prepush summary with branch/commit, changed files, commit-message seed, deploy reminder, content summary, and agent check.
+- `package.json`: added `agent:prepush`.
+- `scripts/agent-check.mjs`: added syntax validation for `scripts/agent-prepush.mjs`.
+- `scripts/agent-status.mjs`: lists `agent:prepush`.
+- `docs/MAINTENANCE.md`: added `agent:prepush` to the before-reporting path.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the prepush command.
 - `docs/CHANGELOG_AGENT.md`: logged the new command.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
@@ -37,17 +38,16 @@ Add content summary tooling
 Run the smallest command that proves the change:
 
 ```bash
-npm run content:summary
+npm run agent:prepush
 npm run agent:check
 ```
 
 Result:
 
-- `node --check scripts/content-summary.mjs`: passed.
-- `npm run content:summary`: passed.
-- `npm run agent:status`: passed and listed `content:summary`.
-- `npm run agent:check`: passed, including `content:summary`, all smoke tests, and `npm test`.
-- `npm run agent:evidence -- --task "tap survivor content summary"`: passed and wrote `../Shane training/20260611T122918Z_tap-survivor-content-summary/result.md`.
+- `node --check scripts/agent-prepush.mjs`: passed.
+- `npm run agent:status`: passed and listed `agent:prepush`.
+- `npm run agent:prepush`: passed, including `content:summary` and `agent:check`.
+- `npm run agent:evidence -- --task "tap survivor agent prepush"`: passed and wrote `../Shane training/20260611T123355Z_tap-survivor-agent-prepush/result.md`.
 
 ## Evidence Required
 

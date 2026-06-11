@@ -89,6 +89,7 @@ The project is mixed but mostly registry-driven:
 - Agent handoff summary: `npm run agent:handoff`
 - Agent validation lane: `npm run agent:check`
 - Agent evidence stub: `npm run agent:evidence -- --task "<short task name>"`
+- Agent prepush lane: `npm run agent:prepush`
 
 ## Current Limitations
 
