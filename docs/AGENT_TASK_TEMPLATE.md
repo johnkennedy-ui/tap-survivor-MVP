@@ -22,6 +22,8 @@ Update `docs/CURRENT_TASK.md` with the active goal, status, likely files, valida
 sed -n '1,220p' docs/AGENT_CODEBASE_CONTEXT.md
 sed -n '1,260p' docs/CONTENT_EXTENSION_GUIDE.md
 sed -n '1,220p' docs/CURRENT_TASK.md
+sed -n '1,220p' docs/CHANGELOG_AGENT.md
+npm run agent:status
 sed -n '1,220p' content/tap-survivor-content.json
 rg -n "<content_id>|<function_name>|<asset_id>" content src scripts docs
 ```
@@ -39,6 +41,7 @@ npm run build:content
 npm run validate:content
 npm run audit:quests
 npm test
+npm run agent:check
 ```
 
 ## Evidence Required
@@ -46,6 +49,7 @@ npm test
 - Files inspected.
 - Files changed or created.
 - Validation command and result.
+- Evidence stub from `npm run agent:evidence -- --task "<short task name>"` when useful.
 - Any generated files updated.
 - Any known risk or limitation.
 

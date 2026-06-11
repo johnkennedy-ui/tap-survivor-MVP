@@ -1,5 +1,8 @@
 {
   "scripts": {
+    "agent:status": "node scripts/agent-status.mjs",
+    "agent:check": "node scripts/agent-check.mjs",
+    "agent:evidence": "node scripts/agent-evidence.mjs",
     "build:content": "node scripts/build-content.mjs",
     "validate:content": "node scripts/validate-content.mjs",
     "add:content": "node scripts/add-content.mjs",
