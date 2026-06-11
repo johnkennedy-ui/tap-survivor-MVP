@@ -28,6 +28,7 @@ const save = readRequired("src/save.js");
 const upgrades = readRequired("src/upgrades.js");
 const rendering = readRequired("src/rendering.js");
 const combat = readRequired("src/combat.js");
+const ui = readRequired("src/ui.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
 const agentContext = readRequired("docs/AGENT_CODEBASE_CONTEXT.md");
@@ -48,6 +49,7 @@ check("index loads save utilities", /src="src\/save\.js(\?[^"]+)?"/.test(index))
 check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
+check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
 check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
@@ -106,6 +108,7 @@ check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game
 check("shared save helpers exist", save.includes("TapSurvivorSave") && game.includes("TapSurvivorSave"));
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
+check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));

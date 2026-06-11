@@ -4,33 +4,35 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add agent prepush helper
+Extract UI DOM helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T12:32:09.924Z
+- Started: 2026-06-11T12:47:06.181Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `scripts/agent-prepush.mjs`
-- `package.json`
-- `docs/MAINTENANCE.md`
+- `src/ui.js`
+- `src/game.js`
+- `index.html`
+- `scripts/verify-mvp.mjs`
+- `scripts/smoke-game-harness.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
-- `scripts/agent-status.mjs`
 
 ## Files Changed
 
-- `scripts/agent-prepush.mjs`: added prepush summary with branch/commit, changed files, commit-message seed, deploy reminder, content summary, and agent check.
-- `package.json`: added `agent:prepush`.
-- `scripts/agent-check.mjs`: added syntax validation for `scripts/agent-prepush.mjs`.
-- `scripts/agent-status.mjs`: lists `agent:prepush`.
-- `docs/MAINTENANCE.md`: added `agent:prepush` to the before-reporting path.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the prepush command.
-- `docs/CHANGELOG_AGENT.md`: logged the new command.
+- `src/ui.js`: added DOM lookup helper for game UI elements.
+- `src/game.js`: now gets UI references through `TapSurvivorUi`.
+- `index.html`: loads `src/ui.js` before `src/game.js`.
+- `scripts/verify-mvp.mjs`: validates UI module load and wiring.
+- `scripts/smoke-game-harness.mjs`: loads `src/ui.js` before `src/game.js`.
+- `scripts/verify-speed-controls.mjs`: loads `src/ui.js` in the VM smoke test path.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/ui.js`.
+- `docs/CHANGELOG_AGENT.md`: logs the extraction.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
 ## Validation Plan
@@ -39,15 +41,16 @@ Run the smallest command that proves the change:
 
 ```bash
 npm run agent:prepush
-npm run agent:check
 ```
 
 Result:
 
-- `node --check scripts/agent-prepush.mjs`: passed.
-- `npm run agent:status`: passed and listed `agent:prepush`.
-- `npm run agent:prepush`: passed, including `content:summary` and `agent:check`.
-- `npm run agent:evidence -- --task "tap survivor agent prepush"`: passed and wrote `../Shane training/20260611T123355Z_tap-survivor-agent-prepush/result.md`.
+- `node --check src/ui.js`: passed.
+- `node --check src/game.js`: passed.
+- `node --check scripts/smoke-game-harness.mjs`: passed.
+- `node scripts/verify-mvp.mjs`: passed, 99 checks.
+- `npm run agent:prepush`: passed, including `content:summary`, all smoke tests, and `npm test`.
+- `npm run agent:evidence -- --task "tap survivor ui dom helper"`: passed and wrote `../Shane training/20260611T124939Z_tap-survivor-ui-dom-helper/result.md`.
 
 ## Evidence Required
 

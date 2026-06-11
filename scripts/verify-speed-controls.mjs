@@ -12,6 +12,7 @@ const saveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const upgradeSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const renderingSource = readFileSync(join(root, "src/rendering.js"), "utf8");
 const combatSource = readFileSync(join(root, "src/combat.js"), "utf8");
+const uiSource = readFileSync(join(root, "src/ui.js"), "utf8");
 const listeners = new Map();
 
 function makeClassList() {
@@ -151,6 +152,7 @@ vm.runInContext(saveSource, context);
 vm.runInContext(upgradeSource, context);
 vm.runInContext(renderingSource, context);
 vm.runInContext(combatSource, context);
+vm.runInContext(uiSource, context);
 vm.runInContext(source, context);
 
 function check(name, pass) {

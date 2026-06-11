@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added `src/ui.js` for DOM lookup outside `src/game.js`.
 - Added `npm run agent:prepush` for content summary, validation, changed-file, deploy reminder, and commit-message preflight.
 - Added `npm run content:summary` for a fast content map, quest chain, and reference overview.
 - Added `npm run smoke:save`, `npm run smoke:start-run`, and `npm run smoke:boss-run` for focused debugging.
