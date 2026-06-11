@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Moved static meta upgrades into `content/tap-survivor-content.json`; `src/upgrades.js` now combines generated weapon upgrades with content-driven meta upgrades.
 - Added `src/ui.js` for DOM lookup outside `src/game.js`.
 - Added `npm run agent:prepush` for content summary, validation, changed-file, deploy reminder, and commit-message preflight.
 - Added `npm run content:summary` for a fast content map, quest chain, and reference overview.

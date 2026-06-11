@@ -21,7 +21,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/rendering.js`: canvas drawing for arena, entities, effects, HUD, skill rail.
 - `src/math.js`: shared math and formatting helpers for runtime modules.
 - `src/sprites.js`: shared sprite loading and canvas draw helper.
-- `src/upgrades.js`: meta upgrade definitions and in-run upgrade definitions.
+- `src/upgrades.js`: generated weapon upgrade definitions and in-run upgrade definitions.
 - `src/styles.css`: page, panel, modal, and responsive styling.
 - `content/tap-survivor-content.json`: source registry for weapons, weapon unlocks, quests, enemies, characters, shop items, levels, and asset IDs.
 - `src/content.generated.js`: generated content bundle; do not edit directly.
@@ -41,22 +41,24 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Save/meta progression: `src/game.js`.
 - Combat and weapon behavior: `src/combat.js`.
 - Rendering and sprite lookup: `src/rendering.js`.
-- Upgrade definitions: `src/upgrades.js`.
+- Upgrade definitions: meta upgrades in `content/tap-survivor-content.json`; weapon damage and run upgrades in `src/upgrades.js`.
 
 ## Current Content Loading Model
 
 The project is mixed but mostly registry-driven:
 
-- Weapons, unlock nodes, quests, quest groups, enemies, characters, shop items, levels, asset sources, and sprite paths are config-driven in `content/tap-survivor-content.json`.
+- Weapons, unlock nodes, meta upgrades, quests, quest groups, enemies, characters, shop items, levels, asset sources, and sprite paths are config-driven in `content/tap-survivor-content.json`.
 - `src/content.generated.js` exposes that registry as `globalThis.TapSurvivorContent`.
 - Weapon behavior still depends on `weapon.kind` branches in `src/combat.js`.
-- Meta upgrades and run upgrades are still code-defined in `src/upgrades.js`.
+- Weapon damage upgrades are generated from weapon definitions in `src/upgrades.js`; run upgrades are still code-defined there.
 - UI layout is HTML/CSS-driven.
 
 ## Where To Add Content
 
 - Weapons: add to `content/tap-survivor-content.json` under `weapons`, add a `weaponUnlocks` entry, add related quests if needed, then run `npm run build:content`.
-- Skills/upgrades: use `src/upgrades.js` for now; keep IDs tied to weapon IDs or stable upgrade IDs.
+- Meta upgrades: add to `metaUpgrades` in `content/tap-survivor-content.json`; keep gates pointed at existing `weaponUnlocks` and `quests`.
+- Weapon damage upgrades: set `upgradeId` on the weapon entry; `src/upgrades.js` generates the upgrade.
+- Run upgrades: use `src/upgrades.js` for now.
 - Items: add to `shopItems` in `content/tap-survivor-content.json`.
 - Levels: add to `levels` in `content/tap-survivor-content.json`.
 - Characters: add to `characters` in `content/tap-survivor-content.json`.
@@ -95,7 +97,7 @@ The project is mixed but mostly registry-driven:
 ## Current Limitations
 
 - Weapon behavior kinds are hard-coded in `src/combat.js`.
-- Meta upgrades and run upgrades are in `src/upgrades.js`, not JSON.
+- Run upgrades are in `src/upgrades.js`, not JSON.
 - Characters are registered as content but the current MVP still uses the default player directly.
 - Shop items and level entries are validated but not yet fully wired into gameplay UI.
 - Asset paths include cache query strings; keep them in the registry, not gameplay code.

@@ -16,6 +16,7 @@ export function validateContent(content) {
   const errors = [];
   const weapons = content.weapons || {};
   const weaponUnlocks = content.weaponUnlocks || [];
+  const metaUpgrades = content.metaUpgrades || [];
   const quests = content.quests || {};
   const questGroups = content.questGroups || {};
   const enemyTypes = content.enemyTypes || [];
@@ -25,6 +26,7 @@ export function validateContent(content) {
   const assets = content.assets || {};
 
   const seenUnlocks = new Set();
+  const seenMetaUpgrades = new Set();
   const seenEnemies = new Set();
   const seenCharacters = new Set();
   const seenShopItems = new Set();
@@ -53,6 +55,7 @@ export function validateContent(content) {
   requireObject(content, "content");
   requireObject(weapons, "weapons");
   requireArray(weaponUnlocks, "weaponUnlocks");
+  requireArray(metaUpgrades, "metaUpgrades");
   requireObject(quests, "quests");
   requireObject(questGroups, "questGroups");
   requireArray(enemyTypes, "enemyTypes");
@@ -86,6 +89,28 @@ export function validateContent(content) {
       fail(`${unlock.id} references missing opensQuest ${unlock.opensQuest}`);
     }
     requireNumber(unlock.cost, `${unlock.id}.cost`, 0);
+  });
+
+  metaUpgrades.forEach((upgrade) => {
+    requireString(upgrade.id, "metaUpgrade.id");
+    if (seenMetaUpgrades.has(upgrade.id)) fail(`duplicate meta upgrade ${upgrade.id}`);
+    seenMetaUpgrades.add(upgrade.id);
+    ["name", "description"].forEach((field) => requireString(upgrade[field], `metaUpgrade ${upgrade.id}.${field}`));
+    requireArray(upgrade.cost, `metaUpgrade ${upgrade.id}.cost`);
+    (upgrade.cost || []).forEach((cost, index) => requireNumber(cost, `metaUpgrade ${upgrade.id}.cost[${index}]`, 0));
+    requireNumber(upgrade.maxTier, `metaUpgrade ${upgrade.id}.maxTier`, 1);
+    if (upgrade.cost?.length && upgrade.cost.length !== upgrade.maxTier) {
+      fail(`metaUpgrade ${upgrade.id}.cost length must match maxTier`);
+    }
+    if (upgrade.requiresNode && !weaponUnlocks.some((item) => item.id === upgrade.requiresNode)) {
+      fail(`${upgrade.id} references missing requiresNode ${upgrade.requiresNode}`);
+    }
+    if (upgrade.requiresQuest && !quests[upgrade.requiresQuest]) {
+      fail(`${upgrade.id} references missing requiresQuest ${upgrade.requiresQuest}`);
+    }
+    if (upgrade.opensQuest && !quests[upgrade.opensQuest]) {
+      fail(`${upgrade.id} references missing opensQuest ${upgrade.opensQuest}`);
+    }
   });
 
   Object.entries(quests).forEach(([id, quest]) => {

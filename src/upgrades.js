@@ -4,6 +4,7 @@ function weaponIdForDef(weaponDefs, weapon) {
 }
 
 function createUpgradeDefs(weaponDefs) {
+  const metaUpgradeDefs = globalThis.TapSurvivorContent?.metaUpgrades || [];
   return [
     ...Object.values(weaponDefs).map((weapon) => {
       const weaponId = weaponIdForDef(weaponDefs, weapon);
@@ -18,69 +19,7 @@ function createUpgradeDefs(weaponDefs) {
         opensQuest: weapon.upgradeId === "laser_damage" ? "laser_damage_5000" : null,
       };
     }),
-    {
-      id: "move_speed",
-      name: "Move Speed",
-      description: "Move faster during runs.",
-      cost: [1, 2, 3],
-      maxTier: 3,
-      requiresNode: "unlock_laser",
-      requiresQuest: "first_blood",
-    },
-    {
-      id: "pickup_radius",
-      name: "Pickup Radius",
-      description: "Collect XP from farther away.",
-      cost: [1, 2, 3],
-      maxTier: 3,
-      requiresNode: "unlock_frost_orb",
-      requiresQuest: "gatherer",
-    },
-    {
-      id: "max_hp",
-      name: "Max HP",
-      description: "Start each run with more health.",
-      cost: [1, 2, 3],
-      maxTier: 3,
-      requiresNode: "unlock_shield_pulse",
-      requiresQuest: "survivor_60",
-    },
-    {
-      id: "attack_radius",
-      name: "Attack Radius",
-      description: "Increase projectile size and area weapon reach.",
-      cost: [1, 2, 3],
-      maxTier: 3,
-      requiresNode: "unlock_flame_wave",
-      requiresQuest: "crowd_control",
-    },
-    {
-      id: "fire_rate",
-      name: "Fire Rate",
-      description: "Reduce weapon cooldowns.",
-      cost: [1, 2, 3],
-      maxTier: 3,
-      requiresNode: "unlock_chain_spark",
-      requiresQuest: "rapid_growth",
-    },
-    {
-      id: "flat_damage",
-      name: "Flat Damage",
-      description: "Add fixed damage to every weapon hit.",
-      cost: [1, 2, 3],
-      maxTier: 3,
-      requiresNode: "unlock_saw_drone",
-      requiresQuest: "heavy_hits",
-    },
-    {
-      id: "percent_damage",
-      name: "Percent Damage",
-      description: "Multiply all weapon damage.",
-      cost: [1, 2, 3],
-      maxTier: 3,
-      requiresNode: "unlock_meteor_pin",
-      requiresQuest: "boss_hunter",
-    },
+    ...metaUpgradeDefs,
   ];
 }
 

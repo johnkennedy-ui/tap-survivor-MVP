@@ -3,6 +3,7 @@ import { readContent, validateContent } from "./content-tools.mjs";
 const content = readContent();
 const weapons = content.weapons || {};
 const weaponUnlocks = content.weaponUnlocks || [];
+const metaUpgrades = content.metaUpgrades || [];
 const quests = content.quests || {};
 const questGroups = content.questGroups || {};
 const enemyTypes = content.enemyTypes || [];
@@ -42,6 +43,11 @@ weaponUnlocks.forEach((unlock) => {
   if (unlock.opensQuest) referencedQuestIds.add(unlock.opensQuest);
 });
 
+metaUpgrades.forEach((upgrade) => {
+  if (upgrade.requiresQuest) referencedQuestIds.add(upgrade.requiresQuest);
+  if (upgrade.opensQuest) referencedQuestIds.add(upgrade.opensQuest);
+});
+
 Object.entries(quests).forEach(([id, quest]) => {
   questFollowUps(quest).forEach((nextId) => {
     referencedQuestIds.add(nextId);
@@ -67,6 +73,7 @@ console.log("# Tap Survivor Content Summary");
 console.log("\n## Counts");
 console.log(`- weapons: ${idsFromMap(weapons).length}`);
 console.log(`- weapon unlocks: ${weaponUnlocks.length}`);
+console.log(`- meta upgrades: ${metaUpgrades.length}`);
 console.log(`- quests: ${questIds.length}`);
 console.log(`- quest groups: ${Object.keys(questGroups).length}`);
 console.log(`- enemy types: ${enemyTypes.length}`);
@@ -91,6 +98,18 @@ printList(
       unlock.opensQuest ? `opens ${unlock.opensQuest}` : "",
     ].filter(Boolean).join("; ");
     return `${unlock.id} -> ${unlock.weaponId} | cost ${unlock.cost} | ${unlock.branch}${gates ? ` | ${gates}` : ""}`;
+  }),
+);
+
+printList(
+  "Meta Upgrades",
+  metaUpgrades.map((upgrade) => {
+    const gates = [
+      upgrade.requiresNode ? `requires node ${upgrade.requiresNode}` : "",
+      upgrade.requiresQuest ? `requires quest ${upgrade.requiresQuest}` : "",
+      upgrade.opensQuest ? `opens ${upgrade.opensQuest}` : "",
+    ].filter(Boolean).join("; ");
+    return `${upgrade.id} | max tier ${upgrade.maxTier} | costs ${upgrade.cost.join(", ")}${gates ? ` | ${gates}` : ""}`;
   }),
 );
 

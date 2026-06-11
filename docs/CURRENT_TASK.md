@@ -4,18 +4,22 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract UI render helpers
+Move meta upgrade definitions into content
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T12:54:54.646Z
+- Started: 2026-06-11T13:09:31.912Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `src/ui.js`
-- `src/game.js`
+- `content/tap-survivor-content.json`
+- `src/upgrades.js`
+- `src/content.generated.js`
+- `scripts/content-tools.mjs`
+- `scripts/content-summary.mjs`
+- `scripts/audit-quests.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
@@ -23,27 +27,37 @@ Extract UI render helpers
 
 ## Files Changed
 
-- `src/ui.js`: added `createUiRenderer` for meta HUD, progression tree, and quest panel rendering.
-- `src/game.js`: delegates `renderMeta`, `renderTree`, and `renderQuests` to `TapSurvivorUi`.
-- `scripts/verify-mvp.mjs`: validates UI rendering helper wiring after extraction.
-- `docs/CURRENT_TASK.md`: updated this checkpoint.
+- `content/tap-survivor-content.json`
+- `src/upgrades.js`
+- `scripts/content-tools.mjs`
+- `scripts/content-summary.mjs`
+- `scripts/audit-quests.mjs`
+- `scripts/verify-mvp.mjs`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
+- `docs/CHANGELOG_AGENT.md`
+- `docs/CURRENT_TASK.md`
 
 ## Validation Plan
 
 Run the smallest command that proves the change:
 
 ```bash
+npm run build:content
 npm run agent:prepush
 ```
 
 Result:
 
-- `node --check src/ui.js`: passed.
-- `node --check src/game.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed, 99 checks.
-- `npm run smoke:start-run`: passed.
+- `npm run build:content`: passed.
+- `node --check src/upgrades.js`: passed.
+- `node --check scripts/content-tools.mjs`: passed.
+- `node --check scripts/content-summary.mjs`: passed.
+- `npm run validate:content`: passed.
+- `npm run content:summary`: passed and reports 7 meta upgrades with no dangling references.
+- `node scripts/verify-mvp.mjs`: passed, 100 checks.
 - `npm run agent:prepush`: passed, including `content:summary`, all smoke tests, and `npm test`.
-- `npm run agent:evidence -- --task "tap survivor ui render helpers"`: passed and wrote `../Shane training/20260611T125807Z_tap-survivor-ui-render-helpers/result.md`.
+- `npm run agent:evidence -- --task "tap survivor meta upgrades content"`: passed and wrote `../Shane training/20260611T152322Z_tap-survivor-meta-upgrades-content/result.md`.
 
 ## Evidence Required
 
