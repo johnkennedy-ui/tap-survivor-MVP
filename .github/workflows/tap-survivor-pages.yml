@@ -33,8 +33,8 @@ jobs:
           set -euo pipefail
           publish_dir="$(mktemp -d)"
           cp index.html "$publish_dir/"
-          cp README.md MVP_GAME_PLAN.md PHONE_TEST_PIPELINE.md package.json "$publish_dir/"
-          cp -R assets content src scripts "$publish_dir/"
+          cp README.md AGENTS.md MVP_GAME_PLAN.md PHONE_TEST_PIPELINE.md package.json "$publish_dir/"
+          cp -R assets content docs src scripts "$publish_dir/"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan gh-pages

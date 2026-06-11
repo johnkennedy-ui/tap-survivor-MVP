@@ -103,7 +103,8 @@ check("agent context pack exists", agentContext.includes("Where To Add Content")
 check("root agent instructions load docs first", agentInstructions.includes("docs/AGENT_CODEBASE_CONTEXT.md") && agentInstructions.includes("docs/CONTENT_EXTENSION_GUIDE.md"));
 
 check("workflow publishes gh-pages", workflow.includes("git push --force origin gh-pages"));
-check("workflow publishes content and assets", workflow.includes("cp -R assets content src scripts"));
+check("workflow publishes content and assets", workflow.includes("assets content") && workflow.includes("src scripts"));
+check("workflow publishes agent docs", workflow.includes("AGENTS.md") && workflow.includes("docs"));
 check("workflow writes nojekyll marker", workflow.includes("touch .nojekyll"));
 check("workflow runs reusable MVP test", workflow.includes("node scripts/verify-mvp.mjs"));
 
