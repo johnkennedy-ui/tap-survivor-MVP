@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added generated tower-themed SVG sprites for player, enemies, boss, and primary weapon icons.
 - Added generated tower-floor stage artwork, a top-screen tower floor badge, and persisted floor progression after boss clears.
 - Added projectile run upgrades for pierce, wall bounces, split fire, explosive hits, and splinter shots; expanded fire-rate/damage tier depth and weighted level-up choices toward started upgrade families.
 - Added second-tier weapon mastery quests and generic weapon-ID quest progress.

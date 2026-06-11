@@ -4,24 +4,19 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add tower stage artwork and floor progression
+Retheme sprites around the tower stage
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T18:45:36.000Z
+- Started: 2026-06-11T19:06:45.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
-- `assets/generated/tower/tower-floor-bg.png`
-- `assets/generated/tower/License.txt`
-- `src/sprites.js`
-- `src/rendering.js`
-- `src/save.js`
-- `src/game.js`
+- `assets/generated/tower/sprites/`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -30,12 +25,14 @@ Add tower stage artwork and floor progression
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
-- `assets/generated/tower/tower-floor-bg.png`
-- `assets/generated/tower/License.txt`
-- `src/sprites.js`
-- `src/rendering.js`
-- `src/save.js`
-- `src/game.js`
+- `assets/generated/tower/sprites/License.txt`
+- `assets/generated/tower/sprites/player-tower-mage.svg`
+- `assets/generated/tower/sprites/enemy-drifter-shade.svg`
+- `assets/generated/tower/sprites/enemy-skitter-rune.svg`
+- `assets/generated/tower/sprites/enemy-bulwark-guardian.svg`
+- `assets/generated/tower/sprites/enemy-boss-tower-warden.svg`
+- `assets/generated/tower/sprites/weapon-spark-rune.svg`
+- `assets/generated/tower/sprites/weapon-prism-rune.svg`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -53,12 +50,9 @@ npm run agent:prepush
 Result:
 
 - `npm run build:content`: passed.
-- `npm run validate:content`: passed, including generated asset path/license checks.
-- `node --check src/sprites.js`: passed.
-- `node --check src/rendering.js`: passed.
-- `node --check src/save.js`: passed.
-- `node --check src/game.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed 130 checks.
+- `npm run validate:content`: passed, including generated sprite path/license checks.
+- `node --check scripts/verify-mvp.mjs`: passed.
+- `node scripts/verify-mvp.mjs`: passed 131 checks.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

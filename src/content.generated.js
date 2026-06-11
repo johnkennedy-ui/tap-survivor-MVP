@@ -1022,22 +1022,31 @@ globalThis.TapSurvivorContent = {
         "attributionRequired": false,
         "url": "local",
         "localLicense": "assets/generated/tower/License.txt"
+      },
+      {
+        "id": "generated_tower_sprites",
+        "name": "Generated Tower Sprite Set",
+        "license": "Generated original SVG assets",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "local",
+        "localLicense": "assets/generated/tower/sprites/License.txt"
       }
     ],
     "sprites": {
-      "player": "assets/kenney/desert-shooter/player.png?v=kenney-20260610",
+      "player": "assets/generated/tower/sprites/player-tower-mage.svg?v=generated-20260611",
       "backgrounds": {
         "tower_floor": "assets/generated/tower/tower-floor-bg.png?v=generated-20260611"
       },
       "enemies": {
-        "drifter": "assets/kenney/desert-shooter/enemy-drifter.png?v=kenney-20260610",
-        "skitter": "assets/kenney/desert-shooter/enemy-skitter.png?v=kenney-20260610",
-        "bulwark": "assets/kenney/desert-shooter/enemy-bulwark.png?v=kenney-20260610",
-        "boss": "assets/kenney/desert-shooter/enemy-bulwark.png?v=kenney-20260610"
+        "drifter": "assets/generated/tower/sprites/enemy-drifter-shade.svg?v=generated-20260611",
+        "skitter": "assets/generated/tower/sprites/enemy-skitter-rune.svg?v=generated-20260611",
+        "bulwark": "assets/generated/tower/sprites/enemy-bulwark-guardian.svg?v=generated-20260611",
+        "boss": "assets/generated/tower/sprites/enemy-boss-tower-warden.svg?v=generated-20260611"
       },
       "weapons": {
-        "spark_bolt": "assets/kenney/desert-shooter/weapon-spark.png?v=kenney-20260610",
-        "prism_beam": "assets/kenney/desert-shooter/weapon-prism.png?v=kenney-20260610"
+        "spark_bolt": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260611",
+        "prism_beam": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260611"
       },
       "ui": {
         "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
