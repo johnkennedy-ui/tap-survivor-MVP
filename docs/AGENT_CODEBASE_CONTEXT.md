@@ -17,6 +17,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/combat.js`: enemy spawning, boss specials, weapon firing, damage, combat effects.
 - `src/rendering.js`: canvas drawing for arena, entities, effects, HUD, skill rail.
 - `src/math.js`: shared math and formatting helpers for runtime modules.
+- `src/sprites.js`: shared sprite loading and canvas draw helper.
 - `src/upgrades.js`: meta upgrade definitions and in-run upgrade definitions.
 - `src/styles.css`: page, panel, modal, and responsive styling.
 - `content/tap-survivor-content.json`: source registry for weapons, weapon unlocks, quests, enemies, characters, shop items, levels, and asset IDs.

@@ -22,6 +22,7 @@ const styles = readRequired("src/styles.css");
 const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
 const math = readRequired("src/math.js");
+const sprites = readRequired("src/sprites.js");
 const upgrades = readRequired("src/upgrades.js");
 const rendering = readRequired("src/rendering.js");
 const combat = readRequired("src/combat.js");
@@ -39,6 +40,7 @@ const runtime = `${game}\n${combat}`;
 check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index));
 check("index loads generated content", /src="src\/content\.generated\.js(\?[^"]+)?"/.test(index));
 check("index loads shared math utilities", /src="src\/math\.js(\?[^"]+)?"/.test(index));
+check("index loads sprite utilities", /src="src\/sprites\.js(\?[^"]+)?"/.test(index));
 check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
@@ -54,7 +56,7 @@ check("touch movement input exists", game.includes('addEventListener("touchstart
 check("enemy chase loop exists", runtime.includes("updateEnemies") && runtime.includes("enemy.speed"));
 check("content source exists", contentSource.includes('"schemaVersion"') && generatedContent.includes("TapSurvivorContent"));
 check("Kenney asset manifest exists", content.assets?.sources?.some((source) => source.id === "kenney_desert_shooter_pack" && source.commercialUse === true && source.attributionRequired === false));
-check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "spark_bolt", "prism_beam"].every((id) => contentText.includes(id)) && game.includes("drawSprite"));
+check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "spark_bolt", "prism_beam"].every((id) => contentText.includes(id)) && sprites.includes("drawSprite"));
 check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
 check("default character registry entry exists", (content.characters || []).some((character) => character.id === "character_default" && character.spriteId === "player"));
 check("enemy types unlock every 30 seconds", runtime.includes("Math.floor(game.elapsed / 30)") && runtime.includes("availableEnemyTypes"));
@@ -97,6 +99,7 @@ check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGrou
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
+check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));

@@ -4,35 +4,33 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract shared runtime math helpers
+Extract sprite loading helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T11:12:37.595Z
+- Started: 2026-06-11T11:31:40.990Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `docs/CURRENT_TASK.md`
-- `index.html`
+- `src/sprites.js`
 - `src/game.js`
-- `src/rendering.js`
-- `src/math.js`
+- `index.html`
 - `scripts/verify-mvp.mjs`
 - `scripts/verify-speed-controls.mjs`
+- `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `src/math.js`: added shared `clamp`, `distance`, `formatTime`, and `randomRange` helpers.
-- `index.html`: loads `src/math.js` before runtime modules that use it.
-- `src/game.js`: uses `TapSurvivorMath` instead of local duplicate helpers.
-- `src/rendering.js`: uses `TapSurvivorMath.clamp` instead of a local duplicate helper.
-- `scripts/verify-mvp.mjs`: validates the new shared math module and script load.
-- `scripts/verify-speed-controls.mjs`: loads the math module in the VM smoke test.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/math.js`.
+- `src/sprites.js`: added shared sprite loading and canvas draw helper.
+- `src/game.js`: removed local sprite registry/draw helpers and uses `TapSurvivorSprites`.
+- `index.html`: loads `src/sprites.js` before runtime modules that use it.
+- `scripts/verify-mvp.mjs`: validates sprite module load and helper wiring.
+- `scripts/verify-speed-controls.mjs`: loads the sprite module in the VM smoke test.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/sprites.js`.
 - `docs/CHANGELOG_AGENT.md`: logs the extraction.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
@@ -46,12 +44,12 @@ npm run agent:check
 
 Result:
 
-- `node --check src/math.js`: passed.
+- `node --check src/sprites.js`: passed.
 - `node --check src/game.js`: passed.
-- `node --check src/rendering.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed, 87 checks.
+- `node scripts/verify-mvp.mjs`: passed, 90 checks.
+- `npm run test:speed`: passed.
 - `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor shared math helpers"`: passed and wrote `../Shane training/20260611T111759Z_tap-survivor-shared-math-helpers/result.md`.
+- `npm run agent:evidence -- --task "tap survivor sprite helper extraction"`: passed and wrote `../Shane training/20260611T113402Z_tap-survivor-sprite-helper-extraction/result.md`.
 
 ## Evidence Required
 
