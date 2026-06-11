@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added `docs/MAINTENANCE.md` as the routine update and validation runbook.
 - Added `docs/CURRENT_TASK.md` as the active repo-local task checkpoint.
 - Added `npm run agent:start` to initialize `docs/CURRENT_TASK.md` from CLI arguments.
 - Added `npm run agent:status` for a fast repo and content overview.

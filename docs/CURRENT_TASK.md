@@ -4,26 +4,30 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add CI validation for agent check
+Add repo maintenance runbook
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T09:20:07.410Z
+- Started: 2026-06-11T10:43:38.941Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `.github/workflows/agent-check.yml`
-- `docs/CURRENT_TASK.md`
+- `docs/MAINTENANCE.md`
+- `AGENTS.md`
+- `README.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
+- `docs/CURRENT_TASK.md`
 
 ## Files Changed
 
-- `.github/workflows/agent-check.yml`: added GitHub Actions workflow for `npm run agent:check` on push, pull request, and manual dispatch.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the CI validation workflow.
-- `docs/CHANGELOG_AGENT.md`: logged the new workflow.
+- `docs/MAINTENANCE.md`: added routine start, content update, code update, reporting, deployment, and boundary guidance.
+- `AGENTS.md`: added the maintenance runbook to the required pre-edit reading path.
+- `README.md`: linked the maintenance runbook from content tooling.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the runbook in the folder map and startup rules.
+- `docs/CHANGELOG_AGENT.md`: logged the new runbook.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
 ## Validation Plan
@@ -36,8 +40,9 @@ npm run agent:check
 
 Result:
 
+- `git diff --check`: passed.
 - `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor agent check ci"`: passed and wrote `../Shane training/20260611T092130Z_tap-survivor-agent-check-ci/result.md`.
+- `npm run agent:evidence -- --task "tap survivor maintenance runbook"`: passed and wrote `../Shane training/20260611T104522Z_tap-survivor-maintenance-runbook/result.md`.
 
 ## Evidence Required
 

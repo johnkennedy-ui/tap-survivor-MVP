@@ -23,6 +23,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `assets/`: committed sprite and license files.
 - `scripts/`: build, validation, content, deployment, and smoke-test utilities.
 - `docs/`: agent context and extension guides.
+- `docs/MAINTENANCE.md`: routine update and validation runbook.
 - `docs/CURRENT_TASK.md`: active task checkpoint; update this before editing.
 - `docs/CHANGELOG_AGENT.md`: short log of structural changes that affect future agent work.
 
@@ -90,7 +91,7 @@ The project is mixed but mostly registry-driven:
 
 ## Rules For Future Agents
 
-- Read this file and `docs/CONTENT_EXTENSION_GUIDE.md` first.
+- Read this file, `docs/CONTENT_EXTENSION_GUIDE.md`, and `docs/MAINTENANCE.md` first.
 - Read and update `docs/CURRENT_TASK.md` for the active request before editing; use `npm run agent:start -- --goal "<task>"` for a clean checkpoint.
 - Check `docs/CHANGELOG_AGENT.md` when changing structure or command workflows.
 - Make one content or structure change at a time.

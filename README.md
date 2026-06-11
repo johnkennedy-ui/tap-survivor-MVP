@@ -8,6 +8,8 @@ Open `index.html` in a browser.
 
 ## Content Tooling
 
+For routine update paths, see `docs/MAINTENANCE.md`.
+
 Game content now lives in `content/tap-survivor-content.json`.
 Do not hand-edit `src/content.generated.js`; rebuild it from the JSON source.
 
