@@ -495,14 +495,6 @@ function closeEndScreen() {
   ui.endScreen.classList.add("hidden");
 }
 
-function setTargetFromEvent(event) {
-  if (!game || !game.running || game.paused) return;
-  const rect = canvas.getBoundingClientRect();
-  const point = event.touches ? event.touches[0] : event;
-  game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
-  game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
-}
-
 function loop(now) {
   const dt = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
@@ -546,17 +538,9 @@ ui.resetSave.addEventListener("click", () => {
 ui.closeEnd.addEventListener("click", closeEndScreen);
 ui.closeEndX.addEventListener("click", closeEndScreen);
 
-canvas.addEventListener("mousedown", setTargetFromEvent);
-canvas.addEventListener("mousemove", (event) => {
-  if (event.buttons === 1) setTargetFromEvent(event);
-});
-canvas.addEventListener("touchstart", (event) => {
-  event.preventDefault();
-  setTargetFromEvent(event);
-});
-canvas.addEventListener("touchmove", (event) => {
-  event.preventDefault();
-  setTargetFromEvent(event);
+globalThis.TapSurvivorInput.bindMovementInput({
+  canvas,
+  getGame: () => game,
 });
 
 spriteSystem.loadSprites();

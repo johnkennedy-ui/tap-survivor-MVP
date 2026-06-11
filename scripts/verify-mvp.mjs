@@ -30,6 +30,7 @@ const rendering = readRequired("src/rendering.js");
 const combat = readRequired("src/combat.js");
 const ui = readRequired("src/ui.js");
 const levelUp = readRequired("src/level-up.js");
+const input = readRequired("src/input.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
 const agentContext = readRequired("docs/AGENT_CODEBASE_CONTEXT.md");
@@ -54,15 +55,16 @@ check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
 check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
 check("index loads level-up module", /src="src\/level-up\.js(\?[^"]+)?"/.test(index));
+check("index loads input module", /src="src\/input\.js(\?[^"]+)?"/.test(index));
 check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
 check("speed controls exist", ["data-speed=\"1\"", "data-speed=\"2\"", "data-speed=\"5\""].every((id) => index.includes(id)) && styles.includes(".speed-controls"));
 check("mobile viewport exists", index.includes('name="viewport"'));
 
-check("tap/click target handler exists", game.includes("setTargetFromEvent"));
-check("mouse movement input exists", game.includes('addEventListener("mousedown"'));
-check("touch movement input exists", game.includes('addEventListener("touchstart"'));
+check("tap/click target handler exists", input.includes("setTargetFromEvent"));
+check("mouse movement input exists", input.includes('addEventListener("mousedown"'));
+check("touch movement input exists", input.includes('addEventListener("touchstart"'));
 check("enemy chase loop exists", runtime.includes("updateEnemies") && runtime.includes("enemy.speed"));
 check("content source exists", contentSource.includes('"schemaVersion"') && generatedContent.includes("TapSurvivorContent"));
 check("Kenney asset manifest exists", content.assets?.sources?.some((source) => source.id === "kenney_desert_shooter_pack" && source.commercialUse === true && source.attributionRequired === false));
@@ -117,6 +119,7 @@ check("shared math helpers exist", math.includes("TapSurvivorMath") && game.incl
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && game.includes("TapSurvivorLevelUp"));
+check("shared input helper exists", input.includes("TapSurvivorInput") && game.includes("TapSurvivorInput"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));
