@@ -4,17 +4,17 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract sprite loading helper
+Extract save state helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T11:31:40.990Z
+- Started: 2026-06-11T11:46:14.778Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `src/sprites.js`
+- `src/save.js`
 - `src/game.js`
 - `index.html`
 - `scripts/verify-mvp.mjs`
@@ -25,12 +25,12 @@ Extract sprite loading helper
 
 ## Files Changed
 
-- `src/sprites.js`: added shared sprite loading and canvas draw helper.
-- `src/game.js`: removed local sprite registry/draw helpers and uses `TapSurvivorSprites`.
-- `index.html`: loads `src/sprites.js` before runtime modules that use it.
-- `scripts/verify-mvp.mjs`: validates sprite module load and helper wiring.
-- `scripts/verify-speed-controls.mjs`: loads the sprite module in the VM smoke test.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/sprites.js`.
+- `src/save.js`: added save defaults, load/migration normalization, and persistence helper.
+- `src/game.js`: delegates save creation/loading/persistence to `TapSurvivorSave`.
+- `index.html`: loads `src/save.js` before `src/game.js`.
+- `scripts/verify-mvp.mjs`: validates save module load and helper wiring.
+- `scripts/verify-speed-controls.mjs`: loads the save module in the VM smoke test.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/save.js`.
 - `docs/CHANGELOG_AGENT.md`: logs the extraction.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
@@ -44,12 +44,12 @@ npm run agent:check
 
 Result:
 
-- `node --check src/sprites.js`: passed.
+- `node --check src/save.js`: passed.
 - `node --check src/game.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed, 90 checks.
+- `node scripts/verify-mvp.mjs`: passed, 93 checks.
 - `npm run test:speed`: passed.
 - `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor sprite helper extraction"`: passed and wrote `../Shane training/20260611T113402Z_tap-survivor-sprite-helper-extraction/result.md`.
+- `npm run agent:evidence -- --task "tap survivor save helper extraction"`: passed and wrote `../Shane training/20260611T114850Z_tap-survivor-save-helper-extraction/result.md`.
 
 ## Evidence Required
 

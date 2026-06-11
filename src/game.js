@@ -25,6 +25,7 @@ const ui = {
 };
 
 const saveKey = "tap-survivor-mvp-save-v2";
+const legacySaveKey = "tap-survivor-mvp-save-v1";
 
 const content = globalThis.TapSurvivorContent || {};
 const upgradeContent = globalThis.TapSurvivorUpgrades || {};
@@ -52,82 +53,23 @@ const enemyTypes = content.enemyTypes || [];
 const shopItemDefs = content.shopItems || [];
 const levelDefs = content.levels || [];
 
-let save = loadSave();
+const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
+  saveKey,
+  legacySaveKey,
+  starterQuestIds,
+  questDefs,
+  weaponUnlocks,
+  upgradeDefs,
+  questOpenIds,
+});
+
+let save = saveSystem.loadSave();
 let game = null;
 let lastFrame = performance.now();
 let gameSpeed = 1;
 
-function defaultSave() {
-  return {
-    coins: 0,
-    questPoints: 0,
-    totalQuestPoints: 0,
-    unlockedNodes: [],
-    unlockedWeapons: ["spark_bolt"],
-    upgradeTiers: {},
-    unlockedUpgrades: [],
-    activeQuests: [...starterQuestIds],
-    completedQuests: [],
-    questProgress: {},
-  };
-}
-
-function loadSave() {
-  try {
-    const raw = localStorage.getItem(saveKey) || localStorage.getItem("tap-survivor-mvp-save-v1");
-    const loaded = raw ? JSON.parse(raw) : {};
-    return normalizeSave({ ...defaultSave(), ...loaded });
-  } catch {
-    return defaultSave();
-  }
-}
-
-function normalizeSave(input) {
-  const normalized = { ...defaultSave(), ...input };
-  normalized.unlockedWeapons = [...new Set(["spark_bolt", ...(normalized.unlockedWeapons || [])])];
-  normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
-  normalized.unlockedNodes = normalized.unlockedNodes || [];
-  normalized.upgradeTiers = normalized.upgradeTiers || {};
-  normalized.activeQuests = normalized.activeQuests || [];
-  normalized.completedQuests = normalized.completedQuests || [];
-  normalized.questProgress = normalized.questProgress || {};
-  const ensureQuestOpen = (questId) => {
-    if (!questId || !questDefs[questId]) return;
-    if (!normalized.activeQuests.includes(questId) && !normalized.completedQuests.includes(questId)) {
-      normalized.activeQuests.push(questId);
-    }
-    normalized.questProgress[questId] = normalized.questProgress[questId] || 0;
-  };
-  starterQuestIds.forEach((questId) => {
-    ensureQuestOpen(questId);
-  });
-  normalized.completedQuests.forEach((questId) => {
-    questOpenIds(questDefs[questId]).forEach(ensureQuestOpen);
-  });
-  normalized.unlockedNodes.forEach((nodeId) => {
-    const unlock = weaponUnlocks.find((node) => node.id === nodeId);
-    ensureQuestOpen(unlock?.opensQuest);
-  });
-  (normalized.unlockedUpgrades || []).forEach((id) => {
-    normalized.upgradeTiers[id] = Math.max(normalized.upgradeTiers[id] || 0, 1);
-  });
-  Object.entries(normalized.upgradeTiers).forEach(([upgradeId, tier]) => {
-    if (tier > 0) {
-      const upgrade = upgradeDefs.find((item) => item.id === upgradeId);
-      ensureQuestOpen(upgrade?.opensQuest);
-    }
-  });
-  normalized.unlockedUpgrades = Object.entries(normalized.upgradeTiers)
-    .filter(([, tier]) => tier > 0)
-    .map(([id]) => id);
-  return normalized;
-}
-
 function persist() {
-  save.unlockedUpgrades = Object.entries(save.upgradeTiers)
-    .filter(([, tier]) => tier > 0)
-    .map(([id]) => id);
-  localStorage.setItem(saveKey, JSON.stringify(save));
+  saveSystem.persist(save);
 }
 
 function hasNode(id) {
@@ -758,8 +700,8 @@ ui.speedButtons.forEach((button) => {
 setGameSpeed(1);
 ui.resetSave.addEventListener("click", () => {
   localStorage.removeItem(saveKey);
-  localStorage.removeItem("tap-survivor-mvp-save-v1");
-  save = defaultSave();
+  localStorage.removeItem(legacySaveKey);
+  save = saveSystem.defaultSave();
   game = null;
   ui.endScreen.classList.add("hidden");
   ui.levelUp.classList.add("hidden");

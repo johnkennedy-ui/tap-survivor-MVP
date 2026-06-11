@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added `src/save.js` for save defaults, loading, migration/normalization, and persistence outside `src/game.js`.
 - Added `src/sprites.js` for shared sprite loading and drawing outside `src/game.js`.
 - Added `src/math.js` for shared runtime math helpers used by game and rendering modules.
 - Added `docs/MAINTENANCE.md` as the routine update and validation runbook.

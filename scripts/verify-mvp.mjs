@@ -23,6 +23,7 @@ const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
 const math = readRequired("src/math.js");
 const sprites = readRequired("src/sprites.js");
+const save = readRequired("src/save.js");
 const upgrades = readRequired("src/upgrades.js");
 const rendering = readRequired("src/rendering.js");
 const combat = readRequired("src/combat.js");
@@ -41,6 +42,7 @@ check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index))
 check("index loads generated content", /src="src\/content\.generated\.js(\?[^"]+)?"/.test(index));
 check("index loads shared math utilities", /src="src\/math\.js(\?[^"]+)?"/.test(index));
 check("index loads sprite utilities", /src="src\/sprites\.js(\?[^"]+)?"/.test(index));
+check("index loads save utilities", /src="src\/save\.js(\?[^"]+)?"/.test(index));
 check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
@@ -66,7 +68,7 @@ check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.in
 check("XP drops exist", game.includes("xpDrops") && game.includes("collectXp"));
 check("coin and heart drops exist", game.includes("lootDrops") && game.includes("spawnLootDrops") && game.includes('type: "coin"') && game.includes('type: "heart"'));
 check("pickup attraction scales with speed", game.includes("pullDropTowardPlayer") && game.includes("updateXpDrops(dt)") && game.includes("updateLootDrops(dt)") && game.includes("pullDropTowardPlayer(drop, p, 480, dt)") && game.includes("pullDropTowardPlayer(drop, p, 540, dt)"));
-check("coins persist in save", game.includes("coins: 0") && game.includes("save.coins +=") && game.includes("persist()"));
+check("coins persist in save", save.includes("coins: 0") && game.includes("save.coins +=") && game.includes("persist()"));
 check("heart drops heal player", game.includes('drop.type === "heart"') && game.includes("game.player.hp = Math.min(game.player.maxHp"));
 check("player HP bar renders above sprite", rendering.includes("drawPlayerHpBar") && rendering.includes("p.y - p.radius - 16"));
 check("level-up choices exist", game.includes("showLevelUp") && contentText.includes("Prism Beam"));
@@ -98,6 +100,7 @@ check("boss death completes run", runtime.includes('endRun("Boss defeated")') &&
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
+check("shared save helpers exist", save.includes("TapSurvivorSave") && game.includes("TapSurvivorSave"));
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
 
