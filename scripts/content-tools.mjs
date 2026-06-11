@@ -17,6 +17,7 @@ export function validateContent(content) {
   const weapons = content.weapons || {};
   const weaponUnlocks = content.weaponUnlocks || [];
   const metaUpgrades = content.metaUpgrades || [];
+  const runUpgrades = content.runUpgrades || [];
   const quests = content.quests || {};
   const questGroups = content.questGroups || {};
   const enemyTypes = content.enemyTypes || [];
@@ -27,6 +28,7 @@ export function validateContent(content) {
 
   const seenUnlocks = new Set();
   const seenMetaUpgrades = new Set();
+  const seenRunUpgrades = new Set();
   const seenEnemies = new Set();
   const seenCharacters = new Set();
   const seenShopItems = new Set();
@@ -56,6 +58,7 @@ export function validateContent(content) {
   requireObject(weapons, "weapons");
   requireArray(weaponUnlocks, "weaponUnlocks");
   requireArray(metaUpgrades, "metaUpgrades");
+  requireArray(runUpgrades, "runUpgrades");
   requireObject(quests, "quests");
   requireObject(questGroups, "questGroups");
   requireArray(enemyTypes, "enemyTypes");
@@ -97,9 +100,10 @@ export function validateContent(content) {
     seenMetaUpgrades.add(upgrade.id);
     ["name", "description"].forEach((field) => requireString(upgrade[field], `metaUpgrade ${upgrade.id}.${field}`));
     requireArray(upgrade.cost, `metaUpgrade ${upgrade.id}.cost`);
-    (upgrade.cost || []).forEach((cost, index) => requireNumber(cost, `metaUpgrade ${upgrade.id}.cost[${index}]`, 0));
+    const costs = Array.isArray(upgrade.cost) ? upgrade.cost : [];
+    costs.forEach((cost, index) => requireNumber(cost, `metaUpgrade ${upgrade.id}.cost[${index}]`, 0));
     requireNumber(upgrade.maxTier, `metaUpgrade ${upgrade.id}.maxTier`, 1);
-    if (upgrade.cost?.length && upgrade.cost.length !== upgrade.maxTier) {
+    if (costs.length && costs.length !== upgrade.maxTier) {
       fail(`metaUpgrade ${upgrade.id}.cost length must match maxTier`);
     }
     if (upgrade.requiresNode && !weaponUnlocks.some((item) => item.id === upgrade.requiresNode)) {
@@ -111,6 +115,27 @@ export function validateContent(content) {
     if (upgrade.opensQuest && !quests[upgrade.opensQuest]) {
       fail(`${upgrade.id} references missing opensQuest ${upgrade.opensQuest}`);
     }
+  });
+
+  runUpgrades.forEach((upgrade) => {
+    requireString(upgrade.id, "runUpgrade.id");
+    if (seenRunUpgrades.has(upgrade.id)) fail(`duplicate run upgrade ${upgrade.id}`);
+    seenRunUpgrades.add(upgrade.id);
+    ["name", "description"].forEach((field) => requireString(upgrade[field], `runUpgrade ${upgrade.id}.${field}`));
+    requireNumber(upgrade.maxTier, `runUpgrade ${upgrade.id}.maxTier`, 1);
+    if (upgrade.effects) requireArray(upgrade.effects, `runUpgrade ${upgrade.id}.effects`);
+    const effects = Array.isArray(upgrade.effects) ? upgrade.effects : [];
+    effects.forEach((effect, index) => {
+      requireString(effect.type, `runUpgrade ${upgrade.id}.effects[${index}].type`);
+      requireNumber(effect.value, `runUpgrade ${upgrade.id}.effects[${index}].value`, 0);
+      if (effect.type === "playerStatAdd") {
+        if (!["speed", "pickupRadius", "maxHp"].includes(effect.stat)) {
+          fail(`runUpgrade ${upgrade.id}.effects[${index}] has unsupported player stat ${effect.stat}`);
+        }
+      } else if (effect.type !== "playerHeal") {
+        fail(`runUpgrade ${upgrade.id}.effects[${index}] has unsupported type ${effect.type}`);
+      }
+    });
   });
 
   Object.entries(quests).forEach(([id, quest]) => {

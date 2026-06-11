@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Move meta upgrade definitions into content
+Move run upgrade definitions into content
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T13:09:31.912Z
+- Started: 2026-06-11T15:28:08.752Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -23,12 +23,14 @@ Move meta upgrade definitions into content
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
 - `content/tap-survivor-content.json`
 - `src/upgrades.js`
+- `src/content.generated.js`
 - `scripts/content-tools.mjs`
 - `scripts/content-summary.mjs`
 - `scripts/audit-quests.mjs`
@@ -53,11 +55,8 @@ Result:
 - `node --check src/upgrades.js`: passed.
 - `node --check scripts/content-tools.mjs`: passed.
 - `node --check scripts/content-summary.mjs`: passed.
-- `npm run validate:content`: passed.
-- `npm run content:summary`: passed and reports 7 meta upgrades with no dangling references.
-- `node scripts/verify-mvp.mjs`: passed, 100 checks.
 - `npm run agent:prepush`: passed, including `content:summary`, all smoke tests, and `npm test`.
-- `npm run agent:evidence -- --task "tap survivor meta upgrades content"`: passed and wrote `../Shane training/20260611T152322Z_tap-survivor-meta-upgrades-content/result.md`.
+- `npm run agent:evidence -- --task "tap survivor run upgrades content"`: passed and wrote `../Shane training/20260611T153348Z_tap-survivor-run-upgrades-content/result.md`.
 
 ## Evidence Required
 

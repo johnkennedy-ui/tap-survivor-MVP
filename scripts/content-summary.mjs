@@ -4,6 +4,7 @@ const content = readContent();
 const weapons = content.weapons || {};
 const weaponUnlocks = content.weaponUnlocks || [];
 const metaUpgrades = content.metaUpgrades || [];
+const runUpgrades = content.runUpgrades || [];
 const quests = content.quests || {};
 const questGroups = content.questGroups || {};
 const enemyTypes = content.enemyTypes || [];
@@ -74,6 +75,7 @@ console.log("\n## Counts");
 console.log(`- weapons: ${idsFromMap(weapons).length}`);
 console.log(`- weapon unlocks: ${weaponUnlocks.length}`);
 console.log(`- meta upgrades: ${metaUpgrades.length}`);
+console.log(`- run upgrades: ${runUpgrades.length}`);
 console.log(`- quests: ${questIds.length}`);
 console.log(`- quest groups: ${Object.keys(questGroups).length}`);
 console.log(`- enemy types: ${enemyTypes.length}`);
@@ -110,6 +112,16 @@ printList(
       upgrade.opensQuest ? `opens ${upgrade.opensQuest}` : "",
     ].filter(Boolean).join("; ");
     return `${upgrade.id} | max tier ${upgrade.maxTier} | costs ${upgrade.cost.join(", ")}${gates ? ` | ${gates}` : ""}`;
+  }),
+);
+
+printList(
+  "Run Upgrades",
+  runUpgrades.map((upgrade) => {
+    const effects = (upgrade.effects || [])
+      .map((effect) => `${effect.type}${effect.stat ? `:${effect.stat}` : ""}+${effect.value}`)
+      .join(", ");
+    return `${upgrade.id} | max tier ${upgrade.maxTier}${effects ? ` | ${effects}` : ""}`;
   }),
 );
 

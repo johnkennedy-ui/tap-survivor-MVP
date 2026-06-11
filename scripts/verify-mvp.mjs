@@ -40,6 +40,7 @@ const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
 const runtime = `${game}\n${combat}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
+const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
 check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index));
 check("index loads generated content", /src="src\/content\.generated\.js(\?[^"]+)?"/.test(index));
@@ -90,6 +91,7 @@ check("quests can open multiple follow-ups", quests.includes("opensQuests") && q
 check("quest chains can open follow-up quests", quests.includes("opensQuest") && quests.includes("questOpenIds(questDefs[id]).forEach(openQuest)"));
 check("combat stats feed quest progress", runtime.includes("addQuestProgressGroup(killQuestIds, 1)") && runtime.includes("addQuestProgressGroup(xpQuestIds, value)") && runtime.includes("addQuestProgressGroup(damageQuestIds, dealt)"));
 check("meta upgrades are content-driven", (content.metaUpgrades || []).length === 7 && upgrades.includes("metaUpgradeDefs"));
+check("run upgrades are content-driven", (content.runUpgrades || []).length === 7 && upgrades.includes("applyRunUpgradeEffects"));
 check("meta upgrades are quest-gated", (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "first_blood") && (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "boss_hunter"));
 check("Laser Damage upgrade exists", upgrades.includes("laser_damage") && upgrades.includes("maxTier: 3"));
 check("upgrade tiers are tracked", game.includes("upgradeTiers") && ui.includes("Buy Tier"));
@@ -98,6 +100,7 @@ check("completed quests disappear from quest list", ui.includes("activeQuestIds"
 check("level-up choices are limited to 3 random options", game.includes("shuffleChoices") && game.includes(".slice(0, 3)"));
 check("active quest weapons are offered on level-up", game.includes("activeQuestWeaponIds") && game.includes("questWeaponChoices"));
 check("new combat upgrade types exist", ["attack_radius", "fire_rate", "flat_damage", "percent_damage"].every((id) => metaUpgradeIds.has(id)));
+check("new run upgrade types exist", ["run_attack_radius", "run_fire_rate", "run_flat_damage", "run_percent_damage"].every((id) => runUpgradeIds.has(id)));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));

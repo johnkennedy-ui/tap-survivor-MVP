@@ -6,6 +6,7 @@ const errors = validateContent(content);
 const weaponDefs = content.weapons || {};
 const weaponUnlocks = content.weaponUnlocks || [];
 const metaUpgrades = content.metaUpgrades || [];
+const runUpgrades = content.runUpgrades || [];
 const questDefs = content.quests || {};
 const starterQuestIds = content.questGroups?.starter || [];
 
@@ -64,3 +65,4 @@ console.log("# Quest Graph Audit");
 console.log(`PASS ${Object.keys(questDefs).length} quests`);
 console.log(`PASS ${weaponUnlocks.length} weapon unlocks`);
 console.log(`PASS ${Object.keys(weaponDefs).length + metaUpgrades.length} meta upgrades`);
+console.log(`PASS ${runUpgrades.length} run upgrades`);

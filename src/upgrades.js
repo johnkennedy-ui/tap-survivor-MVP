@@ -23,56 +23,22 @@ function createUpgradeDefs(weaponDefs) {
   ];
 }
 
-const runUpgradeDefs = [
-  {
-    id: "run_move_speed",
-    name: "Move Speed",
-    description: "Move faster for this run.",
-    maxTier: 3,
-    apply: (game) => (game.player.speed += 32),
-  },
-  {
-    id: "run_pickup_radius",
-    name: "Pickup Radius",
-    description: "Collect XP from farther away this run.",
-    maxTier: 3,
-    apply: (game) => (game.player.pickupRadius += 22),
-  },
-  {
-    id: "run_max_hp",
-    name: "Max HP",
-    description: "Recover and increase HP for this run.",
-    maxTier: 3,
-    apply: (game) => {
-      game.player.maxHp += 18;
-      game.player.hp = Math.min(game.player.maxHp, game.player.hp + 36);
-    },
-  },
-  {
-    id: "run_attack_radius",
-    name: "Attack Radius",
-    description: "Increase projectile size and area reach for this run.",
-    maxTier: 3,
-  },
-  {
-    id: "run_fire_rate",
-    name: "Fire Rate",
-    description: "Reduce weapon cooldowns for this run.",
-    maxTier: 3,
-  },
-  {
-    id: "run_flat_damage",
-    name: "Flat Damage",
-    description: "Add fixed damage to every weapon hit this run.",
-    maxTier: 3,
-  },
-  {
-    id: "run_percent_damage",
-    name: "Percent Damage",
-    description: "Multiply all weapon damage this run.",
-    maxTier: 3,
-  },
-];
+function applyRunUpgradeEffects(game, effects) {
+  (effects || []).forEach((effect) => {
+    if (effect.type === "playerStatAdd") {
+      game.player[effect.stat] += effect.value;
+      return;
+    }
+    if (effect.type === "playerHeal") {
+      game.player.hp = Math.min(game.player.maxHp, game.player.hp + effect.value);
+    }
+  });
+}
+
+const runUpgradeDefs = (globalThis.TapSurvivorContent?.runUpgrades || []).map((upgrade) => ({
+  ...upgrade,
+  apply: upgrade.effects?.length ? (game) => applyRunUpgradeEffects(game, upgrade.effects) : undefined,
+}));
 
 globalThis.TapSurvivorUpgrades = {
   createUpgradeDefs,

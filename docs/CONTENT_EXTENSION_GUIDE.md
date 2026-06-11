@@ -37,7 +37,7 @@ node scripts/add-content.mjs weapon frost_example --name "Frost Example" --descr
 1. Check whether the change is a meta upgrade or an in-run upgrade.
 2. For meta upgrades, add to `metaUpgrades` in `content/tap-survivor-content.json`.
 3. For weapon damage upgrades, set or update the weapon `upgradeId`; `src/upgrades.js` generates the upgrade.
-4. For in-run upgrades, add to `runUpgradeDefs`.
+4. For in-run upgrades, add to `runUpgrades` in `content/tap-survivor-content.json`.
 5. Use stable IDs and avoid duplicating an existing stat modifier.
 6. Run `npm run build:content && npm run validate:content`.
 7. Run `npm test` if the upgrade can affect gameplay.
