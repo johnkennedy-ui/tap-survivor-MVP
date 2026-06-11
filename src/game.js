@@ -260,6 +260,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   damageQuestIds,
   bossQuestIds,
   spawnLootDrops: pickupSystem.spawnLootDrops,
+  advanceTowerFloor,
   endRun,
   distance,
   clamp,
@@ -287,10 +288,6 @@ function endRun(reason) {
   if (!game) return;
   game.running = false;
   game.endReason = reason;
-  const awardedRelic = reason === "Boss defeated" ? grantRandomRelic() : null;
-  if (reason === "Boss defeated") {
-    save.towerFloor = Math.max(save.towerFloor || 1, game.towerFloor + 1);
-  }
   ui.runStats.innerHTML = `
     <p>Result: ${reason}</p>
     <p>Tower floor: ${game.towerFloor}</p>
@@ -299,12 +296,26 @@ function endRun(reason) {
     <p>Level reached: ${game.player.level}</p>
     <p>XP collected: ${game.xpCollected}</p>
     <p>Coins banked: ${save.coins}</p>
-    ${awardedRelic ? `<p>Relic unlocked: ${awardedRelic.name}</p>` : ""}
     <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
     <p>Quest Points: ${save.questPoints} available</p>
   `;
   ui.endScreen.classList.remove("hidden");
   persist();
+  renderMeta();
+}
+
+function advanceTowerFloor() {
+  if (!game) return;
+  const clearedFloor = game.towerFloor || 1;
+  const awardedRelic = grantRandomRelic();
+  save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
+  persist();
+  resetGameState();
+  game.lastFloorClear = {
+    floor: clearedFloor,
+    relicName: awardedRelic?.name || "No locked relics remaining",
+  };
+  updateRunHud();
   renderMeta();
 }
 
@@ -440,7 +451,8 @@ function updateRunHud() {
   }
   const boss = game.enemies.find((enemy) => enemy.boss);
   const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
-  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}`;
+  const floorText = game.lastFloorClear ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}` : "";
+  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Floor ${game.towerFloor} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}${floorText}`;
 }
 
 function openRunMenu() {

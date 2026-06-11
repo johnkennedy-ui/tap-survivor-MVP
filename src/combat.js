@@ -13,6 +13,7 @@ function createCombatSystem({
   damageQuestIds,
   bossQuestIds,
   spawnLootDrops,
+  advanceTowerFloor,
   endRun,
   distance,
   clamp,
@@ -21,7 +22,7 @@ function createCombatSystem({
     const game = getGame();
     game.spawnTimer -= dt;
     if (game.spawnTimer > 0) return;
-    game.spawnTimer = Math.max(0.35, 1.1 - game.elapsed / 150);
+    game.spawnTimer = Math.max(0.32, (1.1 - game.elapsed / 150) / floorDifficulty().spawnRate);
     spawnPatternPositions(2).forEach((position, index) => {
       const type = chooseEnemyType(index);
       spawnEnemy(type, position);
@@ -58,6 +59,7 @@ function createCombatSystem({
 
   function spawnEnemy(type, position) {
     const game = getGame();
+    const difficulty = floorDifficulty();
     game.enemies.push({
       type: type.id,
       name: type.name,
@@ -66,9 +68,9 @@ function createCombatSystem({
       x: position.x,
       y: position.y,
       radius: type.radius,
-      hp: type.hp + game.elapsed * type.hpScale,
+      hp: (type.hp + game.elapsed * type.hpScale) * difficulty.hp,
       speed: type.speed + game.elapsed * type.speedScale,
-      damage: type.damage,
+      damage: type.damage * difficulty.damage,
       touchCooldown: type.touchCooldown,
       xp: type.xp,
       touchTimer: 0,
@@ -79,19 +81,31 @@ function createCombatSystem({
     const game = getGame();
     if (game.bossSpawned) return;
     game.bossSpawned = true;
+    const difficulty = floorDifficulty();
+    const bossHp = (1400 + game.kills * 6) * difficulty.hp;
     game.enemies.push({
       boss: true,
       assetId: "boss",
       x: canvas.width / 2,
       y: -52,
       radius: 38,
-      hp: 1400 + game.kills * 6,
-      maxHp: 1400 + game.kills * 6,
+      hp: bossHp,
+      maxHp: bossHp,
       speed: 42,
-      damage: 22,
+      damage: 22 * difficulty.damage,
       touchCooldown: 0.8,
       touchTimer: 0,
     });
+  }
+
+  function floorDifficulty() {
+    const game = getGame();
+    const floor = Math.max(1, game?.towerFloor || 1);
+    return {
+      hp: 1 + (floor - 1) * 0.18,
+      damage: 1 + (floor - 1) * 0.12,
+      spawnRate: 1 + (floor - 1) * 0.04,
+    };
   }
 
   function updateBossSpecials(dt) {
@@ -560,7 +574,7 @@ function createCombatSystem({
       if (enemy.boss) {
         game.bossDefeated = true;
         addQuestProgressGroup(bossQuestIds, 1);
-        endRun("Boss defeated");
+        advanceTowerFloor?.();
       }
     });
     game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);

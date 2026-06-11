@@ -4,42 +4,26 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add shop options and boss relic rewards
+Loop tower floors after boss clears
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T19:27:45.000Z
+- Started: 2026-06-11T19:44:27.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/save.js`
-- `src/shop.js`
 - `src/game.js`
-- `src/level-up.js`
 - `src/combat.js`
-- `scripts/content-tools.mjs`
-- `scripts/content-summary.mjs`
-- `scripts/agent-status.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/save.js`
-- `src/shop.js`
 - `src/game.js`
-- `src/level-up.js`
 - `src/combat.js`
-- `scripts/content-tools.mjs`
-- `scripts/content-summary.mjs`
-- `scripts/agent-status.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -51,17 +35,15 @@ Run the smallest command that proves the change:
 ```bash
 npm run build:content
 npm run validate:content
+npm run smoke:boss-run
 npm run agent:prepush
 ```
 
 Result:
 
-- `npm run build:content`: passed.
-- `npm run validate:content`: passed; content now has 8 shop items and 24 relics.
-- `node --check src/save.js`: passed.
-- `node --check src/shop.js`: passed.
+- `node --check src/combat.js`: passed.
 - `node --check src/game.js`: passed.
-- `node --check src/level-up.js`: passed.
+- `node --check scripts/verify-mvp.mjs`: passed.
 - `node scripts/verify-mvp.mjs`: passed 134 checks.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 

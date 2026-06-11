@@ -131,9 +131,9 @@ check("run menu pauses game", index.includes('id="openMenu"') && game.includes("
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", runtime.includes("duration: 360") && runtime.includes("spawnBoss"));
-check("boss death completes run", runtime.includes('endRun("Boss defeated")') && runtime.includes("enemy.boss"));
-check("tower floor progresses after boss clear", save.includes("towerFloor: 1") && game.includes("save.towerFloor") && game.includes("Tower floor:") && rendering.includes("Tower Floor"));
-check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && game.includes("grantRandomRelic") && game.includes("Relic unlocked:"));
+check("boss death advances tower floor", runtime.includes("advanceTowerFloor") && game.includes("function advanceTowerFloor") && runtime.includes("enemy.boss"));
+check("tower floor progresses after boss clear", save.includes("towerFloor: 1") && game.includes("save.towerFloor") && game.includes("Cleared Floor") && rendering.includes("Tower Floor"));
+check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && game.includes("grantRandomRelic") && game.includes("lastFloorClear"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
