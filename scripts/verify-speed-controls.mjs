@@ -5,6 +5,7 @@ import vm from "node:vm";
 const root = new URL("..", import.meta.url).pathname;
 const source = readFileSync(join(root, "src/game.js"), "utf8");
 const contentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
+const mathSource = readFileSync(join(root, "src/math.js"), "utf8");
 const upgradeSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const renderingSource = readFileSync(join(root, "src/rendering.js"), "utf8");
 const combatSource = readFileSync(join(root, "src/combat.js"), "utf8");
@@ -140,6 +141,7 @@ const context = {
 
 vm.createContext(context);
 vm.runInContext(contentSource, context);
+vm.runInContext(mathSource, context);
 vm.runInContext(upgradeSource, context);
 vm.runInContext(renderingSource, context);
 vm.runInContext(combatSource, context);

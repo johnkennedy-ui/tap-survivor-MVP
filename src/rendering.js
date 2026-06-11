@@ -1,7 +1,5 @@
 (() => {
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
+const { clamp } = globalThis.TapSurvivorMath;
 
 function createRenderer({ canvas, ctx, drawSprite, weaponDefs }) {
   function draw(game) {

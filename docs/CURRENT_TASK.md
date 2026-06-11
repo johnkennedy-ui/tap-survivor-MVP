@@ -4,30 +4,36 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add repo maintenance runbook
+Extract shared runtime math helpers
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T10:43:38.941Z
+- Started: 2026-06-11T11:12:37.595Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `docs/MAINTENANCE.md`
-- `AGENTS.md`
-- `README.md`
+- `docs/CURRENT_TASK.md`
+- `index.html`
+- `src/game.js`
+- `src/rendering.js`
+- `src/math.js`
+- `scripts/verify-mvp.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
-- `docs/CURRENT_TASK.md`
 
 ## Files Changed
 
-- `docs/MAINTENANCE.md`: added routine start, content update, code update, reporting, deployment, and boundary guidance.
-- `AGENTS.md`: added the maintenance runbook to the required pre-edit reading path.
-- `README.md`: linked the maintenance runbook from content tooling.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: documented the runbook in the folder map and startup rules.
-- `docs/CHANGELOG_AGENT.md`: logged the new runbook.
+- `src/math.js`: added shared `clamp`, `distance`, `formatTime`, and `randomRange` helpers.
+- `index.html`: loads `src/math.js` before runtime modules that use it.
+- `src/game.js`: uses `TapSurvivorMath` instead of local duplicate helpers.
+- `src/rendering.js`: uses `TapSurvivorMath.clamp` instead of a local duplicate helper.
+- `scripts/verify-mvp.mjs`: validates the new shared math module and script load.
+- `scripts/verify-speed-controls.mjs`: loads the math module in the VM smoke test.
+- `docs/AGENT_CODEBASE_CONTEXT.md`: documents `src/math.js`.
+- `docs/CHANGELOG_AGENT.md`: logs the extraction.
 - `docs/CURRENT_TASK.md`: updated this checkpoint.
 
 ## Validation Plan
@@ -40,9 +46,12 @@ npm run agent:check
 
 Result:
 
-- `git diff --check`: passed.
+- `node --check src/math.js`: passed.
+- `node --check src/game.js`: passed.
+- `node --check src/rendering.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed, 87 checks.
 - `npm run agent:check`: passed, including `npm test`.
-- `npm run agent:evidence -- --task "tap survivor maintenance runbook"`: passed and wrote `../Shane training/20260611T104522Z_tap-survivor-maintenance-runbook/result.md`.
+- `npm run agent:evidence -- --task "tap survivor shared math helpers"`: passed and wrote `../Shane training/20260611T111759Z_tap-survivor-shared-math-helpers/result.md`.
 
 ## Evidence Required
 

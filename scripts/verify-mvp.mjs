@@ -21,6 +21,7 @@ const game = readRequired("src/game.js");
 const styles = readRequired("src/styles.css");
 const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
+const math = readRequired("src/math.js");
 const upgrades = readRequired("src/upgrades.js");
 const rendering = readRequired("src/rendering.js");
 const combat = readRequired("src/combat.js");
@@ -37,6 +38,7 @@ const runtime = `${game}\n${combat}`;
 
 check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index));
 check("index loads generated content", /src="src\/content\.generated\.js(\?[^"]+)?"/.test(index));
+check("index loads shared math utilities", /src="src\/math\.js(\?[^"]+)?"/.test(index));
 check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
@@ -94,6 +96,7 @@ check("boss death completes run", runtime.includes('endRun("Boss defeated")') &&
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
+check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));

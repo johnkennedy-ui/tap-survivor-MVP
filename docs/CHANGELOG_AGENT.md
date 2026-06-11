@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added `src/math.js` for shared runtime math helpers used by game and rendering modules.
 - Added `docs/MAINTENANCE.md` as the routine update and validation runbook.
 - Added `docs/CURRENT_TASK.md` as the active repo-local task checkpoint.
 - Added `npm run agent:start` to initialize `docs/CURRENT_TASK.md` from CLI arguments.

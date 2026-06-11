@@ -28,6 +28,7 @@ const saveKey = "tap-survivor-mvp-save-v2";
 
 const content = globalThis.TapSurvivorContent || {};
 const upgradeContent = globalThis.TapSurvivorUpgrades || {};
+const { clamp, distance, formatTime, randomRange } = globalThis.TapSurvivorMath;
 const weaponDefs = content.weapons || {};
 const weaponUnlocks = content.weaponUnlocks || [];
 const spriteDefs = content.assets?.sprites || {};
@@ -771,25 +772,6 @@ function setGameSpeed(speed) {
     button.setAttribute("aria-pressed", String(active));
   });
   updateRunHud();
-}
-
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function randomRange(min, max) {
-  return min + Math.random() * (max - min);
-}
-
-function formatTime(seconds) {
-  const total = Math.max(0, Math.floor(seconds));
-  const mins = Math.floor(total / 60);
-  const secs = String(total % 60).padStart(2, "0");
-  return `${mins}:${secs}`;
 }
 
 ui.startRun.addEventListener("click", startRun);
