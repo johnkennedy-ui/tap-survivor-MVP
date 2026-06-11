@@ -278,6 +278,8 @@ const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
 });
 
 function startRun() {
+  closeStartMenu();
+  shopSystem.closeShop();
   ui.endScreen.classList.add("hidden");
   ui.levelUp.classList.add("hidden");
   closeRunMenu(false);
@@ -458,6 +460,7 @@ function updateRunHud() {
 function openRunMenu() {
   ui.runMenu.classList.remove("hidden");
   ui.openMenu.setAttribute("aria-expanded", "true");
+  ui.exitRun.disabled = !game?.running;
   if (game?.running && !game.paused) {
     game.paused = true;
     game.pauseReason = "menu";
@@ -474,6 +477,14 @@ function closeRunMenu(resume = true) {
   }
 }
 
+function showStartMenu() {
+  ui.startMenu.classList.remove("hidden");
+}
+
+function closeStartMenu() {
+  ui.startMenu.classList.add("hidden");
+}
+
 function toggleRunMenu() {
   if (ui.runMenu.classList.contains("hidden")) {
     openRunMenu();
@@ -488,8 +499,11 @@ function isFullscreen() {
 
 function updateFullscreenButton() {
   const fullscreen = Boolean(isFullscreen());
-  ui.fullscreenButton.textContent = fullscreen ? "Exit Full Screen" : "Full Screen";
+  const label = fullscreen ? "Exit Full Screen" : "Full Screen";
+  ui.fullscreenButton.textContent = label;
+  ui.startMenuFullscreen.textContent = label;
   ui.fullscreenButton.setAttribute("aria-pressed", String(fullscreen));
+  ui.startMenuFullscreen.setAttribute("aria-pressed", String(fullscreen));
 }
 
 function toggleFullscreen() {
@@ -510,8 +524,27 @@ function closeLevelUpMenu() {
   levelUpSystem.closeLevelUpMenu();
 }
 
+function openShopMenu() {
+  closeStartMenu();
+  shopSystem.openShop();
+}
+
+function closeShopMenu() {
+  shopSystem.closeShop();
+  if (!game?.running) showStartMenu();
+}
+
+function exitRun() {
+  if (!game?.running) return;
+  closeRunMenu(false);
+  game.paused = false;
+  game.pauseReason = "";
+  endRun("Run exited");
+}
+
 function closeEndScreen() {
   ui.endScreen.classList.add("hidden");
+  showStartMenu();
 }
 
 function loop(now) {
@@ -536,12 +569,17 @@ function setGameSpeed(speed) {
 }
 
 ui.startRun.addEventListener("click", startRun);
-ui.openShop.addEventListener("click", shopSystem.openShop);
-ui.closeShop.addEventListener("click", shopSystem.closeShop);
+ui.startMenuStartRun.addEventListener("click", startRun);
+ui.openShop.addEventListener("click", openShopMenu);
+ui.startMenuOpenShop.addEventListener("click", openShopMenu);
+ui.closeShop.addEventListener("click", closeShopMenu);
+ui.closeShopBottom.addEventListener("click", closeShopMenu);
 ui.openMenu.addEventListener("click", toggleRunMenu);
 ui.closeMenu.addEventListener("click", () => closeRunMenu(true));
 ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
 ui.fullscreenButton.addEventListener("click", toggleFullscreen);
+ui.startMenuFullscreen.addEventListener("click", toggleFullscreen);
+ui.exitRun.addEventListener("click", exitRun);
 document.addEventListener?.("fullscreenchange", updateFullscreenButton);
 document.addEventListener?.("webkitfullscreenchange", updateFullscreenButton);
 ui.speedButtons.forEach((button) => {
@@ -558,6 +596,7 @@ ui.resetSave.addEventListener("click", () => {
   ui.levelUp.classList.add("hidden");
   shopSystem.closeShop();
   closeRunMenu(false);
+  showStartMenu();
   persist();
   renderMeta();
 });

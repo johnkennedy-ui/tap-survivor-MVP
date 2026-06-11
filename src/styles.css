@@ -235,12 +235,30 @@ section + section {
   background: #151d29;
   padding: 18px;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  max-height: min(86vh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .menu-box {
   width: min(720px, 100%);
-  max-height: min(86vh, 720px);
-  overflow-y: auto;
+}
+
+.start-box {
+  width: min(520px, 100%);
+}
+
+.start-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.danger-button {
+  width: 100%;
+  margin-top: 14px;
+  border-color: #b75a5a;
+  background: #3a2026;
+  color: #ffe0e0;
 }
 
 .modal-header {

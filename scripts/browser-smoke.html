@@ -46,15 +46,19 @@
         check("app document loads", Boolean(app));
         check("canvas exists", Boolean(app.getElementById("game")));
         check("start button exists", Boolean(app.getElementById("startRun")));
+        check("start menu exists", Boolean(app.getElementById("startMenu")));
+        check("start menu is visible", !app.getElementById("startMenu").classList.contains("hidden"));
         check("shop button exists", Boolean(app.getElementById("openShop")));
         check("fullscreen button exists", Boolean(app.getElementById("fullscreenButton")));
 
-        app.getElementById("openShop").click();
+        app.getElementById("startMenuOpenShop").click();
         await wait(100);
         check("shop opens", !app.getElementById("shopModal").classList.contains("hidden"));
         check("shop renders items", app.getElementById("shopItems").children.length >= 4);
         check("shop shows coins", app.getElementById("shopCoinHud").textContent.includes("Coins: 35"));
-        app.getElementById("closeShop").click();
+        app.getElementById("closeShopBottom").click();
+        await wait(50);
+        check("shop closes and returns to start menu", app.getElementById("shopModal").classList.contains("hidden") && !app.getElementById("startMenu").classList.contains("hidden"));
 
         app.getElementById("openMenu").click();
         await wait(50);
@@ -63,9 +67,16 @@
         await wait(50);
         check("menu button closes menu", app.getElementById("runMenu").classList.contains("hidden"));
 
-        app.getElementById("startRun").click();
+        app.getElementById("startMenuStartRun").click();
         await wait(100);
         check("start run updates HUD", app.getElementById("runHud").textContent.includes("Time 0:00"));
+        check("start menu hides during run", app.getElementById("startMenu").classList.contains("hidden"));
+
+        app.getElementById("openMenu").click();
+        await wait(50);
+        app.getElementById("exitRun").click();
+        await wait(50);
+        check("exit run opens end screen", !app.getElementById("endScreen").classList.contains("hidden"));
 
         const speedTwo = [...app.querySelectorAll("[data-speed]")].find((button) => button.dataset.speed === "2");
         speedTwo.click();

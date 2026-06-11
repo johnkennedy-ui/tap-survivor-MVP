@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Tighten menu and fullscreen UI
+Fix shop/start menu flow and run exit
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T19:55:18.000Z
+- Started: 2026-06-11T20:20:54.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -54,9 +54,10 @@ Result:
 - `node --check src/game.js`: passed.
 - `node --check src/ui.js`: passed.
 - `node --check scripts/verify-mvp.mjs`: passed.
-- `node scripts/verify-mvp.mjs`: passed 136 checks.
-- `npm run smoke:browser`: passed as optional; local Chromium unavailable in this sandbox, so it skipped non-required real-browser execution.
+- `node scripts/verify-mvp.mjs`: passed 140 checks.
 - `npm run smoke:start-run`: passed.
+- `npm run smoke:shop`: passed.
+- `npm run smoke:browser`: passed as optional; local Chromium unavailable in this sandbox, so it skipped non-required real-browser execution.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

@@ -127,8 +127,12 @@ check("shop items are content-driven", (content.shopItems || []).length >= 8 && 
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && game.includes("shopBonuses.speed") && game.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => combat.includes(token)) && game.includes("getShopBonuses"));
+check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && game.includes("function showStartMenu"));
+check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && game.includes("function closeShopMenu"));
+check("modal boxes scroll", styles.includes(".modal-box") && styles.includes("overflow-y: auto") && styles.includes("overscroll-behavior: contain"));
 check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
 check("run menu button toggles menu", game.includes("function toggleRunMenu") && game.includes("ui.openMenu.addEventListener(\"click\", toggleRunMenu)") && index.includes('aria-expanded="false"'));
+check("runs can be exited", index.includes('id="exitRun"') && game.includes('endRun("Run exited")'));
 check("fullscreen button exists", index.includes('id="fullscreenButton"') && game.includes("function toggleFullscreen") && game.includes("requestFullscreen"));
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));

@@ -17,6 +17,17 @@
         </div>
         <button id="fullscreenButton" class="fullscreen-button" type="button">Full Screen</button>
         <button id="openMenu" class="menu-button" type="button" aria-expanded="false">Menu</button>
+        <div id="startMenu" class="modal">
+          <div class="modal-box start-box">
+            <h2>Tap Survivor</h2>
+            <p>Climb the tower, clear bosses, and build permanent power between runs.</p>
+            <div class="start-actions">
+              <button id="startMenuStartRun" type="button">Start Run</button>
+              <button id="startMenuOpenShop" type="button">Shop</button>
+              <button id="startMenuFullscreen" type="button">Full Screen</button>
+            </div>
+          </div>
+        </div>
         <div id="shopModal" class="modal hidden">
           <div class="modal-box menu-box">
             <div class="modal-header">
@@ -25,6 +36,7 @@
             </div>
             <p id="shopCoinHud"></p>
             <div id="shopItems" class="shop-grid"></div>
+            <button id="closeShopBottom" type="button">Close Shop</button>
           </div>
         </div>
         <div id="runMenu" class="modal hidden">
@@ -39,6 +51,7 @@
             <div id="menuTree" class="tree"></div>
             <h3>Quests</h3>
             <div id="menuQuests" class="quests"></div>
+            <button id="exitRun" class="danger-button" type="button">Exit Run</button>
           </div>
         </div>
         <div id="levelUp" class="modal hidden">
