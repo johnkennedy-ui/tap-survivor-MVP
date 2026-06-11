@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Extracted start/menu/shop/fullscreen event wiring from `game.js` into `src/shell-ui.js`.
 - Added a start menu overlay, bottom shop close control, shared modal scrolling, and an in-run exit action.
 - Added a fullscreen control and changed the in-run Menu button to toggle the menu open and closed.
 - Changed boss clears to advance the tower floor, reset run-only skills, grant relics, and continue into harder floors instead of ending the run.

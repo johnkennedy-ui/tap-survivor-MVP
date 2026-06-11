@@ -33,6 +33,7 @@ const levelUp = readRequired("src/level-up.js");
 const input = readRequired("src/input.js");
 const pickups = readRequired("src/pickups.js");
 const shop = readRequired("src/shop.js");
+const shellUi = readRequired("src/shell-ui.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
 const agentContext = readRequired("docs/AGENT_CODEBASE_CONTEXT.md");
@@ -58,6 +59,7 @@ check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index)
 check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
 check("index loads level-up module", /src="src\/level-up\.js(\?[^"]+)?"/.test(index));
 check("index loads input module", /src="src\/input\.js(\?[^"]+)?"/.test(index));
+check("index loads shell UI module", /src="src\/shell-ui\.js(\?[^"]+)?"/.test(index));
 check("index loads pickup module", /src="src\/pickups\.js(\?[^"]+)?"/.test(index));
 check("index loads shop module", /src="src\/shop\.js(\?[^"]+)?"/.test(index));
 check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
@@ -127,13 +129,13 @@ check("shop items are content-driven", (content.shopItems || []).length >= 8 && 
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && game.includes("shopBonuses.speed") && game.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => combat.includes(token)) && game.includes("getShopBonuses"));
-check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && game.includes("function showStartMenu"));
-check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && game.includes("function closeShopMenu"));
+check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && shellUi.includes("function showStartMenu"));
+check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && shellUi.includes("function closeShopMenu"));
 check("modal boxes scroll", styles.includes(".modal-box") && styles.includes("overflow-y: auto") && styles.includes("overscroll-behavior: contain"));
-check("run menu pauses game", index.includes('id="openMenu"') && game.includes("openRunMenu") && game.includes('pauseReason = "menu"'));
-check("run menu button toggles menu", game.includes("function toggleRunMenu") && game.includes("ui.openMenu.addEventListener(\"click\", toggleRunMenu)") && index.includes('aria-expanded="false"'));
+check("run menu pauses game", index.includes('id="openMenu"') && shellUi.includes("openRunMenu") && shellUi.includes('pauseReason = "menu"'));
+check("run menu button toggles menu", shellUi.includes("function toggleRunMenu") && shellUi.includes("ui.openMenu.addEventListener(\"click\", toggleRunMenu)") && index.includes('aria-expanded="false"'));
 check("runs can be exited", index.includes('id="exitRun"') && game.includes('endRun("Run exited")'));
-check("fullscreen button exists", index.includes('id="fullscreenButton"') && game.includes("function toggleFullscreen") && game.includes("requestFullscreen"));
+check("fullscreen button exists", index.includes('id="fullscreenButton"') && shellUi.includes("function toggleFullscreen") && shellUi.includes("requestFullscreen"));
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", runtime.includes("duration: 360") && runtime.includes("spawnBoss"));
@@ -152,6 +154,7 @@ check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") &&
 check("shared input helper exists", input.includes("TapSurvivorInput") && game.includes("TapSurvivorInput"));
 check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && game.includes("TapSurvivorPickups"));
 check("shared shop helper exists", shop.includes("TapSurvivorShop") && game.includes("TapSurvivorShop"));
+check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && game.includes("TapSurvivorShellUi"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));

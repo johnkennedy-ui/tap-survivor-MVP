@@ -4,18 +4,19 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Fix shop/start menu flow and run exit
+Extract shell UI controller from game.js
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T20:20:54.000Z
+- Started: 2026-06-11T20:28:36.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `index.html`
 - `src/ui.js`
+- `src/shell-ui.js`
 - `src/game.js`
 - `src/styles.css`
 - `scripts/browser-smoke.html`
@@ -29,6 +30,7 @@ Fix shop/start menu flow and run exit
 
 - `index.html`
 - `src/ui.js`
+- `src/shell-ui.js`
 - `src/game.js`
 - `src/styles.css`
 - `scripts/browser-smoke.html`
@@ -52,12 +54,11 @@ npm run agent:prepush
 Result:
 
 - `node --check src/game.js`: passed.
-- `node --check src/ui.js`: passed.
+- `node --check src/shell-ui.js`: passed.
 - `node --check scripts/verify-mvp.mjs`: passed.
-- `node scripts/verify-mvp.mjs`: passed 140 checks.
+- `node scripts/verify-mvp.mjs`: passed 143 checks.
 - `npm run smoke:start-run`: passed.
 - `npm run smoke:shop`: passed.
-- `npm run smoke:browser`: passed as optional; local Chromium unavailable in this sandbox, so it skipped non-required real-browser execution.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

@@ -277,12 +277,25 @@ const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
   activeQuestWeaponIds: () => questSystem.activeQuestWeaponIds(),
 });
 
+const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
+  ui,
+  getGame: () => game,
+  shopSystem,
+  startRun,
+  exitRun,
+  resetSave,
+  closeLevelUpMenu,
+  closeEndScreen,
+  setGameSpeed,
+  renderMeta,
+});
+
 function startRun() {
-  closeStartMenu();
+  shellUi.closeStartMenu();
   shopSystem.closeShop();
   ui.endScreen.classList.add("hidden");
   ui.levelUp.classList.add("hidden");
-  closeRunMenu(false);
+  shellUi.closeRunMenu(false);
   resetGameState();
 }
 
@@ -457,86 +470,13 @@ function updateRunHud() {
   ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Floor ${game.towerFloor} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}${bossText}${floorText}`;
 }
 
-function openRunMenu() {
-  ui.runMenu.classList.remove("hidden");
-  ui.openMenu.setAttribute("aria-expanded", "true");
-  ui.exitRun.disabled = !game?.running;
-  if (game?.running && !game.paused) {
-    game.paused = true;
-    game.pauseReason = "menu";
-  }
-  renderMeta();
-}
-
-function closeRunMenu(resume = true) {
-  ui.runMenu.classList.add("hidden");
-  ui.openMenu.setAttribute("aria-expanded", "false");
-  if (resume && game?.pauseReason === "menu") {
-    game.paused = false;
-    game.pauseReason = "";
-  }
-}
-
-function showStartMenu() {
-  ui.startMenu.classList.remove("hidden");
-}
-
-function closeStartMenu() {
-  ui.startMenu.classList.add("hidden");
-}
-
-function toggleRunMenu() {
-  if (ui.runMenu.classList.contains("hidden")) {
-    openRunMenu();
-    return;
-  }
-  closeRunMenu(true);
-}
-
-function isFullscreen() {
-  return document.fullscreenElement || document.webkitFullscreenElement;
-}
-
-function updateFullscreenButton() {
-  const fullscreen = Boolean(isFullscreen());
-  const label = fullscreen ? "Exit Full Screen" : "Full Screen";
-  ui.fullscreenButton.textContent = label;
-  ui.startMenuFullscreen.textContent = label;
-  ui.fullscreenButton.setAttribute("aria-pressed", String(fullscreen));
-  ui.startMenuFullscreen.setAttribute("aria-pressed", String(fullscreen));
-}
-
-function toggleFullscreen() {
-  const target = ui.canvas.parentElement || document.documentElement;
-  if (isFullscreen()) {
-    const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen;
-    const result = exitFullscreen?.call(document);
-    result?.catch?.(() => {});
-    return;
-  }
-
-  const requestFullscreen = target.requestFullscreen || target.webkitRequestFullscreen;
-  const result = requestFullscreen?.call(target);
-  result?.catch?.(() => {});
-}
-
 function closeLevelUpMenu() {
   levelUpSystem.closeLevelUpMenu();
 }
 
-function openShopMenu() {
-  closeStartMenu();
-  shopSystem.openShop();
-}
-
-function closeShopMenu() {
-  shopSystem.closeShop();
-  if (!game?.running) showStartMenu();
-}
-
 function exitRun() {
   if (!game?.running) return;
-  closeRunMenu(false);
+  shellUi.closeRunMenu(false);
   game.paused = false;
   game.pauseReason = "";
   endRun("Run exited");
@@ -544,7 +484,7 @@ function exitRun() {
 
 function closeEndScreen() {
   ui.endScreen.classList.add("hidden");
-  showStartMenu();
+  shellUi.showStartMenu();
 }
 
 function loop(now) {
@@ -568,26 +508,7 @@ function setGameSpeed(speed) {
   updateRunHud();
 }
 
-ui.startRun.addEventListener("click", startRun);
-ui.startMenuStartRun.addEventListener("click", startRun);
-ui.openShop.addEventListener("click", openShopMenu);
-ui.startMenuOpenShop.addEventListener("click", openShopMenu);
-ui.closeShop.addEventListener("click", closeShopMenu);
-ui.closeShopBottom.addEventListener("click", closeShopMenu);
-ui.openMenu.addEventListener("click", toggleRunMenu);
-ui.closeMenu.addEventListener("click", () => closeRunMenu(true));
-ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
-ui.fullscreenButton.addEventListener("click", toggleFullscreen);
-ui.startMenuFullscreen.addEventListener("click", toggleFullscreen);
-ui.exitRun.addEventListener("click", exitRun);
-document.addEventListener?.("fullscreenchange", updateFullscreenButton);
-document.addEventListener?.("webkitfullscreenchange", updateFullscreenButton);
-ui.speedButtons.forEach((button) => {
-  button.addEventListener("click", () => setGameSpeed(Number(button.dataset.speed)));
-});
-setGameSpeed(1);
-updateFullscreenButton();
-ui.resetSave.addEventListener("click", () => {
+function resetSave() {
   localStorage.removeItem(saveKey);
   localStorage.removeItem(legacySaveKey);
   save = saveSystem.defaultSave();
@@ -595,13 +516,14 @@ ui.resetSave.addEventListener("click", () => {
   ui.endScreen.classList.add("hidden");
   ui.levelUp.classList.add("hidden");
   shopSystem.closeShop();
-  closeRunMenu(false);
-  showStartMenu();
+  shellUi.closeRunMenu(false);
+  shellUi.showStartMenu();
   persist();
   renderMeta();
-});
-ui.closeEnd.addEventListener("click", closeEndScreen);
-ui.closeEndX.addEventListener("click", closeEndScreen);
+}
+
+shellUi.bind();
+setGameSpeed(1);
 
 globalThis.TapSurvivorInput.bindMovementInput({
   canvas,
