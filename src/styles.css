@@ -157,6 +157,24 @@ section + section {
   margin-bottom: 18px;
 }
 
+.debug-panel {
+  border-top: 1px solid #253247;
+  padding-top: 12px;
+}
+
+.debug-panel pre {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #334052;
+  border-radius: 6px;
+  background: #101722;
+  color: #dff6ff;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .tree,
 .quests,
 .choice-list,

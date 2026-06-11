@@ -17,6 +17,7 @@ const levelUpSource = readFileSync(join(root, "src/level-up.js"), "utf8");
 const inputSource = readFileSync(join(root, "src/input.js"), "utf8");
 const pickupsSource = readFileSync(join(root, "src/pickups.js"), "utf8");
 const shopSource = readFileSync(join(root, "src/shop.js"), "utf8");
+const debugSource = readFileSync(join(root, "src/debug.js"), "utf8");
 const shellUiSource = readFileSync(join(root, "src/shell-ui.js"), "utf8");
 const listeners = new Map();
 
@@ -70,6 +71,7 @@ const ids = [
   "startMenuFullscreen",
   "openShop",
   "resetSave",
+  "toggleDebug",
   "fullscreenButton",
   "openMenu",
   "exitRun",
@@ -82,6 +84,8 @@ const ids = [
   "shopCoinHud",
   "shopItems",
   "runHud",
+  "debugPanel",
+  "debugStats",
   "qpHud",
   "menuQpHud",
   "tree",
@@ -174,6 +178,7 @@ vm.runInContext(levelUpSource, context);
 vm.runInContext(inputSource, context);
 vm.runInContext(pickupsSource, context);
 vm.runInContext(shopSource, context);
+vm.runInContext(debugSource, context);
 vm.runInContext(shellUiSource, context);
 vm.runInContext(source, context);
 

@@ -33,6 +33,7 @@ const levelUp = readRequired("src/level-up.js");
 const input = readRequired("src/input.js");
 const pickups = readRequired("src/pickups.js");
 const shop = readRequired("src/shop.js");
+const debug = readRequired("src/debug.js");
 const shellUi = readRequired("src/shell-ui.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
@@ -62,6 +63,7 @@ check("index loads input module", /src="src\/input\.js(\?[^"]+)?"/.test(index));
 check("index loads shell UI module", /src="src\/shell-ui\.js(\?[^"]+)?"/.test(index));
 check("index loads pickup module", /src="src\/pickups\.js(\?[^"]+)?"/.test(index));
 check("index loads shop module", /src="src\/shop\.js(\?[^"]+)?"/.test(index));
+check("index loads debug module", /src="src\/debug\.js(\?[^"]+)?"/.test(index));
 check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
@@ -147,6 +149,8 @@ check("boss clears grant relics", save.includes("unlockedRelics") && save.includ
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("weapon attack animations exist", game.includes("weaponBursts") && combat.includes("addWeaponBurst") && combat.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
+check("debug balance overlay exists", index.includes('id="toggleDebug"') && index.includes('id="debugStats"') && debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
+check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
 check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game.includes("TapSurvivorQuests"));
 check("shared save helpers exist", save.includes("TapSurvivorSave") && game.includes("TapSurvivorSave"));
@@ -157,6 +161,7 @@ check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") &&
 check("shared input helper exists", input.includes("TapSurvivorInput") && game.includes("TapSurvivorInput"));
 check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && game.includes("TapSurvivorPickups"));
 check("shared shop helper exists", shop.includes("TapSurvivorShop") && game.includes("TapSurvivorShop"));
+check("shared debug helper exists", debug.includes("TapSurvivorDebug") && game.includes("TapSurvivorDebug"));
 check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && game.includes("TapSurvivorShellUi"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));

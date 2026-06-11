@@ -294,6 +294,17 @@ const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
   renderMeta,
 });
 
+const debugSystem = globalThis.TapSurvivorDebug.createDebugSystem({
+  ui,
+  getGame: () => game,
+  getSave: () => save,
+  getRunUpgradeTier,
+  maxEquippedWeapons,
+  getWeaponDamageMultiplier,
+  relicDefs,
+  runUpgradeDefs,
+});
+
 function startRun() {
   shellUi.closeStartMenu();
   shopSystem.closeShop();
@@ -488,12 +499,14 @@ function draw() {
 function updateRunHud() {
   if (!game) {
     ui.runHud.textContent = `Speed x${gameSpeed} | Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.`;
+    debugSystem.render();
     return;
   }
   const boss = game.enemies.find((enemy) => enemy.boss);
   const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
   const floorText = game.lastFloorClear ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}` : "";
   ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Floor ${game.towerFloor} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}/${maxEquippedWeapons()}${bossText}${floorText}`;
+  debugSystem.render();
 }
 
 function closeLevelUpMenu() {
@@ -549,6 +562,7 @@ function resetSave() {
 }
 
 shellUi.bind();
+debugSystem.bind();
 setGameSpeed(1);
 
 globalThis.TapSurvivorInput.bindMovementInput({

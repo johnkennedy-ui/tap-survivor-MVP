@@ -4,23 +4,23 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add weapon animation and weapon slot relics
+Add debug balance overlay
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-11T21:50:19.000Z
+- Started: 2026-06-11T22:38:21.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `src/game.js`
-- `src/combat.js`
-- `src/rendering.js`
-- `src/level-up.js`
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `scripts/content-summary.mjs`
+- `src/debug.js`
+- `src/ui.js`
+- `src/styles.css`
+- `index.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -28,12 +28,12 @@ Add weapon animation and weapon slot relics
 ## Files Changed
 
 - `src/game.js`
-- `src/combat.js`
-- `src/rendering.js`
-- `src/level-up.js`
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `scripts/content-summary.mjs`
+- `src/debug.js`
+- `src/ui.js`
+- `src/styles.css`
+- `index.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -43,25 +43,25 @@ Add weapon animation and weapon slot relics
 Run the smallest command that proves the change:
 
 ```bash
-npm run build:content
+node --check src/debug.js
 node --check src/game.js
-node --check src/combat.js
-node --check src/rendering.js
-node --check src/level-up.js
+node --check src/ui.js
 node scripts/verify-mvp.mjs
+npm run smoke:start-run
 npm run agent:prepush
 ```
 
 Result:
 
-- `npm run build:content`: passed.
+- `node --check src/debug.js`: passed.
 - `node --check src/game.js`: passed.
-- `node --check src/combat.js`: passed.
-- `node --check src/rendering.js`: passed.
-- `node --check src/level-up.js`: passed.
-- `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 146 checks.
+- `node --check src/ui.js`: passed.
+- `node --check scripts/smoke-game-harness.mjs`: passed.
+- `node --check scripts/verify-speed-controls.mjs`: passed.
+- `node --check scripts/verify-mvp.mjs`: passed.
+- `node scripts/verify-mvp.mjs`: passed 151 checks.
 - `npm run smoke:start-run`: passed.
+- `npm run test:speed`: passed.
 - `npm run agent:prepush`: passed, including content summary, optional browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

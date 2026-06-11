@@ -81,12 +81,18 @@
         <div class="actions">
           <button id="startRun">Start Run</button>
           <button id="openShop">Shop</button>
+          <button id="toggleDebug" type="button">Debug</button>
           <button id="resetSave">Reset Save</button>
         </div>
 
         <section>
           <h2>Run</h2>
           <p id="runHud">Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.</p>
+        </section>
+
+        <section id="debugPanel" class="debug-panel hidden">
+          <h2>Debug</h2>
+          <pre id="debugStats"></pre>
         </section>
 
         <section>
@@ -120,6 +126,7 @@
     <script src="src/input.js?v=maintenance-20260611"></script>
     <script src="src/pickups.js?v=maintenance-20260611"></script>
     <script src="src/shop.js?v=maintenance-20260611"></script>
+    <script src="src/debug.js?v=maintenance-20260611"></script>
     <script src="src/shell-ui.js?v=maintenance-20260611"></script>
     <script src="src/game.js?v=combat-20260611"></script>
   </body>

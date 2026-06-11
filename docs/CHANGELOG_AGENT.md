@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Added a debug/balance overlay for floor scaling, weapon slots, weapon damage multiplier, relics, run upgrades, and weapon damage totals.
 - Added weapon attack bursts, a 4-weapon run cap, and weapon-slot relic tradeoffs.
 - Reworked generated tower SVG sprites with richer tower-fantasy styling and refreshed cache keys.
 - Extracted start/menu/shop/fullscreen event wiring from `game.js` into `src/shell-ui.js`.
