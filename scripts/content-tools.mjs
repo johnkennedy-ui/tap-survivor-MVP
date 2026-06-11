@@ -19,12 +19,14 @@ export function validateContent(content) {
   const quests = content.quests || {};
   const questGroups = content.questGroups || {};
   const enemyTypes = content.enemyTypes || [];
+  const characters = content.characters || [];
   const shopItems = content.shopItems || [];
   const levels = content.levels || [];
   const assets = content.assets || {};
 
   const seenUnlocks = new Set();
   const seenEnemies = new Set();
+  const seenCharacters = new Set();
   const seenShopItems = new Set();
   const seenLevels = new Set();
 
@@ -54,6 +56,7 @@ export function validateContent(content) {
   requireObject(quests, "quests");
   requireObject(questGroups, "questGroups");
   requireArray(enemyTypes, "enemyTypes");
+  requireArray(characters, "characters");
   requireArray(shopItems, "shopItems");
   requireArray(levels, "levels");
   if (content.assets) requireObject(assets, "assets");
@@ -110,6 +113,15 @@ export function validateContent(content) {
     seenEnemies.add(enemy.id);
     ["name", "color"].forEach((field) => requireString(enemy[field], `enemy ${enemy.id}.${field}`));
     ["radius", "hp", "speed", "damage", "xp"].forEach((field) => requireNumber(enemy[field], `enemy ${enemy.id}.${field}`, 0));
+  });
+
+  characters.forEach((character) => {
+    requireString(character.id, "character.id");
+    if (seenCharacters.has(character.id)) fail(`duplicate character ${character.id}`);
+    seenCharacters.add(character.id);
+    ["name", "description", "spriteId"].forEach((field) =>
+      requireString(character[field], `character ${character.id}.${field}`),
+    );
   });
 
   (assets.sources || []).forEach((source) => {

@@ -581,6 +581,15 @@
       "assetId": "bulwark"
     }
   ],
+  "characters": [
+    {
+      "id": "character_default",
+      "name": "Default Survivor",
+      "description": "Baseline playable survivor used by the current MVP.",
+      "spriteId": "player",
+      "notes": "Reserved content-registry entry for future character selection. Current gameplay still uses the default player directly."
+    }
+  ],
   "shopItems": [],
   "levels": [],
   "assets": {

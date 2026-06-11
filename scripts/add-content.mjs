@@ -8,7 +8,8 @@ function usage() {
   node scripts/add-content.mjs quest <id> --name "Name" --description "Do thing" --target 100 --reward 2 --group kill [--weapon spark_bolt] [--opens next_id]
   node scripts/add-content.mjs weapon <id> --name "Name" --description "Weapon text" --kind projectile --damage 20 --cooldown 1 --color "#ffffff" --unlock-cost 2 --branch Core [--requires-node unlock_laser] [--requires-quest use_laser_run]
   node scripts/add-content.mjs shop-item <id> --name "Name" --description "Item text" --kind upgrade --cost 100
-  node scripts/add-content.mjs level <id> --name "Name" --starts-at 120`);
+  node scripts/add-content.mjs level <id> --name "Name" --starts-at 120
+  node scripts/add-content.mjs character <id> --name "Name" --description "Character text" --sprite player`);
 }
 
 function requireValue(name) {
@@ -39,6 +40,7 @@ try {
   content.quests ||= {};
   content.questGroups ||= {};
   content.enemyTypes ||= [];
+  content.characters ||= [];
   content.shopItems ||= [];
   content.levels ||= [];
 
@@ -98,6 +100,15 @@ try {
       name: requireValue("name"),
       startsAt: numberValue("starts-at"),
       enemyIds: args.enemies ? args.enemies.split(",").filter(Boolean) : [],
+      notes: args.notes || "",
+    });
+  } else if (type === "character") {
+    if (content.characters.some((character) => character.id === id)) throw new Error(`Character already exists: ${id}`);
+    content.characters.push({
+      id,
+      name: requireValue("name"),
+      description: requireValue("description"),
+      spriteId: requireValue("sprite"),
       notes: args.notes || "",
     });
   } else {
