@@ -14,6 +14,7 @@ const contentRegistrySource = readFileSync(join(root, "src/content-registry.js")
 const progressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const renderingSource = readFileSync(join(root, "src/rendering.js"), "utf8");
 const balanceSource = readFileSync(join(root, "src/balance.js"), "utf8");
+const weaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "utf8");
 const combatSource = readFileSync(join(root, "src/combat.js"), "utf8");
 const uiSource = readFileSync(join(root, "src/ui.js"), "utf8");
 const runUiSource = readFileSync(join(root, "src/run-ui.js"), "utf8");
@@ -182,6 +183,7 @@ vm.runInContext(contentRegistrySource, context);
 vm.runInContext(progressionSource, context);
 vm.runInContext(renderingSource, context);
 vm.runInContext(balanceSource, context);
+vm.runInContext(weaponFireSource, context);
 vm.runInContext(combatSource, context);
 vm.runInContext(uiSource, context);
 vm.runInContext(runUiSource, context);

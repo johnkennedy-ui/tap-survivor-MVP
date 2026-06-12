@@ -30,6 +30,7 @@ const contentRegistry = readRequired("src/content-registry.js");
 const progression = readRequired("src/progression.js");
 const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
+const weaponFire = readRequired("src/weapon-fire.js");
 const combat = readRequired("src/combat.js");
 const ui = readRequired("src/ui.js");
 const runUi = readRequired("src/run-ui.js");
@@ -51,7 +52,7 @@ const agentInstructions = readRequired("AGENTS.md");
 const workflow = readRequired(".github/workflows/tap-survivor-pages.yml");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
-const runtime = `${game}\n${combat}\n${runState}\n${runUpdate}`;
+const runtime = `${game}\n${combat}\n${weaponFire}\n${runState}\n${runUpdate}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
@@ -66,6 +67,7 @@ check("index loads content registry", /src="src\/content-registry\.js(\?[^"]+)?"
 check("index loads progression module", /src="src\/progression\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(index));
+check("index loads weapon fire module", /src="src\/weapon-fire\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
 check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
 check("index loads run UI module", /src="src\/run-ui\.js(\?[^"]+)?"/.test(index));
@@ -137,7 +139,7 @@ check("new run upgrade types exist", ["run_attack_radius", "run_fire_rate", "run
 check("projectile behavior run upgrades exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit"].every((id) => runUpgradeIds.has(id)));
 check("more attack speed and damage levels exist", content.runUpgrades?.find((upgrade) => upgrade.id === "run_fire_rate")?.maxTier === 8 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_percent_damage")?.maxTier === 8 && content.metaUpgrades?.find((upgrade) => upgrade.id === "fire_rate")?.maxTier === 5 && content.metaUpgrades?.find((upgrade) => upgrade.id === "percent_damage")?.maxTier === 5);
 check("weapon damage upgrades have more tiers", upgrades.includes("cost: [1, 2, 3, 4, 5]") && upgrades.includes("maxTier: 5"));
-check("projectile behavior hooks exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit", "spawnProjectileBolt", "splitBoltOnHit", "explodeBolt"].every((token) => combat.includes(token)));
+check("projectile behavior hooks exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit", "spawnProjectileBolt", "splitBoltOnHit", "explodeBolt"].every((token) => weaponFire.includes(token)));
 check("level-up choices favor started upgrade families", levelUp.includes("weightedChoices") && levelUp.includes("familyTiers") && levelUp.includes("choice.runUpgradeId"));
 check("relic content exists for run skills", (content.relics || []).length >= 24 && (content.runUpgrades || []).every((upgrade) => (content.relics || []).filter((relic) => relic.targetUpgradeId === upgrade.id).length >= 2));
 check("relics affect level-up choices", levelUp.includes("selectionWeightBonus") && levelUp.includes("maxTierBonus") && levelUp.includes("equippedRelics") && levelUp.includes("relic_compass"));
@@ -146,7 +148,7 @@ check("coin shop exists", index.includes('id="openShop"') && index.includes('id=
 check("shop items are content-driven", (content.shopItems || []).length >= 8 && shop.includes("shopItemDefs"));
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
-check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => combat.includes(token)) && game.includes("getShopBonuses"));
+check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => weaponFire.includes(token)) && game.includes("getShopBonuses"));
 check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && shellUi.includes("function showStartMenu"));
 check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && shellUi.includes("function closeShopMenu"));
 check("modal boxes scroll", styles.includes(".modal-box") && styles.includes("overflow-y: auto") && styles.includes("overscroll-behavior: contain"));
@@ -162,7 +164,7 @@ check("tower floor progresses after boss clear", save.includes("towerFloor: 1") 
 check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
-check("weapon attack animations exist", runState.includes("weaponBursts") && combat.includes("addWeaponBurst") && combat.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
+check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && combat.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("debug balance overlay exists", index.includes('id="toggleDebug"') && index.includes('id="debugStats"') && debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
@@ -182,6 +184,7 @@ check("shared shop helper exists", shop.includes("TapSurvivorShop") && game.incl
 check("shared relic helper exists", relics.includes("TapSurvivorRelics") && game.includes("TapSurvivorRelics"));
 check("shared run state helper exists", runState.includes("TapSurvivorRunState") && game.includes("TapSurvivorRunState"));
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && game.includes("TapSurvivorRunUpdate"));
+check("shared weapon fire helper exists", weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
 check("shared balance helper exists", balance.includes("TapSurvivorBalance") && combat.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && game.includes("TapSurvivorDebug"));
 check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && game.includes("TapSurvivorShellUi"));

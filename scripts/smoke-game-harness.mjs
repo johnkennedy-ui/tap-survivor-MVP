@@ -211,6 +211,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       },
     };
   } else {
+    vm.runInContext(readSource("src/weapon-fire.js"), context);
     vm.runInContext(readSource("src/combat.js"), context);
   }
 

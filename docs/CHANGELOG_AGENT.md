@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-12
 
+- Extracted weapon firing, projectile, beam, area, and weapon-burst behavior into `src/weapon-fire.js`.
 - Bumped the `src/game.js` browser cache key after the run-update split so live Pages users load the matching runtime file.
 - Extracted run update loop, player movement, XP collection, and combat/pickup ticking into `src/run-update.js`.
 - Extracted skill-tree progression gates and purchase handlers into `src/progression.js`.
