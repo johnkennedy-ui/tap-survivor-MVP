@@ -4,18 +4,18 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract relic runtime helper
+Extract run state helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-12T00:38:38.000Z
+- Started: 2026-06-12T08:32:30.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `src/game.js`
-- `src/relics.js`
+- `src/run-state.js`
 - `index.html`
 - `scripts/smoke-game-harness.mjs`
 - `scripts/verify-speed-controls.mjs`
@@ -26,7 +26,7 @@ Extract relic runtime helper
 ## Files Changed
 
 - `src/game.js`
-- `src/relics.js`
+- `src/run-state.js`
 - `index.html`
 - `scripts/smoke-game-harness.mjs`
 - `scripts/verify-speed-controls.mjs`
@@ -39,25 +39,27 @@ Extract relic runtime helper
 Run the smallest command that proves the change:
 
 ```bash
-node --check src/relics.js
+node --check src/run-state.js
 node --check src/game.js
 node --check scripts/smoke-game-harness.mjs
 node --check scripts/verify-speed-controls.mjs
 node scripts/verify-mvp.mjs
+npm run smoke:start-run
 npm run smoke:boss-run
 npm run agent:prepush
 ```
 
 Result:
 
-- `node --check src/relics.js`: passed.
-- `node --check src/game.js`: passed via `npm run agent:prepush`.
-- `node --check scripts/smoke-game-harness.mjs`: passed via `npm run agent:prepush`.
-- `node --check scripts/verify-speed-controls.mjs`: passed via `npm run agent:prepush`.
-- `node scripts/verify-mvp.mjs`: passed via `npm test`.
+- `node --check src/run-state.js`: passed.
+- `node --check src/game.js`: passed.
+- `node --check scripts/smoke-game-harness.mjs`: passed.
+- `node --check scripts/verify-speed-controls.mjs`: passed.
+- `node scripts/verify-mvp.mjs`: passed 161 checks.
 - `npm run smoke:start-run`: passed.
 - `npm run smoke:boss-run`: passed.
 - `npm run smoke:debug`: passed.
+- `npm run test:speed`: passed.
 - `npm run agent:prepush`: passed, including content summary, browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required

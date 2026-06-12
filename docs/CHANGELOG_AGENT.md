@@ -2,6 +2,10 @@
 
 Short log of structural changes that affect future OpenClaw/Codex work. Keep entries concise and link them to the commands or docs future agents should use.
 
+## 2026-06-12
+
+- Extracted player/run reset and run-meta stat application into `src/run-state.js`.
+
 ## 2026-06-11
 
 - Extracted relic grant, equipped relic, weapon slot, and weapon damage multiplier logic into `src/relics.js`.

@@ -35,6 +35,7 @@ const input = readRequired("src/input.js");
 const pickups = readRequired("src/pickups.js");
 const shop = readRequired("src/shop.js");
 const relics = readRequired("src/relics.js");
+const runState = readRequired("src/run-state.js");
 const debug = readRequired("src/debug.js");
 const shellUi = readRequired("src/shell-ui.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
@@ -46,7 +47,7 @@ const agentInstructions = readRequired("AGENTS.md");
 const workflow = readRequired(".github/workflows/tap-survivor-pages.yml");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
-const runtime = `${game}\n${combat}`;
+const runtime = `${game}\n${combat}\n${runState}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
@@ -67,6 +68,7 @@ check("index loads shell UI module", /src="src\/shell-ui\.js(\?[^"]+)?"/.test(in
 check("index loads pickup module", /src="src\/pickups\.js(\?[^"]+)?"/.test(index));
 check("index loads shop module", /src="src\/shop\.js(\?[^"]+)?"/.test(index));
 check("index loads relic module", /src="src\/relics\.js(\?[^"]+)?"/.test(index));
+check("index loads run state module", /src="src\/run-state\.js(\?[^"]+)?"/.test(index));
 check("index loads debug module", /src="src\/debug\.js(\?[^"]+)?"/.test(index));
 check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
@@ -90,8 +92,8 @@ check("enemy types unlock every 30 seconds", runtime.includes("Math.floor(game.e
 check("enemy spawns are doubled and patterned", runtime.includes("spawnPatternPositions(2)") && runtime.includes("spawnEnemy(type, position)"));
 check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") && game.includes("update(dt * gameSpeed)") && game.includes("setGameSpeed"));
 check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.includes("fireWeapon"));
-check("XP drops exist", game.includes("xpDrops") && game.includes("collectXp"));
-check("coin and heart drops exist", game.includes("lootDrops") && pickups.includes("spawnLootDrops") && pickups.includes('type: "coin"') && pickups.includes('type: "heart"'));
+check("XP drops exist", runState.includes("xpDrops") && game.includes("collectXp"));
+check("coin and heart drops exist", runState.includes("lootDrops") && pickups.includes("spawnLootDrops") && pickups.includes('type: "coin"') && pickups.includes('type: "heart"'));
 check("pickup attraction scales with speed", pickups.includes("pullDropTowardPlayer") && game.includes("pickupSystem.updateXpDrops(dt)") && game.includes("pickupSystem.updateLootDrops(dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 480, dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 540, dt)"));
 check("coins persist in save", save.includes("coins: 0") && pickups.includes("save.coins +=") && pickups.includes("persist()"));
 check("heart drops heal 20 percent max HP", pickups.includes('drop.type === "heart"') && pickups.includes("game.player.maxHp * drop.healPercent") && pickups.includes("healPercent: 0.2"));
@@ -135,7 +137,7 @@ check("weapon slot relics exist", (content.relics || []).some((relic) => relic.w
 check("coin shop exists", index.includes('id="openShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
 check("shop items are content-driven", (content.shopItems || []).length >= 8 && shop.includes("shopItemDefs"));
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
-check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && game.includes("shopBonuses.speed") && game.includes("shopBonuses.maxHp"));
+check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => combat.includes(token)) && game.includes("getShopBonuses"));
 check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && shellUi.includes("function showStartMenu"));
 check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && shellUi.includes("function closeShopMenu"));
@@ -152,7 +154,7 @@ check("tower floor progresses after boss clear", save.includes("towerFloor: 1") 
 check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
-check("weapon attack animations exist", game.includes("weaponBursts") && combat.includes("addWeaponBurst") && combat.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
+check("weapon attack animations exist", runState.includes("weaponBursts") && combat.includes("addWeaponBurst") && combat.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && combat.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("debug balance overlay exists", index.includes('id="toggleDebug"') && index.includes('id="debugStats"') && debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
@@ -167,6 +169,7 @@ check("shared input helper exists", input.includes("TapSurvivorInput") && game.i
 check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && game.includes("TapSurvivorPickups"));
 check("shared shop helper exists", shop.includes("TapSurvivorShop") && game.includes("TapSurvivorShop"));
 check("shared relic helper exists", relics.includes("TapSurvivorRelics") && game.includes("TapSurvivorRelics"));
+check("shared run state helper exists", runState.includes("TapSurvivorRunState") && game.includes("TapSurvivorRunState"));
 check("shared balance helper exists", balance.includes("TapSurvivorBalance") && combat.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && game.includes("TapSurvivorDebug"));
 check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && game.includes("TapSurvivorShellUi"));
