@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-12
 
+- Extracted run update loop, player movement, XP collection, and combat/pickup ticking into `src/run-update.js`.
 - Extracted skill-tree progression gates and purchase handlers into `src/progression.js`.
 - Extracted run HUD and end-screen rendering into `src/run-ui.js`.
 - Extracted content and asset registry unpacking into `src/content-registry.js`.

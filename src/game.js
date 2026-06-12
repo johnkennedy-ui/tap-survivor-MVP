@@ -52,6 +52,7 @@ const questSystem = globalThis.TapSurvivorQuests.createQuestSystem({
 let game = null;
 let lastFrame = performance.now();
 let gameSpeed = 1;
+let runUpdater = null;
 
 function persist() {
   saveSystem.persist(save);
@@ -143,7 +144,7 @@ const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
   getSave: () => save,
   persist,
   renderMeta,
-  collectXp,
+  collectXp: (value) => runUpdater?.collectXp(value),
   distance,
   randomRange,
 });
@@ -179,6 +180,20 @@ const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
   getRunUpgradeTier,
   maxEquippedWeapons,
   activeQuestWeaponIds: () => questSystem.activeQuestWeaponIds(),
+});
+
+runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
+  canvas,
+  getGame: () => game,
+  combat,
+  pickupSystem,
+  addQuestProgressGroup,
+  survivalQuestIds,
+  xpQuestIds,
+  levelQuestIds,
+  showLevelUp: () => levelUpSystem.showLevelUp(),
+  endRun,
+  clamp,
 });
 
 const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
@@ -256,100 +271,8 @@ function getWeaponDamageMultiplier() {
   return relicSystem.getWeaponDamageMultiplier(save);
 }
 
-function update(dt) {
-  if (!game || !game.running || game.paused) return;
-  const p = game.player;
-  game.elapsed += dt;
-  addQuestProgressGroup(survivalQuestIds, dt);
-  if (game.elapsed >= game.duration) {
-    spawnBoss();
-  }
-
-  movePlayer(p, dt);
-  spawnEnemies(dt);
-  updateEnemies(dt);
-  updateBossSpecials(dt);
-  updateWeapons(dt);
-  updateBolts(dt);
-  updateAreas(dt);
-  updateBeams(dt);
-  updateWeaponBursts(dt);
-  pickupSystem.updateXpDrops(dt);
-  pickupSystem.updateLootDrops(dt);
-
-  if (p.hp <= 0) endRun("Player defeated");
-}
-
-function movePlayer(p, dt) {
-  const dx = p.targetX - p.x;
-  const dy = p.targetY - p.y;
-  const dist = Math.hypot(dx, dy);
-  if (dist > 3) {
-    const step = Math.min(dist, p.speed * dt);
-    p.x += (dx / dist) * step;
-    p.y += (dy / dist) * step;
-  }
-  p.x = clamp(p.x, 18, canvas.width - 18);
-  p.y = clamp(p.y, 18, canvas.height - 18);
-}
-
-function spawnEnemies(dt) {
-  combat.spawnEnemies(dt);
-}
-
-function spawnBoss() {
-  combat.spawnBoss();
-}
-
-function updateBossSpecials(dt) {
-  combat.updateBossSpecials(dt);
-}
-
-function updateEnemies(dt) {
-  combat.updateEnemies(dt);
-}
-
-function updateWeapons(dt) {
-  combat.updateWeapons(dt);
-}
-
 function getRunUpgradeTier(id) {
   return combat.getRunUpgradeTier(id);
-}
-
-function updateBolts(dt) {
-  combat.updateBolts(dt);
-}
-
-function updateAreas(dt) {
-  combat.updateAreas(dt);
-}
-
-function updateBeams(dt) {
-  combat.updateBeams(dt);
-}
-
-function updateWeaponBursts(dt) {
-  combat.updateWeaponBursts(dt);
-}
-
-function collectXp(value) {
-  const p = game.player;
-  p.xp += value;
-  game.xpCollected += value;
-  addQuestProgressGroup(xpQuestIds, value);
-  if (p.xp >= p.xpToLevel) {
-    p.xp -= p.xpToLevel;
-    p.level += 1;
-    p.xpToLevel += 4;
-    game.levelUps += 1;
-    addQuestProgressGroup(levelQuestIds, 1);
-    showLevelUp();
-  }
-}
-
-function showLevelUp() {
-  levelUpSystem.showLevelUp();
 }
 
 function applyRunMetaUpgrades() {
@@ -392,7 +315,7 @@ function closeEndScreen() {
 function loop(now) {
   const dt = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  update(dt * gameSpeed);
+  runUpdater.update(dt * gameSpeed);
   draw();
   updateRunHud();
   requestAnimationFrame(loop);

@@ -4,18 +4,18 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract progression helper
+Extract run update helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-12T12:01:56.000Z
+- Started: 2026-06-12T13:32:53.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `src/game.js`
-- `src/progression.js`
+- `src/run-update.js`
 - `index.html`
 - `scripts/smoke-game-harness.mjs`
 - `scripts/verify-speed-controls.mjs`
@@ -26,7 +26,7 @@ Extract progression helper
 ## Files Changed
 
 - `src/game.js`
-- `src/progression.js`
+- `src/run-update.js`
 - `index.html`
 - `scripts/smoke-game-harness.mjs`
 - `scripts/verify-speed-controls.mjs`
@@ -39,7 +39,7 @@ Extract progression helper
 Run the smallest command that proves the change:
 
 ```bash
-node --check src/progression.js
+node --check src/run-update.js
 node --check src/game.js
 node --check scripts/smoke-game-harness.mjs
 node --check scripts/verify-speed-controls.mjs
@@ -51,11 +51,11 @@ npm run agent:prepush
 
 Result:
 
-- `node --check src/progression.js`: passed.
+- `node --check src/run-update.js`: passed.
 - `node --check src/game.js`: passed.
 - `node --check scripts/smoke-game-harness.mjs`: passed.
 - `node --check scripts/verify-speed-controls.mjs`: passed.
-- `node scripts/verify-mvp.mjs`: passed 170 checks.
+- `node scripts/verify-mvp.mjs`: passed 173 checks.
 - `npm run smoke:start-run`: passed.
 - `npm run smoke:boss-run`: passed.
 - `npm run smoke:debug`: passed.
