@@ -26,6 +26,7 @@ const sprites = readRequired("src/sprites.js");
 const quests = readRequired("src/quests.js");
 const save = readRequired("src/save.js");
 const upgrades = readRequired("src/upgrades.js");
+const contentRegistry = readRequired("src/content-registry.js");
 const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
 const combat = readRequired("src/combat.js");
@@ -58,6 +59,7 @@ check("index loads sprite utilities", /src="src\/sprites\.js(\?[^"]+)?"/.test(in
 check("index loads quest utilities", /src="src\/quests\.js(\?[^"]+)?"/.test(index));
 check("index loads save utilities", /src="src\/save\.js(\?[^"]+)?"/.test(index));
 check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
+check("index loads content registry", /src="src\/content-registry\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
@@ -163,6 +165,7 @@ check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game
 check("shared save helpers exist", save.includes("TapSurvivorSave") && game.includes("TapSurvivorSave"));
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
+check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && game.includes("TapSurvivorLevelUp"));
 check("shared input helper exists", input.includes("TapSurvivorInput") && game.includes("TapSurvivorInput"));

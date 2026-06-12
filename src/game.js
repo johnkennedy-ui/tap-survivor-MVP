@@ -9,29 +9,28 @@ const content = globalThis.TapSurvivorContent || {};
 const upgradeContent = globalThis.TapSurvivorUpgrades || {};
 const { clamp, distance, formatTime, randomRange } = globalThis.TapSurvivorMath;
 const { questOpenIds } = globalThis.TapSurvivorQuests;
-const weaponDefs = content.weapons || {};
-const weaponUnlocks = content.weaponUnlocks || [];
-const spriteDefs = content.assets?.sprites || {};
+const {
+  weaponDefs,
+  weaponUnlocks,
+  spriteDefs,
+  upgradeDefs,
+  questDefs,
+  starterQuestIds,
+  killQuestIds,
+  damageQuestIds,
+  survivalQuestIds,
+  xpQuestIds,
+  levelQuestIds,
+  bossQuestIds,
+  runUpgradeDefs,
+  enemyTypes,
+  shopItemDefs,
+  relicDefs,
+} = globalThis.TapSurvivorContentRegistry.createContentRegistry({
+  content,
+  upgradeContent,
+});
 const spriteSystem = globalThis.TapSurvivorSprites.createSpriteSystem({ ctx, spriteDefs });
-
-const upgradeDefs = upgradeContent.createUpgradeDefs?.(weaponDefs) || [];
-
-const questDefs = content.quests || {};
-const questGroups = content.questGroups || {};
-const starterQuestIds = questGroups.starter || [];
-const killQuestIds = questGroups.kill || [];
-const damageQuestIds = questGroups.damage || [];
-const survivalQuestIds = questGroups.survival || [];
-const xpQuestIds = questGroups.xp || [];
-const levelQuestIds = questGroups.level || [];
-const bossQuestIds = questGroups.boss || [];
-
-const runUpgradeDefs = upgradeContent.runUpgradeDefs || [];
-
-const enemyTypes = content.enemyTypes || [];
-const shopItemDefs = content.shopItems || [];
-const relicDefs = content.relics || [];
-const levelDefs = content.levels || [];
 
 const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
   saveKey,

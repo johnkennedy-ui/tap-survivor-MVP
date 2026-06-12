@@ -171,6 +171,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "src/quests.js",
     "src/save.js",
     "src/upgrades.js",
+    "src/content-registry.js",
     "src/rendering.js",
     "src/balance.js",
   ].forEach((path) => vm.runInContext(readSource(path), context));

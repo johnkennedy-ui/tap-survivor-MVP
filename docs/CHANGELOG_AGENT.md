@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-12
 
+- Extracted content and asset registry unpacking into `src/content-registry.js`.
 - Extracted player/run reset and run-meta stat application into `src/run-state.js`.
 
 ## 2026-06-11
