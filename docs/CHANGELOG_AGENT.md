@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-11
 
+- Extracted relic grant, equipped relic, weapon slot, and weapon damage multiplier logic into `src/relics.js`.
 - Tuned first three tower floors with shared balance scaling and added a debug overlay smoke test.
 - Added a debug/balance overlay for floor scaling, weapon slots, weapon damage multiplier, relics, run upgrades, and weapon damage totals.
 - Added weapon attack bursts, a 4-weapon run cap, and weapon-slot relic tradeoffs.

@@ -173,6 +173,10 @@ const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
   renderMeta,
 });
 
+const relicSystem = globalThis.TapSurvivorRelics.createRelicSystem({
+  relicDefs,
+});
+
 function renderMeta() {
   uiRenderer.renderMeta();
 }
@@ -337,7 +341,7 @@ function endRun(reason) {
 function advanceTowerFloor() {
   if (!game) return;
   const clearedFloor = game.towerFloor || 1;
-  const awardedRelic = grantRandomRelic();
+  const awardedRelic = relicSystem.grantRandomRelic(save);
   save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
   persist();
   resetGameState();
@@ -349,31 +353,12 @@ function advanceTowerFloor() {
   renderMeta();
 }
 
-function grantRandomRelic() {
-  const unlocked = new Set(save.unlockedRelics || []);
-  const locked = relicDefs.filter((relic) => !unlocked.has(relic.id));
-  if (!locked.length) return null;
-  const relic = locked[Math.floor(Math.random() * locked.length)];
-  save.unlockedRelics = [...unlocked, relic.id];
-  save.equippedRelics = [...new Set([...(save.equippedRelics || []), relic.id])];
-  return relic;
-}
-
-function equippedRelics() {
-  const equipped = new Set(save.equippedRelics || []);
-  return relicDefs.filter((relic) => equipped.has(relic.id));
-}
-
-function relicNumber(field) {
-  return equippedRelics().reduce((total, relic) => total + (relic[field] || 0), 0);
-}
-
 function maxEquippedWeapons() {
-  return Math.max(1, 4 + relicNumber("weaponSlotBonus"));
+  return relicSystem.maxEquippedWeapons(save);
 }
 
 function getWeaponDamageMultiplier() {
-  return equippedRelics().reduce((multiplier, relic) => multiplier * (relic.weaponDamageMultiplier || 1), 1);
+  return relicSystem.getWeaponDamageMultiplier(save);
 }
 
 function update(dt) {
