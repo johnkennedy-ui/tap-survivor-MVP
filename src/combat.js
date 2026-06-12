@@ -19,11 +19,13 @@ function createCombatSystem({
   distance,
   clamp,
 }) {
+  const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
+
   function spawnEnemies(dt) {
     const game = getGame();
     game.spawnTimer -= dt;
     if (game.spawnTimer > 0) return;
-    game.spawnTimer = Math.max(0.32, (1.1 - game.elapsed / 150) / floorDifficulty().spawnRate);
+    game.spawnTimer = Math.max(0.32, (1.1 - game.elapsed / 150) / floorDifficulty(game.towerFloor).spawnRate);
     spawnPatternPositions(2).forEach((position, index) => {
       const type = chooseEnemyType(index);
       spawnEnemy(type, position);
@@ -60,7 +62,7 @@ function createCombatSystem({
 
   function spawnEnemy(type, position) {
     const game = getGame();
-    const difficulty = floorDifficulty();
+    const difficulty = floorDifficulty(game.towerFloor);
     game.enemies.push({
       type: type.id,
       name: type.name,
@@ -82,7 +84,7 @@ function createCombatSystem({
     const game = getGame();
     if (game.bossSpawned) return;
     game.bossSpawned = true;
-    const difficulty = floorDifficulty();
+    const difficulty = floorDifficulty(game.towerFloor);
     const bossHp = (1400 + game.kills * 6) * difficulty.hp;
     game.enemies.push({
       boss: true,
@@ -97,16 +99,6 @@ function createCombatSystem({
       touchCooldown: 0.8,
       touchTimer: 0,
     });
-  }
-
-  function floorDifficulty() {
-    const game = getGame();
-    const floor = Math.max(1, game?.towerFloor || 1);
-    return {
-      hp: 1 + (floor - 1) * 0.18,
-      damage: 1 + (floor - 1) * 0.12,
-      spawnRate: 1 + (floor - 1) * 0.04,
-    };
   }
 
   function updateBossSpecials(dt) {

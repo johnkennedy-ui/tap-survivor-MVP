@@ -1,12 +1,5 @@
 (() => {
-  function floorDifficulty(floor) {
-    const floorIndex = Math.max(0, floor - 1);
-    return {
-      hp: 1 + floorIndex * 0.18,
-      damage: 1 + floorIndex * 0.12,
-      spawnPressure: 1 + floorIndex * 0.04,
-    };
-  }
+  const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
 
   function createDebugSystem({
     ui,
@@ -56,7 +49,7 @@
         `Floor: ${floor}`,
         `Enemy HP x${difficulty.hp.toFixed(2)}`,
         `Enemy DMG x${difficulty.damage.toFixed(2)}`,
-        `Spawn pressure x${difficulty.spawnPressure.toFixed(2)}`,
+        `Spawn pressure x${difficulty.spawnRate.toFixed(2)}`,
         `Weapon slots: ${equippedWeapons}/${maxEquippedWeapons()}`,
         `Weapon damage x${getWeaponDamageMultiplier().toFixed(2)}`,
         `Kills: ${game?.kills || 0}`,

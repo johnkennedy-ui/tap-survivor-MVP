@@ -172,6 +172,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "src/save.js",
     "src/upgrades.js",
     "src/rendering.js",
+    "src/balance.js",
   ].forEach((path) => vm.runInContext(readSource(path), context));
 
   if (fakeCombat) {
