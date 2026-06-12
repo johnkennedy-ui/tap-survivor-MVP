@@ -7,7 +7,7 @@ const legacySaveKey = "tap-survivor-mvp-save-v1";
 
 const content = globalThis.TapSurvivorContent || {};
 const upgradeContent = globalThis.TapSurvivorUpgrades || {};
-const { clamp, distance, formatTime, randomRange } = globalThis.TapSurvivorMath;
+const { clamp, distance, randomRange, formatTime } = globalThis.TapSurvivorMath;
 const { questOpenIds } = globalThis.TapSurvivorQuests;
 const {
   weaponDefs,
@@ -267,10 +267,20 @@ const debugSystem = globalThis.TapSurvivorDebug.createDebugSystem({
   runUpgradeDefs,
 });
 
+const runUi = globalThis.TapSurvivorRunUi.createRunUi({
+  ui,
+  formatTime,
+  getGame: () => game,
+  getSave: () => save,
+  getGameSpeed: () => gameSpeed,
+  maxEquippedWeapons,
+  renderDebug: () => debugSystem.render(),
+});
+
 function startRun() {
   shellUi.closeStartMenu();
   shopSystem.closeShop();
-  ui.endScreen.classList.add("hidden");
+  runUi.hideEndScreen();
   ui.levelUp.classList.add("hidden");
   shellUi.closeRunMenu(false);
   resetGameState();
@@ -280,18 +290,7 @@ function endRun(reason) {
   if (!game) return;
   game.running = false;
   game.endReason = reason;
-  ui.runStats.innerHTML = `
-    <p>Result: ${reason}</p>
-    <p>Tower floor: ${game.towerFloor}</p>
-    <p>Time survived: ${formatTime(game.elapsed)}</p>
-    <p>Enemies defeated: ${game.kills}</p>
-    <p>Level reached: ${game.player.level}</p>
-    <p>XP collected: ${game.xpCollected}</p>
-    <p>Coins banked: ${save.coins}</p>
-    <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
-    <p>Quest Points: ${save.questPoints} available</p>
-  `;
-  ui.endScreen.classList.remove("hidden");
+  runUi.showEndScreen(reason);
   persist();
   renderMeta();
 }
@@ -432,16 +431,7 @@ function draw() {
 }
 
 function updateRunHud() {
-  if (!game) {
-    ui.runHud.textContent = `Speed x${gameSpeed} | Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.`;
-    debugSystem.render();
-    return;
-  }
-  const boss = game.enemies.find((enemy) => enemy.boss);
-  const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
-  const floorText = game.lastFloorClear ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}` : "";
-  ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Floor ${game.towerFloor} | Speed x${gameSpeed} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}/${maxEquippedWeapons()}${bossText}${floorText}`;
-  debugSystem.render();
+  runUi.updateRunHud();
 }
 
 function closeLevelUpMenu() {
@@ -457,7 +447,7 @@ function exitRun() {
 }
 
 function closeEndScreen() {
-  ui.endScreen.classList.add("hidden");
+  runUi.hideEndScreen();
   shellUi.showStartMenu();
 }
 
@@ -487,7 +477,7 @@ function resetSave() {
   localStorage.removeItem(legacySaveKey);
   save = saveSystem.defaultSave();
   game = null;
-  ui.endScreen.classList.add("hidden");
+  runUi.hideEndScreen();
   ui.levelUp.classList.add("hidden");
   shopSystem.closeShop();
   shellUi.closeRunMenu(false);

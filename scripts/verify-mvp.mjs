@@ -31,6 +31,7 @@ const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
 const combat = readRequired("src/combat.js");
 const ui = readRequired("src/ui.js");
+const runUi = readRequired("src/run-ui.js");
 const levelUp = readRequired("src/level-up.js");
 const input = readRequired("src/input.js");
 const pickups = readRequired("src/pickups.js");
@@ -64,6 +65,7 @@ check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(
 check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
 check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
+check("index loads run UI module", /src="src\/run-ui\.js(\?[^"]+)?"/.test(index));
 check("index loads level-up module", /src="src\/level-up\.js(\?[^"]+)?"/.test(index));
 check("index loads input module", /src="src\/input\.js(\?[^"]+)?"/.test(index));
 check("index loads shell UI module", /src="src\/shell-ui\.js(\?[^"]+)?"/.test(index));
@@ -152,7 +154,7 @@ check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].ever
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));
 check("run lasts 6 minutes before boss", runtime.includes("duration: 360") && runtime.includes("spawnBoss"));
 check("boss death advances tower floor", runtime.includes("advanceTowerFloor") && game.includes("function advanceTowerFloor") && runtime.includes("enemy.boss"));
-check("tower floor progresses after boss clear", save.includes("towerFloor: 1") && game.includes("save.towerFloor") && game.includes("Cleared Floor") && rendering.includes("Tower Floor"));
+check("tower floor progresses after boss clear", save.includes("towerFloor: 1") && game.includes("save.towerFloor") && runUi.includes("Cleared Floor") && rendering.includes("Tower Floor"));
 check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
@@ -167,6 +169,7 @@ check("shared math helpers exist", math.includes("TapSurvivorMath") && game.incl
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
 check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
+check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && game.includes("TapSurvivorRunUi"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && game.includes("TapSurvivorLevelUp"));
 check("shared input helper exists", input.includes("TapSurvivorInput") && game.includes("TapSurvivorInput"));
 check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && game.includes("TapSurvivorPickups"));
