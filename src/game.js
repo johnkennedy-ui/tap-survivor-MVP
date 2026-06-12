@@ -57,60 +57,6 @@ function persist() {
   saveSystem.persist(save);
 }
 
-function hasNode(id) {
-  return save.unlockedNodes.includes(id);
-}
-
-function getUpgradeTier(id) {
-  return Math.min(3, save.upgradeTiers[id] || 0);
-}
-
-function isQuestComplete(id) {
-  return !id || save.completedQuests.includes(id);
-}
-
-function weaponUnlockFor(weaponId) {
-  return weaponUnlocks.find((unlock) => unlock.weaponId === weaponId);
-}
-
-function isNodeVisible(node) {
-  return !node.requiresNode || hasNode(node.requiresNode);
-}
-
-function nodeGateStatus(node) {
-  if (node.requiresNode && !hasNode(node.requiresNode)) {
-    return `Requires ${labelUnlock(node.requiresNode)}`;
-  }
-  if (node.requiresQuest && !isQuestComplete(node.requiresQuest)) {
-    return `Complete quest: ${questDefs[node.requiresQuest]?.name || node.requiresQuest}`;
-  }
-  if (save.questPoints < node.cost) {
-    return `Needs ${node.cost} QP`;
-  }
-  return "";
-}
-
-function canBuyNode(node) {
-  return !nodeGateStatus(node);
-}
-
-function labelUnlock(id) {
-  const unlock = weaponUnlocks.find((node) => node.id === id);
-  return unlock ? weaponDefs[unlock.weaponId].name : id;
-}
-
-function hasQuest(id) {
-  return questSystem.hasQuest(id);
-}
-
-function openQuest(id) {
-  questSystem.openQuest(id);
-}
-
-function completeQuest(id) {
-  questSystem.completeQuest(id);
-}
-
 function addQuestProgress(id, amount) {
   questSystem.addQuestProgress(id, amount);
 }
@@ -119,33 +65,25 @@ function addQuestProgressGroup(ids, amount) {
   questSystem.addQuestProgressGroup(ids, amount);
 }
 
-function buyWeaponUnlock(unlock) {
-  if (hasNode(unlock.id) || !canBuyNode(unlock)) return;
-  save.questPoints -= unlock.cost;
-  save.unlockedNodes.push(unlock.id);
-  if (!save.unlockedWeapons.includes(unlock.weaponId)) {
-    save.unlockedWeapons.push(unlock.weaponId);
-  }
-  if (unlock.opensQuest) openQuest(unlock.opensQuest);
-  persist();
-  renderMeta();
-}
-
-function buyUpgrade(upgrade) {
-  const tier = getUpgradeTier(upgrade.id);
-  if (tier >= upgrade.maxTier) return;
-  if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return;
-  if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return;
-  if (upgrade.requiresQuest && !isQuestComplete(upgrade.requiresQuest)) return;
-  const cost = upgrade.cost[tier];
-  if (save.questPoints < cost) return;
-  save.questPoints -= cost;
-  save.upgradeTiers[upgrade.id] = tier + 1;
-  if (upgrade.opensQuest && tier === 0) openQuest(upgrade.opensQuest);
-  persist();
-  applyRunMetaUpgrades();
-  renderMeta();
-}
+const progressionSystem = globalThis.TapSurvivorProgression.createProgressionSystem({
+  weaponDefs,
+  weaponUnlocks,
+  questDefs,
+  getSave: () => save,
+  openQuest: (id) => questSystem.openQuest(id),
+  persist,
+  renderMeta,
+  applyRunMetaUpgrades,
+});
+const {
+  hasNode,
+  getUpgradeTier,
+  isQuestComplete,
+  isNodeVisible,
+  nodeGateStatus,
+  buyWeaponUnlock,
+  buyUpgrade,
+} = progressionSystem;
 
 const uiRenderer = globalThis.TapSurvivorUi.createUiRenderer({
   ui,

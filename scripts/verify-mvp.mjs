@@ -27,6 +27,7 @@ const quests = readRequired("src/quests.js");
 const save = readRequired("src/save.js");
 const upgrades = readRequired("src/upgrades.js");
 const contentRegistry = readRequired("src/content-registry.js");
+const progression = readRequired("src/progression.js");
 const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
 const combat = readRequired("src/combat.js");
@@ -61,6 +62,7 @@ check("index loads quest utilities", /src="src\/quests\.js(\?[^"]+)?"/.test(inde
 check("index loads save utilities", /src="src\/save\.js(\?[^"]+)?"/.test(index));
 check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
 check("index loads content registry", /src="src\/content-registry\.js(\?[^"]+)?"/.test(index));
+check("index loads progression module", /src="src\/progression\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
@@ -122,8 +124,8 @@ check("meta upgrades are content-driven", (content.metaUpgrades || []).length ==
 check("run upgrades are content-driven", (content.runUpgrades || []).length >= 12 && upgrades.includes("applyRunUpgradeEffects"));
 check("meta upgrades are quest-gated", (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "first_blood") && (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "boss_hunter"));
 check("Laser Damage upgrade exists", upgrades.includes("laser_damage") && upgrades.includes("maxTier: 5"));
-check("upgrade tiers are tracked", game.includes("upgradeTiers") && ui.includes("Buy Tier"));
-check("skill tree gates by prerequisite and quest", game.includes("requiresNode") && game.includes("requiresQuest") && game.includes("nodeGateStatus"));
+check("upgrade tiers are tracked", progression.includes("upgradeTiers") && ui.includes("Buy Tier"));
+check("skill tree gates by prerequisite and quest", progression.includes("requiresNode") && progression.includes("requiresQuest") && progression.includes("nodeGateStatus"));
 check("completed quests disappear from quest list", ui.includes("activeQuestIds") && !ui.includes("Status: ${complete"));
 check("level-up choices are limited to 3 random options", levelUp.includes("shuffleChoices") && levelUp.includes(".slice(0, 3)"));
 check("unique weapons are capped", levelUp.includes("maxEquippedWeapons") && levelUp.includes("equippedWeapons.length < maxWeapons") && game.includes("maxEquippedWeapons"));
@@ -168,6 +170,7 @@ check("shared save helpers exist", save.includes("TapSurvivorSave") && game.incl
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
 check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
+check("shared progression helper exists", progression.includes("TapSurvivorProgression") && game.includes("TapSurvivorProgression"));
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && game.includes("TapSurvivorRunUi"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && game.includes("TapSurvivorLevelUp"));
