@@ -4,33 +4,23 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract run update helper
+Fix game script cache bust after run-update split
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-12T13:32:53.000Z
+- Started: 2026-06-12T18:04:59.952Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `src/game.js`
-- `src/run-update.js`
 - `index.html`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
-- `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `src/game.js`
-- `src/run-update.js`
 - `index.html`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
-- `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
 
@@ -39,28 +29,14 @@ Extract run update helper
 Run the smallest command that proves the change:
 
 ```bash
-node --check src/run-update.js
-node --check src/game.js
-node --check scripts/smoke-game-harness.mjs
-node --check scripts/verify-speed-controls.mjs
-node scripts/verify-mvp.mjs
-npm run smoke:start-run
-npm run smoke:boss-run
-npm run agent:prepush
+npm run test:speed && npm run smoke:start-run && npm run agent:prepush
 ```
 
 Result:
 
-- `node --check src/run-update.js`: passed.
-- `node --check src/game.js`: passed.
-- `node --check scripts/smoke-game-harness.mjs`: passed.
-- `node --check scripts/verify-speed-controls.mjs`: passed.
-- `node scripts/verify-mvp.mjs`: passed 173 checks.
-- `npm run smoke:start-run`: passed.
-- `npm run smoke:boss-run`: passed.
-- `npm run smoke:debug`: passed.
 - `npm run test:speed`: passed.
-- `npm run agent:prepush`: passed, including content summary, browser smoke, focused smoke tests, and `npm test`.
+- `npm run smoke:start-run`: passed.
+- `npm run agent:prepush`: passed.
 
 ## Evidence Required
 
