@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-12
 
+- Extracted enemy spawning, enemy movement, boss spawning, and boss special attacks into `src/enemies.js`.
 - Replaced the weapon-kind firing `if` chain with a dispatch table in `src/weapon-fire.js`.
 - Extracted weapon firing, projectile, beam, area, and weapon-burst behavior into `src/weapon-fire.js`.
 - Bumped the `src/game.js` browser cache key after the run-update split so live Pages users load the matching runtime file.

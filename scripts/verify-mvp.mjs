@@ -31,6 +31,7 @@ const progression = readRequired("src/progression.js");
 const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
 const weaponFire = readRequired("src/weapon-fire.js");
+const enemies = readRequired("src/enemies.js");
 const combat = readRequired("src/combat.js");
 const ui = readRequired("src/ui.js");
 const runUi = readRequired("src/run-ui.js");
@@ -52,7 +53,7 @@ const agentInstructions = readRequired("AGENTS.md");
 const workflow = readRequired(".github/workflows/tap-survivor-pages.yml");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
-const runtime = `${game}\n${combat}\n${weaponFire}\n${runState}\n${runUpdate}`;
+const runtime = `${game}\n${combat}\n${weaponFire}\n${enemies}\n${runState}\n${runUpdate}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
@@ -68,6 +69,7 @@ check("index loads progression module", /src="src\/progression\.js(\?[^"]+)?"/.t
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(index));
 check("index loads weapon fire module", /src="src\/weapon-fire\.js(\?[^"]+)?"/.test(index));
+check("index loads enemies module", /src="src\/enemies\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
 check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
 check("index loads run UI module", /src="src\/run-ui\.js(\?[^"]+)?"/.test(index));
@@ -166,7 +168,7 @@ check("boss clears grant relics", save.includes("unlockedRelics") && save.includ
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
-check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && combat.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
+check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("debug balance overlay exists", index.includes('id="toggleDebug"') && index.includes('id="debugStats"') && debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
@@ -186,7 +188,8 @@ check("shared relic helper exists", relics.includes("TapSurvivorRelics") && game
 check("shared run state helper exists", runState.includes("TapSurvivorRunState") && game.includes("TapSurvivorRunState"));
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && game.includes("TapSurvivorRunUpdate"));
 check("shared weapon fire helper exists", weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
-check("shared balance helper exists", balance.includes("TapSurvivorBalance") && combat.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
+check("shared enemy helper exists", enemies.includes("TapSurvivorEnemies") && combat.includes("TapSurvivorEnemies"));
+check("shared balance helper exists", balance.includes("TapSurvivorBalance") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && game.includes("TapSurvivorDebug"));
 check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && game.includes("TapSurvivorShellUi"));
 

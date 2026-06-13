@@ -4,26 +4,36 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add weapon kind dispatch table
+Extract enemy lifecycle helper
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-12T21:43:16.187Z
+- Started: 2026-06-13T09:27:44.211Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `src/weapon-fire.js`
+- `src/enemies.js`
+- `src/combat.js`
+- `index.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Files Changed
 
-- `src/weapon-fire.js`
+- `src/enemies.js`
+- `src/combat.js`
+- `index.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 
 ## Validation Plan
@@ -31,14 +41,17 @@ Add weapon kind dispatch table
 Run the smallest command that proves the change:
 
 ```bash
-node --check src/weapon-fire.js && node scripts/verify-mvp.mjs && npm run smoke:boss-run && npm run agent:prepush
+node --check src/enemies.js && node --check src/combat.js && node scripts/verify-mvp.mjs && npm run smoke:start-run && npm run smoke:boss-run && npm run test:speed && npm run agent:prepush
 ```
 
 Result:
 
-- `node --check src/weapon-fire.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed 177 checks.
+- `node --check src/enemies.js`: passed.
+- `node --check src/combat.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed 180 checks.
+- `npm run smoke:start-run`: passed.
 - `npm run smoke:boss-run`: passed.
+- `npm run test:speed`: passed.
 - `npm run agent:prepush`: passed, including content summary, browser smoke, focused smoke tests, and `npm test`.
 
 ## Evidence Required
