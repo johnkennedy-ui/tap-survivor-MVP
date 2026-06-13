@@ -61,18 +61,22 @@ function createWeaponFireSystem({
     return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12) * (getWeaponDamageMultiplier?.() || 1);
   }
 
+  const weaponKindHandlers = {
+    radial: fireRadial,
+    beam: fireBeam,
+    cone: fireCone,
+    chain: fireChain,
+    projectile: fireProjectile,
+    target_area: fireTargetArea,
+    lingering_area: fireLingeringArea,
+    mine: fireMine,
+  };
+
   function fireWeapon(weaponId) {
     const weapon = weaponDefs[weaponId];
     if (!weapon) return;
     addWeaponBurst(weaponId, weapon);
-    if (weapon.kind === "radial") fireRadial(weaponId);
-    if (weapon.kind === "beam") fireBeam(weaponId);
-    if (weapon.kind === "cone") fireCone(weaponId);
-    if (weapon.kind === "chain") fireChain(weaponId);
-    if (weapon.kind === "projectile") fireProjectile(weaponId);
-    if (weapon.kind === "target_area") fireTargetArea(weaponId);
-    if (weapon.kind === "lingering_area") fireLingeringArea(weaponId);
-    if (weapon.kind === "mine") fireMine(weaponId);
+    weaponKindHandlers[weapon.kind]?.(weaponId);
   }
 
   function addWeaponBurst(weaponId, weapon) {
