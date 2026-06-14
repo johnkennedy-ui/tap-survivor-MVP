@@ -91,6 +91,7 @@ const ids = [
   "resetSave",
   "toggleDebug",
   "fullscreenButton",
+  "muteAudio",
   "openMenu",
   "questBanner",
   "exitRun",

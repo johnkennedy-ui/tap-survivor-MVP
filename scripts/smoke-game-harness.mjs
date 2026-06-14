@@ -90,6 +90,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "resetSave",
     "toggleDebug",
     "fullscreenButton",
+    "muteAudio",
     "openMenu",
     "questBanner",
     "exitRun",

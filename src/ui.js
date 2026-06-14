@@ -11,6 +11,7 @@ function createUi() {
     resetSave: document.getElementById("resetSave"),
     toggleDebug: document.getElementById("toggleDebug"),
     fullscreenButton: document.getElementById("fullscreenButton"),
+    muteAudio: document.getElementById("muteAudio"),
     openMenu: document.getElementById("openMenu"),
     questBanner: document.getElementById("questBanner"),
     exitRun: document.getElementById("exitRun"),

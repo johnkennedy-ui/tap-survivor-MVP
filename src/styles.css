@@ -85,6 +85,10 @@ button:disabled {
   padding: 8px 0;
 }
 
+.mute-button {
+  width: 64px;
+}
+
 .speed-button.active {
   border-color: #ffd166;
   background: #4a3f22;

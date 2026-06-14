@@ -9,8 +9,9 @@ const defaultLicensePath = "assets/generated/tower/sfx/License.txt";
 function usage() {
   return `Usage:
   node scripts/add-sfx.mjs weapon <weapon_id> <source.wav|mp3|ogg> [--tag sfx-20260615]
+  node scripts/add-sfx.mjs run-upgrade <run_upgrade_id> <source.wav|mp3|ogg> [--tag sfx-20260615]
 
-Copies the audio file into assets/generated/tower/sfx/ and updates content.assets.sfx.weapons.`;
+Copies the audio file into assets/generated/tower/sfx/ and updates content.assets.sfx.`;
 }
 
 function parseArgs(argv) {
@@ -27,7 +28,7 @@ function parseArgs(argv) {
     else throw new Error(`Unknown argument: ${rest[i]}`);
   }
   if (options.help) return options;
-  if (type !== "weapon") throw new Error("Only weapon SFX are supported right now.");
+  if (!["weapon", "run-upgrade"].includes(type)) throw new Error("Type must be weapon or run-upgrade.");
   if (!id || !sourcePath) throw new Error("Missing weapon ID or source audio path.");
   if (!existsSync(sourcePath)) throw new Error(`Source audio not found: ${sourcePath}`);
   return options;
@@ -36,6 +37,9 @@ function parseArgs(argv) {
 function addSfx({ type, id, sourcePath, tag }) {
   const content = readContent();
   if (type === "weapon" && !content.weapons?.[id]) throw new Error(`Unknown weapon: ${id}`);
+  if (type === "run-upgrade" && !content.runUpgrades?.some((upgrade) => upgrade.id === id)) {
+    throw new Error(`Unknown run upgrade: ${id}`);
+  }
   const ext = extname(sourcePath).toLowerCase();
   if (![".wav", ".mp3", ".ogg"].includes(ext)) throw new Error(`Unsupported audio extension: ${ext}`);
 
@@ -64,10 +68,11 @@ function addSfx({ type, id, sourcePath, tag }) {
     });
   }
   content.assets.sfx ||= {};
-  content.assets.sfx.weapons ||= {};
-  content.assets.sfx.weapons[id] = `${relativePath}?v=${tag}`;
+  const bucket = type === "weapon" ? "weapons" : "runUpgrades";
+  content.assets.sfx[bucket] ||= {};
+  content.assets.sfx[bucket][id] = `${relativePath}?v=${tag}`;
   writeContent(content);
-  return { id, source: basename(sourcePath), path: content.assets.sfx.weapons[id] };
+  return { type, id, source: basename(sourcePath), path: content.assets.sfx[bucket][id] };
 }
 
 function main() {

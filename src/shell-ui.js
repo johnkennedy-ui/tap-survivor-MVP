@@ -13,6 +13,8 @@ function createShellUiController({
   closeLevelUpMenu,
   closeEndScreen,
   setGameSpeed,
+  toggleAudioMute,
+  isAudioMuted,
   persist,
   renderMeta,
 }) {
@@ -175,7 +177,16 @@ function createShellUiController({
     ui.speedButtons.forEach((button) => {
       button.addEventListener("click", () => setGameSpeed(Number(button.dataset.speed)));
     });
+    ui.muteAudio?.addEventListener("click", () => updateMuteButton(toggleAudioMute?.()));
+    updateMuteButton(isAudioMuted?.());
     updateFullscreenButton();
+  }
+
+  function updateMuteButton(muted = false) {
+    if (!ui.muteAudio) return;
+    ui.muteAudio.classList.toggle("active", Boolean(muted));
+    ui.muteAudio.textContent = muted ? "Muted" : "Sound";
+    ui.muteAudio.setAttribute("aria-pressed", String(Boolean(muted)));
   }
 
   return {

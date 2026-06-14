@@ -26,6 +26,7 @@ function createLevelUpSystem({
   getRunUpgradeTier,
   maxEquippedWeapons,
   activeQuestWeaponIds,
+  playChoiceSfx,
 }) {
   const skillIconByRunUpgrade = {
     run_move_speed: "speed",
@@ -147,6 +148,7 @@ function createLevelUpSystem({
       button.addEventListener("click", () => {
         if (button.disabled) return;
         choice.apply();
+        playChoiceSfx?.(choice);
         game.paused = false;
         game.pauseReason = "";
         ui.levelUp.classList.add("hidden");

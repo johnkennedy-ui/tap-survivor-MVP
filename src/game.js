@@ -192,6 +192,7 @@ const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
   getRunUpgradeTier,
   maxEquippedWeapons,
   activeQuestWeaponIds: () => questSystem.activeQuestWeaponIds(),
+  playChoiceSfx: playLevelChoiceSfx,
 });
 
 runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
@@ -221,6 +222,8 @@ const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
   closeLevelUpMenu,
   closeEndScreen,
   setGameSpeed,
+  toggleAudioMute,
+  isAudioMuted: audioSystem.isMuted,
   persist,
   renderMeta,
 });
@@ -336,8 +339,17 @@ function getRunUpgradeTier(id) {
   return combat.getRunUpgradeTier(id);
 }
 
+function playLevelChoiceSfx(choice) {
+  if (choice.weaponId) audioSystem.playWeapon(choice.weaponId);
+  if (choice.runUpgradeId) audioSystem.playRunUpgrade(choice.runUpgradeId);
+}
+
 function applyRunMetaUpgrades() {
   runStateSystem.applyRunMetaUpgrades(game);
+}
+
+function toggleAudioMute() {
+  return audioSystem.toggleMuted();
 }
 
 const renderer = globalThis.TapSurvivorRendering.createRenderer({

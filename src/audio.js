@@ -3,8 +3,10 @@ function createAudioSystem({ sfxDefs = {} }) {
   const audioById = new Map();
   const lastPlayed = new Map();
   const weaponSfx = sfxDefs.weapons || {};
+  const runUpgradeSfx = sfxDefs.runUpgrades || {};
   const volume = Number.isFinite(sfxDefs.volume) ? sfxDefs.volume : 0.45;
   const minGapMs = Number.isFinite(sfxDefs.minGapMs) ? sfxDefs.minGapMs : 70;
+  let muted = false;
 
   function audioFor(src) {
     if (!src || typeof Audio === "undefined") return null;
@@ -19,6 +21,7 @@ function createAudioSystem({ sfxDefs = {} }) {
 
   function play(src) {
     const now = Date.now();
+    if (muted) return false;
     if (!src || now - (lastPlayed.get(src) || 0) < minGapMs) return false;
     const audio = audioFor(src);
     if (!audio) return false;
@@ -34,9 +37,30 @@ function createAudioSystem({ sfxDefs = {} }) {
     return play(weaponSfx[weaponId]);
   }
 
+  function playRunUpgrade(runUpgradeId) {
+    return play(runUpgradeSfx[runUpgradeId]);
+  }
+
+  function setMuted(nextMuted) {
+    muted = Boolean(nextMuted);
+    return muted;
+  }
+
+  function toggleMuted() {
+    return setMuted(!muted);
+  }
+
+  function isMuted() {
+    return muted;
+  }
+
   return {
     play,
     playWeapon,
+    playRunUpgrade,
+    setMuted,
+    toggleMuted,
+    isMuted,
   };
 }
 
