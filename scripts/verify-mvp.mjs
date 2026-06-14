@@ -122,6 +122,7 @@ check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.in
 check("weapon kind dispatch table exists", weaponFire.includes("weaponKindHandlers") && ["radial", "beam", "cone", "chain", "projectile", "target_area", "lingering_area", "mine"].every((kind) => weaponFire.includes(`${kind}:`)));
 check("XP drops exist", runState.includes("xpDrops") && runUpdate.includes("collectXp"));
 check("coin and heart drops exist", runState.includes("lootDrops") && pickups.includes("spawnLootDrops") && pickups.includes('type: "coin"') && pickups.includes('type: "heart"'));
+check("coin and heart pickups use sprites", content.assets?.sprites?.ui?.coin && content.assets?.sprites?.ui?.heart && rendering.includes("ui:coin") && rendering.includes("ui:heart"));
 check("pickup attraction scales with speed", pickups.includes("pullDropTowardPlayer") && runUpdate.includes("pickupSystem.updateXpDrops(dt)") && runUpdate.includes("pickupSystem.updateLootDrops(dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 480, dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 540, dt)"));
 check("pickup text updates through run loop", runState.includes("pickupTexts") && pickups.includes("addPickupText") && pickups.includes("updatePickupTexts") && runUpdate.includes("pickupSystem.updatePickupTexts(dt)") && rendering.includes("drawPickupText"));
 check("floor four ranged enemies can spawn immediately", (content.levels || []).filter((level) => level.startsAt <= 30).every((level) => level.enemyIds?.includes("hexer")) && enemies.includes("minTowerFloor"));

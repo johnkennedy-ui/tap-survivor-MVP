@@ -1515,6 +1515,8 @@
         "nova_burst": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
       },
       "ui": {
+        "coin": "assets/generated/tower/sprites/pickup-coin.svg?v=generated-20260614-pickups",
+        "heart": "assets/generated/tower/sprites/pickup-heart.svg?v=generated-20260614-pickups",
         "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
       }
     }

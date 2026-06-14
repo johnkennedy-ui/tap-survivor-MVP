@@ -180,6 +180,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
 
   function drawLoot(drop) {
     if (drop.type === "coin") {
+      if (drawSprite("ui:coin", drop.x, drop.y, Math.max(24, drop.radius * 3.1))) return;
       ctx.fillStyle = "#ffd166";
       ctx.beginPath();
       ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI * 2);
@@ -190,6 +191,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       return;
     }
 
+    if (drop.type === "heart" && drawSprite("ui:heart", drop.x, drop.y, Math.max(26, drop.radius * 3))) return;
     ctx.fillStyle = "#ff5f7a";
     ctx.beginPath();
     ctx.arc(drop.x - drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
