@@ -11,6 +11,7 @@
       weaponDefs,
       weaponUnlocks,
       spriteDefs: content.assets?.sprites || {},
+      sfxDefs: content.assets?.sfx || {},
       upgradeDefs: upgradeContent.createUpgradeDefs?.(weaponDefs) || [],
       questDefs,
       questGroups,

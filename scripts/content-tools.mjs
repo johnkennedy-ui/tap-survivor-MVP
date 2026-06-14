@@ -281,6 +281,7 @@ export function validateContent(content) {
   }
 
   validateSpritePath(assets.sprites, "assets.sprites");
+  validateSpritePath(assets.sfx, "assets.sfx");
 
   shopItems.forEach((item) => {
     requireString(item.id, "shopItem.id");

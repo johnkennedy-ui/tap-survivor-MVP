@@ -13,6 +13,7 @@ const {
   weaponDefs,
   weaponUnlocks,
   spriteDefs,
+  sfxDefs,
   upgradeDefs,
   questDefs,
   starterQuestIds,
@@ -34,6 +35,7 @@ const {
   upgradeContent,
 });
 const spriteSystem = globalThis.TapSurvivorSprites.createSpriteSystem({ ctx, spriteDefs });
+const audioSystem = globalThis.TapSurvivorAudio.createAudioSystem({ sfxDefs });
 
 const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
   saveKey,
@@ -173,6 +175,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   bossQuestIds,
   spawnLootDrops: pickupSystem.spawnLootDrops,
   getWeaponDamageMultiplier,
+  playWeaponSfx: audioSystem.playWeapon,
   advanceTowerFloor,
   endRun,
   distance,

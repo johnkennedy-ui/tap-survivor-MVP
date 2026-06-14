@@ -194,6 +194,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "src/content.generated.js",
     "src/math.js",
     "src/sprites.js",
+    "src/audio.js",
     "src/quests.js",
     "src/save.js",
     "src/upgrades.js",

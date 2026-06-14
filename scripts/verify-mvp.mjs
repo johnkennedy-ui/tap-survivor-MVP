@@ -23,6 +23,7 @@ const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
 const math = readRequired("src/math.js");
 const sprites = readRequired("src/sprites.js");
+const audio = readRequired("src/audio.js");
 const quests = readRequired("src/quests.js");
 const save = readRequired("src/save.js");
 const upgrades = readRequired("src/upgrades.js");
@@ -57,6 +58,7 @@ const agentCheck = readRequired("scripts/agent-check.mjs");
 const agentPrepush = readRequired("scripts/agent-prepush.mjs");
 const cacheBump = readRequired("scripts/bump-cache-keys.mjs");
 const addContent = readRequired("scripts/add-content.mjs");
+const addSfx = readRequired("scripts/add-sfx.mjs");
 const extractSprites = readRequired("scripts/extract-sprites.mjs");
 const smokeExtractSprites = readRequired("scripts/smoke-extract-sprites.mjs");
 const contentTools = readRequired("scripts/content-tools.mjs");
@@ -71,6 +73,7 @@ check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index))
 check("index loads generated content", /src="src\/content\.generated\.js(\?[^"]+)?"/.test(index));
 check("index loads shared math utilities", /src="src\/math\.js(\?[^"]+)?"/.test(index));
 check("index loads sprite utilities", /src="src\/sprites\.js(\?[^"]+)?"/.test(index));
+check("index loads audio utilities", /src="src\/audio\.js(\?[^"]+)?"/.test(index));
 check("index loads quest utilities", /src="src\/quests\.js(\?[^"]+)?"/.test(index));
 check("index loads save utilities", /src="src\/save\.js(\?[^"]+)?"/.test(index));
 check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
@@ -113,6 +116,7 @@ check("wizard uses movement and attack animation sprites", content.assets?.sprit
 check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
 const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
 check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
+check("weapon sound effects are wired", content.assets?.sfx?.weapons?.spark_bolt && audio.includes("createAudioSystem") && weaponFire.includes("playWeaponSfx?.(weaponId)") && combat.includes("playWeaponSfx") && game.includes("audioSystem.playWeapon"));
 check("generated tower sprite set exists", content.assets?.sources?.some((source) => source.id === "generated_tower_sprites" && source.commercialUse === true && source.attributionRequired === false));
 check("user enemy sprite sheet exists", content.assets?.sources?.some((source) => source.id === "user_enemy_sprite_sheet_20260614" && source.commercialUse === true && source.attributionRequired === false) && ["drifter", "skitter", "bulwark", "hexer", "boss"].every((id) => content.assets?.sprites?.enemies?.[id]?.includes("sheet-20260614")));
 check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));
@@ -227,6 +231,7 @@ check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game
 check("shared save helpers exist", save.includes("TapSurvivorSave") && game.includes("TapSurvivorSave"));
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath") && renderHud.includes("TapSurvivorMath"));
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
+check("shared audio helper exists", audio.includes("TapSurvivorAudio") && game.includes("TapSurvivorAudio"));
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
 check("sprite cache trims transparent padding", sprites.includes("trimmedSpriteBounds") && sprites.includes("getImageData") && sprites.includes("spriteBounds"));
 check("enemy sprites draw larger than hit radius", rendering.includes("spriteSize") && rendering.includes("Math.max(34") && rendering.includes("Math.max(92"));
@@ -262,6 +267,7 @@ check("workflow writes nojekyll marker", workflow.includes("touch .nojekyll"));
 check("workflow runs reusable MVP test", workflow.includes("node scripts/verify-mvp.mjs"));
 check("cache keys auto-bump before prepush", pkg.includes('"cache:bump"') && agentPrepush.includes("Cache Key Bump") && cacheBump.includes("content/tap-survivor-content.json") && cacheBump.includes("auto-"));
 check("quest chain helper can link follow-ups", pkg.includes('"smoke:content-tools"') && addContent.includes("--after previous_id") && addContent.includes("linkQuestAfter") && contentTools.includes("function linkQuestAfter"));
+check("sound effect wiring helper exists", pkg.includes('"sfx:add"') && addSfx.includes("content.assets.sfx.weapons") && agentCheck.includes("scripts/add-sfx.mjs"));
 check("sprite sheet extraction helper exists", pkg.includes('"sprites:extract"') && extractSprites.includes("autoDetectSprites") && extractSprites.includes("trimBounds") && extractSprites.includes("writePng"));
 check("sprite extraction smoke exists", pkg.includes('"smoke:sprite-extract"') && smokeExtractSprites.includes("auto extraction writes two sprites") && agentCheck.includes("smoke:sprite-extract"));
 

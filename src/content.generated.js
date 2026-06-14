@@ -1487,6 +1487,15 @@ globalThis.TapSurvivorContent = {
         "attributionRequired": false,
         "url": "telegram:file/AgACAgQAAxkBAAJZNmovHYBCP9zQ3i33d3CAhGf0UW_vAAIqD2sb0fF5UfdIhMdfCDz4AQADAgADdwADPAQ",
         "localLicense": "assets/generated/tower/sheet-20260614/README.md"
+      },
+      {
+        "id": "user_skill_sfx_20260615",
+        "name": "User Provided Skill Sound Effects",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/sfx/License.txt"
       }
     ],
     "sprites": {
@@ -1526,6 +1535,11 @@ globalThis.TapSurvivorContent = {
         "coin": "assets/generated/tower/sprites/pickup-coin.svg?v=generated-20260614-pickups",
         "heart": "assets/generated/tower/sprites/pickup-heart.svg?v=generated-20260614-pickups",
         "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
+      }
+    },
+    "sfx": {
+      "weapons": {
+        "spark_bolt": "assets/generated/tower/sfx/spark_bolt.wav?v=sfx-20260615"
       }
     }
   },

@@ -7,6 +7,7 @@ function createWeaponFireSystem({
   getRunUpgradeTier,
   getShopBonuses,
   getWeaponDamageMultiplier,
+  playWeaponSfx,
   addQuestProgress,
   damageEnemy,
   reapEnemies,
@@ -76,6 +77,7 @@ function createWeaponFireSystem({
     const weapon = weaponDefs[weaponId];
     if (!weapon) return;
     setPlayerAttackAnimation(weapon);
+    playWeaponSfx?.(weaponId);
     addWeaponBurst(weaponId, weapon);
     weaponKindHandlers[weapon.kind]?.(weaponId);
   }
