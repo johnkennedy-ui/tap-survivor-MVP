@@ -4,29 +4,28 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Give super bosses two abilities
+Add more quests
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T16:02:37.506Z
+- Started: 2026-06-14T16:36:25.236Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `index.html`
-- `src/enemies.js`
-- `src/rendering.js`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
 - `index.html`
-- `src/enemies.js`
-- `src/rendering.js`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
 - `scripts/verify-mvp.mjs`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
@@ -41,12 +40,12 @@ npm run agent:check
 
 Result:
 
-- `node --check src/enemies.js src/rendering.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed 200 checks.
-- Focused VM check: floor-5 super bosses roll two different abilities, charger combos create slash attacks, and turret combos fire bolts.
-- `npm test`: passed.
+- `npm run build:content`: passed.
+- `npm run validate:content`: passed 72 quests.
+- `npm run audit:quests`: passed 72 quests.
+- `npm test`: passed 201 MVP checks.
 - `npm run agent:prepush`: passed.
-- Evidence: `../Shane training/20260614T160635Z_super-boss-dual-abilities/result.md`.
+- Evidence: `../Shane training/20260614T164035Z_add-more-quests/result.md`.
 
 ## Evidence Required
 

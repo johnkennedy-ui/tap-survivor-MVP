@@ -126,6 +126,7 @@ check("extended milestone quests exist", ["survivor_180", "survivor_300", "exter
 check("higher-tier milestone quests exist", ["survivor_420", "warlord", "transcendent_growth", "worldbreaker_damage", "gem_storm", "boss_slayer", "boss_reaper"].every((id) => content.quests?.[id]));
 check("end-chain milestone quests exist", ["legion_breaker", "limitless_growth", "cataclysm_damage", "gem_typhoon", "boss_legend"].every((id) => content.quests?.[id]));
 check("second-tier weapon quests exist", ["spark_bolt_expert", "prism_beam_expert", "frost_orb_expert", "flame_wave_expert", "chain_spark_expert", "void_mine_expert", "acid_pool_expert", "saw_drone_expert", "shield_pulse_expert", "moon_glaive_expert", "meteor_pin_expert", "nova_burst_expert"].every((id) => content.quests?.[id]));
+check("third-tier quest extensions exist", ["survivor_600", "army_ender", "tower_transcendent", "oblivion_damage", "gem_singularity", "boss_myth", "spark_bolt_master", "nova_burst_master"].every((id) => content.quests?.[id]));
 check("higher-tier quests reward more QP", [5, 6, 7, 8].every((reward) => Object.values(content.quests || {}).some((quest) => quest.rewardQp === reward)));
 check("quest progress groups feed milestone chains", ["killQuestIds", "damageQuestIds", "survivalQuestIds", "xpQuestIds", "levelQuestIds", "bossQuestIds", "addQuestProgressGroup"].every((id) => runtime.includes(id)));
 check("quests can open multiple follow-ups", quests.includes("opensQuests") && quests.includes("questOpenIds"));

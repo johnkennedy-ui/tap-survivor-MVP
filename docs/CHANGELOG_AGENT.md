@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-14
 
+- Added third-tier weapon quest follow-ups and late milestone quest extensions for survival, kills, levels, damage, XP, and boss clears.
 - Changed super bosses to roll two different boss abilities instead of one.
 - Added randomized boss variants: shockwave warden, red-flashing charger with forward slash, and stationary projectile turret.
 - Retuned shop floor price scaling and coin reward scaling so the shop can be bought out around tower floor 100.
