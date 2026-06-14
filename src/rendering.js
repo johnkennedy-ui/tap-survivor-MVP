@@ -156,10 +156,13 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       ctx.fill();
     }
     if (enemy.boss) {
-      strokeEnemyRing(enemy, enemy.superBoss ? "#ff74c8" : "#ffd166", enemy.superBoss ? 6 : 4);
+      const charging = enemy.bossKind === "charger" && enemy.chargeState === "windup";
+      const ringColor = charging ? "#ff3b3b" : enemy.superBoss ? "#ff74c8" : "#ffd166";
+      strokeEnemyRing(enemy, ringColor, charging ? 7 : enemy.superBoss ? 6 : 4);
       ctx.fillStyle = "#f3f6fb";
       ctx.font = "700 14px sans-serif";
-      ctx.fillText(enemy.superBoss ? "SUPER" : "BOSS", enemy.x - (enemy.superBoss ? 24 : 19), enemy.y - enemy.radius - 10);
+      const label = enemy.bossKind === "turret" ? "TURRET" : enemy.bossKind === "charger" ? "CHARGE" : enemy.superBoss ? "SUPER" : "BOSS";
+      ctx.fillText(label, enemy.x - label.length * 3.6, enemy.y - enemy.radius - 10);
     } else if (enemy.type === "skitter") {
       ctx.fillStyle = "#17202c";
       ctx.beginPath();
@@ -283,6 +286,10 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   }
 
   function drawBossAttack(attack) {
+    if (attack.type === "boss_slash") {
+      drawBossSlash(attack);
+      return;
+    }
     const charging = attack.age < attack.windup;
     const progress = clamp(attack.age / attack.windup, 0, 1);
     const radius = charging ? attack.radius * progress : attack.radius;
@@ -292,6 +299,25 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.lineWidth = charging ? 3 : 5;
     ctx.beginPath();
     ctx.arc(attack.x, attack.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawBossSlash(attack) {
+    const charging = attack.age < attack.windup;
+    const progress = clamp(attack.age / attack.windup, 0, 1);
+    const reach = charging ? attack.radius * progress : attack.radius;
+    const angle = Math.atan2(attack.dirY, attack.dirX);
+    const left = angle - attack.arc / 2;
+    const right = angle + attack.arc / 2;
+    ctx.fillStyle = charging ? "rgba(255, 209, 102, 0.12)" : "rgba(255, 95, 122, 0.24)";
+    ctx.strokeStyle = charging ? "#ffd166" : "#ff5f7a";
+    ctx.lineWidth = charging ? 3 : 5;
+    ctx.beginPath();
+    ctx.moveTo(attack.x, attack.y);
+    ctx.lineTo(attack.x + Math.cos(left) * reach, attack.y + Math.sin(left) * reach);
+    ctx.arc(attack.x, attack.y, reach, left, right);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
   }
@@ -337,7 +363,8 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "700 12px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(`${boss.superBoss ? "SUPER BOSS" : "BOSS"} ${Math.max(0, Math.ceil(boss.hp))}/${Math.ceil(boss.maxHp)}`, canvas.width / 2, y + 13);
+    const kind = boss.bossKind === "charger" ? "CHARGER BOSS" : boss.bossKind === "turret" ? "TURRET BOSS" : boss.superBoss ? "SUPER BOSS" : "BOSS";
+    ctx.fillText(`${kind} ${Math.max(0, Math.ceil(boss.hp))}/${Math.ceil(boss.maxHp)}`, canvas.width / 2, y + 13);
     ctx.textAlign = "start";
   }
 

@@ -183,6 +183,7 @@ check("quest completion banner exists", index.includes('id="questBanner"') && qu
 check("boss health bar renders at screen top", rendering.includes("drawBossHealthBar") && rendering.includes("boss.hp / boss.maxHp") && rendering.includes("SUPER BOSS"));
 check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice") && enemies.includes('type: "boss_drop"') && enemies.includes("landingX") && rendering.includes("drawBossSpawnNotice") && rendering.includes("boss_drop"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
+check("boss variants include charger and turret", enemies.includes('"charger"') && enemies.includes('"turret"') && enemies.includes("startBossCharge") && enemies.includes('type: "boss_slash"') && enemies.includes("projectileCooldown") && rendering.includes("drawBossSlash"));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));

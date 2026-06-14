@@ -7,6 +7,7 @@ function createEnemySystem({
   distance,
   clamp,
 }) {
+  const bossKinds = ["warden", "charger", "turret"];
   const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
   const enemyTypeById = Object.fromEntries(enemyTypes.map((enemy) => [enemy.id, enemy]));
   const orderedLevelDefs = [...levelDefs].sort((a, b) => a.startsAt - b.startsAt);
@@ -107,6 +108,7 @@ function createEnemySystem({
     game.bossSpawned = true;
     const difficulty = floorDifficulty(game.towerFloor);
     const superBoss = game.towerFloor % 5 === 0;
+    const bossKind = bossKinds[Math.floor(Math.random() * bossKinds.length)];
     const bossHp = (1400 + game.kills * 6) * difficulty.hp;
     const landingX = 72 + Math.random() * (canvas.width - 144);
     const landingY = 90 + Math.random() * (canvas.height - 180);
@@ -129,7 +131,9 @@ function createEnemySystem({
     game.enemies.push({
       boss: true,
       superBoss,
+      bossKind,
       assetId: "boss",
+      color: bossKind === "turret" ? "#b794ff" : bossKind === "charger" ? "#ff5f56" : "#ff4f8b",
       x: startX,
       y: startY,
       startX,
@@ -141,10 +145,15 @@ function createEnemySystem({
       radius: 38,
       hp: superBoss ? bossHp * 1.35 : bossHp,
       maxHp: superBoss ? bossHp * 1.35 : bossHp,
-      speed: 42,
+      speed: bossKind === "charger" ? 68 : bossKind === "turret" ? 0 : 42,
       damage: 22 * difficulty.damage,
       touchCooldown: 0.8,
       touchTimer: 0,
+      attackRange: bossKind === "turret" ? 999 : 0,
+      projectileCooldown: bossKind === "turret" ? 1.05 : 0,
+      projectileSpeed: bossKind === "turret" ? 280 : 0,
+      projectileDamage: (superBoss ? 20 : 15) * difficulty.damage,
+      shootTimer: bossKind === "turret" ? 0.8 : 0,
     });
   }
 
@@ -159,19 +168,39 @@ function createEnemySystem({
     if (!boss || boss.dropTimer > 0) return;
     game.bossAttackTimer -= dt;
     if (game.bossAttackTimer <= 0) {
-      game.bossAttackTimer = 4.6;
-      game.bossAttacks.push({
-        type: "shockwave",
-        x: boss.x,
-        y: boss.y,
-        radius: 165,
-        damage: 26,
-        age: 0,
-        windup: 0.9,
-        hit: false,
-      });
+      if (boss.bossKind === "charger") {
+        game.bossAttackTimer = 3.8;
+        startBossCharge(boss);
+      } else if (boss.bossKind === "warden") {
+        game.bossAttackTimer = 4.6;
+        game.bossAttacks.push({
+          type: "shockwave",
+          x: boss.x,
+          y: boss.y,
+          radius: 165,
+          damage: 26,
+          age: 0,
+          windup: 0.9,
+          hit: false,
+        });
+      } else {
+        game.bossAttackTimer = 3.2;
+      }
     }
 
+  }
+
+  function startBossCharge(boss) {
+    const game = getGame();
+    const p = game.player;
+    const dx = p.x - boss.x;
+    const dy = p.y - boss.y;
+    const dist = Math.max(1, Math.hypot(dx, dy));
+    boss.chargeState = "windup";
+    boss.chargeTimer = 0.78;
+    boss.chargeDirX = dx / dist;
+    boss.chargeDirY = dy / dist;
+    boss.chargeSpeed = boss.superBoss ? 620 : 520;
   }
 
   function updateBossAttacks(dt) {
@@ -181,12 +210,20 @@ function createEnemySystem({
       attack.age += dt;
       if (!attack.hit && attack.age >= attack.windup) {
         attack.hit = true;
-        if (distance(p, attack) <= p.radius + attack.radius) {
+        if (attack.type === "boss_slash" ? playerInSlash(p, attack) : distance(p, attack) <= p.radius + attack.radius) {
           p.hp -= attack.damage;
         }
       }
     });
     game.bossAttacks = game.bossAttacks.filter((attack) => attack.age <= attack.windup + 0.35);
+  }
+
+  function playerInSlash(player, attack) {
+    const dx = player.x - attack.x;
+    const dy = player.y - attack.y;
+    const dist = Math.max(1, Math.hypot(dx, dy));
+    const dot = (dx / dist) * attack.dirX + (dy / dist) * attack.dirY;
+    return dist <= attack.radius + player.radius && dot >= Math.cos(attack.arc / 2);
   }
 
   function updateEnemies(dt) {
@@ -203,6 +240,10 @@ function createEnemySystem({
       const dx = p.x - enemy.x;
       const dy = p.y - enemy.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
+      if (enemy.bossKind === "charger" && updateBossCharge(enemy, dt)) {
+        applyEnemyTouch(enemy, dt);
+        return;
+      }
       const ranged = enemy.attackRange && enemy.projectileCooldown;
       if (!ranged || dist > enemy.attackRange * 0.72) {
         enemy.x += (dx / dist) * enemy.speed * dt;
@@ -215,12 +256,50 @@ function createEnemySystem({
           spawnEnemyBolt(enemy, dx / dist, dy / dist);
         }
       }
-      enemy.touchTimer -= dt;
-      if (dist < p.radius + enemy.radius && enemy.touchTimer <= 0) {
-        p.hp -= enemy.damage;
-        enemy.touchTimer = enemy.touchCooldown;
-      }
+      applyEnemyTouch(enemy, dt);
     });
+  }
+
+  function updateBossCharge(boss, dt) {
+    if (!boss.chargeState) return false;
+    const game = getGame();
+    boss.chargeTimer -= dt;
+    if (boss.chargeState === "windup") {
+      if (boss.chargeTimer <= 0) {
+        boss.chargeState = "charging";
+        boss.chargeTimer = 0.56;
+      }
+      return true;
+    }
+    boss.x = clamp(boss.x + boss.chargeDirX * boss.chargeSpeed * dt, boss.radius, canvas.width - boss.radius);
+    boss.y = clamp(boss.y + boss.chargeDirY * boss.chargeSpeed * dt, boss.radius, canvas.height - boss.radius);
+    if (boss.chargeTimer <= 0) {
+      game.bossAttacks.push({
+        type: "boss_slash",
+        x: boss.x + boss.chargeDirX * 58,
+        y: boss.y + boss.chargeDirY * 58,
+        dirX: boss.chargeDirX,
+        dirY: boss.chargeDirY,
+        arc: Math.PI * 0.72,
+        radius: boss.superBoss ? 138 : 112,
+        damage: boss.damage * (boss.superBoss ? 1.55 : 1.2),
+        age: 0,
+        windup: 0.35,
+        hit: false,
+      });
+      boss.chargeState = "";
+    }
+    return true;
+  }
+
+  function applyEnemyTouch(enemy, dt) {
+    const game = getGame();
+    const p = game.player;
+    enemy.touchTimer -= dt;
+    if (distance(enemy, p) < p.radius + enemy.radius && enemy.touchTimer <= 0) {
+      p.hp -= enemy.damage;
+      enemy.touchTimer = enemy.touchCooldown;
+    }
   }
 
   function spawnEnemyBolt(enemy, dirX, dirY) {

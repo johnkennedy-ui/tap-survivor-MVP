@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Tune shop economy for floor 100 buyout
+Add randomized boss variants
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T15:42:28.218Z
+- Started: 2026-06-14T15:50:33.046Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -18,18 +18,16 @@ Tune shop economy for floor 100 buyout
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `index.html`
-- `src/pickups.js`
-- `src/shop.js`
+- `src/enemies.js`
+- `src/rendering.js`
 - `scripts/verify-mvp.mjs`
-- `scripts/smoke-shop.mjs`
 
 ## Files Changed
 
 - `index.html`
-- `src/pickups.js`
-- `src/shop.js`
+- `src/enemies.js`
+- `src/rendering.js`
 - `scripts/verify-mvp.mjs`
-- `scripts/smoke-shop.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
@@ -44,12 +42,12 @@ npm run agent:check
 
 Result:
 
-- `node --check src/shop.js src/pickups.js`: passed.
-- `npm run smoke:shop`: passed, including floor 100 shop cost target.
-- `node scripts/verify-mvp.mjs`: passed 198 checks.
+- `node --check src/enemies.js src/rendering.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed 199 checks.
+- Focused VM check: randomized boss kinds can spawn as warden, charger, and turret; charger creates a slash attack; turret fires enemy bolts.
 - `npm test`: passed.
 - `npm run agent:prepush`: passed.
-- `npm run agent:evidence -- --task shop-economy-floor-100-buyout`: wrote `../Shane training/20260614T154556Z_shop-economy-floor-100-buyout/result.md`.
+- `npm run agent:evidence -- --task randomized-boss-variants`: wrote `../Shane training/20260614T155804Z_randomized-boss-variants/result.md`.
 
 ## Evidence Required
 
