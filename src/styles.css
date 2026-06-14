@@ -208,6 +208,7 @@ section + section {
 .tree,
 .quests,
 .choice-list,
+.relic-grid,
 .shop-grid {
   display: grid;
   gap: 8px;
@@ -215,6 +216,7 @@ section + section {
 
 .node,
 .quest,
+.relic-item,
 .shop-item {
   border: 1px solid #334052;
   border-radius: 6px;
@@ -224,6 +226,7 @@ section + section {
   padding: 10px;
 }
 
+.relic-item,
 .shop-item {
   display: grid;
   grid-template-columns: 42px 1fr;
@@ -231,6 +234,7 @@ section + section {
   align-items: start;
 }
 
+.relic-icon,
 .shop-item-sprite {
   width: 38px;
   height: 38px;
@@ -239,6 +243,7 @@ section + section {
 
 .node strong,
 .quest strong,
+.relic-item strong,
 .shop-item strong {
   display: block;
   margin-bottom: 4px;
@@ -246,6 +251,7 @@ section + section {
 }
 
 .node button,
+.relic-item button,
 .shop-item button {
   width: 100%;
   margin-top: 8px;
@@ -266,6 +272,19 @@ section + section {
 
 .quest.active {
   border-color: #bba24d;
+}
+
+.relic-item.equipped {
+  border-color: #8de7ff;
+}
+
+.relic-item.available {
+  border-color: #4f9b6d;
+}
+
+.relic-item.locked {
+  border-color: #516174;
+  opacity: 0.78;
 }
 
 .shop-item.available {

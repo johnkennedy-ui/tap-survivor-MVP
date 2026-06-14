@@ -2,7 +2,11 @@
   function createRelicSystem({ relicDefs, weaponDefs = {} }) {
     function equippedRelics(save) {
       const equipped = new Set(save.equippedRelics || []);
-      return (relicDefs || []).filter((relic) => equipped.has(relic.id));
+      return (relicDefs || []).filter((relic) => equipped.has(relic.id)).slice(0, maxEquippedRelics(save));
+    }
+
+    function maxEquippedRelics(save) {
+      return Math.min(5, Math.floor(Math.max(0, save.maxPlayerLevel || 1) / 10));
     }
 
     function relicNumber(save, field) {
@@ -22,8 +26,24 @@
       const unlocked = new Set(save.unlockedRelics || []);
       if (unlocked.has(relic.id)) return null;
       save.unlockedRelics = [...unlocked, relic.id];
-      save.equippedRelics = [...new Set([...(save.equippedRelics || []), relic.id])];
+      if ((save.equippedRelics || []).length < maxEquippedRelics(save)) {
+        save.equippedRelics = [...new Set([...(save.equippedRelics || []), relic.id])];
+      }
       return relic;
+    }
+
+    function setRelicEquipped(save, relicId, equipped) {
+      const unlocked = new Set(save.unlockedRelics || []);
+      if (!unlocked.has(relicId)) return false;
+      const current = (save.equippedRelics || []).filter((id) => unlocked.has(id)).slice(0, maxEquippedRelics(save));
+      if (!equipped) {
+        save.equippedRelics = current.filter((id) => id !== relicId);
+        return true;
+      }
+      if (current.includes(relicId)) return true;
+      if (current.length >= maxEquippedRelics(save)) return false;
+      save.equippedRelics = [...current, relicId];
+      return true;
     }
 
     function grantRandomRelic(save) {
@@ -64,11 +84,13 @@
 
     return {
       equippedRelics,
+      maxEquippedRelics,
       maxEquippedWeapons,
       getWeaponDamageMultiplier,
       grantRelic,
       grantRandomRelic,
       relicChoices,
+      setRelicEquipped,
     };
   }
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tap Survivor MVP Prototype</title>
-    <link rel="stylesheet" href="src/styles.css?v=auto-22c077a1" />
+    <link rel="stylesheet" href="src/styles.css?v=auto-6d6fc389" />
   </head>
   <body>
     <main class="shell">
@@ -49,6 +49,7 @@
             </div>
             <div class="menu-tabs" role="tablist" aria-label="Run menu tabs">
               <button id="menuProgressTab" class="menu-tab active" type="button">Rewards</button>
+              <button id="menuInventoryTab" class="menu-tab" type="button">Inventory</button>
               <button id="menuShopTab" class="menu-tab" type="button">Shop</button>
             </div>
             <div id="menuProgressPanel">
@@ -63,6 +64,10 @@
               <p id="menuShopCoinHud"></p>
               <p id="menuShopNotice" class="shop-notice"></p>
               <div id="menuShopItems" class="shop-grid"></div>
+            </div>
+            <div id="menuInventoryPanel" class="hidden">
+              <p id="menuRelicSlots"></p>
+              <div id="menuRelicInventory" class="relic-grid"></div>
             </div>
             <button id="exitRun" class="danger-button" type="button">Exit Run</button>
           </div>
@@ -122,11 +127,11 @@
       </aside>
     </main>
 
-    <script src="src/content.generated.js?v=auto-1b2014c2"></script>
+    <script src="src/content.generated.js?v=auto-8b5acdfb"></script>
     <script src="src/math.js?v=maintenance-20260611"></script>
     <script src="src/sprites.js?v=auto-681ecf8b"></script>
     <script src="src/quests.js?v=maintenance-20260611"></script>
-    <script src="src/save.js?v=maintenance-20260611"></script>
+    <script src="src/save.js?v=auto-8855fcd6"></script>
     <script src="src/upgrades.js?v=combat-20260611"></script>
     <script src="src/content-registry.js?v=auto-95ba4b75"></script>
     <script src="src/progression.js?v=auto-71c4c358"></script>
@@ -136,17 +141,17 @@
     <script src="src/weapon-fire.js?v=auto-dc69f5c6"></script>
     <script src="src/enemies.js?v=auto-b9e6de0a"></script>
     <script src="src/combat.js?v=auto-af39f7cd"></script>
-    <script src="src/ui.js?v=auto-b7fcf37f"></script>
+    <script src="src/ui.js?v=auto-590dc336"></script>
     <script src="src/run-ui.js?v=maintenance-20260612"></script>
     <script src="src/level-up.js?v=auto-05b602b0"></script>
     <script src="src/input.js?v=maintenance-20260611"></script>
     <script src="src/pickups.js?v=shop-economy-20260614"></script>
     <script src="src/shop.js?v=shop-economy-20260614"></script>
-    <script src="src/relics.js?v=maintenance-20260612"></script>
+    <script src="src/relics.js?v=auto-2905bd88"></script>
     <script src="src/run-state.js?v=auto-8a6ff2b6"></script>
-    <script src="src/run-update.js?v=auto-418bc1fe"></script>
+    <script src="src/run-update.js?v=auto-202ece05"></script>
     <script src="src/debug.js?v=maintenance-20260611"></script>
-    <script src="src/shell-ui.js?v=shop-20260614"></script>
-    <script src="src/game.js?v=auto-8093499a"></script>
+    <script src="src/shell-ui.js?v=auto-848b551f"></script>
+    <script src="src/game.js?v=auto-543b12ed"></script>
   </body>
 </html>

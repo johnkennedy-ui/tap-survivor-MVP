@@ -1536,7 +1536,8 @@ globalThis.TapSurvivorContent = {
       "description": "Move Speed appears more often in level-up choices.",
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
     },
     {
       "id": "move_speed_mastery_relic",
@@ -1544,7 +1545,8 @@ globalThis.TapSurvivorContent = {
       "description": "Move Speed gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
     },
     {
       "id": "pickup_radius_focus_relic",
@@ -1552,7 +1554,8 @@ globalThis.TapSurvivorContent = {
       "description": "Pickup Radius appears more often in level-up choices.",
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
     },
     {
       "id": "pickup_radius_mastery_relic",
@@ -1560,7 +1563,8 @@ globalThis.TapSurvivorContent = {
       "description": "Pickup Radius gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
     },
     {
       "id": "max_hp_focus_relic",
@@ -1568,7 +1572,8 @@ globalThis.TapSurvivorContent = {
       "description": "Max HP appears more often in level-up choices.",
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
     },
     {
       "id": "max_hp_mastery_relic",
@@ -1576,7 +1581,8 @@ globalThis.TapSurvivorContent = {
       "description": "Max HP gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
     },
     {
       "id": "attack_radius_focus_relic",
@@ -1584,7 +1590,8 @@ globalThis.TapSurvivorContent = {
       "description": "Attack Radius appears more often in level-up choices.",
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
     },
     {
       "id": "attack_radius_mastery_relic",
@@ -1592,7 +1599,8 @@ globalThis.TapSurvivorContent = {
       "description": "Attack Radius gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
     },
     {
       "id": "fire_rate_focus_relic",
@@ -1600,7 +1608,8 @@ globalThis.TapSurvivorContent = {
       "description": "Fire Rate appears more often in level-up choices.",
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
     },
     {
       "id": "fire_rate_mastery_relic",
@@ -1608,7 +1617,8 @@ globalThis.TapSurvivorContent = {
       "description": "Fire Rate gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
     },
     {
       "id": "flat_damage_focus_relic",
@@ -1616,7 +1626,8 @@ globalThis.TapSurvivorContent = {
       "description": "Flat Damage appears more often in level-up choices.",
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
     },
     {
       "id": "flat_damage_mastery_relic",
@@ -1624,7 +1635,8 @@ globalThis.TapSurvivorContent = {
       "description": "Flat Damage gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
     },
     {
       "id": "percent_damage_focus_relic",
@@ -1632,7 +1644,8 @@ globalThis.TapSurvivorContent = {
       "description": "Percent Damage appears more often in level-up choices.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
     },
     {
       "id": "percent_damage_mastery_relic",
@@ -1640,7 +1653,8 @@ globalThis.TapSurvivorContent = {
       "description": "Percent Damage gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
     },
     {
       "id": "projectile_pierce_focus_relic",
@@ -1648,7 +1662,8 @@ globalThis.TapSurvivorContent = {
       "description": "Piercing Shots appears more often in level-up choices.",
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
     },
     {
       "id": "projectile_pierce_mastery_relic",
@@ -1656,7 +1671,8 @@ globalThis.TapSurvivorContent = {
       "description": "Piercing Shots gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
     },
     {
       "id": "wall_bounce_focus_relic",
@@ -1664,7 +1680,8 @@ globalThis.TapSurvivorContent = {
       "description": "Ricochet Shots appears more often in level-up choices.",
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
     },
     {
       "id": "wall_bounce_mastery_relic",
@@ -1672,7 +1689,8 @@ globalThis.TapSurvivorContent = {
       "description": "Ricochet Shots gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
     },
     {
       "id": "split_shot_focus_relic",
@@ -1680,7 +1698,8 @@ globalThis.TapSurvivorContent = {
       "description": "Split Fire appears more often in level-up choices.",
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
     },
     {
       "id": "split_shot_mastery_relic",
@@ -1688,7 +1707,8 @@ globalThis.TapSurvivorContent = {
       "description": "Split Fire gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
     },
     {
       "id": "explosive_hit_focus_relic",
@@ -1696,7 +1716,8 @@ globalThis.TapSurvivorContent = {
       "description": "Explosive Hits appears more often in level-up choices.",
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
     },
     {
       "id": "explosive_hit_mastery_relic",
@@ -1704,7 +1725,8 @@ globalThis.TapSurvivorContent = {
       "description": "Explosive Hits gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
     },
     {
       "id": "split_on_hit_focus_relic",
@@ -1712,7 +1734,8 @@ globalThis.TapSurvivorContent = {
       "description": "Splinter Shots appears more often in level-up choices.",
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0
+      "maxTierBonus": 0,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
     },
     {
       "id": "split_on_hit_mastery_relic",
@@ -1720,7 +1743,8 @@ globalThis.TapSurvivorContent = {
       "description": "Splinter Shots gains an extra possible tier and appears more often.",
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
     },
     {
       "id": "tower_arsenal_relic",
@@ -1729,7 +1753,8 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 0,
       "maxTierBonus": 0,
-      "weaponSlotBonus": 1
+      "weaponSlotBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
     },
     {
       "id": "focused_channel_relic",
@@ -1739,7 +1764,8 @@ globalThis.TapSurvivorContent = {
       "selectionWeightBonus": 0,
       "maxTierBonus": 0,
       "weaponSlotBonus": -1,
-      "weaponDamageMultiplier": 2
+      "weaponDamageMultiplier": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
     }
   ]
 };

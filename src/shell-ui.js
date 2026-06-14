@@ -3,6 +3,9 @@ function createShellUiController({
   ui,
   documentRef = document,
   getGame,
+  getSave,
+  relicDefs = [],
+  relicSystem,
   shopSystem,
   startRun,
   exitRun,
@@ -10,6 +13,7 @@ function createShellUiController({
   closeLevelUpMenu,
   closeEndScreen,
   setGameSpeed,
+  persist,
   renderMeta,
 }) {
   function openRunMenu() {
@@ -23,6 +27,7 @@ function createShellUiController({
     }
     showRunMenuTab("progress");
     shopSystem.renderShop();
+    renderInventory();
     renderMeta();
   }
 
@@ -91,11 +96,59 @@ function createShellUiController({
 
   function showRunMenuTab(tab) {
     const shop = tab === "shop";
-    ui.menuProgressTab.classList.toggle("active", !shop);
+    const inventory = tab === "inventory";
+    ui.menuProgressTab.classList.toggle("active", tab === "progress");
     ui.menuShopTab.classList.toggle("active", shop);
-    ui.menuProgressPanel.classList.toggle("hidden", shop);
+    ui.menuInventoryTab.classList.toggle("active", inventory);
+    ui.menuProgressPanel.classList.toggle("hidden", tab !== "progress");
     ui.menuShopPanel.classList.toggle("hidden", !shop);
+    ui.menuInventoryPanel.classList.toggle("hidden", !inventory);
     if (shop) shopSystem.renderShop();
+    if (inventory) renderInventory();
+  }
+
+  function renderInventory() {
+    if (!ui.menuRelicSlots || !ui.menuRelicInventory || !relicSystem) return;
+    const save = getSave();
+    const slots = relicSystem.maxEquippedRelics(save);
+    const equipped = new Set(relicSystem.equippedRelics(save).map((relic) => relic.id));
+    const unlocked = new Set(save.unlockedRelics || []);
+    const nextLevel = slots >= 5 ? null : (slots + 1) * 10;
+    ui.menuRelicSlots.textContent = `Relic slots: ${Math.min(equipped.size, slots)}/${slots} unlocked. ${nextLevel ? `Next slot at level ${nextLevel}.` : "Maximum slots unlocked."}`;
+    ui.menuRelicInventory.innerHTML = "";
+    const availableRelics = relicDefs.filter((relic) => unlocked.has(relic.id));
+    if (!availableRelics.length) {
+      const empty = documentRef.createElement("div");
+      empty.className = "relic-item locked";
+      empty.textContent = "No relics unlocked yet. Defeat bosses to add relics here.";
+      ui.menuRelicInventory.appendChild(empty);
+      return;
+    }
+    availableRelics.forEach((relic) => {
+      const isEquipped = equipped.has(relic.id);
+      const canEquip = isEquipped || equipped.size < slots;
+      const el = documentRef.createElement("div");
+      el.className = `relic-item ${isEquipped ? "equipped" : canEquip ? "available" : "locked"}`;
+      el.innerHTML = `
+        <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
+        <span>
+          <strong>${relic.name}</strong>
+          <span>${relic.description}</span>
+        </span>
+      `;
+      const button = documentRef.createElement("button");
+      button.textContent = isEquipped ? "Unequip" : canEquip ? "Equip" : "Full";
+      button.disabled = !isEquipped && !canEquip;
+      button.addEventListener("click", () => {
+        if (relicSystem.setRelicEquipped(save, relic.id, !isEquipped)) {
+          persist?.();
+          renderInventory();
+          renderMeta();
+        }
+      });
+      el.appendChild(button);
+      ui.menuRelicInventory.appendChild(el);
+    });
   }
 
   function bind() {
@@ -109,6 +162,7 @@ function createShellUiController({
     ui.closeMenu.addEventListener("click", () => closeRunMenu(true));
     ui.menuProgressTab.addEventListener("click", () => showRunMenuTab("progress"));
     ui.menuShopTab.addEventListener("click", () => showRunMenuTab("shop"));
+    ui.menuInventoryTab.addEventListener("click", () => showRunMenuTab("inventory"));
     ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
     ui.fullscreenButton.addEventListener("click", toggleFullscreen);
     ui.startMenuFullscreen.addEventListener("click", toggleFullscreen);

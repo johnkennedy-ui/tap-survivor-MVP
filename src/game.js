@@ -201,6 +201,7 @@ runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
   xpQuestIds,
   levelQuestIds,
   showLevelUp: () => levelUpSystem.showLevelUp(),
+  recordPlayerLevel,
   endRun,
   clamp,
 });
@@ -208,6 +209,9 @@ runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
 const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
   ui,
   getGame: () => game,
+  getSave: () => save,
+  relicDefs,
+  relicSystem,
   shopSystem,
   startRun,
   exitRun,
@@ -215,6 +219,7 @@ const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
   closeLevelUpMenu,
   closeEndScreen,
   setGameSpeed,
+  persist,
   renderMeta,
 });
 
@@ -277,7 +282,10 @@ function showRelicChoice(clearedFloor, remainingPicks, awardedRelics) {
   ui.relicChoices.innerHTML = "";
   choices.forEach((relic) => {
     const button = document.createElement("button");
-    button.innerHTML = `<strong>${relic.name}</strong><br /><span>${relic.description}</span>`;
+    button.innerHTML = `
+      <img class="level-choice-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
+      <strong>${relic.name}</strong><br /><span>${relic.description}</span>
+    `;
     button.addEventListener("click", () => {
       const granted = relicSystem.grantRelic(save, relic);
       const nextAwarded = granted ? [...awardedRelics, granted] : awardedRelics;
@@ -320,6 +328,12 @@ function maxEquippedWeapons() {
 
 function getWeaponDamageMultiplier() {
   return relicSystem.getWeaponDamageMultiplier(save);
+}
+
+function recordPlayerLevel(level) {
+  if (level <= (save.maxPlayerLevel || 1)) return;
+  save.maxPlayerLevel = level;
+  persist();
 }
 
 function getRunUpgradeTier(id) {

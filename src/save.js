@@ -12,6 +12,7 @@ function createSaveSystem({
     return {
       coins: 0,
       towerFloor: 1,
+      maxPlayerLevel: 1,
       questPoints: 0,
       totalQuestPoints: 0,
       unlockedNodes: [],
@@ -42,11 +43,14 @@ function createSaveSystem({
     normalized.unlockedWeapons = [...new Set(["spark_bolt", ...(normalized.unlockedWeapons || [])])];
     normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
     normalized.towerFloor = Math.max(1, Math.floor(normalized.towerFloor || 1));
+    normalized.maxPlayerLevel = Math.max(1, Math.floor(normalized.maxPlayerLevel || 1));
     normalized.unlockedNodes = normalized.unlockedNodes || [];
     normalized.upgradeTiers = normalized.upgradeTiers || {};
     normalized.shopPurchases = normalized.shopPurchases || {};
     normalized.unlockedRelics = [...new Set(normalized.unlockedRelics || [])];
-    normalized.equippedRelics = [...new Set(normalized.equippedRelics || normalized.unlockedRelics)];
+    normalized.equippedRelics = [...new Set(normalized.equippedRelics || normalized.unlockedRelics)]
+      .filter((id) => normalized.unlockedRelics.includes(id))
+      .slice(0, 5);
     normalized.activeQuests = normalized.activeQuests || [];
     normalized.completedQuests = normalized.completedQuests || [];
     normalized.questProgress = normalized.questProgress || {};

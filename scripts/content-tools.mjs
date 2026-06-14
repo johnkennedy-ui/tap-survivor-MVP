@@ -316,6 +316,7 @@ export function validateContent(content) {
     }
     requireNumber(relic.selectionWeightBonus, `relic ${relic.id}.selectionWeightBonus`, 0);
     requireNumber(relic.maxTierBonus, `relic ${relic.id}.maxTierBonus`, 0);
+    if (relic.iconPath) validateSpritePath(relic.iconPath, `relic ${relic.id}.iconPath`);
   });
 
   levels.forEach((level) => {
