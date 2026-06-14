@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-14
 
+- Added `--after` quest-chain support to `scripts/add-content.mjs` plus a content-tool smoke check.
 - Added automatic hash-based `index.html` cache-key bumping for changed runtime/content assets during `npm run agent:prepush`.
 - Added third-tier weapon quest follow-ups and late milestone quest extensions for survival, kills, levels, damage, XP, and boss clears.
 - Changed super bosses to roll two different boss abilities instead of one.

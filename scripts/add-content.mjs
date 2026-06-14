@@ -1,11 +1,11 @@
-import { readContent, writeContent, parseArgs, validateContent } from "./content-tools.mjs";
+import { linkQuestAfter, readContent, writeContent, parseArgs, validateContent } from "./content-tools.mjs";
 
 const args = parseArgs(process.argv.slice(2));
 const [type, id] = args._;
 
 function usage() {
   console.log(`Usage:
-  node scripts/add-content.mjs quest <id> --name "Name" --description "Do thing" --target 100 --reward 2 --group kill [--weapon spark_bolt] [--opens next_id]
+  node scripts/add-content.mjs quest <id> --name "Name" --description "Do thing" --target 100 --reward 2 --group kill [--weapon spark_bolt] [--after previous_id] [--opens next_id]
   node scripts/add-content.mjs weapon <id> --name "Name" --description "Weapon text" --kind projectile --damage 20 --cooldown 1 --color "#ffffff" --unlock-cost 2 --branch Core [--requires-node unlock_laser] [--requires-quest use_laser_run]
   node scripts/add-content.mjs shop-item <id> --name "Name" --description "Item text" --kind upgrade --cost 100
   node scripts/add-content.mjs level <id> --name "Name" --starts-at 120 [--enemies drifter,skitter] [--spawn-count 2] [--spawn-rate 1.1]
@@ -47,6 +47,7 @@ try {
   if (type === "quest") {
     if (content.quests[id]) throw new Error(`Quest already exists: ${id}`);
     const group = args.group;
+    if (args.after === id) throw new Error("--after cannot point at the new quest");
     content.quests[id] = {
       name: requireValue("name"),
       description: requireValue("description"),
@@ -59,6 +60,7 @@ try {
       content.questGroups[group] ||= [];
       if (!content.questGroups[group].includes(id)) content.questGroups[group].push(id);
     }
+    if (args.after) linkQuestAfter(content.quests, args.after, id);
   } else if (type === "weapon") {
     if (content.weapons[id]) throw new Error(`Weapon already exists: ${id}`);
     const unlockId = args["unlock-id"] || `unlock_${id}`;

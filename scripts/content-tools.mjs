@@ -12,6 +12,18 @@ export function writeContent(content) {
   writeFileSync(contentPath, `${JSON.stringify(content, null, 2)}\n`);
 }
 
+export function linkQuestAfter(quests, previousId, nextId) {
+  const previous = quests?.[previousId];
+  if (!previous) throw new Error(`Missing --after quest: ${previousId}`);
+  if (!quests?.[nextId]) throw new Error(`Missing follow-up quest: ${nextId}`);
+  if (previous.opensQuest === nextId || (previous.opensQuests || []).includes(nextId)) return;
+  if (!previous.opensQuest) {
+    previous.opensQuest = nextId;
+    return;
+  }
+  previous.opensQuests = [...new Set([...(previous.opensQuests || []), nextId])];
+}
+
 export function validateContent(content) {
   const errors = [];
   const weapons = content.weapons || {};

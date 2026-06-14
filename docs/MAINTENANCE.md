@@ -47,6 +47,7 @@ npm run smoke:save
 npm run smoke:start-run
 npm run smoke:boss-run
 npm run smoke:quest-flow
+npm run smoke:content-tools
 npm run test:speed
 ```
 

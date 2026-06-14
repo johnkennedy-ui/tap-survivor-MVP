@@ -32,6 +32,20 @@ Shortcut:
 node scripts/add-content.mjs weapon frost_example --name "Frost Example" --description "Example projectile." --kind projectile --damage 10 --cooldown 1 --color "#8de7ff" --unlock-cost 1 --branch Control
 ```
 
+## Add A Quest
+
+1. Use `scripts/add-content.mjs quest` for new quest entries.
+2. Pass `--group` for kill, damage, survival, XP, level, or boss milestone quests.
+3. Pass `--after <previous_id>` to open the new quest after an existing quest completes.
+4. Pass `--opens <next_id>` only when the new quest itself should open a known follow-up.
+5. Run `npm run build:content && npm run audit:quests`.
+
+Shortcut:
+
+```bash
+node scripts/add-content.mjs quest next_boss_trial --name "Next Boss Trial" --description "Defeat 20 bosses." --target 20 --reward 14 --group boss --after boss_myth
+```
+
 ## Add A Skill Or Upgrade
 
 1. Check whether the change is a meta upgrade or an in-run upgrade.

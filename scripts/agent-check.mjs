@@ -10,6 +10,7 @@ const checks = [
   ["node", ["--check", "scripts/agent-prepush.mjs"]],
   ["node", ["--check", "scripts/smoke-game-harness.mjs"]],
   ["node", ["--check", "scripts/smoke-browser.mjs"]],
+  ["node", ["--check", "scripts/smoke-content-tools.mjs"]],
   ["node", ["--check", "scripts/content-summary.mjs"]],
   ["npm", ["run", "content:summary"]],
   ["npm", ["run", "smoke:browser"]],
@@ -19,6 +20,7 @@ const checks = [
   ["npm", ["run", "smoke:shop"]],
   ["npm", ["run", "smoke:debug"]],
   ["npm", ["run", "smoke:quest-flow"]],
+  ["npm", ["run", "smoke:content-tools"]],
   ["npm", ["test"]],
 ];
 

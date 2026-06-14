@@ -4,30 +4,36 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Auto-bump runtime cache keys
+Add quest-chain helper
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T17:13:20.140Z
+- Started: 2026-06-14T17:25:27.462Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/MAINTENANCE.md`
 - `package.json`
-- `scripts/agent-prepush.mjs`
-- `scripts/bump-cache-keys.mjs`
+- `scripts/add-content.mjs`
+- `scripts/content-tools.mjs`
+- `scripts/smoke-content-tools.mjs`
+- `scripts/agent-check.mjs`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
 - `package.json`
-- `scripts/agent-prepush.mjs`
-- `scripts/bump-cache-keys.mjs`
+- `scripts/add-content.mjs`
+- `scripts/content-tools.mjs`
+- `scripts/smoke-content-tools.mjs`
+- `scripts/agent-check.mjs`
 - `scripts/verify-mvp.mjs`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/MAINTENANCE.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
@@ -42,11 +48,12 @@ npm run agent:check
 
 Result:
 
-- `node --check scripts/bump-cache-keys.mjs`: passed.
-- `npm run cache:bump`: passed, no cache change needed for tooling-only patch.
-- `npm test`: passed 205 MVP checks.
-- `npm run agent:prepush`: passed; cache-bump hook ran first.
-- Evidence: `../Shane training/20260614T171646Z_auto-cache-key-bump/result.md`.
+- `node --check scripts/add-content.mjs`: passed.
+- `node --check scripts/content-tools.mjs`: passed.
+- `npm run smoke:content-tools`: passed.
+- `npm test`: passed 208 MVP checks.
+- `npm run agent:prepush`: passed.
+- Evidence: `../Shane training/20260614T172937Z_quest-chain-helper/result.md`.
 
 ## Evidence Required
 
