@@ -156,12 +156,12 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       ctx.fill();
     }
     if (enemy.boss) {
-      const charging = enemy.bossKind === "charger" && enemy.chargeState === "windup";
+      const charging = (enemy.bossAbilities?.includes("charger") || enemy.bossKind === "charger") && enemy.chargeState === "windup";
       const ringColor = charging ? "#ff3b3b" : enemy.superBoss ? "#ff74c8" : "#ffd166";
       strokeEnemyRing(enemy, ringColor, charging ? 7 : enemy.superBoss ? 6 : 4);
       ctx.fillStyle = "#f3f6fb";
       ctx.font = "700 14px sans-serif";
-      const label = enemy.bossKind === "turret" ? "TURRET" : enemy.bossKind === "charger" ? "CHARGE" : enemy.superBoss ? "SUPER" : "BOSS";
+      const label = enemy.superBoss ? "SUPER" : enemy.bossKind === "turret" ? "TURRET" : enemy.bossKind === "charger" ? "CHARGE" : "BOSS";
       ctx.fillText(label, enemy.x - label.length * 3.6, enemy.y - enemy.radius - 10);
     } else if (enemy.type === "skitter") {
       ctx.fillStyle = "#17202c";
@@ -363,7 +363,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.fillStyle = "#ffffff";
     ctx.font = "700 12px sans-serif";
     ctx.textAlign = "center";
-    const kind = boss.bossKind === "charger" ? "CHARGER BOSS" : boss.bossKind === "turret" ? "TURRET BOSS" : boss.superBoss ? "SUPER BOSS" : "BOSS";
+    const kind = boss.superBoss ? "SUPER BOSS" : boss.bossKind === "charger" ? "CHARGER BOSS" : boss.bossKind === "turret" ? "TURRET BOSS" : "BOSS";
     ctx.fillText(`${kind} ${Math.max(0, Math.ceil(boss.hp))}/${Math.ceil(boss.maxHp)}`, canvas.width / 2, y + 13);
     ctx.textAlign = "start";
   }

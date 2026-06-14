@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add randomized boss variants
+Give super bosses two abilities
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T15:50:33.046Z
+- Started: 2026-06-14T16:02:37.506Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -28,7 +28,6 @@ Add randomized boss variants
 - `src/enemies.js`
 - `src/rendering.js`
 - `scripts/verify-mvp.mjs`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
 
@@ -43,11 +42,11 @@ npm run agent:check
 Result:
 
 - `node --check src/enemies.js src/rendering.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed 199 checks.
-- Focused VM check: randomized boss kinds can spawn as warden, charger, and turret; charger creates a slash attack; turret fires enemy bolts.
+- `node scripts/verify-mvp.mjs`: passed 200 checks.
+- Focused VM check: floor-5 super bosses roll two different abilities, charger combos create slash attacks, and turret combos fire bolts.
 - `npm test`: passed.
 - `npm run agent:prepush`: passed.
-- `npm run agent:evidence -- --task randomized-boss-variants`: wrote `../Shane training/20260614T155804Z_randomized-boss-variants/result.md`.
+- Evidence: `../Shane training/20260614T160635Z_super-boss-dual-abilities/result.md`.
 
 ## Evidence Required
 

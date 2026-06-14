@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-14
 
+- Changed super bosses to roll two different boss abilities instead of one.
 - Added randomized boss variants: shockwave warden, red-flashing charger with forward slash, and stationary projectile turret.
 - Retuned shop floor price scaling and coin reward scaling so the shop can be bought out around tower floor 100.
 - Added shop inflation so buying an item increases remaining item costs and shows an inflation notice in the shop.

@@ -108,7 +108,10 @@ function createEnemySystem({
     game.bossSpawned = true;
     const difficulty = floorDifficulty(game.towerFloor);
     const superBoss = game.towerFloor % 5 === 0;
-    const bossKind = bossKinds[Math.floor(Math.random() * bossKinds.length)];
+    const bossAbilities = chooseBossAbilities(superBoss ? 2 : 1);
+    const bossKind = bossAbilities[0];
+    const chargerBoss = bossAbilities.includes("charger");
+    const turretBoss = bossAbilities.includes("turret");
     const bossHp = (1400 + game.kills * 6) * difficulty.hp;
     const landingX = 72 + Math.random() * (canvas.width - 144);
     const landingY = 90 + Math.random() * (canvas.height - 180);
@@ -132,8 +135,9 @@ function createEnemySystem({
       boss: true,
       superBoss,
       bossKind,
+      bossAbilities,
       assetId: "boss",
-      color: bossKind === "turret" ? "#b794ff" : bossKind === "charger" ? "#ff5f56" : "#ff4f8b",
+      color: turretBoss ? "#b794ff" : chargerBoss ? "#ff5f56" : "#ff4f8b",
       x: startX,
       y: startY,
       startX,
@@ -145,16 +149,26 @@ function createEnemySystem({
       radius: 38,
       hp: superBoss ? bossHp * 1.35 : bossHp,
       maxHp: superBoss ? bossHp * 1.35 : bossHp,
-      speed: bossKind === "charger" ? 68 : bossKind === "turret" ? 0 : 42,
+      speed: chargerBoss ? 68 : turretBoss ? 0 : 42,
       damage: 22 * difficulty.damage,
       touchCooldown: 0.8,
       touchTimer: 0,
-      attackRange: bossKind === "turret" ? 999 : 0,
-      projectileCooldown: bossKind === "turret" ? 1.05 : 0,
-      projectileSpeed: bossKind === "turret" ? 280 : 0,
+      attackRange: turretBoss ? 999 : 0,
+      projectileCooldown: turretBoss ? 1.05 : 0,
+      projectileSpeed: turretBoss ? 280 : 0,
       projectileDamage: (superBoss ? 20 : 15) * difficulty.damage,
-      shootTimer: bossKind === "turret" ? 0.8 : 0,
+      shootTimer: turretBoss ? 0.8 : 0,
     });
+  }
+
+  function chooseBossAbilities(count) {
+    const available = [...bossKinds];
+    const abilities = [];
+    while (abilities.length < count && available.length) {
+      const index = Math.floor(Math.random() * available.length);
+      abilities.push(available.splice(index, 1)[0]);
+    }
+    return abilities;
   }
 
   function updateBossSpecials(dt) {
@@ -168,11 +182,12 @@ function createEnemySystem({
     if (!boss || boss.dropTimer > 0) return;
     game.bossAttackTimer -= dt;
     if (game.bossAttackTimer <= 0) {
-      if (boss.bossKind === "charger") {
-        game.bossAttackTimer = 3.8;
+      const chargerBoss = hasBossAbility(boss, "charger");
+      const wardenBoss = hasBossAbility(boss, "warden");
+      if (chargerBoss) {
         startBossCharge(boss);
-      } else if (boss.bossKind === "warden") {
-        game.bossAttackTimer = 4.6;
+      }
+      if (wardenBoss) {
         game.bossAttacks.push({
           type: "shockwave",
           x: boss.x,
@@ -183,11 +198,14 @@ function createEnemySystem({
           windup: 0.9,
           hit: false,
         });
-      } else {
-        game.bossAttackTimer = 3.2;
       }
+      game.bossAttackTimer = chargerBoss ? 3.8 : wardenBoss ? 4.6 : 3.2;
     }
 
+  }
+
+  function hasBossAbility(boss, ability) {
+    return boss.bossAbilities?.includes(ability) || boss.bossKind === ability;
   }
 
   function startBossCharge(boss) {
@@ -240,7 +258,7 @@ function createEnemySystem({
       const dx = p.x - enemy.x;
       const dy = p.y - enemy.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      if (enemy.bossKind === "charger" && updateBossCharge(enemy, dt)) {
+      if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
         applyEnemyTouch(enemy, dt);
         return;
       }
