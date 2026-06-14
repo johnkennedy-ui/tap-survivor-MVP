@@ -23,7 +23,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/level-up.js`: level-up choice generation and level-up modal behavior.
 - `src/input.js`: canvas pointer/touch movement input binding.
 - `src/pickups.js`: XP, coin, and heart drop spawning, attraction, collection, and pickup text updates.
-- `src/shop.js`: coin shop rendering, floor-scaled prices, purchases, persistence, item sprites, run-start bonuses, in-run shop-tab rendering, and immediate in-run player stat bonuses.
+- `src/shop.js`: coin shop rendering, floor-scaled and purchase-inflated prices, purchases, persistence, item sprites, run-start bonuses, in-run shop-tab rendering, and immediate in-run player stat bonuses.
 - `src/combat.js`: combat orchestration, damage accounting, enemy reap/loot handoff, and combat effects.
 - `src/enemies.js`: enemy spawning, spawn patterns, melee/ranged enemy updates, boss spawning, and boss special attacks.
 - `src/rendering.js`: canvas drawing for arena, entities, effects, HUD, skill rail.

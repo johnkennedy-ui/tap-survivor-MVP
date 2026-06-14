@@ -28,6 +28,8 @@ const saved = JSON.parse(harness.context.localStorage.getItem("tap-survivor-mvp-
 check("shop purchase spends coins", saved.coins === 5);
 check("shop purchase persists tier", saved.shopPurchases.training_boots === 1);
 check("shop rerenders balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 5"));
+check("shop shows inflation notice", harness.elements.get("shopNotice").textContent.includes("Inflation huh."));
+check("other shop item price inflates", harness.elements.get("shopItems").children[1].innerHTML.includes("Needs 20 coins"));
 
 harness.elements.get("closeShop").click();
 check("shop closes", harness.elements.get("shopModal").classList.contains("hidden"));
@@ -37,6 +39,7 @@ harness.elements.get("openMenu").click();
 harness.elements.get("menuShopTab").click();
 check("run menu shop tab renders items", harness.elements.get("menuShopItems").children.length >= 4);
 check("run menu shop tab shows scaled floor context", harness.elements.get("menuShopCoinHud").textContent.includes("Tower Floor"));
+check("run menu shop tab keeps inflation notice", harness.elements.get("menuShopNotice").textContent.includes("Inflation huh."));
 
 if (process.exitCode) {
   console.error("\nShop smoke failed.");

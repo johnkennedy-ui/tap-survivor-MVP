@@ -46,13 +46,20 @@ function makeClassList() {
 }
 
 function makeElement(id = "") {
+  let html = "";
   return {
     id,
     dataset: {},
     classList: makeClassList(),
     children: [],
     disabled: false,
-    innerHTML: "",
+    get innerHTML() {
+      return html;
+    },
+    set innerHTML(value) {
+      html = value;
+      this.children = [];
+    },
     textContent: "",
     style: {},
     appendChild(child) {
@@ -96,8 +103,10 @@ const ids = [
   "runMenu",
   "shopModal",
   "shopCoinHud",
+  "shopNotice",
   "shopItems",
   "menuShopCoinHud",
+  "menuShopNotice",
   "menuShopItems",
   "runHud",
   "debugPanel",

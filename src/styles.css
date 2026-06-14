@@ -276,6 +276,13 @@ section + section {
   border-color: #516174;
 }
 
+.shop-notice {
+  min-height: 1.2em;
+  color: #ffd166;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
 .modal {
   position: absolute;
   inset: 0;

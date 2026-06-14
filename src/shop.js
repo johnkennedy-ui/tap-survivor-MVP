@@ -14,8 +14,17 @@ function createShopSystem({
   function costFor(item, tier) {
     const baseCost = Array.isArray(item.cost) ? item.cost[tier] : item.cost;
     const floor = Math.max(1, getSave().towerFloor || 1);
-    if (floor <= 1) return baseCost;
-    return Math.ceil(baseCost * (1 + (floor - 1) * 0.18));
+    const floorMultiplier = floor <= 1 ? 1 : 1 + (floor - 1) * 0.18;
+    const inflationMultiplier = 1 + purchasedTierCount(item.id) * 0.08;
+    return Math.ceil(baseCost * floorMultiplier * inflationMultiplier);
+  }
+
+  function purchasedTierCount(excludedItemId = "") {
+    const purchases = getSave().shopPurchases || {};
+    return shopItemDefs.reduce((total, item) => {
+      if (item.id === excludedItemId) return total;
+      return total + (purchases[item.id] || 0);
+    }, 0);
   }
 
   function canBuy(item) {
@@ -35,7 +44,15 @@ function createShopSystem({
     applyItemEffectToRun(item);
     persist();
     renderShop();
+    showInflationNotice();
     renderMeta();
+  }
+
+  function showInflationNotice() {
+    const message = "eh? The prices went up! Inflation huh.";
+    [ui.shopNotice, ui.menuShopNotice].forEach((notice) => {
+      if (notice) notice.textContent = message;
+    });
   }
 
   function applyItemEffectToRun(item) {
