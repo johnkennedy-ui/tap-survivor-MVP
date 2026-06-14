@@ -51,7 +51,8 @@ function createEnemySystem({
   }
 
   function isEnemyAvailable(type, game) {
-    return !type.minTowerFloor || game.towerFloor >= type.minTowerFloor;
+    return (!type.minTowerFloor || game.towerFloor >= type.minTowerFloor) &&
+      (!type.minPlayerLevel || game.player.level >= type.minPlayerLevel);
   }
 
   function chooseEnemyType(offset = 0, available = availableEnemyTypes()) {

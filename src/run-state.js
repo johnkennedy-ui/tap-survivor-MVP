@@ -38,6 +38,7 @@
         enemies: [],
         xpDrops: [],
         lootDrops: [],
+        pickupTexts: [],
         bolts: [],
         enemyBolts: [],
         beams: [],

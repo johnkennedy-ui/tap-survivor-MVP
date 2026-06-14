@@ -47,6 +47,7 @@
       combat.updateWeaponBursts(dt);
       pickupSystem.updateXpDrops(dt);
       pickupSystem.updateLootDrops(dt);
+      pickupSystem.updatePickupTexts(dt);
 
       if (player.hp <= 0) endRun("Player defeated");
     }

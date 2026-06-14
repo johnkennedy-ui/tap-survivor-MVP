@@ -935,7 +935,7 @@ globalThis.TapSurvivorContent = {
       "touchCooldown": 0.7,
       "xp": 2,
       "assetId": "hexer",
-      "minTowerFloor": 4,
+      "minPlayerLevel": 4,
       "attackRange": 260,
       "projectileCooldown": 1.35,
       "projectileSpeed": 235,
@@ -1103,7 +1103,8 @@ globalThis.TapSurvivorContent = {
       "name": "Floor Intro",
       "startsAt": 0,
       "enemyIds": [
-        "drifter"
+        "drifter",
+        "hexer"
       ],
       "spawnCount": 2,
       "spawnRateMultiplier": 1,
@@ -1115,7 +1116,8 @@ globalThis.TapSurvivorContent = {
       "startsAt": 30,
       "enemyIds": [
         "drifter",
-        "skitter"
+        "skitter",
+        "hexer"
       ],
       "spawnCount": 2,
       "spawnRateMultiplier": 1,

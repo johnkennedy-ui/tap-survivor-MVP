@@ -48,6 +48,7 @@ function createPickupSystem({
       }
       if (distance(player, drop) < player.radius + drop.radius) {
         drop.collected = true;
+        addPickupText(`+${drop.value} XP`, drop.x, drop.y, "#78e08f");
         collectXp(drop.value);
       }
     });
@@ -74,19 +75,36 @@ function createPickupSystem({
     const save = getSave();
     if (drop.type === "coin") {
       save.coins += drop.value;
+      addPickupText(`+${drop.value}`, drop.x, drop.y, "#ffd166");
       persist();
       renderMeta();
     }
     if (drop.type === "heart") {
       const healAmount = Math.ceil(game.player.maxHp * drop.healPercent);
       game.player.hp = Math.min(game.player.maxHp, game.player.hp + healAmount);
+      addPickupText(`+${healAmount} HP`, drop.x, drop.y, "#ff8fa3");
     }
+  }
+
+  function addPickupText(text, x, y, color) {
+    const game = getGame();
+    game.pickupTexts.push({ text, x, y, color, life: 0.85, maxLife: 0.85 });
+  }
+
+  function updatePickupTexts(dt) {
+    const game = getGame();
+    game.pickupTexts.forEach((text) => {
+      text.y -= 28 * dt;
+      text.life -= dt;
+    });
+    game.pickupTexts = game.pickupTexts.filter((text) => text.life > 0);
   }
 
   return {
     spawnLootDrops,
     updateXpDrops,
     updateLootDrops,
+    updatePickupTexts,
   };
 }
 

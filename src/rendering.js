@@ -19,6 +19,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     game.enemyBolts.forEach(drawEnemyBolt);
     game.enemies.forEach(drawEnemy);
     game.beams.forEach(drawBeam);
+    game.pickupTexts.forEach(drawPickupText);
     drawPlayer(game.player);
     drawGameHud(game);
   }
@@ -194,6 +195,18 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.lineTo(drop.x + drop.radius, drop.y);
     ctx.closePath();
     ctx.fill();
+  }
+
+  function drawPickupText(text) {
+    const alpha = clamp(text.life / text.maxLife, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = text.color;
+    ctx.font = "700 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(text.text, text.x, text.y);
+    ctx.restore();
+    ctx.textAlign = "start";
   }
 
   function drawBolt(bolt) {

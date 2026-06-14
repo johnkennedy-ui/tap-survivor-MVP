@@ -29,9 +29,22 @@ function createShopSystem({
     const cost = costFor(item, tier);
     save.coins -= cost;
     save.shopPurchases[item.id] = tier + 1;
+    applyItemEffectToRun(item);
     persist();
     renderShop();
     renderMeta();
+  }
+
+  function applyItemEffectToRun(item) {
+    const game = getGame();
+    const player = game?.player;
+    if (!game?.running || !player || !item.effect) return;
+    if (item.effect.stat === "speed") player.speed += item.effect.value;
+    if (item.effect.stat === "pickupRadius") player.pickupRadius += item.effect.value;
+    if (item.effect.stat === "maxHp") {
+      player.maxHp += item.effect.value;
+      player.hp += item.effect.value;
+    }
   }
 
   function renderShop() {

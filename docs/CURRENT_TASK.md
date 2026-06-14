@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add ranged enemies after floor 3
+Fix ranged enemy, magnet, and pickup text updates
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-14T13:14:23.577Z
+- Started: 2026-06-14T13:46:31.132Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -20,29 +20,27 @@ Add ranged enemies after floor 3
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
 - `src/run-state.js`
+- `src/pickups.js`
+- `src/shop.js`
 - `src/enemies.js`
-- `src/combat.js`
 - `src/rendering.js`
 - `src/run-update.js`
-- `scripts/smoke-game-harness.mjs`
 - `scripts/verify-mvp.mjs`
-- `assets/generated/tower/sprites/enemy-hexer-ranged.svg`
 
 ## Files Changed
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
 - `src/run-state.js`
+- `src/pickups.js`
+- `src/shop.js`
 - `src/enemies.js`
-- `src/combat.js`
 - `src/rendering.js`
 - `src/run-update.js`
-- `scripts/smoke-game-harness.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
-- `assets/generated/tower/sprites/enemy-hexer-ranged.svg`
 
 ## Validation Plan
 
@@ -55,18 +53,15 @@ npm run agent:check
 Result:
 
 - `npm run build:content`: passed.
-- `node --check src/enemies.js`: passed.
-- `node --check src/run-update.js`: passed.
-- `node --check src/combat.js`: passed.
-- `node --check src/rendering.js`: passed.
-- `node --check scripts/smoke-game-harness.mjs`: passed.
+- `node --check src/pickups.js src/shop.js src/rendering.js src/run-update.js src/run-state.js scripts/verify-mvp.mjs`: passed.
+- Focused VM check: in-run coin magnet purchase updates current player pickup radius immediately.
+- Focused VM check: pickup text creates on XP/coin collection and expires.
+- Focused VM check: `hexer` does not spawn at player level 3 and can spawn at player level 4 in the intro mix.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 186 checks.
-- `npm run smoke:boss-run`: passed.
-- `npm run smoke:shop`: passed.
+- `node scripts/verify-mvp.mjs`: passed 188 checks.
 - `npm run smoke:start-run`: passed.
+- `npm run smoke:shop`: passed.
 - `npm test`: passed.
-- `npm run agent:check`: passed.
 
 ## Evidence Required
 
