@@ -6,7 +6,7 @@
     }
 
     function maxEquippedRelics(save) {
-      return Math.min(5, Math.floor(Math.max(0, save.maxPlayerLevel || 1) / 10));
+      return Math.min(5, Math.floor(Math.max(0, save.towerFloor || 1) / 10));
     }
 
     function relicNumber(save, field) {

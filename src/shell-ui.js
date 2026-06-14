@@ -114,7 +114,7 @@ function createShellUiController({
     const equipped = new Set(relicSystem.equippedRelics(save).map((relic) => relic.id));
     const unlocked = new Set(save.unlockedRelics || []);
     const nextLevel = slots >= 5 ? null : (slots + 1) * 10;
-    ui.menuRelicSlots.textContent = `Relic slots: ${Math.min(equipped.size, slots)}/${slots} unlocked. ${nextLevel ? `Next slot at level ${nextLevel}.` : "Maximum slots unlocked."}`;
+    ui.menuRelicSlots.textContent = `Relic slots: ${Math.min(equipped.size, slots)}/${slots} unlocked. ${nextLevel ? `Next slot at tower floor ${nextLevel}.` : "Maximum slots unlocked."}`;
     ui.menuRelicInventory.innerHTML = "";
     const availableRelics = relicDefs.filter((relic) => unlocked.has(relic.id));
     if (!availableRelics.length) {

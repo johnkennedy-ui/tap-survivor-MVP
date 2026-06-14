@@ -201,7 +201,6 @@ runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
   xpQuestIds,
   levelQuestIds,
   showLevelUp: () => levelUpSystem.showLevelUp(),
-  recordPlayerLevel,
   endRun,
   clamp,
 });
@@ -328,12 +327,6 @@ function maxEquippedWeapons() {
 
 function getWeaponDamageMultiplier() {
   return relicSystem.getWeaponDamageMultiplier(save);
-}
-
-function recordPlayerLevel(level) {
-  if (level <= (save.maxPlayerLevel || 1)) return;
-  save.maxPlayerLevel = level;
-  persist();
 }
 
 function getRunUpgradeTier(id) {

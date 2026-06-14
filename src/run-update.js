@@ -9,7 +9,6 @@
     xpQuestIds,
     levelQuestIds,
     showLevelUp,
-    recordPlayerLevel,
     endRun,
     clamp,
   }) {
@@ -73,7 +72,6 @@
         player.level += 1;
         player.xpToLevel += 4;
         game.levelUps += 1;
-        recordPlayerLevel?.(player.level);
         addQuestProgressGroup(levelQuestIds, 1);
         showLevelUp();
       }
