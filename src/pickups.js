@@ -11,12 +11,13 @@ function createPickupSystem({
   function spawnLootDrops(enemy) {
     const game = getGame();
     if (enemy.boss || Math.random() < 0.34) {
+      const value = coinValue(enemy.boss ? 12 : 1, game.towerFloor);
       game.lootDrops.push({
         type: "coin",
         x: enemy.x + randomRange(-10, 10),
         y: enemy.y + randomRange(-10, 10),
         radius: enemy.boss ? 10 : 7,
-        value: enemy.boss ? 12 : 1,
+        value,
       });
     }
     if (enemy.boss || Math.random() < 0.12) {
@@ -28,6 +29,11 @@ function createPickupSystem({
         healPercent: 0.2,
       });
     }
+  }
+
+  function coinValue(baseValue, towerFloor) {
+    const floor = Math.max(1, Math.floor(towerFloor || 1));
+    return Math.ceil(baseValue * (1 + (floor - 1) * 0.06));
   }
 
   function pullDropTowardPlayer(drop, player, speed, dt) {

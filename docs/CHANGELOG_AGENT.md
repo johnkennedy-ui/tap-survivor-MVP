@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-14
 
+- Retuned shop floor price scaling and coin reward scaling so the shop can be bought out around tower floor 100.
 - Added shop inflation so buying an item increases remaining item costs and shows an inflation notice in the shop.
 - Scaled shop prices by tower floor, added four shop upgrades with icons, and added an in-run shop tab to the run menu.
 - Added random boss spawn entry, sky-drop warning/damage for non-side boss landings, boss-spawn notice text, and shield-pulse enemy projectile blocking charge.

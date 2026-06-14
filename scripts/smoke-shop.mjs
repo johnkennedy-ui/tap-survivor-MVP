@@ -41,6 +41,20 @@ check("run menu shop tab renders items", harness.elements.get("menuShopItems").c
 check("run menu shop tab shows scaled floor context", harness.elements.get("menuShopCoinHud").textContent.includes("Tower Floor"));
 check("run menu shop tab keeps inflation notice", harness.elements.get("menuShopNotice").textContent.includes("Inflation huh."));
 
+const floorHundred = createGameHarness({
+  fakeCombat: true,
+  initialSave: {
+    coins: 999999,
+    towerFloor: 100,
+    shopPurchases: {},
+    unlockedWeapons: ["spark_bolt"],
+  },
+});
+floorHundred.elements.get("openShop").click();
+const floorHundredFirstItem = floorHundred.elements.get("shopItems").children[0];
+floorHundredFirstItem.children[0].click();
+check("floor 100 shop prices stay buyout-scale", floorHundred.elements.get("shopItems").children[1].innerHTML.includes("Cost: 78 coins"));
+
 if (process.exitCode) {
   console.error("\nShop smoke failed.");
   process.exit(process.exitCode);

@@ -158,8 +158,9 @@ check("coin shop exists", index.includes('id="openShop"') && index.includes('id=
 check("shop items are content-driven", (content.shopItems || []).length >= 12 && shop.includes("shopItemDefs"));
 check("shop items have distinct sprites", (content.shopItems || []).every((item) => item.spritePath) && shop.includes("shop-item-sprite"));
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
-check("shop prices scale with tower floor", shop.includes("towerFloor") && shop.includes("(floor - 1) * 0.18") && shop.includes("Cost: ${cost} coins"));
-check("shop prices inflate after purchases", shop.includes("purchasedTierCount") && shop.includes("0.08") && index.includes('id="shopNotice"') && shop.includes("Inflation huh."));
+check("shop prices scale with tower floor", shop.includes("SHOP_FLOOR_PRICE_RATE = 0.03") && shop.includes("towerFloor") && shop.includes("Cost: ${cost} coins"));
+check("shop prices inflate after purchases", shop.includes("purchasedTierCount") && shop.includes("SHOP_INFLATION_RATE = 0.08") && index.includes('id="shopNotice"') && shop.includes("Inflation huh."));
+check("coin rewards scale toward floor 100 shop buyout", pickups.includes("function coinValue") && pickups.includes("(floor - 1) * 0.06") && pickups.includes("game.towerFloor") && shop.includes("SHOP_FLOOR_PRICE_RATE = 0.03"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => weaponFire.includes(token)) && game.includes("getShopBonuses"));
 check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && shellUi.includes("function showStartMenu"));

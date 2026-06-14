@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add shop inflation after each purchase
+Tune shop economy for floor 100 buyout
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T15:31:06.996Z
+- Started: 2026-06-14T15:42:28.218Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -18,24 +18,18 @@ Add shop inflation after each purchase
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `index.html`
+- `src/pickups.js`
 - `src/shop.js`
-- `src/ui.js`
-- `src/styles.css`
 - `scripts/verify-mvp.mjs`
 - `scripts/smoke-shop.mjs`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
 
 ## Files Changed
 
 - `index.html`
+- `src/pickups.js`
 - `src/shop.js`
-- `src/ui.js`
-- `src/styles.css`
 - `scripts/verify-mvp.mjs`
 - `scripts/smoke-shop.mjs`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
@@ -50,11 +44,12 @@ npm run agent:check
 
 Result:
 
-- `node --check src/shop.js src/ui.js scripts/smoke-shop.mjs scripts/verify-mvp.mjs`: passed.
-- `npm run smoke:shop`: passed, including inflation notice and other-item cost increase.
+- `node --check src/shop.js src/pickups.js`: passed.
+- `npm run smoke:shop`: passed, including floor 100 shop cost target.
+- `node scripts/verify-mvp.mjs`: passed 198 checks.
 - `npm test`: passed.
 - `npm run agent:prepush`: passed.
-- `npm run agent:evidence -- --task shop-inflation-after-purchase`: wrote `../Shane training/20260614T153813Z_shop-inflation-after-purchase/result.md`.
+- `npm run agent:evidence -- --task shop-economy-floor-100-buyout`: wrote `../Shane training/20260614T154556Z_shop-economy-floor-100-buyout/result.md`.
 
 ## Evidence Required
 
