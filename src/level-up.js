@@ -104,11 +104,19 @@ function createLevelUpSystem({
       totals[family] = (totals[family] || 0) + getRunUpgradeTier(upgrade.id);
       return totals;
     }, {});
-    const otherChoices = weightedChoices([...otherWeaponChoices, ...runUpgradeChoices], (choice) => {
+    const recentChoiceIds = new Set(game.lastLevelUpChoiceIds || []);
+    const otherChoicePool = [...otherWeaponChoices, ...runUpgradeChoices];
+    const freshChoices = otherChoicePool.filter((choice) => !recentChoiceIds.has(choiceId(choice)));
+    const repeatChoices = otherChoicePool.filter((choice) => recentChoiceIds.has(choiceId(choice)));
+    const otherChoices = [
+      ...weightedChoices(freshChoices, choiceWeight),
+      ...weightedChoices(repeatChoices, choiceWeight),
+    ];
+    function choiceWeight(choice) {
       if (!choice.runUpgradeId) return 1;
       const shopFocus = shopFocusBonus(save);
       return 1 + (familyTiers[choice.family] || 0) * 1.4 + getRunUpgradeTier(choice.runUpgradeId) * 0.8 + choice.relicWeightBonus + shopFocus;
-    });
+    }
     const choices = [
       ...questWeaponChoices,
       ...otherChoices,
@@ -123,6 +131,7 @@ function createLevelUpSystem({
         },
       });
     }
+    game.lastLevelUpChoiceIds = choices.map(choiceId);
 
     choices.forEach((choice) => {
       const button = document.createElement("button");
@@ -152,6 +161,10 @@ function createLevelUpSystem({
 
   function shopFocusBonus(save) {
     return (save.shopPurchases?.relic_compass || 0) * 0.5;
+  }
+
+  function choiceId(choice) {
+    return choice.weaponId ? `weapon:${choice.weaponId}` : `run:${choice.runUpgradeId || choice.name}`;
   }
 
   function closeLevelUpMenu() {

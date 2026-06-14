@@ -75,8 +75,22 @@ function createWeaponFireSystem({
   function fireWeapon(weaponId) {
     const weapon = weaponDefs[weaponId];
     if (!weapon) return;
+    setPlayerAttackAnimation(weapon);
     addWeaponBurst(weaponId, weapon);
     weaponKindHandlers[weapon.kind]?.(weaponId);
+  }
+
+  function setPlayerAttackAnimation(weapon) {
+    const player = getGame()?.player;
+    if (!player) return;
+    player.actionSprite = playerAttackSprite(weapon.kind);
+    player.actionTimer = 0.22;
+  }
+
+  function playerAttackSprite(kind) {
+    if (kind === "beam" || kind === "cone" || kind === "chain") return "cast_beam";
+    if (kind === "radial" || kind === "target_area" || kind === "lingering_area" || kind === "mine") return "sweep";
+    return "cast_orb";
   }
 
   function addWeaponBurst(weaponId, weapon) {

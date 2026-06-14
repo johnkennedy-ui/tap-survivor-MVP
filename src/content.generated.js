@@ -1491,6 +1491,13 @@ globalThis.TapSurvivorContent = {
     ],
     "sprites": {
       "player": "assets/generated/tower/sheet-20260614/wizard-idle-staff.png?v=sheet-20260614-player",
+      "playerAnimations": {
+        "walk": "assets/generated/tower/sheet-20260614/wizard-walk-staff.png?v=sheet-20260614-player",
+        "cast_orb": "assets/generated/tower/sheet-20260614/wizard-cast-orb.png?v=sheet-20260614-player",
+        "cast_beam": "assets/generated/tower/sheet-20260614/wizard-cast-beam.png?v=sheet-20260614-player",
+        "sweep": "assets/generated/tower/sheet-20260614/wizard-sweep.png?v=sheet-20260614-player",
+        "ready": "assets/generated/tower/sheet-20260614/wizard-ready.png?v=sheet-20260614-player"
+      },
       "backgrounds": {
         "tower_floor": "assets/generated/tower/tower-floor-bg.png?v=generated-20260611"
       },

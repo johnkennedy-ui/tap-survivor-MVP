@@ -16,6 +16,7 @@
       const dx = player.targetX - player.x;
       const dy = player.targetY - player.y;
       const dist = Math.hypot(dx, dy);
+      player.moving = dist > 3;
       if (dist > 3) {
         const step = Math.min(dist, player.speed * dt);
         player.x += (dx / dist) * step;
@@ -45,11 +46,18 @@
       combat.updateAreas(dt);
       combat.updateBeams(dt);
       combat.updateWeaponBursts(dt);
+      updatePlayerAnimation(player, dt);
       pickupSystem.updateXpDrops(dt);
       pickupSystem.updateLootDrops(dt);
       pickupSystem.updatePickupTexts(dt);
 
       if (player.hp <= 0) endRun("Player defeated");
+    }
+
+    function updatePlayerAnimation(player, dt) {
+      if (!player.actionTimer) return;
+      player.actionTimer = Math.max(0, player.actionTimer - dt);
+      if (player.actionTimer <= 0) player.actionSprite = "";
     }
 
     function collectXp(value) {

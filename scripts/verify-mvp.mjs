@@ -106,6 +106,7 @@ check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "s
 check("generated tower background asset exists", content.assets?.sources?.some((source) => source.id === "generated_tower_floor" && source.commercialUse === true && source.attributionRequired === false) && content.assets?.sprites?.backgrounds?.tower_floor);
 check("player uses wizard sprite", content.assets?.sprites?.player?.includes("wizard-idle-staff") && rendering.includes("Math.max(70"));
 check("wizard sprite flips by facing", sprites.includes("flipX") && rendering.includes("playerFacesLeft") && rendering.includes("flipX: playerFacesLeft(p)"));
+check("wizard uses movement and attack animation sprites", content.assets?.sprites?.playerAnimations?.walk && content.assets?.sprites?.playerAnimations?.cast_orb && sprites.includes("playerAnimations") && rendering.includes("playerSpriteId") && weaponFire.includes("setPlayerAttackAnimation") && runUpdate.includes("updatePlayerAnimation"));
 check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
 const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
 check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
@@ -160,6 +161,7 @@ check("progression tier cap follows upgrade max tiers", progression.includes("ma
 check("skill tree gates by prerequisite and quest", progression.includes("requiresNode") && progression.includes("requiresQuest") && progression.includes("nodeGateStatus"));
 check("completed quests disappear from quest list", ui.includes("activeQuestIds") && !ui.includes("Status: ${complete"));
 check("level-up choices are limited to 3 random options", levelUp.includes("shuffleChoices") && levelUp.includes(".slice(0, 3)"));
+check("level-up choices avoid immediate repeats", levelUp.includes("lastLevelUpChoiceIds") && levelUp.includes("freshChoices") && levelUp.includes("repeatChoices"));
 check("level-up choices have icons and click guard", levelUp.includes("level-choice-icon") && levelUp.includes("button.disabled = true") && levelUp.includes("}, 500)") && styles.includes("#levelUp .modal-box") && styles.includes("grid-template-columns: repeat(3"));
 check("unique weapons are capped", levelUp.includes("maxEquippedWeapons") && levelUp.includes("equippedWeapons.length < maxWeapons") && game.includes("maxEquippedWeapons"));
 check("active quest weapons are offered on level-up", levelUp.includes("activeQuestWeaponIds") && levelUp.includes("questWeaponChoices"));

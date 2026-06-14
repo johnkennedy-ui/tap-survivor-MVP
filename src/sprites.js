@@ -29,6 +29,7 @@ function createSpriteSystem({ ctx, spriteDefs }) {
 
   function loadSprites() {
     registerSprite("player", spriteDefs.player);
+    Object.entries(spriteDefs.playerAnimations || {}).forEach(([id, src]) => registerSprite(`player:${id}`, src));
     Object.entries(spriteDefs.backgrounds || {}).forEach(([id, src]) => registerSprite(`background:${id}`, src));
     Object.entries(spriteDefs.enemies || {}).forEach(([id, src]) => registerSprite(`enemy:${id}`, src));
     Object.entries(spriteDefs.weapons || {}).forEach(([id, src]) => registerSprite(`weapon:${id}`, src));
