@@ -176,6 +176,7 @@ check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game
 check("shared save helpers exist", save.includes("TapSurvivorSave") && game.includes("TapSurvivorSave"));
 check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath"));
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
+check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
 check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
 check("shared progression helper exists", progression.includes("TapSurvivorProgression") && game.includes("TapSurvivorProgression"));
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));

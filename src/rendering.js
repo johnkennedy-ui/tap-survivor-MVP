@@ -143,9 +143,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       ctx.fill();
     }
     if (enemy.boss) {
-      ctx.strokeStyle = "#ffd166";
-      ctx.lineWidth = 4;
-      ctx.stroke();
+      strokeEnemyRing(enemy, "#ffd166", 4);
       ctx.fillStyle = "#f3f6fb";
       ctx.font = "700 14px sans-serif";
       ctx.fillText("BOSS", enemy.x - 19, enemy.y - enemy.radius - 10);
@@ -155,10 +153,16 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       ctx.arc(enemy.x, enemy.y, 3, 0, Math.PI * 2);
       ctx.fill();
     } else if (enemy.type === "bulwark") {
-      ctx.strokeStyle = "#dff6ff";
-      ctx.lineWidth = 3;
-      ctx.stroke();
+      strokeEnemyRing(enemy, "#dff6ff", 3);
     }
+  }
+
+  function strokeEnemyRing(enemy, color, width) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   function drawXp(drop) {

@@ -4,40 +4,29 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Wire content levels into enemy waves
+Fix enemy-count performance slowdown
 
 ## Status
 
-- State: validated; ready to report
-- Started: 2026-06-14T10:39:53.503Z
+- State: validated; ready to push/report
+- Started: 2026-06-14T11:40:26.262Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/game.js`
-- `src/combat.js`
-- `src/enemies.js`
-- `scripts/add-content.mjs`
-- `scripts/content-tools.mjs`
+- `docs/CHANGELOG_AGENT.md`
+- `src/sprites.js`
+- `src/rendering.js`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/game.js`
-- `src/combat.js`
-- `src/enemies.js`
-- `scripts/add-content.mjs`
-- `scripts/content-tools.mjs`
+- `src/sprites.js`
+- `src/rendering.js`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
 
@@ -51,19 +40,11 @@ npm run agent:check
 
 Result:
 
-- `node --check src/enemies.js`: passed.
-- `node --check src/combat.js`: passed.
-- `node --check src/game.js`: passed.
-- `node --check scripts/content-tools.mjs`: passed.
-- `node --check scripts/add-content.mjs`: passed.
-- `npm run build:content`: passed.
-- `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 180 checks.
-- `npm run smoke:start-run`: passed.
-- `npm run smoke:boss-run`: passed.
-- `npm run test:speed`: passed.
-- `npm test`: passed.
-- `npm run agent:check`: passed.
+- `node --check src/sprites.js`: passed.
+- `node --check src/rendering.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed 181 checks.
+- `npm run smoke:browser`: skipped locally because Chromium is blocked by snap permissions in this sandbox.
+- `npm run agent:check`: passed, including `npm test`.
 
 ## Evidence Required
 
