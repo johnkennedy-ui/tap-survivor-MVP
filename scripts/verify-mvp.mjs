@@ -104,6 +104,7 @@ check("default character registry entry exists", (content.characters || []).some
 check("content levels drive enemy waves", (content.levels || []).length >= 3 && content.levels.some((level) => level.enemyIds?.includes("bulwark")) && runtime.includes("activeLevelDef") && runtime.includes("levelEnemyTypes"));
 check("enemy spawns are content-counted and patterned", runtime.includes("spawnPatternPositions(spawnCount)") && runtime.includes("spawnEnemy(type, position)"));
 check("enemy projectiles update through combat loop", runState.includes("enemyBolts") && combat.includes("updateEnemyBolts") && runUpdate.includes("combat.updateEnemyBolts(dt)") && rendering.includes("drawEnemyBolt"));
+check("shield pulse clears enemy projectiles and charges block", weaponFire.includes('weaponId === "shield_pulse"') && weaponFire.includes("destroyEnemyProjectilesInRange") && weaponFire.includes("chargeProjectileBlock") && runState.includes("projectileBlockCharge") && enemies.includes("projectileBlockReady") && rendering.includes("drawProjectileBlockBar"));
 check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") && game.includes("runUpdater.update(dt * gameSpeed)") && game.includes("setGameSpeed"));
 check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.includes("fireWeapon"));
 check("weapon kind dispatch table exists", weaponFire.includes("weaponKindHandlers") && ["radial", "beam", "cone", "chain", "projectile", "target_area", "lingering_area", "mine"].every((kind) => weaponFire.includes(`${kind}:`)));
@@ -176,6 +177,7 @@ check("every fifth floor has super boss relic drop", enemies.includes("superBoss
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("quest completion banner exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showQuestBanner") && styles.includes(".quest-banner"));
 check("boss health bar renders at screen top", rendering.includes("drawBossHealthBar") && rendering.includes("boss.hp / boss.maxHp") && rendering.includes("SUPER BOSS"));
+check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice") && enemies.includes('type: "boss_drop"') && enemies.includes("landingX") && rendering.includes("drawBossSpawnNotice") && rendering.includes("boss_drop"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));

@@ -21,6 +21,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     game.beams.forEach(drawBeam);
     game.pickupTexts.forEach(drawPickupText);
     drawPlayer(game.player);
+    drawBossSpawnNotice(game);
     drawGameHud(game);
   }
 
@@ -133,6 +134,16 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.strokeStyle = "#f3f6fb";
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, width, height);
+    drawProjectileBlockBar(p, x, y + height + 3, width);
+  }
+
+  function drawProjectileBlockBar(p, x, y, width) {
+    const progress = p.projectileBlockReady ? 1 : clamp((p.projectileBlockCharge || 0) / (p.projectileBlockNeeded || 1), 0, 1);
+    if (progress <= 0) return;
+    ctx.fillStyle = "rgba(10, 14, 20, 0.82)";
+    ctx.fillRect(x, y, width, 4);
+    ctx.fillStyle = p.projectileBlockReady ? "#8de7ff" : "#4aa3ff";
+    ctx.fillRect(x, y, width * progress, 4);
   }
 
   function drawEnemy(enemy) {
@@ -275,13 +286,28 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     const charging = attack.age < attack.windup;
     const progress = clamp(attack.age / attack.windup, 0, 1);
     const radius = charging ? attack.radius * progress : attack.radius;
-    ctx.strokeStyle = charging ? "#ffd166" : "#ff5f7a";
-    ctx.fillStyle = charging ? "rgba(255, 209, 102, 0.12)" : "rgba(255, 95, 122, 0.2)";
+    const drop = attack.type === "boss_drop";
+    ctx.strokeStyle = charging ? (drop ? "#8de7ff" : "#ffd166") : "#ff5f7a";
+    ctx.fillStyle = charging ? (drop ? "rgba(141, 231, 255, 0.14)" : "rgba(255, 209, 102, 0.12)") : "rgba(255, 95, 122, 0.2)";
     ctx.lineWidth = charging ? 3 : 5;
     ctx.beginPath();
     ctx.arc(attack.x, attack.y, radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+  }
+
+  function drawBossSpawnNotice(game) {
+    const notice = game.bossSpawnNotice;
+    if (!notice) return;
+    const alpha = clamp(notice.life / notice.maxLife, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "800 24px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(notice.text, canvas.width / 2, 104);
+    ctx.restore();
+    ctx.textAlign = "start";
   }
 
   function drawGameHud(game) {

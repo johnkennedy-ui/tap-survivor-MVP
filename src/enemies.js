@@ -108,12 +108,36 @@ function createEnemySystem({
     const difficulty = floorDifficulty(game.towerFloor);
     const superBoss = game.towerFloor % 5 === 0;
     const bossHp = (1400 + game.kills * 6) * difficulty.hp;
+    const landingX = 72 + Math.random() * (canvas.width - 144);
+    const landingY = 90 + Math.random() * (canvas.height - 180);
+    const sideEntry = landingX < 150 || landingX > canvas.width - 150;
+    const startX = sideEntry ? (landingX < canvas.width / 2 ? -52 : canvas.width + 52) : landingX;
+    const startY = sideEntry ? landingY : -72;
+    if (!sideEntry) {
+      game.bossAttacks.push({
+        type: "boss_drop",
+        x: landingX,
+        y: landingY,
+        radius: superBoss ? 138 : 118,
+        damage: (superBoss ? 34 : 26) * difficulty.damage,
+        age: 0,
+        windup: 1.15,
+        hit: false,
+      });
+    }
+    game.bossSpawnNotice = { text: superBoss ? "SUPER BOSS INCOMING" : "BOSS INCOMING", life: 2.1, maxLife: 2.1 };
     game.enemies.push({
       boss: true,
       superBoss,
       assetId: "boss",
-      x: canvas.width / 2,
-      y: -52,
+      x: startX,
+      y: startY,
+      startX,
+      startY,
+      landingX,
+      landingY,
+      dropTimer: sideEntry ? 0 : 1.15,
+      dropWindup: 1.15,
       radius: 38,
       hp: superBoss ? bossHp * 1.35 : bossHp,
       maxHp: superBoss ? bossHp * 1.35 : bossHp,
@@ -126,8 +150,13 @@ function createEnemySystem({
 
   function updateBossSpecials(dt) {
     const game = getGame();
+    if (game.bossSpawnNotice) {
+      game.bossSpawnNotice.life -= dt;
+      if (game.bossSpawnNotice.life <= 0) game.bossSpawnNotice = null;
+    }
+    updateBossAttacks(dt);
     const boss = game.enemies.find((enemy) => enemy.boss);
-    if (!boss) return;
+    if (!boss || boss.dropTimer > 0) return;
     game.bossAttackTimer -= dt;
     if (game.bossAttackTimer <= 0) {
       game.bossAttackTimer = 4.6;
@@ -143,6 +172,10 @@ function createEnemySystem({
       });
     }
 
+  }
+
+  function updateBossAttacks(dt) {
+    const game = getGame();
     const p = game.player;
     game.bossAttacks.forEach((attack) => {
       attack.age += dt;
@@ -160,6 +193,13 @@ function createEnemySystem({
     const game = getGame();
     const p = game.player;
     game.enemies.forEach((enemy) => {
+      if (enemy.boss && enemy.dropTimer > 0) {
+        enemy.dropTimer = Math.max(0, enemy.dropTimer - dt);
+        const progress = 1 - enemy.dropTimer / enemy.dropWindup;
+        enemy.x = enemy.startX + (enemy.landingX - enemy.startX) * progress;
+        enemy.y = enemy.startY + (enemy.landingY - enemy.startY) * progress;
+        return;
+      }
       const dx = p.x - enemy.x;
       const dy = p.y - enemy.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
@@ -205,7 +245,12 @@ function createEnemySystem({
       bolt.y += bolt.vy * dt;
       bolt.life -= dt;
       if (distance(bolt, p) <= bolt.radius + p.radius) {
-        p.hp -= bolt.damage;
+        if (p.projectileBlockReady) {
+          p.projectileBlockReady = false;
+          p.projectileBlockCharge = 0;
+        } else {
+          p.hp -= bolt.damage;
+        }
         bolt.life = 0;
       }
     });

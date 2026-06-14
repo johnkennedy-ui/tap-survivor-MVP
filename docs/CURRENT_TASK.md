@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add boss health bar
+Add boss spawn warning and shield projectile block
 
 ## Status
 
-- State: validated; ready to push/report
-- Started: 2026-06-14T15:01:39.599Z
+- State: in progress
+- Started: 2026-06-14T15:07:37.855Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -17,11 +17,17 @@ Add boss health bar
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
+- `src/enemies.js`
+- `src/weapon-fire.js`
+- `src/run-state.js`
 - `src/rendering.js`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
+- `src/enemies.js`
+- `src/weapon-fire.js`
+- `src/run-state.js`
 - `src/rendering.js`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
@@ -38,10 +44,14 @@ npm run agent:check
 
 Result:
 
-- `node --check src/rendering.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed 192 checks.
+- `npm run build:content`: passed.
+- `node --check src/enemies.js src/weapon-fire.js src/rendering.js src/run-state.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed 194 checks.
+- Focused VM check: shield pulse clears enemy bolts, charges the block, charged block absorbs one enemy projectile, and boss random spawn state exists.
 - `npm run smoke:boss-run`: passed.
+- `npm run smoke:start-run`: passed.
 - `npm test`: passed.
+- `npm run agent:prepush`: passed.
 
 ## Evidence Required
 

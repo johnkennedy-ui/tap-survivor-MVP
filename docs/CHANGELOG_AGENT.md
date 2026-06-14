@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-14
 
+- Added random boss spawn entry, sky-drop warning/damage for non-side boss landings, boss-spawn notice text, and shield-pulse enemy projectile blocking charge.
 - Added a top-of-screen boss health bar during boss fights.
 - Added boss relic choice rewards, weapon-relevant relic choice weighting, a scroll-style quest completion banner, and spread run Move Speed across five smaller tiers.
 - Fixed ranged enemy availability to unlock at tower floor 4, included it in early spawn mixes, applied in-run magnet purchases immediately, and added pickup text updates.

@@ -224,20 +224,48 @@ function createWeaponFireSystem({
     const game = getGame();
     const weapon = weaponDefs[weaponId];
     const p = game.player;
+    const reach = weaponReach(weapon);
     game.enemies.forEach((enemy) => {
-      if (distance(p, enemy) <= weaponReach(weapon) + enemy.radius) {
+      if (distance(p, enemy) <= reach + enemy.radius) {
         damageEnemy(enemy, weaponDamage(weaponId), weaponId);
       }
     });
+    if (weaponId === "shield_pulse") {
+      chargeProjectileBlock(destroyEnemyProjectilesInRange(p, reach));
+    }
     game.areas.push({
       x: p.x,
       y: p.y,
-      radius: weaponReach(weapon),
+      radius: reach,
       color: weapon.color,
       life: 0.24,
       visualOnly: true,
     });
     reapEnemies();
+  }
+
+  function destroyEnemyProjectilesInRange(player, reach) {
+    const game = getGame();
+    let destroyed = 0;
+    game.enemyBolts.forEach((bolt) => {
+      if (bolt.life > 0 && distance(player, bolt) <= reach + bolt.radius) {
+        bolt.life = 0;
+        destroyed += 1;
+      }
+    });
+    game.enemyBolts = game.enemyBolts.filter((bolt) => bolt.life > 0);
+    return destroyed;
+  }
+
+  function chargeProjectileBlock(amount) {
+    const game = getGame();
+    const p = game.player;
+    if (!amount || p.projectileBlockReady) return;
+    p.projectileBlockCharge = Math.min(p.projectileBlockNeeded, p.projectileBlockCharge + amount);
+    if (p.projectileBlockCharge >= p.projectileBlockNeeded) {
+      p.projectileBlockReady = true;
+      p.projectileBlockCharge = p.projectileBlockNeeded;
+    }
   }
 
   function fireChain(weaponId) {
