@@ -91,7 +91,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
 
   function drawPlayer(p) {
     drawPlayerHpBar(p);
-    const playerDrawn = drawSprite("player", p.x, p.y, p.radius * 2.7);
+    const playerDrawn = drawSprite("player", p.x, p.y, Math.max(70, p.radius * 3.8));
     if (!playerDrawn) {
       ctx.fillStyle = "#69d2ff";
       ctx.beginPath();

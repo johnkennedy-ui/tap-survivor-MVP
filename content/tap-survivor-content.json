@@ -1489,7 +1489,7 @@
       }
     ],
     "sprites": {
-      "player": "assets/generated/tower/sprites/player-tower-mage.svg?v=generated-20260611-quality",
+      "player": "assets/generated/tower/sheet-20260614/wizard-idle-staff.png?v=sheet-20260614-player",
       "backgrounds": {
         "tower_floor": "assets/generated/tower/tower-floor-bg.png?v=generated-20260611"
       },
