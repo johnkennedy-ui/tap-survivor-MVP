@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Fix ranged enemy, magnet, and pickup text updates
+Restore ranged enemy floor 4 gate
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-14T13:46:31.132Z
+- Started: 2026-06-14T14:07:57.604Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -56,7 +56,7 @@ Result:
 - `node --check src/pickups.js src/shop.js src/rendering.js src/run-update.js src/run-state.js scripts/verify-mvp.mjs`: passed.
 - Focused VM check: in-run coin magnet purchase updates current player pickup radius immediately.
 - Focused VM check: pickup text creates on XP/coin collection and expires.
-- Focused VM check: `hexer` does not spawn at player level 3 and can spawn at player level 4 in the intro mix.
+- Focused VM check: `hexer` does not spawn before tower floor 4 and can spawn at tower floor 4 in the intro mix.
 - `npm run validate:content`: passed.
 - `node scripts/verify-mvp.mjs`: passed 188 checks.
 - `npm run smoke:start-run`: passed.

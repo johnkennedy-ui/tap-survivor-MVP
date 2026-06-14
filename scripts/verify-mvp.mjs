@@ -99,7 +99,7 @@ check("generated tower background asset exists", content.assets?.sources?.some((
 check("generated tower sprite set exists", content.assets?.sources?.some((source) => source.id === "generated_tower_sprites" && source.commercialUse === true && source.attributionRequired === false) && content.assets?.sprites?.player?.includes("player-tower-mage") && content.assets?.sprites?.enemies?.boss?.includes("tower-warden"));
 check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));
 check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
-check("ranged enemy unlocks after level three", (content.enemyTypes || []).some((enemy) => enemy.id === "hexer" && enemy.minPlayerLevel === 4 && enemy.attackRange && enemy.projectileCooldown) && enemies.includes("isEnemyAvailable"));
+check("ranged enemy unlocks after floor three", (content.enemyTypes || []).some((enemy) => enemy.id === "hexer" && enemy.minTowerFloor === 4 && enemy.attackRange && enemy.projectileCooldown) && enemies.includes("isEnemyAvailable"));
 check("default character registry entry exists", (content.characters || []).some((character) => character.id === "character_default" && character.spriteId === "player"));
 check("content levels drive enemy waves", (content.levels || []).length >= 3 && content.levels.some((level) => level.enemyIds?.includes("bulwark")) && runtime.includes("activeLevelDef") && runtime.includes("levelEnemyTypes"));
 check("enemy spawns are content-counted and patterned", runtime.includes("spawnPatternPositions(spawnCount)") && runtime.includes("spawnEnemy(type, position)"));
@@ -111,7 +111,7 @@ check("XP drops exist", runState.includes("xpDrops") && runUpdate.includes("coll
 check("coin and heart drops exist", runState.includes("lootDrops") && pickups.includes("spawnLootDrops") && pickups.includes('type: "coin"') && pickups.includes('type: "heart"'));
 check("pickup attraction scales with speed", pickups.includes("pullDropTowardPlayer") && runUpdate.includes("pickupSystem.updateXpDrops(dt)") && runUpdate.includes("pickupSystem.updateLootDrops(dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 480, dt)") && pickups.includes("pullDropTowardPlayer(drop, player, 540, dt)"));
 check("pickup text updates through run loop", runState.includes("pickupTexts") && pickups.includes("addPickupText") && pickups.includes("updatePickupTexts") && runUpdate.includes("pickupSystem.updatePickupTexts(dt)") && rendering.includes("drawPickupText"));
-check("level four ranged enemies can spawn immediately", (content.levels || []).filter((level) => level.startsAt <= 30).every((level) => level.enemyIds?.includes("hexer")) && enemies.includes("minPlayerLevel"));
+check("floor four ranged enemies can spawn immediately", (content.levels || []).filter((level) => level.startsAt <= 30).every((level) => level.enemyIds?.includes("hexer")) && enemies.includes("minTowerFloor"));
 check("coins persist in save", save.includes("coins: 0") && pickups.includes("save.coins +=") && pickups.includes("persist()"));
 check("heart drops heal 20 percent max HP", pickups.includes('drop.type === "heart"') && pickups.includes("game.player.maxHp * drop.healPercent") && pickups.includes("healPercent: 0.2"));
 check("player HP bar renders above sprite", rendering.includes("drawPlayerHpBar") && rendering.includes("p.y - p.radius - 16"));

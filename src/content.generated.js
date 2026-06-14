@@ -935,7 +935,7 @@ globalThis.TapSurvivorContent = {
       "touchCooldown": 0.7,
       "xp": 2,
       "assetId": "hexer",
-      "minPlayerLevel": 4,
+      "minTowerFloor": 4,
       "attackRange": 260,
       "projectileCooldown": 1.35,
       "projectileSpeed": 235,
