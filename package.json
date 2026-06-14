@@ -7,6 +7,7 @@
     "agent:evidence": "node scripts/agent-evidence.mjs",
     "agent:prepush": "node scripts/agent-prepush.mjs",
     "build:content": "node scripts/build-content.mjs",
+    "cache:bump": "node scripts/bump-cache-keys.mjs",
     "validate:content": "node scripts/validate-content.mjs",
     "add:content": "node scripts/add-content.mjs",
     "content:summary": "node scripts/content-summary.mjs",

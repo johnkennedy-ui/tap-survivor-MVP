@@ -53,13 +53,14 @@ npm run test:speed
 ## Before Reporting
 
 ```bash
+npm run cache:bump
 npm run agent:prepush
 npm run agent:handoff
 npm run agent:evidence -- --task "<short task name>"
 git status --short
 ```
 
-Report the commit, changed files, validation commands, and any remaining caveats.
+`npm run agent:prepush` runs `npm run cache:bump` automatically before validation. Report the commit, changed files, validation commands, and any remaining caveats.
 
 ## Deployment
 

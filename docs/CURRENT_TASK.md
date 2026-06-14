@@ -4,29 +4,31 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add more quests
+Auto-bump runtime cache keys
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T16:36:25.236Z
+- Started: 2026-06-14T17:13:20.140Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
 - `docs/CHANGELOG_AGENT.md`
-- `index.html`
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
+- `docs/MAINTENANCE.md`
+- `package.json`
+- `scripts/agent-prepush.mjs`
+- `scripts/bump-cache-keys.mjs`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
-- `index.html`
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
+- `package.json`
+- `scripts/agent-prepush.mjs`
+- `scripts/bump-cache-keys.mjs`
 - `scripts/verify-mvp.mjs`
+- `docs/MAINTENANCE.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
 
@@ -40,12 +42,11 @@ npm run agent:check
 
 Result:
 
-- `npm run build:content`: passed.
-- `npm run validate:content`: passed 72 quests.
-- `npm run audit:quests`: passed 72 quests.
-- `npm test`: passed 201 MVP checks.
-- `npm run agent:prepush`: passed.
-- Evidence: `../Shane training/20260614T164035Z_add-more-quests/result.md`.
+- `node --check scripts/bump-cache-keys.mjs`: passed.
+- `npm run cache:bump`: passed, no cache change needed for tooling-only patch.
+- `npm test`: passed 205 MVP checks.
+- `npm run agent:prepush`: passed; cache-bump hook ran first.
+- Evidence: `../Shane training/20260614T171646Z_auto-cache-key-bump/result.md`.
 
 ## Evidence Required
 

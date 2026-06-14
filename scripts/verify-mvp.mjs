@@ -51,6 +51,9 @@ const extensionGuide = readRequired("docs/CONTENT_EXTENSION_GUIDE.md");
 const taskTemplate = readRequired("docs/AGENT_TASK_TEMPLATE.md");
 const agentInstructions = readRequired("AGENTS.md");
 const workflow = readRequired(".github/workflows/tap-survivor-pages.yml");
+const pkg = readRequired("package.json");
+const agentPrepush = readRequired("scripts/agent-prepush.mjs");
+const cacheBump = readRequired("scripts/bump-cache-keys.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
 const runtime = `${game}\n${combat}\n${weaponFire}\n${enemies}\n${runState}\n${runUpdate}`;
@@ -226,6 +229,7 @@ check("workflow publishes content and assets", workflow.includes("assets content
 check("workflow publishes agent docs", workflow.includes("AGENTS.md") && workflow.includes("docs"));
 check("workflow writes nojekyll marker", workflow.includes("touch .nojekyll"));
 check("workflow runs reusable MVP test", workflow.includes("node scripts/verify-mvp.mjs"));
+check("cache keys auto-bump before prepush", pkg.includes('"cache:bump"') && agentPrepush.includes("Cache Key Bump") && cacheBump.includes("content/tap-survivor-content.json") && cacheBump.includes("auto-"));
 
 const failed = checks.filter((item) => !item.pass);
 

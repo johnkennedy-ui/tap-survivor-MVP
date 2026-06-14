@@ -55,6 +55,8 @@ function needsDeployCheck(files) {
   );
 }
 
+runStep("Cache Key Bump", "npm", ["run", "cache:bump"]);
+
 const branch = run("git", ["branch", "--show-current"]) || "unknown";
 const commit = run("git", ["rev-parse", "--short", "HEAD"]) || "unknown";
 const status = run("git", ["status", "--short"]);
