@@ -2,6 +2,7 @@
   function createProgressionSystem({
     weaponDefs,
     weaponUnlocks,
+    upgradeDefs,
     questDefs,
     getSave,
     openQuest,
@@ -9,12 +10,16 @@
     renderMeta,
     applyRunMetaUpgrades,
   }) {
+    const maxTierByUpgradeId = new Map(upgradeDefs.map((upgrade) => [upgrade.id, upgrade.maxTier]));
+
     function hasNode(id) {
       return getSave().unlockedNodes.includes(id);
     }
 
     function getUpgradeTier(id) {
-      return Math.min(3, getSave().upgradeTiers[id] || 0);
+      const tier = getSave().upgradeTiers[id] || 0;
+      const maxTier = maxTierByUpgradeId.get(id);
+      return Math.min(maxTier || tier, tier);
     }
 
     function isQuestComplete(id) {

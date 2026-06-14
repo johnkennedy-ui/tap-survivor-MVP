@@ -73,6 +73,7 @@ function addQuestProgressGroup(ids, amount) {
 const progressionSystem = globalThis.TapSurvivorProgression.createProgressionSystem({
   weaponDefs,
   weaponUnlocks,
+  upgradeDefs,
   questDefs,
   getSave: () => save,
   openQuest: (id) => questSystem.openQuest(id),

@@ -149,6 +149,7 @@ check("run upgrades are content-driven", (content.runUpgrades || []).length >= 1
 check("meta upgrades are quest-gated", (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "first_blood") && (content.metaUpgrades || []).some((upgrade) => upgrade.requiresQuest === "boss_hunter"));
 check("Laser Damage upgrade exists", upgrades.includes("laser_damage") && upgrades.includes("maxTier: 5"));
 check("upgrade tiers are tracked", progression.includes("upgradeTiers") && ui.includes("Buy Tier"));
+check("progression tier cap follows upgrade max tiers", progression.includes("maxTierByUpgradeId") && progression.includes("Math.min(maxTier || tier, tier)") && game.includes("upgradeDefs,"));
 check("skill tree gates by prerequisite and quest", progression.includes("requiresNode") && progression.includes("requiresQuest") && progression.includes("nodeGateStatus"));
 check("completed quests disappear from quest list", ui.includes("activeQuestIds") && !ui.includes("Status: ${complete"));
 check("level-up choices are limited to 3 random options", levelUp.includes("shuffleChoices") && levelUp.includes(".slice(0, 3)"));
