@@ -194,6 +194,19 @@ section + section {
   padding: 10px;
 }
 
+.shop-item {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.shop-item-sprite {
+  width: 38px;
+  height: 38px;
+  image-rendering: pixelated;
+}
+
 .node strong,
 .quest strong,
 .shop-item strong {

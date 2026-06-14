@@ -30,7 +30,7 @@
         paused: false,
         pauseReason: "",
         elapsed: 0,
-        duration: 360,
+        duration: 150,
         towerFloor: getSave().towerFloor || 1,
         bossSpawned: false,
         bossDefeated: false,

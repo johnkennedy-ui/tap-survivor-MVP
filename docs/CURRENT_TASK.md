@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Fix enemy-count performance slowdown
+Shorter run, super boss relics, weapon and shop sprites
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-14T11:40:26.262Z
+- Started: 2026-06-14T12:24:34.770Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -17,18 +17,36 @@ Fix enemy-count performance slowdown
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
-- `src/sprites.js`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `src/run-state.js`
+- `src/enemies.js`
+- `src/game.js`
 - `src/rendering.js`
+- `src/shop.js`
+- `src/styles.css`
+- `scripts/content-tools.mjs`
+- `scripts/smoke-boss-run.mjs`
 - `scripts/verify-mvp.mjs`
+- `assets/generated/tower/sprites/*.svg`
 
 ## Files Changed
 
-- `src/sprites.js`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `src/run-state.js`
+- `src/enemies.js`
+- `src/game.js`
 - `src/rendering.js`
+- `src/shop.js`
+- `src/styles.css`
+- `scripts/content-tools.mjs`
+- `scripts/smoke-boss-run.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
+- 18 SVG files under `assets/generated/tower/sprites/`
 
 ## Validation Plan
 
@@ -40,11 +58,19 @@ npm run agent:check
 
 Result:
 
-- `node --check src/sprites.js`: passed.
-- `node --check src/rendering.js`: passed.
-- `node scripts/verify-mvp.mjs`: passed 181 checks.
-- `npm run smoke:browser`: skipped locally because Chromium is blocked by snap permissions in this sandbox.
-- `npm run agent:check`: passed, including `npm test`.
+- `npm run build:content`: passed.
+- `node --check src/game.js`: passed.
+- `node --check src/enemies.js`: passed.
+- `node --check src/shop.js`: passed.
+- `node --check scripts/content-tools.mjs`: passed.
+- `node --check scripts/smoke-boss-run.mjs`: passed.
+- `npm run validate:content`: passed.
+- `node scripts/verify-mvp.mjs`: passed 184 checks.
+- `npm run smoke:boss-run`: passed.
+- `npm run smoke:shop`: passed.
+- `npm run smoke:start-run`: passed.
+- `npm test`: passed.
+- `npm run agent:check`: passed.
 
 ## Evidence Required
 

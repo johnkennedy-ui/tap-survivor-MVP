@@ -143,10 +143,10 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       ctx.fill();
     }
     if (enemy.boss) {
-      strokeEnemyRing(enemy, "#ffd166", 4);
+      strokeEnemyRing(enemy, enemy.superBoss ? "#ff74c8" : "#ffd166", enemy.superBoss ? 6 : 4);
       ctx.fillStyle = "#f3f6fb";
       ctx.font = "700 14px sans-serif";
-      ctx.fillText("BOSS", enemy.x - 19, enemy.y - enemy.radius - 10);
+      ctx.fillText(enemy.superBoss ? "SUPER" : "BOSS", enemy.x - (enemy.superBoss ? 24 : 19), enemy.y - enemy.radius - 10);
     } else if (enemy.type === "skitter") {
       ctx.fillStyle = "#17202c";
       ctx.beginPath();

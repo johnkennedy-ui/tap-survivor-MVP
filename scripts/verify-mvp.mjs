@@ -149,6 +149,7 @@ check("relics affect level-up choices", levelUp.includes("selectionWeightBonus")
 check("weapon slot relics exist", (content.relics || []).some((relic) => relic.weaponSlotBonus > 0) && (content.relics || []).some((relic) => relic.weaponSlotBonus < 0 && relic.weaponDamageMultiplier === 2) && relics.includes("getWeaponDamageMultiplier"));
 check("coin shop exists", index.includes('id="openShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
 check("shop items are content-driven", (content.shopItems || []).length >= 8 && shop.includes("shopItemDefs"));
+check("shop items have distinct sprites", (content.shopItems || []).every((item) => item.spritePath) && shop.includes("shop-item-sprite"));
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => weaponFire.includes(token)) && game.includes("getShopBonuses"));
@@ -161,13 +162,15 @@ check("runs can be exited", index.includes('id="exitRun"') && game.includes('end
 check("fullscreen button exists", index.includes('id="fullscreenButton"') && shellUi.includes("function toggleFullscreen") && shellUi.includes("requestFullscreen"));
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));
-check("run lasts 6 minutes before boss", runtime.includes("duration: 360") && runtime.includes("spawnBoss"));
+check("run lasts 2.5 minutes before boss", runtime.includes("duration: 150") && runtime.includes("spawnBoss"));
 check("boss death advances tower floor", runtime.includes("advanceTowerFloor") && game.includes("function advanceTowerFloor") && runtime.includes("enemy.boss"));
 check("tower floor progresses after boss clear", save.includes("towerFloor: 1") && game.includes("save.towerFloor") && runUi.includes("Cleared Floor") && rendering.includes("Tower Floor"));
 check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
+check("every fifth floor has super boss relic drop", enemies.includes("superBoss") && game.includes("relicDropCount") && game.includes("clearedFloor % 5 === 0 ? 2 : 1"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
+check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("debug balance overlay exists", index.includes('id="toggleDebug"') && index.includes('id="debugStats"') && debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));

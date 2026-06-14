@@ -945,6 +945,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "speed",
         "value": 10
@@ -962,6 +963,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "pickupRadius",
         "value": 10
@@ -979,6 +981,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "maxHp",
         "value": 15
@@ -996,6 +999,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "flatDamage",
         "value": 2
@@ -1013,6 +1017,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "attackRadius",
         "value": 1
@@ -1030,6 +1035,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "fireRate",
         "value": 1
@@ -1047,6 +1053,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "percentDamage",
         "value": 1
@@ -1064,6 +1071,7 @@ globalThis.TapSurvivorContent = {
       ],
       "maxTier": 3,
       "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop",
       "effect": {
         "stat": "relicFocus",
         "value": 0.5
@@ -1110,7 +1118,7 @@ globalThis.TapSurvivorContent = {
     {
       "id": "floor_pressure",
       "name": "Floor Pressure",
-      "startsAt": 180,
+      "startsAt": 110,
       "enemyIds": [
         "drifter",
         "skitter",
@@ -1164,7 +1172,17 @@ globalThis.TapSurvivorContent = {
       },
       "weapons": {
         "spark_bolt": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260611-quality",
-        "prism_beam": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260611-quality"
+        "prism_beam": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260611-quality",
+        "frost_orb": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons",
+        "flame_wave": "assets/generated/tower/sprites/weapon-flame-wave.svg?v=generated-20260614-weapons",
+        "saw_drone": "assets/generated/tower/sprites/weapon-saw-drone.svg?v=generated-20260614-weapons",
+        "void_mine": "assets/generated/tower/sprites/weapon-void-mine.svg?v=generated-20260614-weapons",
+        "chain_spark": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+        "moon_glaive": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+        "meteor_pin": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+        "acid_pool": "assets/generated/tower/sprites/weapon-acid-pool.svg?v=generated-20260614-weapons",
+        "shield_pulse": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+        "nova_burst": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
       },
       "ui": {
         "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"

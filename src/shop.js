@@ -54,10 +54,13 @@ function createShopSystem({
       const el = document.createElement("div");
       el.className = `shop-item ${affordable ? "available" : "locked"}`;
       el.innerHTML = `
-        <strong>${item.name}</strong>
-        <span>${item.description}</span><br />
-        <span>Tier: ${tier}/${item.maxTier}</span><br />
-        <span>${maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`}</span>
+        ${item.spritePath ? `<img class="shop-item-sprite" src="${item.spritePath}" alt="" />` : ""}
+        <div>
+          <strong>${item.name}</strong>
+          <span>${item.description}</span><br />
+          <span>Tier: ${tier}/${item.maxTier}</span><br />
+          <span>${maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`}</span>
+        </div>
       `;
       const button = document.createElement("button");
       button.textContent = maxed ? "Maxed" : `Buy Tier ${tier + 1}`;

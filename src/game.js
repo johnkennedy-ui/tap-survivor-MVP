@@ -253,13 +253,14 @@ function endRun(reason) {
 function advanceTowerFloor() {
   if (!game) return;
   const clearedFloor = game.towerFloor || 1;
-  const awardedRelic = relicSystem.grantRandomRelic(save);
+  const relicDropCount = clearedFloor % 5 === 0 ? 2 : 1;
+  const awardedRelics = Array.from({ length: relicDropCount }, () => relicSystem.grantRandomRelic(save)).filter(Boolean);
   save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
   persist();
   resetGameState();
   game.lastFloorClear = {
     floor: clearedFloor,
-    relicName: awardedRelic?.name || "No locked relics remaining",
+    relicName: awardedRelics.length ? awardedRelics.map((relic) => relic.name).join(" + ") : "No locked relics remaining",
   };
   updateRunHud();
   renderMeta();

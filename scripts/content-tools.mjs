@@ -225,6 +225,7 @@ export function validateContent(content) {
       }
       requireNumber(item.effect.value, `shopItem ${item.id}.effect.value`, 0);
     }
+    if (item.spritePath) validateSpritePath(item.spritePath, `shopItem ${item.id}.spritePath`);
   });
 
   relics.forEach((relic) => {

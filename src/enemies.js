@@ -94,15 +94,17 @@ function createEnemySystem({
     if (game.bossSpawned) return;
     game.bossSpawned = true;
     const difficulty = floorDifficulty(game.towerFloor);
+    const superBoss = game.towerFloor % 5 === 0;
     const bossHp = (1400 + game.kills * 6) * difficulty.hp;
     game.enemies.push({
       boss: true,
+      superBoss,
       assetId: "boss",
       x: canvas.width / 2,
       y: -52,
       radius: 38,
-      hp: bossHp,
-      maxHp: bossHp,
+      hp: superBoss ? bossHp * 1.35 : bossHp,
+      maxHp: superBoss ? bossHp * 1.35 : bossHp,
       speed: 42,
       damage: 22 * difficulty.damage,
       touchCooldown: 0.8,
