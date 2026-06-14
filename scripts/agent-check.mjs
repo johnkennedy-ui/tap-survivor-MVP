@@ -12,6 +12,7 @@ const checks = [
   ["node", ["--check", "scripts/smoke-browser.mjs"]],
   ["node", ["--check", "scripts/smoke-content-tools.mjs"]],
   ["node", ["--check", "scripts/content-summary.mjs"]],
+  ["node", ["--check", "src/render-hud.js"]],
   ["npm", ["run", "content:summary"]],
   ["npm", ["run", "smoke:browser"]],
   ["npm", ["run", "smoke:save"]],

@@ -4,37 +4,37 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add quest-chain helper
+Split HUD rendering helper
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T17:25:27.462Z
+- Started: 2026-06-14T17:45:08.079Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
-- `docs/MAINTENANCE.md`
-- `package.json`
-- `scripts/add-content.mjs`
-- `scripts/content-tools.mjs`
-- `scripts/smoke-content-tools.mjs`
+- `index.html`
+- `src/render-hud.js`
+- `src/rendering.js`
 - `scripts/agent-check.mjs`
 - `scripts/verify-mvp.mjs`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 
 ## Files Changed
 
-- `package.json`
-- `scripts/add-content.mjs`
-- `scripts/content-tools.mjs`
-- `scripts/smoke-content-tools.mjs`
+- `index.html`
+- `src/render-hud.js`
+- `src/rendering.js`
 - `scripts/agent-check.mjs`
 - `scripts/verify-mvp.mjs`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
-- `docs/MAINTENANCE.md`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
 
@@ -48,12 +48,12 @@ npm run agent:check
 
 Result:
 
-- `node --check scripts/add-content.mjs`: passed.
-- `node --check scripts/content-tools.mjs`: passed.
-- `npm run smoke:content-tools`: passed.
-- `npm test`: passed 208 MVP checks.
-- `npm run agent:prepush`: passed.
-- Evidence: `../Shane training/20260614T172937Z_quest-chain-helper/result.md`.
+- `node --check src/render-hud.js`: passed.
+- `node --check src/rendering.js`: passed.
+- `node --check scripts/verify-mvp.mjs`: passed.
+- `npm test`: passed 211 MVP checks.
+- `npm run agent:prepush`: passed; cache keys bumped for `render-hud.js` and `rendering.js`.
+- Evidence: `../Shane training/20260614T175028Z_render-hud-split/result.md`.
 
 ## Evidence Required
 
