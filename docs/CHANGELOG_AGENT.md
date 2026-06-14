@@ -2,6 +2,11 @@
 
 Short log of structural changes that affect future OpenClaw/Codex work. Keep entries concise and link them to the commands or docs future agents should use.
 
+## 2026-06-14
+
+- Wired `content.levels` into `src/enemies.js` so level entries now control enemy mixes, spawn counts, and spawn pressure.
+- Extended level authoring/validation for `enemyIds`, `spawnCount`, and `spawnRateMultiplier`; bad enemy references now fail `npm run validate:content`.
+
 ## 2026-06-12
 
 - Extracted enemy spawning, enemy movement, boss spawning, and boss special attacks into `src/enemies.js`.

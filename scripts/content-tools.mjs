@@ -245,6 +245,18 @@ export function validateContent(content) {
     seenLevels.add(level.id);
     requireString(level.name, `level ${level.id}.name`);
     requireNumber(level.startsAt, `level ${level.id}.startsAt`, 0);
+    if (level.enemyIds) {
+      requireArray(level.enemyIds, `level ${level.id}.enemyIds`);
+      (Array.isArray(level.enemyIds) ? level.enemyIds : []).forEach((enemyId) => {
+        requireString(enemyId, `level ${level.id}.enemyIds item`);
+        if (!seenEnemies.has(enemyId)) fail(`level ${level.id} references missing enemy ${enemyId}`);
+      });
+    }
+    if (level.spawnCount !== undefined) requireNumber(level.spawnCount, `level ${level.id}.spawnCount`, 1);
+    if (level.spawnRateMultiplier !== undefined) {
+      requireNumber(level.spawnRateMultiplier, `level ${level.id}.spawnRateMultiplier`, 0.01);
+    }
+    if (level.notes !== undefined) requireString(level.notes, `level ${level.id}.notes`);
   });
 
   return errors;

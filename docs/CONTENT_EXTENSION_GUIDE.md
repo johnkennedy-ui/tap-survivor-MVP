@@ -58,14 +58,14 @@ node scripts/add-content.mjs shop-item coin_pack_small --name "Small Coin Pack" 
 ## Add A Level
 
 1. Add the level to `levels` in `content/tap-survivor-content.json`.
-2. Include `id`, `name`, `startsAt`, optional `enemyIds`, and `notes`.
+2. Include `id`, `name`, `startsAt`, optional `enemyIds`, `spawnCount`, `spawnRateMultiplier`, and `notes`.
 3. Keep timing in seconds.
 4. Run `npm run build:content && npm run validate:content`.
 
 Shortcut:
 
 ```bash
-node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --starts-at 420 --enemies drifter,skitter,bulwark
+node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --starts-at 420 --enemies drifter,skitter,bulwark --spawn-count 3 --spawn-rate 1.1
 ```
 
 ## Add A Character

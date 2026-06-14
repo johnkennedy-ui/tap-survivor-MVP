@@ -1070,7 +1070,57 @@ globalThis.TapSurvivorContent = {
       }
     }
   ],
-  "levels": [],
+  "levels": [
+    {
+      "id": "floor_intro",
+      "name": "Floor Intro",
+      "startsAt": 0,
+      "enemyIds": [
+        "drifter"
+      ],
+      "spawnCount": 2,
+      "spawnRateMultiplier": 1,
+      "notes": "Opening wave; mirrors the old first enemy window."
+    },
+    {
+      "id": "floor_skitter_mix",
+      "name": "Skitter Mix",
+      "startsAt": 30,
+      "enemyIds": [
+        "drifter",
+        "skitter"
+      ],
+      "spawnCount": 2,
+      "spawnRateMultiplier": 1,
+      "notes": "Adds fast enemies at the old 30 second unlock point."
+    },
+    {
+      "id": "floor_bulwark_mix",
+      "name": "Bulwark Mix",
+      "startsAt": 60,
+      "enemyIds": [
+        "drifter",
+        "skitter",
+        "bulwark"
+      ],
+      "spawnCount": 2,
+      "spawnRateMultiplier": 1,
+      "notes": "Adds heavy enemies at the old 60 second unlock point."
+    },
+    {
+      "id": "floor_pressure",
+      "name": "Floor Pressure",
+      "startsAt": 180,
+      "enemyIds": [
+        "drifter",
+        "skitter",
+        "bulwark"
+      ],
+      "spawnCount": 3,
+      "spawnRateMultiplier": 1.08,
+      "notes": "Late-run pressure now lives in content instead of spawn code."
+    }
+  ],
   "assets": {
     "sources": [
       {

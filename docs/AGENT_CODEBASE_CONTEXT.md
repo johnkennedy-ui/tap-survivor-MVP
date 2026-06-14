@@ -115,7 +115,7 @@ The project is mixed but mostly registry-driven:
 - Weapon behavior kinds are dispatched in `src/weapon-fire.js`, but adding a new behavior kind still requires a matching handler there.
 - New run-upgrade effect types require extending the interpreter in `src/upgrades.js`.
 - Characters are registered as content but the current MVP still uses the default player directly.
-- Level entries are validated but not yet fully wired into gameplay UI.
+- Level entries drive enemy mixes, spawn count, and spawn pressure in `src/enemies.js`; gameplay UI still only reports tower floor.
 - Asset paths include cache query strings; keep them in the registry, not gameplay code.
 
 ## Rules For Future Agents

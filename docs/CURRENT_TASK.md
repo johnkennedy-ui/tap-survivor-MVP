@@ -4,55 +4,66 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Extract enemy lifecycle helper
+Wire content levels into enemy waves
 
 ## Status
 
-- State: validated; ready to push/report
-- Started: 2026-06-13T09:27:44.211Z
+- State: validated; ready to report
+- Started: 2026-06-14T10:39:53.503Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
-- `src/enemies.js`
-- `src/combat.js`
-- `index.html`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
-- `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CHANGELOG_AGENT.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `src/game.js`
+- `src/combat.js`
+- `src/enemies.js`
+- `scripts/add-content.mjs`
+- `scripts/content-tools.mjs`
+- `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
-- `src/enemies.js`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `src/game.js`
 - `src/combat.js`
-- `index.html`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
+- `src/enemies.js`
+- `scripts/add-content.mjs`
+- `scripts/content-tools.mjs`
 - `scripts/verify-mvp.mjs`
-- `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/CHANGELOG_AGENT.md`
+- `docs/CURRENT_TASK.md`
 
 ## Validation Plan
 
 Run the smallest command that proves the change:
 
 ```bash
-node --check src/enemies.js && node --check src/combat.js && node scripts/verify-mvp.mjs && npm run smoke:start-run && npm run smoke:boss-run && npm run test:speed && npm run agent:prepush
+npm run agent:check
 ```
 
 Result:
 
 - `node --check src/enemies.js`: passed.
 - `node --check src/combat.js`: passed.
+- `node --check src/game.js`: passed.
+- `node --check scripts/content-tools.mjs`: passed.
+- `node --check scripts/add-content.mjs`: passed.
+- `npm run build:content`: passed.
+- `npm run validate:content`: passed.
 - `node scripts/verify-mvp.mjs`: passed 180 checks.
 - `npm run smoke:start-run`: passed.
 - `npm run smoke:boss-run`: passed.
 - `npm run test:speed`: passed.
-- `npm run agent:prepush`: passed, including content summary, browser smoke, focused smoke tests, and `npm test`.
+- `npm test`: passed.
+- `npm run agent:check`: passed.
 
 ## Evidence Required
 

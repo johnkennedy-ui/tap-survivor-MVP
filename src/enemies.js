@@ -2,21 +2,44 @@
 function createEnemySystem({
   canvas,
   enemyTypes,
+  levelDefs = [],
   getGame,
   distance,
   clamp,
 }) {
   const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
+  const enemyTypeById = Object.fromEntries(enemyTypes.map((enemy) => [enemy.id, enemy]));
+  const orderedLevelDefs = [...levelDefs].sort((a, b) => a.startsAt - b.startsAt);
 
   function spawnEnemies(dt) {
     const game = getGame();
     game.spawnTimer -= dt;
     if (game.spawnTimer > 0) return;
-    game.spawnTimer = Math.max(0.32, (1.1 - game.elapsed / 150) / floorDifficulty(game.towerFloor).spawnRate);
-    spawnPatternPositions(2).forEach((position, index) => {
-      const type = chooseEnemyType(index);
+    const level = activeLevelDef();
+    const levelSpawnRate = level?.spawnRateMultiplier || 1;
+    const spawnCount = Math.max(1, Math.floor(level?.spawnCount || 2));
+    game.spawnTimer = Math.max(
+      0.32,
+      (1.1 - game.elapsed / 150) / (floorDifficulty(game.towerFloor).spawnRate * levelSpawnRate),
+    );
+    spawnPatternPositions(spawnCount).forEach((position, index) => {
+      const type = chooseEnemyType(index, levelEnemyTypes(level));
       spawnEnemy(type, position);
     });
+  }
+
+  function activeLevelDef() {
+    const game = getGame();
+    return orderedLevelDefs.reduce(
+      (active, level) => (game.elapsed >= level.startsAt ? level : active),
+      null,
+    );
+  }
+
+  function levelEnemyTypes(level) {
+    if (!level?.enemyIds?.length) return availableEnemyTypes();
+    const configured = level.enemyIds.map((id) => enemyTypeById[id]).filter(Boolean);
+    return configured.length ? configured : availableEnemyTypes();
   }
 
   function availableEnemyTypes() {
@@ -24,8 +47,7 @@ function createEnemySystem({
     return enemyTypes.slice(0, Math.min(enemyTypes.length, 1 + Math.floor(game.elapsed / 30)));
   }
 
-  function chooseEnemyType(offset = 0) {
-    const available = availableEnemyTypes();
+  function chooseEnemyType(offset = 0, available = availableEnemyTypes()) {
     return available[(Math.floor(Math.random() * available.length) + offset) % available.length];
   }
 

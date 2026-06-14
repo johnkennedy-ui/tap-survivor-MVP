@@ -24,6 +24,7 @@ const {
   bossQuestIds,
   runUpgradeDefs,
   enemyTypes,
+  levelDefs,
   shopItemDefs,
   relicDefs,
 } = globalThis.TapSurvivorContentRegistry.createContentRegistry({
@@ -152,6 +153,7 @@ const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
 const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   canvas,
   enemyTypes,
+  levelDefs,
   weaponDefs,
   getGame: () => game,
   getUpgradeTier,

@@ -8,7 +8,7 @@ function usage() {
   node scripts/add-content.mjs quest <id> --name "Name" --description "Do thing" --target 100 --reward 2 --group kill [--weapon spark_bolt] [--opens next_id]
   node scripts/add-content.mjs weapon <id> --name "Name" --description "Weapon text" --kind projectile --damage 20 --cooldown 1 --color "#ffffff" --unlock-cost 2 --branch Core [--requires-node unlock_laser] [--requires-quest use_laser_run]
   node scripts/add-content.mjs shop-item <id> --name "Name" --description "Item text" --kind upgrade --cost 100
-  node scripts/add-content.mjs level <id> --name "Name" --starts-at 120
+  node scripts/add-content.mjs level <id> --name "Name" --starts-at 120 [--enemies drifter,skitter] [--spawn-count 2] [--spawn-rate 1.1]
   node scripts/add-content.mjs character <id> --name "Name" --description "Character text" --sprite player`);
 }
 
@@ -100,6 +100,8 @@ try {
       name: requireValue("name"),
       startsAt: numberValue("starts-at"),
       enemyIds: args.enemies ? args.enemies.split(",").filter(Boolean) : [],
+      spawnCount: numberValue("spawn-count", 2),
+      spawnRateMultiplier: numberValue("spawn-rate", 1),
       notes: args.notes || "",
     });
   } else if (type === "character") {
