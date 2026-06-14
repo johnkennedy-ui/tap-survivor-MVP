@@ -27,6 +27,29 @@ function createLevelUpSystem({
   maxEquippedWeapons,
   activeQuestWeaponIds,
 }) {
+  const skillIconByRunUpgrade = {
+    run_move_speed: "speed",
+    run_pickup_radius: "pickupRadius",
+    run_max_hp: "maxHp",
+    run_attack_radius: "attackRadius",
+    run_fire_rate: "fireRate",
+    run_flat_damage: "flatDamage",
+    run_percent_damage: "percentDamage",
+  };
+  const shopIconByStat = new Map(
+    (globalThis.TapSurvivorContent?.shopItems || [])
+      .filter((item) => item.effect?.stat && item.spritePath)
+      .map((item) => [item.effect.stat, item.spritePath]),
+  );
+  const weaponIcons = globalThis.TapSurvivorContent?.assets?.sprites?.weapons || {};
+  const fallbackSkillIcon = globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+
+  function iconForChoice(choice) {
+    if (choice.weaponId) return weaponIcons[choice.weaponId] || fallbackSkillIcon;
+    if (choice.runUpgradeId) return shopIconByStat.get(skillIconByRunUpgrade[choice.runUpgradeId]) || fallbackSkillIcon;
+    return fallbackSkillIcon;
+  }
+
   function showLevelUp() {
     const game = getGame();
     if (!game) return;
@@ -103,13 +126,25 @@ function createLevelUpSystem({
 
     choices.forEach((choice) => {
       const button = document.createElement("button");
-      button.innerHTML = `<strong>${choice.name}</strong><br /><span>${choice.description}</span>`;
+      button.className = "level-choice";
+      button.disabled = true;
+      button.innerHTML = `
+        <img class="level-choice-icon" src="${iconForChoice(choice)}" alt="" />
+        <span class="level-choice-copy">
+          <strong>${choice.name}</strong>
+          <span>${choice.description}</span>
+        </span>
+      `;
       button.addEventListener("click", () => {
+        if (button.disabled) return;
         choice.apply();
         game.paused = false;
         game.pauseReason = "";
         ui.levelUp.classList.add("hidden");
       });
+      setTimeout(() => {
+        if (!ui.levelUp.classList.contains("hidden")) button.disabled = false;
+      }, 500);
       ui.choices.appendChild(button);
     });
     ui.levelUp.classList.remove("hidden");

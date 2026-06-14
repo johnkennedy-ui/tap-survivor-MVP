@@ -356,6 +356,44 @@ section + section {
   text-align: left;
 }
 
+#levelUp .modal-box {
+  width: min(780px, 100%);
+}
+
+#levelUp .choice-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.level-choice {
+  min-height: 172px;
+  display: grid;
+  grid-template-rows: 76px 1fr;
+  gap: 10px;
+}
+
+.level-choice:disabled {
+  cursor: wait;
+  opacity: 1;
+}
+
+.level-choice-icon {
+  width: 72px;
+  height: 72px;
+  justify-self: center;
+  image-rendering: pixelated;
+}
+
+.level-choice-copy {
+  display: block;
+}
+
+.level-choice-copy span {
+  display: block;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 @media (max-width: 920px) {
   .shell {
     grid-template-columns: 1fr;
@@ -368,5 +406,9 @@ section + section {
 
   .hud {
     max-height: none;
+  }
+
+  #levelUp .choice-list {
+    grid-template-columns: 1fr;
   }
 }

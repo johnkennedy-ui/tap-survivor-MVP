@@ -153,6 +153,7 @@ check("progression tier cap follows upgrade max tiers", progression.includes("ma
 check("skill tree gates by prerequisite and quest", progression.includes("requiresNode") && progression.includes("requiresQuest") && progression.includes("nodeGateStatus"));
 check("completed quests disappear from quest list", ui.includes("activeQuestIds") && !ui.includes("Status: ${complete"));
 check("level-up choices are limited to 3 random options", levelUp.includes("shuffleChoices") && levelUp.includes(".slice(0, 3)"));
+check("level-up choices have icons and click guard", levelUp.includes("level-choice-icon") && levelUp.includes("button.disabled = true") && levelUp.includes("}, 500)") && styles.includes("#levelUp .modal-box") && styles.includes("grid-template-columns: repeat(3"));
 check("unique weapons are capped", levelUp.includes("maxEquippedWeapons") && levelUp.includes("equippedWeapons.length < maxWeapons") && game.includes("maxEquippedWeapons"));
 check("active quest weapons are offered on level-up", levelUp.includes("activeQuestWeaponIds") && levelUp.includes("questWeaponChoices"));
 check("new combat upgrade types exist", ["attack_radius", "fire_rate", "flat_damage", "percent_damage"].every((id) => metaUpgradeIds.has(id)));
