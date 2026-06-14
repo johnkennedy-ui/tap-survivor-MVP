@@ -83,6 +83,7 @@ const ids = [
   "toggleDebug",
   "fullscreenButton",
   "openMenu",
+  "questBanner",
   "exitRun",
   "closeMenu",
   "closeShop",
@@ -103,6 +104,10 @@ const ids = [
   "menuQuests",
   "levelUp",
   "choices",
+  "relicChoice",
+  "relicChoiceTitle",
+  "relicChoiceText",
+  "relicChoices",
   "endScreen",
   "runStats",
   "closeEnd",
@@ -147,6 +152,11 @@ const context = {
     rafCallback = callback;
     return 1;
   },
+  setTimeout: (callback) => {
+    callback();
+    return 1;
+  },
+  clearTimeout() {},
   localStorage: {
     store: new Map(),
     getItem(key) {

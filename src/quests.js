@@ -3,7 +3,7 @@ function questOpenIds(quest) {
   return [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean);
 }
 
-function createQuestSystem({ questDefs, getSave, persist, renderMeta }) {
+function createQuestSystem({ questDefs, getSave, persist, renderMeta, onQuestComplete }) {
   function hasQuest(id) {
     const save = getSave();
     return save.activeQuests.includes(id) || save.completedQuests.includes(id);
@@ -28,6 +28,7 @@ function createQuestSystem({ questDefs, getSave, persist, renderMeta }) {
     questOpenIds(questDefs[id]).forEach(openQuest);
     persist();
     renderMeta();
+    onQuestComplete?.(questDefs[id], reward);
   }
 
   function addQuestProgress(id, amount) {

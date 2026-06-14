@@ -49,6 +49,7 @@ const questSystem = globalThis.TapSurvivorQuests.createQuestSystem({
   getSave: () => save,
   persist,
   renderMeta,
+  onQuestComplete: showQuestBanner,
 });
 let game = null;
 let lastFrame = performance.now();
@@ -114,6 +115,7 @@ const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
 
 const relicSystem = globalThis.TapSurvivorRelics.createRelicSystem({
   relicDefs,
+  weaponDefs,
 });
 
 const runStateSystem = globalThis.TapSurvivorRunState.createRunStateSystem({
@@ -254,7 +256,39 @@ function advanceTowerFloor() {
   if (!game) return;
   const clearedFloor = game.towerFloor || 1;
   const relicDropCount = clearedFloor % 5 === 0 ? 2 : 1;
-  const awardedRelics = Array.from({ length: relicDropCount }, () => relicSystem.grantRandomRelic(save)).filter(Boolean);
+  showRelicChoice(clearedFloor, relicDropCount, []);
+}
+
+function showRelicChoice(clearedFloor, remainingPicks, awardedRelics) {
+  const choices = relicSystem.relicChoices(save, game.player.equippedWeapons, 3);
+  if (!choices.length) {
+    finishBossClear(clearedFloor, awardedRelics);
+    return;
+  }
+  game.paused = true;
+  game.pauseReason = "relic";
+  ui.relicChoiceTitle.textContent = remainingPicks > 1 ? `Choose Relic ${awardedRelics.length + 1}` : "Choose Relic";
+  ui.relicChoiceText.textContent = "Pick one reward shaped by your current weapons.";
+  ui.relicChoices.innerHTML = "";
+  choices.forEach((relic) => {
+    const button = document.createElement("button");
+    button.innerHTML = `<strong>${relic.name}</strong><br /><span>${relic.description}</span>`;
+    button.addEventListener("click", () => {
+      const granted = relicSystem.grantRelic(save, relic);
+      const nextAwarded = granted ? [...awardedRelics, granted] : awardedRelics;
+      if (remainingPicks > 1) {
+        showRelicChoice(clearedFloor, remainingPicks - 1, nextAwarded);
+      } else {
+        finishBossClear(clearedFloor, nextAwarded);
+      }
+    });
+    ui.relicChoices.appendChild(button);
+  });
+  ui.relicChoice.classList.remove("hidden");
+}
+
+function finishBossClear(clearedFloor, awardedRelics) {
+  ui.relicChoice.classList.add("hidden");
   save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
   persist();
   resetGameState();
@@ -264,6 +298,15 @@ function advanceTowerFloor() {
   };
   updateRunHud();
   renderMeta();
+}
+
+let questBannerTimer = 0;
+function showQuestBanner(quest, reward) {
+  if (!ui.questBanner || !quest) return;
+  ui.questBanner.textContent = `${quest.name} complete +${reward} QP`;
+  ui.questBanner.classList.remove("hidden");
+  clearTimeout(questBannerTimer);
+  questBannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), 3000);
 }
 
 function maxEquippedWeapons() {

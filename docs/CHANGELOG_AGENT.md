@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-14
 
+- Added boss relic choice rewards, weapon-relevant relic choice weighting, a scroll-style quest completion banner, and spread run Move Speed across five smaller tiers.
 - Fixed ranged enemy availability to unlock at tower floor 4, included it in early spawn mixes, applied in-run magnet purchases immediately, and added pickup text updates.
 - Added the floor-4+ ranged `hexer` enemy using existing level enemy mixes and the enemy update loop.
 - Shortened run boss timing to 150 seconds, added fifth-floor super boss relic drops, and added distinct SVG mappings for all weapons and shop items.

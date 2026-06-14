@@ -91,6 +91,23 @@ button:disabled {
   color: #fff4c2;
 }
 
+.quest-banner {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  z-index: 3;
+  width: min(520px, calc(100% - 32px));
+  transform: translateX(-50%);
+  border: 2px solid #8d6a2f;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #4f3519, #f0d895 9%, #ffe8a8 50%, #f0d895 91%, #4f3519);
+  color: #24170b;
+  padding: 10px 22px;
+  text-align: center;
+  font-weight: 800;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+}
+
 #game {
   width: min(100%, calc((100vh - 36px) * 16 / 9));
   height: auto;

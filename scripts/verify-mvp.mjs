@@ -150,7 +150,9 @@ check("projectile behavior hooks exist", ["run_projectile_pierce", "run_wall_bou
 check("level-up choices favor started upgrade families", levelUp.includes("weightedChoices") && levelUp.includes("familyTiers") && levelUp.includes("choice.runUpgradeId"));
 check("relic content exists for run skills", (content.relics || []).length >= 24 && (content.runUpgrades || []).every((upgrade) => (content.relics || []).filter((relic) => relic.targetUpgradeId === upgrade.id).length >= 2));
 check("relics affect level-up choices", levelUp.includes("selectionWeightBonus") && levelUp.includes("maxTierBonus") && levelUp.includes("equippedRelics") && levelUp.includes("relic_compass"));
+check("boss relics are choice based", index.includes('id="relicChoice"') && game.includes("showRelicChoice") && game.includes("relicSystem.relicChoices") && relics.includes("relevantRunUpgradeIds"));
 check("weapon slot relics exist", (content.relics || []).some((relic) => relic.weaponSlotBonus > 0) && (content.relics || []).some((relic) => relic.weaponSlotBonus < 0 && relic.weaponDamageMultiplier === 2) && relics.includes("getWeaponDamageMultiplier"));
+check("run move speed spreads over five tiers", content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.maxTier === 5 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.effects?.some((effect) => effect.stat === "speed" && effect.value === 20));
 check("coin shop exists", index.includes('id="openShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
 check("shop items are content-driven", (content.shopItems || []).length >= 8 && shop.includes("shopItemDefs"));
 check("shop items have distinct sprites", (content.shopItems || []).every((item) => item.spritePath) && shop.includes("shop-item-sprite"));
@@ -172,6 +174,7 @@ check("tower floor progresses after boss clear", save.includes("towerFloor: 1") 
 check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
 check("every fifth floor has super boss relic drop", enemies.includes("superBoss") && game.includes("relicDropCount") && game.includes("clearedFloor % 5 === 0 ? 2 : 1"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
+check("quest completion banner exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showQuestBanner") && styles.includes(".quest-banner"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));

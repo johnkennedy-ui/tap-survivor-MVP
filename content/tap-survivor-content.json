@@ -336,12 +336,12 @@
       "id": "run_move_speed",
       "name": "Move Speed",
       "description": "Move faster for this run.",
-      "maxTier": 3,
+      "maxTier": 5,
       "effects": [
         {
           "type": "playerStatAdd",
           "stat": "speed",
-          "value": 32
+          "value": 20
         }
       ]
     },

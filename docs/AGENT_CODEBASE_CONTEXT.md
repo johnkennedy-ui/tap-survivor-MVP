@@ -116,7 +116,7 @@ The project is mixed but mostly registry-driven:
 - New run-upgrade effect types require extending the interpreter in `src/upgrades.js`.
 - Characters are registered as content but the current MVP still uses the default player directly.
 - Level entries drive enemy mixes, spawn count, and spawn pressure in `src/enemies.js`; gameplay UI still only reports tower floor.
-- Run boss timing is 150 seconds; every fifth floor is a super boss and grants two relic rolls on clear.
+- Run boss timing is 150 seconds; every fifth floor is a super boss and gives two relic choices on clear.
 - Asset paths include cache query strings; keep them in the registry, not gameplay code.
 
 ## Rules For Future Agents

@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Restore ranged enemy floor 4 gate
+Add relic choice, run speed rebalance, and quest banner
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-14T14:07:57.604Z
+- Started: 2026-06-14T14:50:54.958Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -18,25 +18,29 @@ Restore ranged enemy floor 4 gate
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `content/tap-survivor-content.json`
+- `index.html`
 - `src/content.generated.js`
-- `src/run-state.js`
-- `src/pickups.js`
-- `src/shop.js`
-- `src/enemies.js`
-- `src/rendering.js`
-- `src/run-update.js`
+- `src/game.js`
+- `src/relics.js`
+- `src/quests.js`
+- `src/ui.js`
+- `src/styles.css`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
 - `content/tap-survivor-content.json`
+- `index.html`
 - `src/content.generated.js`
-- `src/run-state.js`
-- `src/pickups.js`
-- `src/shop.js`
-- `src/enemies.js`
-- `src/rendering.js`
-- `src/run-update.js`
+- `src/game.js`
+- `src/relics.js`
+- `src/quests.js`
+- `src/ui.js`
+- `src/styles.css`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -53,14 +57,13 @@ npm run agent:check
 Result:
 
 - `npm run build:content`: passed.
-- `node --check src/pickups.js src/shop.js src/rendering.js src/run-update.js src/run-state.js scripts/verify-mvp.mjs`: passed.
-- Focused VM check: in-run coin magnet purchase updates current player pickup radius immediately.
-- Focused VM check: pickup text creates on XP/coin collection and expires.
-- Focused VM check: `hexer` does not spawn before tower floor 4 and can spawn at tower floor 4 in the intro mix.
+- `node --check src/game.js src/relics.js src/quests.js scripts/smoke-game-harness.mjs scripts/verify-speed-controls.mjs`: passed.
+- `node scripts/verify-mvp.mjs`: passed 191 checks.
+- Focused VM check: relic choices for `spark_bolt` are weapon-relevant and quest completion callback fires.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 188 checks.
 - `npm run smoke:start-run`: passed.
 - `npm run smoke:shop`: passed.
+- `npm run smoke:boss-run`: passed.
 - `npm test`: passed.
 
 ## Evidence Required

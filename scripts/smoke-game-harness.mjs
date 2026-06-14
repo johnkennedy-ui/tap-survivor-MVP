@@ -84,6 +84,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "toggleDebug",
     "fullscreenButton",
     "openMenu",
+    "questBanner",
     "exitRun",
     "closeMenu",
     "closeShop",
@@ -104,6 +105,10 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "menuQuests",
     "levelUp",
     "choices",
+    "relicChoice",
+    "relicChoiceTitle",
+    "relicChoiceText",
+    "relicChoices",
     "endScreen",
     "runStats",
     "closeEnd",
@@ -133,6 +138,11 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       rafCallback = callback;
       return 1;
     },
+    setTimeout: (callback) => {
+      callback();
+      return 1;
+    },
+    clearTimeout() {},
     localStorage: {
       store: new Map(),
       getItem(key) {
