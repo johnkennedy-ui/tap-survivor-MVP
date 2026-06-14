@@ -53,9 +53,12 @@ const taskTemplate = readRequired("docs/AGENT_TASK_TEMPLATE.md");
 const agentInstructions = readRequired("AGENTS.md");
 const workflow = readRequired(".github/workflows/tap-survivor-pages.yml");
 const pkg = readRequired("package.json");
+const agentCheck = readRequired("scripts/agent-check.mjs");
 const agentPrepush = readRequired("scripts/agent-prepush.mjs");
 const cacheBump = readRequired("scripts/bump-cache-keys.mjs");
 const addContent = readRequired("scripts/add-content.mjs");
+const extractSprites = readRequired("scripts/extract-sprites.mjs");
+const smokeExtractSprites = readRequired("scripts/smoke-extract-sprites.mjs");
 const contentTools = readRequired("scripts/content-tools.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
@@ -259,6 +262,8 @@ check("workflow writes nojekyll marker", workflow.includes("touch .nojekyll"));
 check("workflow runs reusable MVP test", workflow.includes("node scripts/verify-mvp.mjs"));
 check("cache keys auto-bump before prepush", pkg.includes('"cache:bump"') && agentPrepush.includes("Cache Key Bump") && cacheBump.includes("content/tap-survivor-content.json") && cacheBump.includes("auto-"));
 check("quest chain helper can link follow-ups", pkg.includes('"smoke:content-tools"') && addContent.includes("--after previous_id") && addContent.includes("linkQuestAfter") && contentTools.includes("function linkQuestAfter"));
+check("sprite sheet extraction helper exists", pkg.includes('"sprites:extract"') && extractSprites.includes("autoDetectSprites") && extractSprites.includes("trimBounds") && extractSprites.includes("writePng"));
+check("sprite extraction smoke exists", pkg.includes('"smoke:sprite-extract"') && smokeExtractSprites.includes("auto extraction writes two sprites") && agentCheck.includes("smoke:sprite-extract"));
 
 const failed = checks.filter((item) => !item.pass);
 

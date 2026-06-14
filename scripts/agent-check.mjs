@@ -11,6 +11,8 @@ const checks = [
   ["node", ["--check", "scripts/smoke-game-harness.mjs"]],
   ["node", ["--check", "scripts/smoke-browser.mjs"]],
   ["node", ["--check", "scripts/smoke-content-tools.mjs"]],
+  ["node", ["--check", "scripts/extract-sprites.mjs"]],
+  ["node", ["--check", "scripts/smoke-extract-sprites.mjs"]],
   ["node", ["--check", "scripts/content-summary.mjs"]],
   ["node", ["--check", "src/render-hud.js"]],
   ["npm", ["run", "content:summary"]],
@@ -22,6 +24,7 @@ const checks = [
   ["npm", ["run", "smoke:debug"]],
   ["npm", ["run", "smoke:quest-flow"]],
   ["npm", ["run", "smoke:content-tools"]],
+  ["npm", ["run", "smoke:sprite-extract"]],
   ["npm", ["test"]],
 ];
 

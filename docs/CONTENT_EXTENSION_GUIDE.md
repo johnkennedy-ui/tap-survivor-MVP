@@ -113,6 +113,38 @@ node scripts/add-content.mjs character character_runner --name "Runner" --descri
 6. Do not hard-code asset paths in `src/game.js`, `src/combat.js`, or `src/rendering.js`.
 7. Run `npm run build:content && npm run validate:content`.
 
+## Extract Sprites From A Sheet
+
+Use `scripts/extract-sprites.mjs` to split PNG sheets into trimmed PNG files.
+
+Auto-detect transparent islands:
+
+```bash
+npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/generated/tower/sheet-next --names wizard_idle,wizard_cast,enemy_ranged
+```
+
+Use exact rectangles when auto-detect would merge touching art:
+
+```bash
+npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/generated/tower/sheet-next --sprite wizard_idle:0,0,96,96 --sprite wizard_cast:96,0,96,96
+```
+
+Or pass a JSON manifest:
+
+```json
+{
+  "sprites": [
+    { "name": "wizard_idle", "x": 0, "y": 0, "width": 96, "height": 96 }
+  ]
+}
+```
+
+Then run:
+
+```bash
+npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/generated/tower/sheet-next --manifest sprites.json
+```
+
 ## Validation Checklist
 
 - Content JSON parses.
