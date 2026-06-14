@@ -59,6 +59,7 @@ const addContent = readRequired("scripts/add-content.mjs");
 const contentTools = readRequired("scripts/content-tools.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
+const staleText = `${index}\n${contentSource}\n${generatedContent}\n${agentContext}`;
 const runtime = `${game}\n${combat}\n${weaponFire}\n${enemies}\n${runState}\n${runUpdate}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
@@ -109,6 +110,7 @@ check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["
 check("ranged enemy unlocks after floor three", (content.enemyTypes || []).some((enemy) => enemy.id === "hexer" && enemy.minTowerFloor === 4 && enemy.attackRange && enemy.projectileCooldown) && enemies.includes("isEnemyAvailable"));
 check("default character registry entry exists", (content.characters || []).some((character) => character.id === "character_default" && character.spriteId === "player"));
 check("content levels drive enemy waves", (content.levels || []).length >= 3 && content.levels.some((level) => level.enemyIds?.includes("bulwark")) && runtime.includes("activeLevelDef") && runtime.includes("levelEnemyTypes"));
+check("boss ability tuning is content-driven", content.bossConfig?.abilityIds?.length === 3 && ["warden", "charger", "turret"].every((id) => content.bossAbilities?.[id]) && enemies.includes("bossConfig") && enemies.includes("bossAbilities"));
 check("enemy spawns are content-counted and patterned", runtime.includes("spawnPatternPositions(spawnCount)") && runtime.includes("spawnEnemy(type, position)"));
 check("enemy projectiles update through combat loop", runState.includes("enemyBolts") && combat.includes("updateEnemyBolts") && runUpdate.includes("combat.updateEnemyBolts(dt)") && rendering.includes("drawEnemyBolt"));
 check("shield pulse clears enemy projectiles and charges block", weaponFire.includes('weaponId === "shield_pulse"') && weaponFire.includes("destroyEnemyProjectilesInRange") && weaponFire.includes("chargeProjectileBlock") && runState.includes("projectileBlockCharge") && enemies.includes("projectileBlockReady") && rendering.includes("drawProjectileBlockBar"));
@@ -182,6 +184,7 @@ check("fullscreen button exists", index.includes('id="fullscreenButton"') && she
 check("menus have exit crosses", ["closeMenu", "closeLevelUp", "closeEndX"].every((id) => index.includes(`id="${id}"`)) && game.includes("closeLevelUpMenu") && game.includes("closeEndScreen"));
 check("follow-up Laser quest opens", contentText.includes("laser_damage_5000"));
 check("run lasts 2.5 minutes before boss", runtime.includes("duration: 150") && runtime.includes("spawnBoss"));
+check("stale six-minute run text is absent", !/6-minute boss|survive 6 minutes|survives six minutes/i.test(staleText));
 check("boss death advances tower floor", runtime.includes("advanceTowerFloor") && game.includes("function advanceTowerFloor") && runtime.includes("enemy.boss"));
 check("tower floor progresses after boss clear", save.includes("towerFloor: 1") && game.includes("save.towerFloor") && runUi.includes("Cleared Floor") && renderHud.includes("Tower Floor"));
 check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
@@ -191,8 +194,8 @@ check("quest completion banner exists", index.includes('id="questBanner"') && qu
 check("boss health bar renders at screen top", renderHud.includes("drawBossHealthBar") && renderHud.includes("boss.hp / boss.maxHp") && renderHud.includes("SUPER BOSS"));
 check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice") && enemies.includes('type: "boss_drop"') && enemies.includes("landingX") && renderHud.includes("drawBossSpawnNotice") && rendering.includes("boss_drop"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
-check("boss variants include charger and turret", enemies.includes('"charger"') && enemies.includes('"turret"') && enemies.includes("startBossCharge") && enemies.includes('type: "boss_slash"') && enemies.includes("projectileCooldown") && rendering.includes("drawBossSlash"));
-check("super bosses combine two boss abilities", enemies.includes("chooseBossAbilities(superBoss ? 2 : 1)") && enemies.includes("bossAbilities") && enemies.includes("hasBossAbility"));
+check("boss variants include charger and turret", content.bossAbilities?.charger && content.bossAbilities?.turret && enemies.includes("startBossCharge") && enemies.includes('type: "boss_slash"') && enemies.includes("projectileCooldown") && rendering.includes("drawBossSlash"));
+check("super bosses combine two boss abilities", enemies.includes("superBossAbilityCount") && enemies.includes("chooseBossAbilities") && enemies.includes("bossAbilities") && enemies.includes("hasBossAbility"));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));

@@ -82,6 +82,13 @@ Shortcut:
 node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --starts-at 420 --enemies drifter,skitter,bulwark --spawn-count 3 --spawn-rate 1.1
 ```
 
+## Tune Boss Abilities
+
+1. Edit `bossConfig` and `bossAbilities` in `content/tap-survivor-content.json`.
+2. Keep `bossConfig.abilityIds` aligned with keys in `bossAbilities`.
+3. Use `warden`, `charger`, and `turret` unless extending `src/enemies.js` for a new ability behavior.
+4. Run `npm run build:content && npm test`.
+
 ## Add A Character
 
 1. Add the character to `characters` in `content/tap-survivor-content.json`.

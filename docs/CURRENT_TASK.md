@@ -4,38 +4,44 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Split HUD rendering helper
+Content-drive boss abilities and add stale-text check
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T17:45:08.079Z
+- Started: 2026-06-14T18:21:30.747Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CHANGELOG_AGENT.md`
-- `index.html`
-- `src/render-hud.js`
-- `src/rendering.js`
-- `scripts/agent-check.mjs`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `src/content-registry.js`
+- `src/enemies.js`
+- `src/combat.js`
+- `src/game.js`
+- `scripts/content-tools.mjs`
+- `scripts/content-summary.mjs`
 - `scripts/verify-mvp.mjs`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
+- `index.html`
 
 ## Files Changed
 
-- `index.html`
-- `src/render-hud.js`
-- `src/rendering.js`
-- `scripts/agent-check.mjs`
+- `content/tap-survivor-content.json`
+- `src/content.generated.js`
+- `src/content-registry.js`
+- `src/enemies.js`
+- `src/combat.js`
+- `src/game.js`
+- `scripts/content-tools.mjs`
+- `scripts/content-summary.mjs`
 - `scripts/verify-mvp.mjs`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
+- `index.html`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CHANGELOG_AGENT.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/CURRENT_TASK.md`
 
 ## Validation Plan
@@ -48,12 +54,13 @@ npm run agent:check
 
 Result:
 
-- `node --check src/render-hud.js`: passed.
-- `node --check src/rendering.js`: passed.
-- `node --check scripts/verify-mvp.mjs`: passed.
-- `npm test`: passed 211 MVP checks.
-- `npm run agent:prepush`: passed; cache keys bumped for `render-hud.js` and `rendering.js`.
-- Evidence: `../Shane training/20260614T175028Z_render-hud-split/result.md`.
+- `npm run build:content`: passed.
+- `npm run validate:content`: passed.
+- `node scripts/verify-mvp.mjs`: passed 213 checks, including boss ability content wiring and stale six-minute text guard.
+- `npm run smoke:boss-run`: passed.
+- `npm test`: passed.
+- `npm run agent:prepush`: passed; cache keys bumped for changed runtime files.
+- Evidence: `../Shane training/20260614T184353Z_boss-ability-content-stale-text-check/result.md`.
 
 ## Evidence Required
 

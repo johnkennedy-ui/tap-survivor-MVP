@@ -8,6 +8,7 @@ const runUpgrades = content.runUpgrades || [];
 const quests = content.quests || {};
 const questGroups = content.questGroups || {};
 const enemyTypes = content.enemyTypes || [];
+const bossAbilities = content.bossAbilities || {};
 const characters = content.characters || [];
 const shopItems = content.shopItems || [];
 const relics = content.relics || [];
@@ -80,6 +81,7 @@ console.log(`- run upgrades: ${runUpgrades.length}`);
 console.log(`- quests: ${questIds.length}`);
 console.log(`- quest groups: ${Object.keys(questGroups).length}`);
 console.log(`- enemy types: ${enemyTypes.length}`);
+console.log(`- boss abilities: ${Object.keys(bossAbilities).length}`);
 console.log(`- characters: ${characters.length}`);
 console.log(`- shop items: ${shopItems.length}`);
 console.log(`- relics: ${relics.length}`);
@@ -151,6 +153,7 @@ printList(
 printList("Ungrouped Quests", ungroupedQuestIds);
 printList("Terminal Quests", terminalQuestIds);
 printList("Enemy Types", idsFromList(enemyTypes));
+printList("Boss Abilities", idsFromMap(bossAbilities));
 printList("Characters", idsFromList(characters));
 printList(
   "Shop Items",

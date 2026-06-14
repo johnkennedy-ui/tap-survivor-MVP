@@ -24,6 +24,8 @@ const {
   bossQuestIds,
   runUpgradeDefs,
   enemyTypes,
+  bossConfig,
+  bossAbilities,
   levelDefs,
   shopItemDefs,
   relicDefs,
@@ -155,6 +157,8 @@ const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
 const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   canvas,
   enemyTypes,
+  bossConfig,
+  bossAbilities,
   levelDefs,
   weaponDefs,
   getGame: () => game,

@@ -33,6 +33,8 @@ export function validateContent(content) {
   const quests = content.quests || {};
   const questGroups = content.questGroups || {};
   const enemyTypes = content.enemyTypes || [];
+  const bossConfig = content.bossConfig || {};
+  const bossAbilities = content.bossAbilities || {};
   const characters = content.characters || [];
   const shopItems = content.shopItems || [];
   const relics = content.relics || [];
@@ -76,6 +78,8 @@ export function validateContent(content) {
   requireObject(quests, "quests");
   requireObject(questGroups, "questGroups");
   requireArray(enemyTypes, "enemyTypes");
+  requireObject(bossConfig, "bossConfig");
+  requireObject(bossAbilities, "bossAbilities");
   requireArray(characters, "characters");
   requireArray(shopItems, "shopItems");
   requireArray(relics, "relics");
@@ -178,6 +182,62 @@ export function validateContent(content) {
     seenEnemies.add(enemy.id);
     ["name", "color"].forEach((field) => requireString(enemy[field], `enemy ${enemy.id}.${field}`));
     ["radius", "hp", "speed", "damage", "xp"].forEach((field) => requireNumber(enemy[field], `enemy ${enemy.id}.${field}`, 0));
+  });
+
+  if (bossConfig.abilityIds !== undefined) {
+    requireArray(bossConfig.abilityIds, "bossConfig.abilityIds");
+    (Array.isArray(bossConfig.abilityIds) ? bossConfig.abilityIds : []).forEach((abilityId) => {
+      requireString(abilityId, "bossConfig.abilityIds item");
+      if (!bossAbilities[abilityId]) fail(`bossConfig references missing boss ability ${abilityId}`);
+    });
+  }
+  [
+    "normalAbilityCount",
+    "superAbilityCount",
+    "baseHp",
+    "hpPerKill",
+    "superHpMultiplier",
+    "touchDamage",
+    "touchCooldown",
+    "noticeLife",
+    "dropWindup",
+    "sideEntryMargin",
+    "entryOffsetX",
+    "entryOffsetY",
+    "defaultAttackCooldown",
+  ].forEach((field) => {
+    if (bossConfig[field] !== undefined) requireNumber(bossConfig[field], `bossConfig.${field}`, 0);
+  });
+  if (bossConfig.drop) {
+    requireObject(bossConfig.drop, "bossConfig.drop");
+    ["radius", "superRadius", "damage", "superDamage"].forEach((field) => {
+      requireNumber(bossConfig.drop[field], `bossConfig.drop.${field}`, 0);
+    });
+  }
+  if (bossConfig.enemyBolt) {
+    requireObject(bossConfig.enemyBolt, "bossConfig.enemyBolt");
+    ["radius", "life"].forEach((field) => requireNumber(bossConfig.enemyBolt[field], `bossConfig.enemyBolt.${field}`, 0));
+  }
+  Object.entries(bossAbilities).forEach(([id, ability]) => {
+    requireString(id, "boss ability id");
+    ["name", "color"].forEach((field) => requireString(ability[field], `boss ability ${id}.${field}`));
+    ["speed", "attackCooldown"].forEach((field) => requireNumber(ability[field], `boss ability ${id}.${field}`, 0));
+    if (id === "warden") {
+      requireObject(ability.shockwave, "boss ability warden.shockwave");
+      ["radius", "damage", "windup"].forEach((field) => requireNumber(ability.shockwave?.[field], `boss ability warden.shockwave.${field}`, 0));
+    }
+    if (id === "charger") {
+      ["windup", "duration", "chargeSpeed", "superChargeSpeed"].forEach((field) => requireNumber(ability[field], `boss ability charger.${field}`, 0));
+      requireObject(ability.slash, "boss ability charger.slash");
+      ["offset", "arcPi", "radius", "superRadius", "damageMultiplier", "superDamageMultiplier", "windup"].forEach((field) => {
+        requireNumber(ability.slash?.[field], `boss ability charger.slash.${field}`, 0);
+      });
+    }
+    if (id === "turret") {
+      ["attackRange", "projectileCooldown", "projectileSpeed", "projectileDamage", "superProjectileDamage", "initialShootTimer"].forEach((field) => {
+        requireNumber(ability[field], `boss ability turret.${field}`, 0);
+      });
+    }
   });
 
   characters.forEach((character) => {

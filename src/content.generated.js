@@ -935,7 +935,7 @@ globalThis.TapSurvivorContent = {
     },
     "boss_hunter": {
       "name": "Boss Hunter",
-      "description": "Defeat the 6-minute boss.",
+      "description": "Defeat the first tower boss.",
       "target": 1,
       "rewardQp": 4,
       "opensQuest": "boss_slayer"
@@ -1086,6 +1086,80 @@ globalThis.TapSurvivorContent = {
       "projectileDamage": 10
     }
   ],
+  "bossConfig": {
+    "abilityIds": [
+      "warden",
+      "charger",
+      "turret"
+    ],
+    "normalAbilityCount": 1,
+    "superAbilityCount": 2,
+    "baseHp": 1400,
+    "hpPerKill": 6,
+    "superHpMultiplier": 1.35,
+    "touchDamage": 22,
+    "touchCooldown": 0.8,
+    "noticeLife": 2.1,
+    "dropWindup": 1.15,
+    "sideEntryMargin": 150,
+    "entryOffsetX": 52,
+    "entryOffsetY": 72,
+    "defaultAttackCooldown": 3.2,
+    "drop": {
+      "radius": 118,
+      "superRadius": 138,
+      "damage": 26,
+      "superDamage": 34
+    },
+    "enemyBolt": {
+      "radius": 5,
+      "life": 2.2
+    }
+  },
+  "bossAbilities": {
+    "warden": {
+      "name": "Warden",
+      "color": "#ff4f8b",
+      "speed": 42,
+      "attackCooldown": 4.6,
+      "shockwave": {
+        "radius": 165,
+        "damage": 26,
+        "windup": 0.9
+      }
+    },
+    "charger": {
+      "name": "Charger",
+      "color": "#ff5f56",
+      "speed": 68,
+      "attackCooldown": 3.8,
+      "windup": 0.78,
+      "duration": 0.56,
+      "chargeSpeed": 520,
+      "superChargeSpeed": 620,
+      "slash": {
+        "offset": 58,
+        "arcPi": 0.72,
+        "radius": 112,
+        "superRadius": 138,
+        "damageMultiplier": 1.2,
+        "superDamageMultiplier": 1.55,
+        "windup": 0.35
+      }
+    },
+    "turret": {
+      "name": "Turret",
+      "color": "#b794ff",
+      "speed": 0,
+      "attackCooldown": 3.2,
+      "attackRange": 999,
+      "projectileCooldown": 1.05,
+      "projectileSpeed": 280,
+      "projectileDamage": 15,
+      "superProjectileDamage": 20,
+      "initialShootTimer": 0.8
+    }
+  },
   "characters": [
     {
       "id": "character_default",

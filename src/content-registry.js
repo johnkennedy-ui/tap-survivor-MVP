@@ -4,6 +4,8 @@
     const weaponUnlocks = content.weaponUnlocks || [];
     const questDefs = content.quests || {};
     const questGroups = content.questGroups || {};
+    const bossConfig = content.bossConfig || {};
+    const bossAbilities = content.bossAbilities || {};
 
     return {
       weaponDefs,
@@ -21,6 +23,8 @@
       bossQuestIds: questGroups.boss || [],
       runUpgradeDefs: upgradeContent.runUpgradeDefs || [],
       enemyTypes: content.enemyTypes || [],
+      bossConfig,
+      bossAbilities,
       shopItemDefs: content.shopItems || [],
       relicDefs: content.relics || [],
       levelDefs: content.levels || [],

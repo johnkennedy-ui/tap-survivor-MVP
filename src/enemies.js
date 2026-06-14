@@ -2,12 +2,28 @@
 function createEnemySystem({
   canvas,
   enemyTypes,
+  bossConfig = {},
+  bossAbilities = {},
   levelDefs = [],
   getGame,
   distance,
   clamp,
 }) {
-  const bossKinds = ["warden", "charger", "turret"];
+  const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
+  const normalBossAbilityCount = bossConfig.normalAbilityCount || 1;
+  const superBossAbilityCount = bossConfig.superAbilityCount || 2;
+  const bossBaseHp = bossConfig.baseHp || 1400;
+  const bossHpPerKill = bossConfig.hpPerKill || 6;
+  const superBossHpMultiplier = bossConfig.superHpMultiplier || 1.35;
+  const bossTouchDamage = bossConfig.touchDamage || 22;
+  const bossTouchCooldown = bossConfig.touchCooldown || 0.8;
+  const bossNoticeLife = bossConfig.noticeLife || 2.1;
+  const dropWindup = bossConfig.dropWindup || 1.15;
+  const sideEntryMargin = bossConfig.sideEntryMargin || 150;
+  const entryOffsetX = bossConfig.entryOffsetX || 52;
+  const entryOffsetY = bossConfig.entryOffsetY || 72;
+  const boltConfig = bossConfig.enemyBolt || {};
+  const fallbackAbility = bossKinds[0] || "warden";
   const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
   const enemyTypeById = Object.fromEntries(enemyTypes.map((enemy) => [enemy.id, enemy]));
   const orderedLevelDefs = [...levelDefs].sort((a, b) => a.startsAt - b.startsAt);
@@ -108,57 +124,71 @@ function createEnemySystem({
     game.bossSpawned = true;
     const difficulty = floorDifficulty(game.towerFloor);
     const superBoss = game.towerFloor % 5 === 0;
-    const bossAbilities = chooseBossAbilities(superBoss ? 2 : 1);
-    const bossKind = bossAbilities[0];
-    const chargerBoss = bossAbilities.includes("charger");
-    const turretBoss = bossAbilities.includes("turret");
-    const bossHp = (1400 + game.kills * 6) * difficulty.hp;
+    const selectedAbilities = chooseBossAbilities(superBoss ? superBossAbilityCount : normalBossAbilityCount);
+    const bossKind = selectedAbilities[0] || fallbackAbility;
+    const bossHp = (bossBaseHp + game.kills * bossHpPerKill) * difficulty.hp;
     const landingX = 72 + Math.random() * (canvas.width - 144);
     const landingY = 90 + Math.random() * (canvas.height - 180);
-    const sideEntry = landingX < 150 || landingX > canvas.width - 150;
-    const startX = sideEntry ? (landingX < canvas.width / 2 ? -52 : canvas.width + 52) : landingX;
-    const startY = sideEntry ? landingY : -72;
+    const sideEntry = landingX < sideEntryMargin || landingX > canvas.width - sideEntryMargin;
+    const startX = sideEntry ? (landingX < canvas.width / 2 ? -entryOffsetX : canvas.width + entryOffsetX) : landingX;
+    const startY = sideEntry ? landingY : -entryOffsetY;
     if (!sideEntry) {
+      const drop = bossConfig.drop || {};
       game.bossAttacks.push({
         type: "boss_drop",
         x: landingX,
         y: landingY,
-        radius: superBoss ? 138 : 118,
-        damage: (superBoss ? 34 : 26) * difficulty.damage,
+        radius: superBoss ? drop.superRadius : drop.radius,
+        damage: (superBoss ? drop.superDamage : drop.damage) * difficulty.damage,
         age: 0,
-        windup: 1.15,
+        windup: dropWindup,
         hit: false,
       });
     }
-    game.bossSpawnNotice = { text: superBoss ? "SUPER BOSS INCOMING" : "BOSS INCOMING", life: 2.1, maxLife: 2.1 };
+    game.bossSpawnNotice = { text: superBoss ? "SUPER BOSS INCOMING" : "BOSS INCOMING", life: bossNoticeLife, maxLife: bossNoticeLife };
     game.enemies.push({
       boss: true,
       superBoss,
       bossKind,
-      bossAbilities,
+      bossAbilities: selectedAbilities,
       assetId: "boss",
-      color: turretBoss ? "#b794ff" : chargerBoss ? "#ff5f56" : "#ff4f8b",
+      color: bossColor(selectedAbilities),
       x: startX,
       y: startY,
       startX,
       startY,
       landingX,
       landingY,
-      dropTimer: sideEntry ? 0 : 1.15,
-      dropWindup: 1.15,
+      dropTimer: sideEntry ? 0 : dropWindup,
+      dropWindup,
       radius: 38,
-      hp: superBoss ? bossHp * 1.35 : bossHp,
-      maxHp: superBoss ? bossHp * 1.35 : bossHp,
-      speed: chargerBoss ? 68 : turretBoss ? 0 : 42,
-      damage: 22 * difficulty.damage,
-      touchCooldown: 0.8,
+      hp: superBoss ? bossHp * superBossHpMultiplier : bossHp,
+      maxHp: superBoss ? bossHp * superBossHpMultiplier : bossHp,
+      speed: bossSpeed(selectedAbilities),
+      damage: bossTouchDamage * difficulty.damage,
+      touchCooldown: bossTouchCooldown,
       touchTimer: 0,
-      attackRange: turretBoss ? 999 : 0,
-      projectileCooldown: turretBoss ? 1.05 : 0,
-      projectileSpeed: turretBoss ? 280 : 0,
-      projectileDamage: (superBoss ? 20 : 15) * difficulty.damage,
-      shootTimer: turretBoss ? 0.8 : 0,
+      attackRange: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.attackRange : 0,
+      projectileCooldown: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.projectileCooldown : 0,
+      projectileSpeed: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.projectileSpeed : 0,
+      projectileDamage: (superBoss ? bossAbilities.turret.superProjectileDamage : bossAbilities.turret.projectileDamage) * difficulty.damage,
+      shootTimer: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.initialShootTimer : 0,
     });
+  }
+
+  function bossColor(abilities) {
+    const priority = bossKinds.slice().reverse().find((ability) => hasAbility(abilities, ability));
+    return bossAbilities[priority]?.color || "#ff4f8b";
+  }
+
+  function bossSpeed(abilities) {
+    if (hasAbility(abilities, "turret")) return bossAbilities.turret.speed;
+    if (hasAbility(abilities, "charger")) return bossAbilities.charger.speed;
+    return bossAbilities.warden?.speed || 42;
+  }
+
+  function hasAbility(abilities, ability) {
+    return abilities.includes(ability);
   }
 
   function chooseBossAbilities(count) {
@@ -188,20 +218,28 @@ function createEnemySystem({
         startBossCharge(boss);
       }
       if (wardenBoss) {
+        const shockwave = bossAbilities.warden.shockwave;
         game.bossAttacks.push({
           type: "shockwave",
           x: boss.x,
           y: boss.y,
-          radius: 165,
-          damage: 26,
+          radius: shockwave.radius,
+          damage: shockwave.damage,
           age: 0,
-          windup: 0.9,
+          windup: shockwave.windup,
           hit: false,
         });
       }
-      game.bossAttackTimer = chargerBoss ? 3.8 : wardenBoss ? 4.6 : 3.2;
+      game.bossAttackTimer = nextBossAttackCooldown(boss);
     }
 
+  }
+
+  function nextBossAttackCooldown(boss) {
+    const activeCooldowns = boss.bossAbilities
+      .map((ability) => bossAbilities[ability]?.attackCooldown)
+      .filter(Number.isFinite);
+    return Math.min(...activeCooldowns, bossConfig.defaultAttackCooldown || 3.2);
   }
 
   function hasBossAbility(boss, ability) {
@@ -215,10 +253,10 @@ function createEnemySystem({
     const dy = p.y - boss.y;
     const dist = Math.max(1, Math.hypot(dx, dy));
     boss.chargeState = "windup";
-    boss.chargeTimer = 0.78;
+    boss.chargeTimer = bossAbilities.charger.windup;
     boss.chargeDirX = dx / dist;
     boss.chargeDirY = dy / dist;
-    boss.chargeSpeed = boss.superBoss ? 620 : 520;
+    boss.chargeSpeed = boss.superBoss ? bossAbilities.charger.superChargeSpeed : bossAbilities.charger.chargeSpeed;
   }
 
   function updateBossAttacks(dt) {
@@ -285,24 +323,25 @@ function createEnemySystem({
     if (boss.chargeState === "windup") {
       if (boss.chargeTimer <= 0) {
         boss.chargeState = "charging";
-        boss.chargeTimer = 0.56;
+        boss.chargeTimer = bossAbilities.charger.duration;
       }
       return true;
     }
     boss.x = clamp(boss.x + boss.chargeDirX * boss.chargeSpeed * dt, boss.radius, canvas.width - boss.radius);
     boss.y = clamp(boss.y + boss.chargeDirY * boss.chargeSpeed * dt, boss.radius, canvas.height - boss.radius);
     if (boss.chargeTimer <= 0) {
+      const slash = bossAbilities.charger.slash;
       game.bossAttacks.push({
         type: "boss_slash",
-        x: boss.x + boss.chargeDirX * 58,
-        y: boss.y + boss.chargeDirY * 58,
+        x: boss.x + boss.chargeDirX * slash.offset,
+        y: boss.y + boss.chargeDirY * slash.offset,
         dirX: boss.chargeDirX,
         dirY: boss.chargeDirY,
-        arc: Math.PI * 0.72,
-        radius: boss.superBoss ? 138 : 112,
-        damage: boss.damage * (boss.superBoss ? 1.55 : 1.2),
+        arc: Math.PI * slash.arcPi,
+        radius: boss.superBoss ? slash.superRadius : slash.radius,
+        damage: boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
         age: 0,
-        windup: 0.35,
+        windup: slash.windup,
         hit: false,
       });
       boss.chargeState = "";
@@ -327,9 +366,9 @@ function createEnemySystem({
       y: enemy.y,
       vx: dirX * enemy.projectileSpeed,
       vy: dirY * enemy.projectileSpeed,
-      radius: 5,
+      radius: boltConfig.radius || 5,
       damage: enemy.projectileDamage,
-      life: 2.2,
+      life: boltConfig.life || 2.2,
       color: enemy.color,
     });
   }

@@ -2,6 +2,8 @@
 function createCombatSystem({
   canvas,
   enemyTypes,
+  bossConfig,
+  bossAbilities,
   levelDefs,
   weaponDefs,
   getGame,
@@ -23,6 +25,8 @@ function createCombatSystem({
   const enemies = globalThis.TapSurvivorEnemies.createEnemySystem({
     canvas,
     enemyTypes,
+    bossConfig,
+    bossAbilities,
     levelDefs,
     getGame,
     distance,
