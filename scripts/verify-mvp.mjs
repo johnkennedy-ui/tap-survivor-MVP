@@ -105,6 +105,10 @@ check("Kenney asset manifest exists", content.assets?.sources?.some((source) => 
 check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "spark_bolt", "prism_beam"].every((id) => contentText.includes(id)) && sprites.includes("drawSprite"));
 check("generated tower background asset exists", content.assets?.sources?.some((source) => source.id === "generated_tower_floor" && source.commercialUse === true && source.attributionRequired === false) && content.assets?.sprites?.backgrounds?.tower_floor);
 check("player uses wizard sprite", content.assets?.sprites?.player?.includes("wizard-idle-staff") && rendering.includes("Math.max(70"));
+check("wizard sprite flips by facing", sprites.includes("flipX") && rendering.includes("playerFacesLeft") && rendering.includes("flipX: playerFacesLeft(p)"));
+check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
+const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
+check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
 check("generated tower sprite set exists", content.assets?.sources?.some((source) => source.id === "generated_tower_sprites" && source.commercialUse === true && source.attributionRequired === false));
 check("user enemy sprite sheet exists", content.assets?.sources?.some((source) => source.id === "user_enemy_sprite_sheet_20260614" && source.commercialUse === true && source.attributionRequired === false) && ["drifter", "skitter", "bulwark", "hexer", "boss"].every((id) => content.assets?.sprites?.enemies?.[id]?.includes("sheet-20260614")));
 check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));

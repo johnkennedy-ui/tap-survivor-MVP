@@ -91,7 +91,9 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
 
   function drawPlayer(p) {
     drawPlayerHpBar(p);
-    const playerDrawn = drawSprite("player", p.x, p.y, Math.max(70, p.radius * 3.8));
+    const playerDrawn = drawSprite("player", p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
+      flipX: playerFacesLeft(p),
+    });
     if (!playerDrawn) {
       ctx.fillStyle = "#69d2ff";
       ctx.beginPath();
@@ -108,6 +110,10 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.moveTo(p.x, p.y);
     ctx.lineTo(p.targetX, p.targetY);
     ctx.stroke();
+  }
+
+  function playerFacesLeft(p) {
+    return p.targetX < p.x - 2;
   }
 
   function drawPlayerHpBar(p) {

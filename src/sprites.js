@@ -42,13 +42,16 @@ function createSpriteSystem({ ctx, spriteDefs }) {
     return true;
   }
 
-  function drawSprite(id, x, y, size, rotation = 0) {
+  function drawSprite(id, x, y, size, rotation = 0, options = {}) {
     const image = sprites[id];
     if (!image?.complete || !image.naturalWidth) return false;
     const source = rasterizedSprite(id, image, size) || image;
+    const flipX = Boolean(options.flipX);
+    const flipY = Boolean(options.flipY);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(rotation);
+    ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(source, -size / 2, -size / 2, size, size);
     ctx.restore();
