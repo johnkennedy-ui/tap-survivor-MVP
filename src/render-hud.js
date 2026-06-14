@@ -37,6 +37,7 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
 
   function drawGameHud(game) {
     drawBossHealthBar(game);
+    drawBossSpecialBar(game);
     drawSkillRail(game);
   }
 
@@ -64,6 +65,32 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
     ctx.textAlign = "center";
     const kind = boss.superBoss ? "SUPER BOSS" : boss.bossKind === "charger" ? "CHARGER BOSS" : boss.bossKind === "turret" ? "TURRET BOSS" : "BOSS";
     ctx.fillText(`${kind} ${Math.max(0, Math.ceil(boss.hp))}/${Math.ceil(boss.maxHp)}`, canvas.width / 2, y + 13);
+    ctx.textAlign = "start";
+  }
+
+  function drawBossSpecialBar(game) {
+    const boss = game.enemies.find((enemy) => enemy.boss);
+    if (!boss || boss.dropTimer > 0) return;
+    const max = Math.max(0.1, game.bossAttackCooldownMax || 3.8);
+    const progress = clamp(1 - (game.bossAttackTimer || 0) / max, 0, 1);
+    const width = Math.min(360, canvas.width - 320);
+    const height = 10;
+    const x = canvas.width / 2 - width / 2;
+    const y = 78;
+    roundedRectPath(x, y, width, height, 5);
+    ctx.fillStyle = "rgba(10, 14, 20, 0.86)";
+    ctx.fill();
+    roundedRectPath(x, y, width * progress, height, 5);
+    ctx.fillStyle = progress > 0.82 ? "#ff5f56" : "#ffd166";
+    ctx.fill();
+    ctx.strokeStyle = progress > 0.82 ? "#ffffff" : "rgba(255, 209, 102, 0.75)";
+    ctx.lineWidth = 1.5;
+    roundedRectPath(x, y, width, height, 5);
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("SPECIAL", canvas.width / 2, y + 9);
     ctx.textAlign = "start";
   }
 
@@ -195,6 +222,7 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
   return {
     drawBossSpawnNotice,
     drawGameHud,
+    drawBossSpecialBar,
     drawTowerFloorBadge,
   };
 }

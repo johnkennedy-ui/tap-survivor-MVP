@@ -23,6 +23,7 @@ function createEnemySystem({
   const entryOffsetX = bossConfig.entryOffsetX || 52;
   const entryOffsetY = bossConfig.entryOffsetY || 72;
   const boltConfig = bossConfig.enemyBolt || {};
+  const projectileScaling = bossConfig.projectileScaling || {};
   const fallbackAbility = bossKinds[0] || "warden";
   const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
   const enemyTypeById = Object.fromEntries(enemyTypes.map((enemy) => [enemy.id, enemy]));
@@ -96,6 +97,8 @@ function createEnemySystem({
   function spawnEnemy(type, position) {
     const game = getGame();
     const difficulty = floorDifficulty(game.towerFloor);
+    const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
+    const speed = scaledProjectileSpeed(type.projectileSpeed || 0, game);
     game.enemies.push({
       type: type.id,
       name: type.name,
@@ -111,10 +114,10 @@ function createEnemySystem({
       xp: type.xp,
       touchTimer: 0,
       attackRange: type.attackRange || 0,
-      projectileCooldown: type.projectileCooldown || 0,
-      projectileSpeed: type.projectileSpeed || 0,
+      projectileCooldown: cooldown,
+      projectileSpeed: speed,
       projectileDamage: (type.projectileDamage || type.damage) * difficulty.damage,
-      shootTimer: Math.random() * (type.projectileCooldown || 0),
+      shootTimer: Math.random() * cooldown,
     });
   }
 
@@ -146,7 +149,10 @@ function createEnemySystem({
       });
     }
     game.bossSpawnNotice = { text: superBoss ? "SUPER BOSS INCOMING" : "BOSS INCOMING", life: bossNoticeLife, maxLife: bossNoticeLife };
-    game.enemies.push({
+    const turretBoss = hasAbility(selectedAbilities, "turret");
+    const turretCooldown = turretBoss ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game) : 0;
+    const turretSpeed = turretBoss ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game) : 0;
+    const boss = {
       boss: true,
       superBoss,
       bossKind,
@@ -168,12 +174,42 @@ function createEnemySystem({
       damage: bossTouchDamage * difficulty.damage,
       touchCooldown: bossTouchCooldown,
       touchTimer: 0,
-      attackRange: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.attackRange : 0,
-      projectileCooldown: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.projectileCooldown : 0,
-      projectileSpeed: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.projectileSpeed : 0,
+      attackRange: turretBoss ? bossAbilities.turret.attackRange : 0,
+      projectileCooldown: turretCooldown,
+      projectileSpeed: turretSpeed,
       projectileDamage: (superBoss ? bossAbilities.turret.superProjectileDamage : bossAbilities.turret.projectileDamage) * difficulty.damage,
-      shootTimer: hasAbility(selectedAbilities, "turret") ? bossAbilities.turret.initialShootTimer : 0,
-    });
+      shootTimer: turretBoss ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game) : 0,
+    };
+    const cooldown = nextBossAttackCooldown(boss);
+    game.bossAttackTimer = cooldown;
+    game.bossAttackCooldownMax = cooldown;
+    game.enemies.push(boss);
+  }
+
+  function projectileFireRateScale(game) {
+    const floor = Math.max(1, game?.towerFloor || 1);
+    const base = projectileScaling.fireRateBase || 0.68;
+    const perFloor = projectileScaling.fireRatePerFloor || 0.07;
+    const max = projectileScaling.fireRateMax || 1.35;
+    return Math.min(max, base + (floor - 1) * perFloor);
+  }
+
+  function projectileSpeedScale(game) {
+    const floor = Math.max(1, game?.towerFloor || 1);
+    const base = projectileScaling.speedBase || 0.72;
+    const perFloor = projectileScaling.speedPerFloor || 0.06;
+    const max = projectileScaling.speedMax || 1.35;
+    return Math.min(max, base + (floor - 1) * perFloor);
+  }
+
+  function scaledProjectileCooldown(cooldown, game) {
+    if (!cooldown) return 0;
+    return cooldown / projectileFireRateScale(game);
+  }
+
+  function scaledProjectileSpeed(speed, game) {
+    if (!speed) return 0;
+    return speed * projectileSpeedScale(game);
   }
 
   function bossColor(abilities) {
@@ -231,6 +267,7 @@ function createEnemySystem({
         });
       }
       game.bossAttackTimer = nextBossAttackCooldown(boss);
+      game.bossAttackCooldownMax = game.bossAttackTimer;
     }
 
   }
@@ -369,6 +406,7 @@ function createEnemySystem({
       radius: boltConfig.radius || 5,
       damage: enemy.projectileDamage,
       life: boltConfig.life || 2.2,
+      maxLife: boltConfig.life || 2.2,
       color: enemy.color,
     });
   }

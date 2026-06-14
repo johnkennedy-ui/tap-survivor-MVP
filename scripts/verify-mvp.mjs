@@ -113,6 +113,8 @@ check("content levels drive enemy waves", (content.levels || []).length >= 3 && 
 check("boss ability tuning is content-driven", content.bossConfig?.abilityIds?.length === 3 && ["warden", "charger", "turret"].every((id) => content.bossAbilities?.[id]) && enemies.includes("bossConfig") && enemies.includes("bossAbilities"));
 check("enemy spawns are content-counted and patterned", runtime.includes("spawnPatternPositions(spawnCount)") && runtime.includes("spawnEnemy(type, position)"));
 check("enemy projectiles update through combat loop", runState.includes("enemyBolts") && combat.includes("updateEnemyBolts") && runUpdate.includes("combat.updateEnemyBolts(dt)") && rendering.includes("drawEnemyBolt"));
+check("enemy projectiles are high-visibility", content.bossConfig?.enemyBolt?.radius >= 7 && rendering.includes("tailX") && rendering.includes("bolt.radius + 4"));
+check("enemy projectile pacing scales by tower floor", enemies.includes("projectileFireRateScale") && enemies.includes("scaledProjectileCooldown") && enemies.includes("scaledProjectileSpeed") && content.bossConfig?.projectileScaling?.fireRateBase < 1 && content.bossConfig?.projectileScaling?.fireRateMax > 1);
 check("shield pulse clears enemy projectiles and charges block", weaponFire.includes('weaponId === "shield_pulse"') && weaponFire.includes("destroyEnemyProjectilesInRange") && weaponFire.includes("chargeProjectileBlock") && runState.includes("projectileBlockCharge") && enemies.includes("projectileBlockReady") && rendering.includes("drawProjectileBlockBar"));
 check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") && game.includes("runUpdater.update(dt * gameSpeed)") && game.includes("setGameSpeed"));
 check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.includes("fireWeapon"));
@@ -192,6 +194,7 @@ check("every fifth floor has super boss relic drop", enemies.includes("superBoss
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("quest completion banner exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showQuestBanner") && styles.includes(".quest-banner"));
 check("boss health bar renders at screen top", renderHud.includes("drawBossHealthBar") && renderHud.includes("boss.hp / boss.maxHp") && renderHud.includes("SUPER BOSS"));
+check("boss special charge bar renders at screen top", renderHud.includes("drawBossSpecialBar") && renderHud.includes("bossAttackCooldownMax") && renderHud.includes("SPECIAL"));
 check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice") && enemies.includes('type: "boss_drop"') && enemies.includes("landingX") && renderHud.includes("drawBossSpawnNotice") && rendering.includes("boss_drop"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("boss variants include charger and turret", content.bossAbilities?.charger && content.bossAbilities?.turret && enemies.includes("startBossCharge") && enemies.includes('type: "boss_slash"') && enemies.includes("projectileCooldown") && rendering.includes("drawBossSlash"));

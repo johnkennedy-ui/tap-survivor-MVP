@@ -225,13 +225,36 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   }
 
   function drawEnemyBolt(bolt) {
+    const speed = Math.max(1, Math.hypot(bolt.vx || 0, bolt.vy || 0));
+    const tailX = bolt.x - (bolt.vx / speed) * bolt.radius * 3.2;
+    const tailY = bolt.y - (bolt.vy / speed) * bolt.radius * 3.2;
+    const alpha = clamp((bolt.life || 0) / (bolt.maxLife || 1), 0.3, 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = Math.max(4, bolt.radius * 0.8);
+    ctx.beginPath();
+    ctx.moveTo(tailX, tailY);
+    ctx.lineTo(bolt.x, bolt.y);
+    ctx.stroke();
+    ctx.strokeStyle = bolt.color;
+    ctx.lineWidth = Math.max(2, bolt.radius * 0.45);
+    ctx.beginPath();
+    ctx.moveTo(tailX, tailY);
+    ctx.lineTo(bolt.x, bolt.y);
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(bolt.x, bolt.y, bolt.radius + 4, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = bolt.color;
     ctx.beginPath();
     ctx.arc(bolt.x, bolt.y, bolt.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = "#10141d";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.stroke();
+    ctx.restore();
   }
 
   function drawBeam(beam) {

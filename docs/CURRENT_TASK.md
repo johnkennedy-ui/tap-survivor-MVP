@@ -4,27 +4,24 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Content-drive boss abilities and add stale-text check
+Improve boss attack telegraphs and projectile pacing
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-14T18:21:30.747Z
+- Started: 2026-06-14T19:01:29.567Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
-- `src/content-registry.js`
 - `src/enemies.js`
-- `src/combat.js`
-- `src/game.js`
+- `src/render-hud.js`
+- `src/rendering.js`
+- `src/run-state.js`
 - `scripts/content-tools.mjs`
-- `scripts/content-summary.mjs`
 - `scripts/verify-mvp.mjs`
 - `index.html`
 
@@ -32,16 +29,13 @@ Content-drive boss abilities and add stale-text check
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
-- `src/content-registry.js`
 - `src/enemies.js`
-- `src/combat.js`
-- `src/game.js`
+- `src/render-hud.js`
+- `src/rendering.js`
+- `src/run-state.js`
 - `scripts/content-tools.mjs`
-- `scripts/content-summary.mjs`
 - `scripts/verify-mvp.mjs`
 - `index.html`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
 - `docs/CURRENT_TASK.md`
 
 ## Validation Plan
@@ -56,11 +50,10 @@ Result:
 
 - `npm run build:content`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 213 checks, including boss ability content wiring and stale six-minute text guard.
+- `node scripts/verify-mvp.mjs`: passed 216 checks, including boss special charge bar, high-visibility enemy projectiles, and tower-floor projectile pacing.
 - `npm run smoke:boss-run`: passed.
 - `npm test`: passed.
 - `npm run agent:prepush`: passed; cache keys bumped for changed runtime files.
-- Evidence: `../Shane training/20260614T184353Z_boss-ability-content-stale-text-check/result.md`.
 
 ## Evidence Required
 

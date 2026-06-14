@@ -53,6 +53,7 @@
         runUpgradeTiers: {},
         spawnTimer: 0,
         bossAttackTimer: 3.8,
+        bossAttackCooldownMax: 3.8,
         kills: 0,
         xpCollected: 0,
         laserDamage: 0,

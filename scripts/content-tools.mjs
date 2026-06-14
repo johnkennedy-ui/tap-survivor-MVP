@@ -218,6 +218,12 @@ export function validateContent(content) {
     requireObject(bossConfig.enemyBolt, "bossConfig.enemyBolt");
     ["radius", "life"].forEach((field) => requireNumber(bossConfig.enemyBolt[field], `bossConfig.enemyBolt.${field}`, 0));
   }
+  if (bossConfig.projectileScaling) {
+    requireObject(bossConfig.projectileScaling, "bossConfig.projectileScaling");
+    ["fireRateBase", "fireRatePerFloor", "fireRateMax", "speedBase", "speedPerFloor", "speedMax"].forEach((field) => {
+      requireNumber(bossConfig.projectileScaling[field], `bossConfig.projectileScaling.${field}`, 0);
+    });
+  }
   Object.entries(bossAbilities).forEach(([id, ability]) => {
     requireString(id, "boss ability id");
     ["name", "color"].forEach((field) => requireString(ability[field], `boss ability ${id}.${field}`));

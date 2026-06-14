@@ -1112,8 +1112,16 @@ globalThis.TapSurvivorContent = {
       "superDamage": 34
     },
     "enemyBolt": {
-      "radius": 5,
-      "life": 2.2
+      "radius": 7,
+      "life": 2.4
+    },
+    "projectileScaling": {
+      "fireRateBase": 0.68,
+      "fireRatePerFloor": 0.07,
+      "fireRateMax": 1.35,
+      "speedBase": 0.72,
+      "speedPerFloor": 0.06,
+      "speedMax": 1.35
     }
   },
   "bossAbilities": {
