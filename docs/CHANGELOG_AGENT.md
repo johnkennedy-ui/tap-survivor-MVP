@@ -4,6 +4,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 ## 2026-06-14
 
+- Added the floor-4+ ranged `hexer` enemy using existing level enemy mixes and the enemy update loop.
 - Shortened run boss timing to 150 seconds, added fifth-floor super boss relic drops, and added distinct SVG mappings for all weapons and shop items.
 - Added per-size sprite raster caching in `src/sprites.js` and explicit enemy outline paths to reduce slowdown when many SVG enemies are drawn.
 - Wired `content.levels` into `src/enemies.js` so level entries now control enemy mixes, spawn counts, and spawn pressure.

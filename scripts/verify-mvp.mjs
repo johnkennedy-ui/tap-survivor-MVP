@@ -99,9 +99,11 @@ check("generated tower background asset exists", content.assets?.sources?.some((
 check("generated tower sprite set exists", content.assets?.sources?.some((source) => source.id === "generated_tower_sprites" && source.commercialUse === true && source.attributionRequired === false) && content.assets?.sprites?.player?.includes("player-tower-mage") && content.assets?.sprites?.enemies?.boss?.includes("tower-warden"));
 check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));
 check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
+check("ranged enemy unlocks after floor three", (content.enemyTypes || []).some((enemy) => enemy.id === "hexer" && enemy.minTowerFloor === 4 && enemy.attackRange && enemy.projectileCooldown) && enemies.includes("isEnemyAvailable"));
 check("default character registry entry exists", (content.characters || []).some((character) => character.id === "character_default" && character.spriteId === "player"));
 check("content levels drive enemy waves", (content.levels || []).length >= 3 && content.levels.some((level) => level.enemyIds?.includes("bulwark")) && runtime.includes("activeLevelDef") && runtime.includes("levelEnemyTypes"));
 check("enemy spawns are content-counted and patterned", runtime.includes("spawnPatternPositions(spawnCount)") && runtime.includes("spawnEnemy(type, position)"));
+check("enemy projectiles update through combat loop", runState.includes("enemyBolts") && combat.includes("updateEnemyBolts") && runUpdate.includes("combat.updateEnemyBolts(dt)") && rendering.includes("drawEnemyBolt"));
 check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") && game.includes("runUpdater.update(dt * gameSpeed)") && game.includes("setGameSpeed"));
 check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.includes("fireWeapon"));
 check("weapon kind dispatch table exists", weaponFire.includes("weaponKindHandlers") && ["radial", "beam", "cone", "chain", "projectile", "target_area", "lingering_area", "mine"].every((kind) => weaponFire.includes(`${kind}:`)));

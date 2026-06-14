@@ -38,13 +38,20 @@ function createEnemySystem({
 
   function levelEnemyTypes(level) {
     if (!level?.enemyIds?.length) return availableEnemyTypes();
-    const configured = level.enemyIds.map((id) => enemyTypeById[id]).filter(Boolean);
+    const game = getGame();
+    const configured = level.enemyIds.map((id) => enemyTypeById[id]).filter((type) => type && isEnemyAvailable(type, game));
     return configured.length ? configured : availableEnemyTypes();
   }
 
   function availableEnemyTypes() {
     const game = getGame();
-    return enemyTypes.slice(0, Math.min(enemyTypes.length, 1 + Math.floor(game.elapsed / 30)));
+    return enemyTypes
+      .slice(0, Math.min(enemyTypes.length, 1 + Math.floor(game.elapsed / 30)))
+      .filter((type) => isEnemyAvailable(type, game));
+  }
+
+  function isEnemyAvailable(type, game) {
+    return !type.minTowerFloor || game.towerFloor >= type.minTowerFloor;
   }
 
   function chooseEnemyType(offset = 0, available = availableEnemyTypes()) {
@@ -86,6 +93,11 @@ function createEnemySystem({
       touchCooldown: type.touchCooldown,
       xp: type.xp,
       touchTimer: 0,
+      attackRange: type.attackRange || 0,
+      projectileCooldown: type.projectileCooldown || 0,
+      projectileSpeed: type.projectileSpeed || 0,
+      projectileDamage: (type.projectileDamage || type.damage) * difficulty.damage,
+      shootTimer: Math.random() * (type.projectileCooldown || 0),
     });
   }
 
@@ -151,8 +163,18 @@ function createEnemySystem({
       const dx = p.x - enemy.x;
       const dy = p.y - enemy.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
-      enemy.x += (dx / dist) * enemy.speed * dt;
-      enemy.y += (dy / dist) * enemy.speed * dt;
+      const ranged = enemy.attackRange && enemy.projectileCooldown;
+      if (!ranged || dist > enemy.attackRange * 0.72) {
+        enemy.x += (dx / dist) * enemy.speed * dt;
+        enemy.y += (dy / dist) * enemy.speed * dt;
+      }
+      if (ranged && dist <= enemy.attackRange) {
+        enemy.shootTimer -= dt;
+        if (enemy.shootTimer <= 0) {
+          enemy.shootTimer = enemy.projectileCooldown;
+          spawnEnemyBolt(enemy, dx / dist, dy / dist);
+        }
+      }
       enemy.touchTimer -= dt;
       if (dist < p.radius + enemy.radius && enemy.touchTimer <= 0) {
         p.hp -= enemy.damage;
@@ -161,11 +183,48 @@ function createEnemySystem({
     });
   }
 
+  function spawnEnemyBolt(enemy, dirX, dirY) {
+    const game = getGame();
+    game.enemyBolts.push({
+      x: enemy.x,
+      y: enemy.y,
+      vx: dirX * enemy.projectileSpeed,
+      vy: dirY * enemy.projectileSpeed,
+      radius: 5,
+      damage: enemy.projectileDamage,
+      life: 2.2,
+      color: enemy.color,
+    });
+  }
+
+  function updateEnemyBolts(dt) {
+    const game = getGame();
+    const p = game.player;
+    game.enemyBolts.forEach((bolt) => {
+      bolt.x += bolt.vx * dt;
+      bolt.y += bolt.vy * dt;
+      bolt.life -= dt;
+      if (distance(bolt, p) <= bolt.radius + p.radius) {
+        p.hp -= bolt.damage;
+        bolt.life = 0;
+      }
+    });
+    game.enemyBolts = game.enemyBolts.filter(
+      (bolt) =>
+        bolt.life > 0 &&
+        bolt.x > -24 &&
+        bolt.x < canvas.width + 24 &&
+        bolt.y > -24 &&
+        bolt.y < canvas.height + 24,
+    );
+  }
+
   return {
     spawnEnemies,
     spawnBoss,
     updateBossSpecials,
     updateEnemies,
+    updateEnemyBolts,
   };
 }
 

@@ -39,6 +39,7 @@
         xpDrops: [],
         lootDrops: [],
         bolts: [],
+        enemyBolts: [],
         beams: [],
         areas: [],
         weaponBursts: [],

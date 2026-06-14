@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Shorter run, super boss relics, weapon and shop sprites
+Add ranged enemies after floor 3
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-14T12:24:34.770Z
+- Started: 2026-06-14T13:14:23.577Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -21,14 +21,12 @@ Shorter run, super boss relics, weapon and shop sprites
 - `src/content.generated.js`
 - `src/run-state.js`
 - `src/enemies.js`
-- `src/game.js`
+- `src/combat.js`
 - `src/rendering.js`
-- `src/shop.js`
-- `src/styles.css`
-- `scripts/content-tools.mjs`
-- `scripts/smoke-boss-run.mjs`
+- `src/run-update.js`
+- `scripts/smoke-game-harness.mjs`
 - `scripts/verify-mvp.mjs`
-- `assets/generated/tower/sprites/*.svg`
+- `assets/generated/tower/sprites/enemy-hexer-ranged.svg`
 
 ## Files Changed
 
@@ -36,17 +34,15 @@ Shorter run, super boss relics, weapon and shop sprites
 - `src/content.generated.js`
 - `src/run-state.js`
 - `src/enemies.js`
-- `src/game.js`
+- `src/combat.js`
 - `src/rendering.js`
-- `src/shop.js`
-- `src/styles.css`
-- `scripts/content-tools.mjs`
-- `scripts/smoke-boss-run.mjs`
+- `src/run-update.js`
+- `scripts/smoke-game-harness.mjs`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
 - `docs/CURRENT_TASK.md`
-- 18 SVG files under `assets/generated/tower/sprites/`
+- `assets/generated/tower/sprites/enemy-hexer-ranged.svg`
 
 ## Validation Plan
 
@@ -59,13 +55,13 @@ npm run agent:check
 Result:
 
 - `npm run build:content`: passed.
-- `node --check src/game.js`: passed.
 - `node --check src/enemies.js`: passed.
-- `node --check src/shop.js`: passed.
-- `node --check scripts/content-tools.mjs`: passed.
-- `node --check scripts/smoke-boss-run.mjs`: passed.
+- `node --check src/run-update.js`: passed.
+- `node --check src/combat.js`: passed.
+- `node --check src/rendering.js`: passed.
+- `node --check scripts/smoke-game-harness.mjs`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 184 checks.
+- `node scripts/verify-mvp.mjs`: passed 186 checks.
 - `npm run smoke:boss-run`: passed.
 - `npm run smoke:shop`: passed.
 - `npm run smoke:start-run`: passed.

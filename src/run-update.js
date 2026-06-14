@@ -38,6 +38,7 @@
       movePlayer(player, dt);
       combat.spawnEnemies(dt);
       combat.updateEnemies(dt);
+      combat.updateEnemyBolts(dt);
       combat.updateBossSpecials(dt);
       combat.updateWeapons(dt);
       combat.updateBolts(dt);

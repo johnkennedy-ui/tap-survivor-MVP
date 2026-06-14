@@ -199,6 +199,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
           },
           updateBossSpecials() {},
           updateEnemies() {},
+          updateEnemyBolts() {},
           updateWeapons() {},
           getRunUpgradeTier() {
             return 0;

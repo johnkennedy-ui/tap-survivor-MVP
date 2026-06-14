@@ -921,6 +921,25 @@ globalThis.TapSurvivorContent = {
       "touchCooldown": 0.75,
       "xp": 2,
       "assetId": "bulwark"
+    },
+    {
+      "id": "hexer",
+      "name": "Hexer",
+      "color": "#b794ff",
+      "radius": 12,
+      "hp": 20,
+      "hpScale": 0.1,
+      "speed": 46,
+      "speedScale": 0.05,
+      "damage": 8,
+      "touchCooldown": 0.7,
+      "xp": 2,
+      "assetId": "hexer",
+      "minTowerFloor": 4,
+      "attackRange": 260,
+      "projectileCooldown": 1.35,
+      "projectileSpeed": 235,
+      "projectileDamage": 10
     }
   ],
   "characters": [
@@ -1109,7 +1128,8 @@ globalThis.TapSurvivorContent = {
       "enemyIds": [
         "drifter",
         "skitter",
-        "bulwark"
+        "bulwark",
+        "hexer"
       ],
       "spawnCount": 2,
       "spawnRateMultiplier": 1,
@@ -1122,7 +1142,8 @@ globalThis.TapSurvivorContent = {
       "enemyIds": [
         "drifter",
         "skitter",
-        "bulwark"
+        "bulwark",
+        "hexer"
       ],
       "spawnCount": 3,
       "spawnRateMultiplier": 1.08,
@@ -1168,6 +1189,7 @@ globalThis.TapSurvivorContent = {
         "drifter": "assets/generated/tower/sprites/enemy-drifter-shade.svg?v=generated-20260611-quality",
         "skitter": "assets/generated/tower/sprites/enemy-skitter-rune.svg?v=generated-20260611-quality",
         "bulwark": "assets/generated/tower/sprites/enemy-bulwark-guardian.svg?v=generated-20260611-quality",
+        "hexer": "assets/generated/tower/sprites/enemy-hexer-ranged.svg?v=generated-20260614-ranged",
         "boss": "assets/generated/tower/sprites/enemy-boss-tower-warden.svg?v=generated-20260611-quality"
       },
       "weapons": {

@@ -81,6 +81,7 @@ function createCombatSystem({
     spawnBoss: enemies.spawnBoss,
     updateBossSpecials: enemies.updateBossSpecials,
     updateEnemies: enemies.updateEnemies,
+    updateEnemyBolts: enemies.updateEnemyBolts,
     updateWeapons: weaponFire.updateWeapons,
     updateBolts: weaponFire.updateBolts,
     updateAreas: weaponFire.updateAreas,

@@ -16,6 +16,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     game.xpDrops.forEach(drawXp);
     game.lootDrops.forEach(drawLoot);
     game.bolts.forEach(drawBolt);
+    game.enemyBolts.forEach(drawEnemyBolt);
     game.enemies.forEach(drawEnemy);
     game.beams.forEach(drawBeam);
     drawPlayer(game.player);
@@ -205,6 +206,16 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       ctx.arc(bolt.x, bolt.y, bolt.radius, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
+
+  function drawEnemyBolt(bolt) {
+    ctx.fillStyle = bolt.color;
+    ctx.beginPath();
+    ctx.arc(bolt.x, bolt.y, bolt.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#10141d";
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
 
   function drawBeam(beam) {
