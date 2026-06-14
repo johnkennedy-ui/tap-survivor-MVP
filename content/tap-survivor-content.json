@@ -1477,6 +1477,15 @@
         "attributionRequired": false,
         "url": "local",
         "localLicense": "assets/generated/tower/sprites/License.txt"
+      },
+      {
+        "id": "user_enemy_sprite_sheet_20260614",
+        "name": "User Provided Enemy Sprite Sheet",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram:file/AgACAgQAAxkBAAJZNmovHYBCP9zQ3i33d3CAhGf0UW_vAAIqD2sb0fF5UfdIhMdfCDz4AQADAgADdwADPAQ",
+        "localLicense": "assets/generated/tower/sheet-20260614/README.md"
       }
     ],
     "sprites": {
@@ -1485,11 +1494,11 @@
         "tower_floor": "assets/generated/tower/tower-floor-bg.png?v=generated-20260611"
       },
       "enemies": {
-        "drifter": "assets/generated/tower/sprites/enemy-drifter-shade.svg?v=generated-20260611-quality",
-        "skitter": "assets/generated/tower/sprites/enemy-skitter-rune.svg?v=generated-20260611-quality",
-        "bulwark": "assets/generated/tower/sprites/enemy-bulwark-guardian.svg?v=generated-20260611-quality",
-        "hexer": "assets/generated/tower/sprites/enemy-hexer-ranged.svg?v=generated-20260614-ranged",
-        "boss": "assets/generated/tower/sprites/enemy-boss-tower-warden.svg?v=generated-20260611-quality"
+        "drifter": "assets/generated/tower/sheet-20260614/spider-brown.png?v=sheet-20260614",
+        "skitter": "assets/generated/tower/sheet-20260614/spider-red.png?v=sheet-20260614",
+        "bulwark": "assets/generated/tower/sheet-20260614/crystal-golem.png?v=sheet-20260614",
+        "hexer": "assets/generated/tower/sheet-20260614/necromancer-hexer.png?v=sheet-20260614",
+        "boss": "assets/generated/tower/sheet-20260614/demon-boss.png?v=sheet-20260614"
       },
       "weapons": {
         "spark_bolt": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260611-quality",
