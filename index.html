@@ -46,12 +46,22 @@
               <h2>Run Menu</h2>
               <button id="closeMenu" class="modal-close" type="button" aria-label="Close run menu">&times;</button>
             </div>
-            <p>Spend Quest Points, unlock weapons, and review quests.</p>
-            <h3>Progression Tree</h3>
-            <p id="menuQpHud"></p>
-            <div id="menuTree" class="tree"></div>
-            <h3>Quests</h3>
-            <div id="menuQuests" class="quests"></div>
+            <div class="menu-tabs" role="tablist" aria-label="Run menu tabs">
+              <button id="menuProgressTab" class="menu-tab active" type="button">Progress</button>
+              <button id="menuShopTab" class="menu-tab" type="button">Shop</button>
+            </div>
+            <div id="menuProgressPanel">
+              <p>Spend Quest Points, unlock weapons, and review quests.</p>
+              <h3>Progression Tree</h3>
+              <p id="menuQpHud"></p>
+              <div id="menuTree" class="tree"></div>
+              <h3>Quests</h3>
+              <div id="menuQuests" class="quests"></div>
+            </div>
+            <div id="menuShopPanel" class="hidden">
+              <p id="menuShopCoinHud"></p>
+              <div id="menuShopItems" class="shop-grid"></div>
+            </div>
             <button id="exitRun" class="danger-button" type="button">Exit Run</button>
           </div>
         </div>

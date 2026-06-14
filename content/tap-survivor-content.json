@@ -1094,6 +1094,78 @@
         "stat": "relicFocus",
         "value": 0.5
       }
+    },
+    {
+      "id": "aether_soles",
+      "name": "Aether Soles",
+      "description": "Add a smaller extra movement boost for tower climbs.",
+      "kind": "stat_upgrade",
+      "cost": [
+        55,
+        92,
+        135
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-aether-soles.svg?v=generated-20260614-shop2",
+      "effect": {
+        "stat": "speed",
+        "value": 6
+      }
+    },
+    {
+      "id": "soul_satchel",
+      "name": "Soul Satchel",
+      "description": "Pull pickups in from farther away on higher floors.",
+      "kind": "stat_upgrade",
+      "cost": [
+        50,
+        86,
+        128
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-soul-satchel.svg?v=generated-20260614-shop2",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 7
+      }
+    },
+    {
+      "id": "ember_whetstone",
+      "name": "Ember Whetstone",
+      "description": "Add more flat weapon damage for later floors.",
+      "kind": "stat_upgrade",
+      "cost": [
+        70,
+        115,
+        165
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-ember-whetstone.svg?v=generated-20260614-shop2",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 3
+      }
+    },
+    {
+      "id": "chrono_spring",
+      "name": "Chrono Spring",
+      "description": "Slightly increase weapon firing pace before each run.",
+      "kind": "stat_upgrade",
+      "cost": [
+        76,
+        124,
+        180
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-chrono-spring.svg?v=generated-20260614-shop2",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.75
+      }
     }
   ],
   "levels": [

@@ -32,6 +32,12 @@ check("shop rerenders balance", harness.elements.get("shopCoinHud").textContent.
 harness.elements.get("closeShop").click();
 check("shop closes", harness.elements.get("shopModal").classList.contains("hidden"));
 
+harness.elements.get("startRun").click();
+harness.elements.get("openMenu").click();
+harness.elements.get("menuShopTab").click();
+check("run menu shop tab renders items", harness.elements.get("menuShopItems").children.length >= 4);
+check("run menu shop tab shows scaled floor context", harness.elements.get("menuShopCoinHud").textContent.includes("Tower Floor"));
+
 if (process.exitCode) {
   console.error("\nShop smoke failed.");
   process.exit(process.exitCode);

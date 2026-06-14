@@ -12,7 +12,10 @@ function createShopSystem({
   }
 
   function costFor(item, tier) {
-    return Array.isArray(item.cost) ? item.cost[tier] : item.cost;
+    const baseCost = Array.isArray(item.cost) ? item.cost[tier] : item.cost;
+    const floor = Math.max(1, getSave().towerFloor || 1);
+    if (floor <= 1) return baseCost;
+    return Math.ceil(baseCost * (1 + (floor - 1) * 0.18));
   }
 
   function canBuy(item) {
@@ -49,13 +52,19 @@ function createShopSystem({
 
   function renderShop() {
     const save = getSave();
-    ui.shopCoinHud.textContent = `Coins: ${save.coins}`;
-    ui.shopItems.innerHTML = "";
+    renderShopList(ui.shopItems, ui.shopCoinHud, save);
+    renderShopList(ui.menuShopItems, ui.menuShopCoinHud, save);
+  }
+
+  function renderShopList(container, coinHud, save) {
+    if (!container || !coinHud) return;
+    coinHud.textContent = `Coins: ${save.coins} | Tower Floor ${Math.max(1, save.towerFloor || 1)}`;
+    container.innerHTML = "";
     if (!shopItemDefs.length) {
       const empty = document.createElement("div");
       empty.className = "shop-item";
       empty.textContent = "No shop items yet.";
-      ui.shopItems.appendChild(empty);
+      container.appendChild(empty);
       return;
     }
 
@@ -80,7 +89,7 @@ function createShopSystem({
       button.disabled = maxed || !affordable;
       button.addEventListener("click", () => buyItem(item));
       el.appendChild(button);
-      ui.shopItems.appendChild(el);
+      container.appendChild(el);
     });
   }
 

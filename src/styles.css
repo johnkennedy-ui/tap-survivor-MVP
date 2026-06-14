@@ -91,6 +91,19 @@ button:disabled {
   color: #fff4c2;
 }
 
+.menu-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.menu-tab.active {
+  border-color: #ffd166;
+  background: #4a3f22;
+  color: #fff4c2;
+}
+
 .quest-banner {
   position: absolute;
   top: 58px;
