@@ -175,6 +175,7 @@ check("boss clears grant relics", save.includes("unlockedRelics") && save.includ
 check("every fifth floor has super boss relic drop", enemies.includes("superBoss") && game.includes("relicDropCount") && game.includes("clearedFloor % 5 === 0 ? 2 : 1"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
 check("quest completion banner exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showQuestBanner") && styles.includes(".quest-banner"));
+check("boss health bar renders at screen top", rendering.includes("drawBossHealthBar") && rendering.includes("boss.hp / boss.maxHp") && rendering.includes("SUPER BOSS"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));

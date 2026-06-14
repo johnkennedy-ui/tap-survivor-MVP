@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Add relic choice, run speed rebalance, and quest banner
+Add boss health bar
 
 ## Status
 
 - State: validated; ready to push/report
-- Started: 2026-06-14T14:50:54.958Z
+- Started: 2026-06-14T15:01:39.599Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -17,30 +17,12 @@ Add relic choice, run speed rebalance, and quest banner
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
-- `content/tap-survivor-content.json`
-- `index.html`
-- `src/content.generated.js`
-- `src/game.js`
-- `src/relics.js`
-- `src/quests.js`
-- `src/ui.js`
-- `src/styles.css`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
+- `src/rendering.js`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
-- `content/tap-survivor-content.json`
-- `index.html`
-- `src/content.generated.js`
-- `src/game.js`
-- `src/relics.js`
-- `src/quests.js`
-- `src/ui.js`
-- `src/styles.css`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
+- `src/rendering.js`
 - `scripts/verify-mvp.mjs`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CHANGELOG_AGENT.md`
@@ -56,13 +38,8 @@ npm run agent:check
 
 Result:
 
-- `npm run build:content`: passed.
-- `node --check src/game.js src/relics.js src/quests.js scripts/smoke-game-harness.mjs scripts/verify-speed-controls.mjs`: passed.
-- `node scripts/verify-mvp.mjs`: passed 191 checks.
-- Focused VM check: relic choices for `spark_bolt` are weapon-relevant and quest completion callback fires.
-- `npm run validate:content`: passed.
-- `npm run smoke:start-run`: passed.
-- `npm run smoke:shop`: passed.
+- `node --check src/rendering.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed 192 checks.
 - `npm run smoke:boss-run`: passed.
 - `npm test`: passed.
 

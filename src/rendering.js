@@ -285,7 +285,34 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   }
 
   function drawGameHud(game) {
+    drawBossHealthBar(game);
     drawSkillRail(game);
+  }
+
+  function drawBossHealthBar(game) {
+    const boss = game.enemies.find((enemy) => enemy.boss);
+    if (!boss) return;
+    const width = Math.min(520, canvas.width - 220);
+    const height = 18;
+    const x = canvas.width / 2 - width / 2;
+    const y = 54;
+    const fillWidth = width * clamp(boss.hp / boss.maxHp, 0, 1);
+
+    roundedRectPath(x, y, width, height, 7);
+    ctx.fillStyle = "rgba(10, 14, 20, 0.84)";
+    ctx.fill();
+    roundedRectPath(x, y, fillWidth, height, 7);
+    ctx.fillStyle = boss.superBoss ? "#ff74c8" : "#ff5f7a";
+    ctx.fill();
+    ctx.strokeStyle = boss.superBoss ? "#ffd166" : "#f3f6fb";
+    ctx.lineWidth = 2;
+    roundedRectPath(x, y, width, height, 7);
+    ctx.stroke();
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`${boss.superBoss ? "SUPER BOSS" : "BOSS"} ${Math.max(0, Math.ceil(boss.hp))}/${Math.ceil(boss.maxHp)}`, canvas.width / 2, y + 13);
+    ctx.textAlign = "start";
   }
 
   function drawSkillRail(game) {
