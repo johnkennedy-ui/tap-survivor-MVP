@@ -137,7 +137,8 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
 
   function drawEnemy(enemy) {
     const enemySprite = enemy.boss ? "enemy:boss" : `enemy:${enemy.assetId || enemy.type}`;
-    const enemyDrawn = drawSprite(enemySprite, enemy.x, enemy.y, enemy.radius * (enemy.boss ? 2.2 : 2.4));
+    const spriteSize = enemy.boss ? Math.max(92, enemy.radius * 2.9) : Math.max(34, enemy.radius * 3.8);
+    const enemyDrawn = drawSprite(enemySprite, enemy.x, enemy.y, spriteSize);
     if (!enemyDrawn) {
       ctx.fillStyle = enemy.boss ? "#ff4f8b" : enemy.color;
       ctx.beginPath();

@@ -215,6 +215,7 @@ check("shared math helpers exist", math.includes("TapSurvivorMath") && game.incl
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
 check("sprite cache trims transparent padding", sprites.includes("trimmedSpriteBounds") && sprites.includes("getImageData") && sprites.includes("spriteBounds"));
+check("enemy sprites draw larger than hit radius", rendering.includes("spriteSize") && rendering.includes("Math.max(34") && rendering.includes("Math.max(92"));
 check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
 check("shared progression helper exists", progression.includes("TapSurvivorProgression") && game.includes("TapSurvivorProgression"));
 check("shared HUD renderer helper exists", renderHud.includes("TapSurvivorRenderHud") && rendering.includes("TapSurvivorRenderHud"));
