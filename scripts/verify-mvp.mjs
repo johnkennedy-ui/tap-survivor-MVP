@@ -181,6 +181,7 @@ check("start menu exists", index.includes('id="startMenu"') && index.includes('i
 check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && shellUi.includes("function closeShopMenu"));
 check("modal boxes scroll", styles.includes(".modal-box") && styles.includes("overflow-y: auto") && styles.includes("overscroll-behavior: contain"));
 check("run menu pauses game", index.includes('id="openMenu"') && shellUi.includes("openRunMenu") && shellUi.includes('pauseReason = "menu"'));
+check("quest rewards moved to menu tab", index.includes('id="menuProgressTab"') && index.includes(">Rewards</button>") && index.includes('id="menuTree"') && index.includes('id="menuQuests"') && !index.includes('id="qpHud"') && !index.includes('id="tree"') && !index.includes('id="quests"') && !ui.includes("ui.qpHud"));
 check("run menu includes shop tab", index.includes('id="menuShopTab"') && index.includes('id="menuShopItems"') && shellUi.includes("showRunMenuTab") && shop.includes("menuShopItems"));
 check("run menu button toggles menu", shellUi.includes("function toggleRunMenu") && shellUi.includes("ui.openMenu.addEventListener(\"click\", toggleRunMenu)") && index.includes('aria-expanded="false"'));
 check("runs can be exited", index.includes('id="exitRun"') && game.includes('endRun("Run exited")'));

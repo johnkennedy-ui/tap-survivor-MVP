@@ -34,11 +34,8 @@ function createUi() {
     runHud: document.getElementById("runHud"),
     debugPanel: document.getElementById("debugPanel"),
     debugStats: document.getElementById("debugStats"),
-    qpHud: document.getElementById("qpHud"),
     menuQpHud: document.getElementById("menuQpHud"),
-    tree: document.getElementById("tree"),
     menuTree: document.getElementById("menuTree"),
-    quests: document.getElementById("quests"),
     menuQuests: document.getElementById("menuQuests"),
     levelUp: document.getElementById("levelUp"),
     choices: document.getElementById("choices"),
@@ -71,12 +68,9 @@ function createUiRenderer({
   function renderMeta() {
     const save = getSave();
     const qpText = `Coins: ${save.coins} | Quest Points: ${save.questPoints} available, ${save.totalQuestPoints} earned.`;
-    ui.qpHud.textContent = qpText;
     ui.menuQpHud.textContent = qpText;
 
-    renderTree(ui.tree);
     renderTree(ui.menuTree);
-    renderQuests(ui.quests);
     renderQuests(ui.menuQuests);
   }
 
