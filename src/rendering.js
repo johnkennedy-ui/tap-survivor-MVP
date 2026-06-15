@@ -2,6 +2,7 @@
 const { clamp } = globalThis.TapSurvivorMath;
 
 function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
+  const skillEffectSprites = globalThis.TapSurvivorContent?.assets?.sprites?.weapons || {};
   const hudRenderer = globalThis.TapSurvivorRenderHud.createHudRenderer({
     canvas,
     ctx,
@@ -233,7 +234,8 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   function drawBolt(bolt) {
     const weapon = weaponDefs[bolt.weaponId];
     const rotation = Math.atan2(bolt.vy || 0, bolt.vx || 1);
-    const boltDrawn = drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`, bolt.x, bolt.y, bolt.radius * 3.2, rotation);
+    const tuning = skillEffectTuning(bolt.weaponId, weapon);
+    const boltDrawn = drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`, bolt.x, bolt.y, bolt.radius * 2 * tuning.scale, rotation, { alpha: tuning.alpha });
     if (!boltDrawn) {
       ctx.fillStyle = bolt.color;
       ctx.beginPath();
@@ -277,34 +279,45 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
 
   function drawBeam(beam) {
     const weapon = weaponDefs[beam.weaponId];
+    const tuning = skillEffectTuning(beam.weaponId, weapon);
     const length = Math.max(1, Math.hypot(beam.endX - beam.x, beam.endY - beam.y));
     const midX = (beam.x + beam.endX) / 2;
     const midY = (beam.y + beam.endY) / 2;
     const rotation = Math.atan2(beam.endY - beam.y, beam.endX - beam.x);
-    const spriteHeight = Math.max(54, beam.width * 2.6);
-    if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, { width: length, height: spriteHeight })) {
+    const spriteHeight = Math.max(1, beam.width * tuning.scale);
+    if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, { width: length, height: spriteHeight, alpha: tuning.alpha })) {
       return;
     }
+    ctx.save();
     ctx.strokeStyle = beam.color;
     ctx.lineWidth = beam.width;
-    ctx.globalAlpha = Math.max(0.2, beam.life / 0.24);
+    ctx.globalAlpha = Math.max(0.2, beam.life / 0.24) * tuning.alpha;
     ctx.beginPath();
     ctx.moveTo(beam.x, beam.y);
     ctx.lineTo(beam.endX, beam.endY);
     ctx.stroke();
-    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   function drawArea(area) {
+    const weapon = weaponDefs[area.weaponId];
+    const tuning = skillEffectTuning(area.weaponId, weapon);
+    const spriteSize = area.radius * 2 * tuning.scale;
+    const spriteDrawn = weapon && drawSprite(`weapon:${weapon.assetId || area.weaponId}`, area.x, area.y, spriteSize, 0, {
+      width: spriteSize,
+      height: spriteSize,
+      alpha: Math.max(0.1, Math.min(1, area.life)) * tuning.alpha,
+    });
+    ctx.save();
     ctx.strokeStyle = area.color;
     ctx.fillStyle = area.color;
-    ctx.globalAlpha = Math.max(0.1, Math.min(0.32, area.life));
+    ctx.globalAlpha = spriteDrawn ? 0.12 * tuning.alpha : Math.max(0.1, Math.min(0.32, area.life)) * tuning.alpha;
     ctx.beginPath();
     ctx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = 0.8 * tuning.alpha;
     ctx.stroke();
-    ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   function drawWeaponBurst(burst) {
@@ -322,6 +335,14 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
     ctx.arc(burst.x, burst.y, Math.max(8, radius * 0.46), 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
+  }
+
+  function skillEffectTuning(weaponId, weapon) {
+    const sprite = skillEffectSprites[weapon?.assetId || weaponId] || {};
+    return {
+      scale: Math.max(0.1, Number(sprite.effectScale || 1)),
+      alpha: Math.max(0, Math.min(1, Number(sprite.effectAlpha ?? 1))),
+    };
   }
 
   function drawBossAttack(attack) {

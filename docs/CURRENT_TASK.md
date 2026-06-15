@@ -4,7 +4,7 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Animate level-up skill effect previews and tune icon sizing
+Resize visual skill effects to attack radius and expose transparency tuning
 
 ## Status
 
@@ -16,6 +16,9 @@ Animate level-up skill effect previews and tune icon sizing
 
 - `docs/CURRENT_TASK.md`
 - `content/tap-survivor-content.json`
+- `src/rendering.js`
+- `src/weapon-fire.js`
+- `src/sprites.js`
 - `src/level-up.js`
 - `src/styles.css`
 - `src/content.generated.js`
@@ -31,6 +34,9 @@ Animate level-up skill effect previews and tune icon sizing
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
+- `src/rendering.js`
+- `src/weapon-fire.js`
+- `src/sprites.js`
 - `src/level-up.js`
 - `src/styles.css`
 - `scripts/verify-mvp.mjs`
@@ -54,7 +60,7 @@ Result:
 
 - `npm run build:content`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 250 checks, including split sprite paths and animated level-up skill effect previews.
+- `node scripts/verify-mvp.mjs`: passed 251 checks, including tunable skill effect scale/transparency.
 - `npm run smoke:start-run`: passed.
 - `npm run agent:prepush`: passed; cache keys bumped for changed runtime/content files.
 

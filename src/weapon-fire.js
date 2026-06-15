@@ -198,7 +198,7 @@ function createWeaponFireSystem({
       y: p.y,
       endX: p.x + dirX * weaponReach(weapon),
       endY: p.y + dirY * weaponReach(weapon),
-      width: 10,
+      width: weaponWidth(weapon),
       color: weapon.color,
       life: 0.16,
     });
@@ -252,6 +252,7 @@ function createWeaponFireSystem({
       chargeProjectileBlock(destroyEnemyProjectilesInRange(p, reach));
     }
     game.areas.push({
+      weaponId,
       x: p.x,
       y: p.y,
       radius: reach,
@@ -298,6 +299,7 @@ function createWeaponFireSystem({
       if (distance(from, enemy) > weaponReach(weapon)) return;
       damageEnemy(enemy, weaponDamage(weaponId), weaponId);
       game.beams.push({
+        weaponId,
         x: from.x,
         y: from.y,
         endX: enemy.x,
@@ -322,6 +324,7 @@ function createWeaponFireSystem({
       }
     });
     game.areas.push({
+      weaponId,
       x: target.x,
       y: target.y,
       radius: weaponReach(weapon),

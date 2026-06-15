@@ -61,6 +61,7 @@ function createSpriteSystem({ ctx, spriteDefs }) {
     ctx.translate(x, y);
     ctx.rotate(rotation);
     ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+    if (Number.isFinite(options.alpha)) ctx.globalAlpha *= Math.max(0, Math.min(1, options.alpha));
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(source, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
     ctx.restore();
