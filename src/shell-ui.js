@@ -131,33 +131,56 @@ function createShellUiController({
     loadout.appendChild(slotGrid);
     ui.menuRelicInventory.appendChild(loadout);
 
-    const availableRelics = relicDefs.filter((relic) => unlocked.has(relic.id) && !equipped.has(relic.id));
+    const inventoryRelics = relicDefs.filter((relic) => !equipped.has(relic.id));
     const list = documentRef.createElement("div");
     list.className = "relic-icon-grid";
-    if (!availableRelics.length) {
+    if (!inventoryRelics.length) {
       const empty = documentRef.createElement("div");
       empty.className = "relic-item locked";
-      empty.textContent = unlocked.size ? "No unequipped relics available." : "No relics unlocked yet. Defeat bosses to add relics here.";
+      empty.textContent = "All relics are equipped.";
       list.appendChild(empty);
       ui.menuRelicInventory.appendChild(list);
       return;
     }
-    availableRelics.forEach((relic) => {
-      list.appendChild(createRelicIconButton(relic));
+    inventoryRelics.forEach((relic) => {
+      list.appendChild(createRelicIconButton(relic, unlocked.has(relic.id)));
     });
     ui.menuRelicInventory.appendChild(list);
   }
 
-  function createRelicIconButton(relic) {
+  function createRelicIconButton(relic, isUnlocked = true) {
     const button = documentRef.createElement("button");
-    button.className = "relic-icon-button";
+    button.className = `relic-icon-button ${isUnlocked ? "available" : "locked"}`;
     button.type = "button";
+    button.setAttribute("aria-label", isUnlocked ? `View ${relic.name}` : `${relic.name} locked`);
     button.innerHTML = `
       <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
       <span>${relic.name}</span>
     `;
-    button.addEventListener("click", () => openRelicDetail(relic));
+    button.addEventListener("click", () => {
+      if (!isUnlocked) {
+        showRelicLockedMessage();
+        return;
+      }
+      openRelicDetail(relic);
+    });
     return button;
+  }
+
+  function showRelicLockedMessage() {
+    if (!ui.menuRelicInventory) return;
+    let popup = ui.menuRelicInventory.querySelector?.(".relic-lock-popup");
+    if (!popup) {
+      popup = documentRef.createElement("div");
+      popup.className = "relic-lock-popup";
+      ui.menuRelicInventory.prepend?.(popup) || ui.menuRelicInventory.appendChild(popup);
+    }
+    popup.textContent = "Locked, play more to unlock this skill.";
+    popup.classList.remove("hidden");
+    globalThis.clearTimeout?.(popup.hideTimer);
+    popup.hideTimer = globalThis.setTimeout?.(() => {
+      if (popup.isConnected) popup.classList.add("hidden");
+    }, 1800);
   }
 
   function openRelicDetail(relic) {

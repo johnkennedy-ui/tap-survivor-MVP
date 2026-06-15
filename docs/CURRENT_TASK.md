@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Improve relic inventory icon grid and detail screen
+Show locked relic skills in inventory
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-15T11:13:39.000Z
+- Started: 2026-06-15T11:23:06.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -18,13 +18,16 @@ Improve relic inventory icon grid and detail screen
 - `src/shell-ui.js`
 - `src/styles.css`
 - `scripts/verify-mvp.mjs`
+- `scripts/smoke-relic-run-start.mjs`
 
 ## Files Changed
 
 - `src/shell-ui.js`
 - `src/styles.css`
 - `scripts/verify-mvp.mjs`
+- `scripts/smoke-relic-run-start.mjs`
 - `docs/CURRENT_TASK.md`
+- `index.html`
 
 ## Validation Plan
 
@@ -36,8 +39,8 @@ npm run agent:check
 
 Result:
 
-- `node scripts/verify-mvp.mjs`: passed 252 checks, including relic detail UI.
-- `npm run smoke:relic-run-start`: passed, including icon-grid click/detail actions.
+- `npm run smoke:relic-run-start`: passed, including locked relic popup and unlocked detail actions.
+- `node scripts/verify-mvp.mjs`: passed 252 checks, including locked relic inventory UI.
 - `npm run agent:prepush`: passed; cache keys bumped for shell UI and styles.
 
 ## Evidence Required

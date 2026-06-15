@@ -292,6 +292,17 @@ section + section {
   text-align: center;
 }
 
+.relic-icon-button.locked {
+  border-color: #4f5b69;
+  background: rgba(41, 48, 58, 0.82);
+  color: #a9b4c2;
+  opacity: 0.74;
+}
+
+.relic-icon-button.locked .relic-icon {
+  filter: grayscale(1) brightness(0.72);
+}
+
 .relic-icon-button .relic-icon {
   width: 52px;
   height: 52px;
@@ -300,6 +311,20 @@ section + section {
 .relic-icon-button span {
   font-size: 12px;
   line-height: 1.2;
+}
+
+.relic-lock-popup {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  border: 1px solid #748295;
+  border-radius: 6px;
+  background: rgba(18, 25, 34, 0.96);
+  color: #f3f6fa;
+  font-size: 13px;
+  text-align: center;
 }
 
 .relic-detail-screen {
