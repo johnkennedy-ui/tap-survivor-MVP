@@ -2,6 +2,10 @@
 
 Short log of structural changes that affect future OpenClaw/Codex work. Keep entries concise and link them to the commands or docs future agents should use.
 
+## 2026-06-15
+
+- Downgraded `docs/CURRENT_TASK.md` from required active-task state to optional housekeeping so stale checkpoints do not override the conversation or git status.
+
 ## 2026-06-14
 
 - Extracted canvas HUD and boss overlay rendering into `src/render-hud.js`.

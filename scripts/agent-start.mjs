@@ -4,7 +4,7 @@ function usage() {
   console.log(`Usage:
   npm run agent:start -- --goal "Short task goal" [--status "in progress"] [--files "src/game.js,docs/CURRENT_TASK.md"] [--validation "npm test"] [--dry-run]
 
-Creates docs/CURRENT_TASK.md for a new agent pass.`);
+Optionally creates docs/CURRENT_TASK.md for a local checkpoint. This file is housekeeping only; the conversation and git status remain authoritative.`);
 }
 
 function argValue(name, fallback = "") {
@@ -48,7 +48,7 @@ if (flag("--help") || !goal) {
 
 const body = `# Current Agent Task
 
-This file is the repo-local checkpoint for the active Tap Survivor task. Update it at the start of each agent pass, keep it short, and clear or replace stale details before starting unrelated work.
+This file is an optional repo-local checkpoint for a Tap Survivor task. It is housekeeping only and may be stale; use the conversation and current git diff as the source of truth.
 
 ## Active Goal
 

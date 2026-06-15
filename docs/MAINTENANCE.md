@@ -5,7 +5,6 @@ Use this as the short path for routine Tap Survivor updates. Keep changes small,
 ## Start A Pass
 
 ```bash
-npm run agent:start -- --goal "<short task goal>"
 npm run agent:status
 npm run content:summary
 ```
@@ -14,7 +13,8 @@ Read:
 
 - `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/CONTENT_EXTENSION_GUIDE.md`
-- `docs/CURRENT_TASK.md`
+
+`docs/CURRENT_TASK.md` is optional housekeeping only. Prefer the current conversation and `git status --short` when deciding what work is active.
 
 ## Content-Only Update
 

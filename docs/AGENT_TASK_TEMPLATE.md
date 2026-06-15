@@ -4,9 +4,9 @@
 
 State the single requested gameplay, content, asset, or maintenance change.
 
-## Current Task File
+## Optional Task File
 
-Update `docs/CURRENT_TASK.md` with the active goal, status, likely files, validation plan, evidence required, and stop condition before editing code or content.
+Use `docs/CURRENT_TASK.md` only when a repo-local checkpoint is useful. Do not treat it as the source of truth for the active request; the conversation and current git diff are authoritative.
 
 Shortcut:
 
@@ -27,7 +27,6 @@ npm run agent:start -- --goal "<short task goal>" --files "content/tap-survivor-
 ```bash
 sed -n '1,220p' docs/AGENT_CODEBASE_CONTEXT.md
 sed -n '1,260p' docs/CONTENT_EXTENSION_GUIDE.md
-sed -n '1,220p' docs/CURRENT_TASK.md
 sed -n '1,220p' docs/CHANGELOG_AGENT.md
 npm run agent:status
 npm run agent:handoff

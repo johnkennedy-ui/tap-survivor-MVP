@@ -40,7 +40,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `scripts/`: build, validation, content, deployment, and smoke-test utilities.
 - `docs/`: agent context and extension guides.
 - `docs/MAINTENANCE.md`: routine update and validation runbook.
-- `docs/CURRENT_TASK.md`: active task checkpoint; update this before editing.
+- `docs/CURRENT_TASK.md`: optional local task checkpoint. It can be stale; do not treat it as authoritative over the conversation or git status.
 - `docs/CHANGELOG_AGENT.md`: short log of structural changes that affect future agent work.
 
 ## Main Gameplay Systems
@@ -107,7 +107,7 @@ The project is mixed but mostly registry-driven:
 - Generated content drift check: `npm run content:check`
 - Focused verifier lanes: `npm run verify:assets`, `npm run verify:audio`, `npm run verify:content`, `npm run verify:relics`, `npm run verify:ui`
 - CI validation: GitHub Actions runs `npm run agent:check` via `.github/workflows/agent-check.yml`; browser smoke is optional unless `SMOKE_BROWSER_REQUIRED=1`.
-- Agent task checkpoint writer: `npm run agent:start -- --goal "<task>"`
+- Optional agent task checkpoint writer: `npm run agent:start -- --goal "<task>"`
 - Agent status overview: `npm run agent:status`
 - Agent handoff summary: `npm run agent:handoff`
 - Agent validation lane: `npm run agent:check`
@@ -127,7 +127,7 @@ The project is mixed but mostly registry-driven:
 ## Rules For Future Agents
 
 - Read this file, `docs/CONTENT_EXTENSION_GUIDE.md`, and `docs/MAINTENANCE.md` first.
-- Read and update `docs/CURRENT_TASK.md` for the active request before editing; use `npm run agent:start -- --goal "<task>"` for a clean checkpoint.
+- Use the conversation and current git diff as the source of truth for the active request. `docs/CURRENT_TASK.md` is optional housekeeping and may be stale.
 - Check `docs/CHANGELOG_AGENT.md` when changing structure or command workflows.
 - Make one content or structure change at a time.
 - Prefer `content/tap-survivor-content.json` and `scripts/add-content.mjs` over manual code edits.
