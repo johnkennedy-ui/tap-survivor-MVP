@@ -213,6 +213,7 @@ section + section {
 .quests,
 .choice-list,
 .relic-inventory-list,
+.relic-icon-grid,
 .relic-grid,
 .shop-grid {
   display: grid;
@@ -273,6 +274,64 @@ section + section {
 
 .relic-slots {
   display: grid;
+  gap: 8px;
+}
+
+.relic-icon-grid {
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  margin-top: 10px;
+}
+
+.relic-icon-button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 104px;
+  padding: 10px;
+  text-align: center;
+}
+
+.relic-icon-button .relic-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.relic-icon-button span {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.relic-detail-screen {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #536173;
+  border-radius: 6px;
+  background: rgba(21, 29, 41, 0.95);
+  padding: 14px;
+}
+
+.relic-detail-preview {
+  width: 112px;
+  height: 112px;
+  justify-self: center;
+  image-rendering: pixelated;
+}
+
+.relic-detail-canvas {
+  display: block;
+}
+
+.relic-detail-copy p {
+  margin-bottom: 8px;
+}
+
+.relic-detail-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
@@ -508,6 +567,10 @@ section + section {
   }
 
   .relic-loadout {
+    grid-template-columns: 1fr;
+  }
+
+  .relic-detail-screen {
     grid-template-columns: 1fr;
   }
 }

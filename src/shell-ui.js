@@ -133,7 +133,7 @@ function createShellUiController({
 
     const availableRelics = relicDefs.filter((relic) => unlocked.has(relic.id) && !equipped.has(relic.id));
     const list = documentRef.createElement("div");
-    list.className = "relic-inventory-list";
+    list.className = "relic-icon-grid";
     if (!availableRelics.length) {
       const empty = documentRef.createElement("div");
       empty.className = "relic-item locked";
@@ -143,30 +143,123 @@ function createShellUiController({
       return;
     }
     availableRelics.forEach((relic) => {
-      const canEquip = equipped.size < slots;
-      const el = documentRef.createElement("div");
-      el.className = `relic-item ${canEquip ? "available" : "locked"}`;
-      el.innerHTML = `
-        <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
-        <span>
-          <strong>${relic.name}</strong>
-          <span>${relic.description}</span>
-        </span>
-      `;
-      const button = documentRef.createElement("button");
-      button.textContent = canEquip ? "Equip" : "Slots Full";
-      button.disabled = !canEquip;
-      button.addEventListener("click", () => {
-        if (relicSystem.setRelicEquipped(save, relic.id, true)) {
-          persist?.();
-          renderInventory();
-          renderMeta();
-        }
-      });
-      el.appendChild(button);
-      list.appendChild(el);
+      list.appendChild(createRelicIconButton(relic));
     });
     ui.menuRelicInventory.appendChild(list);
+  }
+
+  function createRelicIconButton(relic) {
+    const button = documentRef.createElement("button");
+    button.className = "relic-icon-button";
+    button.type = "button";
+    button.innerHTML = `
+      <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
+      <span>${relic.name}</span>
+    `;
+    button.addEventListener("click", () => openRelicDetail(relic));
+    return button;
+  }
+
+  function openRelicDetail(relic) {
+    const save = getSave();
+    const slots = relicSystem.maxEquippedRelics(save);
+    const equippedRelics = relicSystem.equippedRelics(save);
+    const canEquip = equippedRelics.length < slots;
+    const skill = (globalThis.TapSurvivorContent?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
+    ui.menuRelicSlots.textContent = skill ? `${relic.name} -> ${skill.name}` : relic.name;
+    ui.menuRelicInventory.innerHTML = "";
+
+    const detail = documentRef.createElement("div");
+    detail.className = "relic-detail-screen";
+    const preview = createRelicSkillPreview(relic);
+    detail.appendChild(preview);
+    const copy = documentRef.createElement("div");
+    copy.className = "relic-detail-copy";
+    copy.innerHTML = `
+      <span class="relic-slot-index">Selected skill</span>
+      <strong>${skill?.name || relic.name}</strong>
+      <p>${skill?.description || relic.description}</p>
+      <p>${relic.description}</p>
+    `;
+    detail.appendChild(copy);
+
+    const actions = documentRef.createElement("div");
+    actions.className = "relic-detail-actions";
+    const equipButton = documentRef.createElement("button");
+    equipButton.type = "button";
+    equipButton.textContent = "Equip relic";
+    equipButton.disabled = !canEquip;
+    equipButton.addEventListener("click", () => {
+      if (relicSystem.setRelicEquipped(save, relic.id, true)) {
+        persist?.();
+        renderInventory();
+        renderMeta();
+      }
+    });
+    const cancelButton = documentRef.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.textContent = "Cancel";
+    cancelButton.addEventListener("click", renderInventory);
+    actions.appendChild(equipButton);
+    actions.appendChild(cancelButton);
+    detail.appendChild(actions);
+    ui.menuRelicInventory.appendChild(detail);
+  }
+
+  function createRelicSkillPreview(relic) {
+    const sprite = globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades?.[relic.targetUpgradeId];
+    const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
+    if (frames.length && typeof Image !== "undefined") {
+      const canvas = documentRef.createElement("canvas");
+      canvas.className = "relic-detail-preview relic-detail-canvas";
+      canvas.width = 112;
+      canvas.height = 112;
+      if (animateRelicSkillPreview(canvas, sprite)) return canvas;
+    }
+    const image = documentRef.createElement("img");
+    image.className = "relic-detail-preview";
+    image.src = relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+    image.alt = "";
+    return image;
+  }
+
+  function animateRelicSkillPreview(canvas, sprite) {
+    const ctx = canvas.getContext?.("2d", { willReadFrequently: true });
+    const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
+    const src = typeof sprite === "string" ? sprite : sprite?.src || sprite?.path;
+    if (!ctx || !frames.length || !src) return false;
+    const image = new Image();
+    let frameIndex = 0;
+    function drawFrame() {
+      if (canvas.isConnected === false) return;
+      const frame = frames[frameIndex % frames.length];
+      frameIndex += 1;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+      applyPreviewTransparency(ctx, canvas.width, canvas.height, sprite);
+      globalThis.setTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10));
+    }
+    image.addEventListener?.("load", drawFrame, { once: true });
+    image.src = src;
+    return true;
+  }
+
+  function applyPreviewTransparency(ctx, width, height, sprite) {
+    const color = sprite?.transparentColor;
+    if (!Array.isArray(color) || color.length < 3) return;
+    const tolerance = Math.max(0, Number(sprite.transparentTolerance ?? 28));
+    try {
+      const pixels = ctx.getImageData(0, 0, width, height);
+      const data = pixels.data;
+      for (let index = 0; index < data.length; index += 4) {
+        const delta = Math.abs(data[index] - color[0]) + Math.abs(data[index + 1] - color[1]) + Math.abs(data[index + 2] - color[2]);
+        if (delta <= tolerance) data[index + 3] = 0;
+      }
+      ctx.putImageData(pixels, 0, 0);
+    } catch {
+      // If a browser blocks pixel reads, the preview still shows the untrimmed frame.
+    }
   }
 
   function createCharacterPanel(save) {

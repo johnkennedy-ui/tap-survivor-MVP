@@ -4,31 +4,25 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Make relics grant starting run-upgrade tiers
+Improve relic inventory icon grid and detail screen
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-15T10:58:13.000Z
+- Started: 2026-06-15T11:13:39.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/relics.js`
-- `src/game.js`
-- `scripts/content-tools.mjs`
+- `src/shell-ui.js`
+- `src/styles.css`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
-- `src/relics.js`
-- `src/game.js`
-- `scripts/content-tools.mjs`
+- `src/shell-ui.js`
+- `src/styles.css`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 
@@ -42,11 +36,9 @@ npm run agent:check
 
 Result:
 
-- `npm run build:content`: passed.
-- `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 252 checks, including relic run-start bonuses.
-- `npm run smoke:relic-run-start`: passed.
-- `npm run agent:prepush`: passed; cache keys bumped for generated content, game, and relics.
+- `node scripts/verify-mvp.mjs`: passed 252 checks, including relic detail UI.
+- `npm run smoke:relic-run-start`: passed, including icon-grid click/detail actions.
+- `npm run agent:prepush`: passed; cache keys bumped for shell UI and styles.
 
 ## Evidence Required
 
