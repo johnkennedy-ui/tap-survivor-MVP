@@ -21,6 +21,7 @@ Wire skill effect sprite sheets 2-5
 - `src/sprites.js`
 - `scripts/verify-mvp.mjs`
 - `index.html`
+- `assets/generated/tower/skill-effects/split/`
 - `assets/generated/tower/skill-effects/batch-02.jpg`
 - `assets/generated/tower/skill-effects/batch-03.jpg`
 - `assets/generated/tower/skill-effects/batch-04.jpg`
@@ -35,6 +36,7 @@ Wire skill effect sprite sheets 2-5
 - `scripts/verify-mvp.mjs`
 - `index.html`
 - `docs/CURRENT_TASK.md`
+- `assets/generated/tower/skill-effects/split/`
 - `assets/generated/tower/skill-effects/batch-02.jpg`
 - `assets/generated/tower/skill-effects/batch-03.jpg`
 - `assets/generated/tower/skill-effects/batch-04.jpg`
@@ -52,7 +54,7 @@ Result:
 
 - `npm run build:content`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 249 checks, including all five user skill effect atlases.
+- `node scripts/verify-mvp.mjs`: passed 249 checks, including all five user skill effect atlases and split sprite paths.
 - `npm run smoke:start-run`: passed.
 - `npm run agent:prepush`: passed; cache keys bumped for changed runtime/content files.
 

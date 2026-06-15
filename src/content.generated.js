@@ -1566,7 +1566,7 @@ globalThis.TapSurvivorContent = {
       },
       "weapons": {
         "spark_bolt": {
-          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "src": "assets/generated/tower/skill-effects/split/skill-01-spark_bolt.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1614,7 +1614,7 @@ globalThis.TapSurvivorContent = {
           ]
         },
         "prism_beam": {
-          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "src": "assets/generated/tower/skill-effects/split/skill-02-prism_beam.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1625,44 +1625,44 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 52,
-              "y": 225,
+              "y": 27,
               "width": 160,
               "height": 145
             },
             {
               "x": 262,
-              "y": 212,
+              "y": 14,
               "width": 255,
               "height": 150
             },
             {
               "x": 540,
-              "y": 230,
+              "y": 32,
               "width": 555,
               "height": 105
             },
             {
               "x": 805,
-              "y": 230,
+              "y": 32,
               "width": 300,
               "height": 105
             },
             {
               "x": 1138,
-              "y": 257,
+              "y": 59,
               "width": 215,
               "height": 55
             },
             {
               "x": 1405,
-              "y": 252,
+              "y": 54,
               "width": 150,
               "height": 65
             }
           ]
         },
         "frost_orb": {
-          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1673,44 +1673,44 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 52,
-              "y": 420,
+              "y": 26,
               "width": 175,
               "height": 130
             },
             {
               "x": 285,
-              "y": 410,
+              "y": 16,
               "width": 140,
               "height": 130
             },
             {
               "x": 520,
-              "y": 425,
+              "y": 31,
               "width": 205,
               "height": 105
             },
             {
               "x": 788,
-              "y": 425,
+              "y": 31,
               "width": 200,
               "height": 105
             },
             {
               "x": 1088,
-              "y": 425,
+              "y": 31,
               "width": 210,
               "height": 105
             },
             {
               "x": 1382,
-              "y": 420,
+              "y": 26,
               "width": 150,
               "height": 110
             }
           ]
         },
         "flame_wave": {
-          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "src": "assets/generated/tower/skill-effects/split/skill-04-flame_wave.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1721,44 +1721,44 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 44,
-              "y": 610,
+              "y": 55,
               "width": 105,
               "height": 105
             },
             {
               "x": 175,
-              "y": 575,
+              "y": 20,
               "width": 190,
               "height": 150
             },
             {
               "x": 342,
-              "y": 560,
+              "y": 5,
               "width": 220,
               "height": 165
             },
             {
               "x": 588,
-              "y": 555,
+              "y": 0,
               "width": 295,
               "height": 170
             },
             {
               "x": 765,
-              "y": 555,
+              "y": 0,
               "width": 400,
               "height": 170
             },
             {
               "x": 1110,
-              "y": 610,
+              "y": 55,
               "width": 430,
               "height": 105
             }
           ]
         },
         "saw_drone": {
-          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "src": "assets/generated/tower/skill-effects/split/skill-05-saw_drone.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1769,50 +1769,50 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 50,
-              "y": 802,
+              "y": 42,
               "width": 132,
               "height": 115
             },
             {
               "x": 252,
-              "y": 785,
+              "y": 25,
               "width": 190,
               "height": 125
             },
             {
               "x": 490,
-              "y": 790,
+              "y": 30,
               "width": 165,
               "height": 120
             },
             {
               "x": 725,
-              "y": 790,
+              "y": 30,
               "width": 175,
               "height": 120
             },
             {
               "x": 962,
-              "y": 790,
+              "y": 30,
               "width": 190,
               "height": 120
             },
             {
               "x": 1210,
-              "y": 790,
+              "y": 30,
               "width": 168,
               "height": 120
             },
             {
               "x": 1408,
-              "y": 790,
+              "y": 30,
               "width": 132,
               "height": 125
             }
           ]
         },
         "void_mine": {
-          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "src": "assets/generated/tower/skill-effects/split/skill-06-void_mine.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1872,7 +1872,7 @@ globalThis.TapSurvivorContent = {
           ]
         },
         "chain_spark": {
-          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "src": "assets/generated/tower/skill-effects/split/skill-07-chain_spark.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1883,56 +1883,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "moon_glaive": {
-          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "src": "assets/generated/tower/skill-effects/split/skill-08-moon_glaive.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -1943,56 +1943,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "meteor_pin": {
-          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "src": "assets/generated/tower/skill-effects/split/skill-09-meteor_pin.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2003,56 +2003,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "acid_pool": {
-          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "src": "assets/generated/tower/skill-effects/split/skill-10-acid_pool.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2063,56 +2063,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "shield_pulse": {
-          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "src": "assets/generated/tower/skill-effects/split/skill-11-shield_pulse.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2172,7 +2172,7 @@ globalThis.TapSurvivorContent = {
           ]
         },
         "nova_burst": {
-          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "src": "assets/generated/tower/skill-effects/split/skill-12-nova_burst.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2183,49 +2183,49 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             }
@@ -2239,7 +2239,7 @@ globalThis.TapSurvivorContent = {
       },
       "runUpgrades": {
         "run_move_speed": {
-          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "src": "assets/generated/tower/skill-effects/split/skill-13-run_move_speed.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2250,56 +2250,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_pickup_radius": {
-          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "src": "assets/generated/tower/skill-effects/split/skill-14-run_pickup_radius.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2310,56 +2310,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_max_hp": {
-          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "src": "assets/generated/tower/skill-effects/split/skill-15-run_max_hp.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2370,56 +2370,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_attack_radius": {
-          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "src": "assets/generated/tower/skill-effects/split/skill-16-run_attack_radius.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2479,7 +2479,7 @@ globalThis.TapSurvivorContent = {
           ]
         },
         "run_fire_rate": {
-          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "src": "assets/generated/tower/skill-effects/split/skill-17-run_fire_rate.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2490,56 +2490,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_flat_damage": {
-          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "src": "assets/generated/tower/skill-effects/split/skill-18-run_flat_damage.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2550,56 +2550,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_percent_damage": {
-          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "src": "assets/generated/tower/skill-effects/split/skill-19-run_percent_damage.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2610,56 +2610,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_projectile_pierce": {
-          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "src": "assets/generated/tower/skill-effects/split/skill-20-run_projectile_pierce.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2670,56 +2670,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 868,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_wall_bounce": {
-          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "src": "assets/generated/tower/skill-effects/split/skill-21-run_wall_bounce.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2779,7 +2779,7 @@ globalThis.TapSurvivorContent = {
           ]
         },
         "run_split_shot": {
-          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "src": "assets/generated/tower/skill-effects/split/skill-22-run_split_shot.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2790,56 +2790,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 217,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_explosive_hit": {
-          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "src": "assets/generated/tower/skill-effects/split/skill-23-run_explosive_hit.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2850,56 +2850,56 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 434,
+              "y": 0,
               "width": 181,
               "height": 217
             }
           ]
         },
         "run_split_on_hit": {
-          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "src": "assets/generated/tower/skill-effects/split/skill-24-run_split_on_hit.png?v=skill-effects-20260615-split",
           "fps": 10,
           "transparentColor": [
             181,
@@ -2910,49 +2910,49 @@ globalThis.TapSurvivorContent = {
           "frames": [
             {
               "x": 0,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 181,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 362,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 543,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 724,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 905,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1086,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             },
             {
               "x": 1267,
-              "y": 651,
+              "y": 0,
               "width": 181,
               "height": 217
             }
