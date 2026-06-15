@@ -43,12 +43,19 @@ function createLevelUpSystem({
       .map((item) => [item.effect.stat, item.spritePath]),
   );
   const weaponIcons = globalThis.TapSurvivorContent?.assets?.sprites?.weapons || {};
+  const runUpgradeIcons = globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades || {};
   const fallbackSkillIcon = globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
 
   function iconForChoice(choice) {
-    if (choice.weaponId) return weaponIcons[choice.weaponId] || fallbackSkillIcon;
-    if (choice.runUpgradeId) return shopIconByStat.get(skillIconByRunUpgrade[choice.runUpgradeId]) || fallbackSkillIcon;
+    if (choice.weaponId) return spritePath(weaponIcons[choice.weaponId]) || fallbackSkillIcon;
+    if (choice.runUpgradeId) return spritePath(runUpgradeIcons[choice.runUpgradeId]) || shopIconByStat.get(skillIconByRunUpgrade[choice.runUpgradeId]) || fallbackSkillIcon;
     return fallbackSkillIcon;
+  }
+
+  function spritePath(definition) {
+    if (typeof definition === "string") return definition;
+    if (definition && typeof definition === "object") return definition.src || definition.path || "";
+    return "";
   }
 
   function showLevelUp() {

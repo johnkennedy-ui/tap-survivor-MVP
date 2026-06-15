@@ -1507,6 +1507,42 @@ globalThis.TapSurvivorContent = {
         "attributionRequired": false,
         "url": "telegram:file/AgACAgQAAxkBAAJZ5GovP0n_zqdywCRIFnBNHtM_CBpDAAJRD2sb0fF5USsxl8VE0EiyAQADAgADdwADPAQ",
         "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_02",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 02",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_03",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 03",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_04",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 04",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_05",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 05",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
       }
     ],
     "sprites": {
@@ -1775,18 +1811,1153 @@ globalThis.TapSurvivorContent = {
             }
           ]
         },
-        "void_mine": "assets/generated/tower/sprites/weapon-void-mine.svg?v=generated-20260614-weapons",
-        "chain_spark": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
-        "moon_glaive": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
-        "meteor_pin": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
-        "acid_pool": "assets/generated/tower/sprites/weapon-acid-pool.svg?v=generated-20260614-weapons",
-        "shield_pulse": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
-        "nova_burst": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
+        "void_mine": {
+          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "chain_spark": {
+          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "moon_glaive": {
+          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "meteor_pin": {
+          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "acid_pool": {
+          "src": "assets/generated/tower/skill-effects/batch-02.jpg?v=skill-effects-20260615-2",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "shield_pulse": {
+          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "nova_burst": {
+          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        }
       },
       "ui": {
         "coin": "assets/generated/tower/sprites/pickup-coin.svg?v=generated-20260614-pickups",
         "heart": "assets/generated/tower/sprites/pickup-heart.svg?v=generated-20260614-pickups",
         "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
+      },
+      "runUpgrades": {
+        "run_move_speed": {
+          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_pickup_radius": {
+          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_max_hp": {
+          "src": "assets/generated/tower/skill-effects/batch-03.jpg?v=skill-effects-20260615-3",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_attack_radius": {
+          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_fire_rate": {
+          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_flat_damage": {
+          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_percent_damage": {
+          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_projectile_pierce": {
+          "src": "assets/generated/tower/skill-effects/batch-04.jpg?v=skill-effects-20260615-4",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 868,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_wall_bounce": {
+          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_split_shot": {
+          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 217,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_explosive_hit": {
+          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 434,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        },
+        "run_split_on_hit": {
+          "src": "assets/generated/tower/skill-effects/batch-05.jpg?v=skill-effects-20260615-5",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 651,
+              "width": 181,
+              "height": 217
+            }
+          ]
+        }
       }
     },
     "sfx": {

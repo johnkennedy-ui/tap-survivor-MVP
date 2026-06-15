@@ -36,6 +36,7 @@ function createSpriteSystem({ ctx, spriteDefs }) {
     Object.entries(spriteDefs.backgrounds || {}).forEach(([id, src]) => registerSprite(`background:${id}`, src));
     Object.entries(spriteDefs.enemies || {}).forEach(([id, src]) => registerSprite(`enemy:${id}`, src));
     Object.entries(spriteDefs.weapons || {}).forEach(([id, src]) => registerSprite(`weapon:${id}`, src));
+    Object.entries(spriteDefs.runUpgrades || {}).forEach(([id, src]) => registerSprite(`runUpgrade:${id}`, src));
     Object.entries(spriteDefs.ui || {}).forEach(([id, src]) => registerSprite(`ui:${id}`, src));
   }
 
