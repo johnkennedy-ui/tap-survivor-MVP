@@ -4,28 +4,26 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Restore relic inventory skill sprites
+Scale weapon SFX to fire rate
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-15T11:33:45.000Z
+- Started: 2026-06-15T11:46:30.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `src/shell-ui.js`
-- `src/styles.css`
+- `src/audio.js`
+- `src/weapon-fire.js`
 - `scripts/verify-mvp.mjs`
-- `scripts/smoke-relic-run-start.mjs`
 
 ## Files Changed
 
-- `src/shell-ui.js`
-- `src/styles.css`
+- `src/audio.js`
+- `src/weapon-fire.js`
 - `scripts/verify-mvp.mjs`
-- `scripts/smoke-relic-run-start.mjs`
 - `docs/CURRENT_TASK.md`
 - `index.html`
 
@@ -39,9 +37,13 @@ npm run agent:check
 
 Result:
 
-- `npm run smoke:relic-run-start`: passed, including locked popup and skill sprite icon source.
-- `node scripts/verify-mvp.mjs`: passed 252 checks, including relic icon source coverage.
-- `npm run agent:prepush`: passed; cache keys bumped for shell UI and styles.
+Result:
+
+- `node --check src/audio.js`: passed.
+- `node --check src/weapon-fire.js`: passed.
+- `node scripts/verify-mvp.mjs`: passed 252 checks, including scaled weapon SFX.
+- `npm run smoke:start-run`: passed.
+- `npm run agent:prepush`: passed; cache keys bumped for audio and weapon fire.
 
 ## Evidence Required
 

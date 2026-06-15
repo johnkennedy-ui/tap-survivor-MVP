@@ -19,22 +19,24 @@ function createAudioSystem({ sfxDefs = {} }) {
     return audioById.get(src);
   }
 
-  function play(src) {
+  function play(src, options = {}) {
     const now = Date.now();
+    const gapMs = Number.isFinite(options.minGapMs) ? Math.max(0, options.minGapMs) : minGapMs;
     if (muted) return false;
-    if (!src || now - (lastPlayed.get(src) || 0) < minGapMs) return false;
+    if (!src || now - (lastPlayed.get(src) || 0) < gapMs) return false;
     const audio = audioFor(src);
     if (!audio) return false;
     lastPlayed.set(src, now);
     const player = audio.cloneNode ? audio.cloneNode() : audio;
-    player.volume = volume;
+    player.volume = Number.isFinite(options.volume) ? Math.max(0, Math.min(1, options.volume)) : volume;
+    player.playbackRate = Number.isFinite(options.playbackRate) ? Math.max(0.5, Math.min(2.5, options.playbackRate)) : 1;
     player.currentTime = 0;
     player.play?.().catch?.(() => {});
     return true;
   }
 
-  function playWeapon(weaponId) {
-    return play(weaponSfx[weaponId]);
+  function playWeapon(weaponId, options = {}) {
+    return play(weaponSfx[weaponId], options);
   }
 
   function playRunUpgrade(runUpgradeId) {

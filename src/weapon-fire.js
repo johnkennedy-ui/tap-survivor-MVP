@@ -32,6 +32,14 @@ function createWeaponFireSystem({
     return weapon.cooldown / (1 + rateTier * 0.12);
   }
 
+  function weaponSfxOptions(weapon) {
+    const cooldown = Math.max(0.1, weaponCooldown(weapon));
+    return {
+      playbackRate: clamp(1.15 / cooldown, 0.75, 2.35),
+      minGapMs: clamp(cooldown * 320, 35, 120),
+    };
+  }
+
   function weaponReach(weapon) {
     const shopBonuses = getShopBonuses?.() || {};
     const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
@@ -77,7 +85,7 @@ function createWeaponFireSystem({
     const weapon = weaponDefs[weaponId];
     if (!weapon) return;
     setPlayerAttackAnimation(weapon);
-    playWeaponSfx?.(weaponId);
+    playWeaponSfx?.(weaponId, weaponSfxOptions(weapon));
     flashWeaponIcon(weaponId);
     addWeaponBurst(weaponId, weapon);
     weaponKindHandlers[weapon.kind]?.(weaponId);
