@@ -7,6 +7,7 @@
     "agent:evidence": "node scripts/agent-evidence.mjs",
     "agent:finish": "node scripts/agent-finish.mjs",
     "agent:ship": "node scripts/agent-ship.mjs",
+    "agent:release": "node scripts/agent-release.mjs",
     "agent:prepush": "node scripts/agent-prepush.mjs",
     "build:content": "node scripts/build-content.mjs",
     "content:check": "node scripts/content-check.mjs",

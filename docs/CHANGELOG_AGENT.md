@@ -15,6 +15,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added schema-backed shop item field rules for required fields, supported kinds, cost tiers, max tiers, and effect validation.
 - Added `npm run smoke:add-content` to exercise the content CLI against a temporary content registry without touching real content.
 - Split shop-item validation into a dedicated `scripts/content-tools.mjs` helper as the first content-validator decomposition.
+- Added `npm run agent:release` as the explicit ship-and-live-deploy-check path for release-style pushes.
 
 ## 2026-06-14
 

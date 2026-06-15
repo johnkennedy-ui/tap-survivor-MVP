@@ -128,6 +128,7 @@ The project is mixed but mostly registry-driven:
 - Agent prepush lane: `npm run agent:prepush`
 - Agent finish lane: `npm run agent:finish -- --message "<commit message>" --push --deploy`
 - Agent ship shortcut: `npm run agent:ship -- --message "<commit message>" --deploy`
+- Agent release shortcut: `npm run agent:release -- --message "<commit message>"`
 
 ## Current Limitations
 
