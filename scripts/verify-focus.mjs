@@ -47,13 +47,22 @@ function verifyContent() {
 
 function verifyRelics() {
   const shellUi = read("src/shell-ui.js");
+  const combat = read("src/combat.js");
+  const weaponFire = read("src/weapon-fire.js");
+  const enemies = read("src/enemies.js");
+  const pickups = read("src/pickups.js");
+  const rendering = read("src/rendering.js");
   const relics = content.relics || [];
+  const greenRelics = relics.filter((relic) => relic.rarity === "green");
   check("relics target existing run upgrades", (content.relics || []).every((relic) => (content.runUpgrades || []).some((upgrade) => upgrade.id === relic.targetUpgradeId)));
   check("relic inventory uses central icon resolver", shellUi.includes("assetResolver.relicIcon"));
   check("locked relic popup exists", shellUi.includes("Locked, play more to unlock this skill."));
   check("generated random relic pool has no floor prefixes", relics.every((relic) => !/^floor_\d{3}_/.test(relic.id)));
   check("generated random relic tiers are present", relics.filter((relic) => /^random_/.test(relic.id)).length === 96 && relics.filter((relic) => /_obsessed_relic$/.test(relic.id)).length === 32);
   check("super boss relic extras fill the 100-item generated pool", relics.filter((relic) => /^super_boss_/.test(relic.id)).length === 4);
+  check("twenty-six green relics have unique special abilities", greenRelics.length === 26 && new Set(greenRelics.map((relic) => relic.specialAbility?.id)).size === 26 && greenRelics.every((relic) => relic.backgroundColor && relic.specialAbility?.description));
+  check("green relic UI background is wired", shellUi.includes("green-relic") && read("src/styles.css").includes(".green-relic"));
+  check("green relic runtime effects are wired", combat.includes("damagePlayer") && combat.includes("lifestealOnKill") && combat.includes("killExplosionDamage") && weaponFire.includes("projectileSpeedBonus") && weaponFire.includes("doubleShotCount") && enemies.includes("damagePlayer?.") && pickups.includes("coinMultiplier") && rendering.includes("invincibleTimer"));
 }
 
 function verifyUi() {

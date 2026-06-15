@@ -17,6 +17,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Split shop-item validation into a dedicated `scripts/content-tools.mjs` helper as the first content-validator decomposition.
 - Added `npm run agent:release` as the explicit ship-and-live-deploy-check path for release-style pushes, and tightened `check:deploy` so it waits for the local commit's Pages workflow to succeed.
 - Replaced the 100 floor-numbered relics with 96 random themed Focus/Obsessed/Mastery relics plus 4 rare super-boss extras, keeping the relic pool at 126 total.
+- Upgraded the 26 original relics into green build-defining relics with unique runtime abilities and green inventory/reward backgrounds.
 - Removed the visible `Tap Survivor MVP` sidebar heading and tightened run-menu tab layout so Rewards, Inventory, and Shop stay visible as one row while menu panels scroll.
 - Tightened deploy verification again so `check:deploy` prefers the matching Pages publish workflow over other workflows for the same source commit.
 

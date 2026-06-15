@@ -2,6 +2,7 @@
 function createPickupSystem({
   getGame,
   getSave,
+  getRelicSpecialEffects,
   persist,
   renderMeta,
   collectXp,
@@ -80,8 +81,9 @@ function createPickupSystem({
     const game = getGame();
     const save = getSave();
     if (drop.type === "coin") {
-      save.coins += drop.value;
-      addPickupText(`+${drop.value}`, drop.x, drop.y, "#ffd166");
+      const value = Math.ceil(drop.value * (1 + ((getRelicSpecialEffects?.() || {}).coinMultiplier || 0)));
+      save.coins += value;
+      addPickupText(`+${value}`, drop.x, drop.y, "#ffd166");
       persist();
       renderMeta();
     }

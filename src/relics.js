@@ -37,6 +37,19 @@
       return equippedRelics(save).reduce((multiplier, relic) => multiplier * (relic.weaponDamageMultiplier || 1), 1);
     }
 
+    function specialEffects(save) {
+      return equippedRelics(save).reduce((effects, relic) => mergeSpecialAbility(effects, relic.specialAbility), {});
+    }
+
+    function mergeSpecialAbility(effects, ability) {
+      if (!ability?.modifiers) return effects;
+      Object.entries(ability.modifiers).forEach(([key, value]) => {
+        if (!Number.isFinite(value)) return;
+        effects[key] = (effects[key] || 0) + value;
+      });
+      return effects;
+    }
+
     function grantRelic(save, relic) {
       if (!relic) return null;
       const unlocked = new Set(save.unlockedRelics || []);
@@ -103,6 +116,7 @@
       maxEquippedRelics,
       maxEquippedWeapons,
       getWeaponDamageMultiplier,
+      specialEffects,
       relicBonusFor,
       grantRelic,
       grantRandomRelic,

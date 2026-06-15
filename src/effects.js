@@ -56,10 +56,29 @@ function addShopItemBonus(bonuses, item, tier) {
   bonuses[item.effect.stat] += item.effect.value * tier;
 }
 
+function applyRelicSpecialEffects(game, effects = {}) {
+  const player = game?.player;
+  if (!player) return;
+  if (effects.maxHpBonus) {
+    player.maxHp += effects.maxHpBonus;
+    player.hp += effects.maxHpBonus;
+  }
+  if (effects.maxHpMultiplier) {
+    const nextMaxHp = Math.ceil(player.maxHp * (1 + effects.maxHpMultiplier));
+    player.hp += nextMaxHp - player.maxHp;
+    player.maxHp = nextMaxHp;
+  }
+  if (effects.speedBonus) player.speed += effects.speedBonus;
+  if (effects.speedMultiplier) player.speed *= 1 + effects.speedMultiplier;
+  if (effects.pickupRadiusBonus) player.pickupRadius += effects.pickupRadiusBonus;
+  if (effects.pickupRadiusMultiplier) player.pickupRadius *= 1 + effects.pickupRadiusMultiplier;
+}
+
 globalThis.TapSurvivorEffects = {
   applyRunUpgradeEffects,
   applyShopItemEffectToRun,
   emptyShopBonuses,
   addShopItemBonus,
+  applyRelicSpecialEffects,
 };
 })();

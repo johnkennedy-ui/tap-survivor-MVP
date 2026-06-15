@@ -156,7 +156,8 @@ function createShellUiController({
 
   function createRelicIconButton(relic, isUnlocked = true) {
     const button = documentRef.createElement("button");
-    button.className = `relic-icon-button ${isUnlocked ? "available" : "locked"}`;
+    button.className = `relic-icon-button ${isUnlocked ? "available" : "locked"} ${relic.rarity === "green" ? "green-relic" : ""}`;
+    setRelicBackground(button, relic);
     button.type = "button";
     button.setAttribute("aria-label", isUnlocked ? `View ${relic.name}` : `${relic.name} locked`);
     button.innerHTML = `
@@ -204,7 +205,8 @@ function createShellUiController({
     ui.menuRelicInventory.innerHTML = "";
 
     const detail = documentRef.createElement("div");
-    detail.className = "relic-detail-screen";
+    detail.className = `relic-detail-screen ${relic.rarity === "green" ? "green-relic" : ""}`;
+    setRelicBackground(detail, relic);
     const preview = createRelicSkillPreview(relic);
     detail.appendChild(preview);
     const copy = documentRef.createElement("div");
@@ -214,6 +216,7 @@ function createShellUiController({
       <strong>${skill?.name || relic.name}</strong>
       <p>${skill?.description || relic.description}</p>
       <p>${relic.description}</p>
+      ${relic.specialAbility ? `<p><strong>${relic.specialAbility.label}</strong>: ${relic.specialAbility.description}</p>` : ""}
     `;
     detail.appendChild(copy);
 
@@ -314,7 +317,8 @@ function createShellUiController({
     const slot = documentRef.createElement("div");
     const unlockLevel = (index + 1) * 10;
     const unlocked = index < unlockedSlots;
-    slot.className = `relic-slot ${unlocked ? relic ? "equipped" : "empty" : "locked"}`;
+    slot.className = `relic-slot ${unlocked ? relic ? "equipped" : "empty" : "locked"} ${relic?.rarity === "green" ? "green-relic" : ""}`;
+    setRelicBackground(slot, relic);
     if (!unlocked) {
       slot.innerHTML = `
         <span class="relic-slot-index">Slot ${index + 1}</span>
@@ -352,6 +356,12 @@ function createShellUiController({
     });
     slot.appendChild(button);
     return slot;
+  }
+
+  function setRelicBackground(element, relic) {
+    if (!element?.style || !relic?.backgroundColor) return;
+    if (typeof element.style.setProperty === "function") element.style.setProperty("--relic-bg", relic.backgroundColor);
+    else element.style["--relic-bg"] = relic.backgroundColor;
   }
 
   function bind() {

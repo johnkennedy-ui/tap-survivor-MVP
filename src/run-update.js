@@ -10,6 +10,7 @@
     levelQuestIds,
     showLevelUp,
     endRun,
+    getRelicSpecialEffects,
     clamp,
   }) {
     function movePlayer(player, dt) {
@@ -46,6 +47,7 @@
       combat.updateAreas(dt);
       combat.updateBeams(dt);
       combat.updateWeaponBursts(dt);
+      updateRelicTimers(player, dt);
       updatePlayerAnimation(player, dt);
       pickupSystem.updateXpDrops(dt);
       pickupSystem.updateLootDrops(dt);
@@ -60,12 +62,19 @@
       if (player.actionTimer <= 0) player.actionSprite = "";
     }
 
+    function updateRelicTimers(player, dt) {
+      player.invincibleTimer = Math.max(0, (player.invincibleTimer || 0) - dt);
+      player.blinkTimer = Math.max(0, (player.blinkTimer || 0) - dt);
+      player.teleportCooldown = Math.max(0, (player.teleportCooldown || 0) - dt);
+    }
+
     function collectXp(value) {
       const game = getGame();
       if (!game?.player) return;
       const player = game.player;
-      player.xp += value;
-      game.xpCollected += value;
+      const xpValue = Math.ceil(value * (1 + ((getRelicSpecialEffects?.() || {}).xpMultiplier || 0)));
+      player.xp += xpValue;
+      game.xpCollected += xpValue;
       addQuestProgressGroup(xpQuestIds, value);
       if (player.xp >= player.xpToLevel) {
         player.xp -= player.xpToLevel;

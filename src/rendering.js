@@ -92,6 +92,8 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
 
   function drawPlayer(p) {
     drawPlayerHpBar(p);
+    const previousAlpha = ctx.globalAlpha;
+    if (p.blinkTimer > 0) ctx.globalAlpha = 0.35 + Math.abs(Math.sin(p.blinkTimer * 24)) * 0.65;
     const spriteId = playerSpriteId(p);
     const playerDrawn = drawSprite(spriteId, p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
       flipX: playerFacesLeft(p),
@@ -103,6 +105,14 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
       ctx.fill();
+    }
+    ctx.globalAlpha = previousAlpha;
+    if (p.invincibleTimer > 0) {
+      ctx.strokeStyle = "rgba(88, 255, 157, 0.72)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius + 8, 0, Math.PI * 2);
+      ctx.stroke();
     }
     ctx.strokeStyle = "rgba(105, 210, 255, 0.28)";
     ctx.lineWidth = 2;

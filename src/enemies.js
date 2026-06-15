@@ -8,6 +8,7 @@ function createEnemySystem({
   getGame,
   distance,
   clamp,
+  damagePlayer,
 }) {
   const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
   const normalBossAbilityCount = bossConfig.normalAbilityCount || 1;
@@ -304,7 +305,7 @@ function createEnemySystem({
       if (!attack.hit && attack.age >= attack.windup) {
         attack.hit = true;
         if (attack.type === "boss_slash" ? playerInSlash(p, attack) : distance(p, attack) <= p.radius + attack.radius) {
-          p.hp -= attack.damage;
+          damagePlayer?.(attack.damage, { type: attack.type, attack });
         }
       }
     });
@@ -391,7 +392,7 @@ function createEnemySystem({
     const p = game.player;
     enemy.touchTimer -= dt;
     if (distance(enemy, p) < p.radius + enemy.radius && enemy.touchTimer <= 0) {
-      p.hp -= enemy.damage;
+      damagePlayer?.(enemy.damage, { type: "touch", enemy });
       enemy.touchTimer = enemy.touchCooldown;
     }
   }
@@ -423,7 +424,7 @@ function createEnemySystem({
           p.projectileBlockReady = false;
           p.projectileBlockCharge = 0;
         } else {
-          p.hp -= bolt.damage;
+          damagePlayer?.(bolt.damage, { type: "projectile", bolt });
         }
         bolt.life = 0;
       }

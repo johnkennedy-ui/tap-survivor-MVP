@@ -146,6 +146,7 @@ function renderQuests(container) {
 
 function resetGameState() {
   game = runStateSystem.resetGameState();
+  globalThis.TapSurvivorEffects.applyRelicSpecialEffects(game, getRelicSpecialEffects());
   applyRelicStartingRunUpgrades(game);
 }
 
@@ -167,6 +168,7 @@ function applyRelicStartingRunUpgrades(run) {
 const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
   getGame: () => game,
   getSave: () => save,
+  getRelicSpecialEffects,
   persist,
   renderMeta,
   collectXp: (value) => runUpdater?.collectXp(value),
@@ -184,6 +186,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   getGame: () => game,
   getUpgradeTier,
   getShopBonuses: () => shopSystem.getShopBonuses(),
+  getRelicSpecialEffects,
   addQuestProgress,
   addQuestProgressForWeapon: questSystem.addQuestProgressForWeapon,
   addQuestProgressGroup,
@@ -223,6 +226,7 @@ runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
   levelQuestIds,
   showLevelUp: () => levelUpSystem.showLevelUp(),
   endRun,
+  getRelicSpecialEffects,
   clamp,
 });
 
@@ -304,9 +308,13 @@ function showRelicChoice(clearedFloor, remainingPicks, awardedRelics) {
   ui.relicChoices.innerHTML = "";
   choices.forEach((relic) => {
     const button = document.createElement("button");
+    button.className = relic.rarity === "green" ? "green-relic" : "";
+    if (relic.backgroundColor && typeof button.style?.setProperty === "function") button.style.setProperty("--relic-bg", relic.backgroundColor);
+    else if (relic.backgroundColor && button.style) button.style["--relic-bg"] = relic.backgroundColor;
     button.innerHTML = `
       <img class="level-choice-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
       <strong>${relic.name}</strong><br /><span>${relic.description}</span>
+      ${relic.specialAbility ? `<br /><span>${relic.specialAbility.label}: ${relic.specialAbility.description}</span>` : ""}
     `;
     button.addEventListener("click", () => {
       const granted = relicSystem.grantRelic(save, relic);
@@ -350,6 +358,10 @@ function maxEquippedWeapons() {
 
 function getWeaponDamageMultiplier() {
   return relicSystem.getWeaponDamageMultiplier(save);
+}
+
+function getRelicSpecialEffects() {
+  return relicSystem.specialEffects(save);
 }
 
 function getRunUpgradeTier(id) {

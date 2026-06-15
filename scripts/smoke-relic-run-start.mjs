@@ -28,6 +28,7 @@ const game = harness.context.__tapSurvivorHarness.getGame();
 assert("focus relic starts linked run skill at +1", game?.runUpgradeTiers?.run_move_speed === 1);
 assert("mastery relic starts linked run skill at +2", game?.runUpgradeTiers?.run_fire_rate === 2);
 assert("focus relic applies player stat tier on run start", game?.player?.speed > 185);
+assert("green relic abilities apply on run start", game?.player?.invincibleTimer === undefined && game?.player?.speed > 200);
 
 function textTree(element, output = []) {
   output.push(element.className || "", element.textContent || "", element.innerHTML || "");
@@ -61,3 +62,4 @@ unlockedRelicButton?.click();
 const detailText = textTree(inventory).join(" ");
 assert("relic icon opens detail screen", detailText.includes("relic-detail-screen") && detailText.includes("Selected skill"));
 assert("relic detail offers equip and cancel", detailText.includes("Equip relic") && detailText.includes("Cancel"));
+assert("green relic detail shows special ability copy", detailText.includes("Blink Invincibility") || detailText.includes("Instant Teleport") || detailText.includes("Double Shot"));

@@ -328,6 +328,19 @@ section + section {
   line-height: 1.2;
 }
 
+.green-relic {
+  --relic-bg: #17633a;
+  border-color: #6ee7a0 !important;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--relic-bg) 86%, #0a1210), rgba(14, 44, 28, 0.94)) !important;
+  box-shadow: inset 0 0 0 1px rgba(198, 255, 213, 0.2), 0 0 20px rgba(55, 214, 112, 0.16);
+}
+
+.green-relic .relic-lock-badge {
+  border-color: rgba(198, 255, 213, 0.55);
+  color: #d8ffe2;
+}
+
 .relic-lock-popup {
   position: sticky;
   top: 0;

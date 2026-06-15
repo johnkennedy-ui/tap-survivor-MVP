@@ -6,6 +6,7 @@ function createWeaponFireSystem({
   getUpgradeTier,
   getRunUpgradeTier,
   getShopBonuses,
+  getRelicSpecialEffects,
   getWeaponDamageMultiplier,
   playWeaponSfx,
   addQuestProgress,
@@ -28,8 +29,9 @@ function createWeaponFireSystem({
 
   function weaponCooldown(weapon) {
     const shopBonuses = getShopBonuses?.() || {};
+    const relicEffects = getRelicSpecialEffects?.() || {};
     const rateTier = getUpgradeTier("fire_rate") + getRunUpgradeTier("run_fire_rate") + (shopBonuses.fireRate || 0);
-    return weapon.cooldown / (1 + rateTier * 0.12);
+    return weapon.cooldown / (1 + rateTier * 0.12 + (relicEffects.cooldownReduction || 0));
   }
 
   function weaponSfxOptions(weapon) {
@@ -42,20 +44,23 @@ function createWeaponFireSystem({
 
   function weaponReach(weapon) {
     const shopBonuses = getShopBonuses?.() || {};
+    const relicEffects = getRelicSpecialEffects?.() || {};
     const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
-    return (weapon.range || 0) * (1 + radiusTier * 0.12);
+    return (weapon.range || 0) * (1 + radiusTier * 0.12 + (relicEffects.areaRadiusBonus || 0));
   }
 
   function weaponWidth(weapon) {
     const shopBonuses = getShopBonuses?.() || {};
+    const relicEffects = getRelicSpecialEffects?.() || {};
     const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
-    return (weapon.width || 0) * (1 + radiusTier * 0.1);
+    return (weapon.width || 0) * (1 + radiusTier * 0.1 + (relicEffects.beamWidthBonus || 0));
   }
 
   function projectileRadius(weapon) {
     const shopBonuses = getShopBonuses?.() || {};
+    const relicEffects = getRelicSpecialEffects?.() || {};
     const radiusTier = getUpgradeTier("attack_radius") + getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
-    return (weapon.radius || 0) * (1 + radiusTier * 0.12);
+    return (weapon.radius || 0) * (1 + radiusTier * 0.12 + (relicEffects.projectileSizeBonus || 0));
   }
 
   function weaponDamage(weaponId) {
@@ -67,7 +72,8 @@ function createWeaponFireSystem({
       getRunUpgradeTier("run_percent_damage") +
       getUpgradeTier(weapon.upgradeId) * 2 +
       (shopBonuses.percentDamage || 0);
-    return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12) * (getWeaponDamageMultiplier?.() || 1);
+    const relicEffects = getRelicSpecialEffects?.() || {};
+    return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12 + (relicEffects.damageBonus || 0)) * (getWeaponDamageMultiplier?.() || 1);
   }
 
   const weaponKindHandlers = {
@@ -133,13 +139,17 @@ function createWeaponFireSystem({
     const dx = target.x - p.x;
     const dy = target.y - p.y;
     const dist = Math.max(1, Math.hypot(dx, dy));
-    const speed = weapon.speed;
+    const relicEffects = getRelicSpecialEffects?.() || {};
+    const speed = weapon.speed * (1 + (relicEffects.projectileSpeedBonus || 0));
     const baseVx = (dx / dist) * speed;
     const baseVy = (dy / dist) * speed;
     const splitTier = getRunUpgradeTier("run_split_shot");
     const spread = 0.26;
 
     spawnProjectileBolt(weaponId, p.x, p.y, baseVx, baseVy);
+    if (relicEffects.doubleShotCount) {
+      spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread * 0.5));
+    }
     if (splitTier >= 1) {
       spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread));
       spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, spread));
