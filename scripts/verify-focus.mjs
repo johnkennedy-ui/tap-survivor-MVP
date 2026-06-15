@@ -72,6 +72,7 @@ function verifyUi() {
   const styles = read("src/styles.css");
   const levelUp = read("src/level-up.js");
   check("level-up uses static central choice icons", levelUp.includes("assetResolver.choiceIconPath") && !levelUp.includes("renderChoiceSprite"));
+  check("level-up choices fit horizontally without modal scroll", styles.includes("height: min(80vh") && styles.includes("#levelUp .choice-list") && styles.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") && styles.includes("#levelUp .modal-box") && styles.includes("overflow: hidden"));
   check("inventory UI exists", index.includes('id="menuInventoryTab"') && index.includes('id="menuRelicInventory"'));
   check("sidebar MVP heading is removed", !index.includes("<h1>Tap Survivor MVP</h1>"));
   check("run menu tabs stay in one three-column row", styles.includes("grid-template-columns: repeat(3, minmax(0, 1fr))"));

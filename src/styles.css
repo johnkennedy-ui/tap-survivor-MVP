@@ -574,19 +574,26 @@ section + section {
 }
 
 #levelUp .modal-box {
-  width: min(780px, 100%);
+  width: min(96vw, 1040px);
+  height: min(80vh, 520px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
 }
 
 #levelUp .choice-list {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+  min-height: 0;
 }
 
 .level-choice {
-  min-height: 172px;
+  min-height: 0;
   display: grid;
-  grid-template-rows: 76px 1fr;
-  gap: 10px;
+  grid-template-rows: clamp(44px, 10vh, 72px) minmax(0, 1fr);
+  gap: 8px;
+  align-content: start;
+  overflow: hidden;
 }
 
 .level-choice:disabled {
@@ -595,8 +602,8 @@ section + section {
 }
 
 .level-choice-icon {
-  width: 72px;
-  height: 72px;
+  width: clamp(44px, 10vh, 72px);
+  height: clamp(44px, 10vh, 72px);
   justify-self: center;
   image-rendering: pixelated;
 }
@@ -611,8 +618,15 @@ section + section {
 
 .level-choice-copy span {
   display: block;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: clamp(11px, 1.7vh, 13px);
+  line-height: 1.25;
+}
+
+.level-choice-copy strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: clamp(12px, 1.9vh, 15px);
+  line-height: 1.2;
 }
 
 @media (max-width: 920px) {
@@ -629,8 +643,15 @@ section + section {
     max-height: none;
   }
 
+  #levelUp .modal-box {
+    width: min(98vw, 1040px);
+    height: min(80vh, 500px);
+    padding: 12px;
+  }
+
   #levelUp .choice-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .relic-loadout {
