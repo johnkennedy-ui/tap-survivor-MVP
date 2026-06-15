@@ -97,9 +97,17 @@ button:disabled {
 
 .menu-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin: 12px 0;
+}
+
+.menu-tab {
+  min-width: 0;
+  padding: 9px 8px;
+  font-size: 13px;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .menu-tab.active {
@@ -492,6 +500,20 @@ section + section {
 
 .menu-box {
   width: min(720px, 100%);
+}
+
+#runMenu .menu-box {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+#menuProgressPanel,
+#menuShopPanel,
+#menuInventoryPanel {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .start-box {

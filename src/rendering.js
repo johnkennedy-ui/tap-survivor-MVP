@@ -85,7 +85,7 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   function drawMenuHint() {
     ctx.fillStyle = "#f3f6fb";
     ctx.font = "700 28px sans-serif";
-    ctx.fillText("Tap Survivor MVP", 36, 58);
+    ctx.fillText("Tap Survivor", 36, 58);
     ctx.font = "16px sans-serif";
     ctx.fillText("Unlock weapons, then start a run.", 36, 88);
   }

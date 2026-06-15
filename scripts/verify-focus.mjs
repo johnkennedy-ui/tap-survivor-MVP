@@ -54,10 +54,14 @@ function verifyRelics() {
 
 function verifyUi() {
   const index = read("index.html");
+  const styles = read("src/styles.css");
   const levelUp = read("src/level-up.js");
   check("level-up uses central choice resolver", levelUp.includes("assetResolver.choiceIconDefinition") && levelUp.includes("assetResolver.choiceIconPath"));
   check("inventory UI exists", index.includes('id="menuInventoryTab"') && index.includes('id="menuRelicInventory"'));
-  check("modal boxes remain scrollable", read("src/styles.css").includes("overflow-y: auto"));
+  check("sidebar MVP heading is removed", !index.includes("<h1>Tap Survivor MVP</h1>"));
+  check("run menu tabs stay in one three-column row", styles.includes("grid-template-columns: repeat(3, minmax(0, 1fr))"));
+  check("run menu keeps tabs visible while panels scroll", styles.includes("#runMenu .menu-box") && styles.includes("grid-template-rows: auto auto minmax(0, 1fr) auto") && styles.includes("#menuProgressPanel"));
+  check("modal boxes remain scrollable", styles.includes("overflow-y: auto"));
 }
 
 const verifiers = {
