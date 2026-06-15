@@ -17,6 +17,7 @@
     "sprites:extract": "node scripts/extract-sprites.mjs",
     "content:summary": "node scripts/content-summary.mjs",
     "economy:check": "node scripts/economy-check.mjs",
+    "verify:script-order": "node scripts/check-script-order.mjs",
     "verify:assets": "node scripts/verify-focus.mjs assets",
     "verify:audio": "node scripts/verify-focus.mjs audio",
     "verify:content": "node scripts/verify-focus.mjs content",

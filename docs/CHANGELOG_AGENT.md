@@ -11,6 +11,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added schema-backed weapon kind and boss ability behavior registries so unsupported behavior IDs fail content validation.
 - Added `npm run economy:check` to report shop tiers, stat lanes, buyout cost, price scaling, inflation, and coin reward scaling before monetization work.
 - Added schema-backed add-content templates, generated runtime schema constants, save versioning, and shop purchase normalization.
+- Added `npm run verify:script-order` so browser-global module load order fails validation before runtime.
 
 ## 2026-06-14
 

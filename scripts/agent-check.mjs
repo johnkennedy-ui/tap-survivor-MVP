@@ -23,11 +23,13 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-extract-sprites.mjs"]],
   ["node", ["--check", "scripts/content-summary.mjs"]],
   ["node", ["--check", "scripts/economy-check.mjs"]],
+  ["node", ["--check", "scripts/check-script-order.mjs"]],
   ["node", ["--check", "src/effects.js"]],
   ["node", ["--check", "src/render-hud.js"]],
   ["npm", ["run", "content:check"]],
   ["npm", ["run", "content:summary"]],
   ["npm", ["run", "economy:check"]],
+  ["npm", ["run", "verify:script-order"]],
   ["npm", ["run", "verify:assets"]],
   ["npm", ["run", "verify:audio"]],
   ["npm", ["run", "verify:content"]],
@@ -83,7 +85,10 @@ function focusedChecks(files) {
     checks.push(["npm", ["run", "verify:relics"]], ["npm", ["run", "smoke:relic-run-start"]]);
   }
   if (files.some((file) => file === "index.html" || file === "src/styles.css" || file === "src/level-up.js" || file === "src/shell-ui.js")) {
-    checks.push(["npm", ["run", "verify:ui"]], ["npm", ["run", "smoke:browser"]]);
+    checks.push(["npm", ["run", "verify:script-order"]], ["npm", ["run", "verify:ui"]], ["npm", ["run", "smoke:browser"]]);
+  }
+  if (files.some((file) => file.startsWith("src/") && /\.(js)$/.test(file))) {
+    checks.push(["npm", ["run", "verify:script-order"]]);
   }
   return dedupeChecks(checks);
 }

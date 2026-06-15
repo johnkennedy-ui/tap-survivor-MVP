@@ -168,6 +168,7 @@ npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/gen
 - Content JSON parses.
 - `npm run build:content` passes.
 - `npm run validate:content` passes.
+- `npm run verify:script-order` passes after `index.html` or `src/*.js` script dependency changes.
 - `npm run audit:quests` passes if quests or unlock gates changed.
 - `npm test` passes if gameplay code, combat, rendering, upgrades, or script load order changed.
 - Generated `src/content.generated.js` is updated after registry edits.

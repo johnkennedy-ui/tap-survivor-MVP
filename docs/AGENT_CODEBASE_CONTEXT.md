@@ -53,6 +53,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Content build: `scripts/build-content.mjs`.
 - Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`.
 - Economy/shop balance check: `scripts/economy-check.mjs`.
+- Browser global load-order check: `scripts/check-script-order.mjs`.
 - Quest graph audit: `scripts/audit-quests.mjs`.
 - Save/meta progression: `src/save.js`, `src/progression.js`, `src/run-state.js`, and orchestration in `src/game.js`.
 - Run HUD/end-screen UI: `src/run-ui.js`.
@@ -104,6 +105,7 @@ The project is mixed but mostly registry-driven:
 - Validate content only: `npm run validate:content`
 - Content map summary: `npm run content:summary`
 - Economy/shop balance report: `npm run economy:check`
+- Verify browser global script order: `npm run verify:script-order`
 - Audit quest graph: `npm run audit:quests`
 - Full local validation: `npm test`
 - Save smoke test: `npm run smoke:save`
