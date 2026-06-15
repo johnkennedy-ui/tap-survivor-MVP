@@ -4,7 +4,7 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Resize visual skill effects to attack radius and expose transparency tuning
+Use basic level-up icons for non-projectile skills
 
 ## Status
 
@@ -60,9 +60,9 @@ Result:
 
 - `npm run build:content`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 251 checks, including tunable skill effect scale/transparency.
+- `node scripts/verify-mvp.mjs`: passed 251 checks, including projectile-only level-up animation.
 - `npm run smoke:start-run`: passed.
-- `npm run agent:prepush`: passed; cache keys bumped for changed runtime/content files.
+- `npm run agent:prepush`: passed; cache keys bumped for changed content and level-up files.
 
 ## Evidence Required
 

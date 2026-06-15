@@ -1614,7 +1614,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1.1,
           "effectScale": 1.45,
-          "effectAlpha": 0.86
+          "effectAlpha": 0.86,
+          "animatedIcon": true
         },
         "prism_beam": {
           "src": "assets/generated/tower/skill-effects/split/skill-02-prism_beam.png?v=skill-effects-20260615-split",
@@ -1665,7 +1666,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 1.05,
-          "effectAlpha": 0.76
+          "effectAlpha": 0.76,
+          "animatedIcon": false
         },
         "frost_orb": {
           "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
@@ -1716,7 +1718,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1.05,
           "effectScale": 1.25,
-          "effectAlpha": 0.86
+          "effectAlpha": 0.86,
+          "animatedIcon": true
         },
         "flame_wave": {
           "src": "assets/generated/tower/skill-effects/split/skill-04-flame_wave.png?v=skill-effects-20260615-split",
@@ -1767,7 +1770,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.95,
           "effectScale": 1,
-          "effectAlpha": 0.78
+          "effectAlpha": 0.78,
+          "animatedIcon": false
         },
         "saw_drone": {
           "src": "assets/generated/tower/skill-effects/split/skill-05-saw_drone.png?v=skill-effects-20260615-split",
@@ -1824,7 +1828,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 0.92,
-          "effectAlpha": 0.88
+          "effectAlpha": 0.88,
+          "animatedIcon": true
         },
         "void_mine": {
           "src": "assets/generated/tower/skill-effects/split/skill-06-void_mine.png?v=skill-effects-20260615-split",
@@ -1887,7 +1892,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 0.96,
-          "effectAlpha": 0.78
+          "effectAlpha": 0.78,
+          "animatedIcon": false
         },
         "chain_spark": {
           "src": "assets/generated/tower/skill-effects/split/skill-07-chain_spark.png?v=skill-effects-20260615-split",
@@ -1950,7 +1956,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.95,
           "effectScale": 1,
-          "effectAlpha": 0.78
+          "effectAlpha": 0.78,
+          "animatedIcon": false
         },
         "moon_glaive": {
           "src": "assets/generated/tower/skill-effects/split/skill-08-moon_glaive.png?v=skill-effects-20260615-split",
@@ -2013,7 +2020,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1.08,
           "effectScale": 1.08,
-          "effectAlpha": 0.86
+          "effectAlpha": 0.86,
+          "animatedIcon": true
         },
         "meteor_pin": {
           "src": "assets/generated/tower/skill-effects/split/skill-09-meteor_pin.png?v=skill-effects-20260615-split",
@@ -2076,7 +2084,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.92,
           "effectScale": 0.95,
-          "effectAlpha": 0.82
+          "effectAlpha": 0.82,
+          "animatedIcon": false
         },
         "acid_pool": {
           "src": "assets/generated/tower/skill-effects/split/skill-10-acid_pool.png?v=skill-effects-20260615-split",
@@ -2139,7 +2148,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.95,
           "effectScale": 1,
-          "effectAlpha": 0.72
+          "effectAlpha": 0.72,
+          "animatedIcon": false
         },
         "shield_pulse": {
           "src": "assets/generated/tower/skill-effects/split/skill-11-shield_pulse.png?v=skill-effects-20260615-split",
@@ -2202,7 +2212,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 1,
-          "effectAlpha": 0.72
+          "effectAlpha": 0.72,
+          "animatedIcon": false
         },
         "nova_burst": {
           "src": "assets/generated/tower/skill-effects/split/skill-12-nova_burst.png?v=skill-effects-20260615-split",
@@ -2265,7 +2276,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 1,
-          "effectAlpha": 0.7
+          "effectAlpha": 0.7,
+          "animatedIcon": false
         }
       },
       "ui": {
@@ -2335,7 +2347,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1.05,
           "effectScale": 1.05,
-          "effectAlpha": 0.82
+          "effectAlpha": 0.82,
+          "animatedIcon": false
         },
         "run_pickup_radius": {
           "src": "assets/generated/tower/skill-effects/split/skill-14-run_pickup_radius.png?v=skill-effects-20260615-split",
@@ -2398,7 +2411,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1,
           "effectScale": 1,
-          "effectAlpha": 0.78
+          "effectAlpha": 0.78,
+          "animatedIcon": false
         },
         "run_max_hp": {
           "src": "assets/generated/tower/skill-effects/split/skill-15-run_max_hp.png?v=skill-effects-20260615-split",
@@ -2461,7 +2475,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 0.9,
-          "effectAlpha": 0.82
+          "effectAlpha": 0.82,
+          "animatedIcon": false
         },
         "run_attack_radius": {
           "src": "assets/generated/tower/skill-effects/split/skill-16-run_attack_radius.png?v=skill-effects-20260615-split",
@@ -2524,7 +2539,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.95,
           "effectScale": 1,
-          "effectAlpha": 0.78
+          "effectAlpha": 0.78,
+          "animatedIcon": false
         },
         "run_fire_rate": {
           "src": "assets/generated/tower/skill-effects/split/skill-17-run_fire_rate.png?v=skill-effects-20260615-split",
@@ -2587,7 +2603,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1,
           "effectScale": 1,
-          "effectAlpha": 0.8
+          "effectAlpha": 0.8,
+          "animatedIcon": false
         },
         "run_flat_damage": {
           "src": "assets/generated/tower/skill-effects/split/skill-18-run_flat_damage.png?v=skill-effects-20260615-split",
@@ -2650,7 +2667,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.95,
           "effectScale": 0.95,
-          "effectAlpha": 0.82
+          "effectAlpha": 0.82,
+          "animatedIcon": false
         },
         "run_percent_damage": {
           "src": "assets/generated/tower/skill-effects/split/skill-19-run_percent_damage.png?v=skill-effects-20260615-split",
@@ -2713,7 +2731,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 0.9,
-          "effectAlpha": 0.78
+          "effectAlpha": 0.78,
+          "animatedIcon": false
         },
         "run_projectile_pierce": {
           "src": "assets/generated/tower/skill-effects/split/skill-20-run_projectile_pierce.png?v=skill-effects-20260615-split",
@@ -2776,7 +2795,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1.05,
           "effectScale": 1.05,
-          "effectAlpha": 0.82
+          "effectAlpha": 0.82,
+          "animatedIcon": false
         },
         "run_wall_bounce": {
           "src": "assets/generated/tower/skill-effects/split/skill-21-run_wall_bounce.png?v=skill-effects-20260615-split",
@@ -2839,7 +2859,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1.05,
           "effectScale": 1.05,
-          "effectAlpha": 0.8
+          "effectAlpha": 0.8,
+          "animatedIcon": false
         },
         "run_split_shot": {
           "src": "assets/generated/tower/skill-effects/split/skill-22-run_split_shot.png?v=skill-effects-20260615-split",
@@ -2902,7 +2923,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.95,
           "effectScale": 0.95,
-          "effectAlpha": 0.82
+          "effectAlpha": 0.82,
+          "animatedIcon": false
         },
         "run_explosive_hit": {
           "src": "assets/generated/tower/skill-effects/split/skill-23-run_explosive_hit.png?v=skill-effects-20260615-split",
@@ -2965,7 +2987,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 0.9,
           "effectScale": 0.9,
-          "effectAlpha": 0.76
+          "effectAlpha": 0.76,
+          "animatedIcon": false
         },
         "run_split_on_hit": {
           "src": "assets/generated/tower/skill-effects/split/skill-24-run_split_on_hit.png?v=skill-effects-20260615-split",
@@ -3028,7 +3051,8 @@ globalThis.TapSurvivorContent = {
           ],
           "iconScale": 1,
           "effectScale": 1,
-          "effectAlpha": 0.82
+          "effectAlpha": 0.82,
+          "animatedIcon": false
         }
       }
     },

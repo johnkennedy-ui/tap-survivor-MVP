@@ -185,7 +185,7 @@ function createLevelUpSystem({
       canvas.width = 72;
       canvas.height = 72;
       canvas.setAttribute("aria-hidden", "true");
-      animateChoiceSprite(canvas, definition, path);
+      renderChoiceSprite(canvas, definition, path, definition.animatedIcon === true);
       return canvas;
     }
     const image = document.createElement("img");
@@ -195,7 +195,7 @@ function createLevelUpSystem({
     return image;
   }
 
-  function animateChoiceSprite(canvas, definition, path) {
+  function renderChoiceSprite(canvas, definition, path, animated = false) {
     const ctx = canvas.getContext?.("2d", { willReadFrequently: true });
     if (!ctx) return;
     const image = new Image();
@@ -211,7 +211,7 @@ function createLevelUpSystem({
     function drawFrame() {
       if (!frames.length || ui.levelUp.classList.contains("hidden")) return;
       const now = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
-      const frame = frames[Math.floor((now / 1000) * fps) % frames.length];
+      const frame = animated ? frames[Math.floor((now / 1000) * fps) % frames.length] : frames[0];
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const bounds = trimmedFrameBounds(image, frame, definition, temp, tempCtx);
       const fit = Math.min(canvas.width / bounds.width, canvas.height / bounds.height) * iconScale;
@@ -229,7 +229,7 @@ function createLevelUpSystem({
         width,
         height,
       );
-      requestAnimationFrame(drawFrame);
+      if (animated) requestAnimationFrame(drawFrame);
     }
   }
 
