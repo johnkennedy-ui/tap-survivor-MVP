@@ -62,6 +62,8 @@ const addContent = readRequired("scripts/add-content.mjs");
 const addSfx = readRequired("scripts/add-sfx.mjs");
 const extractSprites = readRequired("scripts/extract-sprites.mjs");
 const smokeExtractSprites = readRequired("scripts/smoke-extract-sprites.mjs");
+const smokeAssetResolver = readRequired("scripts/smoke-asset-resolver.mjs");
+const smokeAudioScaling = readRequired("scripts/smoke-audio-scaling.mjs");
 const contentTools = readRequired("scripts/content-tools.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
@@ -281,6 +283,7 @@ check("cache keys auto-bump before prepush", pkg.includes('"cache:bump"') && age
 check("quest chain helper can link follow-ups", pkg.includes('"smoke:content-tools"') && addContent.includes("--after previous_id") && addContent.includes("linkQuestAfter") && contentTools.includes("function linkQuestAfter"));
 check("sound effect wiring helper exists", pkg.includes('"sfx:add"') && addSfx.includes("run-upgrade") && addSfx.includes("content.assets.sfx[bucket]") && agentCheck.includes("scripts/add-sfx.mjs"));
 check("focused agent maintenance tooling exists", pkg.includes('"agent:finish"') && pkg.includes('"content:check"') && pkg.includes('"verify:assets"') && agentCheck.includes("focusedChecks") && agentPrepush.includes("--full"));
+check("asset and audio regression smokes exist", pkg.includes('"smoke:assets"') && pkg.includes('"smoke:audio"') && smokeAssetResolver.includes("weapon choice uses clean icon source") && smokeAudioScaling.includes("fast weapon playback rate is applied") && agentCheck.includes("smoke:assets") && agentCheck.includes("smoke:audio"));
 check("sprite sheet extraction helper exists", pkg.includes('"sprites:extract"') && extractSprites.includes("autoDetectSprites") && extractSprites.includes("trimBounds") && extractSprites.includes("writePng"));
 check("sprite extraction smoke exists", pkg.includes('"smoke:sprite-extract"') && smokeExtractSprites.includes("auto extraction writes two sprites") && agentCheck.includes("smoke:sprite-extract"));
 

@@ -14,6 +14,8 @@ const fullChecks = [
   ["node", ["--check", "scripts/verify-focus.mjs"]],
   ["node", ["--check", "scripts/smoke-game-harness.mjs"]],
   ["node", ["--check", "scripts/smoke-browser.mjs"]],
+  ["node", ["--check", "scripts/smoke-asset-resolver.mjs"]],
+  ["node", ["--check", "scripts/smoke-audio-scaling.mjs"]],
   ["node", ["--check", "scripts/smoke-content-tools.mjs"]],
   ["node", ["--check", "scripts/smoke-relic-run-start.mjs"]],
   ["node", ["--check", "scripts/extract-sprites.mjs"]],
@@ -27,6 +29,8 @@ const fullChecks = [
   ["npm", ["run", "verify:content"]],
   ["npm", ["run", "verify:relics"]],
   ["npm", ["run", "verify:ui"]],
+  ["npm", ["run", "smoke:assets"]],
+  ["npm", ["run", "smoke:audio"]],
   ["npm", ["run", "smoke:browser"]],
   ["npm", ["run", "smoke:save"]],
   ["npm", ["run", "smoke:start-run"]],
@@ -63,10 +67,10 @@ function focusedChecks(files) {
     checks.push(["npm", ["run", "content:check"]], ["npm", ["run", "verify:content"]]);
   }
   if (files.some((file) => file.startsWith("assets/") || file.includes("sprites") || file === "src/assets.js")) {
-    checks.push(["npm", ["run", "verify:assets"]]);
+    checks.push(["npm", ["run", "verify:assets"]], ["npm", ["run", "smoke:assets"]]);
   }
   if (files.some((file) => file === "src/audio.js" || file === "src/weapon-fire.js" || file.includes("sfx"))) {
-    checks.push(["npm", ["run", "verify:audio"]], ["npm", ["run", "smoke:start-run"]]);
+    checks.push(["npm", ["run", "verify:audio"]], ["npm", ["run", "smoke:audio"]], ["npm", ["run", "smoke:start-run"]]);
   }
   if (files.some((file) => file === "src/relics.js" || file === "src/shell-ui.js" || file.includes("relic"))) {
     checks.push(["npm", ["run", "verify:relics"]], ["npm", ["run", "smoke:relic-run-start"]]);

@@ -59,10 +59,14 @@ function commitSeed(files) {
 
 function archiveCurrentTask() {
   if (!existsSync("docs/CURRENT_TASK.md")) return;
+  const body = readFileSync("docs/CURRENT_TASK.md", "utf8");
+  if (body.includes("No active task.")) {
+    console.log("No active current task to archive");
+    return;
+  }
   mkdirSync("docs/tasks", { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const archivePath = join("docs/tasks", `${stamp}.md`);
-  const body = readFileSync("docs/CURRENT_TASK.md", "utf8");
   writeFileSync(archivePath, `${body.trim()}\n\n## Finished\n\n- Archived by \`npm run agent:finish\`.\n`);
   writeFileSync("docs/CURRENT_TASK.md", `# Current Agent Task\n\nNo active task.\n\nLast archived task: \`${archivePath}\`.\n`);
   console.log(`Archived current task to ${archivePath}`);

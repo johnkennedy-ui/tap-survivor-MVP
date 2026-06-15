@@ -28,6 +28,8 @@
     "smoke:relic-run-start": "node scripts/smoke-relic-run-start.mjs",
     "smoke:debug": "node scripts/smoke-debug.mjs",
     "smoke:browser": "node scripts/smoke-browser.mjs",
+    "smoke:assets": "node scripts/smoke-asset-resolver.mjs",
+    "smoke:audio": "node scripts/smoke-audio-scaling.mjs",
     "smoke:quest-flow": "node scripts/smoke-quest-flow.mjs",
     "smoke:content-tools": "node scripts/smoke-content-tools.mjs",
     "smoke:sprite-extract": "node scripts/smoke-extract-sprites.mjs",
