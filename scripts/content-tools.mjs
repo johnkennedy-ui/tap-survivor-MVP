@@ -33,6 +33,52 @@ export function linkQuestAfter(quests, previousId, nextId) {
   previous.opensQuests = [...new Set([...(previous.opensQuests || []), nextId])];
 }
 
+function validateShopItems(shopItems, { fail, requireNumber, requireString, schema, validateSpritePath }) {
+  const seenShopItems = new Set();
+  const shopItemEffectStats = schema.effectRegistries?.shopItem?.stats || [];
+  const shopItemRules = schema.fieldRules?.shopItem || {};
+  const shopItemRequiredFields = shopItemRules.required || ["id", "name", "description", "kind", "cost", "maxTier"];
+  const shopItemKinds = shopItemRules.kinds || [];
+  const shopItemCostMin = shopItemRules.cost?.min ?? 0;
+  const shopItemMaxTierMin = shopItemRules.maxTier?.min ?? 1;
+
+  shopItems.forEach((item) => {
+    requireString(item.id, "shopItem.id");
+    if (seenShopItems.has(item.id)) fail(`duplicate shop item ${item.id}`);
+    seenShopItems.add(item.id);
+    shopItemRequiredFields
+      .filter((field) => ["name", "description", "kind"].includes(field))
+      .forEach((field) => requireString(item[field], `shopItem ${item.id}.${field}`));
+    if (shopItemKinds.length && !shopItemKinds.includes(item.kind)) {
+      fail(`shopItem ${item.id} has unsupported kind ${item.kind}`);
+    }
+    if (Array.isArray(item.cost)) {
+      item.cost.forEach((cost, index) => {
+        requireNumber(cost, `shopItem ${item.id}.cost[${index}]`, shopItemCostMin);
+        if (shopItemRules.cost?.tiersMustIncrease && index > 0 && cost <= item.cost[index - 1]) {
+          fail(`shopItem ${item.id}.cost[${index}] must be greater than cost[${index - 1}]`);
+        }
+      });
+    } else {
+      requireNumber(item.cost, `shopItem ${item.id}.cost`, shopItemCostMin);
+    }
+    if (shopItemRequiredFields.includes("maxTier") || item.maxTier !== undefined) {
+      requireNumber(item.maxTier, `shopItem ${item.id}.maxTier`, shopItemMaxTierMin);
+    }
+    if (shopItemRules.cost?.arrayLengthMustMatchMaxTier && Array.isArray(item.cost) && item.maxTier && item.cost.length !== item.maxTier) {
+      fail(`shopItem ${item.id}.cost length must match maxTier`);
+    }
+    if (item.effect) {
+      requireString(item.effect.stat, `shopItem ${item.id}.effect.stat`);
+      if (!shopItemEffectStats.includes(item.effect.stat)) {
+        fail(`shopItem ${item.id} has unsupported effect stat ${item.effect.stat}`);
+      }
+      requireNumber(item.effect.value, `shopItem ${item.id}.effect.value`, 0);
+    }
+    if (item.spritePath) validateSpritePath(item.spritePath, `shopItem ${item.id}.spritePath`);
+  });
+}
+
 export function validateContent(content) {
   const errors = [];
   const weapons = content.weapons || {};
@@ -52,21 +98,14 @@ export function validateContent(content) {
   const schema = readContentSchema();
   const runUpgradeEffectTypes = schema.effectRegistries?.runUpgrade?.types || [];
   const runUpgradePlayerStats = schema.effectRegistries?.runUpgrade?.playerStatAddStats || [];
-  const shopItemEffectStats = schema.effectRegistries?.shopItem?.stats || [];
   const weaponBehaviorKinds = schema.behaviorRegistries?.weaponKinds?.ids || [];
   const bossAbilityKinds = schema.behaviorRegistries?.bossAbilityKinds?.ids || [];
-  const shopItemRules = schema.fieldRules?.shopItem || {};
-  const shopItemRequiredFields = shopItemRules.required || ["id", "name", "description", "kind", "cost", "maxTier"];
-  const shopItemKinds = shopItemRules.kinds || [];
-  const shopItemCostMin = shopItemRules.cost?.min ?? 0;
-  const shopItemMaxTierMin = shopItemRules.maxTier?.min ?? 1;
 
   const seenUnlocks = new Set();
   const seenMetaUpgrades = new Set();
   const seenRunUpgrades = new Set();
   const seenEnemies = new Set();
   const seenCharacters = new Set();
-  const seenShopItems = new Set();
   const seenRelics = new Set();
   const seenLevels = new Set();
 
@@ -312,41 +351,7 @@ export function validateContent(content) {
   validateSpritePath(assets.sprites, "assets.sprites");
   validateSpritePath(assets.sfx, "assets.sfx");
 
-  shopItems.forEach((item) => {
-    requireString(item.id, "shopItem.id");
-    if (seenShopItems.has(item.id)) fail(`duplicate shop item ${item.id}`);
-    seenShopItems.add(item.id);
-    shopItemRequiredFields
-      .filter((field) => ["name", "description", "kind"].includes(field))
-      .forEach((field) => requireString(item[field], `shopItem ${item.id}.${field}`));
-    if (shopItemKinds.length && !shopItemKinds.includes(item.kind)) {
-      fail(`shopItem ${item.id} has unsupported kind ${item.kind}`);
-    }
-    if (Array.isArray(item.cost)) {
-      item.cost.forEach((cost, index) => {
-        requireNumber(cost, `shopItem ${item.id}.cost[${index}]`, shopItemCostMin);
-        if (shopItemRules.cost?.tiersMustIncrease && index > 0 && cost <= item.cost[index - 1]) {
-          fail(`shopItem ${item.id}.cost[${index}] must be greater than cost[${index - 1}]`);
-        }
-      });
-    } else {
-      requireNumber(item.cost, `shopItem ${item.id}.cost`, shopItemCostMin);
-    }
-    if (shopItemRequiredFields.includes("maxTier") || item.maxTier !== undefined) {
-      requireNumber(item.maxTier, `shopItem ${item.id}.maxTier`, shopItemMaxTierMin);
-    }
-    if (shopItemRules.cost?.arrayLengthMustMatchMaxTier && Array.isArray(item.cost) && item.maxTier && item.cost.length !== item.maxTier) {
-      fail(`shopItem ${item.id}.cost length must match maxTier`);
-    }
-    if (item.effect) {
-      requireString(item.effect.stat, `shopItem ${item.id}.effect.stat`);
-      if (!shopItemEffectStats.includes(item.effect.stat)) {
-        fail(`shopItem ${item.id} has unsupported effect stat ${item.effect.stat}`);
-      }
-      requireNumber(item.effect.value, `shopItem ${item.id}.effect.value`, 0);
-    }
-    if (item.spritePath) validateSpritePath(item.spritePath, `shopItem ${item.id}.spritePath`);
-  });
+  validateShopItems(shopItems, { fail, requireNumber, requireString, schema, validateSpritePath });
 
   relics.forEach((relic) => {
     requireString(relic.id, "relic.id");

@@ -14,6 +14,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added `npm run verify:script-order` so browser-global module load order fails validation before runtime.
 - Added schema-backed shop item field rules for required fields, supported kinds, cost tiers, max tiers, and effect validation.
 - Added `npm run smoke:add-content` to exercise the content CLI against a temporary content registry without touching real content.
+- Split shop-item validation into a dedicated `scripts/content-tools.mjs` helper as the first content-validator decomposition.
 
 ## 2026-06-14
 

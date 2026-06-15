@@ -51,7 +51,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Content schema/manifest: `content/tap-survivor-schema.json`.
 - Content add templates: `content/tap-survivor-schema.json` under `templates`; `scripts/add-content.mjs` reads those defaults.
 - Content build: `scripts/build-content.mjs`.
-- Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`.
+- Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`; shop-item validation is split into a dedicated helper inside `content-tools`.
 - Economy/shop balance check: `scripts/economy-check.mjs`.
 - Browser global load-order check: `scripts/check-script-order.mjs`.
 - Quest graph audit: `scripts/audit-quests.mjs`.
