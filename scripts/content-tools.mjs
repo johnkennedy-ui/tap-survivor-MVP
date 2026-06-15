@@ -316,6 +316,7 @@ export function validateContent(content) {
       fail(`relic ${relic.id} references missing run upgrade ${relic.targetUpgradeId}`);
     }
     requireNumber(relic.selectionWeightBonus, `relic ${relic.id}.selectionWeightBonus`, 0);
+    requireNumber(relic.startingTierBonus, `relic ${relic.id}.startingTierBonus`, 0);
     requireNumber(relic.maxTierBonus, `relic ${relic.id}.maxTierBonus`, 0);
     if (relic.iconPath) validateSpritePath(relic.iconPath, `relic ${relic.id}.iconPath`);
   });

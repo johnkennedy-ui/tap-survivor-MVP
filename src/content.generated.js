@@ -3129,218 +3129,242 @@ globalThis.TapSurvivorContent = {
     {
       "id": "move_speed_focus_relic",
       "name": "Move Speed Focus Relic",
-      "description": "Move Speed appears more often in level-up choices.",
+      "description": "Start each run with +1 Move Speed tier and increase its max tier by 1.",
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
     },
     {
       "id": "move_speed_mastery_relic",
       "name": "Move Speed Mastery Relic",
-      "description": "Move Speed gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Move Speed tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     },
     {
       "id": "pickup_radius_focus_relic",
       "name": "Pickup Radius Focus Relic",
-      "description": "Pickup Radius appears more often in level-up choices.",
+      "description": "Start each run with +1 Pickup Radius tier and increase its max tier by 1.",
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
     },
     {
       "id": "pickup_radius_mastery_relic",
       "name": "Pickup Radius Mastery Relic",
-      "description": "Pickup Radius gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Pickup Radius tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     },
     {
       "id": "max_hp_focus_relic",
       "name": "Max HP Focus Relic",
-      "description": "Max HP appears more often in level-up choices.",
+      "description": "Start each run with +1 Max HP tier and increase its max tier by 1.",
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
     },
     {
       "id": "max_hp_mastery_relic",
       "name": "Max HP Mastery Relic",
-      "description": "Max HP gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Max HP tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     },
     {
       "id": "attack_radius_focus_relic",
       "name": "Attack Radius Focus Relic",
-      "description": "Attack Radius appears more often in level-up choices.",
+      "description": "Start each run with +1 Attack Radius tier and increase its max tier by 1.",
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
     },
     {
       "id": "attack_radius_mastery_relic",
       "name": "Attack Radius Mastery Relic",
-      "description": "Attack Radius gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Attack Radius tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     },
     {
       "id": "fire_rate_focus_relic",
       "name": "Fire Rate Focus Relic",
-      "description": "Fire Rate appears more often in level-up choices.",
+      "description": "Start each run with +1 Fire Rate tier and increase its max tier by 1.",
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
     },
     {
       "id": "fire_rate_mastery_relic",
       "name": "Fire Rate Mastery Relic",
-      "description": "Fire Rate gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Fire Rate tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     },
     {
       "id": "flat_damage_focus_relic",
       "name": "Flat Damage Focus Relic",
-      "description": "Flat Damage appears more often in level-up choices.",
+      "description": "Start each run with +1 Flat Damage tier and increase its max tier by 1.",
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
     },
     {
       "id": "flat_damage_mastery_relic",
       "name": "Flat Damage Mastery Relic",
-      "description": "Flat Damage gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Flat Damage tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     },
     {
       "id": "percent_damage_focus_relic",
       "name": "Percent Damage Focus Relic",
-      "description": "Percent Damage appears more often in level-up choices.",
+      "description": "Start each run with +1 Percent Damage tier and increase its max tier by 1.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
     },
     {
       "id": "percent_damage_mastery_relic",
       "name": "Percent Damage Mastery Relic",
-      "description": "Percent Damage gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Percent Damage tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     },
     {
       "id": "projectile_pierce_focus_relic",
       "name": "Piercing Shots Focus Relic",
-      "description": "Piercing Shots appears more often in level-up choices.",
+      "description": "Start each run with +1 Piercing Shots tier and increase its max tier by 1.",
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
     },
     {
       "id": "projectile_pierce_mastery_relic",
       "name": "Piercing Shots Mastery Relic",
-      "description": "Piercing Shots gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Piercing Shots tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
     },
     {
       "id": "wall_bounce_focus_relic",
       "name": "Ricochet Shots Focus Relic",
-      "description": "Ricochet Shots appears more often in level-up choices.",
+      "description": "Start each run with +1 Ricochet Shots tier and increase its max tier by 1.",
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
     },
     {
       "id": "wall_bounce_mastery_relic",
       "name": "Ricochet Shots Mastery Relic",
-      "description": "Ricochet Shots gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Ricochet Shots tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
     },
     {
       "id": "split_shot_focus_relic",
       "name": "Split Fire Focus Relic",
-      "description": "Split Fire appears more often in level-up choices.",
+      "description": "Start each run with +1 Split Fire tier and increase its max tier by 1.",
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
     },
     {
       "id": "split_shot_mastery_relic",
       "name": "Split Fire Mastery Relic",
-      "description": "Split Fire gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Split Fire tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
     },
     {
       "id": "explosive_hit_focus_relic",
       "name": "Explosive Hits Focus Relic",
-      "description": "Explosive Hits appears more often in level-up choices.",
+      "description": "Start each run with +1 Explosive Hits tier and increase its max tier by 1.",
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
     },
     {
       "id": "explosive_hit_mastery_relic",
       "name": "Explosive Hits Mastery Relic",
-      "description": "Explosive Hits gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Explosive Hits tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
     },
     {
       "id": "split_on_hit_focus_relic",
       "name": "Splinter Shots Focus Relic",
-      "description": "Splinter Shots appears more often in level-up choices.",
+      "description": "Start each run with +1 Splinter Shots tier and increase its max tier by 1.",
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 2,
-      "maxTierBonus": 0,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
     },
     {
       "id": "split_on_hit_mastery_relic",
       "name": "Splinter Shots Mastery Relic",
-      "description": "Splinter Shots gains an extra possible tier and appears more often.",
+      "description": "Start each run with +2 Splinter Shots tiers and increase its max tier by 2.",
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 1,
-      "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
     },
     {
       "id": "tower_arsenal_relic",
@@ -3350,7 +3374,8 @@ globalThis.TapSurvivorContent = {
       "selectionWeightBonus": 0,
       "maxTierBonus": 0,
       "weaponSlotBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+      "iconPath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop",
+      "startingTierBonus": 0
     },
     {
       "id": "focused_channel_relic",
@@ -3361,7 +3386,8 @@ globalThis.TapSurvivorContent = {
       "maxTierBonus": 0,
       "weaponSlotBonus": -1,
       "weaponDamageMultiplier": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 0
     }
   ]
 };

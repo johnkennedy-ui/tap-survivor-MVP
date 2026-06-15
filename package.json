@@ -18,6 +18,7 @@
     "smoke:start-run": "node scripts/smoke-start-run.mjs",
     "smoke:boss-run": "node scripts/smoke-boss-run.mjs",
     "smoke:shop": "node scripts/smoke-shop.mjs",
+    "smoke:relic-run-start": "node scripts/smoke-relic-run-start.mjs",
     "smoke:debug": "node scripts/smoke-debug.mjs",
     "smoke:browser": "node scripts/smoke-browser.mjs",
     "smoke:quest-flow": "node scripts/smoke-quest-flow.mjs",

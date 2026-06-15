@@ -13,6 +13,22 @@
       return equippedRelics(save).reduce((total, relic) => total + (relic[field] || 0), 0);
     }
 
+    function relicBonusFor(save, upgradeId, field) {
+      return equippedRelics(save)
+        .filter((relic) => relic.targetUpgradeId === upgradeId)
+        .reduce((total, relic) => total + (relic[field] || 0), 0);
+    }
+
+    function startingRunUpgradeTiers(save) {
+      return equippedRelics(save).reduce((tiers, relic) => {
+        const bonus = relic.startingTierBonus || 0;
+        if (relic.targetUpgradeId && bonus > 0) {
+          tiers[relic.targetUpgradeId] = (tiers[relic.targetUpgradeId] || 0) + bonus;
+        }
+        return tiers;
+      }, {});
+    }
+
     function maxEquippedWeapons(save) {
       return Math.max(1, 4 + relicNumber(save, "weaponSlotBonus"));
     }
@@ -87,10 +103,12 @@
       maxEquippedRelics,
       maxEquippedWeapons,
       getWeaponDamageMultiplier,
+      relicBonusFor,
       grantRelic,
       grantRandomRelic,
       relicChoices,
       setRelicEquipped,
+      startingRunUpgradeTiers,
     };
   }
 

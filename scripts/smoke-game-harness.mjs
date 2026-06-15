@@ -257,7 +257,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
   vm.runInContext(readSource("src/run-update.js"), context);
   vm.runInContext(readSource("src/debug.js"), context);
   vm.runInContext(readSource("src/shell-ui.js"), context);
-  vm.runInContext(readSource("src/game.js"), context);
+  vm.runInContext(`${readSource("src/game.js")}\nglobalThis.__tapSurvivorHarness = { getGame: () => game, getSave: () => save };`, context);
 
   return {
     context,

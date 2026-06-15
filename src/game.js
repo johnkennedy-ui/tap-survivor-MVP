@@ -145,6 +145,22 @@ function renderQuests(container) {
 
 function resetGameState() {
   game = runStateSystem.resetGameState();
+  applyRelicStartingRunUpgrades(game);
+}
+
+function applyRelicStartingRunUpgrades(run) {
+  const startingTiers = relicSystem.startingRunUpgradeTiers(save);
+  Object.entries(startingTiers).forEach(([upgradeId, tier]) => {
+    const upgrade = runUpgradeDefs.find((item) => item.id === upgradeId);
+    if (!upgrade) return;
+    const maxTier = upgrade.maxTier + relicSystem.relicBonusFor(save, upgradeId, "maxTierBonus");
+    const appliedTier = Math.min(Math.max(0, Math.floor(tier)), maxTier);
+    if (appliedTier <= 0) return;
+    run.runUpgradeTiers[upgradeId] = Math.max(run.runUpgradeTiers[upgradeId] || 0, appliedTier);
+    for (let index = 0; index < appliedTier; index += 1) {
+      upgrade.apply?.(run);
+    }
+  });
 }
 
 const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
