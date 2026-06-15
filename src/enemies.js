@@ -9,6 +9,7 @@ function createEnemySystem({
   distance,
   clamp,
   damagePlayer,
+  onBossSpawn,
 }) {
   const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
   const normalBossAbilityCount = bossConfig.normalAbilityCount || 1;
@@ -150,6 +151,7 @@ function createEnemySystem({
       });
     }
     game.bossSpawnNotice = { text: superBoss ? "SUPER BOSS INCOMING" : "BOSS INCOMING", life: bossNoticeLife, maxLife: bossNoticeLife };
+    onBossSpawn?.({ superBoss, abilities: selectedAbilities });
     const turretBoss = hasAbility(selectedAbilities, "turret");
     const turretCooldown = turretBoss ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game) : 0;
     const turretSpeed = turretBoss ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game) : 0;

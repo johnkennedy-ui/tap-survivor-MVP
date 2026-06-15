@@ -7,6 +7,7 @@ function createShopSystem({
   shopItemDefs,
   getSave,
   getGame,
+  onShopVisit,
   persist,
   renderMeta,
 }) {
@@ -64,8 +65,13 @@ function createShopSystem({
 
   function renderShop() {
     const save = getSave();
+    if (isShopVisible()) onShopVisit?.();
     renderShopList(ui.shopItems, ui.shopCoinHud, save);
     renderShopList(ui.menuShopItems, ui.menuShopCoinHud, save);
+  }
+
+  function isShopVisible() {
+    return !ui.shopModal?.classList.contains("hidden") || !ui.menuShopPanel?.classList.contains("hidden");
   }
 
   function renderShopList(container, coinHud, save) {

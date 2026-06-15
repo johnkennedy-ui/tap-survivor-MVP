@@ -17,6 +17,7 @@ function check(name, pass) {
 harness.elements.get("openShop").click();
 
 check("shop opens from main menu", !harness.elements.get("shopModal").classList.contains("hidden"));
+check("first shop visit banner is recorded", harness.context.__tapSurvivorHarness.getSave().seenBanners.includes("first_shop_visit"));
 check("shop renders coin balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 25"));
 check("shop renders content items", harness.elements.get("shopItems").children.length >= 4);
 

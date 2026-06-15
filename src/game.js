@@ -115,6 +115,7 @@ const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
   shopItemDefs,
   getSave: () => save,
   getGame: () => game,
+  onShopVisit: () => showOnceBanner("first_shop_visit", "Shop spends coins on permanent power. Use Menu > Shop during a run, or Shop before starting, to buy upgrades."),
   persist,
   renderMeta,
 });
@@ -198,6 +199,13 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   playWeaponSfx: audioSystem.playWeapon,
   advanceTowerFloor,
   endRun,
+  onBossSpawn: ({ superBoss }) =>
+    showOnceBanner(
+      superBoss ? "first_super_boss_fight" : "first_boss_fight",
+      superBoss
+        ? "Super bosses combine powers. Keep moving, use Menu > Inventory to review relics, and expect two relic picks if you win."
+        : "Boss fight. Watch the top health bar and special meter. Open Menu if you need to pause and check Rewards, Inventory, or Shop.",
+    ),
   distance,
   clamp,
 });
@@ -277,6 +285,7 @@ function startRun() {
   ui.levelUp.classList.add("hidden");
   shellUi.closeRunMenu(false);
   resetGameState();
+  showOnceBanner("first_run_movement", "Tap or drag on the arena to move. Use Menu for Rewards, Inventory, Shop, pause, and exit.");
 }
 
 function endRun(reason) {
@@ -343,13 +352,42 @@ function finishBossClear(clearedFloor, awardedRelics) {
   renderMeta();
 }
 
-let questBannerTimer = 0;
-function showQuestBanner(quest, reward) {
-  if (!ui.questBanner || !quest) return;
-  ui.questBanner.textContent = `${quest.name} complete +${reward} QP`;
+let bannerTimer = 0;
+function hasSeenBanner(id) {
+  return save.seenBanners?.includes(id);
+}
+
+function markBannerSeen(id) {
+  save.seenBanners = [...new Set([...(save.seenBanners || []), id])];
+  persist();
+}
+
+function showBanner(message, duration = 5200) {
+  if (!ui.questBanner || !message) return;
+  ui.questBanner.textContent = message;
   ui.questBanner.classList.remove("hidden");
-  clearTimeout(questBannerTimer);
-  questBannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), 3000);
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), duration);
+}
+
+function showOnceBanner(id, message, duration) {
+  if (hasSeenBanner(id)) return false;
+  markBannerSeen(id);
+  showBanner(message, duration);
+  return true;
+}
+
+function showQuestBanner(quest, reward) {
+  if (!quest) return;
+  const firstQuest = !hasSeenBanner("first_quest_completion");
+  if (firstQuest) {
+    markBannerSeen("first_quest_completion");
+  }
+  showBanner(
+    firstQuest
+      ? `${quest.name} complete +${reward} QP. Open Menu > Rewards to spend Quest Points and review quests.`
+      : `${quest.name} complete +${reward} QP`,
+  );
 }
 
 function maxEquippedWeapons() {

@@ -60,7 +60,8 @@ storage.set(legacySaveKey, JSON.stringify({
 const migrated = saveSystem.loadSave();
 const trainingBoots = content.shopItems.find((item) => item.id === "training_boots");
 check("legacy save is normalized", migrated.coins === 12 && migrated.unlockedWeapons.includes("spark_bolt"));
-check("save version is current", migrated.saveVersion === 2);
+check("save version is current", migrated.saveVersion === 3);
+check("seen banners normalize", Array.isArray(migrated.seenBanners));
 check("shop purchases clamp to content tiers", migrated.shopPurchases.training_boots === trainingBoots.maxTier);
 check("missing shop purchases are removed", migrated.shopPurchases.missing_item === undefined);
 check("completed quest follow-ups reopen", migrated.activeQuests.includes("rapid_growth") && migrated.activeQuests.includes("gem_hoarder"));

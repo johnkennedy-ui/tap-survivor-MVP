@@ -226,7 +226,7 @@ check("tower floor progresses after boss clear", save.includes("towerFloor: 1") 
 check("boss clears grant relics", save.includes("unlockedRelics") && save.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
 check("every fifth floor has super boss relic drop", enemies.includes("superBoss") && game.includes("relicDropCount") && game.includes("clearedFloor % 5 === 0 ? 2 : 1"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
-check("quest completion banner exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showQuestBanner") && styles.includes(".quest-banner"));
+check("reusable banner system exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showBanner") && game.includes("showOnceBanner") && game.includes("first_run_movement") && game.includes("first_shop_visit") && game.includes("first_quest_completion") && game.includes("first_boss_fight") && game.includes("first_super_boss_fight") && styles.includes(".quest-banner"));
 check("boss health bar renders at screen top", renderHud.includes("drawBossHealthBar") && renderHud.includes("boss.hp / boss.maxHp") && renderHud.includes("SUPER BOSS"));
 check("boss special charge bar renders at screen top", renderHud.includes("drawBossSpecialBar") && renderHud.includes("bossAttackCooldownMax") && renderHud.includes("SPECIAL"));
 check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice") && enemies.includes('type: "boss_drop"') && enemies.includes("landingX") && renderHud.includes("drawBossSpawnNotice") && rendering.includes("boss_drop"));

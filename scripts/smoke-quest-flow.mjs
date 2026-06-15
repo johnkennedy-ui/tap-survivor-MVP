@@ -19,6 +19,7 @@ const save = {
 };
 let persistCount = 0;
 let renderCount = 0;
+let completedQuestBanner = "";
 
 const questSystem = context.TapSurvivorQuests.createQuestSystem({
   questDefs: content.quests,
@@ -28,6 +29,9 @@ const questSystem = context.TapSurvivorQuests.createQuestSystem({
   },
   renderMeta: () => {
     renderCount += 1;
+  },
+  onQuestComplete: (quest, reward) => {
+    completedQuestBanner = `${quest.name} complete +${reward}`;
   },
 });
 
@@ -49,6 +53,7 @@ questSystem.addQuestProgress("gatherer", 1);
 check("completed quest is removed from active list", !save.activeQuests.includes("gatherer"));
 check("completed quest is recorded", save.completedQuests.includes("gatherer"));
 check("quest reward points are awarded", save.questPoints === 1 && save.totalQuestPoints === 1);
+check("quest completion banner callback fires", completedQuestBanner.includes("Field Gatherer complete +1"));
 check("opensQuest follow-up opens", save.activeQuests.includes("rapid_growth"));
 check("opensQuests follow-up opens", save.activeQuests.includes("gem_hoarder"));
 check("completion persists and rerenders", persistCount >= 1 && renderCount === 1);

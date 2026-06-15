@@ -21,6 +21,7 @@ function createCombatSystem({
   playWeaponSfx,
   advanceTowerFloor,
   endRun,
+  onBossSpawn,
   distance,
   clamp,
 }) {
@@ -34,6 +35,7 @@ function createCombatSystem({
     distance,
     clamp,
     damagePlayer,
+    onBossSpawn,
   });
   const weaponFire = globalThis.TapSurvivorWeaponFire.createWeaponFireSystem({
     canvas,

@@ -1,5 +1,5 @@
 (() => {
-const CURRENT_SAVE_VERSION = 2;
+const CURRENT_SAVE_VERSION = 3;
 
 function createSaveSystem({
   saveKey,
@@ -19,6 +19,12 @@ function createSaveSystem({
         shopPurchases: save.shopPurchases || {},
       };
     },
+    3(save) {
+      return {
+        ...save,
+        seenBanners: save.seenBanners || [],
+      };
+    },
   };
 
   function defaultSave() {
@@ -33,6 +39,7 @@ function createSaveSystem({
       upgradeTiers: {},
       unlockedUpgrades: [],
       shopPurchases: {},
+      seenBanners: [],
       unlockedRelics: [],
       equippedRelics: [],
       activeQuests: [...starterQuestIds],
@@ -84,6 +91,7 @@ function createSaveSystem({
     normalized.unlockedNodes = normalized.unlockedNodes || [];
     normalized.upgradeTiers = normalized.upgradeTiers || {};
     normalized.shopPurchases = normalizeShopPurchases(normalized.shopPurchases);
+    normalized.seenBanners = [...new Set(normalized.seenBanners || [])];
     normalized.unlockedRelics = [...new Set(normalized.unlockedRelics || [])];
     normalized.equippedRelics = [...new Set(normalized.equippedRelics || normalized.unlockedRelics)]
       .filter((id) => normalized.unlockedRelics.includes(id))
