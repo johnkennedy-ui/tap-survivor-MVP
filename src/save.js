@@ -1,4 +1,6 @@
 (() => {
+const CURRENT_SAVE_VERSION = 2;
+
 function createSaveSystem({
   saveKey,
   legacySaveKey,
@@ -6,10 +8,22 @@ function createSaveSystem({
   questDefs,
   weaponUnlocks,
   upgradeDefs,
+  shopItemDefs = [],
   questOpenIds,
 }) {
+  const shopItemById = new Map(shopItemDefs.map((item) => [item.id, item]));
+  const saveMigrations = {
+    2(save) {
+      return {
+        ...save,
+        shopPurchases: save.shopPurchases || {},
+      };
+    },
+  };
+
   function defaultSave() {
     return {
+      saveVersion: CURRENT_SAVE_VERSION,
       coins: 0,
       towerFloor: 1,
       questPoints: 0,
@@ -31,20 +45,45 @@ function createSaveSystem({
     try {
       const raw = localStorage.getItem(saveKey) || localStorage.getItem(legacySaveKey);
       const loaded = raw ? JSON.parse(raw) : {};
-      return normalizeSave({ ...defaultSave(), ...loaded });
+      return normalizeSave({ ...defaultSave(), ...migrateSave(loaded) });
     } catch {
       return defaultSave();
     }
   }
 
+  function migrateSave(input) {
+    let migrated = { ...(input || {}) };
+    let version = Math.max(1, Math.floor(migrated.saveVersion || 1));
+    while (version < CURRENT_SAVE_VERSION) {
+      version += 1;
+      migrated = saveMigrations[version]?.(migrated) || migrated;
+      migrated.saveVersion = version;
+    }
+    migrated.saveVersion = CURRENT_SAVE_VERSION;
+    return migrated;
+  }
+
+  function normalizeShopPurchases(purchases) {
+    const normalizedPurchases = {};
+    Object.entries(purchases || {}).forEach(([id, rawTier]) => {
+      const item = shopItemById.get(id);
+      if (shopItemById.size && !item) return;
+      const maxTier = Math.max(0, Math.floor(item?.maxTier || rawTier || 0));
+      const tier = Math.min(maxTier, Math.max(0, Math.floor(rawTier || 0)));
+      if (tier > 0) normalizedPurchases[id] = tier;
+    });
+    return normalizedPurchases;
+  }
+
   function normalizeSave(input) {
     const normalized = { ...defaultSave(), ...input };
+    normalized.saveVersion = CURRENT_SAVE_VERSION;
     normalized.unlockedWeapons = [...new Set(["spark_bolt", ...(normalized.unlockedWeapons || [])])];
     normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
     normalized.towerFloor = Math.max(1, Math.floor(normalized.towerFloor || 1));
     normalized.unlockedNodes = normalized.unlockedNodes || [];
     normalized.upgradeTiers = normalized.upgradeTiers || {};
-    normalized.shopPurchases = normalized.shopPurchases || {};
+    normalized.shopPurchases = normalizeShopPurchases(normalized.shopPurchases);
     normalized.unlockedRelics = [...new Set(normalized.unlockedRelics || [])];
     normalized.equippedRelics = [...new Set(normalized.equippedRelics || normalized.unlockedRelics)]
       .filter((id) => normalized.unlockedRelics.includes(id))

@@ -12,7 +12,7 @@ const PLAYER_STAT_EFFECTS = {
   },
 };
 
-const SHOP_BONUS_STATS = [
+const SHOP_BONUS_STATS = globalThis.TapSurvivorContentSchema?.effectRegistries?.shopItem?.stats || [
   "speed",
   "pickupRadius",
   "maxHp",

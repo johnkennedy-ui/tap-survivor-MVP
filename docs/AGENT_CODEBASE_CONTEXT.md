@@ -9,6 +9,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Engine/framework: no external game engine; plain browser JavaScript, HTML canvas, HTML, and CSS.
 - Module style: browser globals loaded by `index.html` in script order.
 - Runtime content source: `src/content.generated.js`, generated from `content/tap-survivor-content.json`.
+- Runtime schema source: `src/content.generated.js` also exposes `globalThis.TapSurvivorContentSchema`, generated from `content/tap-survivor-schema.json`.
 
 ## Folder Map
 
@@ -48,6 +49,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 
 - Content registry: `content/tap-survivor-content.json`.
 - Content schema/manifest: `content/tap-survivor-schema.json`.
+- Content add templates: `content/tap-survivor-schema.json` under `templates`; `scripts/add-content.mjs` reads those defaults.
 - Content build: `scripts/build-content.mjs`.
 - Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`.
 - Economy/shop balance check: `scripts/economy-check.mjs`.
@@ -68,12 +70,12 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 The project is mixed but mostly registry-driven:
 
 - Weapons, unlock nodes, meta upgrades, run upgrades, quests, quest groups, enemies, characters, shop items, levels, asset sources, and sprite paths are config-driven in `content/tap-survivor-content.json`.
-- Supported content tooling defaults, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
+- Supported content tooling templates/defaults, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
 - Supported runtime behavior IDs for weapon kinds and boss ability kinds are also listed in `content/tap-survivor-schema.json`; content validation rejects unsupported IDs before runtime.
-- `src/content.generated.js` exposes that registry as `globalThis.TapSurvivorContent`.
+- `src/content.generated.js` exposes the content registry as `globalThis.TapSurvivorContent` and the content schema as `globalThis.TapSurvivorContentSchema`.
 - Weapon behavior dispatch lives in `src/weapon-fire.js`; enemy lifecycle behavior lives in `src/enemies.js`.
 - Weapon damage upgrades are generated from weapon definitions in `src/upgrades.js`.
-- Run-upgrade one-shot effects and shop item stat bonuses use shared handlers in `src/effects.js`; combat-scaling run upgrades are read by tier ID in `src/weapon-fire.js`.
+- Run-upgrade one-shot effects and shop item stat bonuses use shared handlers in `src/effects.js`; shop bonus stats come from the generated schema at runtime, and combat-scaling run upgrades are read by tier ID in `src/weapon-fire.js`.
 - UI layout is HTML/CSS-driven.
 
 ## Where To Add Content
@@ -101,6 +103,7 @@ The project is mixed but mostly registry-driven:
 - Build generated content: `npm run build:content`
 - Validate content only: `npm run validate:content`
 - Content map summary: `npm run content:summary`
+- Economy/shop balance report: `npm run economy:check`
 - Audit quest graph: `npm run audit:quests`
 - Full local validation: `npm test`
 - Save smoke test: `npm run smoke:save`

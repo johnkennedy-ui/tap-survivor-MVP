@@ -32,6 +32,7 @@ const saveSystem = context.TapSurvivorSave.createSaveSystem({
   questDefs: content.quests,
   weaponUnlocks: content.weaponUnlocks,
   upgradeDefs: [{ id: "laser_damage", opensQuest: "laser_damage_5000" }],
+  shopItemDefs: content.shopItems,
   questOpenIds: context.TapSurvivorQuests.questOpenIds,
 });
 
@@ -50,10 +51,18 @@ storage.set(legacySaveKey, JSON.stringify({
   completedQuests: ["gatherer"],
   unlockedNodes: ["unlock_laser"],
   unlockedUpgrades: ["laser_damage"],
+  shopPurchases: {
+    training_boots: 99,
+    missing_item: 2,
+  },
 }));
 
 const migrated = saveSystem.loadSave();
+const trainingBoots = content.shopItems.find((item) => item.id === "training_boots");
 check("legacy save is normalized", migrated.coins === 12 && migrated.unlockedWeapons.includes("spark_bolt"));
+check("save version is current", migrated.saveVersion === 2);
+check("shop purchases clamp to content tiers", migrated.shopPurchases.training_boots === trainingBoots.maxTier);
+check("missing shop purchases are removed", migrated.shopPurchases.missing_item === undefined);
 check("completed quest follow-ups reopen", migrated.activeQuests.includes("rapid_growth") && migrated.activeQuests.includes("gem_hoarder"));
 check("unlock-opened quests reopen", migrated.activeQuests.includes("use_laser_run"));
 check("legacy unlocked upgrades become tiers", migrated.upgradeTiers.laser_damage === 1);

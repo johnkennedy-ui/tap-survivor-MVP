@@ -30,6 +30,34 @@
       "collection": "characters"
     }
   },
+  "templates": {
+    "weapon": {
+      "defaults": {
+        "cooldown": 1,
+        "damage": 10,
+        "kind": "projectile",
+        "speed": 320,
+        "radius": 8,
+        "color": "#ffffff",
+        "unlockCost": 1,
+        "branch": "Core"
+      }
+    },
+    "quest": {
+      "defaults": {
+        "target": 1,
+        "rewardQp": 1
+      }
+    },
+    "shopItem": {
+      "defaults": {
+        "kind": "stat_upgrade",
+        "cost": 100,
+        "maxTier": 1,
+        "effectValue": 0
+      }
+    }
+  },
   "effectRegistries": {
     "runUpgrade": {
       "types": ["playerStatAdd", "playerHeal"],

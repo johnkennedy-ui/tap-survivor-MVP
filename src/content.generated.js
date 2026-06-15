@@ -3391,3 +3391,129 @@ globalThis.TapSurvivorContent = {
     }
   ]
 };
+globalThis.TapSurvivorContentSchema = {
+  "schemaVersion": 1,
+  "idConvention": "lowercase snake_case",
+  "contentTypes": {
+    "weapon": {
+      "collection": "weapons",
+      "idPattern": "<weapon_id>",
+      "generatedFields": [
+        "upgradeId"
+      ]
+    },
+    "quest": {
+      "collection": "quests",
+      "idPattern": "<quest_id>",
+      "groupedBy": "questGroups"
+    },
+    "shopItem": {
+      "collection": "shopItems",
+      "defaultKind": "stat_upgrade",
+      "defaultMaxTier": 1
+    },
+    "runUpgrade": {
+      "collection": "runUpgrades"
+    },
+    "relic": {
+      "collection": "relics"
+    },
+    "level": {
+      "collection": "levels"
+    },
+    "character": {
+      "collection": "characters"
+    }
+  },
+  "templates": {
+    "weapon": {
+      "defaults": {
+        "cooldown": 1,
+        "damage": 10,
+        "kind": "projectile",
+        "speed": 320,
+        "radius": 8,
+        "color": "#ffffff",
+        "unlockCost": 1,
+        "branch": "Core"
+      }
+    },
+    "quest": {
+      "defaults": {
+        "target": 1,
+        "rewardQp": 1
+      }
+    },
+    "shopItem": {
+      "defaults": {
+        "kind": "stat_upgrade",
+        "cost": 100,
+        "maxTier": 1,
+        "effectValue": 0
+      }
+    }
+  },
+  "effectRegistries": {
+    "runUpgrade": {
+      "types": [
+        "playerStatAdd",
+        "playerHeal"
+      ],
+      "playerStatAddStats": [
+        "speed",
+        "pickupRadius",
+        "maxHp"
+      ]
+    },
+    "shopItem": {
+      "stats": [
+        "speed",
+        "pickupRadius",
+        "maxHp",
+        "flatDamage",
+        "attackRadius",
+        "fireRate",
+        "percentDamage",
+        "relicFocus"
+      ]
+    }
+  },
+  "behaviorRegistries": {
+    "weaponKinds": {
+      "runtime": "src/weapon-fire.js",
+      "ids": [
+        "radial",
+        "beam",
+        "cone",
+        "chain",
+        "projectile",
+        "target_area",
+        "lingering_area",
+        "mine"
+      ]
+    },
+    "bossAbilityKinds": {
+      "runtime": "src/enemies.js",
+      "ids": [
+        "warden",
+        "charger",
+        "turret"
+      ]
+    }
+  },
+  "validationCommands": {
+    "contentOnly": [
+      "npm run build:content",
+      "npm run validate:content"
+    ],
+    "questOrUnlock": [
+      "npm run audit:quests"
+    ],
+    "runtimeAffected": [
+      "npm test"
+    ],
+    "ship": [
+      "npm run agent:ship -- --message \"<commit message>\""
+    ]
+  }
+};

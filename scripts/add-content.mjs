@@ -4,6 +4,10 @@ const args = parseArgs(process.argv.slice(2));
 const [type, id] = args._;
 const schema = readContentSchema();
 
+function templateDefaults(typeName) {
+  return schema.templates?.[typeName]?.defaults || {};
+}
+
 function usage() {
   console.log(`Usage:
   node scripts/add-content.mjs quest <id> --name "Name" --description "Do thing" --target 100 --reward 2 --group kill [--weapon spark_bolt] [--after previous_id] [--opens next_id]
@@ -46,6 +50,7 @@ try {
   content.levels ||= [];
 
   if (type === "quest") {
+    const defaults = templateDefaults("quest");
     if (content.quests[id]) throw new Error(`Quest already exists: ${id}`);
     const group = args.group;
     if (args.after === id) throw new Error("--after cannot point at the new quest");
@@ -53,8 +58,8 @@ try {
       name: requireValue("name"),
       description: requireValue("description"),
       ...(args.weapon ? { weaponId: args.weapon } : {}),
-      target: numberValue("target"),
-      rewardQp: numberValue("reward"),
+      target: numberValue("target", defaults.target),
+      rewardQp: numberValue("reward", defaults.rewardQp),
       ...(args.opens ? { opensQuest: args.opens } : {}),
     };
     if (group) {
@@ -63,32 +68,34 @@ try {
     }
     if (args.after) linkQuestAfter(content.quests, args.after, id);
   } else if (type === "weapon") {
+    const defaults = templateDefaults("weapon");
     if (content.weapons[id]) throw new Error(`Weapon already exists: ${id}`);
     const unlockId = args["unlock-id"] || `unlock_${id}`;
     content.weapons[id] = {
       name: requireValue("name"),
       description: requireValue("description"),
       upgradeId: args["upgrade-id"] || `${id}_damage`,
-      cooldown: numberValue("cooldown", 1),
-      damage: numberValue("damage", 10),
-      kind: requireValue("kind"),
-      speed: numberValue("speed", 320),
-      radius: numberValue("radius", 8),
-      color: args.color || "#ffffff",
+      cooldown: numberValue("cooldown", defaults.cooldown),
+      damage: numberValue("damage", defaults.damage),
+      kind: args.kind || defaults.kind,
+      speed: numberValue("speed", defaults.speed),
+      radius: numberValue("radius", defaults.radius),
+      color: args.color || defaults.color,
     };
     content.weaponUnlocks.push({
       id: unlockId,
       weaponId: id,
-      cost: numberValue("unlock-cost", 1),
-      branch: args.branch || "Core",
+      cost: numberValue("unlock-cost", defaults.unlockCost),
+      branch: args.branch || defaults.branch,
       ...(args["requires-node"] ? { requiresNode: args["requires-node"] } : {}),
       ...(args["requires-quest"] ? { requiresQuest: args["requires-quest"] } : {}),
       ...(args["opens-quest"] ? { opensQuest: args["opens-quest"] } : {}),
     });
   } else if (type === "shop-item") {
+    const defaults = templateDefaults("shopItem");
     if (content.shopItems.some((item) => item.id === id)) throw new Error(`Shop item already exists: ${id}`);
     const effectStat = args["effect-stat"] || args.effect;
-    const effectValue = numberValue("effect-value", numberValue("value", 0));
+    const effectValue = numberValue("effect-value", numberValue("value", defaults.effectValue));
     const shopEffectStats = schema.effectRegistries?.shopItem?.stats || [];
     if (effectStat && !shopEffectStats.includes(effectStat)) {
       throw new Error(`Unsupported shop item effect stat: ${effectStat}`);
@@ -97,9 +104,9 @@ try {
       id,
       name: requireValue("name"),
       description: requireValue("description"),
-      kind: args.kind || schema.contentTypes?.shopItem?.defaultKind || "stat_upgrade",
-      cost: numberValue("cost"),
-      maxTier: numberValue("max-tier", schema.contentTypes?.shopItem?.defaultMaxTier || 1),
+      kind: args.kind || defaults.kind || schema.contentTypes?.shopItem?.defaultKind || "stat_upgrade",
+      cost: numberValue("cost", defaults.cost),
+      maxTier: numberValue("max-tier", defaults.maxTier || schema.contentTypes?.shopItem?.defaultMaxTier || 1),
       ...(effectStat ? { effect: { stat: effectStat, value: effectValue } } : {}),
     });
   } else if (type === "level") {

@@ -44,6 +44,7 @@ const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
   questDefs,
   weaponUnlocks,
   upgradeDefs,
+  shopItemDefs,
   questOpenIds,
 });
 

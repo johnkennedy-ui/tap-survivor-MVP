@@ -12,9 +12,15 @@
 
 - Source content registry: `content/tap-survivor-content.json`.
 - Machine-readable content schema: `content/tap-survivor-schema.json`.
-- Generated content: `src/content.generated.js`.
+- Generated content and schema globals: `src/content.generated.js`.
 - Sprites and licenses: `assets/<source>/<pack>/`.
 - Agent docs: `docs/`.
+
+## Schema-Backed Defaults
+
+- `scripts/add-content.mjs` reads default templates from `content/tap-survivor-schema.json`.
+- Update schema `templates` before changing repeated CLI defaults for weapons, quests, or shop items.
+- `src/content.generated.js` exposes `globalThis.TapSurvivorContentSchema`; runtime modules can use generated schema constants when they need supported content lists.
 
 ## Add A Weapon
 
@@ -165,3 +171,5 @@ npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/gen
 - `npm run audit:quests` passes if quests or unlock gates changed.
 - `npm test` passes if gameplay code, combat, rendering, upgrades, or script load order changed.
 - Generated `src/content.generated.js` is updated after registry edits.
+- Generated `src/content.generated.js` is updated after schema edits.
+- `npm run smoke:save` passes after save defaults, migrations, shop purchases, or persistence fields change.
