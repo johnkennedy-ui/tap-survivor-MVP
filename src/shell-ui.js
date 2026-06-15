@@ -113,24 +113,39 @@ function createShellUiController({
     if (!ui.menuRelicSlots || !ui.menuRelicInventory || !relicSystem) return;
     const save = getSave();
     const slots = relicSystem.maxEquippedRelics(save);
-    const equipped = new Set(relicSystem.equippedRelics(save).map((relic) => relic.id));
+    const equippedRelics = relicSystem.equippedRelics(save);
+    const equipped = new Set(equippedRelics.map((relic) => relic.id));
     const unlocked = new Set(save.unlockedRelics || []);
     const nextLevel = slots >= 5 ? null : (slots + 1) * 10;
-    ui.menuRelicSlots.textContent = `Relic slots: ${Math.min(equipped.size, slots)}/${slots} unlocked. ${nextLevel ? `Next slot at tower floor ${nextLevel}.` : "Maximum slots unlocked."}`;
+    ui.menuRelicSlots.textContent = `Relic slots: ${slots}/5 unlocked. ${nextLevel ? `Next slot at tower level ${nextLevel}.` : "Maximum slots unlocked."}`;
     ui.menuRelicInventory.innerHTML = "";
-    const availableRelics = relicDefs.filter((relic) => unlocked.has(relic.id));
+    const loadout = documentRef.createElement("div");
+    loadout.className = "relic-loadout";
+    loadout.appendChild(createCharacterPanel(save));
+
+    const slotGrid = documentRef.createElement("div");
+    slotGrid.className = "relic-slots";
+    for (let index = 0; index < 5; index += 1) {
+      slotGrid.appendChild(createRelicSlot(index, slots, equippedRelics[index]));
+    }
+    loadout.appendChild(slotGrid);
+    ui.menuRelicInventory.appendChild(loadout);
+
+    const availableRelics = relicDefs.filter((relic) => unlocked.has(relic.id) && !equipped.has(relic.id));
+    const list = documentRef.createElement("div");
+    list.className = "relic-inventory-list";
     if (!availableRelics.length) {
       const empty = documentRef.createElement("div");
       empty.className = "relic-item locked";
-      empty.textContent = "No relics unlocked yet. Defeat bosses to add relics here.";
-      ui.menuRelicInventory.appendChild(empty);
+      empty.textContent = unlocked.size ? "No unequipped relics available." : "No relics unlocked yet. Defeat bosses to add relics here.";
+      list.appendChild(empty);
+      ui.menuRelicInventory.appendChild(list);
       return;
     }
     availableRelics.forEach((relic) => {
-      const isEquipped = equipped.has(relic.id);
-      const canEquip = isEquipped || equipped.size < slots;
+      const canEquip = equipped.size < slots;
       const el = documentRef.createElement("div");
-      el.className = `relic-item ${isEquipped ? "equipped" : canEquip ? "available" : "locked"}`;
+      el.className = `relic-item ${canEquip ? "available" : "locked"}`;
       el.innerHTML = `
         <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
         <span>
@@ -139,18 +154,77 @@ function createShellUiController({
         </span>
       `;
       const button = documentRef.createElement("button");
-      button.textContent = isEquipped ? "Unequip" : canEquip ? "Equip" : "Full";
-      button.disabled = !isEquipped && !canEquip;
+      button.textContent = canEquip ? "Equip" : "Slots Full";
+      button.disabled = !canEquip;
       button.addEventListener("click", () => {
-        if (relicSystem.setRelicEquipped(save, relic.id, !isEquipped)) {
+        if (relicSystem.setRelicEquipped(save, relic.id, true)) {
           persist?.();
           renderInventory();
           renderMeta();
         }
       });
       el.appendChild(button);
-      ui.menuRelicInventory.appendChild(el);
+      list.appendChild(el);
     });
+    ui.menuRelicInventory.appendChild(list);
+  }
+
+  function createCharacterPanel(save) {
+    const panel = documentRef.createElement("div");
+    panel.className = "relic-character-panel";
+    const playerSprite = globalThis.TapSurvivorContent?.assets?.sprites?.player || "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
+    panel.innerHTML = `
+      <img class="relic-character-sprite" src="${playerSprite}" alt="" />
+      <span>
+        <strong>Character</strong>
+        <span>Tower level ${Math.max(1, save.towerFloor || 1)}</span>
+      </span>
+    `;
+    return panel;
+  }
+
+  function createRelicSlot(index, unlockedSlots, relic) {
+    const slot = documentRef.createElement("div");
+    const unlockLevel = (index + 1) * 10;
+    const unlocked = index < unlockedSlots;
+    slot.className = `relic-slot ${unlocked ? relic ? "equipped" : "empty" : "locked"}`;
+    if (!unlocked) {
+      slot.innerHTML = `
+        <span class="relic-slot-index">Slot ${index + 1}</span>
+        <strong>Locked</strong>
+        <span>Unlocked at tower level ${unlockLevel}.</span>
+      `;
+      return slot;
+    }
+    if (!relic) {
+      slot.innerHTML = `
+        <span class="relic-slot-index">Slot ${index + 1}</span>
+        <strong>Empty relic slot</strong>
+        <span>Equip an unlocked relic below.</span>
+      `;
+      return slot;
+    }
+
+    slot.innerHTML = `
+      <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
+      <span>
+        <span class="relic-slot-index">Slot ${index + 1}</span>
+        <strong>${relic.name}</strong>
+        <span>${relic.description}</span>
+      </span>
+    `;
+    const button = documentRef.createElement("button");
+    button.textContent = "Unequip";
+    button.addEventListener("click", () => {
+      const save = getSave();
+      if (relicSystem.setRelicEquipped(save, relic.id, false)) {
+        persist?.();
+        renderInventory();
+        renderMeta();
+      }
+    });
+    slot.appendChild(button);
+    return slot;
   }
 
   function bind() {

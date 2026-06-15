@@ -212,6 +212,7 @@ section + section {
 .tree,
 .quests,
 .choice-list,
+.relic-inventory-list,
 .relic-grid,
 .shop-grid {
   display: grid;
@@ -221,6 +222,8 @@ section + section {
 .node,
 .quest,
 .relic-item,
+.relic-slot,
+.relic-character-panel,
 .shop-item {
   border: 1px solid #334052;
   border-radius: 6px;
@@ -231,6 +234,7 @@ section + section {
 }
 
 .relic-item,
+.relic-slot,
 .shop-item {
   display: grid;
   grid-template-columns: 42px 1fr;
@@ -239,15 +243,62 @@ section + section {
 }
 
 .relic-icon,
+.relic-character-sprite,
 .shop-item-sprite {
   width: 38px;
   height: 38px;
   image-rendering: pixelated;
 }
 
+.relic-loadout {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.55fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.relic-character-panel {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 180px;
+  text-align: center;
+}
+
+.relic-character-sprite {
+  width: 84px;
+  height: 84px;
+}
+
+.relic-slots {
+  display: grid;
+  gap: 8px;
+}
+
+.relic-slot {
+  min-height: 70px;
+}
+
+.relic-slot.empty,
+.relic-slot.locked {
+  grid-template-columns: 1fr;
+}
+
+.relic-slot-index {
+  display: block;
+  color: #9fb0c5;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .node strong,
 .quest strong,
 .relic-item strong,
+.relic-slot strong,
+.relic-character-panel strong,
 .shop-item strong {
   display: block;
   margin-bottom: 4px;
@@ -256,6 +307,7 @@ section + section {
 
 .node button,
 .relic-item button,
+.relic-slot button,
 .shop-item button {
   width: 100%;
   margin-top: 8px;
@@ -282,13 +334,29 @@ section + section {
   border-color: #8de7ff;
 }
 
+.relic-slot.equipped {
+  border-color: #8de7ff;
+}
+
 .relic-item.available {
   border-color: #4f9b6d;
+}
+
+.relic-slot.empty {
+  border-color: #4f9b6d;
+  background: rgba(24, 35, 46, 0.88);
 }
 
 .relic-item.locked {
   border-color: #516174;
   opacity: 0.78;
+}
+
+.relic-slot.locked {
+  border-color: #516174;
+  background: rgba(24, 28, 35, 0.72);
+  color: #9daabc;
+  opacity: 0.86;
 }
 
 .shop-item.available {
@@ -436,6 +504,10 @@ section + section {
   }
 
   #levelUp .choice-list {
+    grid-template-columns: 1fr;
+  }
+
+  .relic-loadout {
     grid-template-columns: 1fr;
   }
 }
