@@ -61,6 +61,7 @@ function verifyRelics() {
   check("generated random relic tiers are present", relics.filter((relic) => /^random_/.test(relic.id)).length === 96 && relics.filter((relic) => /_obsessed_relic$/.test(relic.id)).length === 32);
   check("super boss relic extras fill the 100-item generated pool", relics.filter((relic) => /^super_boss_/.test(relic.id)).length === 4);
   check("twenty-six green relics have unique special abilities", greenRelics.length === 26 && new Set(greenRelics.map((relic) => relic.specialAbility?.id)).size === 26 && greenRelics.every((relic) => relic.backgroundColor && relic.specialAbility?.description));
+  check("green relic names are based on their special effects", greenRelics.every((relic) => relic.name === `${relic.specialAbility.label} Relic`));
   check("green relic UI background is wired", shellUi.includes("green-relic") && read("src/styles.css").includes(".green-relic"));
   check("green relic runtime effects are wired", combat.includes("damagePlayer") && combat.includes("lifestealOnKill") && combat.includes("killExplosionDamage") && weaponFire.includes("projectileSpeedBonus") && weaponFire.includes("doubleShotCount") && enemies.includes("damagePlayer?.") && pickups.includes("coinMultiplier") && rendering.includes("invincibleTimer"));
 }

@@ -201,7 +201,7 @@ function createShellUiController({
     const equippedRelics = relicSystem.equippedRelics(save);
     const canEquip = equippedRelics.length < slots;
     const skill = (globalThis.TapSurvivorContent?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
-    ui.menuRelicSlots.textContent = skill ? `${relic.name} -> ${skill.name}` : relic.name;
+    ui.menuRelicSlots.textContent = relic.name;
     ui.menuRelicInventory.innerHTML = "";
 
     const detail = documentRef.createElement("div");
@@ -212,11 +212,11 @@ function createShellUiController({
     const copy = documentRef.createElement("div");
     copy.className = "relic-detail-copy";
     copy.innerHTML = `
-      <span class="relic-slot-index">Selected skill</span>
-      <strong>${skill?.name || relic.name}</strong>
-      <p>${skill?.description || relic.description}</p>
+      <span class="relic-slot-index">Selected relic</span>
+      <strong>${relic.name}</strong>
       <p>${relic.description}</p>
       ${relic.specialAbility ? `<p><strong>${relic.specialAbility.label}</strong>: ${relic.specialAbility.description}</p>` : ""}
+      ${skill ? `<p>Linked skill: ${skill.name}</p>` : ""}
     `;
     detail.appendChild(copy);
 

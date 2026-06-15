@@ -3128,7 +3128,7 @@ globalThis.TapSurvivorContent = {
   "relics": [
     {
       "id": "move_speed_focus_relic",
-      "name": "Blinkleaf Charm",
+      "name": "Blink Invincibility Relic",
       "description": "The first hit makes you blink and grants a short invincibility window. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 2,
@@ -3148,7 +3148,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "move_speed_mastery_relic",
-      "name": "Phase Step Idol",
+      "name": "Instant Teleport Relic",
       "description": "Getting hit instantly teleports you away before the next blow can land. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 1,
@@ -3169,7 +3169,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "pickup_radius_focus_relic",
-      "name": "Emerald Magnet",
+      "name": "Greedy Aura Relic",
       "description": "Your pickup aura blooms wide enough to drag rewards from dangerous lanes. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 2,
@@ -3189,7 +3189,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "pickup_radius_mastery_relic",
-      "name": "Verdant Collector",
+      "name": "Treasure Bloom Relic",
       "description": "Coins collected are doubled by a greedy green bloom. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 1,
@@ -3209,7 +3209,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "max_hp_focus_relic",
-      "name": "Ironroot Heart",
+      "name": "Overgrown Heart Relic",
       "description": "Begin every run with a huge bonus heartwood health pool. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 2,
@@ -3229,7 +3229,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "max_hp_mastery_relic",
-      "name": "Unbroken Seed",
+      "name": "Half-Life Reprieve Relic",
       "description": "Hits are softened by a stubborn green shell. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 1,
@@ -3249,7 +3249,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "attack_radius_focus_relic",
-      "name": "Circle of Moss",
+      "name": "Widened Circles Relic",
       "description": "Area and aura weapons swell far beyond their normal footprint. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 2,
@@ -3269,7 +3269,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "attack_radius_mastery_relic",
-      "name": "Emerald Lens",
+      "name": "Wide Beams Relic",
       "description": "Beam and cone weapons carve wider lanes through the tower. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 1,
@@ -3289,7 +3289,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "fire_rate_focus_relic",
-      "name": "Haste Sprout",
+      "name": "Rapid Bloom Relic",
       "description": "All weapons cycle faster as the relic keeps feeding them sparks. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 2,
@@ -3309,7 +3309,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "fire_rate_mastery_relic",
-      "name": "Twin Fern Trigger",
+      "name": "Double Shot Relic",
       "description": "Projectile weapons fire a second angled shot every volley. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 1,
@@ -3329,7 +3329,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "flat_damage_focus_relic",
-      "name": "Venom Thorn",
+      "name": "Thornbite Relic",
       "description": "Enemies that touch you are stabbed by a green retaliation thorn. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 2,
@@ -3349,7 +3349,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "flat_damage_mastery_relic",
-      "name": "Gravebud Leech",
+      "name": "Life Steal on Kill Relic",
       "description": "Every kill drinks life from the tower and heals you. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 1,
@@ -3369,7 +3369,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "percent_damage_focus_relic",
-      "name": "Giantkiller Clover",
+      "name": "Boss Bane Relic",
       "description": "Bosses take reckless extra damage from every weapon. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
@@ -3389,7 +3389,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "percent_damage_mastery_relic",
-      "name": "Savage Chlorophyll",
+      "name": "Wild Damage Relic",
       "description": "All weapon damage surges with unstable green growth. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 1,
@@ -3409,7 +3409,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "projectile_pierce_focus_relic",
-      "name": "Arrowleaf Engine",
+      "name": "Projectile Speed Relic",
       "description": "Projectile weapons fly much faster and reach targets sooner. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 2,
@@ -3429,7 +3429,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "projectile_pierce_mastery_relic",
-      "name": "Boulderseed Core",
+      "name": "Heavy Projectiles Relic",
       "description": "Projectile weapons become enormous, harder-to-miss chunks. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 1,
@@ -3449,7 +3449,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "wall_bounce_focus_relic",
-      "name": "Lucky Fern",
+      "name": "Fifty-Fifty Dodge Relic",
       "description": "Half of incoming hits are simply dodged. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 2,
@@ -3469,7 +3469,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "wall_bounce_mastery_relic",
-      "name": "Rebound Crown",
+      "name": "Safe Rebound Relic",
       "description": "Dodges are common and successful dodges make you visibly flicker. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 1,
@@ -3490,7 +3490,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "split_shot_focus_relic",
-      "name": "Mimic Grimoire",
+      "name": "Mimic Grimoire Relic",
       "description": "The grimoire imitates your training and floods each run with bonus XP. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 2,
@@ -3510,7 +3510,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "split_shot_mastery_relic",
-      "name": "Manyhand Sigil",
+      "name": "Many Hands Relic",
       "description": "Projectiles fire faster, split wider, and build into chaotic volleys. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 1,
@@ -3531,7 +3531,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "explosive_hit_focus_relic",
-      "name": "Bombfruit Kernel",
+      "name": "Death Burst Relic",
       "description": "Kills burst outward and hurt nearby enemies. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 2,
@@ -3552,7 +3552,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "explosive_hit_mastery_relic",
-      "name": "Cataclysm Sprout",
+      "name": "Chain Bloom Relic",
       "description": "Kills detonate in larger bursts that can start cascading clears. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 1,
@@ -3573,7 +3573,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "split_on_hit_focus_relic",
-      "name": "Rootrunner Boots",
+      "name": "Green Sprint Relic",
       "description": "Movement speed surges hard enough to reshape positioning. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 2,
@@ -3593,7 +3593,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "split_on_hit_mastery_relic",
-      "name": "Overgrowth Mantle",
+      "name": "Full Overgrowth Relic",
       "description": "Health, speed, and pickup reach all grow at once. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 1,
@@ -3615,7 +3615,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "tower_arsenal_relic",
-      "name": "Arsenal Kudzu",
+      "name": "Mimic Arsenal Relic",
       "description": "Every weapon hits harder while projectiles launch faster. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 0,
@@ -3637,7 +3637,7 @@ globalThis.TapSurvivorContent = {
     },
     {
       "id": "focused_channel_relic",
-      "name": "Obsessive Emerald",
+      "name": "Obsessed Focus Relic",
       "description": "Run skills appear more often while weapon cooldowns collapse. Keeps its linked run skill bonuses too.",
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 0,

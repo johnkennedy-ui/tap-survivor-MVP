@@ -60,6 +60,6 @@ assert("locked relic keeps skill sprite icon", lockedText.includes("assets/gener
 const unlockedRelicButton = iconGrid.children.find((child) => child.className?.includes("available"));
 unlockedRelicButton?.click();
 const detailText = textTree(inventory).join(" ");
-assert("relic icon opens detail screen", detailText.includes("relic-detail-screen") && detailText.includes("Selected skill"));
+assert("relic icon opens correct relic detail screen", detailText.includes("relic-detail-screen") && detailText.includes("Selected relic") && detailText.includes("Double Shot Relic"));
 assert("relic detail offers equip and cancel", detailText.includes("Equip relic") && detailText.includes("Cancel"));
 assert("green relic detail shows special ability copy", detailText.includes("Blink Invincibility") || detailText.includes("Instant Teleport") || detailText.includes("Double Shot"));
