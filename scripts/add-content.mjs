@@ -1,13 +1,14 @@
-import { linkQuestAfter, readContent, writeContent, parseArgs, validateContent } from "./content-tools.mjs";
+import { linkQuestAfter, readContent, readContentSchema, writeContent, parseArgs, validateContent } from "./content-tools.mjs";
 
 const args = parseArgs(process.argv.slice(2));
 const [type, id] = args._;
+const schema = readContentSchema();
 
 function usage() {
   console.log(`Usage:
   node scripts/add-content.mjs quest <id> --name "Name" --description "Do thing" --target 100 --reward 2 --group kill [--weapon spark_bolt] [--after previous_id] [--opens next_id]
   node scripts/add-content.mjs weapon <id> --name "Name" --description "Weapon text" --kind projectile --damage 20 --cooldown 1 --color "#ffffff" --unlock-cost 2 --branch Core [--requires-node unlock_laser] [--requires-quest use_laser_run]
-  node scripts/add-content.mjs shop-item <id> --name "Name" --description "Item text" --kind upgrade --cost 100
+  node scripts/add-content.mjs shop-item <id> --name "Name" --description "Item text" --kind stat_upgrade --cost 100 --effect-stat speed --effect-value 5 [--max-tier 1]
   node scripts/add-content.mjs level <id> --name "Name" --starts-at 120 [--enemies drifter,skitter] [--spawn-count 2] [--spawn-rate 1.1]
   node scripts/add-content.mjs character <id> --name "Name" --description "Character text" --sprite player`);
 }
@@ -86,14 +87,20 @@ try {
     });
   } else if (type === "shop-item") {
     if (content.shopItems.some((item) => item.id === id)) throw new Error(`Shop item already exists: ${id}`);
+    const effectStat = args["effect-stat"] || args.effect;
+    const effectValue = numberValue("effect-value", numberValue("value", 0));
+    const shopEffectStats = schema.effectRegistries?.shopItem?.stats || [];
+    if (effectStat && !shopEffectStats.includes(effectStat)) {
+      throw new Error(`Unsupported shop item effect stat: ${effectStat}`);
+    }
     content.shopItems.push({
       id,
       name: requireValue("name"),
       description: requireValue("description"),
-      kind: requireValue("kind"),
+      kind: args.kind || schema.contentTypes?.shopItem?.defaultKind || "stat_upgrade",
       cost: numberValue("cost"),
-      effect: args.effect || "",
-      value: numberValue("value", 0),
+      maxTier: numberValue("max-tier", schema.contentTypes?.shopItem?.defaultMaxTier || 1),
+      ...(effectStat ? { effect: { stat: effectStat, value: effectValue } } : {}),
     });
   } else if (type === "level") {
     if (content.levels.some((level) => level.id === id)) throw new Error(`Level already exists: ${id}`);

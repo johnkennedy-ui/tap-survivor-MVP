@@ -46,6 +46,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 ## Main Gameplay Systems
 
 - Content registry: `content/tap-survivor-content.json`.
+- Content schema/manifest: `content/tap-survivor-schema.json`.
 - Content build: `scripts/build-content.mjs`.
 - Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`.
 - Quest graph audit: `scripts/audit-quests.mjs`.
@@ -63,6 +64,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 The project is mixed but mostly registry-driven:
 
 - Weapons, unlock nodes, meta upgrades, run upgrades, quests, quest groups, enemies, characters, shop items, levels, asset sources, and sprite paths are config-driven in `content/tap-survivor-content.json`.
+- Supported content tooling defaults, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
 - `src/content.generated.js` exposes that registry as `globalThis.TapSurvivorContent`.
 - Weapon behavior dispatch lives in `src/weapon-fire.js`; enemy lifecycle behavior lives in `src/enemies.js`.
 - Weapon damage upgrades are generated from weapon definitions in `src/upgrades.js`.
@@ -75,7 +77,7 @@ The project is mixed but mostly registry-driven:
 - Meta upgrades: add to `metaUpgrades` in `content/tap-survivor-content.json`; keep gates pointed at existing `weaponUnlocks` and `quests`.
 - Weapon damage upgrades: set `upgradeId` on the weapon entry; `src/upgrades.js` generates the upgrade.
 - Run upgrades: add to `runUpgrades` in `content/tap-survivor-content.json`; use supported effects only unless extending `src/upgrades.js`.
-- Items: add to `shopItems` in `content/tap-survivor-content.json`.
+- Items: add to `shopItems` in `content/tap-survivor-content.json`; keep effect stats aligned with `content/tap-survivor-schema.json`.
 - Levels: add to `levels` in `content/tap-survivor-content.json`.
 - Characters: add to `characters` in `content/tap-survivor-content.json`.
 - Sprites/assets: add files under `assets/<source>/<pack>/`, register source/license in `assets.sources`, then map logical IDs in `assets.sprites`.

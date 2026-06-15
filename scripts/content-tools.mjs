@@ -3,9 +3,14 @@ import { join } from "node:path";
 
 export const root = new URL("..", import.meta.url).pathname;
 export const contentPath = join(root, "content/tap-survivor-content.json");
+export const schemaPath = join(root, "content/tap-survivor-schema.json");
 
 export function readContent() {
   return JSON.parse(readFileSync(contentPath, "utf8"));
+}
+
+export function readContentSchema() {
+  return JSON.parse(readFileSync(schemaPath, "utf8"));
 }
 
 export function writeContent(content) {
@@ -40,6 +45,10 @@ export function validateContent(content) {
   const relics = content.relics || [];
   const levels = content.levels || [];
   const assets = content.assets || {};
+  const schema = readContentSchema();
+  const runUpgradeEffectTypes = schema.effectRegistries?.runUpgrade?.types || [];
+  const runUpgradePlayerStats = schema.effectRegistries?.runUpgrade?.playerStatAddStats || [];
+  const shopItemEffectStats = schema.effectRegistries?.shopItem?.stats || [];
 
   const seenUnlocks = new Set();
   const seenMetaUpgrades = new Set();
@@ -148,10 +157,10 @@ export function validateContent(content) {
       requireString(effect.type, `runUpgrade ${upgrade.id}.effects[${index}].type`);
       requireNumber(effect.value, `runUpgrade ${upgrade.id}.effects[${index}].value`, 0);
       if (effect.type === "playerStatAdd") {
-        if (!["speed", "pickupRadius", "maxHp"].includes(effect.stat)) {
+        if (!runUpgradePlayerStats.includes(effect.stat)) {
           fail(`runUpgrade ${upgrade.id}.effects[${index}] has unsupported player stat ${effect.stat}`);
         }
-      } else if (effect.type !== "playerHeal") {
+      } else if (!runUpgradeEffectTypes.includes(effect.type)) {
         fail(`runUpgrade ${upgrade.id}.effects[${index}] has unsupported type ${effect.type}`);
       }
     });
@@ -299,7 +308,7 @@ export function validateContent(content) {
     }
     if (item.effect) {
       requireString(item.effect.stat, `shopItem ${item.id}.effect.stat`);
-      if (!["speed", "pickupRadius", "maxHp", "flatDamage", "attackRadius", "fireRate", "percentDamage", "relicFocus"].includes(item.effect.stat)) {
+      if (!shopItemEffectStats.includes(item.effect.stat)) {
         fail(`shopItem ${item.id} has unsupported effect stat ${item.effect.stat}`);
       }
       requireNumber(item.effect.value, `shopItem ${item.id}.effect.value`, 0);

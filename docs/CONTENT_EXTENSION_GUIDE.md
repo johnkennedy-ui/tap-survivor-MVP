@@ -11,6 +11,7 @@
 ## Folder Conventions
 
 - Source content registry: `content/tap-survivor-content.json`.
+- Machine-readable content schema: `content/tap-survivor-schema.json`.
 - Generated content: `src/content.generated.js`.
 - Sprites and licenses: `assets/<source>/<pack>/`.
 - Agent docs: `docs/`.
@@ -60,13 +61,14 @@ node scripts/add-content.mjs quest next_boss_trial --name "Next Boss Trial" --de
 
 1. Add the item to `shopItems` in `content/tap-survivor-content.json`.
 2. Include `id`, `name`, `description`, `kind`, `cost`, `maxTier`, and optional `effect`.
-3. `stat_upgrade` items with `speed`, `pickupRadius`, `maxHp`, or `flatDamage` effects are applied by `src/shop.js`/`src/combat.js`.
-4. Run `npm run build:content && npm run validate:content`.
+3. Keep `effect.stat` aligned with `content/tap-survivor-schema.json`.
+4. `stat_upgrade` items with supported effect stats are applied by `src/shop.js`/`src/combat.js`.
+5. Run `npm run build:content && npm run validate:content`.
 
 Shortcut:
 
 ```bash
-node scripts/add-content.mjs shop-item coin_pack_small --name "Small Coin Pack" --description "Example shop item." --kind currency --cost 100 --effect coins --value 25
+node scripts/add-content.mjs shop-item quick_boots --name "Quick Boots" --description "Move faster." --kind stat_upgrade --cost 100 --effect-stat speed --effect-value 5 --max-tier 1
 ```
 
 ## Add A Level

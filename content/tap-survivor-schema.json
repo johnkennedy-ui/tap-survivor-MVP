@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "idConvention": "lowercase snake_case",
+  "contentTypes": {
+    "weapon": {
+      "collection": "weapons",
+      "idPattern": "<weapon_id>",
+      "generatedFields": ["upgradeId"]
+    },
+    "quest": {
+      "collection": "quests",
+      "idPattern": "<quest_id>",
+      "groupedBy": "questGroups"
+    },
+    "shopItem": {
+      "collection": "shopItems",
+      "defaultKind": "stat_upgrade",
+      "defaultMaxTier": 1
+    },
+    "runUpgrade": {
+      "collection": "runUpgrades"
+    },
+    "relic": {
+      "collection": "relics"
+    },
+    "level": {
+      "collection": "levels"
+    },
+    "character": {
+      "collection": "characters"
+    }
+  },
+  "effectRegistries": {
+    "runUpgrade": {
+      "types": ["playerStatAdd", "playerHeal"],
+      "playerStatAddStats": ["speed", "pickupRadius", "maxHp"]
+    },
+    "shopItem": {
+      "stats": [
+        "speed",
+        "pickupRadius",
+        "maxHp",
+        "flatDamage",
+        "attackRadius",
+        "fireRate",
+        "percentDamage",
+        "relicFocus"
+      ]
+    }
+  },
+  "validationCommands": {
+    "contentOnly": ["npm run build:content", "npm run validate:content"],
+    "questOrUnlock": ["npm run audit:quests"],
+    "runtimeAffected": ["npm test"],
+    "ship": ["npm run agent:ship -- --message \"<commit message>\""]
+  }
+}

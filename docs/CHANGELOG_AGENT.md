@@ -6,6 +6,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 
 - Downgraded `docs/CURRENT_TASK.md` from required active-task state to optional housekeeping so stale checkpoints do not override the conversation or git status.
 - Added `npm run agent:ship` as the streamlined prepush, commit, and push path for approved maintenance delivery.
+- Added `content/tap-survivor-schema.json` and wired content validation/tooling docs to schema-backed effect stats.
 
 ## 2026-06-14
 
