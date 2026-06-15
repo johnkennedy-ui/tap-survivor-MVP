@@ -3453,6 +3453,34 @@ globalThis.TapSurvivorContentSchema = {
       }
     }
   },
+  "fieldRules": {
+    "shopItem": {
+      "required": [
+        "id",
+        "name",
+        "description",
+        "kind",
+        "cost",
+        "maxTier"
+      ],
+      "kinds": [
+        "stat_upgrade"
+      ],
+      "cost": {
+        "min": 0,
+        "arrayLengthMustMatchMaxTier": true,
+        "tiersMustIncrease": true
+      },
+      "maxTier": {
+        "min": 1
+      },
+      "effect": {
+        "optional": true,
+        "statRegistry": "effectRegistries.shopItem.stats",
+        "valueMin": 0
+      }
+    }
+  },
   "effectRegistries": {
     "runUpgrade": {
       "types": [

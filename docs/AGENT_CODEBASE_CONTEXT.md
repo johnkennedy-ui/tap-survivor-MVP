@@ -71,7 +71,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 The project is mixed but mostly registry-driven:
 
 - Weapons, unlock nodes, meta upgrades, run upgrades, quests, quest groups, enemies, characters, shop items, levels, asset sources, and sprite paths are config-driven in `content/tap-survivor-content.json`.
-- Supported content tooling templates/defaults, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
+- Supported content tooling templates/defaults, shop item field rules, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
 - Supported runtime behavior IDs for weapon kinds and boss ability kinds are also listed in `content/tap-survivor-schema.json`; content validation rejects unsupported IDs before runtime.
 - `src/content.generated.js` exposes the content registry as `globalThis.TapSurvivorContent` and the content schema as `globalThis.TapSurvivorContentSchema`.
 - Weapon behavior dispatch lives in `src/weapon-fire.js`; enemy lifecycle behavior lives in `src/enemies.js`.

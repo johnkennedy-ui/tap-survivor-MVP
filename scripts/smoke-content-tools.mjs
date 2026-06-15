@@ -70,6 +70,21 @@ const schemaBackedContent = {
 
 check("schema-backed shop effect validates", validateContent(schemaBackedContent).length === 0);
 
+const badShopKindContent = JSON.parse(JSON.stringify(schemaBackedContent));
+badShopKindContent.shopItems[0].kind = "loot_box";
+check(
+  "schema-backed shop item kind rejects unsupported kind",
+  validateContent(badShopKindContent).some((error) => error.includes("unsupported kind loot_box")),
+);
+
+const badShopCostContent = JSON.parse(JSON.stringify(schemaBackedContent));
+badShopCostContent.shopItems[0].cost = [10, 5];
+badShopCostContent.shopItems[0].maxTier = 2;
+check(
+  "schema-backed shop item cost tiers must increase",
+  validateContent(badShopCostContent).some((error) => error.includes("cost[1] must be greater than cost[0]")),
+);
+
 const badWeaponKindContent = JSON.parse(JSON.stringify(schemaBackedContent));
 badWeaponKindContent.weapons.schema_weapon.kind = "unsupported_kind";
 check(

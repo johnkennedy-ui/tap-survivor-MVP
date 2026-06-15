@@ -20,6 +20,7 @@
 
 - `scripts/add-content.mjs` reads default templates from `content/tap-survivor-schema.json`.
 - Update schema `templates` before changing repeated CLI defaults for weapons, quests, or shop items.
+- Update schema `fieldRules` before changing repeated validator rules for shop item fields, kinds, costs, or effects.
 - `src/content.generated.js` exposes `globalThis.TapSurvivorContentSchema`; runtime modules can use generated schema constants when they need supported content lists.
 
 ## Add A Weapon

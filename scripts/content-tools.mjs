@@ -51,6 +51,11 @@ export function validateContent(content) {
   const shopItemEffectStats = schema.effectRegistries?.shopItem?.stats || [];
   const weaponBehaviorKinds = schema.behaviorRegistries?.weaponKinds?.ids || [];
   const bossAbilityKinds = schema.behaviorRegistries?.bossAbilityKinds?.ids || [];
+  const shopItemRules = schema.fieldRules?.shopItem || {};
+  const shopItemRequiredFields = shopItemRules.required || ["id", "name", "description", "kind", "cost", "maxTier"];
+  const shopItemKinds = shopItemRules.kinds || [];
+  const shopItemCostMin = shopItemRules.cost?.min ?? 0;
+  const shopItemMaxTierMin = shopItemRules.maxTier?.min ?? 1;
 
   const seenUnlocks = new Set();
   const seenMetaUpgrades = new Set();
@@ -307,14 +312,26 @@ export function validateContent(content) {
     requireString(item.id, "shopItem.id");
     if (seenShopItems.has(item.id)) fail(`duplicate shop item ${item.id}`);
     seenShopItems.add(item.id);
-    ["name", "description", "kind"].forEach((field) => requireString(item[field], `shopItem ${item.id}.${field}`));
-    if (Array.isArray(item.cost)) {
-      item.cost.forEach((cost, index) => requireNumber(cost, `shopItem ${item.id}.cost[${index}]`, 0));
-    } else {
-      requireNumber(item.cost, `shopItem ${item.id}.cost`, 0);
+    shopItemRequiredFields
+      .filter((field) => ["name", "description", "kind"].includes(field))
+      .forEach((field) => requireString(item[field], `shopItem ${item.id}.${field}`));
+    if (shopItemKinds.length && !shopItemKinds.includes(item.kind)) {
+      fail(`shopItem ${item.id} has unsupported kind ${item.kind}`);
     }
-    if (item.maxTier) requireNumber(item.maxTier, `shopItem ${item.id}.maxTier`, 1);
-    if (Array.isArray(item.cost) && item.maxTier && item.cost.length !== item.maxTier) {
+    if (Array.isArray(item.cost)) {
+      item.cost.forEach((cost, index) => {
+        requireNumber(cost, `shopItem ${item.id}.cost[${index}]`, shopItemCostMin);
+        if (shopItemRules.cost?.tiersMustIncrease && index > 0 && cost <= item.cost[index - 1]) {
+          fail(`shopItem ${item.id}.cost[${index}] must be greater than cost[${index - 1}]`);
+        }
+      });
+    } else {
+      requireNumber(item.cost, `shopItem ${item.id}.cost`, shopItemCostMin);
+    }
+    if (shopItemRequiredFields.includes("maxTier") || item.maxTier !== undefined) {
+      requireNumber(item.maxTier, `shopItem ${item.id}.maxTier`, shopItemMaxTierMin);
+    }
+    if (shopItemRules.cost?.arrayLengthMustMatchMaxTier && Array.isArray(item.cost) && item.maxTier && item.cost.length !== item.maxTier) {
       fail(`shopItem ${item.id}.cost length must match maxTier`);
     }
     if (item.effect) {
