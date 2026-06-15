@@ -22,10 +22,12 @@ const fullChecks = [
   ["node", ["--check", "scripts/extract-sprites.mjs"]],
   ["node", ["--check", "scripts/smoke-extract-sprites.mjs"]],
   ["node", ["--check", "scripts/content-summary.mjs"]],
+  ["node", ["--check", "scripts/economy-check.mjs"]],
   ["node", ["--check", "src/effects.js"]],
   ["node", ["--check", "src/render-hud.js"]],
   ["npm", ["run", "content:check"]],
   ["npm", ["run", "content:summary"]],
+  ["npm", ["run", "economy:check"]],
   ["npm", ["run", "verify:assets"]],
   ["npm", ["run", "verify:audio"]],
   ["npm", ["run", "verify:content"]],
@@ -66,7 +68,10 @@ function focusedChecks(files) {
     .filter((file) => /\.(mjs|js)$/.test(file) && !file.endsWith("src/content.generated.js"))
     .forEach((file) => checks.push(["node", ["--check", file]]));
   if (files.some((file) => file.startsWith("content/") || file === "src/content.generated.js")) {
-    checks.push(["npm", ["run", "content:check"]], ["npm", ["run", "verify:content"]]);
+    checks.push(["npm", ["run", "content:check"]], ["npm", ["run", "economy:check"]], ["npm", ["run", "verify:content"]]);
+  }
+  if (files.some((file) => file === "src/shop.js" || file === "src/pickups.js" || file === "src/balance.js")) {
+    checks.push(["npm", ["run", "economy:check"]]);
   }
   if (files.some((file) => file.startsWith("assets/") || file.includes("sprites") || file === "src/assets.js")) {
     checks.push(["npm", ["run", "verify:assets"]], ["npm", ["run", "smoke:assets"]]);

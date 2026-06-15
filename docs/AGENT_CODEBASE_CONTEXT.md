@@ -50,11 +50,13 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Content schema/manifest: `content/tap-survivor-schema.json`.
 - Content build: `scripts/build-content.mjs`.
 - Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`.
+- Economy/shop balance check: `scripts/economy-check.mjs`.
 - Quest graph audit: `scripts/audit-quests.mjs`.
 - Save/meta progression: `src/save.js`, `src/progression.js`, `src/run-state.js`, and orchestration in `src/game.js`.
 - Run HUD/end-screen UI: `src/run-ui.js`.
 - Run ticking/player movement: `src/run-update.js`.
 - Coin shop: `src/shop.js` plus `shopItems` content and the in-run shop tab in `src/shell-ui.js`.
+- Economy tuning: run `npm run economy:check` before monetization-route work; it reports shop tiers, stat lanes, buyout cost, price scaling, inflation, and coin reward scaling.
 - Enemy and boss behavior: `src/enemies.js`; boss ability tuning lives in `content/tap-survivor-content.json`.
 - Weapon firing behavior: `src/weapon-fire.js`.
 - Rendering and sprite lookup: `src/rendering.js`; HUD overlays: `src/render-hud.js`.

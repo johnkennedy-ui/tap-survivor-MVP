@@ -65,6 +65,7 @@ node scripts/add-content.mjs quest next_boss_trial --name "Next Boss Trial" --de
 3. Keep `effect.stat` aligned with `content/tap-survivor-schema.json`.
 4. `stat_upgrade` items with supported effect stats are applied by `src/shop.js`/`src/combat.js`.
 5. Run `npm run build:content && npm run validate:content`.
+6. Run `npm run economy:check` when changing costs, tiers, coin scaling, or shop stat lanes.
 
 Shortcut:
 
@@ -91,6 +92,14 @@ node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --st
 2. Keep `bossConfig.abilityIds` aligned with keys in `bossAbilities`.
 3. Use boss ability IDs listed in `content/tap-survivor-schema.json` unless extending `src/enemies.js` for a new ability behavior.
 4. Run `npm run build:content && npm test`.
+
+## Tune Economy Or Monetization Routes
+
+1. Start with data and validation; do not add payment, ads, or remote config before the local economy has a passing report.
+2. Use `npm run economy:check` to inspect shop item count, cost tiers, stat lanes, buyout cost, floor price scaling, purchase inflation, and coin reward scaling.
+3. Keep shop costs increasing across tiers.
+4. Treat repeated stat lanes as a balancing warning, not a blocker.
+5. Run `npm run smoke:shop` after changing shop behavior.
 
 ## Add A Character
 

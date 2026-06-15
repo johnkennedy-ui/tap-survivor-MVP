@@ -9,6 +9,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added `content/tap-survivor-schema.json` and wired content validation/tooling docs to schema-backed effect stats.
 - Added `src/effects.js` as the shared runtime effect handler registry for run upgrades and shop item bonuses.
 - Added schema-backed weapon kind and boss ability behavior registries so unsupported behavior IDs fail content validation.
+- Added `npm run economy:check` to report shop tiers, stat lanes, buyout cost, price scaling, inflation, and coin reward scaling before monetization work.
 
 ## 2026-06-14
 
