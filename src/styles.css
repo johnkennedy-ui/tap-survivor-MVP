@@ -407,6 +407,10 @@ section + section {
   image-rendering: pixelated;
 }
 
+.level-choice-sprite {
+  display: block;
+}
+
 .level-choice-copy {
   display: block;
 }

@@ -46,9 +46,9 @@ function createLevelUpSystem({
   const runUpgradeIcons = globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades || {};
   const fallbackSkillIcon = globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
 
-  function iconForChoice(choice) {
-    if (choice.weaponId) return spritePath(weaponIcons[choice.weaponId]) || fallbackSkillIcon;
-    if (choice.runUpgradeId) return spritePath(runUpgradeIcons[choice.runUpgradeId]) || shopIconByStat.get(skillIconByRunUpgrade[choice.runUpgradeId]) || fallbackSkillIcon;
+  function iconDefinitionForChoice(choice) {
+    if (choice.weaponId) return weaponIcons[choice.weaponId] || fallbackSkillIcon;
+    if (choice.runUpgradeId) return runUpgradeIcons[choice.runUpgradeId] || shopIconByStat.get(skillIconByRunUpgrade[choice.runUpgradeId]) || fallbackSkillIcon;
     return fallbackSkillIcon;
   }
 
@@ -145,13 +145,16 @@ function createLevelUpSystem({
       const button = document.createElement("button");
       button.className = "level-choice";
       button.disabled = true;
-      button.innerHTML = `
-        <img class="level-choice-icon" src="${iconForChoice(choice)}" alt="" />
-        <span class="level-choice-copy">
-          <strong>${choice.name}</strong>
-          <span>${choice.description}</span>
-        </span>
-      `;
+      button.appendChild(createChoiceIcon(choice));
+      const copy = document.createElement("span");
+      copy.className = "level-choice-copy";
+      const name = document.createElement("strong");
+      name.textContent = choice.name;
+      const description = document.createElement("span");
+      description.textContent = choice.description;
+      copy.appendChild(name);
+      copy.appendChild(description);
+      button.appendChild(copy);
       button.addEventListener("click", () => {
         if (button.disabled) return;
         choice.apply();
@@ -170,6 +173,117 @@ function createLevelUpSystem({
 
   function shopFocusBonus(save) {
     return (save.shopPurchases?.relic_compass || 0) * 0.5;
+  }
+
+  function createChoiceIcon(choice) {
+    const definition = iconDefinitionForChoice(choice);
+    const path = spritePath(definition) || fallbackSkillIcon;
+    const frames = definition && typeof definition === "object" && Array.isArray(definition.frames) ? definition.frames : [];
+    if (frames.length && typeof Image !== "undefined") {
+      const canvas = document.createElement("canvas");
+      canvas.className = "level-choice-icon level-choice-sprite";
+      canvas.width = 72;
+      canvas.height = 72;
+      canvas.setAttribute("aria-hidden", "true");
+      animateChoiceSprite(canvas, definition, path);
+      return canvas;
+    }
+    const image = document.createElement("img");
+    image.className = "level-choice-icon";
+    image.src = path;
+    image.alt = "";
+    return image;
+  }
+
+  function animateChoiceSprite(canvas, definition, path) {
+    const ctx = canvas.getContext?.("2d", { willReadFrequently: true });
+    if (!ctx) return;
+    const image = new Image();
+    const frames = definition.frames || [];
+    const fps = Math.max(1, Number(definition.fps || 10));
+    const iconScale = Math.max(0.4, Math.min(1.6, Number(definition.iconScale || 1)));
+    const temp = document.createElement("canvas");
+    const tempCtx = temp.getContext?.("2d", { willReadFrequently: true });
+
+    image.onload = () => drawFrame();
+    image.src = path;
+
+    function drawFrame() {
+      if (!frames.length || ui.levelUp.classList.contains("hidden")) return;
+      const now = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
+      const frame = frames[Math.floor((now / 1000) * fps) % frames.length];
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const bounds = trimmedFrameBounds(image, frame, definition, temp, tempCtx);
+      const fit = Math.min(canvas.width / bounds.width, canvas.height / bounds.height) * iconScale;
+      const width = Math.max(1, bounds.width * fit);
+      const height = Math.max(1, bounds.height * fit);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        bounds.source,
+        bounds.x,
+        bounds.y,
+        bounds.width,
+        bounds.height,
+        (canvas.width - width) / 2,
+        (canvas.height - height) / 2,
+        width,
+        height,
+      );
+      requestAnimationFrame(drawFrame);
+    }
+  }
+
+  function trimmedFrameBounds(image, frame, definition, temp, tempCtx) {
+    const fallback = {
+      source: image,
+      x: frame.x,
+      y: frame.y,
+      width: frame.width,
+      height: frame.height,
+    };
+    const color = definition.transparentColor;
+    if (!temp || !tempCtx || !Array.isArray(color) || color.length < 3) return fallback;
+    temp.width = frame.width;
+    temp.height = frame.height;
+    tempCtx.imageSmoothingEnabled = false;
+    tempCtx.clearRect(0, 0, frame.width, frame.height);
+    tempCtx.drawImage(image, frame.x, frame.y, frame.width, frame.height, 0, 0, frame.width, frame.height);
+    try {
+      const pixels = tempCtx.getImageData(0, 0, frame.width, frame.height);
+      const data = pixels.data;
+      const tolerance = Math.max(0, Number(definition.transparentTolerance ?? 28));
+      let minX = frame.width;
+      let minY = frame.height;
+      let maxX = -1;
+      let maxY = -1;
+      for (let y = 0; y < frame.height; y += 1) {
+        for (let x = 0; x < frame.width; x += 1) {
+          const offset = (y * frame.width + x) * 4;
+          const delta = Math.abs(data[offset] - color[0]) + Math.abs(data[offset + 1] - color[1]) + Math.abs(data[offset + 2] - color[2]);
+          if (delta <= tolerance || data[offset + 3] <= 8) {
+            data[offset + 3] = 0;
+            continue;
+          }
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+      tempCtx.putImageData(pixels, 0, 0);
+      if (maxX >= minX && maxY >= minY) {
+        return {
+          source: temp,
+          x: minX,
+          y: minY,
+          width: maxX - minX + 1,
+          height: maxY - minY + 1,
+        };
+      }
+    } catch {
+      return fallback;
+    }
+    return fallback;
   }
 
   function choiceId(choice) {

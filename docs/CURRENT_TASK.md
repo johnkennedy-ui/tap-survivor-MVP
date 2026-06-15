@@ -4,7 +4,7 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Wire skill effect sprite sheets 2-5
+Animate level-up skill effect previews and tune icon sizing
 
 ## Status
 
@@ -16,9 +16,9 @@ Wire skill effect sprite sheets 2-5
 
 - `docs/CURRENT_TASK.md`
 - `content/tap-survivor-content.json`
-- `src/content.generated.js`
 - `src/level-up.js`
-- `src/sprites.js`
+- `src/styles.css`
+- `src/content.generated.js`
 - `scripts/verify-mvp.mjs`
 - `index.html`
 - `assets/generated/tower/skill-effects/split/`
@@ -32,7 +32,7 @@ Wire skill effect sprite sheets 2-5
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
 - `src/level-up.js`
-- `src/sprites.js`
+- `src/styles.css`
 - `scripts/verify-mvp.mjs`
 - `index.html`
 - `docs/CURRENT_TASK.md`
@@ -54,7 +54,7 @@ Result:
 
 - `npm run build:content`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 249 checks, including all five user skill effect atlases and split sprite paths.
+- `node scripts/verify-mvp.mjs`: passed 250 checks, including split sprite paths and animated level-up skill effect previews.
 - `npm run smoke:start-run`: passed.
 - `npm run agent:prepush`: passed; cache keys bumped for changed runtime/content files.
 
