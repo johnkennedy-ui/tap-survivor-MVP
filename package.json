@@ -35,6 +35,7 @@
     "smoke:audio": "node scripts/smoke-audio-scaling.mjs",
     "smoke:quest-flow": "node scripts/smoke-quest-flow.mjs",
     "smoke:content-tools": "node scripts/smoke-content-tools.mjs",
+    "smoke:add-content": "node scripts/smoke-add-content.mjs",
     "smoke:sprite-extract": "node scripts/smoke-extract-sprites.mjs",
     "audit:quests": "npm run build:content && npm run validate:content && node scripts/audit-quests.mjs",
     "test:speed": "node scripts/verify-speed-controls.mjs",

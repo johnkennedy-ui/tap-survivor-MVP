@@ -1,9 +1,13 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 export const root = new URL("..", import.meta.url).pathname;
-export const contentPath = join(root, "content/tap-survivor-content.json");
-export const schemaPath = join(root, "content/tap-survivor-schema.json");
+export const contentPath = process.env.TAP_SURVIVOR_CONTENT_PATH
+  ? resolve(process.env.TAP_SURVIVOR_CONTENT_PATH)
+  : join(root, "content/tap-survivor-content.json");
+export const schemaPath = process.env.TAP_SURVIVOR_SCHEMA_PATH
+  ? resolve(process.env.TAP_SURVIVOR_SCHEMA_PATH)
+  : join(root, "content/tap-survivor-schema.json");
 
 export function readContent() {
   return JSON.parse(readFileSync(contentPath, "utf8"));

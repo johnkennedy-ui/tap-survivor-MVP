@@ -109,6 +109,7 @@ The project is mixed but mostly registry-driven:
 - Audit quest graph: `npm run audit:quests`
 - Full local validation: `npm test`
 - Save smoke test: `npm run smoke:save`
+- Add-content CLI smoke test: `npm run smoke:add-content`
 - Start-run smoke test: `npm run smoke:start-run`
 - Boss-run smoke test: `npm run smoke:boss-run`
 - Optional real-browser smoke test: `npm run smoke:browser`

@@ -18,6 +18,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-asset-resolver.mjs"]],
   ["node", ["--check", "scripts/smoke-audio-scaling.mjs"]],
   ["node", ["--check", "scripts/smoke-content-tools.mjs"]],
+  ["node", ["--check", "scripts/smoke-add-content.mjs"]],
   ["node", ["--check", "scripts/smoke-relic-run-start.mjs"]],
   ["node", ["--check", "scripts/extract-sprites.mjs"]],
   ["node", ["--check", "scripts/smoke-extract-sprites.mjs"]],
@@ -46,6 +47,7 @@ const fullChecks = [
   ["npm", ["run", "smoke:debug"]],
   ["npm", ["run", "smoke:quest-flow"]],
   ["npm", ["run", "smoke:content-tools"]],
+  ["npm", ["run", "smoke:add-content"]],
   ["npm", ["run", "smoke:sprite-extract"]],
   ["npm", ["test"]],
 ];
@@ -70,7 +72,10 @@ function focusedChecks(files) {
     .filter((file) => /\.(mjs|js)$/.test(file) && !file.endsWith("src/content.generated.js"))
     .forEach((file) => checks.push(["node", ["--check", file]]));
   if (files.some((file) => file.startsWith("content/") || file === "src/content.generated.js")) {
-    checks.push(["npm", ["run", "content:check"]], ["npm", ["run", "economy:check"]], ["npm", ["run", "verify:content"]]);
+    checks.push(["npm", ["run", "content:check"]], ["npm", ["run", "economy:check"]], ["npm", ["run", "smoke:add-content"]], ["npm", ["run", "verify:content"]]);
+  }
+  if (files.some((file) => file === "scripts/add-content.mjs" || file === "scripts/content-tools.mjs" || file === "scripts/smoke-add-content.mjs")) {
+    checks.push(["npm", ["run", "smoke:add-content"]]);
   }
   if (files.some((file) => file === "src/shop.js" || file === "src/pickups.js" || file === "src/balance.js")) {
     checks.push(["npm", ["run", "economy:check"]]);
