@@ -115,12 +115,14 @@ check("player uses wizard sprite", content.assets?.sprites?.player?.includes("wi
 check("wizard sprite flips by facing", sprites.includes("flipX") && rendering.includes("playerFacesLeft") && rendering.includes("flipX: playerFacesLeft(p)"));
 check("wizard uses movement and attack animation sprites", content.assets?.sprites?.playerAnimations?.walk && content.assets?.sprites?.playerAnimations?.cast_orb && sprites.includes("playerAnimations") && rendering.includes("playerSpriteId") && weaponFire.includes("setPlayerAttackAnimation") && runUpdate.includes("updatePlayerAnimation"));
 check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
+check("beam and cone effects can use weapon sprites", weaponFire.includes("weaponId,") && rendering.includes("drawSprite(`weapon:${weapon.assetId || beam.weaponId}`") && rendering.includes("spriteHeight"));
 const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
 check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
 check("weapon sound effects are wired", Object.keys(content.weapons || {}).every((id) => content.assets?.sfx?.weapons?.[id]) && audio.includes("createAudioSystem") && weaponFire.includes("playWeaponSfx?.(weaponId)") && combat.includes("playWeaponSfx") && game.includes("audioSystem.playWeapon"));
 check("run upgrade sound effects are wired", (content.runUpgrades || []).every((upgrade) => content.assets?.sfx?.runUpgrades?.[upgrade.id]) && audio.includes("playRunUpgrade") && levelUp.includes("playChoiceSfx?.(choice)") && game.includes("playLevelChoiceSfx"));
 check("generated tower sprite set exists", content.assets?.sources?.some((source) => source.id === "generated_tower_sprites" && source.commercialUse === true && source.attributionRequired === false));
 check("user enemy sprite sheet exists", content.assets?.sources?.some((source) => source.id === "user_enemy_sprite_sheet_20260614" && source.commercialUse === true && source.attributionRequired === false) && ["drifter", "skitter", "bulwark", "hexer", "boss"].every((id) => content.assets?.sprites?.enemies?.[id]?.includes("sheet-20260614")));
+check("user skill effect atlas exists", content.assets?.sources?.some((source) => source.id === "user_skill_effect_sheet_20260615_batch_01" && source.commercialUse === true && source.attributionRequired === false) && ["spark_bolt", "prism_beam", "frost_orb", "flame_wave", "saw_drone"].every((id) => Array.isArray(content.assets?.sprites?.weapons?.[id]?.frames)));
 check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));
 check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
 check("ranged enemy unlocks after floor three", (content.enemyTypes || []).some((enemy) => enemy.id === "hexer" && enemy.minTowerFloor === 4 && enemy.attackRange && enemy.projectileCooldown) && enemies.includes("isEnemyAvailable"));
@@ -147,6 +149,7 @@ check("player HP bar renders above sprite", rendering.includes("drawPlayerHpBar"
 check("level-up choices exist", runUpdate.includes("showLevelUp") && levelUp.includes("createLevelUpSystem") && contentText.includes("Prism Beam"));
 check("Laser weapon exists", runtime.includes("fireBeam") && contentText.includes("prism_beam"));
 check("10 new weapons exist", ["frost_orb", "flame_wave", "saw_drone", "void_mine", "chain_spark", "moon_glaive", "meteor_pin", "acid_pool", "shield_pulse", "nova_burst"].every((id) => content.weapons?.[id]));
+check("Saw Drone is a heavy projectile weapon", content.weapons?.saw_drone?.kind === "projectile" && content.weapons?.saw_drone?.radius >= 20 && content.weapons?.saw_drone?.speed <= 180);
 check("Laser use quest exists", contentText.includes("use_laser_run"));
 check("Quest Points are awarded", contentText.includes("rewardQp") && quests.includes("save.questPoints += reward"));
 check("more quest types exist", ["first_blood", "gatherer", "survivor_60", "crowd_control", "rapid_growth", "heavy_hits", "boss_hunter"].every((id) => content.quests?.[id]));
@@ -236,6 +239,7 @@ check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && g
 check("shared audio helper exists", audio.includes("TapSurvivorAudio") && game.includes("TapSurvivorAudio") && audio.includes("setMuted"));
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
 check("sprite cache trims transparent padding", sprites.includes("trimmedSpriteBounds") && sprites.includes("getImageData") && sprites.includes("spriteBounds"));
+check("sprite atlases support animated frames", sprites.includes("currentFrameIndex") && sprites.includes("transparentColor") && sprites.includes("spriteSourceBounds"));
 check("enemy sprites draw larger than hit radius", rendering.includes("spriteSize") && rendering.includes("Math.max(34") && rendering.includes("Math.max(92"));
 check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
 check("shared progression helper exists", progression.includes("TapSurvivorProgression") && game.includes("TapSurvivorProgression"));

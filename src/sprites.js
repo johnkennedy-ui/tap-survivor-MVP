@@ -1,6 +1,7 @@
 (() => {
 function createSpriteSystem({ ctx, spriteDefs }) {
   const sprites = {};
+  const spriteConfigs = {};
   const spriteCache = new Map();
   const spriteBounds = new Map();
 
@@ -15,8 +16,10 @@ function createSpriteSystem({ ctx, spriteDefs }) {
     return null;
   }
 
-  function registerSprite(id, src) {
+  function registerSprite(id, definition) {
+    const src = spriteSource(definition);
     if (!src || typeof Image === "undefined") return;
+    spriteConfigs[id] = typeof definition === "object" && !Array.isArray(definition) ? definition : {};
     const image = new Image();
     image.addEventListener?.("load", () => {
       [...spriteCache.keys()]
@@ -46,7 +49,11 @@ function createSpriteSystem({ ctx, spriteDefs }) {
   function drawSprite(id, x, y, size, rotation = 0, options = {}) {
     const image = sprites[id];
     if (!image?.complete || !image.naturalWidth) return false;
-    const source = rasterizedSprite(id, image, size) || image;
+    const config = spriteConfigs[id] || {};
+    const frameIndex = currentFrameIndex(config);
+    const drawWidth = Math.max(1, Number(options.width || size));
+    const drawHeight = Math.max(1, Number(options.height || size));
+    const source = rasterizedSprite(id, image, drawWidth, drawHeight, config, frameIndex) || image;
     const flipX = Boolean(options.flipX);
     const flipY = Boolean(options.flipY);
     ctx.save();
@@ -54,21 +61,22 @@ function createSpriteSystem({ ctx, spriteDefs }) {
     ctx.rotate(rotation);
     ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(source, -size / 2, -size / 2, size, size);
+    ctx.drawImage(source, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
     ctx.restore();
     return true;
   }
 
-  function rasterizedSprite(id, image, size) {
-    const rasterSize = Math.max(1, Math.ceil(size));
-    const key = `${id}:${rasterSize}`;
+  function rasterizedSprite(id, image, width, height, config = {}, frameIndex = 0) {
+    const rasterWidth = Math.max(1, Math.ceil(width));
+    const rasterHeight = Math.max(1, Math.ceil(height));
+    const key = `${id}:${rasterWidth}x${rasterHeight}:${frameIndex}`;
     if (spriteCache.has(key)) return spriteCache.get(key);
-    const canvas = createRasterCanvas(rasterSize, rasterSize);
+    const canvas = createRasterCanvas(rasterWidth, rasterHeight);
     const rasterCtx = canvas?.getContext?.("2d");
     if (!canvas || !rasterCtx) return null;
-    const bounds = trimmedSpriteBounds(id, image);
+    const bounds = spriteSourceBounds(id, image, config, frameIndex);
     rasterCtx.imageSmoothingEnabled = false;
-    rasterCtx.clearRect(0, 0, rasterSize, rasterSize);
+    rasterCtx.clearRect(0, 0, rasterWidth, rasterHeight);
     rasterCtx.drawImage(
       image,
       bounds.x,
@@ -77,11 +85,60 @@ function createSpriteSystem({ ctx, spriteDefs }) {
       bounds.height,
       0,
       0,
-      rasterSize,
-      rasterSize,
+      rasterWidth,
+      rasterHeight,
     );
+    applyTransparentColor(rasterCtx, rasterWidth, rasterHeight, config);
     spriteCache.set(key, canvas);
     return canvas;
+  }
+
+  function spriteSource(definition) {
+    if (typeof definition === "string") return definition;
+    if (definition && typeof definition === "object") return definition.src || definition.path;
+    return "";
+  }
+
+  function currentFrameIndex(config) {
+    const frames = Array.isArray(config.frames) ? config.frames : [];
+    if (frames.length <= 1) return 0;
+    const fps = Math.max(1, Number(config.fps || 10));
+    const now = typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
+    return Math.floor((now / 1000) * fps) % frames.length;
+  }
+
+  function spriteSourceBounds(id, image, config, frameIndex) {
+    const frames = Array.isArray(config.frames) ? config.frames : [];
+    if (frames[frameIndex]) return normalizeBounds(frames[frameIndex], image);
+    if (config.x !== undefined) return normalizeBounds(config, image);
+    return trimmedSpriteBounds(id, image);
+  }
+
+  function normalizeBounds(bounds, image) {
+    const imageWidth = image.naturalWidth || image.width;
+    const imageHeight = image.naturalHeight || image.height;
+    const x = clampInt(bounds.x, 0, imageWidth - 1);
+    const y = clampInt(bounds.y, 0, imageHeight - 1);
+    const width = clampInt(bounds.width ?? bounds.w, 1, imageWidth - x);
+    const height = clampInt(bounds.height ?? bounds.h, 1, imageHeight - y);
+    return { x, y, width, height };
+  }
+
+  function clampInt(value, min, max) {
+    return Math.max(min, Math.min(max, Math.floor(Number(value) || min)));
+  }
+
+  function applyTransparentColor(rasterCtx, width, height, config) {
+    const color = config.transparentColor;
+    if (!Array.isArray(color) || color.length < 3) return;
+    const tolerance = Math.max(0, Number(config.transparentTolerance ?? 28));
+    const pixels = rasterCtx.getImageData(0, 0, width, height);
+    const data = pixels.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const delta = Math.abs(data[i] - color[0]) + Math.abs(data[i + 1] - color[1]) + Math.abs(data[i + 2] - color[2]);
+      if (delta <= tolerance) data[i + 3] = 0;
+    }
+    rasterCtx.putImageData(pixels, 0, 0);
   }
 
   function trimmedSpriteBounds(id, image) {

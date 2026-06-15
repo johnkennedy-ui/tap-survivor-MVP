@@ -193,6 +193,7 @@ function createWeaponFireSystem({
     }
 
     game.beams.push({
+      weaponId,
       x: p.x,
       y: p.y,
       endX: p.x + dirX * weaponReach(weapon),
@@ -225,6 +226,7 @@ function createWeaponFireSystem({
       if (side <= weaponWidth(weapon)) damageEnemy(enemy, weaponDamage(weaponId), weaponId);
     });
     game.beams.push({
+      weaponId,
       x: p.x,
       y: p.y,
       endX: p.x + dirX * weaponReach(weapon),

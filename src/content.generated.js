@@ -51,12 +51,14 @@ globalThis.TapSurvivorContent = {
     },
     "saw_drone": {
       "name": "Saw Drone",
-      "description": "Close-range rotating damage pulse.",
+      "description": "Large slow saw ball that travels in a straight line.",
       "upgradeId": "saw_damage",
-      "cooldown": 0.75,
-      "damage": 18,
-      "kind": "radial",
-      "range": 92,
+      "cooldown": 1.2,
+      "damage": 24,
+      "kind": "projectile",
+      "speed": 165,
+      "radius": 20,
+      "pierce": 1,
       "color": "#d8dde8"
     },
     "void_mine": {
@@ -1496,6 +1498,15 @@ globalThis.TapSurvivorContent = {
         "attributionRequired": false,
         "url": "telegram",
         "localLicense": "assets/generated/tower/sfx/License.txt"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_01",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 01",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram:file/AgACAgQAAxkBAAJZ5GovP0n_zqdywCRIFnBNHtM_CBpDAAJRD2sb0fF5USsxl8VE0EiyAQADAgADdwADPAQ",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
       }
     ],
     "sprites": {
@@ -1518,11 +1529,252 @@ globalThis.TapSurvivorContent = {
         "boss": "assets/generated/tower/sheet-20260614/demon-boss.png?v=sheet-20260614"
       },
       "weapons": {
-        "spark_bolt": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260611-quality",
-        "prism_beam": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260611-quality",
-        "frost_orb": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons",
-        "flame_wave": "assets/generated/tower/sprites/weapon-flame-wave.svg?v=generated-20260614-weapons",
-        "saw_drone": "assets/generated/tower/sprites/weapon-saw-drone.svg?v=generated-20260614-weapons",
+        "spark_bolt": {
+          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 48,
+              "y": 42,
+              "width": 160,
+              "height": 145
+            },
+            {
+              "x": 270,
+              "y": 28,
+              "width": 200,
+              "height": 155
+            },
+            {
+              "x": 548,
+              "y": 50,
+              "width": 215,
+              "height": 120
+            },
+            {
+              "x": 815,
+              "y": 48,
+              "width": 220,
+              "height": 118
+            },
+            {
+              "x": 1085,
+              "y": 58,
+              "width": 210,
+              "height": 88
+            },
+            {
+              "x": 1380,
+              "y": 45,
+              "width": 145,
+              "height": 130
+            }
+          ]
+        },
+        "prism_beam": {
+          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 52,
+              "y": 225,
+              "width": 160,
+              "height": 145
+            },
+            {
+              "x": 262,
+              "y": 212,
+              "width": 255,
+              "height": 150
+            },
+            {
+              "x": 540,
+              "y": 230,
+              "width": 555,
+              "height": 105
+            },
+            {
+              "x": 805,
+              "y": 230,
+              "width": 300,
+              "height": 105
+            },
+            {
+              "x": 1138,
+              "y": 257,
+              "width": 215,
+              "height": 55
+            },
+            {
+              "x": 1405,
+              "y": 252,
+              "width": 150,
+              "height": 65
+            }
+          ]
+        },
+        "frost_orb": {
+          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 52,
+              "y": 420,
+              "width": 175,
+              "height": 130
+            },
+            {
+              "x": 285,
+              "y": 410,
+              "width": 140,
+              "height": 130
+            },
+            {
+              "x": 520,
+              "y": 425,
+              "width": 205,
+              "height": 105
+            },
+            {
+              "x": 788,
+              "y": 425,
+              "width": 200,
+              "height": 105
+            },
+            {
+              "x": 1088,
+              "y": 425,
+              "width": 210,
+              "height": 105
+            },
+            {
+              "x": 1382,
+              "y": 420,
+              "width": 150,
+              "height": 110
+            }
+          ]
+        },
+        "flame_wave": {
+          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 44,
+              "y": 610,
+              "width": 105,
+              "height": 105
+            },
+            {
+              "x": 175,
+              "y": 575,
+              "width": 190,
+              "height": 150
+            },
+            {
+              "x": 342,
+              "y": 560,
+              "width": 220,
+              "height": 165
+            },
+            {
+              "x": 588,
+              "y": 555,
+              "width": 295,
+              "height": 170
+            },
+            {
+              "x": 765,
+              "y": 555,
+              "width": 400,
+              "height": 170
+            },
+            {
+              "x": 1110,
+              "y": 610,
+              "width": 430,
+              "height": 105
+            }
+          ]
+        },
+        "saw_drone": {
+          "src": "assets/generated/tower/skill-effects/batch-01.jpg?v=skill-effects-20260615-1",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 50,
+              "y": 802,
+              "width": 132,
+              "height": 115
+            },
+            {
+              "x": 252,
+              "y": 785,
+              "width": 190,
+              "height": 125
+            },
+            {
+              "x": 490,
+              "y": 790,
+              "width": 165,
+              "height": 120
+            },
+            {
+              "x": 725,
+              "y": 790,
+              "width": 175,
+              "height": 120
+            },
+            {
+              "x": 962,
+              "y": 790,
+              "width": 190,
+              "height": 120
+            },
+            {
+              "x": 1210,
+              "y": 790,
+              "width": 168,
+              "height": 120
+            },
+            {
+              "x": 1408,
+              "y": 790,
+              "width": 132,
+              "height": 125
+            }
+          ]
+        },
         "void_mine": "assets/generated/tower/sprites/weapon-void-mine.svg?v=generated-20260614-weapons",
         "chain_spark": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
         "moon_glaive": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",

@@ -276,6 +276,15 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   }
 
   function drawBeam(beam) {
+    const weapon = weaponDefs[beam.weaponId];
+    const length = Math.max(1, Math.hypot(beam.endX - beam.x, beam.endY - beam.y));
+    const midX = (beam.x + beam.endX) / 2;
+    const midY = (beam.y + beam.endY) / 2;
+    const rotation = Math.atan2(beam.endY - beam.y, beam.endX - beam.x);
+    const spriteHeight = Math.max(54, beam.width * 2.6);
+    if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, { width: length, height: spriteHeight })) {
+      return;
+    }
     ctx.strokeStyle = beam.color;
     ctx.lineWidth = beam.width;
     ctx.globalAlpha = Math.max(0.2, beam.life / 0.24);
