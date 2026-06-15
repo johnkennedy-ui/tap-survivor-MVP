@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Show locked relic skills in inventory
+Restore relic inventory skill sprites
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-15T11:23:06.000Z
+- Started: 2026-06-15T11:33:45.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -39,8 +39,8 @@ npm run agent:check
 
 Result:
 
-- `npm run smoke:relic-run-start`: passed, including locked relic popup and unlocked detail actions.
-- `node scripts/verify-mvp.mjs`: passed 252 checks, including locked relic inventory UI.
+- `npm run smoke:relic-run-start`: passed, including locked popup and skill sprite icon source.
+- `node scripts/verify-mvp.mjs`: passed 252 checks, including relic icon source coverage.
 - `npm run agent:prepush`: passed; cache keys bumped for shell UI and styles.
 
 ## Evidence Required

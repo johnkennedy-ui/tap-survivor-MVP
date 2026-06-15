@@ -55,6 +55,7 @@ const lockedRelicButton = iconGrid.children.find((child) => child.className?.inc
 lockedRelicButton?.click();
 const lockedText = textTree(inventory).join(" ");
 assert("locked relic click shows popup", lockedText.includes("Locked, play more to unlock this skill."));
+assert("locked relic keeps skill sprite icon", lockedText.includes("assets/generated/tower/sprites/"));
 const unlockedRelicButton = iconGrid.children.find((child) => child.className?.includes("available"));
 unlockedRelicButton?.click();
 const detailText = textTree(inventory).join(" ");

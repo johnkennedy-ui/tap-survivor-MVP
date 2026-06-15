@@ -296,11 +296,18 @@ section + section {
   border-color: #4f5b69;
   background: rgba(41, 48, 58, 0.82);
   color: #a9b4c2;
-  opacity: 0.74;
 }
 
-.relic-icon-button.locked .relic-icon {
-  filter: grayscale(1) brightness(0.72);
+.relic-lock-badge {
+  border: 1px solid #6a7585;
+  border-radius: 999px;
+  padding: 2px 7px;
+  color: #c9d2df;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .relic-icon-button .relic-icon {

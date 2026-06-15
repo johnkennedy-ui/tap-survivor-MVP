@@ -154,8 +154,9 @@ function createShellUiController({
     button.type = "button";
     button.setAttribute("aria-label", isUnlocked ? `View ${relic.name}` : `${relic.name} locked`);
     button.innerHTML = `
-      <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
+      <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
       <span>${relic.name}</span>
+      ${isUnlocked ? "" : '<em class="relic-lock-badge">Locked</em>'}
     `;
     button.addEventListener("click", () => {
       if (!isUnlocked) {
@@ -165,6 +166,15 @@ function createShellUiController({
       openRelicDetail(relic);
     });
     return button;
+  }
+
+  function relicIconSrc(relic) {
+    const sprites = globalThis.TapSurvivorContent?.assets?.sprites || {};
+    const upgradeSprite = sprites.runUpgrades?.[relic.targetUpgradeId];
+    return sprites.runUpgradeIcons?.[relic.targetUpgradeId]
+      || upgradeSprite?.iconSrc
+      || relic.iconPath
+      || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
   }
 
   function showRelicLockedMessage() {
@@ -241,7 +251,7 @@ function createShellUiController({
     }
     const image = documentRef.createElement("img");
     image.className = "relic-detail-preview";
-    image.src = relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+    image.src = relicIconSrc(relic);
     image.alt = "";
     return image;
   }
@@ -322,7 +332,7 @@ function createShellUiController({
     }
 
     slot.innerHTML = `
-      <img class="relic-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
+      <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
       <span>
         <span class="relic-slot-index">Slot ${index + 1}</span>
         <strong>${relic.name}</strong>
