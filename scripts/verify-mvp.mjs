@@ -199,7 +199,7 @@ check("relic slots unlock by tower floor", save.includes("towerFloor: 1") && !sa
 check("relics have inventory icons", (content.relics || []).every((relic) => relic.iconPath) && assets.includes("relicIcon") && shellUi.includes("assetResolver.relicIcon"));
 check("weapon slot relics exist", (content.relics || []).some((relic) => relic.weaponSlotBonus > 0) && (content.relics || []).some((relic) => relic.weaponSlotBonus < 0 && relic.weaponDamageMultiplier === 2) && relics.includes("getWeaponDamageMultiplier"));
 check("run move speed spreads over five tiers", content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.maxTier === 5 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.effects?.some((effect) => effect.stat === "speed" && effect.value === 20));
-check("coin shop exists", index.includes('id="openShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
+check("coin shop exists", index.includes('id="startMenuOpenShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
 check("shop items are content-driven", (content.shopItems || []).length >= 12 && shop.includes("shopItemDefs"));
 check("shop items have distinct sprites", (content.shopItems || []).every((item) => item.spritePath) && shop.includes("shop-item-sprite"));
 check("shop purchases persist", save.includes("shopPurchases") && shop.includes("save.shopPurchases"));
@@ -236,7 +236,7 @@ check("super bosses combine two boss abilities", enemies.includes("superBossAbil
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
-check("debug balance overlay exists", index.includes('id="toggleDebug"') && index.includes('id="debugStats"') && debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
+check("debug balance system exists", debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
 check("local save exists", game.includes("localStorage") && game.includes("tap-survivor-mvp-save-v2"));
 check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game.includes("TapSurvivorQuests"));

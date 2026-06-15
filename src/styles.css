@@ -41,17 +41,15 @@ button:disabled {
 
 .shell {
   display: grid;
-  grid-template-columns: minmax(560px, 1fr) 360px;
-  gap: 18px;
   min-height: 100vh;
-  padding: 18px;
+  padding: 0;
 }
 
 .game-panel {
   position: relative;
   min-height: 0;
   display: grid;
-  place-items: start center;
+  place-items: center;
 }
 
 .menu-button {
@@ -134,13 +132,13 @@ button:disabled {
 }
 
 #game {
-  width: min(100%, calc((100vh - 36px) * 16 / 9));
+  width: min(100vw, 177.78vh);
   height: auto;
-  max-height: calc(100vh - 36px);
+  max-height: 100vh;
   aspect-ratio: 16 / 9;
   min-height: 0;
   border: 1px solid #394556;
-  border-radius: 8px;
+  border-radius: 0;
   background: #17202c;
   display: block;
 }
@@ -630,17 +628,9 @@ section + section {
 }
 
 @media (max-width: 920px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
   #game {
-    width: 100%;
+    width: 100vw;
     min-height: 0;
-  }
-
-  .hud {
-    max-height: none;
   }
 
   #levelUp .modal-box {

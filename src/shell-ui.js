@@ -365,9 +365,9 @@ function createShellUiController({
   }
 
   function bind() {
-    ui.startRun.addEventListener("click", startRun);
+    ui.startRun?.addEventListener("click", startRun);
     ui.startMenuStartRun.addEventListener("click", startRun);
-    ui.openShop.addEventListener("click", openShopMenu);
+    ui.openShop?.addEventListener("click", openShopMenu);
     ui.startMenuOpenShop.addEventListener("click", openShopMenu);
     ui.closeShop.addEventListener("click", closeShopMenu);
     ui.closeShopBottom.addEventListener("click", closeShopMenu);
@@ -380,7 +380,7 @@ function createShellUiController({
     ui.fullscreenButton.addEventListener("click", toggleFullscreen);
     ui.startMenuFullscreen.addEventListener("click", toggleFullscreen);
     ui.exitRun.addEventListener("click", exitRun);
-    ui.resetSave.addEventListener("click", resetSave);
+    ui.resetSave?.addEventListener("click", resetSave);
     ui.closeEnd.addEventListener("click", closeEndScreen);
     ui.closeEndX.addEventListener("click", closeEndScreen);
     documentRef.addEventListener?.("fullscreenchange", updateFullscreenButton);

@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tap Survivor MVP Prototype</title>
-    <link rel="stylesheet" href="src/styles.css?v=auto-6ce2863b" />
+    <title>Tap Survivor</title>
+    <link rel="stylesheet" href="src/styles.css?v=auto-58d94091" />
   </head>
   <body>
     <main class="shell">
       <section class="game-panel">
-        <canvas id="game" width="960" height="540" aria-label="Tap Survivor MVP game canvas"></canvas>
+        <canvas id="game" width="960" height="540" aria-label="Tap Survivor game canvas"></canvas>
         <div class="speed-controls" aria-label="Game speed controls">
           <button class="speed-button active" type="button" data-speed="1">x1</button>
           <button class="speed-button" type="button" data-speed="2">x2</button>
@@ -102,29 +102,6 @@
         </div>
       </section>
 
-      <aside class="hud">
-        <div class="actions">
-          <button id="startRun">Start Run</button>
-          <button id="openShop">Shop</button>
-          <button id="toggleDebug" type="button">Debug</button>
-          <button id="resetSave">Reset Save</button>
-        </div>
-
-        <section>
-          <h2>Run</h2>
-          <p id="runHud">Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.</p>
-        </section>
-
-        <section id="debugPanel" class="debug-panel hidden">
-          <h2>Debug</h2>
-          <pre id="debugStats"></pre>
-        </section>
-
-        <section>
-          <h2>Manual Test Goal</h2>
-          <p>Complete Spark Basics, unlock Laser, survive 2.5 minutes, then defeat the boss to complete the run.</p>
-        </section>
-      </aside>
     </main>
 
     <script src="src/content.generated.js?v=auto-f174e6e7"></script>
@@ -145,7 +122,7 @@
     <script src="src/enemies.js?v=auto-55129927"></script>
     <script src="src/combat.js?v=auto-bb712fc0"></script>
     <script src="src/ui.js?v=auto-6e982117"></script>
-    <script src="src/run-ui.js?v=maintenance-20260612"></script>
+    <script src="src/run-ui.js?v=auto-ca5121aa"></script>
     <script src="src/level-up.js?v=auto-1f04c9e8"></script>
     <script src="src/input.js?v=maintenance-20260611"></script>
     <script src="src/pickups.js?v=auto-f0c71b70"></script>
@@ -154,7 +131,7 @@
     <script src="src/run-state.js?v=auto-b88ef356"></script>
     <script src="src/run-update.js?v=auto-4b0f4f98"></script>
     <script src="src/debug.js?v=maintenance-20260611"></script>
-    <script src="src/shell-ui.js?v=auto-327f7511"></script>
+    <script src="src/shell-ui.js?v=auto-b114267e"></script>
     <script src="src/game.js?v=auto-5363f977"></script>
   </body>
 </html>

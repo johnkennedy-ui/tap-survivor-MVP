@@ -45,10 +45,10 @@
         const app = frame.contentDocument;
         check("app document loads", Boolean(app));
         check("canvas exists", Boolean(app.getElementById("game")));
-        check("start button exists", Boolean(app.getElementById("startRun")));
+        check("index chrome is absent", !app.querySelector("aside") && !app.getElementById("startRun") && !app.getElementById("runHud"));
         check("start menu exists", Boolean(app.getElementById("startMenu")));
         check("start menu is visible", !app.getElementById("startMenu").classList.contains("hidden"));
-        check("shop button exists", Boolean(app.getElementById("openShop")));
+        check("start menu shop button exists", Boolean(app.getElementById("startMenuOpenShop")));
         check("fullscreen button exists", Boolean(app.getElementById("fullscreenButton")));
 
         app.getElementById("startMenuOpenShop").click();
@@ -69,7 +69,7 @@
 
         app.getElementById("startMenuStartRun").click();
         await wait(100);
-        check("start run updates HUD", app.getElementById("runHud").textContent.includes("Time 0:00"));
+        check("start run creates game state", Boolean(frame.contentWindow.__tapSurvivorHarness?.getGame?.()?.running));
         check("start menu hides during run", app.getElementById("startMenu").classList.contains("hidden"));
 
         app.getElementById("openMenu").click();

@@ -74,7 +74,7 @@ function verifyUi() {
   check("level-up uses static central choice icons", levelUp.includes("assetResolver.choiceIconPath") && !levelUp.includes("renderChoiceSprite"));
   check("level-up choices fit horizontally without modal scroll", styles.includes("height: min(80vh") && styles.includes("#levelUp .choice-list") && styles.includes("grid-template-columns: repeat(3, minmax(0, 1fr))") && styles.includes("#levelUp .modal-box") && styles.includes("overflow: hidden"));
   check("inventory UI exists", index.includes('id="menuInventoryTab"') && index.includes('id="menuRelicInventory"'));
-  check("sidebar MVP heading is removed", !index.includes("<h1>Tap Survivor MVP</h1>"));
+  check("index chrome is removed", !index.includes("<aside") && !index.includes("Tap Survivor MVP") && !index.includes('id="runHud"') && !index.includes('id="startRun"'));
   check("run menu tabs stay in one three-column row", styles.includes("grid-template-columns: repeat(3, minmax(0, 1fr))"));
   check("run menu keeps tabs visible while panels scroll", styles.includes("#runMenu .menu-box") && styles.includes("grid-template-rows: auto auto minmax(0, 1fr) auto") && styles.includes("#menuProgressPanel"));
   check("modal boxes remain scrollable", styles.includes("overflow-y: auto"));
