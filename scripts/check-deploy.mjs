@@ -68,7 +68,7 @@ function loadedSourceUrls(html) {
   return [...html.matchAll(/\b(?:src|href)="(src\/[^"#?]+(?:\?v=[^"#]*)?)"/g)].map((match) => match[1]);
 }
 
-const runs = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/actions/runs?per_page=1`);
+const runs = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/actions/runs?per_page=10`);
 const repoInfo = await fetchJson(`https://api.github.com/repos/${owner}/${repo}`);
 const pages = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/pages`);
 const site = await head(pagesUrl);
@@ -78,6 +78,7 @@ const localIndex = readFileSync("index.html", "utf8");
 const localSources = loadedSourceUrls(localIndex);
 const liveSources = loadedSourceUrls(liveIndex.body || "");
 const sourceSha = localHeadSha();
+let deployFailed = false;
 
 console.log("# Tap Survivor Deploy Check");
 console.log(`Repo: ${owner}/${repo}`);
@@ -86,14 +87,25 @@ console.log(`Pages URL: ${pagesUrl}`);
 console.log(`Preview fallback URL: ${previewUrl}`);
 
 if (runs.status === 200 && runs.data.workflow_runs?.length) {
-  const latest = runs.data.workflow_runs[0];
-  console.log(`Latest workflow: ${latest.name}`);
-  console.log(`Workflow status: ${latest.status}`);
-  console.log(`Workflow conclusion: ${latest.conclusion || "pending"}`);
-  console.log(`Workflow commit: ${latest.head_sha}`);
-  console.log(`Workflow link: ${latest.html_url}`);
+  const sourceRun = sourceSha
+    ? runs.data.workflow_runs.find((run) => run.head_sha === sourceSha)
+    : runs.data.workflow_runs[0];
+  if (!sourceRun) {
+    console.log(`Source workflow: unavailable for local commit ${sourceSha}`);
+    deployFailed = true;
+  } else {
+    console.log(`Source workflow: ${sourceRun.name}`);
+    console.log(`Workflow status: ${sourceRun.status}`);
+    console.log(`Workflow conclusion: ${sourceRun.conclusion || "pending"}`);
+    console.log(`Workflow commit: ${sourceRun.head_sha}`);
+    console.log(`Workflow link: ${sourceRun.html_url}`);
+    if (sourceRun.status !== "completed" || sourceRun.conclusion !== "success") {
+      console.log("Workflow is not successfully completed yet.");
+      deployFailed = true;
+    }
+  }
 } else {
-  console.log(`Latest workflow: unavailable (HTTP ${runs.status})`);
+  console.log(`Source workflow: unavailable (HTTP ${runs.status})`);
 }
 
 if (repoInfo.status === 200) {
@@ -121,6 +133,6 @@ if (missingSources.length) {
   console.log("Live cache keys: match local index");
 }
 
-if (site.status !== 200 || liveIndex.status !== 200 || missingSources.length) {
+if (deployFailed || site.status !== 200 || liveIndex.status !== 200 || missingSources.length) {
   process.exitCode = 1;
 }

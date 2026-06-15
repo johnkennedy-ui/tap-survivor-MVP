@@ -77,7 +77,7 @@ git status --short
 Pushes to `main` publish the GitHub Pages site via `.github/workflows/tap-survivor-pages.yml`.
 Pushes and pull requests run `npm run agent:check` via `.github/workflows/agent-check.yml`.
 
-Use `npm run agent:release -- --message "<commit message>"` for changes that should be live-verified immediately after push. Use `npm run check:deploy` for a read-only live Pages deployment check.
+Use `npm run agent:release -- --message "<commit message>"` for changes that should be live-verified immediately after push. Use `npm run check:deploy` for a read-only live Pages deployment check; it expects the latest Pages workflow for the local commit to complete successfully and the live page/cache keys to match.
 
 ## Boundaries
 
