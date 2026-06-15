@@ -22,6 +22,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/extract-sprites.mjs"]],
   ["node", ["--check", "scripts/smoke-extract-sprites.mjs"]],
   ["node", ["--check", "scripts/content-summary.mjs"]],
+  ["node", ["--check", "src/effects.js"]],
   ["node", ["--check", "src/render-hud.js"]],
   ["npm", ["run", "content:check"]],
   ["npm", ["run", "content:summary"]],

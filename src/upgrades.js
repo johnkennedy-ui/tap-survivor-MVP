@@ -23,21 +23,9 @@ function createUpgradeDefs(weaponDefs) {
   ];
 }
 
-function applyRunUpgradeEffects(game, effects) {
-  (effects || []).forEach((effect) => {
-    if (effect.type === "playerStatAdd") {
-      game.player[effect.stat] += effect.value;
-      return;
-    }
-    if (effect.type === "playerHeal") {
-      game.player.hp = Math.min(game.player.maxHp, game.player.hp + effect.value);
-    }
-  });
-}
-
 const runUpgradeDefs = (globalThis.TapSurvivorContent?.runUpgrades || []).map((upgrade) => ({
   ...upgrade,
-  apply: upgrade.effects?.length ? (game) => applyRunUpgradeEffects(game, upgrade.effects) : undefined,
+  apply: upgrade.effects?.length ? (game) => globalThis.TapSurvivorEffects.applyRunUpgradeEffects(game, upgrade.effects) : undefined,
 }));
 
 globalThis.TapSurvivorUpgrades = {

@@ -59,15 +59,7 @@ function createShopSystem({
   }
 
   function applyItemEffectToRun(item) {
-    const game = getGame();
-    const player = game?.player;
-    if (!game?.running || !player || !item.effect) return;
-    if (item.effect.stat === "speed") player.speed += item.effect.value;
-    if (item.effect.stat === "pickupRadius") player.pickupRadius += item.effect.value;
-    if (item.effect.stat === "maxHp") {
-      player.maxHp += item.effect.value;
-      player.hp += item.effect.value;
-    }
+    globalThis.TapSurvivorEffects.applyShopItemEffectToRun(getGame(), item);
   }
 
   function renderShop() {
@@ -134,20 +126,10 @@ function createShopSystem({
 
   function getShopBonuses() {
     const save = getSave();
-    const bonuses = {
-      speed: 0,
-      pickupRadius: 0,
-      maxHp: 0,
-      flatDamage: 0,
-      attackRadius: 0,
-      fireRate: 0,
-      percentDamage: 0,
-      relicFocus: 0,
-    };
+    const bonuses = globalThis.TapSurvivorEffects.emptyShopBonuses();
     shopItemDefs.forEach((item) => {
       const tier = save.shopPurchases?.[item.id] || 0;
-      if (!item.effect || !Object.prototype.hasOwnProperty.call(bonuses, item.effect.stat)) return;
-      bonuses[item.effect.stat] += item.effect.value * tier;
+      globalThis.TapSurvivorEffects.addShopItemBonus(bonuses, item, tier);
     });
     return bonuses;
   }
