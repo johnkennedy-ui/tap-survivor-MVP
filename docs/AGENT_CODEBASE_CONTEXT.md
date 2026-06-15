@@ -114,6 +114,7 @@ The project is mixed but mostly registry-driven:
 - Agent evidence stub: `npm run agent:evidence -- --task "<short task name>"`
 - Agent prepush lane: `npm run agent:prepush`
 - Agent finish lane: `npm run agent:finish -- --message "<commit message>" --push --deploy`
+- Agent ship shortcut: `npm run agent:ship -- --message "<commit message>" --deploy`
 
 ## Current Limitations
 

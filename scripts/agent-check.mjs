@@ -9,6 +9,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/agent-check.mjs"]],
   ["node", ["--check", "scripts/agent-evidence.mjs"]],
   ["node", ["--check", "scripts/agent-prepush.mjs"]],
+  ["node", ["--check", "scripts/agent-ship.mjs"]],
   ["node", ["--check", "scripts/add-sfx.mjs"]],
   ["node", ["--check", "scripts/content-check.mjs"]],
   ["node", ["--check", "scripts/verify-focus.mjs"]],

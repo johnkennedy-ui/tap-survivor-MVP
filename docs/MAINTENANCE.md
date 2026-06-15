@@ -63,12 +63,13 @@ npm run test:speed
 
 ```bash
 npm run agent:finish -- --message "<commit message>" --push --deploy
+npm run agent:ship -- --message "<commit message>" --deploy
 npm run agent:handoff
 npm run agent:evidence -- --task "<short task name>"
 git status --short
 ```
 
-`npm run agent:prepush` runs `npm run cache:bump` automatically before validation and forces the full agent check. `npm run agent:finish` runs prepush, archives the current task, commits, optionally pushes, and optionally runs deploy verification. Report the commit, changed files, validation commands, and any remaining caveats.
+`npm run agent:prepush` runs `npm run cache:bump` automatically before validation and forces the full agent check. `npm run agent:finish` runs prepush, archives the current task, commits, optionally pushes, and optionally runs deploy verification. `npm run agent:ship` is the streamlined finish-and-push path: it runs `agent:finish -- --push`, so no push happens unless prepush validation passes. Report the commit, changed files, validation commands, and any remaining caveats.
 
 ## Deployment
 
