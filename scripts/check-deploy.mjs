@@ -88,7 +88,9 @@ console.log(`Preview fallback URL: ${previewUrl}`);
 
 if (runs.status === 200 && runs.data.workflow_runs?.length) {
   const sourceRun = sourceSha
-    ? runs.data.workflow_runs.find((run) => run.head_sha === sourceSha)
+    ? runs.data.workflow_runs.find((run) => run.head_sha === sourceSha && run.name === "Publish Tap Survivor MVP")
+      || runs.data.workflow_runs.find((run) => run.head_sha === sourceSha && /publish|pages|deploy/i.test(run.name || ""))
+      || runs.data.workflow_runs.find((run) => run.head_sha === sourceSha)
     : runs.data.workflow_runs[0];
   if (!sourceRun) {
     console.log(`Source workflow: unavailable for local commit ${sourceSha}`);

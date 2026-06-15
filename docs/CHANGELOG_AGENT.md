@@ -18,6 +18,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added `npm run agent:release` as the explicit ship-and-live-deploy-check path for release-style pushes, and tightened `check:deploy` so it waits for the local commit's Pages workflow to succeed.
 - Added 100 floor-clear relics so the relic pool covers a 100-floor climb plus every-fifth-floor super-boss extra picks.
 - Removed the visible `Tap Survivor MVP` sidebar heading and tightened run-menu tab layout so Rewards, Inventory, and Shop stay visible as one row while menu panels scroll.
+- Tightened deploy verification again so `check:deploy` prefers the matching Pages publish workflow over other workflows for the same source commit.
 
 ## 2026-06-14
 
