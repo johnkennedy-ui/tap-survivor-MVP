@@ -35,8 +35,12 @@ function createSpriteSystem({ ctx, spriteDefs }) {
     Object.entries(spriteDefs.playerAnimations || {}).forEach(([id, src]) => registerSprite(`player:${id}`, src));
     Object.entries(spriteDefs.backgrounds || {}).forEach(([id, src]) => registerSprite(`background:${id}`, src));
     Object.entries(spriteDefs.enemies || {}).forEach(([id, src]) => registerSprite(`enemy:${id}`, src));
-    Object.entries(spriteDefs.weapons || {}).forEach(([id, src]) => registerSprite(`weapon:${id}`, src));
+    Object.entries(spriteDefs.weapons || {}).forEach(([id, src]) => {
+      registerSprite(`weapon:${id}`, src);
+      if (src && typeof src === "object" && src.iconSrc) registerSprite(`weaponIcon:${id}`, src.iconSrc);
+    });
     Object.entries(spriteDefs.runUpgrades || {}).forEach(([id, src]) => registerSprite(`runUpgrade:${id}`, src));
+    Object.entries(spriteDefs.runUpgradeIcons || {}).forEach(([id, src]) => registerSprite(`runUpgradeIcon:${id}`, src));
     Object.entries(spriteDefs.ui || {}).forEach(([id, src]) => registerSprite(`ui:${id}`, src));
   }
 

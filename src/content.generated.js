@@ -1615,7 +1615,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1.1,
           "effectScale": 1.45,
           "effectAlpha": 0.86,
-          "animatedIcon": true
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260614-weapons"
         },
         "prism_beam": {
           "src": "assets/generated/tower/skill-effects/split/skill-02-prism_beam.png?v=skill-effects-20260615-split",
@@ -1667,7 +1668,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 1.05,
           "effectAlpha": 0.76,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260614-weapons"
         },
         "frost_orb": {
           "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
@@ -1719,7 +1721,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1.05,
           "effectScale": 1.25,
           "effectAlpha": 0.86,
-          "animatedIcon": true
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
         },
         "flame_wave": {
           "src": "assets/generated/tower/skill-effects/split/skill-04-flame_wave.png?v=skill-effects-20260615-split",
@@ -1771,7 +1774,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.95,
           "effectScale": 1,
           "effectAlpha": 0.78,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-flame-wave.svg?v=generated-20260614-weapons"
         },
         "saw_drone": {
           "src": "assets/generated/tower/skill-effects/split/skill-05-saw_drone.png?v=skill-effects-20260615-split",
@@ -1829,7 +1833,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 0.92,
           "effectAlpha": 0.88,
-          "animatedIcon": true
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-saw-drone.svg?v=generated-20260614-weapons"
         },
         "void_mine": {
           "src": "assets/generated/tower/skill-effects/split/skill-06-void_mine.png?v=skill-effects-20260615-split",
@@ -1893,7 +1898,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 0.96,
           "effectAlpha": 0.78,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-void-mine.svg?v=generated-20260614-weapons"
         },
         "chain_spark": {
           "src": "assets/generated/tower/skill-effects/split/skill-07-chain_spark.png?v=skill-effects-20260615-split",
@@ -1957,7 +1963,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.95,
           "effectScale": 1,
           "effectAlpha": 0.78,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
         },
         "moon_glaive": {
           "src": "assets/generated/tower/skill-effects/split/skill-08-moon_glaive.png?v=skill-effects-20260615-split",
@@ -2021,7 +2028,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1.08,
           "effectScale": 1.08,
           "effectAlpha": 0.86,
-          "animatedIcon": true
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
         },
         "meteor_pin": {
           "src": "assets/generated/tower/skill-effects/split/skill-09-meteor_pin.png?v=skill-effects-20260615-split",
@@ -2085,7 +2093,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.92,
           "effectScale": 0.95,
           "effectAlpha": 0.82,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
         },
         "acid_pool": {
           "src": "assets/generated/tower/skill-effects/split/skill-10-acid_pool.png?v=skill-effects-20260615-split",
@@ -2149,7 +2158,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.95,
           "effectScale": 1,
           "effectAlpha": 0.72,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-acid-pool.svg?v=generated-20260614-weapons"
         },
         "shield_pulse": {
           "src": "assets/generated/tower/skill-effects/split/skill-11-shield_pulse.png?v=skill-effects-20260615-split",
@@ -2213,7 +2223,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 1,
           "effectAlpha": 0.72,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
         },
         "nova_burst": {
           "src": "assets/generated/tower/skill-effects/split/skill-12-nova_burst.png?v=skill-effects-20260615-split",
@@ -2277,7 +2288,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 1,
           "effectAlpha": 0.7,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
         }
       },
       "ui": {
@@ -2348,7 +2360,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1.05,
           "effectScale": 1.05,
           "effectAlpha": 0.82,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
         },
         "run_pickup_radius": {
           "src": "assets/generated/tower/skill-effects/split/skill-14-run_pickup_radius.png?v=skill-effects-20260615-split",
@@ -2412,7 +2425,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1,
           "effectScale": 1,
           "effectAlpha": 0.78,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
         },
         "run_max_hp": {
           "src": "assets/generated/tower/skill-effects/split/skill-15-run_max_hp.png?v=skill-effects-20260615-split",
@@ -2476,7 +2490,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 0.9,
           "effectAlpha": 0.82,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
         },
         "run_attack_radius": {
           "src": "assets/generated/tower/skill-effects/split/skill-16-run_attack_radius.png?v=skill-effects-20260615-split",
@@ -2540,7 +2555,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.95,
           "effectScale": 1,
           "effectAlpha": 0.78,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
         },
         "run_fire_rate": {
           "src": "assets/generated/tower/skill-effects/split/skill-17-run_fire_rate.png?v=skill-effects-20260615-split",
@@ -2604,7 +2620,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1,
           "effectScale": 1,
           "effectAlpha": 0.8,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
         },
         "run_flat_damage": {
           "src": "assets/generated/tower/skill-effects/split/skill-18-run_flat_damage.png?v=skill-effects-20260615-split",
@@ -2668,7 +2685,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.95,
           "effectScale": 0.95,
           "effectAlpha": 0.82,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
         },
         "run_percent_damage": {
           "src": "assets/generated/tower/skill-effects/split/skill-19-run_percent_damage.png?v=skill-effects-20260615-split",
@@ -2732,7 +2750,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 0.9,
           "effectAlpha": 0.78,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
         },
         "run_projectile_pierce": {
           "src": "assets/generated/tower/skill-effects/split/skill-20-run_projectile_pierce.png?v=skill-effects-20260615-split",
@@ -2796,7 +2815,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1.05,
           "effectScale": 1.05,
           "effectAlpha": 0.82,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
         },
         "run_wall_bounce": {
           "src": "assets/generated/tower/skill-effects/split/skill-21-run_wall_bounce.png?v=skill-effects-20260615-split",
@@ -2860,7 +2880,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1.05,
           "effectScale": 1.05,
           "effectAlpha": 0.8,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
         },
         "run_split_shot": {
           "src": "assets/generated/tower/skill-effects/split/skill-22-run_split_shot.png?v=skill-effects-20260615-split",
@@ -2924,7 +2945,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.95,
           "effectScale": 0.95,
           "effectAlpha": 0.82,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
         },
         "run_explosive_hit": {
           "src": "assets/generated/tower/skill-effects/split/skill-23-run_explosive_hit.png?v=skill-effects-20260615-split",
@@ -2988,7 +3010,8 @@ globalThis.TapSurvivorContent = {
           "iconScale": 0.9,
           "effectScale": 0.9,
           "effectAlpha": 0.76,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
         },
         "run_split_on_hit": {
           "src": "assets/generated/tower/skill-effects/split/skill-24-run_split_on_hit.png?v=skill-effects-20260615-split",
@@ -3052,8 +3075,23 @@ globalThis.TapSurvivorContent = {
           "iconScale": 1,
           "effectScale": 1,
           "effectAlpha": 0.82,
-          "animatedIcon": false
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
         }
+      },
+      "runUpgradeIcons": {
+        "run_move_speed": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+        "run_pickup_radius": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+        "run_max_hp": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+        "run_attack_radius": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+        "run_fire_rate": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+        "run_flat_damage": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+        "run_percent_damage": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+        "run_projectile_pierce": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+        "run_wall_bounce": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+        "run_split_shot": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+        "run_explosive_hit": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+        "run_split_on_hit": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
       }
     },
     "sfx": {

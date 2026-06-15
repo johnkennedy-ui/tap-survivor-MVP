@@ -2,6 +2,8 @@
 const { clamp } = globalThis.TapSurvivorMath;
 
 function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDefs }) {
+  const runUpgradeDefs = globalThis.TapSurvivorContent?.runUpgrades || [];
+
   function drawTowerFloorBadge(game) {
     const floor = game?.towerFloor || 1;
     const width = 132;
@@ -39,6 +41,7 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
     drawBossHealthBar(game);
     drawBossSpecialBar(game);
     drawSkillRail(game);
+    drawUpgradeRail(game);
   }
 
   function drawBossHealthBar(game) {
@@ -146,8 +149,87 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
       ctx.globalAlpha = 1;
     }
 
+    if (drawSprite(`weaponIcon:${weapon.assetId || weaponId}`, centerX, centerY, size * (active ? 0.72 : 0.62))) return;
     if (drawSprite(`weapon:${weapon.assetId || weaponId}`, centerX, centerY, size * (active ? 0.72 : 0.62))) return;
     drawWeaponGlyph(weapon.kind, centerX, centerY, size, color);
+  }
+
+  function drawUpgradeRail(game) {
+    const activeUpgrades = Object.entries(game.runUpgradeTiers || {})
+      .filter(([, tier]) => tier > 0)
+      .map(([id, tier]) => ({
+        id,
+        tier,
+        upgrade: runUpgradeDefs.find((item) => item.id === id),
+      }))
+      .filter((item) => item.upgrade);
+    if (!activeUpgrades.length) return;
+
+    const size = 34;
+    const gap = 7;
+    const x = 78;
+    const y = 78;
+    const railHeight = activeUpgrades.length * size + (activeUpgrades.length - 1) * gap + 14;
+
+    roundedRectPath(x - 7, y - 7, size + 14, railHeight, 8);
+    ctx.fillStyle = "rgba(10, 14, 20, 0.72)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(120, 224, 143, 0.24)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    activeUpgrades.forEach(({ id, tier, upgrade }, index) => {
+      drawUpgradeIcon(id, upgrade, tier, x, y + index * (size + gap), size);
+    });
+  }
+
+  function drawUpgradeIcon(upgradeId, upgrade, tier, x, y, size) {
+    const centerX = x + size / 2;
+    const centerY = y + size / 2;
+    roundedRectPath(x, y, size, size, 7);
+    ctx.fillStyle = "rgba(18, 24, 34, 0.92)";
+    ctx.fill();
+    ctx.strokeStyle = "#78e08f";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    if (!drawSprite(`runUpgradeIcon:${upgradeId}`, centerX, centerY, size * 0.68)) {
+      drawUpgradeGlyph(upgradeId, centerX, centerY, size, "#78e08f");
+    }
+
+    const label = String(tier);
+    const badgeSize = 14;
+    roundedRectPath(x + size - badgeSize, y + size - badgeSize, badgeSize, badgeSize, 5);
+    ctx.fillStyle = "rgba(120, 224, 143, 0.92)";
+    ctx.fill();
+    ctx.fillStyle = "#10141d";
+    ctx.font = "800 10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(label, x + size - badgeSize / 2, y + size - 3);
+    ctx.textAlign = "start";
+  }
+
+  function drawUpgradeGlyph(id, x, y, size, color) {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+    if (id.includes("fire_rate")) {
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.18, 0, Math.PI * 2);
+      ctx.stroke();
+      return;
+    }
+    if (id.includes("damage")) {
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.2, y + size * 0.16);
+      ctx.lineTo(x + size * 0.2, y - size * 0.16);
+      ctx.stroke();
+      return;
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.16, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   function drawWeaponGlyph(kind, x, y, size, color) {

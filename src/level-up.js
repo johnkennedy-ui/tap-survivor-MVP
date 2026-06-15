@@ -177,15 +177,16 @@ function createLevelUpSystem({
 
   function createChoiceIcon(choice) {
     const definition = iconDefinitionForChoice(choice);
-    const path = spritePath(definition) || fallbackSkillIcon;
-    const frames = definition && typeof definition === "object" && Array.isArray(definition.frames) ? definition.frames : [];
+    const path = choiceIconPath(definition) || fallbackSkillIcon;
+    const animated = definition && typeof definition === "object" && definition.animatedIcon === true;
+    const frames = animated && Array.isArray(definition.frames) ? definition.frames : [];
     if (frames.length && typeof Image !== "undefined") {
       const canvas = document.createElement("canvas");
       canvas.className = "level-choice-icon level-choice-sprite";
       canvas.width = 72;
       canvas.height = 72;
       canvas.setAttribute("aria-hidden", "true");
-      renderChoiceSprite(canvas, definition, path, definition.animatedIcon === true);
+      renderChoiceSprite(canvas, definition, path, true);
       return canvas;
     }
     const image = document.createElement("img");
@@ -231,6 +232,13 @@ function createLevelUpSystem({
       );
       if (animated) requestAnimationFrame(drawFrame);
     }
+  }
+
+  function choiceIconPath(definition) {
+    if (definition && typeof definition === "object" && definition.animatedIcon !== true) {
+      return definition.iconSrc || spritePath(definition);
+    }
+    return spritePath(definition);
   }
 
   function trimmedFrameBounds(image, frame, definition, temp, tempCtx) {

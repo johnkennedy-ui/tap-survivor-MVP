@@ -4,49 +4,33 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Use basic level-up icons for non-projectile skills
+Fix confusing skill icons and show run-upgrade icons in the HUD
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-15T07:43:24.485Z
+- Started: 2026-06-15T09:14:12.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
 - `content/tap-survivor-content.json`
-- `src/rendering.js`
-- `src/weapon-fire.js`
 - `src/sprites.js`
 - `src/level-up.js`
-- `src/styles.css`
+- `src/render-hud.js`
 - `src/content.generated.js`
 - `scripts/verify-mvp.mjs`
-- `index.html`
-- `assets/generated/tower/skill-effects/split/`
-- `assets/generated/tower/skill-effects/batch-02.jpg`
-- `assets/generated/tower/skill-effects/batch-03.jpg`
-- `assets/generated/tower/skill-effects/batch-04.jpg`
-- `assets/generated/tower/skill-effects/batch-05.jpg`
 
 ## Files Changed
 
 - `content/tap-survivor-content.json`
 - `src/content.generated.js`
-- `src/rendering.js`
-- `src/weapon-fire.js`
 - `src/sprites.js`
 - `src/level-up.js`
-- `src/styles.css`
+- `src/render-hud.js`
 - `scripts/verify-mvp.mjs`
-- `index.html`
 - `docs/CURRENT_TASK.md`
-- `assets/generated/tower/skill-effects/split/`
-- `assets/generated/tower/skill-effects/batch-02.jpg`
-- `assets/generated/tower/skill-effects/batch-03.jpg`
-- `assets/generated/tower/skill-effects/batch-04.jpg`
-- `assets/generated/tower/skill-effects/batch-05.jpg`
 
 ## Validation Plan
 
@@ -60,9 +44,9 @@ Result:
 
 - `npm run build:content`: passed.
 - `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 251 checks, including projectile-only level-up animation.
+- `node scripts/verify-mvp.mjs`: passed 252 checks, including clean HUD icons and projectile-only level-up animation.
 - `npm run smoke:start-run`: passed.
-- `npm run agent:prepush`: passed; cache keys bumped for changed content and level-up files.
+- `npm run agent:prepush`: passed; cache keys bumped for content, level-up, HUD, and sprite files.
 
 ## Evidence Required
 
