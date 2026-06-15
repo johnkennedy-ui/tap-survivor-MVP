@@ -28,7 +28,7 @@ function createAssetResolver(content = globalThis.TapSurvivorContent || {}) {
   }
 
   function relicIcon(relic) {
-    return runUpgradeIcon(relic?.targetUpgradeId) || relic?.iconPath || fallbackSkillIcon;
+    return relic?.iconPath || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon;
   }
 
   function choiceIconDefinition(choice) {

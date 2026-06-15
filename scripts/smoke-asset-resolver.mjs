@@ -28,5 +28,5 @@ const sparkSprite = resolver.choiceIconDefinition({ weaponId: "spark_bolt" });
 
 assert("weapon choice uses clean icon source", sparkIcon.includes("assets/generated/tower/sprites/") && !sparkIcon.includes("skill-effects/split"));
 assert("run upgrade choice uses clean icon source", moveSpeedIcon.includes("assets/generated/tower/sprites/") && !moveSpeedIcon.includes("skill-effects/split"));
-assert("relic uses linked skill icon source", relicIcon === moveSpeedIcon);
+assert("relic uses unique static relic icon source", relicIcon === moveSpeedRelic.iconPath && relicIcon.includes("assets/generated/tower/sprites/relics/"));
 assert("weapon effect sprite remains available separately", sparkSprite.src.includes("skill-effects/split/skill-") && sparkSprite.iconSrc === sparkIcon);

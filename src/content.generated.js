@@ -3133,7 +3133,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/move_speed_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3153,7 +3153,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/move_speed_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3174,7 +3174,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/pickup_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3194,7 +3194,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3214,7 +3214,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/max_hp_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3234,7 +3234,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/max_hp_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3254,7 +3254,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/attack_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3274,7 +3274,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/attack_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3294,7 +3294,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/fire_rate_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3314,7 +3314,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/fire_rate_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3334,7 +3334,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/flat_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3354,7 +3354,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/flat_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3374,7 +3374,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/percent_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3394,7 +3394,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/percent_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3414,7 +3414,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3434,7 +3434,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3454,7 +3454,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/wall_bounce_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3474,7 +3474,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/wall_bounce_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3495,7 +3495,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/split_shot_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3515,7 +3515,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/split_shot_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3536,7 +3536,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/explosive_hit_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3557,7 +3557,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/explosive_hit_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3578,7 +3578,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/split_on_hit_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3598,7 +3598,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 1,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/split_on_hit_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3621,7 +3621,7 @@ globalThis.TapSurvivorContent = {
       "selectionWeightBonus": 0,
       "maxTierBonus": 0,
       "weaponSlotBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/tower_arsenal_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 0,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3644,7 +3644,7 @@ globalThis.TapSurvivorContent = {
       "maxTierBonus": 0,
       "weaponSlotBonus": -1,
       "weaponDamageMultiplier": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/focused_channel_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 0,
       "rarity": "green",
       "backgroundColor": "#17633a",
@@ -3665,7 +3665,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ember_move_speed_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3675,7 +3675,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ember_move_speed_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3685,7 +3685,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ember_move_speed_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3695,7 +3695,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3705,7 +3705,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3715,7 +3715,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3725,7 +3725,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_storm_max_hp_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3735,7 +3735,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_storm_max_hp_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3745,7 +3745,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_storm_max_hp_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3755,7 +3755,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_moon_attack_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3765,7 +3765,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_moon_attack_radius_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3775,7 +3775,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_moon_attack_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3785,7 +3785,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_sun_fire_rate_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3795,7 +3795,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_sun_fire_rate_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3805,7 +3805,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_sun_fire_rate_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3815,7 +3815,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_void_flat_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3825,7 +3825,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_void_flat_damage_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3835,7 +3835,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_void_flat_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3845,7 +3845,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_iron_percent_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3855,7 +3855,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_iron_percent_damage_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3865,7 +3865,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_iron_percent_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3875,7 +3875,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3885,7 +3885,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3895,7 +3895,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3905,7 +3905,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3915,7 +3915,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3925,7 +3925,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3935,7 +3935,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_echo_split_shot_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3945,7 +3945,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_echo_split_shot_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3955,7 +3955,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_echo_split_shot_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3965,7 +3965,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -3975,7 +3975,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -3985,7 +3985,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -3995,7 +3995,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4005,7 +4005,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4015,7 +4015,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4025,7 +4025,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_onyx_move_speed_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4035,7 +4035,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_onyx_move_speed_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4045,7 +4045,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_onyx_move_speed_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4055,7 +4055,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4065,7 +4065,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4075,7 +4075,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4085,7 +4085,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_gold_max_hp_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4095,7 +4095,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_gold_max_hp_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4105,7 +4105,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_gold_max_hp_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4115,7 +4115,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_prism_attack_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4125,7 +4125,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_prism_attack_radius_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4135,7 +4135,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_prism_attack_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4145,7 +4145,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4155,7 +4155,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4165,7 +4165,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4175,7 +4175,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4185,7 +4185,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4195,7 +4195,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4205,7 +4205,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_azure_percent_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4215,7 +4215,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_azure_percent_damage_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4225,7 +4225,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_azure_percent_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4235,7 +4235,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4245,7 +4245,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4255,7 +4255,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4265,7 +4265,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4275,7 +4275,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4285,7 +4285,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_wall_bounce",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4295,7 +4295,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4305,7 +4305,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4315,7 +4315,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_shot",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4325,7 +4325,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4335,7 +4335,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4345,7 +4345,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_explosive_hit",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4355,7 +4355,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4365,7 +4365,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4375,7 +4375,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_split_on_hit",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4385,7 +4385,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_arcane_move_speed_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4395,7 +4395,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_arcane_move_speed_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4405,7 +4405,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_move_speed",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_arcane_move_speed_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4415,7 +4415,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4425,7 +4425,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4435,7 +4435,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4445,7 +4445,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4455,7 +4455,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4465,7 +4465,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_max_hp",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4475,7 +4475,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4485,7 +4485,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4495,7 +4495,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_attack_radius",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4505,7 +4505,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_soul_fire_rate_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4515,7 +4515,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_soul_fire_rate_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4525,7 +4525,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_soul_fire_rate_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4535,7 +4535,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4545,7 +4545,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4555,7 +4555,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_flat_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4565,7 +4565,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_nova_percent_damage_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4575,7 +4575,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_nova_percent_damage_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4585,7 +4585,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/random_nova_percent_damage_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4595,7 +4595,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 1
     },
     {
@@ -4605,7 +4605,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_obsessed_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4615,7 +4615,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_projectile_pierce",
       "selectionWeightBonus": 1,
       "maxTierBonus": 3,
-      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "iconPath": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 3
     },
     {
@@ -4625,7 +4625,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 2,
       "maxTierBonus": 1,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_arsenal_cache_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "weaponSlotBonus": 1
     },
@@ -4636,7 +4636,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_percent_damage",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_focused_channel_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2,
       "weaponDamageMultiplier": 1.35
     },
@@ -4647,7 +4647,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_fire_rate",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_quickening_core_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     },
     {
@@ -4657,7 +4657,7 @@ globalThis.TapSurvivorContent = {
       "targetUpgradeId": "run_pickup_radius",
       "selectionWeightBonus": 3,
       "maxTierBonus": 2,
-      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_aether_gravity_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     }
   ]

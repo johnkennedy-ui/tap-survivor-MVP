@@ -60,6 +60,7 @@ function verifyRelics() {
   check("generated random relic pool has no floor prefixes", relics.every((relic) => !/^floor_\d{3}_/.test(relic.id)));
   check("generated random relic tiers are present", relics.filter((relic) => /^random_/.test(relic.id)).length === 96 && relics.filter((relic) => /_obsessed_relic$/.test(relic.id)).length === 32);
   check("super boss relic extras fill the 100-item generated pool", relics.filter((relic) => /^super_boss_/.test(relic.id)).length === 4);
+  check("every relic has a unique static icon", relics.every((relic) => relic.iconPath?.includes("assets/generated/tower/sprites/relics/") && existsSync(relic.iconPath.split("?")[0])) && new Set(relics.map((relic) => relic.iconPath)).size === relics.length);
   check("twenty-six green relics have unique special abilities", greenRelics.length === 26 && new Set(greenRelics.map((relic) => relic.specialAbility?.id)).size === 26 && greenRelics.every((relic) => relic.backgroundColor && relic.specialAbility?.description));
   check("green relic names are based on their special effects", greenRelics.every((relic) => relic.name === `${relic.specialAbility.label} Relic`));
   check("green relic UI background is wired", shellUi.includes("green-relic") && read("src/styles.css").includes(".green-relic"));
@@ -70,7 +71,7 @@ function verifyUi() {
   const index = read("index.html");
   const styles = read("src/styles.css");
   const levelUp = read("src/level-up.js");
-  check("level-up uses central choice resolver", levelUp.includes("assetResolver.choiceIconDefinition") && levelUp.includes("assetResolver.choiceIconPath"));
+  check("level-up uses static central choice icons", levelUp.includes("assetResolver.choiceIconPath") && !levelUp.includes("renderChoiceSprite"));
   check("inventory UI exists", index.includes('id="menuInventoryTab"') && index.includes('id="menuRelicInventory"'));
   check("sidebar MVP heading is removed", !index.includes("<h1>Tap Survivor MVP</h1>"));
   check("run menu tabs stay in one three-column row", styles.includes("grid-template-columns: repeat(3, minmax(0, 1fr))"));
