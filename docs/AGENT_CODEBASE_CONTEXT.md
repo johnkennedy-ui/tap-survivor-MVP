@@ -31,6 +31,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/weapon-fire.js`: weapon cooldown, damage/reach scaling, firing patterns, projectiles, beams, areas, and weapon bursts.
 - `src/math.js`: shared math and formatting helpers for runtime modules.
 - `src/sprites.js`: shared sprite loading and canvas draw helper with per-size raster caching for SVG sprite performance.
+- `src/assets.js`: shared resolver for effect sprites, clean icons, relic icons, level-up icons, and fallback asset paths.
 - `src/upgrades.js`: generated weapon upgrade definitions plus the small run-upgrade effect interpreter.
 - `src/styles.css`: page, panel, modal, and responsive styling.
 - `content/tap-survivor-content.json`: source registry for weapons, weapon unlocks, quests, enemies, characters, shop items, levels, and asset IDs.
@@ -103,6 +104,8 @@ The project is mixed but mostly registry-driven:
 - Speed-control VM smoke test: `npm run test:speed`
 - Local server: `npm run serve`
 - Deployment check: `npm run check:deploy`
+- Generated content drift check: `npm run content:check`
+- Focused verifier lanes: `npm run verify:assets`, `npm run verify:audio`, `npm run verify:content`, `npm run verify:relics`, `npm run verify:ui`
 - CI validation: GitHub Actions runs `npm run agent:check` via `.github/workflows/agent-check.yml`; browser smoke is optional unless `SMOKE_BROWSER_REQUIRED=1`.
 - Agent task checkpoint writer: `npm run agent:start -- --goal "<task>"`
 - Agent status overview: `npm run agent:status`
@@ -110,6 +113,7 @@ The project is mixed but mostly registry-driven:
 - Agent validation lane: `npm run agent:check`
 - Agent evidence stub: `npm run agent:evidence -- --task "<short task name>"`
 - Agent prepush lane: `npm run agent:prepush`
+- Agent finish lane: `npm run agent:finish -- --message "<commit message>" --push --deploy`
 
 ## Current Limitations
 

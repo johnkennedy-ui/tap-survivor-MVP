@@ -18,6 +18,12 @@ function createShellUiController({
   persist,
   renderMeta,
 }) {
+  const assetResolver = globalThis.TapSurvivorAssets?.createAssetResolver?.() || {
+    relicIcon: (relic) => relic?.iconPath || globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+    runUpgradeSprite: (upgradeId) => globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades?.[upgradeId],
+    spriteSource: (definition) => typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
+  };
+
   function openRunMenu() {
     ui.runMenu.classList.remove("hidden");
     ui.openMenu.setAttribute("aria-expanded", "true");
@@ -169,12 +175,7 @@ function createShellUiController({
   }
 
   function relicIconSrc(relic) {
-    const sprites = globalThis.TapSurvivorContent?.assets?.sprites || {};
-    const upgradeSprite = sprites.runUpgrades?.[relic.targetUpgradeId];
-    return sprites.runUpgradeIcons?.[relic.targetUpgradeId]
-      || upgradeSprite?.iconSrc
-      || relic.iconPath
-      || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+    return assetResolver.relicIcon(relic);
   }
 
   function showRelicLockedMessage() {
@@ -240,7 +241,7 @@ function createShellUiController({
   }
 
   function createRelicSkillPreview(relic) {
-    const sprite = globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades?.[relic.targetUpgradeId];
+    const sprite = assetResolver.runUpgradeSprite(relic.targetUpgradeId);
     const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
     if (frames.length && typeof Image !== "undefined") {
       const canvas = documentRef.createElement("canvas");
@@ -259,7 +260,7 @@ function createShellUiController({
   function animateRelicSkillPreview(canvas, sprite) {
     const ctx = canvas.getContext?.("2d", { willReadFrequently: true });
     const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
-    const src = typeof sprite === "string" ? sprite : sprite?.src || sprite?.path;
+    const src = assetResolver.spriteSource(sprite);
     if (!ctx || !frames.length || !src) return false;
     const image = new Image();
     let frameIndex = 0;

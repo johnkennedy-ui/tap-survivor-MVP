@@ -82,6 +82,6 @@ console.log(needsDeployCheck(files)
   : "Live deploy verification is probably not needed for docs/tooling-only changes.");
 
 runStep("Content Summary", "npm", ["run", "content:summary"]);
-runStep("Agent Check", "npm", ["run", "agent:check"]);
+runStep("Agent Check", "npm", ["run", "agent:check", "--", "--full"]);
 
 console.log("\nPASS prepush complete");

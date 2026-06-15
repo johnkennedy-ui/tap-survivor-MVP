@@ -1,4 +1,6 @@
 import { request } from "node:https";
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 const owner = process.env.GITHUB_OWNER || "johnkennedy-ui";
 const repo = process.env.GITHUB_REPO || "tap-survivor-MVP";
@@ -41,14 +43,45 @@ function head(url) {
   });
 }
 
+function get(url) {
+  return new Promise((resolve) => {
+    const req = request(url, { headers: { "user-agent": "tap-survivor-mvp-deploy-check" } }, (res) => {
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => (body += chunk));
+      res.on("end", () => resolve({ status: res.statusCode, body, headers: res.headers }));
+    });
+    req.on("error", (error) => resolve({ status: 0, error: error.message, body: "" }));
+    req.end();
+  });
+}
+
+function localHeadSha() {
+  try {
+    return execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  } catch {
+    return "";
+  }
+}
+
+function loadedSourceUrls(html) {
+  return [...html.matchAll(/\b(?:src|href)="(src\/[^"#?]+(?:\?v=[^"#]*)?)"/g)].map((match) => match[1]);
+}
+
 const runs = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/actions/runs?per_page=1`);
 const repoInfo = await fetchJson(`https://api.github.com/repos/${owner}/${repo}`);
 const pages = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/pages`);
 const site = await head(pagesUrl);
+const liveIndex = await get(pagesUrl);
 const preview = await head(previewUrl);
+const localIndex = readFileSync("index.html", "utf8");
+const localSources = loadedSourceUrls(localIndex);
+const liveSources = loadedSourceUrls(liveIndex.body || "");
+const sourceSha = localHeadSha();
 
 console.log("# Tap Survivor Deploy Check");
 console.log(`Repo: ${owner}/${repo}`);
+console.log(`Local source commit: ${sourceSha || "unknown"}`);
 console.log(`Pages URL: ${pagesUrl}`);
 console.log(`Preview fallback URL: ${previewUrl}`);
 
@@ -77,8 +110,17 @@ if (pages.status === 200) {
 }
 
 console.log(`Pages URL HTTP status: ${site.status}${site.error ? ` (${site.error})` : ""}`);
+console.log(`Pages index GET status: ${liveIndex.status}${liveIndex.error ? ` (${liveIndex.error})` : ""}`);
 console.log(`Preview fallback HTTP status: ${preview.status}${preview.error ? ` (${preview.error})` : ""}`);
 
-if (site.status !== 200) {
+const missingSources = localSources.filter((url) => !liveSources.includes(url));
+if (missingSources.length) {
+  console.log("Live cache key mismatch:");
+  missingSources.forEach((url) => console.log(`- missing ${url}`));
+} else {
+  console.log("Live cache keys: match local index");
+}
+
+if (site.status !== 200 || liveIndex.status !== 200 || missingSources.length) {
   process.exitCode = 1;
 }

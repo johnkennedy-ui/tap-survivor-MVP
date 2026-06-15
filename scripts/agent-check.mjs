@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
 
-const checks = [
+const fullChecks = [
   ["git", ["diff", "--check"]],
+  ["node", ["--check", "scripts/agent-finish.mjs"]],
   ["node", ["--check", "scripts/agent-start.mjs"]],
   ["node", ["--check", "scripts/agent-handoff.mjs"]],
   ["node", ["--check", "scripts/agent-status.mjs"]],
@@ -9,6 +10,8 @@ const checks = [
   ["node", ["--check", "scripts/agent-evidence.mjs"]],
   ["node", ["--check", "scripts/agent-prepush.mjs"]],
   ["node", ["--check", "scripts/add-sfx.mjs"]],
+  ["node", ["--check", "scripts/content-check.mjs"]],
+  ["node", ["--check", "scripts/verify-focus.mjs"]],
   ["node", ["--check", "scripts/smoke-game-harness.mjs"]],
   ["node", ["--check", "scripts/smoke-browser.mjs"]],
   ["node", ["--check", "scripts/smoke-content-tools.mjs"]],
@@ -17,7 +20,13 @@ const checks = [
   ["node", ["--check", "scripts/smoke-extract-sprites.mjs"]],
   ["node", ["--check", "scripts/content-summary.mjs"]],
   ["node", ["--check", "src/render-hud.js"]],
+  ["npm", ["run", "content:check"]],
   ["npm", ["run", "content:summary"]],
+  ["npm", ["run", "verify:assets"]],
+  ["npm", ["run", "verify:audio"]],
+  ["npm", ["run", "verify:content"]],
+  ["npm", ["run", "verify:relics"]],
+  ["npm", ["run", "verify:ui"]],
   ["npm", ["run", "smoke:browser"]],
   ["npm", ["run", "smoke:save"]],
   ["npm", ["run", "smoke:start-run"]],
@@ -31,9 +40,69 @@ const checks = [
   ["npm", ["test"]],
 ];
 
+function changedFiles() {
+  const result = spawnSync("git", ["status", "--short", "--untracked-files=all"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (result.status !== 0 || !result.stdout.trim()) return [];
+  return result.stdout
+    .trim()
+    .split("\n")
+    .map((line) => line.replace(/^[ MARCUD?!]{1,2}\s+/, "").trim())
+    .map((file) => file.split(" -> ").pop())
+    .filter(Boolean);
+}
+
+function focusedChecks(files) {
+  const checks = [["git", ["diff", "--check"]]];
+  files
+    .filter((file) => /\.(mjs|js)$/.test(file) && !file.endsWith("src/content.generated.js"))
+    .forEach((file) => checks.push(["node", ["--check", file]]));
+  if (files.some((file) => file.startsWith("content/") || file === "src/content.generated.js")) {
+    checks.push(["npm", ["run", "content:check"]], ["npm", ["run", "verify:content"]]);
+  }
+  if (files.some((file) => file.startsWith("assets/") || file.includes("sprites") || file === "src/assets.js")) {
+    checks.push(["npm", ["run", "verify:assets"]]);
+  }
+  if (files.some((file) => file === "src/audio.js" || file === "src/weapon-fire.js" || file.includes("sfx"))) {
+    checks.push(["npm", ["run", "verify:audio"]], ["npm", ["run", "smoke:start-run"]]);
+  }
+  if (files.some((file) => file === "src/relics.js" || file === "src/shell-ui.js" || file.includes("relic"))) {
+    checks.push(["npm", ["run", "verify:relics"]], ["npm", ["run", "smoke:relic-run-start"]]);
+  }
+  if (files.some((file) => file === "index.html" || file === "src/styles.css" || file === "src/level-up.js" || file === "src/shell-ui.js")) {
+    checks.push(["npm", ["run", "verify:ui"]], ["npm", ["run", "smoke:browser"]]);
+  }
+  return dedupeChecks(checks);
+}
+
+function needsFullCheck(files) {
+  return files.some((file) => file === "package.json" || file.startsWith(".github/") || file === "scripts/agent-check.mjs");
+}
+
+function dedupeChecks(checks) {
+  const seen = new Set();
+  return checks.filter(([command, args]) => {
+    const key = `${command} ${args.join(" ")}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 console.log("# Tap Survivor Agent Check");
 
 let failed = false;
+const files = changedFiles();
+const full = process.argv.includes("--full") || process.env.AGENT_CHECK_FULL === "1" || !files.length || needsFullCheck(files);
+const checks = full ? fullChecks : focusedChecks(files);
+
+console.log(full ? "Mode: full" : "Mode: focused");
+if (!full) {
+  console.log("Changed files:");
+  files.forEach((file) => console.log(`- ${file}`));
+}
 
 for (const [command, args] of checks) {
   const label = `${command} ${args.join(" ")}`;

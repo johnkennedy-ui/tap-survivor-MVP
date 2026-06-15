@@ -28,34 +28,20 @@ function createLevelUpSystem({
   activeQuestWeaponIds,
   playChoiceSfx,
 }) {
-  const skillIconByRunUpgrade = {
-    run_move_speed: "speed",
-    run_pickup_radius: "pickupRadius",
-    run_max_hp: "maxHp",
-    run_attack_radius: "attackRadius",
-    run_fire_rate: "fireRate",
-    run_flat_damage: "flatDamage",
-    run_percent_damage: "percentDamage",
+  const assetResolver = globalThis.TapSurvivorAssets?.createAssetResolver?.() || {
+    fallbackSkillIcon: globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+    choiceIconDefinition: () => globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+    choiceIconPath: () => globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+    spriteSource: (definition) => typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
   };
-  const shopIconByStat = new Map(
-    (globalThis.TapSurvivorContent?.shopItems || [])
-      .filter((item) => item.effect?.stat && item.spritePath)
-      .map((item) => [item.effect.stat, item.spritePath]),
-  );
-  const weaponIcons = globalThis.TapSurvivorContent?.assets?.sprites?.weapons || {};
-  const runUpgradeIcons = globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades || {};
-  const fallbackSkillIcon = globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+  const fallbackSkillIcon = assetResolver.fallbackSkillIcon;
 
   function iconDefinitionForChoice(choice) {
-    if (choice.weaponId) return weaponIcons[choice.weaponId] || fallbackSkillIcon;
-    if (choice.runUpgradeId) return runUpgradeIcons[choice.runUpgradeId] || shopIconByStat.get(skillIconByRunUpgrade[choice.runUpgradeId]) || fallbackSkillIcon;
-    return fallbackSkillIcon;
+    return assetResolver.choiceIconDefinition(choice);
   }
 
   function spritePath(definition) {
-    if (typeof definition === "string") return definition;
-    if (definition && typeof definition === "object") return definition.src || definition.path || "";
-    return "";
+    return assetResolver.spriteSource(definition);
   }
 
   function showLevelUp() {
@@ -177,7 +163,7 @@ function createLevelUpSystem({
 
   function createChoiceIcon(choice) {
     const definition = iconDefinitionForChoice(choice);
-    const path = choiceIconPath(definition) || fallbackSkillIcon;
+    const path = assetResolver.choiceIconPath(choice) || choiceIconPath(definition) || fallbackSkillIcon;
     const animated = definition && typeof definition === "object" && definition.animatedIcon === true;
     const frames = animated && Array.isArray(definition.frames) ? definition.frames : [];
     if (frames.length && typeof Image !== "undefined") {

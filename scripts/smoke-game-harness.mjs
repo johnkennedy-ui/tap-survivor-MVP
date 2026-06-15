@@ -21,7 +21,7 @@ function makeClassList() {
 
 function makeElement(id = "") {
   let html = "";
-  return {
+  const element = {
     id,
     dataset: {},
     classList: makeClassList(),
@@ -38,6 +38,24 @@ function makeElement(id = "") {
     style: {},
     appendChild(child) {
       this.children.push(child);
+      child.parentElement = this;
+      child.isConnected = true;
+    },
+    prepend(child) {
+      this.children.unshift(child);
+      child.parentElement = this;
+      child.isConnected = true;
+    },
+    querySelector(selector) {
+      if (!selector?.startsWith(".")) return null;
+      const name = selector.slice(1);
+      const stack = [...this.children];
+      while (stack.length) {
+        const child = stack.shift();
+        if (String(child.className || "").split(/\s+/).includes(name)) return child;
+        stack.push(...(child.children || []));
+      }
+      return null;
     },
     addEventListener(type, handler) {
       this.listeners ||= new Map();
@@ -50,6 +68,7 @@ function makeElement(id = "") {
       this.listeners?.get("click")?.({ target: this });
     },
   };
+  return element;
 }
 
 function makeContext2d() {
@@ -160,6 +179,19 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       return 1;
     },
     clearTimeout() {},
+    Audio: function FakeAudio(src = "") {
+      this.src = src;
+      this.volume = 1;
+      this.currentTime = 0;
+      this.playbackRate = 1;
+      this.preload = "";
+      this.cloneNode = () => new context.Audio(this.src);
+      this.play = () => {
+        context.__audioPlays.push({ src: this.src, volume: this.volume, playbackRate: this.playbackRate });
+        return Promise.resolve();
+      };
+    },
+    __audioPlays: [],
     localStorage: {
       store: new Map(),
       getItem(key) {
@@ -193,6 +225,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
   vm.createContext(context);
   [
     "src/content.generated.js",
+    "src/assets.js",
     "src/math.js",
     "src/sprites.js",
     "src/audio.js",

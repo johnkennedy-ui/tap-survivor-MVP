@@ -38,10 +38,18 @@ Use this for `src/`, `scripts/`, `index.html`, style, workflow, or structural ch
 npm run agent:check
 ```
 
+`npm run agent:check` is path-aware for local dirty work. Use `npm run agent:check -- --full` when you need the complete gate without going through prepush.
+
 For focused checks:
 
 ```bash
 node --check <changed-script>
+npm run content:check
+npm run verify:assets
+npm run verify:audio
+npm run verify:content
+npm run verify:relics
+npm run verify:ui
 npm run validate:content
 npm run smoke:save
 npm run smoke:start-run
@@ -54,14 +62,13 @@ npm run test:speed
 ## Before Reporting
 
 ```bash
-npm run cache:bump
-npm run agent:prepush
+npm run agent:finish -- --message "<commit message>" --push --deploy
 npm run agent:handoff
 npm run agent:evidence -- --task "<short task name>"
 git status --short
 ```
 
-`npm run agent:prepush` runs `npm run cache:bump` automatically before validation. Report the commit, changed files, validation commands, and any remaining caveats.
+`npm run agent:prepush` runs `npm run cache:bump` automatically before validation and forces the full agent check. `npm run agent:finish` runs prepush, archives the current task, commits, optionally pushes, and optionally runs deploy verification. Report the commit, changed files, validation commands, and any remaining caveats.
 
 ## Deployment
 
