@@ -78,8 +78,15 @@ function createWeaponFireSystem({
     if (!weapon) return;
     setPlayerAttackAnimation(weapon);
     playWeaponSfx?.(weaponId);
+    flashWeaponIcon(weaponId);
     addWeaponBurst(weaponId, weapon);
     weaponKindHandlers[weapon.kind]?.(weaponId);
+  }
+
+  function flashWeaponIcon(weaponId) {
+    const game = getGame();
+    game.weaponIconFlashes ||= {};
+    game.weaponIconFlashes[weaponId] = 1;
   }
 
   function setPlayerAttackAnimation(weapon) {
@@ -475,6 +482,11 @@ function createWeaponFireSystem({
     const game = getGame();
     game.weaponBursts.forEach((burst) => (burst.life -= dt));
     game.weaponBursts = game.weaponBursts.filter((burst) => burst.life > 0);
+    Object.entries(game.weaponIconFlashes || {}).forEach(([weaponId, flash]) => {
+      const next = flash - dt * 3.6;
+      if (next > 0) game.weaponIconFlashes[weaponId] = next;
+      else delete game.weaponIconFlashes[weaponId];
+    });
   }
 
   function nearestEnemy() {

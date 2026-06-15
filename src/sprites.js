@@ -58,7 +58,7 @@ function createSpriteSystem({ ctx, spriteDefs }) {
     const frameIndex = currentFrameIndex(config);
     const drawWidth = Math.max(1, Number(options.width || size));
     const drawHeight = Math.max(1, Number(options.height || size));
-    const source = rasterizedSprite(id, image, drawWidth, drawHeight, config, frameIndex) || image;
+    const source = options.trim === false ? image : rasterizedSprite(id, image, drawWidth, drawHeight, config, frameIndex) || image;
     const flipX = Boolean(options.flipX);
     const flipY = Boolean(options.flipY);
     ctx.save();

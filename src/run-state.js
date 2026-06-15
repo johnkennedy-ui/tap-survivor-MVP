@@ -47,6 +47,7 @@
         beams: [],
         areas: [],
         weaponBursts: [],
+        weaponIconFlashes: {},
         bossAttacks: [],
         bossSpawnNotice: null,
         weaponTimers: {},

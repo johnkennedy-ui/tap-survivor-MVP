@@ -118,14 +118,23 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
     equipped.forEach((weaponId, index) => {
       const weapon = weaponDefs[weaponId];
       const top = y + index * (size + gap);
-      drawSkillIcon(weaponId, weapon, x, top, size, game.weaponBursts.some((burst) => burst.weaponId === weaponId));
+      drawSkillIcon(weaponId, weapon, x, top, size, weaponFlashAmount(game, weaponId));
     });
   }
 
-  function drawSkillIcon(weaponId, weapon, x, y, size, active = false) {
+  function weaponFlashAmount(game, weaponId) {
+    const iconFlash = Math.max(0, game.weaponIconFlashes?.[weaponId] || 0);
+    const burstFlash = game.weaponBursts.some((burst) => burst.weaponId === weaponId) ? 0.45 : 0;
+    return Math.min(1, Math.max(iconFlash, burstFlash));
+  }
+
+  function drawSkillIcon(weaponId, weapon, x, y, size, flash = 0) {
     const centerX = x + size / 2;
     const centerY = y + size / 2;
     const color = weapon.color || "#f3f6fb";
+    const active = flash > 0;
+    const pulse = 1 + flash * 0.14;
+    const iconSize = size * (active ? 0.74 : 0.62) * pulse;
 
     roundedRectPath(x, y, size, size, 7);
     ctx.fillStyle = "rgba(18, 24, 34, 0.94)";
@@ -142,16 +151,20 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
 
     if (active) {
       ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.55;
+      ctx.globalAlpha = 0.35 + flash * 0.45;
       ctx.beginPath();
-      ctx.arc(centerX, centerY, size * 0.42, 0, Math.PI * 2);
+      ctx.arc(centerX, centerY, size * (0.34 + flash * 0.22), 0, Math.PI * 2);
       ctx.stroke();
+      ctx.fillStyle = "#ffffff";
+      ctx.globalAlpha = flash * 0.32;
+      roundedRectPath(x + 3, y + 3, size - 6, size - 6, 6);
+      ctx.fill();
       ctx.globalAlpha = 1;
     }
 
-    if (drawSprite(`weaponIcon:${weapon.assetId || weaponId}`, centerX, centerY, size * (active ? 0.72 : 0.62))) return;
-    if (drawSprite(`weapon:${weapon.assetId || weaponId}`, centerX, centerY, size * (active ? 0.72 : 0.62))) return;
-    drawWeaponGlyph(weapon.kind, centerX, centerY, size, color);
+    drawFallbackWeaponGlyph(weapon.kind, centerX, centerY, size, color);
+    drawSprite(`weaponIcon:${weapon.assetId || weaponId}`, centerX, centerY, iconSize, 0, { trim: false }) ||
+      drawSprite(`weapon:${weapon.assetId || weaponId}`, centerX, centerY, iconSize);
   }
 
   function drawUpgradeRail(game) {
@@ -193,9 +206,8 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    if (!drawSprite(`runUpgradeIcon:${upgradeId}`, centerX, centerY, size * 0.68)) {
-      drawUpgradeGlyph(upgradeId, centerX, centerY, size, "#78e08f");
-    }
+    drawFallbackUpgradeGlyph(upgradeId, centerX, centerY, size, "#78e08f");
+    drawSprite(`runUpgradeIcon:${upgradeId}`, centerX, centerY, size * 0.68, 0, { trim: false });
 
     const label = String(tier);
     const badgeSize = 14;
@@ -230,6 +242,20 @@ function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDef
     ctx.beginPath();
     ctx.arc(x, y, size * 0.16, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  function drawFallbackUpgradeGlyph(id, x, y, size, color) {
+    const previousAlpha = ctx.globalAlpha ?? 1;
+    ctx.globalAlpha = 0.5;
+    drawUpgradeGlyph(id, x, y, size, color);
+    ctx.globalAlpha = previousAlpha;
+  }
+
+  function drawFallbackWeaponGlyph(kind, x, y, size, color) {
+    const previousAlpha = ctx.globalAlpha ?? 1;
+    ctx.globalAlpha = 0.44;
+    drawWeaponGlyph(kind, x, y, size, color);
+    ctx.globalAlpha = previousAlpha;
   }
 
   function drawWeaponGlyph(kind, x, y, size, color) {

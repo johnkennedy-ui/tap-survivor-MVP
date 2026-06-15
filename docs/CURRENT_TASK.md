@@ -4,12 +4,12 @@ This file is the repo-local checkpoint for the active Tap Survivor task. Update 
 
 ## Active Goal
 
-Fix confusing skill icons and show run-upgrade icons in the HUD
+Fix left-side skill icons and make skills flash on fire
 
 ## Status
 
 - State: validated locally
-- Started: 2026-06-15T09:14:12.000Z
+- Started: 2026-06-15T09:30:23.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -17,18 +17,17 @@ Fix confusing skill icons and show run-upgrade icons in the HUD
 - `docs/CURRENT_TASK.md`
 - `content/tap-survivor-content.json`
 - `src/sprites.js`
-- `src/level-up.js`
 - `src/render-hud.js`
-- `src/content.generated.js`
+- `src/weapon-fire.js`
+- `src/run-state.js`
 - `scripts/verify-mvp.mjs`
 
 ## Files Changed
 
-- `content/tap-survivor-content.json`
-- `src/content.generated.js`
 - `src/sprites.js`
-- `src/level-up.js`
 - `src/render-hud.js`
+- `src/weapon-fire.js`
+- `src/run-state.js`
 - `scripts/verify-mvp.mjs`
 - `docs/CURRENT_TASK.md`
 
@@ -42,11 +41,10 @@ npm run agent:check
 
 Result:
 
-- `npm run build:content`: passed.
-- `npm run validate:content`: passed.
-- `node scripts/verify-mvp.mjs`: passed 252 checks, including clean HUD icons and projectile-only level-up animation.
+- `node scripts/verify-mvp.mjs`: passed 252 checks, including clean/flashing left HUD icons.
 - `npm run smoke:start-run`: passed.
-- `npm run agent:prepush`: passed; cache keys bumped for content, level-up, HUD, and sprite files.
+- `npm test`: passed.
+- `npm run agent:prepush`: passed; cache keys bumped for HUD/runtime files.
 
 ## Evidence Required
 
