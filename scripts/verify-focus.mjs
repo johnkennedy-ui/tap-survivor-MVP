@@ -47,9 +47,13 @@ function verifyContent() {
 
 function verifyRelics() {
   const shellUi = read("src/shell-ui.js");
+  const relics = content.relics || [];
   check("relics target existing run upgrades", (content.relics || []).every((relic) => (content.runUpgrades || []).some((upgrade) => upgrade.id === relic.targetUpgradeId)));
   check("relic inventory uses central icon resolver", shellUi.includes("assetResolver.relicIcon"));
   check("locked relic popup exists", shellUi.includes("Locked, play more to unlock this skill."));
+  check("generated random relic pool has no floor prefixes", relics.every((relic) => !/^floor_\d{3}_/.test(relic.id)));
+  check("generated random relic tiers are present", relics.filter((relic) => /^random_/.test(relic.id)).length === 96 && relics.filter((relic) => /_obsessed_relic$/.test(relic.id)).length === 32);
+  check("super boss relic extras fill the 100-item generated pool", relics.filter((relic) => /^super_boss_/.test(relic.id)).length === 4);
 }
 
 function verifyUi() {
