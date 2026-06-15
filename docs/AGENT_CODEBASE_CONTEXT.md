@@ -137,6 +137,7 @@ The project is mixed but mostly registry-driven:
 - Characters are registered as content but the current MVP still uses the default player directly.
 - Level entries drive enemy mixes, spawn count, and spawn pressure in `src/enemies.js`; gameplay UI still only reports tower floor.
 - Run boss timing is 150 seconds; boss ability tuning is content-driven; every fifth floor is a super boss and gives two relic choices on clear.
+- Relic rewards have a 126-item pool: the original skill and weapon-slot relics plus 100 floor-clear relics covering floors 1-100, with stronger super-boss variants every fifth floor.
 - Asset paths include cache query strings; keep them in the registry, not gameplay code.
 
 ## Rules For Future Agents

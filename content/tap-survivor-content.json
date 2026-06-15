@@ -3387,6 +3387,1006 @@
       "weaponDamageMultiplier": 2,
       "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
       "startingTierBonus": 0
+    },
+    {
+      "id": "floor_001_move_speed_relic",
+      "name": "Floor 1 Move Speed Relic",
+      "description": "Claimed after clearing floor 1. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_002_pickup_radius_relic",
+      "name": "Floor 2 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 2. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_003_max_hp_relic",
+      "name": "Floor 3 Max Hp Relic",
+      "description": "Claimed after clearing floor 3. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_004_attack_radius_relic",
+      "name": "Floor 4 Attack Radius Relic",
+      "description": "Claimed after clearing floor 4. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_005_fire_rate_relic",
+      "name": "Super Boss Floor 5 Fire Rate Relic",
+      "description": "Claimed from a super boss cache on floor 5. Start each run with +1 Fire Rate tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_006_flat_damage_relic",
+      "name": "Floor 6 Flat Damage Relic",
+      "description": "Claimed after clearing floor 6. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_007_percent_damage_relic",
+      "name": "Floor 7 Percent Damage Relic",
+      "description": "Claimed after clearing floor 7. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_008_projectile_pierce_relic",
+      "name": "Floor 8 Projectile Pierce Relic",
+      "description": "Claimed after clearing floor 8. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_009_wall_bounce_relic",
+      "name": "Floor 9 Wall Bounce Relic",
+      "description": "Claimed after clearing floor 9. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_010_split_shot_relic",
+      "name": "Super Boss Floor 10 Split Shot Relic",
+      "description": "Claimed from a super boss cache on floor 10. Start each run with +2 Split Fire tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_011_explosive_hit_relic",
+      "name": "Floor 11 Explosive Hit Relic",
+      "description": "Claimed after clearing floor 11. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_012_split_on_hit_relic",
+      "name": "Floor 12 Split On Hit Relic",
+      "description": "Claimed after clearing floor 12. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_013_move_speed_relic",
+      "name": "Floor 13 Move Speed Relic",
+      "description": "Claimed after clearing floor 13. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_014_pickup_radius_relic",
+      "name": "Floor 14 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 14. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_015_max_hp_relic",
+      "name": "Super Boss Floor 15 Max Hp Relic",
+      "description": "Claimed from a super boss cache on floor 15. Start each run with +1 Max HP tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_016_attack_radius_relic",
+      "name": "Floor 16 Attack Radius Relic",
+      "description": "Claimed after clearing floor 16. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_017_fire_rate_relic",
+      "name": "Floor 17 Fire Rate Relic",
+      "description": "Claimed after clearing floor 17. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_018_flat_damage_relic",
+      "name": "Floor 18 Flat Damage Relic",
+      "description": "Claimed after clearing floor 18. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_019_percent_damage_relic",
+      "name": "Floor 19 Percent Damage Relic",
+      "description": "Claimed after clearing floor 19. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_020_projectile_pierce_relic",
+      "name": "Super Boss Floor 20 Projectile Pierce Relic",
+      "description": "Claimed from a super boss cache on floor 20. Start each run with +2 Piercing Shots tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_021_wall_bounce_relic",
+      "name": "Floor 21 Wall Bounce Relic",
+      "description": "Claimed after clearing floor 21. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_022_split_shot_relic",
+      "name": "Floor 22 Split Shot Relic",
+      "description": "Claimed after clearing floor 22. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_023_explosive_hit_relic",
+      "name": "Floor 23 Explosive Hit Relic",
+      "description": "Claimed after clearing floor 23. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_024_split_on_hit_relic",
+      "name": "Floor 24 Split On Hit Relic",
+      "description": "Claimed after clearing floor 24. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_025_move_speed_relic",
+      "name": "Super Boss Floor 25 Move Speed Relic",
+      "description": "Claimed from a super boss cache on floor 25. Start each run with +1 Move Speed tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_026_pickup_radius_relic",
+      "name": "Floor 26 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 26. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_027_max_hp_relic",
+      "name": "Floor 27 Max Hp Relic",
+      "description": "Claimed after clearing floor 27. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_028_attack_radius_relic",
+      "name": "Floor 28 Attack Radius Relic",
+      "description": "Claimed after clearing floor 28. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_029_fire_rate_relic",
+      "name": "Floor 29 Fire Rate Relic",
+      "description": "Claimed after clearing floor 29. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_030_flat_damage_relic",
+      "name": "Super Boss Floor 30 Flat Damage Relic",
+      "description": "Claimed from a super boss cache on floor 30. Start each run with +2 Flat Damage tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_031_percent_damage_relic",
+      "name": "Floor 31 Percent Damage Relic",
+      "description": "Claimed after clearing floor 31. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_032_projectile_pierce_relic",
+      "name": "Floor 32 Projectile Pierce Relic",
+      "description": "Claimed after clearing floor 32. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_033_wall_bounce_relic",
+      "name": "Floor 33 Wall Bounce Relic",
+      "description": "Claimed after clearing floor 33. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_034_split_shot_relic",
+      "name": "Floor 34 Split Shot Relic",
+      "description": "Claimed after clearing floor 34. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_035_explosive_hit_relic",
+      "name": "Super Boss Floor 35 Explosive Hit Relic",
+      "description": "Claimed from a super boss cache on floor 35. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_036_split_on_hit_relic",
+      "name": "Floor 36 Split On Hit Relic",
+      "description": "Claimed after clearing floor 36. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_037_move_speed_relic",
+      "name": "Floor 37 Move Speed Relic",
+      "description": "Claimed after clearing floor 37. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_038_pickup_radius_relic",
+      "name": "Floor 38 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 38. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_039_max_hp_relic",
+      "name": "Floor 39 Max Hp Relic",
+      "description": "Claimed after clearing floor 39. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_040_attack_radius_relic",
+      "name": "Super Boss Floor 40 Attack Radius Relic",
+      "description": "Claimed from a super boss cache on floor 40. Start each run with +2 Attack Radius tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_041_fire_rate_relic",
+      "name": "Floor 41 Fire Rate Relic",
+      "description": "Claimed after clearing floor 41. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_042_flat_damage_relic",
+      "name": "Floor 42 Flat Damage Relic",
+      "description": "Claimed after clearing floor 42. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_043_percent_damage_relic",
+      "name": "Floor 43 Percent Damage Relic",
+      "description": "Claimed after clearing floor 43. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_044_projectile_pierce_relic",
+      "name": "Floor 44 Projectile Pierce Relic",
+      "description": "Claimed after clearing floor 44. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_045_wall_bounce_relic",
+      "name": "Super Boss Floor 45 Wall Bounce Relic",
+      "description": "Claimed from a super boss cache on floor 45. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_046_split_shot_relic",
+      "name": "Floor 46 Split Shot Relic",
+      "description": "Claimed after clearing floor 46. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_047_explosive_hit_relic",
+      "name": "Floor 47 Explosive Hit Relic",
+      "description": "Claimed after clearing floor 47. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_048_split_on_hit_relic",
+      "name": "Floor 48 Split On Hit Relic",
+      "description": "Claimed after clearing floor 48. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_049_move_speed_relic",
+      "name": "Floor 49 Move Speed Relic",
+      "description": "Claimed after clearing floor 49. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_050_pickup_radius_relic",
+      "name": "Super Boss Floor 50 Pickup Radius Relic",
+      "description": "Claimed from a super boss cache on floor 50. Start each run with +2 Pickup Radius tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_051_max_hp_relic",
+      "name": "Floor 51 Max Hp Relic",
+      "description": "Claimed after clearing floor 51. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_052_attack_radius_relic",
+      "name": "Floor 52 Attack Radius Relic",
+      "description": "Claimed after clearing floor 52. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_053_fire_rate_relic",
+      "name": "Floor 53 Fire Rate Relic",
+      "description": "Claimed after clearing floor 53. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_054_flat_damage_relic",
+      "name": "Floor 54 Flat Damage Relic",
+      "description": "Claimed after clearing floor 54. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_055_percent_damage_relic",
+      "name": "Super Boss Floor 55 Percent Damage Relic",
+      "description": "Claimed from a super boss cache on floor 55. Start each run with +1 Percent Damage tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_056_projectile_pierce_relic",
+      "name": "Floor 56 Projectile Pierce Relic",
+      "description": "Claimed after clearing floor 56. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_057_wall_bounce_relic",
+      "name": "Floor 57 Wall Bounce Relic",
+      "description": "Claimed after clearing floor 57. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_058_split_shot_relic",
+      "name": "Floor 58 Split Shot Relic",
+      "description": "Claimed after clearing floor 58. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_059_explosive_hit_relic",
+      "name": "Floor 59 Explosive Hit Relic",
+      "description": "Claimed after clearing floor 59. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_060_split_on_hit_relic",
+      "name": "Super Boss Floor 60 Split On Hit Relic",
+      "description": "Claimed from a super boss cache on floor 60. Start each run with +2 Splinter Shots tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_061_move_speed_relic",
+      "name": "Floor 61 Move Speed Relic",
+      "description": "Claimed after clearing floor 61. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_062_pickup_radius_relic",
+      "name": "Floor 62 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 62. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_063_max_hp_relic",
+      "name": "Floor 63 Max Hp Relic",
+      "description": "Claimed after clearing floor 63. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_064_attack_radius_relic",
+      "name": "Floor 64 Attack Radius Relic",
+      "description": "Claimed after clearing floor 64. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_065_fire_rate_relic",
+      "name": "Super Boss Floor 65 Fire Rate Relic",
+      "description": "Claimed from a super boss cache on floor 65. Start each run with +1 Fire Rate tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_066_flat_damage_relic",
+      "name": "Floor 66 Flat Damage Relic",
+      "description": "Claimed after clearing floor 66. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_067_percent_damage_relic",
+      "name": "Floor 67 Percent Damage Relic",
+      "description": "Claimed after clearing floor 67. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_068_projectile_pierce_relic",
+      "name": "Floor 68 Projectile Pierce Relic",
+      "description": "Claimed after clearing floor 68. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_069_wall_bounce_relic",
+      "name": "Floor 69 Wall Bounce Relic",
+      "description": "Claimed after clearing floor 69. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_070_split_shot_relic",
+      "name": "Super Boss Floor 70 Split Shot Relic",
+      "description": "Claimed from a super boss cache on floor 70. Start each run with +2 Split Fire tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_071_explosive_hit_relic",
+      "name": "Floor 71 Explosive Hit Relic",
+      "description": "Claimed after clearing floor 71. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_072_split_on_hit_relic",
+      "name": "Floor 72 Split On Hit Relic",
+      "description": "Claimed after clearing floor 72. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_073_move_speed_relic",
+      "name": "Floor 73 Move Speed Relic",
+      "description": "Claimed after clearing floor 73. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_074_pickup_radius_relic",
+      "name": "Floor 74 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 74. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_075_max_hp_relic",
+      "name": "Super Boss Floor 75 Max Hp Relic",
+      "description": "Claimed from a super boss cache on floor 75. Start each run with +1 Max HP tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_076_attack_radius_relic",
+      "name": "Floor 76 Attack Radius Relic",
+      "description": "Claimed after clearing floor 76. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_077_fire_rate_relic",
+      "name": "Floor 77 Fire Rate Relic",
+      "description": "Claimed after clearing floor 77. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_078_flat_damage_relic",
+      "name": "Floor 78 Flat Damage Relic",
+      "description": "Claimed after clearing floor 78. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_079_percent_damage_relic",
+      "name": "Floor 79 Percent Damage Relic",
+      "description": "Claimed after clearing floor 79. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_080_projectile_pierce_relic",
+      "name": "Super Boss Floor 80 Projectile Pierce Relic",
+      "description": "Claimed from a super boss cache on floor 80. Start each run with +2 Piercing Shots tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_081_wall_bounce_relic",
+      "name": "Floor 81 Wall Bounce Relic",
+      "description": "Claimed after clearing floor 81. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_082_split_shot_relic",
+      "name": "Floor 82 Split Shot Relic",
+      "description": "Claimed after clearing floor 82. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_083_explosive_hit_relic",
+      "name": "Floor 83 Explosive Hit Relic",
+      "description": "Claimed after clearing floor 83. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_084_split_on_hit_relic",
+      "name": "Floor 84 Split On Hit Relic",
+      "description": "Claimed after clearing floor 84. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_085_move_speed_relic",
+      "name": "Super Boss Floor 85 Move Speed Relic",
+      "description": "Claimed from a super boss cache on floor 85. Start each run with +1 Move Speed tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_086_pickup_radius_relic",
+      "name": "Floor 86 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 86. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_087_max_hp_relic",
+      "name": "Floor 87 Max Hp Relic",
+      "description": "Claimed after clearing floor 87. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_088_attack_radius_relic",
+      "name": "Floor 88 Attack Radius Relic",
+      "description": "Claimed after clearing floor 88. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_089_fire_rate_relic",
+      "name": "Floor 89 Fire Rate Relic",
+      "description": "Claimed after clearing floor 89. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_090_flat_damage_relic",
+      "name": "Super Boss Floor 90 Flat Damage Relic",
+      "description": "Claimed from a super boss cache on floor 90. Start each run with +2 Flat Damage tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "floor_091_percent_damage_relic",
+      "name": "Floor 91 Percent Damage Relic",
+      "description": "Claimed after clearing floor 91. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_092_projectile_pierce_relic",
+      "name": "Floor 92 Projectile Pierce Relic",
+      "description": "Claimed after clearing floor 92. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_093_wall_bounce_relic",
+      "name": "Floor 93 Wall Bounce Relic",
+      "description": "Claimed after clearing floor 93. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_094_split_shot_relic",
+      "name": "Floor 94 Split Shot Relic",
+      "description": "Claimed after clearing floor 94. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_095_explosive_hit_relic",
+      "name": "Super Boss Floor 95 Explosive Hit Relic",
+      "description": "Claimed from a super boss cache on floor 95. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_096_split_on_hit_relic",
+      "name": "Floor 96 Split On Hit Relic",
+      "description": "Claimed after clearing floor 96. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_097_move_speed_relic",
+      "name": "Floor 97 Move Speed Relic",
+      "description": "Claimed after clearing floor 97. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_098_pickup_radius_relic",
+      "name": "Floor 98 Pickup Radius Relic",
+      "description": "Claimed after clearing floor 98. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_099_max_hp_relic",
+      "name": "Floor 99 Max Hp Relic",
+      "description": "Claimed after clearing floor 99. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "floor_100_attack_radius_relic",
+      "name": "Super Boss Floor 100 Attack Radius Relic",
+      "description": "Claimed from a super boss cache on floor 100. Start each run with +2 Attack Radius tiers, increase its max tier by 2, and strongly weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+      "startingTierBonus": 2
     }
   ]
 }

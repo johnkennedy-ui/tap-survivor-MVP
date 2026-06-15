@@ -16,6 +16,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added `npm run smoke:add-content` to exercise the content CLI against a temporary content registry without touching real content.
 - Split shop-item validation into a dedicated `scripts/content-tools.mjs` helper as the first content-validator decomposition.
 - Added `npm run agent:release` as the explicit ship-and-live-deploy-check path for release-style pushes, and tightened `check:deploy` so it waits for the local commit's Pages workflow to succeed.
+- Added 100 floor-clear relics so the relic pool covers a 100-floor climb plus every-fifth-floor super-boss extra picks.
 
 ## 2026-06-14
 
