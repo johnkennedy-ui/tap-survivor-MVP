@@ -20,12 +20,13 @@
 
 1. Add the weapon under `weapons` in `content/tap-survivor-content.json`.
 2. Give it `name`, `description`, `upgradeId`, `cooldown`, `damage`, `kind`, `color`, and kind-specific fields.
-3. Add a matching `weaponUnlocks` entry with `id`, `weaponId`, `cost`, `branch`, and any gates.
-4. Add mastery or unlock quests under `quests` if the weapon should gate progression.
-5. Add the quest ID to the right `questGroups` list if it tracks kills, damage, survival, XP, levels, or boss kills.
-6. If it has a sprite, add the sprite path under `assets.sprites.weapons`.
-7. Run `npm run build:content && npm run validate:content`.
-8. Run `npm test` if combat behavior, unlock flow, or generated tests are affected.
+3. Use only weapon `kind` values listed in `content/tap-survivor-schema.json` unless you are also adding runtime behavior in `src/weapon-fire.js`.
+4. Add a matching `weaponUnlocks` entry with `id`, `weaponId`, `cost`, `branch`, and any gates.
+5. Add mastery or unlock quests under `quests` if the weapon should gate progression.
+6. Add the quest ID to the right `questGroups` list if it tracks kills, damage, survival, XP, levels, or boss kills.
+7. If it has a sprite, add the sprite path under `assets.sprites.weapons`.
+8. Run `npm run build:content && npm run validate:content`.
+9. Run `npm test` if combat behavior, unlock flow, or generated tests are affected.
 
 Shortcut:
 
@@ -88,7 +89,7 @@ node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --st
 
 1. Edit `bossConfig` and `bossAbilities` in `content/tap-survivor-content.json`.
 2. Keep `bossConfig.abilityIds` aligned with keys in `bossAbilities`.
-3. Use `warden`, `charger`, and `turret` unless extending `src/enemies.js` for a new ability behavior.
+3. Use boss ability IDs listed in `content/tap-survivor-schema.json` unless extending `src/enemies.js` for a new ability behavior.
 4. Run `npm run build:content && npm test`.
 
 ## Add A Character

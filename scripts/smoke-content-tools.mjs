@@ -33,8 +33,18 @@ check("missing previous quest fails", missingFailed);
 
 const schema = readContentSchema();
 const shopStat = schema.effectRegistries.shopItem.stats[0];
+const weaponKind = schema.behaviorRegistries.weaponKinds.ids[0];
 const schemaBackedContent = {
-  weapons: {},
+  weapons: {
+    schema_weapon: {
+      name: "Schema Weapon",
+      description: "Uses schema-backed behavior validation.",
+      upgradeId: "schema_weapon_damage",
+      cooldown: 1,
+      damage: 1,
+      kind: weaponKind,
+    },
+  },
   weaponUnlocks: [],
   metaUpgrades: [],
   runUpgrades: [],
@@ -59,3 +69,25 @@ const schemaBackedContent = {
 };
 
 check("schema-backed shop effect validates", validateContent(schemaBackedContent).length === 0);
+
+const badWeaponKindContent = JSON.parse(JSON.stringify(schemaBackedContent));
+badWeaponKindContent.weapons.schema_weapon.kind = "unsupported_kind";
+check(
+  "schema-backed weapon kind rejects unsupported kind",
+  validateContent(badWeaponKindContent).some((error) => error.includes("unsupported kind unsupported_kind")),
+);
+
+const badBossAbilityContent = JSON.parse(JSON.stringify(schemaBackedContent));
+badBossAbilityContent.bossConfig = { abilityIds: ["blink"] };
+badBossAbilityContent.bossAbilities = {
+  blink: {
+    name: "Blink",
+    color: "#ffffff",
+    speed: 1,
+    attackCooldown: 1,
+  },
+};
+check(
+  "schema-backed boss ability rejects unsupported kind",
+  validateContent(badBossAbilityContent).some((error) => error.includes("unsupported boss ability blink")),
+);

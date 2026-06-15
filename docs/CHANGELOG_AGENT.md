@@ -8,6 +8,7 @@ Short log of structural changes that affect future OpenClaw/Codex work. Keep ent
 - Added `npm run agent:ship` as the streamlined prepush, commit, and push path for approved maintenance delivery.
 - Added `content/tap-survivor-schema.json` and wired content validation/tooling docs to schema-backed effect stats.
 - Added `src/effects.js` as the shared runtime effect handler registry for run upgrades and shop item bonuses.
+- Added schema-backed weapon kind and boss ability behavior registries so unsupported behavior IDs fail content validation.
 
 ## 2026-06-14
 

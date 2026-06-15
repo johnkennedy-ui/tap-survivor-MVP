@@ -49,6 +49,8 @@ export function validateContent(content) {
   const runUpgradeEffectTypes = schema.effectRegistries?.runUpgrade?.types || [];
   const runUpgradePlayerStats = schema.effectRegistries?.runUpgrade?.playerStatAddStats || [];
   const shopItemEffectStats = schema.effectRegistries?.shopItem?.stats || [];
+  const weaponBehaviorKinds = schema.behaviorRegistries?.weaponKinds?.ids || [];
+  const bossAbilityKinds = schema.behaviorRegistries?.bossAbilityKinds?.ids || [];
 
   const seenUnlocks = new Set();
   const seenMetaUpgrades = new Set();
@@ -100,6 +102,9 @@ export function validateContent(content) {
     requireString(weapon.name, `weapon ${id}.name`);
     requireString(weapon.description, `weapon ${id}.description`);
     requireString(weapon.kind, `weapon ${id}.kind`);
+    if (weaponBehaviorKinds.length && !weaponBehaviorKinds.includes(weapon.kind)) {
+      fail(`weapon ${id} has unsupported kind ${weapon.kind}`);
+    }
     requireString(weapon.upgradeId, `weapon ${id}.upgradeId`);
     requireNumber(weapon.cooldown, `weapon ${id}.cooldown`, 0.01);
     requireNumber(weapon.damage, `weapon ${id}.damage`, 0);
@@ -198,6 +203,9 @@ export function validateContent(content) {
     (Array.isArray(bossConfig.abilityIds) ? bossConfig.abilityIds : []).forEach((abilityId) => {
       requireString(abilityId, "bossConfig.abilityIds item");
       if (!bossAbilities[abilityId]) fail(`bossConfig references missing boss ability ${abilityId}`);
+      if (bossAbilityKinds.length && !bossAbilityKinds.includes(abilityId)) {
+        fail(`bossConfig references unsupported boss ability ${abilityId}`);
+      }
     });
   }
   [
@@ -235,6 +243,9 @@ export function validateContent(content) {
   }
   Object.entries(bossAbilities).forEach(([id, ability]) => {
     requireString(id, "boss ability id");
+    if (bossAbilityKinds.length && !bossAbilityKinds.includes(id)) {
+      fail(`boss ability ${id} is not registered in schema behaviorRegistries.bossAbilityKinds`);
+    }
     ["name", "color"].forEach((field) => requireString(ability[field], `boss ability ${id}.${field}`));
     ["speed", "attackCooldown"].forEach((field) => requireNumber(ability[field], `boss ability ${id}.${field}`, 0));
     if (id === "warden") {

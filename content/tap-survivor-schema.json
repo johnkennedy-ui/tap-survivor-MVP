@@ -48,6 +48,16 @@
       ]
     }
   },
+  "behaviorRegistries": {
+    "weaponKinds": {
+      "runtime": "src/weapon-fire.js",
+      "ids": ["radial", "beam", "cone", "chain", "projectile", "target_area", "lingering_area", "mine"]
+    },
+    "bossAbilityKinds": {
+      "runtime": "src/enemies.js",
+      "ids": ["warden", "charger", "turret"]
+    }
+  },
   "validationCommands": {
     "contentOnly": ["npm run build:content", "npm run validate:content"],
     "questOrUnlock": ["npm run audit:quests"],

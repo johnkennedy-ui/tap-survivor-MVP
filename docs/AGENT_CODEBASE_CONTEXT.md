@@ -67,6 +67,7 @@ The project is mixed but mostly registry-driven:
 
 - Weapons, unlock nodes, meta upgrades, run upgrades, quests, quest groups, enemies, characters, shop items, levels, asset sources, and sprite paths are config-driven in `content/tap-survivor-content.json`.
 - Supported content tooling defaults, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
+- Supported runtime behavior IDs for weapon kinds and boss ability kinds are also listed in `content/tap-survivor-schema.json`; content validation rejects unsupported IDs before runtime.
 - `src/content.generated.js` exposes that registry as `globalThis.TapSurvivorContent`.
 - Weapon behavior dispatch lives in `src/weapon-fire.js`; enemy lifecycle behavior lives in `src/enemies.js`.
 - Weapon damage upgrades are generated from weapon definitions in `src/upgrades.js`.
@@ -75,7 +76,7 @@ The project is mixed but mostly registry-driven:
 
 ## Where To Add Content
 
-- Weapons: add to `content/tap-survivor-content.json` under `weapons`, add a `weaponUnlocks` entry, add related quests if needed, then run `npm run build:content`.
+- Weapons: add to `content/tap-survivor-content.json` under `weapons`, use a `kind` listed in `content/tap-survivor-schema.json`, add a `weaponUnlocks` entry, add related quests if needed, then run `npm run build:content`.
 - Meta upgrades: add to `metaUpgrades` in `content/tap-survivor-content.json`; keep gates pointed at existing `weaponUnlocks` and `quests`.
 - Weapon damage upgrades: set `upgradeId` on the weapon entry; `src/upgrades.js` generates the upgrade.
 - Run upgrades: add to `runUpgrades` in `content/tap-survivor-content.json`; use supported effects only unless extending `src/upgrades.js`.
