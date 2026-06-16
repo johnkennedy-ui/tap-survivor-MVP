@@ -60,13 +60,17 @@ captures/
 .pfx
 *.pfx
 key.properties
+**/key.properties
 local.properties
+.env
+.env.*
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 .cxx/
 
 # Google Services (e.g. APIs or Firebase)
+service-account*.json
 service-account.json
 google-services.json
 

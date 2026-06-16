@@ -55,6 +55,32 @@ Use this checklist for Play internal testing release candidates.
 - Do not commit `android/key.properties`.
 - Do not commit keystores, `.env` files, service account JSON, or Play
   credentials.
+- Store the upload keystore and password somewhere safe. Losing the upload key
+  can block app updates until the key is reset through Play Console.
+
+Create the upload keystore locally only when preparing a signed Play build:
+
+```bash
+keytool -genkeypair \
+  -v \
+  -keystore ~/tap-survivor-upload-keystore.jks \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000 \
+  -alias upload
+```
+
+Then create the ignored local signing file:
+
+```properties
+# android/key.properties
+storeFile=/home/logix/tap-survivor-upload-keystore.jks
+storePassword=<local password>
+keyAlias=upload
+keyPassword=<local password>
+```
+
+Never commit this file or the keystore.
 
 ## No-Secrets Check
 
@@ -74,18 +100,7 @@ Confirm these remain ignored or absent:
 
 ## Play Internal Testing
 
-Manual Play Console steps:
-
-1. Create app in Play Console.
-2. Use package ID `com.tap.survivor`.
-3. Set app as game.
-4. Pricing: free.
-5. Ads: no.
-6. IAP: no for current build.
-7. Upload signed AAB to internal testing.
-8. Add internal testers.
-9. Install from Play internal testing link.
-10. Verify runtime parity and save persistence.
+Use `docs/PLAY_INTERNAL_TESTING.md` for the Play Console and device checklist.
 
 ## Device Checks After Play Install
 

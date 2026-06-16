@@ -80,7 +80,8 @@ keyPassword=DO_NOT_COMMIT_REAL_VALUE
 `android/key.properties` exists. Debug builds and unsigned release-bundle checks
 must not require local signing secrets.
 
-See `docs/RELEASE_CHECKLIST.md` for the internal testing checklist.
+See `docs/RELEASE_CHECKLIST.md` for local release checks and
+`docs/PLAY_INTERNAL_TESTING.md` for the Play Console/device checklist.
 
 ## Runtime Flow
 

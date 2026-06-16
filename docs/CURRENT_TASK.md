@@ -8,50 +8,40 @@ Prepare signed AAB path for Play internal testing
 
 ## Status
 
-- State: in progress
-- Started: 2026-06-16T19:30:44.132Z
+- State: completed
+- Started: 2026-06-16T20:56:51.876Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `android/app/build.gradle`
-- `android/key.properties.example`
+- `android/.gitignore`
 - `docs/PLAY_STORE_ANDROID_PREP.md`
 - `docs/RELEASE_CHECKLIST.md`
-- `.gitignore`
-- `android/.gitignore`
+- `docs/PLAY_INTERNAL_TESTING.md`
 
 ## Files Changed
 
-- `android/app/build.gradle`
-- `android/key.properties.example`
+- `android/.gitignore`
 - `docs/PLAY_STORE_ANDROID_PREP.md`
 - `docs/RELEASE_CHECKLIST.md`
+- `docs/PLAY_INTERNAL_TESTING.md`
 - `docs/CURRENT_TASK.md`
 
 ## Release Config Inspection
 
 - App ID / application ID: `com.tap.survivor`
 - App name: `Tap Survivor`
-- Capacitor `webDir`: `www`
 - Android target SDK: `35`
 - Android `versionCode`: `1`
 - Android `versionName`: `1.0`
-- Local signing file status: `android/key.properties` missing locally
+- Local signing file status: `android/key.properties` absent locally
+- Release bundle result: unsigned AAB built successfully
 - Real signing secrets committed: no
-
-## Signing Design
-
-- Release signing reads local ignored `android/key.properties` only when it
-  exists.
-- `android/key.properties.example` contains placeholders only.
-- Debug builds do not require release signing properties.
-- No keystore or real credential file is created in the repo.
 
 ## Validation Plan
 
-Run the smallest command that proves the change:
+Run the requested release-path checks:
 
 ```bash
 npm run build:content
@@ -64,24 +54,27 @@ npm run android:sync
 npm run android:debug
 npm run android:bundle:local
 git diff --check
+git status --short --ignored
 ```
 
 Result:
 
 - `npm run build:content`: PASS
 - `npm run validate:content`: PASS
-- `npm test`: PASS, 271 MVP checks plus speed controls.
+- `npm test`: PASS, 271 MVP checks plus speed controls
 - `npm run agent:check`: PASS
 - `npm run build:web`: PASS
 - `npm run check:runtime-parity`: PASS
 - `npm run android:sync`: PASS
-- `npm run android:debug`: PASS, APK `android/app/build/outputs/apk/debug/app-debug.apk`, 20,466,951 bytes.
-- `npm run android:bundle:local`: PASS, AAB `android/app/build/outputs/bundle/release/app-release.aab`, 19,181,489 bytes.
+- `npm run android:debug`: PASS, APK
+  `android/app/build/outputs/apk/debug/app-debug.apk`, 20,452,999 bytes
+- `npm run android:bundle:local`: PASS, AAB
+  `android/app/build/outputs/bundle/release/app-release.aab`, 19,181,444 bytes
+- `jarsigner -verify -verbose -certs android/app/build/outputs/bundle/release/app-release.aab`:
+  unsigned, because no local `android/key.properties` exists
 - `git diff --check`: PASS
-- `git status --short --ignored`: generated `www/`, Android build outputs,
-  `android/local.properties`, and `node_modules/` remain ignored.
-- `git check-ignore -v android/key.properties upload.jks upload.keystore .env
-  service-account.json service-account-play.json`: PASS, all matched ignore rules.
+- `git status --short --ignored`: only safe docs/config changes are tracked;
+  generated build outputs, `www/`, `node_modules/`, and Android local files are ignored
 
 ## Evidence Required
 
