@@ -14,5 +14,8 @@ Before editing this repo:
 10. Use `npm run agent:handoff` when handing the repo to another agent or resuming later.
 11. Run `npm run agent:check` before reporting code or structure changes.
 12. Use `npm run agent:evidence -- --task "<short task name>"` to create a replayable evidence stub.
+13. For Android/GitHub.io runtime changes, read `docs/RUNTIME_PARITY.md`.
+14. For Android packaging/release prep, read `docs/PLAY_STORE_ANDROID_PREP.md`.
+15. Do not hand-edit `www/`, fork gameplay between GitHub.io and Android, or commit signing secrets.
 
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.

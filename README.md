@@ -14,6 +14,7 @@ npm run check:runtime-parity
 ```
 
 `www/` is generated and ignored by git.
+See `docs/RUNTIME_PARITY.md` for the shared GitHub Pages and Android runtime rules, and `docs/PLAY_STORE_ANDROID_PREP.md` for Android prep notes.
 
 ## Content Tooling
 

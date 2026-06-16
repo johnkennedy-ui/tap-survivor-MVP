@@ -52,17 +52,23 @@ captures/
 # Comment next line if keeping position of elements in Navigation Editor is relevant for you
 .idea/navEditor.xml
 
-# Keystore files
-# Uncomment the following lines if you do not want to check your keystore files in.
-#*.jks
-#*.keystore
+# Keystore and signing files
+*.jks
+*.keystore
+*.pem
+*.p12
+.pfx
+*.pfx
+key.properties
+local.properties
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 .cxx/
 
 # Google Services (e.g. APIs or Firebase)
-# google-services.json
+service-account.json
+google-services.json
 
 # Freeline
 freeline.py

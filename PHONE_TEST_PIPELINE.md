@@ -42,6 +42,8 @@ The workflow:
 
 The generated `www/` directory is the single runtime source for both GitHub Pages and Capacitor Android.
 
+See `docs/RUNTIME_PARITY.md` for parity rules and `docs/PLAY_STORE_ANDROID_PREP.md` for Android prep, signing, and permission notes.
+
 ## Reusable Local Debug Scripts
 
 Run the no-dependency MVP verification checks with:
