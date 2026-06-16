@@ -3,7 +3,7 @@
 ## App Identity
 
 - App name: Tap Survivor
-- Package/application ID: `com.quatrex.tapsurvivor`
+- Package/application ID: `com.tap.survivor`
 - Capacitor `webDir`: `www`
 
 ## Current Release Scope

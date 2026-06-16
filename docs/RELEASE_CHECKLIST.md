@@ -77,7 +77,7 @@ Confirm these remain ignored or absent:
 Manual Play Console steps:
 
 1. Create app in Play Console.
-2. Use package ID `com.quatrex.tapsurvivor`.
+2. Use package ID `com.tap.survivor`.
 3. Set app as game.
 4. Pricing: free.
 5. Ads: no.

@@ -1,4 +1,4 @@
-package com.quatrex.tapsurvivor;
+package com.tap.survivor;
 
 import com.getcapacitor.BridgeActivity;
 

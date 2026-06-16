@@ -32,7 +32,7 @@ Prepare signed AAB path for Play internal testing
 
 ## Release Config Inspection
 
-- App ID / application ID: `com.quatrex.tapsurvivor`
+- App ID / application ID: `com.tap.survivor`
 - App name: `Tap Survivor`
 - Capacitor `webDir`: `www`
 - Android target SDK: `35`

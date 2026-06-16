@@ -7,7 +7,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.quatrex.tapsurvivor"
+    namespace = "com.tap.survivor"
     compileSdk = rootProject.ext.compileSdkVersion
 
     signingConfigs {
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.quatrex.tapsurvivor"
+        applicationId "com.tap.survivor"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

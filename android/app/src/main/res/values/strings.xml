@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Tap Survivor</string>
     <string name="title_activity_main">Tap Survivor</string>
-    <string name="package_name">com.quatrex.tapsurvivor</string>
-    <string name="custom_url_scheme">com.quatrex.tapsurvivor</string>
+    <string name="package_name">com.tap.survivor</string>
+    <string name="custom_url_scheme">com.tap.survivor</string>
 </resources>
