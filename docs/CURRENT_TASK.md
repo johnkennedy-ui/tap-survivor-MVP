@@ -4,123 +4,53 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Improve maintainability by formatting one-line files and extracting safe helpers
+Merge completed maintainability and skill-system branches
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-16T16:53:35.199Z
+- Started: 2026-06-16T18:08:12.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
-- `docs/MAINTAINABILITY_REFACTOR.md`
-- `docs/MAINTENANCE.md`
-- `docs/PLAY_STORE_ANDROID_PREP.md`
-- `README.md`
-- `index.html`
-- `package.json`
-- `scripts/agent-check.mjs`
-- `scripts/check-format-hygiene.mjs`
-- `src/input.js`
-- `src/run-ui.js`
-- `src/save.js`
-- `src/save-defaults.js`
-- `src/save-migrations.js`
-- `src/save-normalize.js`
-- `src/weapon-fire.js`
-- `src/weapon-projectiles.js`
-- `src/weapon-targeting.js`
+- `AGENTS.md`
+- `docs/skills/`
+- Previously completed maintainability split files
 
 ## Files Changed
 
-- `README.md`: wrapped long content scaffold command.
-- `docs/AGENT_CODEBASE_CONTEXT.md`: added save helper ownership notes and wrapped a long relic note.
-- `docs/MAINTENANCE.md`: wrapped long agent/deploy workflow notes.
-- `docs/MAINTAINABILITY_REFACTOR.md`: added future-agent ownership notes for this refactor.
-- `docs/PLAY_STORE_ANDROID_PREP.md`: wrapped long Android permission rationale.
-- `index.html`: loads save helper scripts before `src/save.js`.
-- `package.json`: added `check:format-hygiene`.
-- `scripts/agent-check.mjs`: runs format hygiene in full and relevant focused checks.
-- `scripts/check-format-hygiene.mjs`: added active source/docs readability guard.
-- `src/input.js`: indentation-only formatting.
-- `src/run-ui.js`: split long HUD source string into joined segments.
-- `src/save-defaults.js`: added default save/schema helper.
-- `src/save-migrations.js`: added save migration helper.
-- `src/save-normalize.js`: added normalization helper.
-- `src/save.js`: kept public save API and delegated helpers.
-- `src/weapon-projectiles.js`: added pure projectile vector helper.
-- `src/weapon-targeting.js`: added nearest-enemy targeting helper.
-- `src/weapon-fire.js`: kept weapon fire integration and delegated pure helpers.
-
-## Manual Review Checklist
-
-- Runtime behaviour intentionally changed: no.
-- Save schema changed: no.
-- Package identity changed: no.
-- GitHub.io/Android parity changed: no.
-- Generated files hand-edited: no.
-- New files requiring `index.html` script-order updates: yes, `src/save-defaults.js`, `src/save-migrations.js`, `src/save-normalize.js`, `src/weapon-projectiles.js`, and `src/weapon-targeting.js`.
-- Public APIs preserved: `TapSurvivorSave.createSaveSystem(...)` and `TapSurvivorWeaponFire.createWeaponFireSystem(...)` remain the entry points.
-- Systems split in this task: save and weapon helper logic only.
-- Systems intentionally not split: CSS.
+- Merged `dev/maintainability-split-format`.
+- Merged `dev/agent-skills-system`.
+- Resolved this checkpoint file to describe the merge state.
 
 ## Validation Plan
 
-Run the smallest command that proves the change:
+Run the smallest commands that prove the merged result:
 
 ```bash
 npm run agent:check
+npm test
+git diff --check
 ```
 
 Result:
 
-- `node --check src/save.js`: PASS
-- `node --check src/storage-adapter.js`: PASS
-- `node --check src/weapon-fire.js`: PASS
-- `node --check src/input.js`: PASS
-- `node --check src/save-defaults.js`: PASS
-- `node --check src/save-migrations.js`: PASS
-- `node --check src/save-normalize.js`: PASS
-- `npm run check:format-hygiene`: PASS
-- `npm run build:content`: PASS
-- `npm run validate:content`: PASS
-- `npm run smoke:save`: PASS
-- `npm run smoke:start-run`: PASS
-- `npm run smoke:quest-flow`: PASS
-- `npm run smoke:shop`: PASS
-- `npm run smoke:browser`: ran directly and skipped because the sandbox `chromium-browser` snap wrapper cannot start; full `agent:check` browser smoke lane completed with the repo's non-required behavior.
-- `npm test`: PASS
 - `npm run agent:check`: PASS
+- `npm test`: PASS, 271 MVP checks plus speed control checks.
 - `npm run build:web`: PASS
 - `npm run check:runtime-parity`: PASS
-- `npm run android:sync`: PASS
-- `npm run android:debug`: PASS, APK `android/app/build/outputs/apk/debug/app-debug.apk`, 20,466,783 bytes.
-- `node --check src/weapon-projectiles.js`: PASS
-- `node --check src/weapon-targeting.js`: PASS
-- focused weapon helper `npm run verify:script-order`: PASS
-- focused weapon helper `npm run verify:audio`: PASS
-- focused weapon helper `npm run smoke:audio`: PASS
-- focused weapon helper `npm run smoke:start-run`: PASS
-- focused weapon helper `npm run smoke:boss-run`: PASS
-- post-weapon-split `npm test`: PASS, 271 checks.
-- post-weapon-split `npm run agent:check`: PASS.
-- post-weapon-split `npm run build:web`: PASS.
-- post-weapon-split `npm run check:runtime-parity`: PASS.
-- post-weapon-split `npm run android:sync`: PASS.
-- post-weapon-split `npm run android:debug`: PASS, APK `android/app/build/outputs/apk/debug/app-debug.apk`, 20,466,951 bytes.
+- `git diff --check`: PASS
 
 ## Evidence Required
 
-- Files inspected.
-- Files changed.
+- Branches merged.
+- Commands run.
 - Validation commands and results.
-- Evidence stub when useful.
+- Push result.
 - Remaining risks or follow-up tasks.
 
 ## Stop Condition
 
-Stop after the requested single change is implemented, validated, documented, and reported.
+Stop after both completed branches are merged into `main`, validated, pushed, and reported.
