@@ -36,6 +36,15 @@ function textTree(element, output = []) {
   return output;
 }
 
+function findTree(element, predicate) {
+  if (predicate(element)) return element;
+  for (const child of element.children || []) {
+    const found = findTree(child, predicate);
+    if (found) return found;
+  }
+  return null;
+}
+
 const inventoryHarness = createGameHarness({
   initialSave: {
     towerFloor: 20,
@@ -63,3 +72,14 @@ const detailText = textTree(inventory).join(" ");
 assert("relic icon opens correct relic detail screen", detailText.includes("relic-detail-screen") && detailText.includes("Selected relic") && detailText.includes("Double Shot Relic"));
 assert("relic detail offers equip and cancel", detailText.includes("Equip relic") && detailText.includes("Cancel"));
 assert("green relic detail shows special ability copy", detailText.includes("Blink Invincibility") || detailText.includes("Instant Teleport") || detailText.includes("Double Shot"));
+
+const detailScreen = inventory.children.find((child) => child.className?.includes("relic-detail-screen"));
+const actions = detailScreen?.children?.find((child) => child.className === "relic-detail-actions");
+actions?.children?.[0]?.click();
+const equippedSave = JSON.parse(inventoryHarness.context.localStorage.store.get("tap-survivor-mvp-save-v2"));
+assert("relic equip persists", equippedSave.equippedRelics.includes(masteryRelic));
+
+const unequipButton = findTree(inventory, (child) => child.textContent === "Unequip");
+unequipButton?.click();
+const unequippedSave = JSON.parse(inventoryHarness.context.localStorage.store.get("tap-survivor-mvp-save-v2"));
+assert("relic unequip persists", !unequippedSave.equippedRelics.includes(focusRelic));

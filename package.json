@@ -48,11 +48,14 @@
     "audit:quests": "npm run build:content && npm run validate:content && node scripts/audit-quests.mjs",
     "test:speed": "node scripts/verify-speed-controls.mjs",
     "test": "npm run audit:quests && node scripts/verify-mvp.mjs && npm run test:speed",
-    "serve": "node scripts/serve-local.mjs"
+    "serve": "node scripts/serve-local.mjs",
+    "serve:apk": "node scripts/serve-debug-apk.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
-    "@capacitor/core": "^8.4.0"
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/preferences": "^8.0.1"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0"

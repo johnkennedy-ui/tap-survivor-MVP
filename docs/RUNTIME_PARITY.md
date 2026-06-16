@@ -4,6 +4,8 @@
 
 GitHub Pages deploys `www/`. Capacitor Android syncs `www/`. GitHub.io and Android must have runtime parity: the same source change must produce the same playable runtime for both targets.
 
+Save/runtime parity requires the same save schema and save API on GitHub.io and Android. The storage backend may differ by platform.
+
 Runtime changes must be made in source files, then rebuilt into `www/`.
 
 Never hand-edit `www/`. Never manually copy Android-only runtime files. Never create GitHub.io-only gameplay fixes. Never create Android-only gameplay fixes.

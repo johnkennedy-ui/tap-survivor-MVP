@@ -37,6 +37,10 @@ const {
 const spriteSystem = globalThis.TapSurvivorSprites.createSpriteSystem({ ctx, spriteDefs });
 const audioSystem = globalThis.TapSurvivorAudio.createAudioSystem({ sfxDefs });
 
+const storageAdapter = globalThis.TapSurvivorStorage.createStorageAdapter({
+  saveKey,
+  legacySaveKey,
+});
 const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
   saveKey,
   legacySaveKey,
@@ -46,9 +50,10 @@ const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
   upgradeDefs,
   shopItemDefs,
   questOpenIds,
+  storageAdapter,
 });
 
-let save = saveSystem.loadSave();
+let save = saveSystem.defaultSave();
 const questSystem = globalThis.TapSurvivorQuests.createQuestSystem({
   questDefs,
   getSave: () => save,
@@ -62,7 +67,11 @@ let gameSpeed = 1;
 let runUpdater = null;
 
 function persist() {
-  saveSystem.persist(save);
+  return saveSystem.persist(save);
+}
+
+function flushSave() {
+  return persist();
 }
 
 function addQuestProgress(id, amount) {
@@ -474,28 +483,82 @@ function setGameSpeed(speed) {
 }
 
 function resetSave() {
-  localStorage.removeItem(saveKey);
-  localStorage.removeItem(legacySaveKey);
-  save = saveSystem.defaultSave();
-  game = null;
-  runUi.hideEndScreen();
-  ui.levelUp.classList.add("hidden");
-  shopSystem.closeShop();
-  shellUi.closeRunMenu(false);
-  shellUi.showStartMenu();
-  persist();
-  renderMeta();
+  const resetAfterRemove = () => {
+    save = saveSystem.defaultSave();
+    game = null;
+    runUi.hideEndScreen();
+    ui.levelUp.classList.add("hidden");
+    shopSystem.closeShop();
+    shellUi.closeRunMenu(false);
+    shellUi.showStartMenu();
+    persist();
+    renderMeta();
+  };
+  const removed = saveSystem.removeSave();
+  if (removed && typeof removed.then === "function") {
+    void removed.then(resetAfterRemove);
+  } else {
+    resetAfterRemove();
+  }
 }
 
-shellUi.bind();
-debugSystem.bind();
-setGameSpeed(1);
+function startRuntime() {
+  shellUi.bind();
+  debugSystem.bind();
+  setGameSpeed(1);
+  bindLifecycleFlush();
 
-globalThis.TapSurvivorInput.bindMovementInput({
-  canvas,
-  getGame: () => game,
-});
+  globalThis.TapSurvivorInput.bindMovementInput({
+    canvas,
+    getGame: () => game,
+  });
 
-spriteSystem.loadSprites();
-renderMeta();
-requestAnimationFrame(loop);
+  spriteSystem.loadSprites();
+  renderMeta();
+  requestAnimationFrame(loop);
+}
+
+function bindLifecycleFlush() {
+  const flush = () => {
+    void flushSave();
+  };
+  if (document?.addEventListener) {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flush();
+    });
+  }
+  globalThis.addEventListener?.("pagehide", flush);
+  globalThis.addEventListener?.("beforeunload", flush);
+  bindCapacitorAppLifecycle(flush);
+}
+
+function bindCapacitorAppLifecycle(flush) {
+  const app = globalThis.Capacitor?.Plugins?.App;
+  if (!app?.addListener) return;
+  try {
+    const listener = app.addListener("appStateChange", ({ isActive }) => {
+      if (!isActive) flush();
+    });
+    if (listener?.catch) listener.catch(() => {});
+  } catch {
+    // Browser and test runtimes may not expose Capacitor App events.
+  }
+}
+
+function initializeRuntime() {
+  const loaded = saveSystem.loadSave();
+  if (loaded && typeof loaded.then === "function") {
+    void loaded.then((loadedSave) => {
+      save = loadedSave;
+      startRuntime();
+    }).catch(() => {
+      save = saveSystem.defaultSave();
+      startRuntime();
+    });
+    return;
+  }
+  save = loaded;
+  startRuntime();
+}
+
+initializeRuntime();

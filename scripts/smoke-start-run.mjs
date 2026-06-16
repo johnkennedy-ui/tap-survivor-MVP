@@ -25,6 +25,18 @@ check("menu button pauses the run", game.paused === true && game.pauseReason ===
 harness.elements.get("openMenu").click();
 check("menu button resumes the run", game.paused === false && game.pauseReason === "");
 
+const save = harness.context.__tapSurvivorHarness.getSave();
+const bannerPersisted = JSON.parse(harness.context.localStorage.store.get("tap-survivor-mvp-save-v2"));
+check("tutorial banner flag persists", bannerPersisted.seenBanners.includes("first_run_movement"));
+save.coins = 41;
+harness.elements.get("exitRun").click();
+const exitedRunSave = JSON.parse(harness.context.localStorage.store.get("tap-survivor-mvp-save-v2"));
+check("run completion persists current save", exitedRunSave.coins === 41);
+save.coins = 42;
+harness.dispatchPagehide();
+const persisted = JSON.parse(harness.context.localStorage.store.get("tap-survivor-mvp-save-v2"));
+check("pagehide flush persists current save", persisted.coins === 42);
+
 if (process.exitCode) {
   console.error("\nStart-run smoke failed.");
   process.exit(process.exitCode);

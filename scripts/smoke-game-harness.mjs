@@ -165,6 +165,16 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
   });
 
   let rafCallback = null;
+  const globalListeners = new Map();
+  const documentListeners = new Map();
+  const addListener = (listeners, type, handler) => {
+    const handlers = listeners.get(type) || [];
+    handlers.push(handler);
+    listeners.set(type, handlers);
+  };
+  const dispatchListeners = (listeners, type, event = {}) => {
+    (listeners.get(type) || []).forEach((handler) => handler(event));
+  };
   const context = {
     console,
     Math,
@@ -179,6 +189,9 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       return 1;
     },
     clearTimeout() {},
+    addEventListener(type, handler) {
+      addListener(globalListeners, type, handler);
+    },
     Audio: function FakeAudio(src = "") {
       this.src = src;
       this.volume = 1;
@@ -206,6 +219,10 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     },
     document: {
       body: { dataset: {} },
+      visibilityState: "visible",
+      addEventListener(type, handler) {
+        addListener(documentListeners, type, handler);
+      },
       getElementById(id) {
         return elements.get(id);
       },
@@ -230,6 +247,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "src/sprites.js",
     "src/audio.js",
     "src/quests.js",
+    "src/storage-adapter.js",
     "src/save.js",
     "src/effects.js",
     "src/upgrades.js",
@@ -304,6 +322,16 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       for (let index = 0; index < count; index += 1) {
         rafCallback?.(start + index * step);
       }
+    },
+    dispatchPagehide() {
+      dispatchListeners(globalListeners, "pagehide", {});
+    },
+    dispatchBeforeunload() {
+      dispatchListeners(globalListeners, "beforeunload", {});
+    },
+    dispatchVisibilityHidden() {
+      context.document.visibilityState = "hidden";
+      dispatchListeners(documentListeners, "visibilitychange", {});
     },
   };
 }

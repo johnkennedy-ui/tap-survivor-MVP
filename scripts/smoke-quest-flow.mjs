@@ -5,10 +5,12 @@ import vm from "node:vm";
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const questsSource = readFileSync(join(root, "src/quests.js"), "utf8");
+const progressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 
 const context = { console };
 vm.createContext(context);
 vm.runInContext(questsSource, context);
+vm.runInContext(progressionSource, context);
 
 const save = {
   questPoints: 0,
@@ -60,6 +62,43 @@ check("completion persists and rerenders", persistCount >= 1 && renderCount === 
 
 questSystem.addQuestProgressGroup(["first_blood"], 15);
 check("inactive group progress is ignored", !save.completedQuests.includes("first_blood"));
+
+const progressionSave = {
+  questPoints: 2,
+  unlockedNodes: [],
+  unlockedWeapons: ["spark_bolt"],
+  upgradeTiers: {},
+  unlockedUpgrades: [],
+  completedQuests: ["spark_bolt_mastery", "first_blood"],
+  activeQuests: [],
+  questProgress: {},
+};
+let progressionPersistCount = 0;
+let progressionRenderCount = 0;
+const progressionSystem = context.TapSurvivorProgression.createProgressionSystem({
+  weaponDefs: content.weapons,
+  weaponUnlocks: content.weaponUnlocks,
+  upgradeDefs: content.metaUpgrades,
+  questDefs: content.quests,
+  getSave: () => progressionSave,
+  openQuest: (id) => {
+    if (id && !progressionSave.activeQuests.includes(id)) progressionSave.activeQuests.push(id);
+  },
+  persist: () => {
+    progressionPersistCount += 1;
+  },
+  renderMeta: () => {
+    progressionRenderCount += 1;
+  },
+  applyRunMetaUpgrades() {},
+});
+progressionSystem.buyWeaponUnlock(content.weaponUnlocks[0]);
+check("weapon unlock spends quest points", progressionSave.questPoints === 1);
+check("weapon unlock persists", progressionPersistCount === 1);
+check("weapon unlock opens follow-up quest", progressionSave.activeQuests.includes("use_laser_run"));
+progressionSystem.buyUpgrade(content.metaUpgrades.find((upgrade) => upgrade.id === "move_speed"));
+check("meta upgrade spend persists", progressionPersistCount === 2 && progressionRenderCount === 2);
+check("meta upgrade tier is saved", progressionSave.upgradeTiers.move_speed === 1);
 
 if (process.exitCode) {
   console.error("\nQuest flow smoke failed.");
