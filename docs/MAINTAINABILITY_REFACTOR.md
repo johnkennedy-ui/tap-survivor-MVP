@@ -58,9 +58,32 @@ Future save helper changes:
 
 Future weapon helper changes:
 
-- `src/weapon-fire.js` was inspected but not split in this pass.
-- If splitting it later, keep `src/weapon-fire.js` as the main integration point.
+- `src/weapon-fire.js` remains the main integration point.
 - Move only pure targeting/projectile/behavior helpers, preserve weapon stats and behavior, and run audio/start-run smoke tests.
+
+## 2026-06-16 Weapon Helper Split
+
+Scope:
+
+- Maintainability only.
+- No weapon stats, projectile behavior, targeting behavior, content, balance, or gameplay changes.
+- `src/weapon-fire.js` remains the public weapon-fire integration point.
+
+Files split:
+
+- `src/weapon-projectiles.js`: projectile vector helper ownership, currently `rotateVector(...)`.
+- `src/weapon-targeting.js`: nearest-enemy targeting helper ownership.
+- `src/weapon-fire.js`: firing behavior integration, weapon cooldown/damage scaling, projectile spawning, beam/area updates, and public `TapSurvivorWeaponFire` factory.
+
+Public APIs preserved:
+
+- `globalThis.TapSurvivorWeaponFire.createWeaponFireSystem(...)`
+- weapon kind handler names and dispatch behavior
+- existing projectile, beam, area, and burst update methods returned by the weapon fire system
+
+Script-order changes:
+
+- `index.html` loads `src/weapon-projectiles.js` and `src/weapon-targeting.js` after `src/balance.js` and before `src/weapon-fire.js`.
 
 Commands future agents should run:
 

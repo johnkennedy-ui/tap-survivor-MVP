@@ -37,6 +37,8 @@ const progression = readRequired("src/progression.js");
 const renderHud = readRequired("src/render-hud.js");
 const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
+const weaponProjectiles = readRequired("src/weapon-projectiles.js");
+const weaponTargeting = readRequired("src/weapon-targeting.js");
 const weaponFire = readRequired("src/weapon-fire.js");
 const enemies = readRequired("src/enemies.js");
 const combat = readRequired("src/combat.js");
@@ -93,6 +95,8 @@ check("index loads progression module", /src="src\/progression\.js(\?[^"]+)?"/.t
 check("index loads HUD renderer module", /src="src\/render-hud\.js(\?[^"]+)?"/.test(index));
 check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
 check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(index));
+check("index loads weapon projectile helpers", /src="src\/weapon-projectiles\.js(\?[^"]+)?"/.test(index));
+check("index loads weapon targeting helpers", /src="src\/weapon-targeting\.js(\?[^"]+)?"/.test(index));
 check("index loads weapon fire module", /src="src\/weapon-fire\.js(\?[^"]+)?"/.test(index));
 check("index loads enemies module", /src="src\/enemies\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
@@ -268,7 +272,7 @@ check("shared shop helper exists", shop.includes("TapSurvivorShop") && game.incl
 check("shared relic helper exists", relics.includes("TapSurvivorRelics") && game.includes("TapSurvivorRelics"));
 check("shared run state helper exists", runState.includes("TapSurvivorRunState") && game.includes("TapSurvivorRunState"));
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && game.includes("TapSurvivorRunUpdate"));
-check("shared weapon fire helper exists", weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
+check("shared weapon helpers exist", weaponProjectiles.includes("TapSurvivorWeaponProjectiles") && weaponTargeting.includes("TapSurvivorWeaponTargeting") && weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
 check("shared enemy helper exists", enemies.includes("TapSurvivorEnemies") && combat.includes("TapSurvivorEnemies"));
 check("shared balance helper exists", balance.includes("TapSurvivorBalance") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && game.includes("TapSurvivorDebug"));

@@ -31,6 +31,9 @@ Improve maintainability by formatting one-line files and extracting safe helpers
 - `src/save-defaults.js`
 - `src/save-migrations.js`
 - `src/save-normalize.js`
+- `src/weapon-fire.js`
+- `src/weapon-projectiles.js`
+- `src/weapon-targeting.js`
 
 ## Files Changed
 
@@ -49,6 +52,9 @@ Improve maintainability by formatting one-line files and extracting safe helpers
 - `src/save-migrations.js`: added save migration helper.
 - `src/save-normalize.js`: added normalization helper.
 - `src/save.js`: kept public save API and delegated helpers.
+- `src/weapon-projectiles.js`: added pure projectile vector helper.
+- `src/weapon-targeting.js`: added nearest-enemy targeting helper.
+- `src/weapon-fire.js`: kept weapon fire integration and delegated pure helpers.
 
 ## Manual Review Checklist
 
@@ -57,10 +63,10 @@ Improve maintainability by formatting one-line files and extracting safe helpers
 - Package identity changed: no.
 - GitHub.io/Android parity changed: no.
 - Generated files hand-edited: no.
-- New files requiring `index.html` script-order updates: yes, `src/save-defaults.js`, `src/save-migrations.js`, and `src/save-normalize.js`.
-- Public APIs preserved: `TapSurvivorSave.createSaveSystem(...)` remains the save entry point.
-- Systems split in this task: save only.
-- Systems intentionally not split: weapon-fire and CSS.
+- New files requiring `index.html` script-order updates: yes, `src/save-defaults.js`, `src/save-migrations.js`, `src/save-normalize.js`, `src/weapon-projectiles.js`, and `src/weapon-targeting.js`.
+- Public APIs preserved: `TapSurvivorSave.createSaveSystem(...)` and `TapSurvivorWeaponFire.createWeaponFireSystem(...)` remain the entry points.
+- Systems split in this task: save and weapon helper logic only.
+- Systems intentionally not split: CSS.
 
 ## Validation Plan
 
@@ -93,6 +99,19 @@ Result:
 - `npm run check:runtime-parity`: PASS
 - `npm run android:sync`: PASS
 - `npm run android:debug`: PASS, APK `android/app/build/outputs/apk/debug/app-debug.apk`, 20,466,783 bytes.
+- `node --check src/weapon-projectiles.js`: PASS
+- `node --check src/weapon-targeting.js`: PASS
+- focused weapon helper `npm run verify:script-order`: PASS
+- focused weapon helper `npm run verify:audio`: PASS
+- focused weapon helper `npm run smoke:audio`: PASS
+- focused weapon helper `npm run smoke:start-run`: PASS
+- focused weapon helper `npm run smoke:boss-run`: PASS
+- post-weapon-split `npm test`: PASS, 271 checks.
+- post-weapon-split `npm run agent:check`: PASS.
+- post-weapon-split `npm run build:web`: PASS.
+- post-weapon-split `npm run check:runtime-parity`: PASS.
+- post-weapon-split `npm run android:sync`: PASS.
+- post-weapon-split `npm run android:debug`: PASS, APK `android/app/build/outputs/apk/debug/app-debug.apk`, 20,466,951 bytes.
 
 ## Evidence Required
 

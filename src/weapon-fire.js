@@ -15,6 +15,9 @@ function createWeaponFireSystem({
   distance,
   clamp,
 }) {
+  const rotateVector = globalThis.TapSurvivorWeaponProjectiles.rotateVector;
+  const nearestEnemy = () => globalThis.TapSurvivorWeaponTargeting.nearestEnemy(getGame(), distance);
+
   function updateWeapons(dt) {
     const game = getGame();
     game.player.equippedWeapons.forEach((weaponId) => {
@@ -158,12 +161,6 @@ function createWeaponFireSystem({
       spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread * 2));
       spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, spread * 2));
     }
-  }
-
-  function rotateVector(vx, vy, angle) {
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    return [vx * cos - vy * sin, vx * sin + vy * cos];
   }
 
   function spawnProjectileBolt(weaponId, x, y, vx, vy, overrides = {}) {
@@ -505,15 +502,6 @@ function createWeaponFireSystem({
       if (next > 0) game.weaponIconFlashes[weaponId] = next;
       else delete game.weaponIconFlashes[weaponId];
     });
-  }
-
-  function nearestEnemy() {
-    const game = getGame();
-    if (!game.enemies.length) return null;
-    const p = game.player;
-    return game.enemies.reduce((best, enemy) =>
-      distance(p, enemy) < distance(p, best) ? enemy : best,
-    );
   }
 
   return {

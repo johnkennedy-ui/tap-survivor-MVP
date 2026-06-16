@@ -21,6 +21,8 @@ const progressionSource = readFileSync(join(root, "src/progression.js"), "utf8")
 const renderHudSource = readFileSync(join(root, "src/render-hud.js"), "utf8");
 const renderingSource = readFileSync(join(root, "src/rendering.js"), "utf8");
 const balanceSource = readFileSync(join(root, "src/balance.js"), "utf8");
+const weaponProjectilesSource = readFileSync(join(root, "src/weapon-projectiles.js"), "utf8");
+const weaponTargetingSource = readFileSync(join(root, "src/weapon-targeting.js"), "utf8");
 const weaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "utf8");
 const enemiesSource = readFileSync(join(root, "src/enemies.js"), "utf8");
 const combatSource = readFileSync(join(root, "src/combat.js"), "utf8");
@@ -225,6 +227,8 @@ vm.runInContext(progressionSource, context);
 vm.runInContext(renderHudSource, context);
 vm.runInContext(renderingSource, context);
 vm.runInContext(balanceSource, context);
+vm.runInContext(weaponProjectilesSource, context);
+vm.runInContext(weaponTargetingSource, context);
 vm.runInContext(weaponFireSource, context);
 vm.runInContext(enemiesSource, context);
 vm.runInContext(combatSource, context);
