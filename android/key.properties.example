@@ -1,0 +1,4 @@
+storeFile=/absolute/path/to/upload-keystore.jks
+storePassword=DO_NOT_COMMIT_REAL_VALUE
+keyAlias=upload
+keyPassword=DO_NOT_COMMIT_REAL_VALUE

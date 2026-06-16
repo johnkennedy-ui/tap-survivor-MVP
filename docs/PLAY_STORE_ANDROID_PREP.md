@@ -21,7 +21,8 @@
 
 - Android packaging path exists.
 - GitHub.io and Android both use `www/`.
-- Release signing is not configured yet.
+- Release signing is configured through local ignored `android/key.properties`
+  when present.
 - Play Console upload is not configured yet.
 
 ## Commands
@@ -56,6 +57,31 @@ android/app/build/outputs/bundle/release/app-release.aab
 
 The root `.gitignore` and `android/.gitignore` actively ignore common signing, service, environment, local SDK, and Android build-output files.
 
+## Local Release Signing
+
+Use `android/key.properties.example` as the placeholder template.
+
+For a signed Play internal testing build, create a local ignored file:
+
+```text
+android/key.properties
+```
+
+Use this shape with real values only on the local machine:
+
+```properties
+storeFile=/absolute/path/to/upload-keystore.jks
+storePassword=DO_NOT_COMMIT_REAL_VALUE
+keyAlias=upload
+keyPassword=DO_NOT_COMMIT_REAL_VALUE
+```
+
+`android/app/build.gradle` activates the release signing config only when
+`android/key.properties` exists. Debug builds and unsigned release-bundle checks
+must not require local signing secrets.
+
+See `docs/RELEASE_CHECKLIST.md` for the internal testing checklist.
+
 ## Runtime Flow
 
 Use the shared-runtime flow in `docs/RUNTIME_PARITY.md`.
@@ -78,7 +104,6 @@ Remove it only after a dedicated Android device/emulator test confirms the packa
 
 - Configure upload key outside git.
 - Configure Play App Signing in Play Console.
-- Create signed AAB.
 - Run internal testing.
 - Verify save/lifecycle behaviour on Android.
 - Verify GitHub.io build matches Android runtime manifest.
