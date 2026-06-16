@@ -1,0 +1,64 @@
+# Skill: Handoff Evidence
+
+## Use When
+
+- The user asks for a handoff, summary, evidence bundle, or resume point.
+- Work must pause cleanly for another agent.
+- A task needs a concise final report without new edits.
+
+## Do Not Use When
+
+- The active task still needs implementation.
+- Validation has not been run and the user asked for a completed change.
+- The repo state is ambiguous and needs investigation first.
+
+## Goal
+
+Create a clear snapshot of branch, changes, validation, risks, and next step.
+
+## Allowed Files
+
+- `docs/CURRENT_TASK.md`
+- Evidence files under `docs/tasks/**`
+- No files, if the handoff can be reported directly
+
+## Forbidden Files
+
+- Source files
+- Generated files
+- Android signing secrets
+- Content JSON unless documenting existing changes
+
+## Procedure
+
+1. Run repo status and diff summary.
+2. Run `npm run agent:status`.
+3. Run validation only if required by the handoff.
+4. Summarize commits, changed files, commands, validation, blockers, and next step.
+5. Do not make unrelated fixes.
+
+## Commands
+
+```sh
+git status --short --branch
+git diff --stat
+npm run agent:status
+npm run agent:handoff
+```
+
+## Stop Condition
+
+Stop once the handoff evidence is written or reported.
+
+## Report Format
+
+```text
+Skill: handoff-evidence
+Branch:
+Commit:
+Changed files:
+Commands run:
+Validation:
+Blockers:
+Next step:
+```
