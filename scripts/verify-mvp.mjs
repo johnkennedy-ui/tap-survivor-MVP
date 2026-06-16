@@ -275,10 +275,11 @@ check("agent context pack exists", agentContext.includes("Where To Add Content")
 check("root agent instructions load docs first", agentInstructions.includes("docs/AGENT_CODEBASE_CONTEXT.md") && agentInstructions.includes("docs/CONTENT_EXTENSION_GUIDE.md"));
 
 check("workflow publishes gh-pages", workflow.includes("git push --force origin gh-pages"));
-check("workflow publishes content and assets", workflow.includes("assets content") && workflow.includes("src scripts"));
-check("workflow publishes agent docs", workflow.includes("AGENTS.md") && workflow.includes("docs"));
-check("workflow writes nojekyll marker", workflow.includes("touch .nojekyll"));
-check("workflow runs reusable MVP test", workflow.includes("node scripts/verify-mvp.mjs"));
+check("workflow installs dependencies", workflow.includes("actions/setup-node@v4") && workflow.includes("npm ci"));
+check("workflow runs agent check", workflow.includes("npm run agent:check"));
+check("workflow builds shared www runtime", workflow.includes("npm run build:web"));
+check("workflow checks runtime parity", workflow.includes("npm run check:runtime-parity"));
+check("workflow publishes only www", workflow.includes("cp -R www/.") && !workflow.includes("cp -R assets content docs src scripts"));
 check("cache keys auto-bump before prepush", pkg.includes('"cache:bump"') && agentPrepush.includes("Cache Key Bump") && cacheBump.includes("content/tap-survivor-content.json") && cacheBump.includes("auto-"));
 check("quest chain helper can link follow-ups", pkg.includes('"smoke:content-tools"') && addContent.includes("--after previous_id") && addContent.includes("linkQuestAfter") && contentTools.includes("function linkQuestAfter"));
 check("sound effect wiring helper exists", pkg.includes('"sfx:add"') && addSfx.includes("run-upgrade") && addSfx.includes("content.assets.sfx[bucket]") && agentCheck.includes("scripts/add-sfx.mjs"));

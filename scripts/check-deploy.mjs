@@ -1,6 +1,6 @@
 import { request } from "node:https";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const owner = process.env.GITHUB_OWNER || "johnkennedy-ui";
 const repo = process.env.GITHUB_REPO || "tap-survivor-MVP";
@@ -68,13 +68,25 @@ function loadedSourceUrls(html) {
   return [...html.matchAll(/\b(?:src|href)="(src\/[^"#?]+(?:\?v=[^"#]*)?)"/g)].map((match) => match[1]);
 }
 
+function readLocalRuntimeFile(file) {
+  const runtimePath = `www/${file}`;
+  if (!existsSync(runtimePath)) {
+    throw new Error(`Missing local runtime file: ${runtimePath}. Run npm run build:web && npm run check:runtime-parity first.`);
+  }
+  return readFileSync(runtimePath, "utf8");
+}
+
 const runs = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/actions/runs?per_page=10`);
 const repoInfo = await fetchJson(`https://api.github.com/repos/${owner}/${repo}`);
 const pages = await fetchJson(`https://api.github.com/repos/${owner}/${repo}/pages`);
 const site = await head(pagesUrl);
 const liveIndex = await get(pagesUrl);
+const liveBuildInfo = await fetchJson(new URL("build-info.json", pagesUrl).href);
+const liveManifest = await fetchJson(new URL("runtime-manifest.json", pagesUrl).href);
 const preview = await head(previewUrl);
-const localIndex = readFileSync("index.html", "utf8");
+const localIndex = readLocalRuntimeFile("index.html");
+const localBuildInfo = JSON.parse(readLocalRuntimeFile("build-info.json"));
+const localManifest = JSON.parse(readLocalRuntimeFile("runtime-manifest.json"));
 const localSources = loadedSourceUrls(localIndex);
 const liveSources = loadedSourceUrls(liveIndex.body || "");
 const sourceSha = localHeadSha();
@@ -125,6 +137,8 @@ if (pages.status === 200) {
 
 console.log(`Pages URL HTTP status: ${site.status}${site.error ? ` (${site.error})` : ""}`);
 console.log(`Pages index GET status: ${liveIndex.status}${liveIndex.error ? ` (${liveIndex.error})` : ""}`);
+console.log(`Pages build-info GET status: ${liveBuildInfo.status}${liveBuildInfo.error ? ` (${liveBuildInfo.error})` : ""}`);
+console.log(`Pages runtime manifest GET status: ${liveManifest.status}${liveManifest.error ? ` (${liveManifest.error})` : ""}`);
 console.log(`Preview fallback HTTP status: ${preview.status}${preview.error ? ` (${preview.error})` : ""}`);
 
 const missingSources = localSources.filter((url) => !liveSources.includes(url));
@@ -132,9 +146,23 @@ if (missingSources.length) {
   console.log("Live cache key mismatch:");
   missingSources.forEach((url) => console.log(`- missing ${url}`));
 } else {
-  console.log("Live cache keys: match local index");
+  console.log("Live cache keys: match local www/index.html");
 }
 
-if (deployFailed || site.status !== 200 || liveIndex.status !== 200 || missingSources.length) {
+if (liveBuildInfo.status === 200 && liveBuildInfo.data?.source === localBuildInfo.source && liveBuildInfo.data?.gitCommit === localBuildInfo.gitCommit) {
+  console.log("Live build-info: matches local www/build-info.json");
+} else {
+  console.log("Live build-info mismatch");
+  deployFailed = true;
+}
+
+if (liveManifest.status === 200 && liveManifest.data?.runtimeHash === localManifest.runtimeHash) {
+  console.log("Live runtime manifest: matches local www/runtime-manifest.json");
+} else {
+  console.log("Live runtime manifest mismatch");
+  deployFailed = true;
+}
+
+if (deployFailed || site.status !== 200 || liveIndex.status !== 200 || liveBuildInfo.status !== 200 || liveManifest.status !== 200 || missingSources.length) {
   process.exitCode = 1;
 }

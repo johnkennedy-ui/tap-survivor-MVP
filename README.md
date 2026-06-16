@@ -6,6 +6,15 @@ This folder contains the MVP plan and a small no-dependency browser prototype fo
 
 Open `index.html` in a browser.
 
+Build the shared runtime used by both GitHub Pages and Android:
+
+```bash
+npm run build:web
+npm run check:runtime-parity
+```
+
+`www/` is generated and ignored by git.
+
 ## Content Tooling
 
 For routine update paths, see `docs/MAINTENANCE.md`.
@@ -33,7 +42,8 @@ After adding content, run `npm run build:content && npm test`.
 ## Phone Test
 
 The GitHub Pages workflow is defined in `.github/workflows/tap-survivor-pages.yml`.
-See `PHONE_TEST_PIPELINE.md` for the Android test path and current publishing blocker.
+It deploys only the generated `www/` runtime. Android also syncs from that same `www/` directory through Capacitor.
+See `PHONE_TEST_PIPELINE.md` for browser and Android test paths.
 
 Expected test URL after deployment:
 
@@ -57,3 +67,4 @@ https://johnkennedy-ui.github.io/tap-survivor-MVP/
 - This is not the final Unity project.
 - Unity was not available on this host, so this prototype proves the loop locally before the Unity implementation.
 - Save data uses browser `localStorage`.
+- Android packaging is Capacitor-based and does not include Play upload, signing keys, billing, ads, analytics, login, Firebase, or backend services.

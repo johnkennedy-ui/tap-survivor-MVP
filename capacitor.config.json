@@ -1,0 +1,8 @@
+{
+  "appId": "com.quatrex.tapsurvivor",
+  "appName": "Tap Survivor",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

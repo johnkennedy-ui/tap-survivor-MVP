@@ -10,6 +10,13 @@
     "agent:release": "node scripts/agent-release.mjs",
     "agent:prepush": "node scripts/agent-prepush.mjs",
     "build:content": "node scripts/build-content.mjs",
+    "build:web": "npm run build:content && node scripts/build-web.mjs",
+    "check:runtime-parity": "node scripts/check-runtime-parity.mjs",
+    "android:sync": "npm run build:web && npm run check:runtime-parity && npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:run": "npm run android:sync && npx cap run android",
+    "android:debug": "npm run android:sync && cd android && GRADLE_USER_HOME=.gradle ./gradlew --no-daemon :app:assembleDebug",
+    "android:bundle:local": "npm run android:sync && cd android && GRADLE_USER_HOME=.gradle ./gradlew --no-daemon :app:bundleRelease",
     "content:check": "node scripts/content-check.mjs",
     "cache:bump": "node scripts/bump-cache-keys.mjs",
     "validate:content": "node scripts/validate-content.mjs",
@@ -43,5 +50,11 @@
     "test": "npm run audit:quests && node scripts/verify-mvp.mjs && npm run test:speed",
     "serve": "node scripts/serve-local.mjs"
   },
-  "devDependencies": {}
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.0"
+  }
 }

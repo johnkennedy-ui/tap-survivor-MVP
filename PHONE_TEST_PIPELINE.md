@@ -33,11 +33,14 @@ Publishing is configured through:
 The workflow:
 
 1. Checks out the repo.
-2. Runs `node scripts/verify-mvp.mjs` to validate the prototype files and required MVP loop markers.
-3. Copies the static site files into a temporary publish directory.
-4. Force-pushes those files to the `gh-pages` branch used by GitHub Pages.
+2. Installs Node dependencies with `npm ci`.
+3. Runs `npm run agent:check`.
+4. Runs `npm run build:web` to generate the shared `www/` runtime.
+5. Runs `npm run check:runtime-parity`.
+6. Copies only `www/` into a temporary publish directory.
+7. Force-pushes those generated runtime files to the `gh-pages` branch used by GitHub Pages.
 
-No build step is required because the prototype is plain HTML, CSS, and JavaScript.
+The generated `www/` directory is the single runtime source for both GitHub Pages and Capacitor Android.
 
 ## Reusable Local Debug Scripts
 
@@ -57,6 +60,28 @@ Run a local static server for desktop debugging with:
 
 ```text
 npm run serve
+```
+
+Build and check the shared runtime with:
+
+```text
+npm run build:web
+npm run check:runtime-parity
+```
+
+Build local Android outputs with:
+
+```text
+npm run android:sync
+npm run android:debug
+npm run android:bundle:local
+```
+
+Expected outputs:
+
+```text
+android/app/build/outputs/apk/debug/app-debug.apk
+android/app/build/outputs/bundle/release/app-release.aab
 ```
 
 Then open:
@@ -99,6 +124,17 @@ It can also be started manually from GitHub Actions through `workflow_dispatch`.
 13. Spend 1 Quest Point on `Laser Damage I`.
 14. Confirm `Deal 5,000 damage with Laser` becomes active.
 
+## Native Android Build
+
+Android packaging uses Capacitor with `webDir` set to `www`.
+
+Rules:
+
+- Run `npm run android:sync` before native Android runs or builds.
+- Do not hand-copy runtime files into `android/`.
+- Do not commit copied Android web assets from `android/app/src/main/assets/public`.
+- Do not add Play upload, signing keys, keystores, service account JSON, billing, ads, analytics, Firebase, login, or backend services.
+
 ## What The Phone Build Proves
 
 - Tap-to-move works in a mobile browser.
@@ -117,8 +153,8 @@ It can also be started manually from GitHub Actions through `workflow_dispatch`.
 ## Known Limitations
 
 - This is a temporary browser prototype, not the final Unity project.
-- No native Android build exists yet.
-- No Google Play, signing, Play Console, or Steam integration is included.
+- Native Android packaging exists through Capacitor.
+- No Google Play upload, signing, Play Console, billing, ads, analytics, Firebase, login, backend services, or Steam integration is included.
 - Save data is local to the browser/device and can be cleared by browser storage cleanup.
 - Art is placeholder canvas drawing only.
 - Headless Chromium rendering could not be verified on this host because the local Chromium snap lacks required permissions.

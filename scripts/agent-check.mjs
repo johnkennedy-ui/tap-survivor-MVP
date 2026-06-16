@@ -12,6 +12,8 @@ const fullChecks = [
   ["node", ["--check", "scripts/agent-ship.mjs"]],
   ["node", ["--check", "scripts/agent-release.mjs"]],
   ["node", ["--check", "scripts/check-deploy.mjs"]],
+  ["node", ["--check", "scripts/build-web.mjs"]],
+  ["node", ["--check", "scripts/check-runtime-parity.mjs"]],
   ["node", ["--check", "scripts/add-sfx.mjs"]],
   ["node", ["--check", "scripts/content-check.mjs"]],
   ["node", ["--check", "scripts/verify-focus.mjs"]],
