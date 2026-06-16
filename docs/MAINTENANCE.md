@@ -70,14 +70,24 @@ npm run agent:evidence -- --task "<short task name>"
 git status --short
 ```
 
-`npm run agent:prepush` runs `npm run cache:bump` automatically before validation and forces the full agent check. `npm run agent:finish` runs prepush, archives the current task, commits, optionally pushes, and optionally runs deploy verification. `npm run agent:ship` is the streamlined finish-and-push path: it runs `agent:finish -- --push`, so no push happens unless prepush validation passes. `npm run agent:release` is the live-release path: it runs `agent:ship -- --deploy`, so the push is followed by deploy verification. Report the commit, changed files, validation commands, and any remaining caveats.
+`npm run agent:prepush` runs `npm run cache:bump` automatically before validation
+and forces the full agent check. `npm run agent:finish` runs prepush, archives
+the current task, commits, optionally pushes, and optionally runs deploy
+verification. `npm run agent:ship` is the streamlined finish-and-push path: it
+runs `agent:finish -- --push`, so no push happens unless prepush validation
+passes. `npm run agent:release` is the live-release path: it runs
+`agent:ship -- --deploy`, so the push is followed by deploy verification. Report
+the commit, changed files, validation commands, and any remaining caveats.
 
 ## Deployment
 
 Pushes to `main` publish the GitHub Pages site via `.github/workflows/tap-survivor-pages.yml`.
 Pushes and pull requests run `npm run agent:check` via `.github/workflows/agent-check.yml`.
 
-Use `npm run agent:release -- --message "<commit message>"` for changes that should be live-verified immediately after push. Use `npm run check:deploy` for a read-only live Pages deployment check; it expects the latest Pages workflow for the local commit to complete successfully and the live page/cache keys to match.
+Use `npm run agent:release -- --message "<commit message>"` for changes that
+should be live-verified immediately after push. Use `npm run check:deploy` for a
+read-only live Pages deployment check; it expects the latest Pages workflow for
+the local commit to complete successfully and the live page/cache keys to match.
 
 ## Boundaries
 
