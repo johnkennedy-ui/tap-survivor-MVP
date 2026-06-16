@@ -6,6 +6,9 @@ const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const questsSource = readFileSync(join(root, "src/quests.js"), "utf8");
 const storageSource = readFileSync(join(root, "src/storage-adapter.js"), "utf8");
+const saveDefaultsSource = readFileSync(join(root, "src/save-defaults.js"), "utf8");
+const saveMigrationsSource = readFileSync(join(root, "src/save-migrations.js"), "utf8");
+const saveNormalizeSource = readFileSync(join(root, "src/save-normalize.js"), "utf8");
 const saveSource = readFileSync(join(root, "src/save.js"), "utf8");
 
 const storage = new Map();
@@ -26,6 +29,9 @@ const context = {
 vm.createContext(context);
 vm.runInContext(questsSource, context);
 vm.runInContext(storageSource, context);
+vm.runInContext(saveDefaultsSource, context);
+vm.runInContext(saveMigrationsSource, context);
+vm.runInContext(saveNormalizeSource, context);
 vm.runInContext(saveSource, context);
 
 const saveKey = "tap-survivor-mvp-save-v2";
@@ -156,6 +162,9 @@ const throwingContext = {
 vm.createContext(throwingContext);
 vm.runInContext(questsSource, throwingContext);
 vm.runInContext(storageSource, throwingContext);
+vm.runInContext(saveDefaultsSource, throwingContext);
+vm.runInContext(saveMigrationsSource, throwingContext);
+vm.runInContext(saveNormalizeSource, throwingContext);
 vm.runInContext(saveSource, throwingContext);
 
 const throwingAdapter = throwingContext.TapSurvivorStorage.createStorageAdapter({

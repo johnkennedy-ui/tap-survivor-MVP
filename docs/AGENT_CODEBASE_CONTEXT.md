@@ -17,7 +17,11 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/game.js`: run loop and high-level orchestration.
 - `src/quests.js`: quest opening, completion, progress, and active quest weapon helpers.
 - `src/progression.js`: skill-tree gate checks and weapon/meta upgrade purchase handlers.
-- `src/save.js`: save defaults, loading, migration/normalization, and persistence.
+- `src/save.js`: public save-system entry point, loading, storage orchestration, and persistence.
+- `src/save-defaults.js`: save schema version constant and default save shape.
+- `src/save-migrations.js`: save migration table and migration helper.
+- `src/save-normalize.js`: save normalization and clamping helpers.
+- `src/storage-adapter.js`: browser `localStorage` and Capacitor Preferences save backend adapter.
 - `src/effects.js`: shared runtime effect handlers for run upgrades and shop item bonuses.
 - `src/ui.js`: DOM lookup helper for game UI elements.
 - `src/run-ui.js`: run HUD and end-screen rendering helper.
@@ -45,6 +49,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `scripts/`: build, validation, content, deployment, and smoke-test utilities.
 - `docs/`: agent context and extension guides.
 - `docs/MAINTENANCE.md`: routine update and validation runbook.
+- `docs/MAINTAINABILITY_REFACTOR.md`: small file-ownership notes for formatting and helper-split passes.
 - `docs/CURRENT_TASK.md`: optional local task checkpoint. It can be stale; do not treat it as authoritative over the conversation or git status.
 - `docs/CHANGELOG_AGENT.md`: short log of structural changes that affect future agent work.
 
@@ -59,6 +64,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Browser global load-order check: `scripts/check-script-order.mjs`.
 - Quest graph audit: `scripts/audit-quests.mjs`.
 - Save/meta progression: `src/save.js`, `src/progression.js`, `src/run-state.js`, and orchestration in `src/game.js`.
+- Save helper ownership: defaults live in `src/save-defaults.js`, migrations in `src/save-migrations.js`, and normalization in `src/save-normalize.js`.
 - Run HUD/end-screen UI: `src/run-ui.js`.
 - Run ticking/player movement: `src/run-update.js`.
 - Coin shop: `src/shop.js` plus `shopItems` content and the in-run shop tab in `src/shell-ui.js`.
@@ -146,7 +152,10 @@ The project is mixed but mostly registry-driven:
 - Characters are registered as content but the current MVP still uses the default player directly.
 - Level entries drive enemy mixes, spawn count, and spawn pressure in `src/enemies.js`; gameplay UI still only reports tower floor.
 - Run boss timing is 150 seconds; boss ability tuning is content-driven; every fifth floor is a super boss and gives two relic choices on clear.
-- Relic rewards have a 126-item pool: 26 green build-defining relics with unique runtime abilities, 96 random themed Focus/Obsessed/Mastery relics, and 4 rare super-boss extras. Every relic has a unique static SVG icon under `assets/generated/tower/sprites/relics/`; the generated random relics intentionally avoid floor-numbered IDs/names.
+- Relic rewards have a 126-item pool: 26 green build-defining relics with unique runtime abilities,
+  96 random themed Focus/Obsessed/Mastery relics, and 4 rare super-boss extras.
+  Every relic has a unique static SVG icon under `assets/generated/tower/sprites/relics/`;
+  the generated random relics intentionally avoid floor-numbered IDs/names.
 - Level-up skill select icons intentionally use static clean icons only; do not re-enable animated sprite canvases there unless the UI is simplified around it.
 - Asset paths include cache query strings; keep them in the registry, not gameplay code.
 - Android packaging is Capacitor-based. Do not hand-copy runtime files into `android/`; use `npm run android:sync` so Android consumes the same generated `www/` runtime as GitHub Pages.

@@ -11,7 +11,19 @@
       const boss = game.enemies.find((enemy) => enemy.boss);
       const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
       const floorText = game.lastFloorClear ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}` : "";
-      if (ui.runHud) ui.runHud.textContent = `Time ${formatTime(game.elapsed)} | Floor ${game.towerFloor} | Speed x${getGameSpeed()} | HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp} | Coins ${save.coins} | Level ${game.player.level} | Kills ${game.kills} | Laser damage ${Math.floor(game.laserDamage)} | Weapons ${game.player.equippedWeapons.length}/${maxEquippedWeapons()}${bossText}${floorText}`;
+      if (ui.runHud) {
+        ui.runHud.textContent = [
+          `Time ${formatTime(game.elapsed)}`,
+          `Floor ${game.towerFloor}`,
+          `Speed x${getGameSpeed()}`,
+          `HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp}`,
+          `Coins ${save.coins}`,
+          `Level ${game.player.level}`,
+          `Kills ${game.kills}`,
+          `Laser damage ${Math.floor(game.laserDamage)}`,
+          `Weapons ${game.player.equippedWeapons.length}/${maxEquippedWeapons()}${bossText}${floorText}`,
+        ].join(" | ");
+      }
       renderDebug();
     }
 

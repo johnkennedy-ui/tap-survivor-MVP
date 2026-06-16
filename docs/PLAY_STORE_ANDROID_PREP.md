@@ -68,7 +68,9 @@ Do not hand-copy runtime files into `android/`, and do not commit copied web ass
 
 Decision: keep it as a non-blocking review item.
 
-Reason: the current gameplay runtime is local, but this is a Capacitor WebView shell and the permission is non-dangerous on Android. Keeping it avoids breaking normal WebView/dev-test/network compatibility paths while this cleanup is focused on merge blockers. It does not add ads, analytics, login, billing, Firebase, cloud saves, or backend behavior by itself.
+Reason: the current gameplay runtime is local, but this is a Capacitor WebView shell and the permission is non-dangerous on Android.
+Keeping it avoids breaking normal WebView/dev-test/network compatibility paths while this cleanup is focused on merge blockers.
+It does not add ads, analytics, login, billing, Firebase, cloud saves, or backend behavior by itself.
 
 Remove it only after a dedicated Android device/emulator test confirms the packaged Capacitor runtime and any WebView compatibility paths still work without it.
 

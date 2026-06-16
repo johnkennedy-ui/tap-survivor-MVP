@@ -13,6 +13,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/agent-release.mjs"]],
   ["node", ["--check", "scripts/check-deploy.mjs"]],
   ["node", ["--check", "scripts/build-web.mjs"]],
+  ["node", ["--check", "scripts/check-format-hygiene.mjs"]],
   ["node", ["--check", "scripts/check-runtime-parity.mjs"]],
   ["node", ["--check", "scripts/add-sfx.mjs"]],
   ["node", ["--check", "scripts/content-check.mjs"]],
@@ -34,6 +35,7 @@ const fullChecks = [
   ["npm", ["run", "content:check"]],
   ["npm", ["run", "content:summary"]],
   ["npm", ["run", "economy:check"]],
+  ["npm", ["run", "check:format-hygiene"]],
   ["npm", ["run", "verify:script-order"]],
   ["npm", ["run", "verify:assets"]],
   ["npm", ["run", "verify:audio"]],
@@ -95,6 +97,9 @@ function focusedChecks(files) {
   }
   if (files.some((file) => file === "index.html" || file === "src/styles.css" || file === "src/level-up.js" || file === "src/shell-ui.js")) {
     checks.push(["npm", ["run", "verify:script-order"]], ["npm", ["run", "verify:ui"]], ["npm", ["run", "smoke:browser"]]);
+  }
+  if (files.some((file) => file.startsWith("src/") || file.startsWith("docs/") || file === "AGENTS.md" || file === "README.md" || file === "scripts/check-format-hygiene.mjs")) {
+    checks.push(["npm", ["run", "check:format-hygiene"]]);
   }
   if (files.some((file) => file.startsWith("src/") && /\.(js)$/.test(file))) {
     checks.push(["npm", ["run", "verify:script-order"]]);
