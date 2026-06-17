@@ -404,6 +404,26 @@
       "family": "damage"
     },
     {
+      "id": "run_haste_projectiles",
+      "name": "Haste Projectiles",
+      "description": "Projectile weapons fly faster and fire faster, but each hit deals less damage.",
+      "maxTier": 1,
+      "family": "projectile",
+      "projectileSpeedMultiplier": 1.65,
+      "projectileCooldownMultiplier": 0.65,
+      "projectileDamageMultiplier": 0.7
+    },
+    {
+      "id": "run_heavy_projectiles",
+      "name": "Heavy Projectiles",
+      "description": "Projectile weapons fly slower and fire slower, but each hit deals triple base damage.",
+      "maxTier": 1,
+      "family": "projectile",
+      "projectileSpeedMultiplier": 0.55,
+      "projectileCooldownMultiplier": 1.45,
+      "projectileDamageMultiplier": 3
+    },
+    {
       "id": "run_projectile_pierce",
       "name": "Piercing Shots",
       "description": "Projectiles pierce extra enemies.",
@@ -3076,6 +3096,136 @@
           "effectAlpha": 0.82,
           "animatedIcon": false,
           "iconSrc": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
+        },
+        "run_haste_projectiles": {
+          "src": "assets/generated/tower/skill-effects/split/skill-20-run_projectile_pierce.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.05,
+          "effectAlpha": 0.84,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260614-weapons"
+        },
+        "run_heavy_projectiles": {
+          "src": "assets/generated/tower/skill-effects/split/skill-24-run_split_on_hit.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.05,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
         }
       },
       "runUpgradeIcons": {
@@ -3090,7 +3240,9 @@
         "run_wall_bounce": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
         "run_split_shot": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
         "run_explosive_hit": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
-        "run_split_on_hit": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
+        "run_split_on_hit": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+        "run_haste_projectiles": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260614-weapons",
+        "run_heavy_projectiles": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
       }
     },
     "sfx": {
@@ -3120,7 +3272,9 @@
         "run_wall_bounce": "assets/generated/tower/sfx/run_wall_bounce.wav?v=sfx-20260615",
         "run_split_shot": "assets/generated/tower/sfx/run_split_shot.wav?v=sfx-20260615",
         "run_explosive_hit": "assets/generated/tower/sfx/run_explosive_hit.wav?v=sfx-20260615",
-        "run_split_on_hit": "assets/generated/tower/sfx/run_split_on_hit.wav?v=sfx-20260615"
+        "run_split_on_hit": "assets/generated/tower/sfx/run_split_on_hit.wav?v=sfx-20260615",
+        "run_haste_projectiles": "assets/generated/tower/sfx/run_projectile_pierce.wav?v=sfx-20260615",
+        "run_heavy_projectiles": "assets/generated/tower/sfx/run_split_on_hit.wav?v=sfx-20260615"
       }
     }
   },
@@ -3405,6 +3559,46 @@
           "damageBonus": 0.65
         }
       }
+    },
+    {
+      "id": "haste_projectiles_focus_relic",
+      "name": "Haste Projectiles Focus Relic",
+      "description": "Start each run with +1 Haste Projectiles tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_haste_projectiles",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/haste_projectiles_focus_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "haste_projectiles_mastery_relic",
+      "name": "Haste Projectiles Mastery Relic",
+      "description": "Start each run with +2 Haste Projectiles tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_haste_projectiles",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/haste_projectiles_mastery_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "heavy_projectiles_focus_relic",
+      "name": "Heavy Projectiles Focus Relic",
+      "description": "Start each run with +1 Heavy Projectiles tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_heavy_projectiles",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/heavy_projectiles_focus_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "heavy_projectiles_mastery_relic",
+      "name": "Heavy Projectiles Mastery Relic",
+      "description": "Start each run with +2 Heavy Projectiles tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_heavy_projectiles",
+      "selectionWeightBonus": 1,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/heavy_projectiles_mastery_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 2
     },
     {
       "id": "projectile_pierce_focus_relic",

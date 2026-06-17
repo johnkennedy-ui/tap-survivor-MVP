@@ -34,7 +34,7 @@ function createWeaponFireSystem({
     const shopBonuses = getShopBonuses?.() || {};
     const relicEffects = getRelicSpecialEffects?.() || {};
     const rateTier = getUpgradeTier("fire_rate") + getRunUpgradeTier("run_fire_rate") + (shopBonuses.fireRate || 0);
-    return weapon.cooldown / (1 + rateTier * 0.12 + (relicEffects.cooldownReduction || 0));
+    return (weapon.cooldown / (1 + rateTier * 0.12 + (relicEffects.cooldownReduction || 0))) * projectileSkillModifier(weapon, "projectileCooldownMultiplier");
   }
 
   function weaponSfxOptions(weapon) {
@@ -76,7 +76,22 @@ function createWeaponFireSystem({
       getUpgradeTier(weapon.upgradeId) * 2 +
       (shopBonuses.percentDamage || 0);
     const relicEffects = getRelicSpecialEffects?.() || {};
-    return (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) * (1 + percentTier * 0.12 + (relicEffects.damageBonus || 0)) * (getWeaponDamageMultiplier?.() || 1);
+    return (
+      (weapon.damage + flatTier * 4 + (shopBonuses.flatDamage || 0)) *
+      (1 + percentTier * 0.12 + (relicEffects.damageBonus || 0)) *
+      (getWeaponDamageMultiplier?.() || 1) *
+      projectileSkillModifier(weapon, "projectileDamageMultiplier")
+    );
+  }
+
+  function projectileSkillModifier(weapon, field) {
+    if (weapon?.kind !== "projectile") return 1;
+    return (globalThis.TapSurvivorContent?.runUpgrades || []).reduce((multiplier, upgrade) => {
+      const tier = getRunUpgradeTier(upgrade.id);
+      const value = upgrade[field];
+      if (!tier || !Number.isFinite(value)) return multiplier;
+      return multiplier * value ** tier;
+    }, 1);
   }
 
   const weaponKindHandlers = {
@@ -143,7 +158,7 @@ function createWeaponFireSystem({
     const dy = target.y - p.y;
     const dist = Math.max(1, Math.hypot(dx, dy));
     const relicEffects = getRelicSpecialEffects?.() || {};
-    const speed = weapon.speed * (1 + (relicEffects.projectileSpeedBonus || 0));
+    const speed = weapon.speed * (1 + (relicEffects.projectileSpeedBonus || 0)) * projectileSkillModifier(weapon, "projectileSpeedMultiplier");
     const baseVx = (dx / dist) * speed;
     const baseVy = (dy / dist) * speed;
     const splitTier = getRunUpgradeTier("run_split_shot");

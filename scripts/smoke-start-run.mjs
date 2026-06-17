@@ -37,6 +37,43 @@ harness.dispatchPagehide();
 const persisted = JSON.parse(harness.context.localStorage.store.get("tap-survivor-mvp-save-v2"));
 check("pagehide flush persists current save", persisted.coins === 42);
 
+function projectileSkillShot(upgradeId) {
+  const skillHarness = createGameHarness();
+  skillHarness.elements.get("startRun").click();
+  skillHarness.frame(1000);
+  const game = skillHarness.context.__tapSurvivorHarness.getGame();
+  const player = game.player;
+  game.runUpgradeTiers[upgradeId] = 1;
+  game.weaponTimers.spark_bolt = -1;
+  game.bolts = [];
+  game.enemies = [
+    {
+      x: player.x + 300,
+      y: player.y,
+      radius: 12,
+      hp: 999,
+      maxHp: 999,
+      damage: 0,
+      speed: 0,
+    },
+  ];
+  skillHarness.frame(1050);
+  return {
+    bolt: game.bolts[0],
+    timer: game.weaponTimers.spark_bolt,
+  };
+}
+
+const hasteShot = projectileSkillShot("run_haste_projectiles");
+check("haste projectiles fly faster", Math.abs(hasteShot.bolt.vx) > 680 && Math.abs(hasteShot.bolt.vx) < 705);
+check("haste projectiles deal reduced damage", hasteShot.bolt.damage > 8 && hasteShot.bolt.damage < 9);
+check("haste projectiles fire faster", hasteShot.timer > 0.34 && hasteShot.timer < 0.37);
+
+const heavyShot = projectileSkillShot("run_heavy_projectiles");
+check("heavy projectiles fly slower", Math.abs(heavyShot.bolt.vx) > 220 && Math.abs(heavyShot.bolt.vx) < 240);
+check("heavy projectiles deal triple base damage", heavyShot.bolt.damage === 36);
+check("heavy projectiles fire slower", heavyShot.timer > 0.78 && heavyShot.timer < 0.82);
+
 if (process.exitCode) {
   console.error("\nStart-run smoke failed.");
   process.exit(process.exitCode);
