@@ -13,10 +13,7 @@
         message: error?.message || String(error),
       };
       if (typeof console?.warn === "function") {
-        console.warn(
-          `Save storage ${operation} failed; falling back where possible.`,
-          error,
-        );
+        console.warn(`Save storage ${operation} failed; falling back where possible.`, error);
       }
     }
 

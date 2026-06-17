@@ -4,12 +4,12 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Reformat format-hygiene skill only
+Add deterministic formatting enforcement
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-17T19:37:48.857Z
+- Started: 2026-06-17T23:30:57.375Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved

@@ -71,10 +71,7 @@ const LONG_LINE_ALLOWANCES = new Map([
 ]);
 
 function isIgnored(path) {
-  return (
-    IGNORED_PATHS.has(path) ||
-    IGNORED_PREFIXES.some((prefix) => path.startsWith(prefix))
-  );
+  return IGNORED_PATHS.has(path) || IGNORED_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
 function extensionOf(path) {
@@ -115,9 +112,7 @@ function inspectFile(path) {
       const allowanceKey = `${path}:${index + 1}`;
       const allowanceReason = LONG_LINE_ALLOWANCES.get(allowanceKey);
       if (allowanceReason) {
-        allowedLongLines.push(
-          `line ${index + 1} is ${line.length} chars: ${allowanceReason}`,
-        );
+        allowedLongLines.push(`line ${index + 1} is ${line.length} chars: ${allowanceReason}`);
         return;
       }
       failures.push(`line ${index + 1} is ${line.length} chars`);
@@ -148,7 +143,7 @@ const inspected = files.map(inspectFile);
 const failed = inspected.filter((result) => result.failures.length);
 const allowedLongLineCount = inspected.reduce(
   (count, result) => count + result.allowedLongLines.length,
-  0,
+  0
 );
 
 console.log("# Tap Survivor Format Hygiene Check");
@@ -158,9 +153,7 @@ console.log(`- allowed long lines: ${allowedLongLineCount}`);
 
 if (failed.length) {
   for (const result of failed) {
-    console.error(
-      `FAIL ${result.path} (${result.lineCount} lines, ${result.size} bytes)`,
-    );
+    console.error(`FAIL ${result.path} (${result.lineCount} lines, ${result.size} bytes)`);
     result.failures.forEach((failure) => console.error(`  - ${failure}`));
   }
   process.exit(1);
