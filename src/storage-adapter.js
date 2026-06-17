@@ -35,6 +35,7 @@
 
     function getSaveRawFromLocalStorage() {
       const storage = browserStorage();
+
       if (!storage?.getItem) {
         backendName = "unavailable";
         return null;
@@ -42,7 +43,10 @@
 
       try {
         backendName = "localStorage";
-        return storage.getItem(saveKey) || storage.getItem(legacySaveKey);
+        return (
+          storage.getItem(saveKey) ||
+          storage.getItem(legacySaveKey)
+        );
       } catch (error) {
         rememberError("localStorage-get", error);
         backendName = "unavailable";
@@ -52,6 +56,7 @@
 
     function setSaveRawToLocalStorage(value) {
       const storage = browserStorage();
+
       if (!storage?.setItem) {
         backendName = "unavailable";
         return false;
@@ -70,16 +75,27 @@
 
     function removeSaveRawFromLocalStorage(removed = false) {
       const storage = browserStorage();
-      if (!storage?.removeItem) return removed;
+
+      if (!storage?.removeItem) {
+        return removed;
+      }
 
       try {
-        if (!removed) backendName = "localStorage";
+        if (!removed) {
+          backendName = "localStorage";
+        }
+
         storage.removeItem(saveKey);
         storage.removeItem(legacySaveKey);
+
         return true;
       } catch (error) {
         rememberError("localStorage-remove", error);
-        if (!removed) backendName = "unavailable";
+
+        if (!removed) {
+          backendName = "unavailable";
+        }
+
         return removed;
       }
     }
@@ -144,6 +160,7 @@
 
     function setRawToLocalStorageKey(key, value) {
       const storage = browserStorage();
+
       if (!storage?.setItem) {
         backendName = "unavailable";
         return false;
