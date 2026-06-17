@@ -3,13 +3,17 @@
 ## Use When
 
 - Active source or docs are compressed, unreadable, or fail format hygiene.
+
 - The user asks for formatting-only cleanup.
+
 - A generated one-line file was accidentally treated as source.
 
 ## Do Not Use When
 
 - Gameplay, content, save behavior, or Android config needs functional changes.
+
 - The file is generated or archived evidence.
+
 - Formatting would hide a real parser or validation failure.
 
 ## Goal
