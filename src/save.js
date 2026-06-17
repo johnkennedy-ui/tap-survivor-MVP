@@ -15,7 +15,12 @@
     storageAdapter,
   }) {
     const shopItemById = new Map(shopItemDefs.map((item) => [item.id, item]));
-    const storage = storageAdapter || globalThis.TapSurvivorStorage?.createStorageAdapter({ saveKey, legacySaveKey });
+    const storage =
+      storageAdapter ||
+      globalThis.TapSurvivorStorage?.createStorageAdapter({
+        saveKey,
+        legacySaveKey,
+      });
     let lastLoadWarning = null;
 
     function defaultSave() {
@@ -34,7 +39,9 @@
     function loadSave() {
       function fromRaw(raw) {
         lastLoadWarning = null;
-        if (!raw) return normalizeAndMigrateSave({});
+        if (!raw) {
+          return normalizeAndMigrateSave({});
+        }
 
         try {
           return normalizeAndMigrateSave(JSON.parse(raw));
@@ -65,9 +72,11 @@
     }
 
     function persist(save) {
-      save.unlockedUpgrades = Object.entries(save.upgradeTiers)
+      const unlockedUpgrades = Object.entries(save.upgradeTiers)
         .filter(([, tier]) => tier > 0)
         .map(([id]) => id);
+
+      save.unlockedUpgrades = unlockedUpgrades;
       return storage?.setSaveRaw?.(JSON.stringify(save)) ?? false;
     }
 

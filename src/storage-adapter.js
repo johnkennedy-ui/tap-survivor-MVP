@@ -1,5 +1,9 @@
 (() => {
-  function createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey = `${saveKey}-corrupt-backup` }) {
+  function createStorageAdapter({
+    saveKey,
+    legacySaveKey,
+    corruptBackupKey = `${saveKey}-corrupt-backup`,
+  }) {
     let backendName = "unavailable";
     let lastStorageError = null;
 
@@ -9,7 +13,10 @@
         message: error?.message || String(error),
       };
       if (typeof console?.warn === "function") {
-        console.warn(`Save storage ${operation} failed; falling back where possible.`, error);
+        console.warn(
+          `Save storage ${operation} failed; falling back where possible.`,
+          error,
+        );
       }
     }
 
@@ -80,13 +87,20 @@
     function getSaveRaw() {
       const preferences = preferencesPlugin();
       if (preferences?.get) {
-        return Promise.resolve().then(async () => {
-          backendName = "capacitor-preferences";
-          return (await getFromPreferences(preferences, saveKey)) || (await getFromPreferences(preferences, legacySaveKey));
-        }).catch((error) => {
-          rememberError("preferences-get", error);
-          return getSaveRawFromLocalStorage();
-        });
+        return Promise.resolve()
+          .then(async () => {
+            backendName = "capacitor-preferences";
+            const currentSave = await getFromPreferences(preferences, saveKey);
+            const legacySave = currentSave
+              ? currentSave
+              : await getFromPreferences(preferences, legacySaveKey);
+
+            return legacySave;
+          })
+          .catch((error) => {
+            rememberError("preferences-get", error);
+            return getSaveRawFromLocalStorage();
+          });
       }
 
       return getSaveRawFromLocalStorage();
@@ -95,14 +109,16 @@
     function setSaveRaw(value) {
       const preferences = preferencesPlugin();
       if (preferences?.set) {
-        return Promise.resolve().then(async () => {
-          backendName = "capacitor-preferences";
-          await preferences.set({ key: saveKey, value });
-          return true;
-        }).catch((error) => {
-          rememberError("preferences-set", error);
-          return setSaveRawToLocalStorage(value);
-        });
+        return Promise.resolve()
+          .then(async () => {
+            backendName = "capacitor-preferences";
+            await preferences.set({ key: saveKey, value });
+            return true;
+          })
+          .catch((error) => {
+            rememberError("preferences-set", error);
+            return setSaveRawToLocalStorage(value);
+          });
       }
 
       return setSaveRawToLocalStorage(value);
@@ -111,14 +127,16 @@
     function setCorruptBackupRaw(value) {
       const preferences = preferencesPlugin();
       if (preferences?.set) {
-        return Promise.resolve().then(async () => {
-          backendName = "capacitor-preferences";
-          await preferences.set({ key: corruptBackupKey, value });
-          return true;
-        }).catch((error) => {
-          rememberError("preferences-backup-set", error);
-          return setRawToLocalStorageKey(corruptBackupKey, value);
-        });
+        return Promise.resolve()
+          .then(async () => {
+            backendName = "capacitor-preferences";
+            await preferences.set({ key: corruptBackupKey, value });
+            return true;
+          })
+          .catch((error) => {
+            rememberError("preferences-backup-set", error);
+            return setRawToLocalStorageKey(corruptBackupKey, value);
+          });
       }
 
       return setRawToLocalStorageKey(corruptBackupKey, value);
@@ -145,16 +163,18 @@
     function removeSaveRaw() {
       const preferences = preferencesPlugin();
       if (preferences?.remove) {
-        return Promise.resolve().then(async () => {
-          backendName = "capacitor-preferences";
-          await preferences.remove({ key: saveKey });
-          await preferences.remove({ key: legacySaveKey });
-          removeSaveRawFromLocalStorage(true);
-          return true;
-        }).catch((error) => {
-          rememberError("preferences-remove", error);
-          return removeSaveRawFromLocalStorage(false);
-        });
+        return Promise.resolve()
+          .then(async () => {
+            backendName = "capacitor-preferences";
+            await preferences.remove({ key: saveKey });
+            await preferences.remove({ key: legacySaveKey });
+            removeSaveRawFromLocalStorage(true);
+            return true;
+          })
+          .catch((error) => {
+            rememberError("preferences-remove", error);
+            return removeSaveRawFromLocalStorage(false);
+          });
       }
 
       return removeSaveRawFromLocalStorage(false);

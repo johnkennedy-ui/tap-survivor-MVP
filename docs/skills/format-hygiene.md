@@ -39,9 +39,13 @@ Improve readability of active source/docs without runtime behavior changes.
 ## Procedure
 
 1. Run the format hygiene check.
+
 2. Reformat only files that fail or are explicitly requested.
+
 3. Preserve function names, globals, public APIs, schema keys, and script order.
+
 4. Run `node --check` for each edited JS file.
+
 5. Run format hygiene and agent checks again.
 
 ## Commands

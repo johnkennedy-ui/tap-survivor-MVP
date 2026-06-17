@@ -71,7 +71,10 @@ const LONG_LINE_ALLOWANCES = new Map([
 ]);
 
 function isIgnored(path) {
-  return IGNORED_PATHS.has(path) || IGNORED_PREFIXES.some((prefix) => path.startsWith(prefix));
+  return (
+    IGNORED_PATHS.has(path) ||
+    IGNORED_PREFIXES.some((prefix) => path.startsWith(prefix))
+  );
 }
 
 function extensionOf(path) {
@@ -124,9 +127,9 @@ function inspectFile(path) {
   }
 
   if (
-    path.startsWith("docs/skills/")
-    && path.endsWith(".md")
-    && lineCount < COMPRESSED_LINE_COUNT
+    path.startsWith("docs/skills/") &&
+    path.endsWith(".md") &&
+    lineCount < COMPRESSED_LINE_COUNT
   ) {
     failures.push(`skill file has only ${lineCount} lines`);
   }

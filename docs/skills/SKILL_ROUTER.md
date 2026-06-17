@@ -15,17 +15,28 @@ Use this router before repository work that can be handled by one bounded routin
 
 ## Skill Index
 
-- `validation-baseline.md`: run baseline checks before edits or after small changes.
-- `runtime-parity.md`: verify GitHub.io and Android share the same built runtime.
-- `android-debug-build.md`: build and verify a local Android debug APK.
-- `save-lifecycle.md`: inspect or change save creation, migration, storage, and corruption handling.
-- `format-hygiene.md`: check or improve source/doc readability without behavior changes.
-- `file-split-maintainability.md`: split large files into small helper files while preserving public APIs.
-- `content-patch.md`: patch game content through the content JSON pipeline.
-- `mechanics-extension.md`: add a small gameplay mechanic or runtime behavior.
-- `play-release-aab.md`: prepare or validate a Play release Android App Bundle.
-- `device-qa-smoke-test.md`: run or document a hands-on device QA pass.
-- `handoff-evidence.md`: prepare a concise repo handoff or evidence bundle.
+- `validation-baseline.md`:
+  run baseline checks before edits or after small changes.
+- `runtime-parity.md`:
+  verify GitHub.io and Android share the same built runtime.
+- `android-debug-build.md`:
+  build and verify a local Android debug APK.
+- `save-lifecycle.md`:
+  inspect or change save creation, migration, storage, and corruption handling.
+- `format-hygiene.md`:
+  check or improve source/doc readability without behavior changes.
+- `file-split-maintainability.md`:
+  split large files into small helper files while preserving public APIs.
+- `content-patch.md`:
+  patch game content through the content JSON pipeline.
+- `mechanics-extension.md`:
+  add a small gameplay mechanic or runtime behavior.
+- `play-release-aab.md`:
+  prepare or validate a Play release Android App Bundle.
+- `device-qa-smoke-test.md`:
+  run or document a hands-on device QA pass.
+- `handoff-evidence.md`:
+  prepare a concise repo handoff or evidence bundle.
 
 ## Selection Guide
 

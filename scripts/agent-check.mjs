@@ -77,20 +77,55 @@ function focusedChecks(files) {
   files
     .filter((file) => /\.(mjs|js)$/.test(file) && !file.endsWith("src/content.generated.js"))
     .forEach((file) => checks.push(["node", ["--check", file]]));
-  if (files.some((file) => file.startsWith("content/") || file === "src/content.generated.js")) {
-    checks.push(["npm", ["run", "content:check"]], ["npm", ["run", "economy:check"]], ["npm", ["run", "smoke:add-content"]], ["npm", ["run", "verify:content"]]);
+  if (
+    files.some((file) => (
+      file.startsWith("content/") ||
+      file === "src/content.generated.js"
+    ))
+  ) {
+    checks.push(
+      ["npm", ["run", "content:check"]],
+      ["npm", ["run", "economy:check"]],
+      ["npm", ["run", "smoke:add-content"]],
+      ["npm", ["run", "verify:content"]],
+    );
   }
-  if (files.some((file) => file === "scripts/add-content.mjs" || file === "scripts/content-tools.mjs" || file === "scripts/smoke-add-content.mjs")) {
+  if (
+    files.some((file) => (
+      file === "scripts/add-content.mjs" ||
+      file === "scripts/content-tools.mjs" ||
+      file === "scripts/smoke-add-content.mjs"
+    ))
+  ) {
     checks.push(["npm", ["run", "smoke:add-content"]]);
   }
   if (files.some((file) => file === "src/shop.js" || file === "src/pickups.js" || file === "src/balance.js")) {
     checks.push(["npm", ["run", "economy:check"]]);
   }
-  if (files.some((file) => file.startsWith("assets/") || file.includes("sprites") || file === "src/assets.js")) {
-    checks.push(["npm", ["run", "verify:assets"]], ["npm", ["run", "smoke:assets"]]);
+  if (
+    files.some((file) => (
+      file.startsWith("assets/") ||
+      file.includes("sprites") ||
+      file === "src/assets.js"
+    ))
+  ) {
+    checks.push(
+      ["npm", ["run", "verify:assets"]],
+      ["npm", ["run", "smoke:assets"]],
+    );
   }
-  if (files.some((file) => file === "src/audio.js" || file === "src/weapon-fire.js" || file.includes("sfx"))) {
-    checks.push(["npm", ["run", "verify:audio"]], ["npm", ["run", "smoke:audio"]], ["npm", ["run", "smoke:start-run"]]);
+  if (
+    files.some((file) => (
+      file === "src/audio.js" ||
+      file === "src/weapon-fire.js" ||
+      file.includes("sfx")
+    ))
+  ) {
+    checks.push(
+      ["npm", ["run", "verify:audio"]],
+      ["npm", ["run", "smoke:audio"]],
+      ["npm", ["run", "smoke:start-run"]],
+    );
   }
   if (files.some((file) => file === "src/relics.js" || file === "src/shell-ui.js" || file.includes("relic"))) {
     checks.push(["npm", ["run", "verify:relics"]], ["npm", ["run", "smoke:relic-run-start"]]);
