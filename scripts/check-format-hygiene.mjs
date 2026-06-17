@@ -3,11 +3,11 @@ import { join, relative } from "node:path";
 
 const root = new URL("..", import.meta.url).pathname;
 const MAX_LINE_LENGTH = 240;
-const COMPRESSED_SIZE_BYTES = 2048;
-const COMPRESSED_LINE_COUNT = 5;
+const COMPRESSED_SIZE_BYTES = 1024;
+const COMPRESSED_LINE_COUNT = 10;
 
 const SCAN_ROOTS = ["src", "scripts", "docs"];
-const SCAN_FILES = ["AGENTS.md", "README.md"];
+const SCAN_FILES = ["AGENTS.md", "README.md", "package.json"];
 const ACTIVE_EXTENSIONS = new Set([".js", ".css", ".mjs", ".md"]);
 
 const IGNORED_PATHS = new Set([
@@ -121,6 +121,14 @@ function inspectFile(path) {
 
   if (size > COMPRESSED_SIZE_BYTES && lineCount < COMPRESSED_LINE_COUNT) {
     failures.push(`${size} bytes but only ${lineCount} lines`);
+  }
+
+  if (
+    path.startsWith("docs/skills/")
+    && path.endsWith(".md")
+    && lineCount < COMPRESSED_LINE_COUNT
+  ) {
+    failures.push(`skill file has only ${lineCount} lines`);
   }
 
   return { allowedLongLines, failures, lineCount, path, size };
