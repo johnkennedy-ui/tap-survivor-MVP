@@ -1,7 +1,15 @@
 (() => {
-  const { createDefaultSave } = globalThis.TapSurvivorSaveDefaults;
-  const { migrateSave } = globalThis.TapSurvivorSaveMigrations;
-  const { createSaveNormalizer } = globalThis.TapSurvivorSaveNormalize;
+  const {
+    createDefaultSave,
+  } = globalThis.TapSurvivorSaveDefaults;
+
+  const {
+    migrateSave,
+  } = globalThis.TapSurvivorSaveMigrations;
+
+  const {
+    createSaveNormalizer,
+  } = globalThis.TapSurvivorSaveNormalize;
 
   function createSaveSystem({
     saveKey,
@@ -55,11 +63,14 @@
       try {
         const raw = storage?.getSaveRaw?.();
         if (raw && typeof raw.then === "function") {
-          return raw.then(fromRaw).catch(() => {
-            lastLoadWarning = "storage-read-failed";
-            return defaultSave();
-          });
+          return raw
+            .then(fromRaw)
+            .catch(() => {
+              lastLoadWarning = "storage-read-failed";
+              return defaultSave();
+            });
         }
+
         return fromRaw(raw);
       } catch {
         lastLoadWarning = "storage-read-failed";
@@ -68,7 +79,10 @@
     }
 
     function normalizeAndMigrateSave(input) {
-      return normalizeSave({ ...defaultSave(), ...migrateSave(input) });
+      return normalizeSave({
+        ...defaultSave(),
+        ...migrateSave(input),
+      });
     }
 
     function persist(save) {
