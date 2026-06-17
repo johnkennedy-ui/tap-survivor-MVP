@@ -115,7 +115,9 @@ function inspectFile(path) {
       const allowanceKey = `${path}:${index + 1}`;
       const allowanceReason = LONG_LINE_ALLOWANCES.get(allowanceKey);
       if (allowanceReason) {
-        allowedLongLines.push(`line ${index + 1} is ${line.length} chars: ${allowanceReason}`);
+        allowedLongLines.push(
+          `line ${index + 1} is ${line.length} chars: ${allowanceReason}`,
+        );
         return;
       }
       failures.push(`line ${index + 1} is ${line.length} chars`);
@@ -156,7 +158,9 @@ console.log(`- allowed long lines: ${allowedLongLineCount}`);
 
 if (failed.length) {
   for (const result of failed) {
-    console.error(`FAIL ${result.path} (${result.lineCount} lines, ${result.size} bytes)`);
+    console.error(
+      `FAIL ${result.path} (${result.lineCount} lines, ${result.size} bytes)`,
+    );
     result.failures.forEach((failure) => console.error(`  - ${failure}`));
   }
   process.exit(1);

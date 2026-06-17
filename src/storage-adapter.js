@@ -43,10 +43,7 @@
 
       try {
         backendName = "localStorage";
-        return (
-          storage.getItem(saveKey) ||
-          storage.getItem(legacySaveKey)
-        );
+        return storage.getItem(saveKey) || storage.getItem(legacySaveKey);
       } catch (error) {
         rememberError("localStorage-get", error);
         backendName = "unavailable";

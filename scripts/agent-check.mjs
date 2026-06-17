@@ -59,10 +59,14 @@ const fullChecks = [
 ];
 
 function changedFiles() {
-  const result = spawnSync("git", ["status", "--short", "--untracked-files=all"], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const result = spawnSync(
+    "git",
+    ["status", "--short", "--untracked-files=all"],
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
   if (result.status !== 0 || !result.stdout.trim()) return [];
   return result.stdout
     .trim()
@@ -75,13 +79,16 @@ function changedFiles() {
 function focusedChecks(files) {
   const checks = [["git", ["diff", "--check"]]];
   files
-    .filter((file) => /\.(mjs|js)$/.test(file) && !file.endsWith("src/content.generated.js"))
+    .filter(
+      (file) =>
+        /\.(mjs|js)$/.test(file) && !file.endsWith("src/content.generated.js"),
+    )
     .forEach((file) => checks.push(["node", ["--check", file]]));
   if (
-    files.some((file) => (
-      file.startsWith("content/") ||
-      file === "src/content.generated.js"
-    ))
+    files.some(
+      (file) =>
+        file.startsWith("content/") || file === "src/content.generated.js",
+    )
   ) {
     checks.push(
       ["npm", ["run", "content:check"]],
@@ -91,23 +98,32 @@ function focusedChecks(files) {
     );
   }
   if (
-    files.some((file) => (
-      file === "scripts/add-content.mjs" ||
-      file === "scripts/content-tools.mjs" ||
-      file === "scripts/smoke-add-content.mjs"
-    ))
+    files.some(
+      (file) =>
+        file === "scripts/add-content.mjs" ||
+        file === "scripts/content-tools.mjs" ||
+        file === "scripts/smoke-add-content.mjs",
+    )
   ) {
     checks.push(["npm", ["run", "smoke:add-content"]]);
   }
-  if (files.some((file) => file === "src/shop.js" || file === "src/pickups.js" || file === "src/balance.js")) {
+  if (
+    files.some(
+      (file) =>
+        file === "src/shop.js" ||
+        file === "src/pickups.js" ||
+        file === "src/balance.js",
+    )
+  ) {
     checks.push(["npm", ["run", "economy:check"]]);
   }
   if (
-    files.some((file) => (
-      file.startsWith("assets/") ||
-      file.includes("sprites") ||
-      file === "src/assets.js"
-    ))
+    files.some(
+      (file) =>
+        file.startsWith("assets/") ||
+        file.includes("sprites") ||
+        file === "src/assets.js",
+    )
   ) {
     checks.push(
       ["npm", ["run", "verify:assets"]],
@@ -115,11 +131,12 @@ function focusedChecks(files) {
     );
   }
   if (
-    files.some((file) => (
-      file === "src/audio.js" ||
-      file === "src/weapon-fire.js" ||
-      file.includes("sfx")
-    ))
+    files.some(
+      (file) =>
+        file === "src/audio.js" ||
+        file === "src/weapon-fire.js" ||
+        file.includes("sfx"),
+    )
   ) {
     checks.push(
       ["npm", ["run", "verify:audio"]],
@@ -127,13 +144,44 @@ function focusedChecks(files) {
       ["npm", ["run", "smoke:start-run"]],
     );
   }
-  if (files.some((file) => file === "src/relics.js" || file === "src/shell-ui.js" || file.includes("relic"))) {
-    checks.push(["npm", ["run", "verify:relics"]], ["npm", ["run", "smoke:relic-run-start"]]);
+  if (
+    files.some(
+      (file) =>
+        file === "src/relics.js" ||
+        file === "src/shell-ui.js" ||
+        file.includes("relic"),
+    )
+  ) {
+    checks.push(
+      ["npm", ["run", "verify:relics"]],
+      ["npm", ["run", "smoke:relic-run-start"]],
+    );
   }
-  if (files.some((file) => file === "index.html" || file === "src/styles.css" || file === "src/level-up.js" || file === "src/shell-ui.js")) {
-    checks.push(["npm", ["run", "verify:script-order"]], ["npm", ["run", "verify:ui"]], ["npm", ["run", "smoke:browser"]]);
+  if (
+    files.some(
+      (file) =>
+        file === "index.html" ||
+        file === "src/styles.css" ||
+        file === "src/level-up.js" ||
+        file === "src/shell-ui.js",
+    )
+  ) {
+    checks.push(
+      ["npm", ["run", "verify:script-order"]],
+      ["npm", ["run", "verify:ui"]],
+      ["npm", ["run", "smoke:browser"]],
+    );
   }
-  if (files.some((file) => file.startsWith("src/") || file.startsWith("docs/") || file === "AGENTS.md" || file === "README.md" || file === "scripts/check-format-hygiene.mjs")) {
+  if (
+    files.some(
+      (file) =>
+        file.startsWith("src/") ||
+        file.startsWith("docs/") ||
+        file === "AGENTS.md" ||
+        file === "README.md" ||
+        file === "scripts/check-format-hygiene.mjs",
+    )
+  ) {
     checks.push(["npm", ["run", "check:format-hygiene"]]);
   }
   if (files.some((file) => file.startsWith("src/") && /\.(js)$/.test(file))) {
@@ -143,7 +191,12 @@ function focusedChecks(files) {
 }
 
 function needsFullCheck(files) {
-  return files.some((file) => file === "package.json" || file.startsWith(".github/") || file === "scripts/agent-check.mjs");
+  return files.some(
+    (file) =>
+      file === "package.json" ||
+      file.startsWith(".github/") ||
+      file === "scripts/agent-check.mjs",
+  );
 }
 
 function dedupeChecks(checks) {
@@ -160,7 +213,11 @@ console.log("# Tap Survivor Agent Check");
 
 let failed = false;
 const files = changedFiles();
-const full = process.argv.includes("--full") || process.env.AGENT_CHECK_FULL === "1" || !files.length || needsFullCheck(files);
+const full =
+  process.argv.includes("--full") ||
+  process.env.AGENT_CHECK_FULL === "1" ||
+  !files.length ||
+  needsFullCheck(files);
 const checks = full ? fullChecks : focusedChecks(files);
 
 console.log(full ? "Mode: full" : "Mode: focused");
