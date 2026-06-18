@@ -4,33 +4,30 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Add release candidate gate script
+Add task scope checker
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T14:59:06.302Z
+- Started: 2026-06-18T17:58:54.651Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `scripts/release-candidate.mjs`
-- `scripts/check-package-id.mjs`
+- `scripts/check-task-scope.mjs`
 - `package.json`
-- `docs/skills/release-candidate.md`
+- `docs/skills/task-scope.md`
 - `docs/skills/SKILL_ROUTER.md`
-- `docs/RELEASE_CHECKLIST.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
+- `docs/skills/handoff-evidence.md`
 
 ## Files Changed
 
-- `scripts/release-candidate.mjs` adds the release candidate gate runner.
-- `scripts/check-package-id.mjs` adds the package ID consistency check required by the gate.
-- `package.json` adds `check:package-id` and `release:candidate`.
-- `docs/skills/release-candidate.md` documents the release candidate skill.
-- `docs/skills/SKILL_ROUTER.md` routes Play/internal-testing candidate proof to the release candidate skill.
-- `docs/RELEASE_CHECKLIST.md` records the release candidate gate command.
+- `scripts/check-task-scope.mjs` adds the task scope checker.
+- `package.json` adds `check:task-scope`.
+- `docs/skills/task-scope.md` documents the task scope workflow.
+- `docs/skills/SKILL_ROUTER.md` routes permitted-file verification to the task scope skill.
+- `docs/skills/handoff-evidence.md` requires scope evidence for scoped tasks.
 - `docs/CURRENT_TASK.md` records this tooling/docs task.
 
 ## Validation Plan
@@ -38,11 +35,13 @@ Add release candidate gate script
 Run the smallest command that proves the change:
 
 ```bash
-node --check scripts/release-candidate.mjs
-npm run release:candidate
-npm run check:commit-evidence -- --commit HEAD --expect-file docs/MECHANIC_EXTENSION_GUIDE.md --min-lines docs/MECHANIC_EXTENSION_GUIDE.md=180 --allow-unchanged
-git diff --check
+node --check scripts/check-task-scope.mjs
+npm run check:task-scope -- --help
+npm run check:task-scope -- --mode working --allow "scripts/**" --allow "docs/**" --allow "package.json" --forbid "src/**" --forbid "android/**" --forbid "www/**"
+npm run check:format-hygiene
 npm run agent:check
+npm test
+git diff --check
 ```
 
 Result:

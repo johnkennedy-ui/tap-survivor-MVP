@@ -35,8 +35,9 @@ Create a clear snapshot of branch, changes, validation, risks, and next step.
 2. Run `npm run agent:status`.
 3. Run validation only if required by the handoff.
 4. When a task claims specific files were reformatted, split, generated, or updated, run `npm run check:commit-evidence` against those files after commit.
-5. Summarize commits, changed files, commands, validation, blockers, and next step.
-6. Do not make unrelated fixes.
+5. When a task had explicit allowed or forbidden files, include `npm run check:task-scope` in the final handoff evidence.
+6. Summarize commits, changed files, commands, validation, blockers, and next step.
+7. Do not make unrelated fixes.
 
 ## Commands
 

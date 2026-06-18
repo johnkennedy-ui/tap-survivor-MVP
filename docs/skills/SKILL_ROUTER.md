@@ -41,6 +41,8 @@ Use this router before repository work that can be handled by one bounded routin
   prove committed files match an agent's report.
 - `release-candidate.md`:
   prove a Play/internal-testing release candidate can be built without secrets.
+- `task-scope.md`:
+  prove changed files stay inside the task's allowed and forbidden scope.
 
 ## Selection Guide
 
@@ -53,5 +55,7 @@ If a request is ambiguous between docs-only and code changes, choose the docs-on
 If the task is complete and needs proof that the committed files match the report, use `docs/skills/commit-evidence.md`.
 
 If the task is to prove a Play/internal-testing release candidate, use `docs/skills/release-candidate.md`.
+
+If verifying that a task touched only permitted files, use `docs/skills/task-scope.md`.
 
 If the selected skill's forbidden files include a file that must be edited to satisfy the task, stop and report the conflict.
