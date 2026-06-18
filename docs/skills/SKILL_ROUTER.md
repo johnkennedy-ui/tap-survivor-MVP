@@ -43,6 +43,8 @@ Use this router before repository work that can be handled by one bounded routin
   prove a Play/internal-testing release candidate can be built without secrets.
 - `task-scope.md`:
   prove changed files stay inside the task's allowed and forbidden scope.
+- `ci-gate.md`:
+  add or verify GitHub Actions non-secret validation checks.
 
 ## Selection Guide
 
@@ -57,5 +59,7 @@ If the task is complete and needs proof that the committed files match the repor
 If the task is to prove a Play/internal-testing release candidate, use `docs/skills/release-candidate.md`.
 
 If verifying that a task touched only permitted files, use `docs/skills/task-scope.md`.
+
+If editing CI or GitHub Actions, use `docs/skills/ci-gate.md`.
 
 If the selected skill's forbidden files include a file that must be edited to satisfy the task, stop and report the conflict.

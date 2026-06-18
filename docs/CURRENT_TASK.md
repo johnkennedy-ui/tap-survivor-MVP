@@ -16,6 +16,7 @@ Merge validated tooling branches into main
 
 - `docs/CURRENT_TASK.md`
 - `.prettierignore`
+- `.github/workflows/ci.yml`
 - `package.json`
 - `scripts/release-candidate.mjs`
 - `scripts/check-commit-evidence.mjs`
@@ -23,13 +24,15 @@ Merge validated tooling branches into main
 - `scripts/check-task-scope.mjs`
 - `docs/skills/release-candidate.md`
 - `docs/skills/task-scope.md`
+- `docs/skills/ci-gate.md`
 - `docs/skills/SKILL_ROUTER.md`
 - `docs/skills/handoff-evidence.md`
+- `docs/RELEASE_CHECKLIST.md`
 
 ## Files Changed
 
-- Merge conflict resolved between release-gate verification and task-scope task state.
-- Keep the combined validated tooling state from the merged branches.
+- Merged release-gate verification, task-scope checker, and non-secret CI gate branches.
+- Resolved task-state and skill-router conflicts by keeping the combined validated tooling state.
 
 ## Validation Plan
 
@@ -40,12 +43,13 @@ npm run format:check
 npm run check:format-hygiene
 npm run check:package-id
 npm run check:task-scope -- --help
+npm run check:commit-evidence -- --help
 git diff --check
 ```
 
 Result:
 
-- Pending.
+- Passed.
 
 ## Evidence Required
 
