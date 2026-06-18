@@ -4,43 +4,63 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Split save system into maintainable helper files
+Split weapon fire system into helper files
 
 ## Status
 
-- State: in progress
-- Started: 2026-06-17T23:47:15.971Z
+- State: complete
+- Started: 2026-06-18T07:25:35.172Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
 - `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
+- `docs/MECHANIC_EXTENSION_GUIDE.md`
+- `index.html`
+- `scripts/smoke-game-harness.mjs`
+- `scripts/verify-speed-controls.mjs`
+- `src/weapon-fire.js`
+- `src/weapon-projectiles.js`
+- `src/weapon-cooldowns.js`
+- `src/weapon-behaviors.js`
 
 ## Files Changed
 
-- `src/save-corruption.js`
-- `src/save.js`
-- `index.html`
-- `scripts/smoke-save.mjs`
-- `.prettierignore`
-- `docs/SAVE_LIFECYCLE.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CURRENT_TASK.md`
+- `src/weapon-fire.js` remains the public weapon-fire integration entry point.
+- `src/weapon-cooldowns.js` owns cooldown, stat, and projectile-skill scaling.
+- `src/weapon-projectiles.js` owns projectile firing, bolt spawning, bounces, split-on-hit, and explosions.
+- `src/weapon-behaviors.js` owns beam, cone, radial, chain, target-area, lingering-area, mine, area, beam, and burst updates.
+- `index.html` and VM harnesses load weapon helpers before `src/weapon-fire.js`.
+- `docs/AGENT_CODEBASE_CONTEXT.md` and `docs/MECHANIC_EXTENSION_GUIDE.md` document weapon helper ownership.
 
 ## Validation Plan
 
 Run the smallest command that proves the change:
 
 ```bash
+node --check src/weapon-fire.js
+node --check src/weapon-targeting.js
+node --check src/weapon-projectiles.js
+node --check src/weapon-behaviors.js
+node --check src/weapon-cooldowns.js
+npm run check:format-hygiene
+npm run build:content
+npm run validate:content
+npm run smoke:start-run
+npm run smoke:quest-flow
+npm test
 npm run agent:check
+npm run build:web
+npm run check:runtime-parity
+npm run android:sync
+npm run android:debug
+git diff --check
 ```
 
 Result:
 
-- Slice 2 validation passed.
-- Slice 3 documentation validation passed.
+- Passed.
 
 ## Evidence Required
 

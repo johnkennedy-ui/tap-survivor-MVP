@@ -251,6 +251,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "src/save-defaults.js",
     "src/save-migrations.js",
     "src/save-normalize.js",
+    "src/save-corruption.js",
     "src/save.js",
     "src/effects.js",
     "src/upgrades.js",
@@ -298,6 +299,8 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
   } else {
     vm.runInContext(readSource("src/weapon-projectiles.js"), context);
     vm.runInContext(readSource("src/weapon-targeting.js"), context);
+    vm.runInContext(readSource("src/weapon-cooldowns.js"), context);
+    vm.runInContext(readSource("src/weapon-behaviors.js"), context);
     vm.runInContext(readSource("src/weapon-fire.js"), context);
     vm.runInContext(readSource("src/enemies.js"), context);
     vm.runInContext(readSource("src/combat.js"), context);
