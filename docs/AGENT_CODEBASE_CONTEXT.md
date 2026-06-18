@@ -21,6 +21,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/save-defaults.js`: save schema version constant and default save shape.
 - `src/save-migrations.js`: save migration table and migration helper.
 - `src/save-normalize.js`: save normalization and clamping helpers.
+- `src/save-corruption.js`: corrupt save fallback and load-warning helper.
 - `src/storage-adapter.js`: browser `localStorage` and Capacitor Preferences save backend adapter.
 - `src/effects.js`: shared runtime effect handlers for run upgrades and shop item bonuses.
 - `src/ui.js`: DOM lookup helper for game UI elements.
@@ -66,7 +67,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Browser global load-order check: `scripts/check-script-order.mjs`.
 - Quest graph audit: `scripts/audit-quests.mjs`.
 - Save/meta progression: `src/save.js`, `src/progression.js`, `src/run-state.js`, and orchestration in `src/game.js`.
-- Save helper ownership: defaults live in `src/save-defaults.js`, migrations in `src/save-migrations.js`, and normalization in `src/save-normalize.js`.
+- Save helper ownership: defaults live in `src/save-defaults.js`, migrations in `src/save-migrations.js`, normalization in `src/save-normalize.js`, and corrupt-load warning behavior in `src/save-corruption.js`.
 - Run HUD/end-screen UI: `src/run-ui.js`.
 - Run ticking/player movement: `src/run-update.js`.
 - Coin shop: `src/shop.js` plus `shopItems` content and the in-run shop tab in `src/shell-ui.js`.

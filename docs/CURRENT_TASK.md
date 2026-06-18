@@ -20,7 +20,14 @@ Split save system into maintainable helper files
 
 ## Files Changed
 
-- Pending.
+- `src/save-corruption.js`
+- `src/save.js`
+- `index.html`
+- `scripts/smoke-save.mjs`
+- `.prettierignore`
+- `docs/SAVE_LIFECYCLE.md`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
+- `docs/CURRENT_TASK.md`
 
 ## Validation Plan
 
@@ -32,7 +39,8 @@ npm run agent:check
 
 Result:
 
-- Pending.
+- Slice 2 validation passed.
+- Slice 3 documentation validation passed.
 
 ## Evidence Required
 

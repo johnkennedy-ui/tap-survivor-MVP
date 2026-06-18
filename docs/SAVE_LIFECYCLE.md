@@ -26,6 +26,15 @@ All save reads, writes, resets, corrupt-save backups, and lifecycle flushes go t
 
 The save schema and save API stay the same on every platform.
 
+## Save File Ownership
+
+- `src/save.js` remains the public save API entry point.
+- `src/save-defaults.js` owns default save object construction and schema version defaults.
+- `src/save-migrations.js` owns save version migration behavior.
+- `src/save-normalize.js` owns partial-save repair, coercion, clamping, and unknown field preservation.
+- `src/save-corruption.js` owns corrupt JSON fallback and load-warning state.
+- `src/storage-adapter.js` owns browser and Capacitor storage backend access.
+
 ## Load And Migration
 
 The canonical load path is:
