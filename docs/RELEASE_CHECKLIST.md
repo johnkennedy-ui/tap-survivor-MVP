@@ -115,6 +115,12 @@ Confirm these remain ignored or absent:
 
 Use `docs/PLAY_INTERNAL_TESTING.md` for the Play Console and device checklist.
 
+Before Play Console submission, review:
+
+- `docs/PRIVACY_POLICY_DRAFT.md`
+- `docs/PLAY_DATA_SAFETY_WORKSHEET.md`
+- `docs/PLAY_PERMISSIONS_WORKSHEET.md`
+
 ## Device Checks After Play Install
 
 - Launch the Play-installed build.
