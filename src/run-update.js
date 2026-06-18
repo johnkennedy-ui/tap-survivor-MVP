@@ -19,9 +19,11 @@
       const dist = Math.hypot(dx, dy);
       player.moving = dist > 3;
       if (dist > 3) {
+        player.facingX = dx / dist;
+        player.facingY = dy / dist;
         const step = Math.min(dist, player.speed * dt);
-        player.x += (dx / dist) * step;
-        player.y += (dy / dist) * step;
+        player.x += player.facingX * step;
+        player.y += player.facingY * step;
       }
       player.x = clamp(player.x, 18, canvas.width - 18);
       player.y = clamp(player.y, 18, canvas.height - 18);

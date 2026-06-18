@@ -74,6 +74,53 @@ check("heavy projectiles fly slower", Math.abs(heavyShot.bolt.vx) > 220 && Math.
 check("heavy projectiles deal triple base damage", heavyShot.bolt.damage === 36);
 check("heavy projectiles fire slower", heavyShot.timer > 0.78 && heavyShot.timer < 0.82);
 
+function voidMineShot() {
+  const mineHarness = createGameHarness();
+  mineHarness.elements.get("startRun").click();
+  mineHarness.frame(1000);
+  const save = mineHarness.context.__tapSurvivorHarness.getSave();
+  save.towerFloor = 10;
+  save.unlockedRelics = ["attack_radius_focus_relic"];
+  save.equippedRelics = ["attack_radius_focus_relic"];
+  const game = mineHarness.context.__tapSurvivorHarness.getGame();
+  const player = game.player;
+  player.targetX = player.x + 200;
+  mineHarness.frame(1050);
+  game.player.equippedWeapons = ["void_mine"];
+  game.weaponTimers = { void_mine: -1 };
+  game.bolts = [];
+  game.runUpgradeTiers.run_attack_radius = 2;
+  game.enemies = [
+    {
+      x: game.player.x - 62,
+      y: game.player.y,
+      radius: 12,
+      hp: 100,
+      maxHp: 100,
+      damage: 0,
+      speed: 0,
+    },
+  ];
+  mineHarness.frame(1100);
+  const armedMine = game.areas.find((area) => area.weaponId === "void_mine");
+  const armDelayBeforeExplosion = armedMine.armDelay;
+  const enemyHpBeforeExplosion = game.enemies[0].hp;
+  mineHarness.runFrames(44, 1150, 50);
+  return {
+    armedMine,
+    armDelayBeforeExplosion,
+    enemyHpBeforeExplosion,
+    enemyHpAfterExplosion: game.enemies[0]?.hp,
+    playerX: game.player.x,
+  };
+}
+
+const voidMine = voidMineShot();
+check("void mine spawns behind player", voidMine.armedMine.x < voidMine.playerX);
+check("void mine waits before exploding", voidMine.armDelayBeforeExplosion > 1.8 && voidMine.enemyHpBeforeExplosion === 100);
+check("void mine area scales with upgrades and relics", voidMine.armedMine.radius > 160);
+check("void mine explodes after delay", voidMine.enemyHpAfterExplosion < 100);
+
 if (process.exitCode) {
   console.error("\nStart-run smoke failed.");
   process.exit(process.exitCode);

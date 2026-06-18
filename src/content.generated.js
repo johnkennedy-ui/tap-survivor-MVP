@@ -63,12 +63,15 @@ globalThis.TapSurvivorContent = {
     },
     "void_mine": {
       "name": "Void Mine",
-      "description": "Drops a delayed trap at your feet.",
+      "description": "Drops a delayed mine behind you that explodes after 2 seconds.",
       "upgradeId": "void_damage",
       "cooldown": 1.65,
       "damage": 36,
       "kind": "mine",
       "range": 86,
+      "armDelay": 2,
+      "explosionLife": 0.32,
+      "spawnOffset": 62,
       "color": "#7964ff"
     },
     "chain_spark": {

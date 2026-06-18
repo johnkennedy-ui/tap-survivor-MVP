@@ -206,15 +206,18 @@
       const game = getGame();
       const weapon = weaponDefs[weaponId];
       const p = game.player;
+      const facing = playerFacingVector(p);
+      const armDelay = mineArmDelay(weapon);
       game.areas.push({
         weaponId,
-        x: p.x,
-        y: p.y,
+        x: p.x - facing.x * mineSpawnOffset(weapon),
+        y: p.y - facing.y * mineSpawnOffset(weapon),
         radius: weaponReach(weapon),
         color: weapon.color,
-        life: 1.1,
-        tick: 1.1,
-        tickTimer: 0.18,
+        life: armDelay + mineExplosionLife(weapon),
+        armDelay,
+        explosionLife: mineExplosionLife(weapon),
+        damageOnce: true,
         damage: weaponDamage(weaponId),
       });
     }
@@ -224,17 +227,58 @@
       game.areas.forEach((area) => {
         area.life -= dt;
         if (area.visualOnly || !area.weaponId) return;
+        if (area.armDelay > 0) {
+          area.armDelay = Math.max(0, area.armDelay - dt);
+          if (area.armDelay > 0) return;
+        }
+        if (area.damageOnce) {
+          if (!area.exploded) {
+            damageEnemiesInArea(area);
+            area.exploded = true;
+            area.life = Math.min(area.life, area.explosionLife || 0.28);
+          }
+          return;
+        }
         area.tickTimer -= dt;
         if (area.tickTimer > 0) return;
         area.tickTimer = area.tick;
-        game.enemies.forEach((enemy) => {
-          if (distance(area, enemy) <= area.radius + enemy.radius) {
-            damageEnemy(enemy, area.damage, area.weaponId);
-          }
-        });
+        damageEnemiesInArea(area);
       });
       game.areas = game.areas.filter((area) => area.life > 0);
       reapEnemies();
+    }
+
+    function damageEnemiesInArea(area) {
+      const game = getGame();
+      game.enemies.forEach((enemy) => {
+        if (distance(area, enemy) <= area.radius + enemy.radius) {
+          damageEnemy(enemy, area.damage, area.weaponId);
+        }
+      });
+    }
+
+    function playerFacingVector(player) {
+      if (Number.isFinite(player.facingX) && Number.isFinite(player.facingY)) {
+        const length = Math.hypot(player.facingX, player.facingY);
+        if (length > 0) return { x: player.facingX / length, y: player.facingY / length };
+      }
+      const dx = player.targetX - player.x;
+      const dy = player.targetY - player.y;
+      const distanceToTarget = Math.hypot(dx, dy);
+      if (distanceToTarget > 0) return { x: dx / distanceToTarget, y: dy / distanceToTarget };
+      return { x: 0, y: 1 };
+    }
+
+    function mineArmDelay(weapon) {
+      return Number.isFinite(weapon.armDelay) ? weapon.armDelay : 2;
+    }
+
+    function mineExplosionLife(weapon) {
+      return Number.isFinite(weapon.explosionLife) ? weapon.explosionLife : 0.32;
+    }
+
+    function mineSpawnOffset(weapon) {
+      return Math.max(24, weapon.spawnOffset || 58);
     }
 
     function updateBeams(dt) {
