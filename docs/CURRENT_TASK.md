@@ -4,31 +4,33 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Add commit evidence checker
+Add release candidate gate script
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T14:34:31.071Z
+- Started: 2026-06-18T14:59:06.302Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `scripts/check-commit-evidence.mjs`
+- `scripts/release-candidate.mjs`
+- `scripts/check-package-id.mjs`
 - `package.json`
-- `docs/skills/commit-evidence.md`
-- `docs/skills/handoff-evidence.md`
+- `docs/skills/release-candidate.md`
 - `docs/skills/SKILL_ROUTER.md`
+- `docs/RELEASE_CHECKLIST.md`
 - `docs/CONTENT_EXTENSION_GUIDE.md`
 
 ## Files Changed
 
-- `scripts/check-commit-evidence.mjs` adds the committed-object evidence checker.
-- `package.json` adds `check:commit-evidence`.
-- `docs/skills/commit-evidence.md` documents the commit evidence skill.
-- `docs/skills/handoff-evidence.md` requires commit evidence checks for claimed file changes.
-- `docs/skills/SKILL_ROUTER.md` routes committed-file proof to the new skill.
+- `scripts/release-candidate.mjs` adds the release candidate gate runner.
+- `scripts/check-package-id.mjs` adds the package ID consistency check required by the gate.
+- `package.json` adds `check:package-id` and `release:candidate`.
+- `docs/skills/release-candidate.md` documents the release candidate skill.
+- `docs/skills/SKILL_ROUTER.md` routes Play/internal-testing candidate proof to the release candidate skill.
+- `docs/RELEASE_CHECKLIST.md` records the release candidate gate command.
 - `docs/CURRENT_TASK.md` records this tooling/docs task.
 
 ## Validation Plan
@@ -36,12 +38,11 @@ Add commit evidence checker
 Run the smallest command that proves the change:
 
 ```bash
-node --check scripts/check-commit-evidence.mjs
-npm run check:commit-evidence -- --help
-npm run check:format-hygiene
-npm run agent:check
-npm test
+node --check scripts/release-candidate.mjs
+npm run release:candidate
+npm run check:commit-evidence -- --commit HEAD --expect-file docs/MECHANIC_EXTENSION_GUIDE.md --min-lines docs/MECHANIC_EXTENSION_GUIDE.md=180 --allow-unchanged
 git diff --check
+npm run agent:check
 ```
 
 Result:

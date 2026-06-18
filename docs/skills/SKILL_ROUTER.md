@@ -39,6 +39,8 @@ Use this router before repository work that can be handled by one bounded routin
   prepare a concise repo handoff or evidence bundle.
 - `commit-evidence.md`:
   prove committed files match an agent's report.
+- `release-candidate.md`:
+  prove a Play/internal-testing release candidate can be built without secrets.
 
 ## Selection Guide
 
@@ -49,5 +51,7 @@ If a request names multiple outcomes, choose the first required skill and stop a
 If a request is ambiguous between docs-only and code changes, choose the docs-only path only when the user explicitly says documentation only.
 
 If the task is complete and needs proof that the committed files match the report, use `docs/skills/commit-evidence.md`.
+
+If the task is to prove a Play/internal-testing release candidate, use `docs/skills/release-candidate.md`.
 
 If the selected skill's forbidden files include a file that must be edited to satisfy the task, stop and report the conflict.

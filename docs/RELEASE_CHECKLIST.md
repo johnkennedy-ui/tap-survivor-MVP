@@ -2,6 +2,16 @@
 
 Use this checklist for Play internal testing release candidates.
 
+## Release Candidate Gate
+
+Before Play internal testing, run:
+
+```bash
+npm run release:candidate
+```
+
+This does not replace signed-AAB verification or Play Console upload.
+
 ## Build Checks
 
 1. Build the shared runtime.

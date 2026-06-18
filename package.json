@@ -15,6 +15,8 @@
     "format:check": "prettier --check .",
     "check:format-hygiene": "node scripts/check-format-hygiene.mjs",
     "check:commit-evidence": "node scripts/check-commit-evidence.mjs",
+    "check:package-id": "node scripts/check-package-id.mjs",
+    "release:candidate": "node scripts/release-candidate.mjs",
     "check:runtime-parity": "node scripts/check-runtime-parity.mjs",
     "android:sync": "npm run build:web && npm run check:runtime-parity && npx cap sync android",
     "android:open": "npx cap open android",
