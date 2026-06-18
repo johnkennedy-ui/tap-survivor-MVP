@@ -21,6 +21,7 @@ README.md
 src/*
 !src/save.js
 !src/storage-adapter.js
+!src/save-corruption.js
 
 scripts/*
 !scripts/agent-check.mjs

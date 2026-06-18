@@ -5,6 +5,8 @@
 
   const { createSaveNormalizer } = globalThis.TapSurvivorSaveNormalize;
 
+  const { createSaveLoadHandler } = globalThis.TapSurvivorSaveCorruption;
+
   function createSaveSystem({
     saveKey,
     legacySaveKey,
@@ -23,7 +25,6 @@
         saveKey,
         legacySaveKey,
       });
-    let lastLoadWarning = null;
 
     function defaultSave() {
       return createDefaultSave({ starterQuestIds });
@@ -38,35 +39,22 @@
       questOpenIds,
     });
 
+    const saveLoadHandler = createSaveLoadHandler({
+      defaultSave,
+      normalizeAndMigrateSave,
+      storage,
+    });
+
     function loadSave() {
-      function fromRaw(raw) {
-        lastLoadWarning = null;
-        if (!raw) {
-          return normalizeAndMigrateSave({});
-        }
-
-        try {
-          return normalizeAndMigrateSave(JSON.parse(raw));
-        } catch {
-          lastLoadWarning = "corrupt-save";
-          storage?.setCorruptBackupRaw?.(raw);
-          return defaultSave();
-        }
-      }
-
       try {
         const raw = storage?.getSaveRaw?.();
         if (raw && typeof raw.then === "function") {
-          return raw.then(fromRaw).catch(() => {
-            lastLoadWarning = "storage-read-failed";
-            return defaultSave();
-          });
+          return raw.then(saveLoadHandler.fromRaw).catch(saveLoadHandler.storageReadFailed);
         }
 
-        return fromRaw(raw);
+        return saveLoadHandler.fromRaw(raw);
       } catch {
-        lastLoadWarning = "storage-read-failed";
-        return defaultSave();
+        return saveLoadHandler.storageReadFailed();
       }
     }
 
@@ -91,7 +79,7 @@
     }
 
     function getLastLoadWarning() {
-      return lastLoadWarning;
+      return saveLoadHandler.getLastLoadWarning();
     }
 
     return {
