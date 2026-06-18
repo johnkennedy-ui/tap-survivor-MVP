@@ -4,33 +4,28 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Add release candidate gate script
+Add non-secret CI gate
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T14:59:06.302Z
+- Started: 2026-06-18T18:15:19.973Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `scripts/release-candidate.mjs`
-- `scripts/check-package-id.mjs`
-- `package.json`
-- `docs/skills/release-candidate.md`
+- `.github/workflows/ci.yml`
+- `docs/skills/ci-gate.md`
 - `docs/skills/SKILL_ROUTER.md`
 - `docs/RELEASE_CHECKLIST.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
 
 ## Files Changed
 
-- `scripts/release-candidate.mjs` adds the release candidate gate runner.
-- `scripts/check-package-id.mjs` adds the package ID consistency check required by the gate.
-- `package.json` adds `check:package-id` and `release:candidate`.
-- `docs/skills/release-candidate.md` documents the release candidate skill.
-- `docs/skills/SKILL_ROUTER.md` routes Play/internal-testing candidate proof to the release candidate skill.
-- `docs/RELEASE_CHECKLIST.md` records the release candidate gate command.
+- `.github/workflows/ci.yml` adds the non-secret CI gate.
+- `docs/skills/ci-gate.md` documents the CI gate workflow.
+- `docs/skills/SKILL_ROUTER.md` routes CI/GitHub Actions work to the CI gate skill.
+- `docs/RELEASE_CHECKLIST.md` requires CI to pass before release-candidate merge.
 - `docs/CURRENT_TASK.md` records this tooling/docs task.
 
 ## Validation Plan
@@ -38,11 +33,17 @@ Add release candidate gate script
 Run the smallest command that proves the change:
 
 ```bash
-node --check scripts/release-candidate.mjs
-npm run release:candidate
-npm run check:commit-evidence -- --commit HEAD --expect-file docs/MECHANIC_EXTENSION_GUIDE.md --min-lines docs/MECHANIC_EXTENSION_GUIDE.md=180 --allow-unchanged
-git diff --check
+npm run format:check
+npm run check:format-hygiene
+npm run check:package-id
+npm run build:content
+npm run validate:content
+npm test
 npm run agent:check
+npm run build:web
+npm run check:runtime-parity
+npm run check:commit-evidence -- --help
+git diff --check
 ```
 
 Result:

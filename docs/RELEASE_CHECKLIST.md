@@ -4,6 +4,9 @@ Use this checklist for Play internal testing release candidates.
 
 ## Release Candidate Gate
 
+Before an internal-testing or release-candidate branch merge, confirm CI passes on
+the branch or pull request.
+
 Before Play internal testing, run:
 
 ```bash
