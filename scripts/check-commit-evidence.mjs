@@ -106,7 +106,7 @@ function parseArgs(argv) {
     if (arg === "--max-line-length") {
       options.maxLineLength = parseNumber(
         argv[index + 1] ?? die("--max-line-length requires a value"),
-        "--max-line-length",
+        "--max-line-length"
       );
       index += 1;
       continue;
@@ -205,7 +205,7 @@ for (const file of options.expectFiles) {
 
   if (stats.longestLine > options.maxLineLength) {
     fail(
-      `${file} has longest line ${stats.longestLine}, expected at most ${options.maxLineLength}`,
+      `${file} has longest line ${stats.longestLine}, expected at most ${options.maxLineLength}`
     );
   }
 

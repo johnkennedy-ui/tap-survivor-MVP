@@ -2,6 +2,7 @@
 
 import { spawnSync } from "node:child_process";
 
+// Keep this order aligned with docs/skills/release-candidate.md.
 const steps = [
   ["npm", ["run", "format:check"]],
   ["npm", ["run", "check:format-hygiene"]],

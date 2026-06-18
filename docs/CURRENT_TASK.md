@@ -4,34 +4,30 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Add release candidate gate script
+Verify release candidate gate and formatting coverage
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T14:59:06.302Z
+- Started: 2026-06-18T17:06:01.064Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `scripts/release-candidate.mjs`
-- `scripts/check-package-id.mjs`
+- `.prettierignore`
 - `package.json`
+- `scripts/release-candidate.mjs`
 - `docs/skills/release-candidate.md`
-- `docs/skills/SKILL_ROUTER.md`
 - `docs/RELEASE_CHECKLIST.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
+- `scripts/check-format-hygiene.mjs`
 
 ## Files Changed
 
-- `scripts/release-candidate.mjs` adds the release candidate gate runner.
-- `scripts/check-package-id.mjs` adds the package ID consistency check required by the gate.
-- `package.json` adds `check:package-id` and `release:candidate`.
-- `docs/skills/release-candidate.md` documents the release candidate skill.
-- `docs/skills/SKILL_ROUTER.md` routes Play/internal-testing candidate proof to the release candidate skill.
-- `docs/RELEASE_CHECKLIST.md` records the release candidate gate command.
-- `docs/CURRENT_TASK.md` records this tooling/docs task.
+- `.prettierignore` explicitly unignores active release/evidence tooling scripts.
+- `scripts/check-commit-evidence.mjs` is formatted now that it is covered.
+- `scripts/check-package-id.mjs` is formatted now that it is covered.
+- `docs/CURRENT_TASK.md` records this verification task.
 
 ## Validation Plan
 
@@ -39,10 +35,12 @@ Run the smallest command that proves the change:
 
 ```bash
 node --check scripts/release-candidate.mjs
+npm run format:check
+npm run check:format-hygiene
+npm run check:package-id
+npm run check:commit-evidence -- --help
 npm run release:candidate
-npm run check:commit-evidence -- --commit HEAD --expect-file docs/MECHANIC_EXTENSION_GUIDE.md --min-lines docs/MECHANIC_EXTENSION_GUIDE.md=180 --allow-unchanged
 git diff --check
-npm run agent:check
 ```
 
 Result:

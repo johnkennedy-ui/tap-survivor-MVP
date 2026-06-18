@@ -27,12 +27,12 @@ const appId = capacitorConfig.appId;
 const namespace = matchGradleValue(
   buildGradle,
   /^\s*namespace\s*=\s*["']([^"']+)["']/m,
-  "android namespace",
+  "android namespace"
 );
 const applicationId = matchGradleValue(
   buildGradle,
   /^\s*applicationId\s+["']([^"']+)["']/m,
-  "android applicationId",
+  "android applicationId"
 );
 
 console.log("# Tap Survivor Package ID Check");
@@ -49,9 +49,7 @@ if (namespace && appId && namespace !== appId) {
 }
 
 if (applicationId && appId && applicationId !== appId) {
-  fail(
-    `android applicationId ${applicationId} does not match capacitor appId ${appId}`,
-  );
+  fail(`android applicationId ${applicationId} does not match capacitor appId ${appId}`);
 }
 
 if (process.exitCode) {

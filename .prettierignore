@@ -33,7 +33,10 @@ src/*
 
 scripts/*
 !scripts/agent-check.mjs
+!scripts/check-commit-evidence.mjs
 !scripts/check-format-hygiene.mjs
+!scripts/check-package-id.mjs
+!scripts/release-candidate.mjs
 
 docs/*
 !docs/skills/

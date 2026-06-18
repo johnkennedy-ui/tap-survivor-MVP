@@ -18,6 +18,8 @@ npm run release:candidate
 
 ## What It Checks
 
+The gate runs these checks in fixed order:
+
 - Formatting.
 - Format hygiene.
 - Package ID.
