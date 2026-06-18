@@ -4,57 +4,34 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Split weapon fire system into helper files
+Expand mechanic extension guide
 
 ## Status
 
-- State: complete
-- Started: 2026-06-18T07:25:35.172Z
+- State: in progress
+- Started: 2026-06-18T11:57:00.421Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
 - `docs/MECHANIC_EXTENSION_GUIDE.md`
-- `index.html`
-- `scripts/smoke-game-harness.mjs`
-- `scripts/verify-speed-controls.mjs`
-- `src/weapon-fire.js`
-- `src/weapon-projectiles.js`
-- `src/weapon-cooldowns.js`
-- `src/weapon-behaviors.js`
+- `docs/skills/mechanics-extension.md`
 
 ## Files Changed
 
-- `src/weapon-fire.js` remains the public weapon-fire integration entry point.
-- `src/weapon-cooldowns.js` owns cooldown, stat, and projectile-skill scaling.
-- `src/weapon-projectiles.js` owns projectile firing, bolt spawning, bounces, split-on-hit, and explosions.
-- `src/weapon-behaviors.js` owns beam, cone, radial, chain, target-area, lingering-area, mine, area, beam, and burst updates.
-- `index.html` and VM harnesses load weapon helpers before `src/weapon-fire.js`.
-- `docs/AGENT_CODEBASE_CONTEXT.md` and `docs/MECHANIC_EXTENSION_GUIDE.md` document weapon helper ownership.
+- `docs/MECHANIC_EXTENSION_GUIDE.md` expanded into a recipe guide with boundaries, ownership, validation matrix, and prompt templates.
+- `docs/skills/mechanics-extension.md` now points agents to the guide and requires one recipe only.
+- `docs/CURRENT_TASK.md` records this docs-only task.
 
 ## Validation Plan
 
 Run the smallest command that proves the change:
 
 ```bash
-node --check src/weapon-fire.js
-node --check src/weapon-targeting.js
-node --check src/weapon-projectiles.js
-node --check src/weapon-behaviors.js
-node --check src/weapon-cooldowns.js
 npm run check:format-hygiene
-npm run build:content
-npm run validate:content
-npm run smoke:start-run
-npm run smoke:quest-flow
-npm test
 npm run agent:check
-npm run build:web
-npm run check:runtime-parity
-npm run android:sync
-npm run android:debug
+npm test
 git diff --check
 ```
 

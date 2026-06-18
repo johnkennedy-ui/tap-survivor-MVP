@@ -35,11 +35,14 @@ Add one small mechanic while preserving runtime parity, save compatibility, and 
 ## Procedure
 
 1. Identify the one mechanic and affected source area.
-2. Inspect only the relevant files and existing helpers.
-3. Make the smallest source change.
-4. Preserve existing globals and script-order compatibility.
-5. Add or update focused validation if needed.
-6. Run syntax, smoke, test, agent, build, and parity checks.
+2. Read `docs/MECHANIC_EXTENSION_GUIDE.md`.
+3. Choose exactly one recipe from the guide.
+4. Do not combine recipes unless explicitly instructed.
+5. Inspect only the relevant files and existing helpers.
+6. Make the smallest source change.
+7. Preserve existing globals and script-order compatibility.
+8. Add or update focused validation if needed.
+9. Run the validation commands for the chosen recipe.
 
 ## Commands
 
@@ -55,7 +58,7 @@ git diff --check
 
 ## Stop Condition
 
-Stop after the one mechanic is validated or behavior risk exceeds the request.
+Stop after the chosen recipe stop condition is met or behavior risk exceeds the request.
 
 ## Report Format
 
