@@ -4,12 +4,12 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Verify release candidate gate and formatting coverage
+Merge validated tooling branches into main
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T17:06:01.064Z
+- Started: 2026-06-18T18:30:33.000Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -18,43 +18,42 @@ Verify release candidate gate and formatting coverage
 - `.prettierignore`
 - `package.json`
 - `scripts/release-candidate.mjs`
+- `scripts/check-commit-evidence.mjs`
+- `scripts/check-package-id.mjs`
+- `scripts/check-task-scope.mjs`
 - `docs/skills/release-candidate.md`
-- `docs/RELEASE_CHECKLIST.md`
-- `scripts/check-format-hygiene.mjs`
+- `docs/skills/task-scope.md`
+- `docs/skills/SKILL_ROUTER.md`
+- `docs/skills/handoff-evidence.md`
 
 ## Files Changed
 
-- `.prettierignore` explicitly unignores active release/evidence tooling scripts.
-- `scripts/check-commit-evidence.mjs` is formatted now that it is covered.
-- `scripts/check-package-id.mjs` is formatted now that it is covered.
-- `docs/CURRENT_TASK.md` records this verification task.
+- Merge conflict resolved between release-gate verification and task-scope task state.
+- Keep the combined validated tooling state from the merged branches.
 
 ## Validation Plan
 
-Run the smallest command that proves the change:
+Run the smallest command that proves the merged tree is coherent:
 
 ```bash
-node --check scripts/release-candidate.mjs
 npm run format:check
 npm run check:format-hygiene
 npm run check:package-id
-npm run check:commit-evidence -- --help
-npm run release:candidate
+npm run check:task-scope -- --help
 git diff --check
 ```
 
 Result:
 
-- Passed.
+- Pending.
 
 ## Evidence Required
 
-- Files inspected.
-- Files changed.
+- Merged commits.
+- Conflict resolution summary.
 - Validation commands and results.
-- Evidence stub when useful.
-- Remaining risks or follow-up tasks.
+- Push result.
 
 ## Stop Condition
 
-Stop after the requested single change is implemented, validated, documented, and reported.
+Stop after the merged main branch is validated, pushed, and reported.
