@@ -43,6 +43,7 @@ Add one small mechanic while preserving runtime parity, save compatibility, and 
 7. Preserve existing globals and script-order compatibility.
 8. Add or update focused validation if needed.
 9. Run the validation commands for the chosen recipe.
+10. Use `docs/skills/handoff-evidence.md` for final reporting.
 
 ## Commands
 

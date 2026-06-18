@@ -1,289 +1,497 @@
 # Mechanic Extension Guide
 
-Use this guide when adding exactly one weapon behavior or gameplay mechanic. Pick one recipe, inspect only the files named by that recipe, validate with that recipe's commands, then stop at its stop condition.
+Use this guide when adding exactly one Tap Survivor weapon behaviour or mechanic. Choose one recipe, inspect only the files named by that recipe, run the listed validation, and stop at the selected recipe stop condition.
 
-## Hard Boundaries
+## Hard boundaries
 
-- Do not modify unrelated systems while adding a mechanic.
-- Do not hand-edit `src/content.generated.js`; edit content source and rebuild generated content.
-- Do not touch `www/`, Android package/signing config, or generated build output for docs-only or non-Android work.
-- Do not change save schema unless the request explicitly asks for save migration.
-- Do not combine recipes unless the prompt explicitly asks for a multi-part task.
-- Do not introduce a new helper file unless existing ownership makes the target file clearly too broad.
+- Docs-only tasks must not edit source, content, Android, workflow, package, generated, or `www/` files.
+- Runtime tasks must keep `src/weapon-fire.js` as the public combat integration entry point unless inspection proves the requested change belongs there.
+- Do not hand-edit `src/content.generated.js`; use the content build path when content changes.
+- Do not change save schema unless the user explicitly asks for save migration.
+- Do not combine recipes unless the user explicitly asks for a multi-recipe task.
+- If a detail is not visible from the inspected files, write "inspect current implementation first" instead of guessing.
 
-## File Ownership
+## File ownership map
 
-| Area                    | Primary Files                       | Notes                                                                                             |
-| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Weapon integration      | `src/weapon-fire.js`                | Public combat entry point. Keep existing globals and helper calls stable.                         |
-| Projectile behavior     | `src/weapon-projectiles.js`         | Bolts, bounces, split-on-hit, explosions, and projectile runtime effects.                         |
-| Non-projectile behavior | `src/weapon-behaviors.js`           | Beams, cones, radial effects, chains, target areas, lingering areas, mines, and bursts.           |
-| Cooldown and scaling    | `src/weapon-cooldowns.js`           | Cooldowns, damage scaling, reach, width, projectile size, and stat modifiers.                     |
-| Target selection        | `src/weapon-targeting.js`           | Enemy targeting helpers and target filtering.                                                     |
-| Content data            | `content/tap-survivor-content.json` | Weapons, quests, unlocks, assets, and content-side values. Rebuild generated content after edits. |
-| Script order            | `index.html` and VM harnesses       | Only edit when a new runtime helper must load before `src/weapon-fire.js`.                        |
-| Task checkpoint         | `docs/CURRENT_TASK.md`              | Keep the active task, changed files, validation, and stop condition current.                      |
+- `src/weapon-fire.js`: combat integration and weapon dispatch.
+- `src/weapon-projectiles.js`: projectile firing, projectile effects, bounces, split-on-hit, and explosions.
+- `src/weapon-behaviors.js`: beam, line, radial, cone, area, lingering, mine, trap, zone, chain, and burst updates.
+- `src/weapon-cooldowns.js`: cooldown, stat scaling, damage, reach, width, and projectile-size scaling.
+- `src/weapon-targeting.js`: enemy target selection and target filtering.
+- `content/tap-survivor-content.json`: weapon, quest, unlock, upgrade, asset, audio, enemy, boss, and content-side values.
+- `index.html`: script order only when a new helper must load before its caller.
+- `docs/CURRENT_TASK.md`: repo-local task checkpoint when the agent tooling requires it.
 
-## Recipe: Content-Only Weapon
+## Add a content-only weapon using an existing behaviour
 
-Use when a weapon can be added or tuned with content data only.
+### When to use
 
-Allowed files:
+Use when the requested weapon can reuse an existing content behaviour, stat model, asset mapping, and unlock pattern.
+
+### Files to inspect
 
 - `content/tap-survivor-content.json`
-- `docs/CURRENT_TASK.md`
-- Generated content only through the build command, never by hand
+- `docs/CURRENT_TASK.md` only if the agent task checkpoint is active
 
-Forbidden files:
+### Files usually changed
+
+- `content/tap-survivor-content.json`
+- Generated content through `npm run build:content`, never by hand
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
 
 - `src/**/*.js`
 - `src/content.generated.js` by hand
 - `www/`
-- Android package/signing config
-- Unrelated docs or assets
+- Android files
+- Workflow and package files
 
-Steps:
+### Implementation outline
 
-1. Inspect the existing weapon entries in `content/tap-survivor-content.json`.
-2. Add or tune one weapon entry using existing content fields and patterns.
-3. Rebuild generated content with the existing content build command.
-4. Run the content validation and the narrow smoke path.
-5. Stop when validation passes or the weapon needs source behavior.
+1. Inspect current weapon entries first.
+2. Reuse an existing weapon kind, stat shape, unlock style, and asset convention.
+3. Add exactly one weapon and any required content-side unlock.
+4. Rebuild generated content with the existing content build command.
+5. Stop if the weapon needs new runtime behaviour.
 
-Validation:
+### Validation
 
-```sh
-npm run build:content
-npm run validate:content
-npm run smoke:start-run
-npm run agent:check
-git diff --check
-```
+- `npm run build:content`
+- `npm run validate:content`
+- `npm run smoke:start-run`
+- `npm run agent:check`
+- `git diff --check`
 
-Stop condition:
+### Stop condition
 
-- Stop after one content-only weapon is validated.
-- If the weapon needs new runtime behavior, stop and switch to the `New Weapon Behavior` recipe only when explicitly instructed.
+Stop after one content-only weapon is validated, or report that a runtime behaviour recipe is required.
 
-## Recipe: New Weapon Behavior
+## Add a new projectile-style weapon behaviour
 
-Use when the requested weapon needs runtime behavior that content data cannot express.
+### When to use
 
-Allowed files:
+Use when the requested weapon fires, spawns, updates, or resolves projectile-like objects and cannot be represented by content alone.
 
-- The directly affected `src/weapon-*.js` owner file
-- `index.html` only if script order must change
-- Relevant test or smoke script only if existing coverage cannot prove the behavior
-- `docs/CURRENT_TASK.md`
+### Files to inspect
 
-Forbidden files:
+- `src/weapon-projectiles.js`
+- `src/weapon-fire.js` only to confirm dispatch and integration
+- `src/weapon-cooldowns.js` only if scaling or cooldown values are part of the request
+- Existing focused smoke or test scripts if validation coverage is unclear
+
+### Files usually changed
+
+- `src/weapon-projectiles.js`
+- `src/weapon-fire.js` only when dispatch must call the new behaviour
+- `src/weapon-cooldowns.js` only for requested scaling
+- A focused validation script only if existing checks cannot prove the behaviour
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
 
 - Unrelated `src/**/*.js`
-- `content/tap-survivor-content.json` unless behavior needs one small data flag or value
+- `content/tap-survivor-content.json` unless a small content flag or value is required
 - `src/content.generated.js` by hand
 - `www/`
-- Android package/signing config
+- Android files
+
+### Implementation outline
+
+1. Inspect current projectile helpers first.
+2. Add the smallest projectile branch or helper in the existing owner file.
+3. Preserve existing globals and script-order compatibility.
+4. Keep any content coupling minimal and explicit.
+5. Stop if the request expands into multiple projectile mechanics.
+
+### Validation
+
+- `node --check` on touched JavaScript files
+- `npm run smoke:start-run`
+- `npm test`
+- `npm run agent:check`
+- `git diff --check`
+
+### Stop condition
+
+Stop after one projectile-style behaviour is validated, or report any need for save migration, Android-specific work, or multiple mechanics.
+
+## Add a beam or line weapon behaviour
+
+### When to use
+
+Use when the requested weapon applies damage or effects along a beam, ray, laser, slash line, or other linear path.
+
+### Files to inspect
+
+- `src/weapon-behaviors.js`
+- `src/weapon-fire.js` only to confirm dispatch and timing
+- `src/weapon-cooldowns.js` only if width, reach, cooldown, or damage scaling is requested
+- `src/weapon-targeting.js` only if target selection changes
+
+### Files usually changed
+
+- `src/weapon-behaviors.js`
+- `src/weapon-cooldowns.js` only for requested scaling
+- `src/weapon-fire.js` only when dispatch must call the new behaviour
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
+
+- Projectile helper files unless inspection proves the current beam path uses them
+- Unrelated combat, rendering, save, shop, or quest files
+- `src/content.generated.js` by hand
+- `www/`
+- Android files
+
+### Implementation outline
+
+1. Inspect current beam or line implementation first.
+2. Reuse the existing timing, hit detection, and visual-effect pattern where possible.
+3. Add one narrow behaviour branch.
+4. Keep rendering data compatible with the current runtime shape.
+5. Mark unknown beam internals as inspect current implementation first.
+
+### Validation
+
+- `node --check` on touched JavaScript files
+- `npm run smoke:start-run`
+- `npm test`
+- `npm run agent:check`
+- `git diff --check`
+
+### Stop condition
+
+Stop after one beam or line behaviour is validated, or report if the request requires renderer changes or multiple behaviours.
+
+## Add a radial, cone, or area weapon behaviour
+
+### When to use
+
+Use when the requested weapon affects enemies around the player, inside a cone, or inside a target area.
+
+### Files to inspect
+
+- `src/weapon-behaviors.js`
+- `src/weapon-cooldowns.js` only if radius, width, reach, damage, or cooldown scaling is requested
+- `src/weapon-targeting.js` only if target filtering changes
+- `src/weapon-fire.js` only to confirm integration
+
+### Files usually changed
+
+- `src/weapon-behaviors.js`
+- `src/weapon-cooldowns.js` only for requested scaling
+- `src/weapon-fire.js` only when dispatch must change
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
+
+- Unrelated projectile, quest, save, shop, Android, or generated files
+- `content/tap-survivor-content.json` unless one small content value is required
+- `src/content.generated.js` by hand
+- `www/`
+
+### Implementation outline
+
+1. Inspect current radial, cone, and area effects first.
+2. Reuse current distance, angle, collision, and effect lifetime patterns.
+3. Add exactly one effect shape or one variant of an existing shape.
+4. Keep damage and cooldown changes in the scaling owner file if needed.
+5. Stop if the mechanic also needs persistent zones or mines.
+
+### Validation
+
+- `node --check` on touched JavaScript files
+- `npm run smoke:start-run`
+- `npm test`
+- `npm run agent:check`
+- `git diff --check`
+
+### Stop condition
+
+Stop after one radial, cone, or area behaviour is validated, or report if the request crosses into another recipe.
+
+## Add a mine, trap, or zone weapon behaviour
+
+### When to use
+
+Use when the requested mechanic places a delayed, persistent, triggered, or lingering effect in the playfield.
+
+### Files to inspect
+
+- `src/weapon-behaviors.js`
+- `src/weapon-projectiles.js` only if the current implementation stores placed effects with projectile-like objects
+- `src/weapon-cooldowns.js` only for requested timing, duration, or damage scaling
+- `src/weapon-fire.js` only to confirm dispatch
+
+### Files usually changed
+
+- `src/weapon-behaviors.js`
+- `src/weapon-projectiles.js` only if inspection shows placed effects live there
+- `src/weapon-cooldowns.js` only for requested scaling
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
+
 - Save schema unless explicitly requested
+- Unrelated enemy, quest, shop, Android, generated, or workflow files
+- `src/content.generated.js` by hand
+- `www/`
 
-Steps:
+### Implementation outline
 
-1. Identify whether the change belongs in projectile, non-projectile, cooldown/scaling, targeting, or integration ownership.
-2. Inspect only the owner file and the directly called helpers.
-3. Add the smallest behavior branch that preserves existing globals and script-order compatibility.
-4. Add or update focused validation only when existing smoke tests cannot exercise the path.
-5. Run syntax checks on touched JavaScript files before the broader validation commands.
+1. Inspect current mine, trap, lingering-area, or zone patterns first.
+2. Reuse existing lifetime, trigger, collision, and cleanup logic.
+3. Add one placed-effect behaviour.
+4. Keep duration and damage scaling in the current scaling pattern.
+5. Stop if persistence across runs or saves is requested.
 
-Validation:
+### Validation
 
-```sh
-node --check <touched-js-file>
-npm run smoke:start-run
-npm test
-npm run agent:check
-git diff --check
-```
+- `node --check` on touched JavaScript files
+- `npm run smoke:start-run`
+- `npm test`
+- `npm run agent:check`
+- `git diff --check`
 
-Stop condition:
+### Stop condition
 
-- Stop after one new behavior is validated.
-- If the change requires save migration, Android packaging, a renderer rewrite, or multiple mechanics, stop and report the boundary.
+Stop after one mine, trap, or zone behaviour is validated, or report if save persistence or multiple placed effects are needed.
 
-## Recipe: Quest-Linked Mechanic
+## Add a chain, ricochet, or split-shot behaviour
 
-Use when a mechanic is unlocked, gated, rewarded, or tracked through quest progression.
+### When to use
 
-Allowed files:
+Use when a weapon hit or projectile should jump, bounce, fork, split, or create secondary targets.
+
+### Files to inspect
+
+- `src/weapon-projectiles.js`
+- `src/weapon-behaviors.js` only if current chain-like behaviour lives outside projectile helpers
+- `src/weapon-targeting.js` only for target selection rules
+- `src/weapon-cooldowns.js` only for requested scaling
+
+### Files usually changed
+
+- `src/weapon-projectiles.js`
+- `src/weapon-targeting.js` only if target rules must change
+- `src/weapon-cooldowns.js` only for requested scaling
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
+
+- Unrelated combat, quest, save, Android, generated, or content files
+- `src/content.generated.js` by hand
+- `www/`
+- Workflow and package files
+
+### Implementation outline
+
+1. Inspect current bounce, split, and chain handling first.
+2. Reuse current target exclusion and secondary-hit patterns.
+3. Add one bounded chain, ricochet, or split-shot rule.
+4. Keep loop limits explicit to avoid runaway behaviour.
+5. Stop if the mechanic needs broad target-system changes.
+
+### Validation
+
+- `node --check` on touched JavaScript files
+- `npm run smoke:start-run`
+- `npm test`
+- `npm run agent:check`
+- `git diff --check`
+
+### Stop condition
+
+Stop after one chain, ricochet, or split-shot behaviour is validated, or report if target selection must be redesigned.
+
+## Add a new run upgrade effect
+
+### When to use
+
+Use when the requested mechanic changes run-time upgrade choices, upgrade effects, or per-run stat behaviour.
+
+### Files to inspect
 
 - `content/tap-survivor-content.json`
-- The directly affected mechanic owner file only if runtime behavior is required
-- Relevant quest audit or smoke script only if existing checks cannot prove the flow
-- `docs/CURRENT_TASK.md`
+- Runtime upgrade owner files from current implementation; inspect current implementation first
+- `src/weapon-cooldowns.js` only if weapon stat scaling is affected
+- Existing run-upgrade validation scripts if present
 
-Forbidden files:
+### Files usually changed
 
-- Unrelated quest, combat, shop, or save systems
+- `content/tap-survivor-content.json` when the upgrade is content-driven
+- The directly affected runtime owner file after inspection
+- Generated content through `npm run build:content`, never by hand
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
+
+- Unrelated weapon behaviour files
+- Save schema unless explicitly requested
 - `src/content.generated.js` by hand
 - `www/`
-- Android package/signing config
-- Save schema unless explicitly requested
+- Android files
 
-Steps:
+### Implementation outline
 
-1. Identify the quest trigger, unlock, reward, or tracking condition.
-2. Inspect the existing quest and weapon content patterns before changing anything.
-3. Add the smallest content link and only the runtime hook required to honor it.
-4. Rebuild content if content changed.
-5. Run quest audit and quest-flow smoke validation.
+1. Inspect current run upgrade content and runtime effect handling first.
+2. Add one upgrade effect or one content entry, not both unless required.
+3. Keep upgrade IDs, tiers, and display text aligned with existing patterns.
+4. Rebuild content when content changes.
+5. Stop if the effect needs save migration or progression redesign.
 
-Validation:
+### Validation
 
-```sh
-npm run audit:quests
-npm run smoke:quest-flow
-npm run agent:check
-git diff --check
-```
+- `npm run build:content` if content changed
+- `npm run validate:content` if content changed
+- `node --check` on touched JavaScript files
+- `npm test`
+- `npm run agent:check`
+- `git diff --check`
 
-Stop condition:
+### Stop condition
 
-- Stop after one quest-linked mechanic is validated.
-- If the mechanic needs multiple quest chains, save migration, or broad progression changes, stop and report the boundary.
+Stop after one run upgrade effect is validated, or report if save migration or broader progression work is needed.
 
-## Recipe: Sprite Or SFX Addition
+## Add a boss ability or enemy attack pattern
 
-Use when a mechanic needs a new sprite, icon, or sound effect without changing runtime behavior.
+### When to use
 
-Allowed files:
+Use when the requested mechanic changes boss behaviour, enemy attacks, projectiles, waves, or combat pressure.
+
+### Files to inspect
 
 - `content/tap-survivor-content.json`
-- Relevant source asset file or asset manifest
-- `docs/CURRENT_TASK.md`
-- Generated content only through the build command, never by hand
+- Current enemy and combat owner files; inspect current implementation first
+- Existing smoke or verification scripts that cover boss or enemy combat
+- `docs/CURRENT_TASK.md` only if the task checkpoint is active
 
-Forbidden files:
+### Files usually changed
 
-- Runtime behavior files unless explicitly requested
+- `content/tap-survivor-content.json` for content-driven tuning
+- The directly affected enemy or combat owner file after inspection
+- A focused validation script only if existing checks cannot prove the pattern
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
+
+- Unrelated weapon, quest, save, shop, Android, workflow, or package files
 - `src/content.generated.js` by hand
 - `www/`
-- Android package/signing config
-- Unrelated assets
-
-Steps:
-
-1. Inspect nearby asset entries and naming patterns.
-2. Add one asset reference and the minimal source asset file or manifest entry.
-3. Rebuild and validate content.
-4. Run relevant asset, sprite, or audio smoke checks if available.
-
-Validation:
-
-```sh
-npm run build:content
-npm run validate:content
-npm run verify:assets
-npm run smoke:assets
-git diff --check
-```
-
-For SFX-only changes, prefer the audio checks when they are the relevant available path:
-
-```sh
-npm run verify:audio
-npm run smoke:audio
-```
-
-Stop condition:
-
-- Stop after one asset or SFX addition is validated.
-- If the asset needs new runtime behavior, stop and switch recipes only when explicitly instructed.
-
-## Recipe: Android-Sensitive Mechanic
-
-Use when the requested mechanic can affect Android runtime parity, Capacitor behavior, storage, input, audio, or packaging.
-
-Allowed files:
-
-- The directly affected runtime file
-- `content/tap-survivor-content.json` only if needed
-- `index.html` only for required script order or platform loading
-- Relevant Android bridge/config files only when the request explicitly requires them
-- `docs/CURRENT_TASK.md`
-
-Forbidden files:
-
-- Android package/signing config unless explicitly requested
 - Generated build output
-- Unrelated runtime systems
-- Save schema unless explicitly requested
 
-Steps:
+### Implementation outline
 
-1. Identify why the mechanic is Android-sensitive before editing.
-2. Make the smallest runtime or content change.
-3. Run web build and runtime parity before Android sync.
-4. Sync Android only after web and parity checks pass.
-5. Build the debug APK to prove the Android path.
+1. Inspect current boss and enemy attack handling first.
+2. Prefer content tuning when the pattern already exists.
+3. Add one attack pattern or one boss ability.
+4. Keep projectile visibility, pacing, and existing combat loop compatibility.
+5. Stop if the request requires a new enemy architecture.
 
-Validation:
+### Validation
 
-```sh
-npm run build:web
-npm run check:runtime-parity
-npm run android:sync
-npm run android:debug
-git diff --check
-```
+- `npm run build:content` if content changed
+- `npm run validate:content` if content changed
+- `node --check` on touched JavaScript files
+- `npm test`
+- `npm run agent:check`
+- `git diff --check`
 
-Stop condition:
+### Stop condition
 
-- Stop after one Android-sensitive mechanic passes web, parity, sync, and debug build validation.
-- If signing, release packaging, Play release work, or device QA is required, stop and route to the appropriate Android or handoff skill.
+Stop after one boss ability or enemy attack pattern is validated, or report if the change needs broader combat architecture work.
 
-## Validation Matrix
+## Add a weapon-linked quest or unlock path
 
-| Change Type                | Required Validation                                                                                                          |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Content-only weapon        | `npm run build:content`, `npm run validate:content`, `npm run smoke:start-run`, `npm run agent:check`, `git diff --check`    |
-| New weapon behavior        | `node --check` on touched JavaScript files, `npm run smoke:start-run`, `npm test`, `npm run agent:check`, `git diff --check` |
-| Quest-linked unlock        | `npm run audit:quests`, `npm run smoke:quest-flow`, `npm run agent:check`, `git diff --check`                                |
-| Sprite/SFX addition        | Content validation plus relevant asset, sprite, or audio smoke checks when available                                         |
-| Android-sensitive mechanic | `npm run build:web`, `npm run check:runtime-parity`, `npm run android:sync`, `npm run android:debug`, `git diff --check`     |
-| Docs-only guide update     | `npm run check:format-hygiene`, `npm run agent:check`, `npm test`, `git diff --check`                                        |
+### When to use
 
-## Prompt Templates
+Use when a weapon, mechanic, upgrade, or reward must unlock through quest progress.
 
-### Content-Only Weapon Prompt
+### Files to inspect
 
-```text
-Branch: dev/<content-weapon-name>
-Goal: Add or tune one content-only weapon using existing content fields.
-Allowed files: content/tap-survivor-content.json, docs/CURRENT_TASK.md, generated content only through npm run build:content.
-Forbidden files: src/**/*.js, src/content.generated.js by hand, www/, Android files, unrelated docs or assets.
-Validation: npm run build:content; npm run validate:content; npm run smoke:start-run; npm run agent:check; git diff --check.
-Stop condition: Stop after one content-only weapon is validated, or report that source behavior is required.
-Report format: branch, files inspected, files changed, validation results, generated files, remaining risks, next single task.
-```
+- `content/tap-survivor-content.json`
+- Current quest helper files; inspect current implementation first
+- Existing quest audit and quest-flow smoke scripts
+- The directly affected mechanic owner file only if runtime behaviour changes
 
-### New Weapon Behavior Prompt
+### Files usually changed
 
-```text
-Branch: dev/<weapon-behavior-name>
-Goal: Add one runtime weapon behavior in the correct weapon owner file.
-Allowed files: the directly affected src/weapon-*.js file, index.html only if script order must change, focused validation script if required, docs/CURRENT_TASK.md.
-Forbidden files: unrelated src/**/*.js, src/content.generated.js by hand, www/, Android files, save schema unless explicitly requested.
-Validation: node --check on touched JavaScript files; npm run smoke:start-run; npm test; npm run agent:check; git diff --check.
-Stop condition: Stop after one behavior is validated, or report if the request requires multiple mechanics, save migration, or Android packaging.
-Report format: branch, mechanic, owner file, files changed, validation results, parity/build caveats, remaining risks, next single task.
-```
+- `content/tap-survivor-content.json`
+- The directly affected mechanic owner file only if needed
+- Generated content through `npm run build:content`, never by hand
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
 
-### Quest-Linked Mechanic Prompt
+### Files not to touch
 
-```text
-Branch: dev/<quest-mechanic-name>
-Goal: Add one quest-linked unlock, reward, gate, or tracker for a mechanic.
-Allowed files: content/tap-survivor-content.json, the directly affected mechanic owner file only if runtime behavior is required, focused quest validation if required, docs/CURRENT_TASK.md.
-Forbidden files: unrelated quest/combat/shop/save systems, src/content.generated.js by hand, www/, Android files, save schema unless explicitly requested.
-Validation: npm run audit:quests; npm run smoke:quest-flow; npm run agent:check; git diff --check.
-Stop condition: Stop after one quest-linked mechanic is validated, or report if broader progression or save migration is required.
-Report format: branch, quest link, mechanic owner, files changed, validation results, generated files, remaining risks, next single task.
-```
+- Unrelated quest, combat, shop, save, Android, workflow, or package files
+- `src/content.generated.js` by hand
+- `www/`
+- Generated build output
+
+### Implementation outline
+
+1. Inspect current quest chains, unlocks, and weapon-linked progress first.
+2. Add one unlock path, quest gate, reward, or tracker.
+3. Keep follow-up quest links consistent with existing content patterns.
+4. Rebuild content when content changes.
+5. Stop if the request requires multiple quest chains or save migration.
+
+### Validation
+
+- `npm run audit:quests`
+- `npm run smoke:quest-flow`
+- `npm run agent:check`
+- `git diff --check`
+
+### Stop condition
+
+Stop after one weapon-linked quest or unlock path is validated, or report if broader progression changes are required.
+
+## Add sprites or SFX for a new mechanic
+
+### When to use
+
+Use when the requested mechanic already exists or is being handled separately, and this task only wires visual or audio assets.
+
+### Files to inspect
+
+- `content/tap-survivor-content.json`
+- Current asset, sprite, or audio mapping files; inspect current implementation first
+- Existing asset, sprite, or audio smoke scripts
+- Source asset files only when the task includes them
+
+### Files usually changed
+
+- `content/tap-survivor-content.json`
+- The relevant source asset or manifest file after inspection
+- Generated content through `npm run build:content`, never by hand
+- `docs/CURRENT_TASK.md` only if the task checkpoint needs updating
+
+### Files not to touch
+
+- Runtime behaviour files unless explicitly requested
+- Unrelated assets
+- `src/content.generated.js` by hand
+- `www/`
+- Android files
+
+### Implementation outline
+
+1. Inspect current asset and audio naming patterns first.
+2. Add one sprite, icon, atlas reference, or SFX mapping.
+3. Keep file naming and content references aligned with existing conventions.
+4. Rebuild and validate content when content changes.
+5. Stop if the asset requires new runtime behaviour.
+
+### Validation
+
+- `npm run build:content`
+- `npm run validate:content`
+- Relevant asset, sprite, or audio smoke checks when available
+- `npm run agent:check`
+- `git diff --check`
+
+### Stop condition
+
+Stop after one sprite or SFX addition is validated, or report if runtime behaviour work is required.

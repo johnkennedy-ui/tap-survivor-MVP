@@ -4,12 +4,12 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Expand mechanic extension guide
+Fix mechanic guide formatting and missing recipes
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T11:57:00.421Z
+- Started: 2026-06-18T12:49:49.847Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
@@ -20,8 +20,8 @@ Expand mechanic extension guide
 
 ## Files Changed
 
-- `docs/MECHANIC_EXTENSION_GUIDE.md` expanded into a recipe guide with boundaries, ownership, validation matrix, and prompt templates.
-- `docs/skills/mechanics-extension.md` now points agents to the guide and requires one recipe only.
+- `docs/MECHANIC_EXTENSION_GUIDE.md` reformatted and expanded with the 10 required exact recipe headings.
+- `docs/skills/mechanics-extension.md` tightened to require one recipe and handoff-evidence reporting.
 - `docs/CURRENT_TASK.md` records this docs-only task.
 
 ## Validation Plan
