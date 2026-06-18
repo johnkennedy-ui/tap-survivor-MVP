@@ -92,7 +92,7 @@
         }
         const enemy = game.enemies.find(
           (candidate) =>
-            !bolt.hit.has(candidate) && distance(bolt, candidate) < bolt.radius + candidate.radius,
+            !bolt.hit.has(candidate) && distance(bolt, candidate) < bolt.radius + candidate.radius
         );
         if (enemy) {
           damageEnemy(enemy, bolt.damage, bolt.weaponId);
@@ -140,14 +140,21 @@
       const right = rotateVector(bolt.vx, bolt.vy, 0.72);
       [left, right].forEach(([vx, vy]) => {
         const magnitude = Math.max(1, Math.hypot(vx, vy));
-        spawnProjectileBolt(bolt.weaponId, bolt.x, bolt.y, (vx / magnitude) * speed, (vy / magnitude) * speed, {
-          damage: bolt.damage * 0.55,
-          life: 0.9,
-          pierce: 0,
-          bounces: 0,
-          splitDepth: bolt.splitDepth + 1,
-          hit: new Set(bolt.hit),
-        });
+        spawnProjectileBolt(
+          bolt.weaponId,
+          bolt.x,
+          bolt.y,
+          (vx / magnitude) * speed,
+          (vy / magnitude) * speed,
+          {
+            damage: bolt.damage * 0.55,
+            life: 0.9,
+            pierce: 0,
+            bounces: 0,
+            splitDepth: bolt.splitDepth + 1,
+            hit: new Set(bolt.hit),
+          }
+        );
       });
     }
 

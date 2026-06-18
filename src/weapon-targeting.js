@@ -4,7 +4,7 @@
 
     const p = game.player;
     return game.enemies.reduce((best, enemy) =>
-      distance(p, enemy) < distance(p, best) ? enemy : best,
+      distance(p, enemy) < distance(p, best) ? enemy : best
     );
   }
 

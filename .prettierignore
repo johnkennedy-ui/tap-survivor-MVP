@@ -21,7 +21,15 @@ README.md
 src/*
 !src/save.js
 !src/storage-adapter.js
+!src/save-defaults.js
+!src/save-migrations.js
+!src/save-normalize.js
 !src/save-corruption.js
+!src/weapon-fire.js
+!src/weapon-behaviors.js
+!src/weapon-cooldowns.js
+!src/weapon-projectiles.js
+!src/weapon-targeting.js
 
 scripts/*
 !scripts/agent-check.mjs
@@ -30,3 +38,4 @@ scripts/*
 docs/*
 !docs/skills/
 !docs/skills/*.md
+!docs/MECHANIC_EXTENSION_GUIDE.md

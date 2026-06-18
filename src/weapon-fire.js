@@ -15,7 +15,8 @@
     distance,
     clamp,
   }) {
-    const nearestEnemy = () => globalThis.TapSurvivorWeaponTargeting.nearestEnemy(getGame(), distance);
+    const nearestEnemy = () =>
+      globalThis.TapSurvivorWeaponTargeting.nearestEnemy(getGame(), distance);
     const scaling = globalThis.TapSurvivorWeaponCooldowns.createWeaponScaling({
       weaponDefs,
       getUpgradeTier,
@@ -105,7 +106,13 @@
 
     function playerAttackSprite(kind) {
       if (kind === "beam" || kind === "cone" || kind === "chain") return "cast_beam";
-      if (kind === "radial" || kind === "target_area" || kind === "lingering_area" || kind === "mine") return "sweep";
+      if (
+        kind === "radial" ||
+        kind === "target_area" ||
+        kind === "lingering_area" ||
+        kind === "mine"
+      )
+        return "sweep";
       return "cast_orb";
     }
 

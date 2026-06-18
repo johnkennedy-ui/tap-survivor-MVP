@@ -36,7 +36,9 @@
     function normalizeSave(input) {
       const normalized = { ...defaultSave(), ...(isPlainObject(input) ? input : {}) };
       normalized.saveVersion = CURRENT_SAVE_VERSION;
-      normalized.unlockedWeapons = [...new Set(["spark_bolt", ...arrayValue(normalized.unlockedWeapons)])];
+      normalized.unlockedWeapons = [
+        ...new Set(["spark_bolt", ...arrayValue(normalized.unlockedWeapons)]),
+      ];
       normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
       normalized.towerFloor = Math.max(1, Math.floor(normalized.towerFloor || 1));
       normalized.unlockedNodes = arrayValue(normalized.unlockedNodes);
@@ -45,7 +47,11 @@
       normalized.seenBanners = [...new Set(arrayValue(normalized.seenBanners))];
       normalized.unlockedRelics = [...new Set(arrayValue(normalized.unlockedRelics))];
       normalized.equippedRelics = [
-        ...new Set(arrayValue(normalized.equippedRelics).length ? arrayValue(normalized.equippedRelics) : normalized.unlockedRelics),
+        ...new Set(
+          arrayValue(normalized.equippedRelics).length
+            ? arrayValue(normalized.equippedRelics)
+            : normalized.unlockedRelics
+        ),
       ]
         .filter((id) => normalized.unlockedRelics.includes(id))
         .slice(0, 5);
@@ -55,7 +61,10 @@
 
       const ensureQuestOpen = (questId) => {
         if (!questId || !questDefs[questId]) return;
-        if (!normalized.activeQuests.includes(questId) && !normalized.completedQuests.includes(questId)) {
+        if (
+          !normalized.activeQuests.includes(questId) &&
+          !normalized.completedQuests.includes(questId)
+        ) {
           normalized.activeQuests.push(questId);
         }
         normalized.questProgress[questId] = normalized.questProgress[questId] || 0;
