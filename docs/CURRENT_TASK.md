@@ -4,60 +4,55 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Merge validated tooling branches into main
+Prepare Play privacy and Data safety docs
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T18:30:33.000Z
+- Started: 2026-06-18T20:00:59.572Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `.prettierignore`
-- `.github/workflows/ci.yml`
-- `package.json`
-- `scripts/release-candidate.mjs`
-- `scripts/check-commit-evidence.mjs`
-- `scripts/check-package-id.mjs`
-- `scripts/check-task-scope.mjs`
-- `docs/skills/release-candidate.md`
-- `docs/skills/task-scope.md`
-- `docs/skills/ci-gate.md`
-- `docs/skills/SKILL_ROUTER.md`
-- `docs/skills/handoff-evidence.md`
+- `docs/PRIVACY_POLICY_DRAFT.md`
+- `docs/PLAY_DATA_SAFETY_WORKSHEET.md`
+- `docs/PLAY_PERMISSIONS_WORKSHEET.md`
 - `docs/RELEASE_CHECKLIST.md`
+- `docs/PLAY_STORE_ANDROID_PREP.md`
 
 ## Files Changed
 
-- Merged release-gate verification, task-scope checker, and non-secret CI gate branches.
-- Resolved task-state and skill-router conflicts by keeping the combined validated tooling state.
+- `docs/PRIVACY_POLICY_DRAFT.md` adds the draft privacy policy.
+- `docs/PLAY_DATA_SAFETY_WORKSHEET.md` adds the Play Data safety worksheet.
+- `docs/PLAY_PERMISSIONS_WORKSHEET.md` adds the Android permissions worksheet.
+- `docs/RELEASE_CHECKLIST.md` links the privacy/Data safety/permissions docs.
+- `docs/PLAY_STORE_ANDROID_PREP.md` links the privacy/Data safety/permissions docs.
+- `docs/CURRENT_TASK.md` records this docs-only task.
 
 ## Validation Plan
 
-Run the smallest command that proves the merged tree is coherent:
+Run the smallest command that proves the change:
 
 ```bash
-npm run format:check
 npm run check:format-hygiene
-npm run check:package-id
-npm run check:task-scope -- --help
-npm run check:commit-evidence -- --help
+npm run agent:check
+npm test
 git diff --check
 ```
 
 Result:
 
-- Passed.
+- Pending.
 
 ## Evidence Required
 
-- Merged commits.
-- Conflict resolution summary.
+- Files inspected.
+- Files changed.
 - Validation commands and results.
-- Push result.
+- Evidence stub when useful.
+- Remaining risks or follow-up tasks.
 
 ## Stop Condition
 
-Stop after the merged main branch is validated, pushed, and reported.
+Stop after the requested single change is implemented, validated, documented, and reported.

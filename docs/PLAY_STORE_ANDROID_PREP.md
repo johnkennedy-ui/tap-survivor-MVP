@@ -83,6 +83,12 @@ must not require local signing secrets.
 See `docs/RELEASE_CHECKLIST.md` for local release checks and
 `docs/PLAY_INTERNAL_TESTING.md` for the Play Console/device checklist.
 
+Before Play Console submission, review:
+
+- `docs/PRIVACY_POLICY_DRAFT.md`
+- `docs/PLAY_DATA_SAFETY_WORKSHEET.md`
+- `docs/PLAY_PERMISSIONS_WORKSHEET.md`
+
 ## Runtime Flow
 
 Use the shared-runtime flow in `docs/RUNTIME_PARITY.md`.
