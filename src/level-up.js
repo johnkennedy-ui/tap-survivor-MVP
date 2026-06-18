@@ -68,6 +68,11 @@ function createLevelUpSystem({
         .filter((relic) => relic.targetUpgradeId === upgradeId)
         .reduce((total, relic) => total + (relic[field] || 0), 0);
     }
+    function relicSpawnRateMultiplierFor(upgradeId) {
+      return activeRelics
+        .filter((relic) => relic.targetUpgradeId === upgradeId)
+        .reduce((multiplier, relic) => multiplier * Math.max(1, relic.selectionWeightBonus || 1), 1);
+    }
     const runUpgradeChoices = runUpgradeDefs
       .filter((upgrade) => getRunUpgradeTier(upgrade.id) < upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus"))
       .map((upgrade) => {
@@ -77,7 +82,7 @@ function createLevelUpSystem({
           name: `${upgrade.name} ${tier + 1}`,
           description: `${upgrade.description} Tier ${tier + 1}/${maxTier}.`,
           family: upgrade.family || upgrade.id,
-          relicWeightBonus: relicBonusFor(upgrade.id, "selectionWeightBonus"),
+          relicSpawnRateMultiplier: relicSpawnRateMultiplierFor(upgrade.id),
           runUpgradeId: upgrade.id,
           apply: () => {
             game.runUpgradeTiers[upgrade.id] = tier + 1;
@@ -101,7 +106,9 @@ function createLevelUpSystem({
     function choiceWeight(choice) {
       if (!choice.runUpgradeId) return 1;
       const shopFocus = shopFocusBonus(save);
-      return 1 + (familyTiers[choice.family] || 0) * 1.4 + getRunUpgradeTier(choice.runUpgradeId) * 0.8 + choice.relicWeightBonus + shopFocus;
+      const baseWeight =
+        1 + (familyTiers[choice.family] || 0) * 1.4 + getRunUpgradeTier(choice.runUpgradeId) * 0.8 + shopFocus;
+      return baseWeight * choice.relicSpawnRateMultiplier;
     }
     const choices = [
       ...questWeaponChoices,
