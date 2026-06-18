@@ -37,6 +37,8 @@ Use this router before repository work that can be handled by one bounded routin
   run or document a hands-on device QA pass.
 - `handoff-evidence.md`:
   prepare a concise repo handoff or evidence bundle.
+- `commit-evidence.md`:
+  prove committed files match an agent's report.
 
 ## Selection Guide
 
@@ -45,5 +47,7 @@ Prefer the narrowest skill that fully covers the request.
 If a request names multiple outcomes, choose the first required skill and stop after its report unless the human explicitly asked for a multi-skill sequence.
 
 If a request is ambiguous between docs-only and code changes, choose the docs-only path only when the user explicitly says documentation only.
+
+If the task is complete and needs proof that the committed files match the report, use `docs/skills/commit-evidence.md`.
 
 If the selected skill's forbidden files include a file that must be edited to satisfy the task, stop and report the conflict.

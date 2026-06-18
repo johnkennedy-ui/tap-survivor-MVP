@@ -4,31 +4,40 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Fix mechanic guide formatting and missing recipes
+Add commit evidence checker
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T12:49:49.847Z
+- Started: 2026-06-18T14:34:31.071Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `docs/MECHANIC_EXTENSION_GUIDE.md`
-- `docs/skills/mechanics-extension.md`
+- `scripts/check-commit-evidence.mjs`
+- `package.json`
+- `docs/skills/commit-evidence.md`
+- `docs/skills/handoff-evidence.md`
+- `docs/skills/SKILL_ROUTER.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
 
 ## Files Changed
 
-- `docs/MECHANIC_EXTENSION_GUIDE.md` reformatted and expanded with the 10 required exact recipe headings.
-- `docs/skills/mechanics-extension.md` tightened to require one recipe and handoff-evidence reporting.
-- `docs/CURRENT_TASK.md` records this docs-only task.
+- `scripts/check-commit-evidence.mjs` adds the committed-object evidence checker.
+- `package.json` adds `check:commit-evidence`.
+- `docs/skills/commit-evidence.md` documents the commit evidence skill.
+- `docs/skills/handoff-evidence.md` requires commit evidence checks for claimed file changes.
+- `docs/skills/SKILL_ROUTER.md` routes committed-file proof to the new skill.
+- `docs/CURRENT_TASK.md` records this tooling/docs task.
 
 ## Validation Plan
 
 Run the smallest command that proves the change:
 
 ```bash
+node --check scripts/check-commit-evidence.mjs
+npm run check:commit-evidence -- --help
 npm run check:format-hygiene
 npm run agent:check
 npm test
