@@ -54,24 +54,34 @@ function createAudioSystem({ sfxDefs = {} }) {
       audioContext.resume?.();
       const startAt = audioContext.currentTime;
       const master = audioContext.createGain();
+      const tone = audioContext.createBiquadFilter();
+      const throat = audioContext.createBiquadFilter();
       master.gain.setValueAtTime(0.0001, startAt);
-      master.gain.exponentialRampToValueAtTime(volume * 0.45, startAt + 0.025);
-      master.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.34);
+      master.gain.exponentialRampToValueAtTime(volume * 0.55, startAt + 0.04);
+      master.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.02);
+      tone.type = "lowpass";
+      tone.frequency.setValueAtTime(920, startAt);
+      tone.Q.setValueAtTime(2.2, startAt);
+      throat.type = "bandpass";
+      throat.frequency.setValueAtTime(360, startAt);
+      throat.Q.setValueAtTime(4.6, startAt);
+      tone.connect(throat);
+      throat.connect(master);
       master.connect(audioContext.destination);
 
-      [0, 0.11, 0.22].forEach((offset, index) => {
+      [0, 0.23, 0.48].forEach((offset, index) => {
         const osc = audioContext.createOscillator();
-        const vowel = audioContext.createBiquadFilter();
+        const syllable = audioContext.createGain();
         osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(280 - index * 34, startAt + offset);
-        osc.frequency.exponentialRampToValueAtTime(210 - index * 22, startAt + offset + 0.08);
-        vowel.type = "bandpass";
-        vowel.frequency.setValueAtTime(760 + index * 90, startAt + offset);
-        vowel.Q.setValueAtTime(6, startAt + offset);
-        osc.connect(vowel);
-        vowel.connect(master);
+        osc.frequency.setValueAtTime(118 - index * 16, startAt + offset);
+        osc.frequency.exponentialRampToValueAtTime(64 - index * 7, startAt + offset + 0.18);
+        syllable.gain.setValueAtTime(0.0001, startAt + offset);
+        syllable.gain.exponentialRampToValueAtTime(0.74, startAt + offset + 0.035);
+        syllable.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.24);
+        osc.connect(syllable);
+        syllable.connect(tone);
         osc.start(startAt + offset);
-        osc.stop(startAt + offset + 0.1);
+        osc.stop(startAt + offset + 0.26);
       });
       return true;
     } catch {
