@@ -8,6 +8,7 @@ function createShopSystem({
   getSave,
   getGame,
   onShopVisit,
+  playPurchaseSfx,
   persist,
   renderMeta,
 }) {
@@ -49,6 +50,7 @@ function createShopSystem({
     const cost = costFor(item, tier);
     save.coins -= cost;
     save.shopPurchases[item.id] = tier + 1;
+    playPurchaseSfx?.();
     applyItemEffectToRun(item);
     persist();
     renderShop();

@@ -207,6 +207,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       };
     },
     __audioPlays: [],
+    __audioOscillators: 0,
     __timeouts: 0,
     __startLaughOscillators: 0,
     AudioContext: function FakeAudioContext() {
@@ -232,6 +233,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
           exponentialRampToValueAtTime() {},
         },
         start() {
+          context.__audioOscillators += 1;
           context.__startLaughOscillators += 1;
         },
         stop() {},

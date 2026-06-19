@@ -27,6 +27,7 @@ buyButton.click();
 
 const saved = JSON.parse(harness.context.localStorage.getItem("tap-survivor-mvp-save-v2"));
 check("shop purchase spends coins", saved.coins === 5);
+check("shop purchase plays coin jingle", harness.context.__audioOscillators >= 4);
 check("shop purchase persists tier", saved.shopPurchases.training_boots === 1);
 const registryBonuses = harness.context.TapSurvivorEffects.emptyShopBonuses();
 harness.context.TapSurvivorEffects.addShopItemBonus(registryBonuses, { effect: { stat: "speed", value: 10 } }, 2);

@@ -214,6 +214,7 @@ check("coin shop exists", index.includes('id="shopItems"') && shop.includes("cre
 check("shop items are content-driven", (content.shopItems || []).length >= 12 && shop.includes("shopItemDefs"));
 check("shop items have distinct sprites", (content.shopItems || []).every((item) => item.spritePath) && shop.includes("shop-item-sprite"));
 check("shop purchases persist", saveDefaults.includes("shopPurchases") && saveNormalize.includes("normalizeShopPurchases") && shop.includes("save.shopPurchases"));
+check("shop purchase SFX is wired", audio.includes("function playShopPurchase") && shop.includes("playPurchaseSfx?.()") && game.includes("playPurchaseSfx: audioSystem.playShopPurchase"));
 check("shop prices scale with tower floor", shop.includes("SHOP_FLOOR_PRICE_RATE = 0.03") && shop.includes("towerFloor") && shop.includes("Cost: ${cost} coins"));
 check(
   "shop prices inflate after purchases",

@@ -125,6 +125,7 @@ const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
   getSave: () => save,
   getGame: () => game,
   onShopVisit: () => showOnceBanner("first_shop_visit", "Coins buy permanent power upgrades."),
+  playPurchaseSfx: audioSystem.playShopPurchase,
   persist,
   renderMeta,
 });

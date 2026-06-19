@@ -89,6 +89,42 @@ function createAudioSystem({ sfxDefs = {} }) {
     }
   }
 
+  function playShopPurchase() {
+    if (muted) return false;
+    const AudioContextRef = globalThis.AudioContext || globalThis.webkitAudioContext;
+    if (!AudioContextRef) return false;
+
+    try {
+      audioContext ||= new AudioContextRef();
+      audioContext.resume?.();
+      const startAt = audioContext.currentTime;
+      const master = audioContext.createGain();
+      master.gain.setValueAtTime(0.0001, startAt);
+      master.gain.exponentialRampToValueAtTime(volume * 0.42, startAt + 0.015);
+      master.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.48);
+      master.connect(audioContext.destination);
+
+      [880, 1175, 1480, 1976].forEach((frequency, index) => {
+        const offset = index * 0.055;
+        const osc = audioContext.createOscillator();
+        const note = audioContext.createGain();
+        osc.type = index % 2 ? "sine" : "triangle";
+        osc.frequency.setValueAtTime(frequency, startAt + offset);
+        osc.frequency.exponentialRampToValueAtTime(frequency * 0.82, startAt + offset + 0.16);
+        note.gain.setValueAtTime(0.0001, startAt + offset);
+        note.gain.exponentialRampToValueAtTime(0.6, startAt + offset + 0.012);
+        note.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.19);
+        osc.connect(note);
+        note.connect(master);
+        osc.start(startAt + offset);
+        osc.stop(startAt + offset + 0.22);
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function setMuted(nextMuted) {
     muted = Boolean(nextMuted);
     return muted;
@@ -105,6 +141,7 @@ function createAudioSystem({ sfxDefs = {} }) {
   return {
     play,
     playStartLaugh,
+    playShopPurchase,
     playWeapon,
     playRunUpgrade,
     setMuted,
