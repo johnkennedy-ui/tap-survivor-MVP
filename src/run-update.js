@@ -33,7 +33,6 @@
       const game = getGame();
       if (!game || !game.running || game.paused) return;
       const player = game.player;
-      if (game.awaitingFirstMoveInput) return;
       game.elapsed += dt;
       addQuestProgressGroup(survivalQuestIds, dt);
       if (game.elapsed >= game.duration) {

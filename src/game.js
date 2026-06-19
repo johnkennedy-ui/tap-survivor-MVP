@@ -295,8 +295,6 @@ function startRun() {
   ui.levelUp.classList.add("hidden");
   shellUi.closeRunMenu(false);
   resetGameState();
-  game.awaitingFirstMoveInput = true;
-  showMovementGateBanner();
 }
 
 function endRun(reason) {
@@ -381,16 +379,6 @@ function showBanner(message, duration = 5200) {
   if (duration > 0) {
     bannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), duration);
   }
-}
-
-function showMovementGateBanner() {
-  showBanner("Click/tap to move", 0);
-}
-
-function hideMovementGateBanner() {
-  if (!ui.questBanner || ui.questBanner.textContent !== "Click/tap to move") return;
-  clearTimeout(bannerTimer);
-  ui.questBanner.classList.add("hidden");
 }
 
 function showOnceBanner(id, message, duration) {
@@ -525,7 +513,6 @@ function startRuntime() {
   globalThis.TapSurvivorInput.bindMovementInput({
     canvas,
     getGame: () => game,
-    onFirstMoveInput: hideMovementGateBanner,
   });
 
   spriteSystem.loadSprites();
