@@ -3,7 +3,7 @@ import { createGameHarness } from "./smoke-game-harness.mjs";
 const harness = createGameHarness({
   fakeCombat: true,
   initialSave: {
-    coins: 25,
+    coins: 40,
     shopPurchases: {},
     unlockedWeapons: ["spark_bolt"],
   },
@@ -18,7 +18,7 @@ harness.elements.get("openShop").click();
 
 check("shop opens from main menu", !harness.elements.get("shopModal").classList.contains("hidden"));
 check("first shop visit banner is recorded", harness.context.__tapSurvivorHarness.getSave().seenBanners.includes("first_shop_visit"));
-check("shop renders coin balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 25"));
+check("shop renders coin balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 40"));
 check("shop renders expanded content items", harness.elements.get("shopItems").children.length >= 100);
 
 const firstItem = harness.elements.get("shopItems").children[0];
@@ -26,15 +26,16 @@ const buyButton = firstItem.children[0];
 buyButton.click();
 
 const saved = JSON.parse(harness.context.localStorage.getItem("tap-survivor-mvp-save-v2"));
-check("shop purchase spends coins", saved.coins === 5);
+check("shop purchase spends coins", saved.coins === 13);
 check("shop purchase plays coin jingle", harness.context.__audioOscillators >= 4);
 check("shop purchase persists tier", saved.shopPurchases.training_boots === 1);
 const registryBonuses = harness.context.TapSurvivorEffects.emptyShopBonuses();
 harness.context.TapSurvivorEffects.addShopItemBonus(registryBonuses, { effect: { stat: "speed", value: 10 } }, 2);
 check("shop bonus registry applies stat tiers", registryBonuses.speed === 20);
-check("shop rerenders balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 5"));
-check("shop shows inflation notice", harness.elements.get("shopNotice").textContent.includes("Inflation huh."));
-check("other shop item price inflates", harness.elements.get("shopItems").children[1].innerHTML.includes("Needs 19 coins"));
+check("shop rerenders balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 13"));
+check("shop shows inflation notice as banner", harness.elements.get("questBanner").textContent.includes("Inflation huh."));
+check("shop inline inflation notice stays empty", !harness.elements.get("shopNotice").textContent.includes("Inflation huh."));
+check("other shop item price inflates", harness.elements.get("shopItems").children[1].innerHTML.includes("Needs 22 coins"));
 
 harness.elements.get("closeShop").click();
 check("shop closes", harness.elements.get("shopModal").classList.contains("hidden"));
@@ -44,7 +45,7 @@ harness.elements.get("openMenu").click();
 harness.elements.get("menuShopTab").click();
 check("run menu shop tab renders items", harness.elements.get("menuShopItems").children.length >= 4);
 check("run menu shop tab shows scaled floor context", harness.elements.get("menuShopCoinHud").textContent.includes("Tower Floor"));
-check("run menu shop tab keeps inflation notice", harness.elements.get("menuShopNotice").textContent.includes("Inflation huh."));
+check("run menu shop tab leaves inline inflation notice empty", !harness.elements.get("menuShopNotice").textContent.includes("Inflation huh."));
 
 const floorHundred = createGameHarness({
   fakeCombat: true,
@@ -58,7 +59,7 @@ const floorHundred = createGameHarness({
 floorHundred.elements.get("openShop").click();
 const floorHundredFirstItem = floorHundred.elements.get("shopItems").children[0];
 floorHundredFirstItem.children[0].click();
-check("floor 100 shop prices stay buyout-scale", floorHundred.elements.get("shopItems").children[1].innerHTML.includes("Cost: 73 coins"));
+check("floor 100 shop prices stay buyout-scale", floorHundred.elements.get("shopItems").children[1].innerHTML.includes("Cost: 85 coins"));
 
 if (process.exitCode) {
   console.error("\nShop smoke failed.");

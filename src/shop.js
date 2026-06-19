@@ -8,6 +8,7 @@ function createShopSystem({
   getSave,
   getGame,
   onShopVisit,
+  onPurchaseNotice,
   playPurchaseSfx,
   persist,
   renderMeta,
@@ -54,15 +55,13 @@ function createShopSystem({
     applyItemEffectToRun(item);
     persist();
     renderShop();
-    showInflationNotice();
+    showPurchaseNotice();
     renderMeta();
   }
 
-  function showInflationNotice() {
+  function showPurchaseNotice() {
     const message = "eh? The prices went up! Inflation huh.";
-    [ui.shopNotice, ui.menuShopNotice].forEach((notice) => {
-      if (notice) notice.textContent = message;
-    });
+    onPurchaseNotice?.(message);
   }
 
   function applyItemEffectToRun(item) {

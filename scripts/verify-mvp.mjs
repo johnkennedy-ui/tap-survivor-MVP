@@ -218,10 +218,11 @@ check("shop purchase SFX is wired", audio.includes("function playShopPurchase") 
 check("shop prices scale with tower floor", shop.includes("SHOP_FLOOR_PRICE_RATE = 0.03") && shop.includes("towerFloor") && shop.includes("Cost: ${cost} coins"));
 check(
   "shop prices inflate after purchases",
-  shop.includes("purchasedTierCount") &&
+    shop.includes("purchasedTierCount") &&
     shop.includes("SHOP_INFLATION_RATE = 0.025") &&
     shop.includes("taperedInflationMultiplier") &&
-    index.includes('id="shopNotice"') &&
+    shop.includes("onPurchaseNotice?.(message)") &&
+    game.includes("onPurchaseNotice: (message) => showBanner(message)") &&
     shop.includes("Inflation huh."),
 );
 check("coin rewards scale toward floor 100 shop buyout", pickups.includes("function coinValue") && pickups.includes("(floor - 1) * 0.06") && pickups.includes("game.towerFloor") && shop.includes("SHOP_FLOOR_PRICE_RATE = 0.03"));

@@ -1209,9 +1209,9 @@ globalThis.TapSurvivorContent = {
       "description": "Start each run with more movement speed; soft tower leather gives the first stride extra pace.",
       "kind": "stat_upgrade",
       "cost": [
-        20,
-        35,
-        55
+        27,
+        48,
+        75
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1227,9 +1227,9 @@ globalThis.TapSurvivorContent = {
       "description": "Start each run with a larger pickup radius; stray coins and shards tug toward you sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        18,
-        32,
-        50
+        21,
+        37,
+        58
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1245,9 +1245,9 @@ globalThis.TapSurvivorContent = {
       "description": "Start each run with more maximum HP; layered plates absorb the first mistakes of a climb.",
       "kind": "stat_upgrade",
       "cost": [
-        24,
-        42,
-        66
+        30,
+        53,
+        83
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1263,9 +1263,9 @@ globalThis.TapSurvivorContent = {
       "description": "Start each run with more flat weapon damage; every blade and bolt lands with a cleaner bite.",
       "kind": "stat_upgrade",
       "cost": [
-        30,
         50,
-        75
+        83,
+        124
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1281,9 +1281,9 @@ globalThis.TapSurvivorContent = {
       "description": "Start each run with wider attack reach; moon-glass stretches the edge of every strike.",
       "kind": "stat_upgrade",
       "cost": [
-        28,
-        46,
-        72
+        45,
+        74,
+        116
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1299,9 +1299,9 @@ globalThis.TapSurvivorContent = {
       "description": "Start each run with faster auto-attacks; a ticking gear shortens the gap between shots.",
       "kind": "stat_upgrade",
       "cost": [
-        34,
-        56,
-        84
+        62,
+        101,
+        152
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1317,9 +1317,9 @@ globalThis.TapSurvivorContent = {
       "description": "Start each run with stronger percentage damage; tower ink amplifies every scaling bonus.",
       "kind": "stat_upgrade",
       "cost": [
-        40,
-        66,
-        98
+        72,
+        119,
+        177
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1335,9 +1335,9 @@ globalThis.TapSurvivorContent = {
       "description": "Boss relics push their linked skills harder in level-up choices; the needle leans toward bound power.",
       "kind": "stat_upgrade",
       "cost": [
-        45,
-        75,
-        110
+        50,
+        83,
+        122
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1353,9 +1353,9 @@ globalThis.TapSurvivorContent = {
       "description": "Add a smaller extra movement boost for tower climbs; the soles lift just before your step lands.",
       "kind": "stat_upgrade",
       "cost": [
-        55,
-        92,
-        135
+        75,
+        125,
+        183
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1371,9 +1371,9 @@ globalThis.TapSurvivorContent = {
       "description": "Pull pickups in from farther away on higher floors; the bag drinks in loose treasure.",
       "kind": "stat_upgrade",
       "cost": [
-        50,
-        86,
-        128
+        58,
+        99,
+        148
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1389,9 +1389,9 @@ globalThis.TapSurvivorContent = {
       "description": "Add more flat weapon damage for later floors; a hot edge keeps its bite longer.",
       "kind": "stat_upgrade",
       "cost": [
-        70,
-        115,
-        165
+        116,
+        190,
+        273
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1407,9 +1407,9 @@ globalThis.TapSurvivorContent = {
       "description": "Slightly increase weapon firing pace before each run; the coil snaps attacks forward.",
       "kind": "stat_upgrade",
       "cost": [
-        76,
-        124,
-        180
+        137,
+        224,
+        324
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1425,9 +1425,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; ash-etched soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        12,
-        20,
-        32
+        17,
+        27,
+        44
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1443,9 +1443,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; ash-etched pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        14,
-        22,
-        35
+        17,
+        26,
+        41
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1461,9 +1461,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; ash-etched plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        16,
-        25,
-        39
+        20,
+        32,
+        49
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1479,9 +1479,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; ash-etched a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        18,
-        28,
-        42
+        30,
+        47,
+        70
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1497,9 +1497,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; ash-etched glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        20,
-        31,
-        46
+        32,
+        50,
+        74
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1515,9 +1515,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; ash-etched the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        22,
-        34,
-        50
+        40,
+        62,
+        90
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1533,9 +1533,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; ash-etched glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        24,
-        36,
-        53
+        44,
+        65,
+        96
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1551,9 +1551,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; ash-etched the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        26,
-        39,
-        57
+        29,
+        43,
+        63
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1569,9 +1569,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; copper-bound soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        28,
-        42,
-        60
+        38,
+        57,
+        81
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1587,9 +1587,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; copper-bound pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        30,
-        45,
-        64
+        35,
+        52,
+        74
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1605,9 +1605,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; copper-bound plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        32,
-        48,
-        68
+        40,
+        60,
+        85
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1623,9 +1623,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; copper-bound a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        34,
-        50,
-        71
+        57,
+        83,
+        118
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1641,9 +1641,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; copper-bound glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        36,
-        53,
-        75
+        58,
+        85,
+        120
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1659,9 +1659,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; copper-bound the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        38,
-        56,
-        78
+        69,
+        101,
+        141
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1677,9 +1677,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; copper-bound glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        40,
-        59,
-        82
+        72,
+        107,
+        148
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1695,9 +1695,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; copper-bound the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        42,
-        62,
-        86
+        47,
+        69,
+        95
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1713,9 +1713,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; brass-rung soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        44,
-        64,
-        89
+        60,
+        87,
+        121
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1731,9 +1731,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; brass-rung pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        46,
-        67,
-        93
+        53,
+        78,
+        107
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1749,9 +1749,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; brass-rung plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        48,
-        70,
-        96
+        60,
+        88,
+        120
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1767,9 +1767,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; brass-rung a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        50,
-        73,
-        100
+        83,
+        121,
+        165
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1785,9 +1785,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; brass-rung glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        52,
-        76,
-        104
+        84,
+        122,
+        167
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1803,9 +1803,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; brass-rung the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        54,
-        78,
-        107
+        98,
+        141,
+        193
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1821,9 +1821,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; brass-rung glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        56,
-        81,
-        111
+        101,
+        146,
+        200
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1839,9 +1839,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; brass-rung the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        58,
-        84,
-        114
+        64,
+        93,
+        126
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1857,9 +1857,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; shadow-dyed soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        60,
-        87,
-        118
+        81,
+        118,
+        160
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1875,9 +1875,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; shadow-dyed pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        62,
-        90,
-        122
+        72,
+        104,
+        141
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1893,9 +1893,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; shadow-dyed plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        64,
-        92,
-        125
+        80,
+        115,
+        157
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1911,9 +1911,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; shadow-dyed a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        66,
-        95,
-        129
+        109,
+        157,
+        213
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1929,9 +1929,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; shadow-dyed glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        68,
-        98,
-        132
+        109,
+        157,
+        212
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1947,9 +1947,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; shadow-dyed the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        70,
-        101,
-        136
+        126,
+        182,
+        245
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1965,9 +1965,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; shadow-dyed glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        72,
-        104,
-        140
+        130,
+        188,
+        252
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -1983,9 +1983,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; shadow-dyed the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        74,
-        106,
-        143
+        82,
+        117,
+        158
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2001,9 +2001,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; bone-white soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        76,
-        109,
-        147
+        103,
+        148,
+        199
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2019,9 +2019,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; bone-white pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        78,
-        112,
-        150
+        90,
+        129,
+        173
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2037,9 +2037,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; bone-white plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        80,
-        115,
-        154
+        100,
+        144,
+        193
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2055,9 +2055,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; bone-white a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        82,
-        118,
-        158
+        136,
+        195,
+        261
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2073,9 +2073,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; bone-white glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        84,
-        120,
-        161
+        135,
+        192,
+        258
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2091,9 +2091,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; bone-white the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        86,
-        123,
-        165
+        155,
+        222,
+        297
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2109,9 +2109,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; bone-white glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        88,
-        126,
-        168
+        159,
+        227,
+        303
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2127,9 +2127,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; bone-white the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        90,
-        129,
-        172
+        100,
+        142,
+        190
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2145,9 +2145,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; moss-wrapped soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        92,
-        132,
-        176
+        125,
+        179,
+        238
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2163,9 +2163,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; moss-wrapped pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        94,
-        134,
-        179
+        109,
+        155,
+        206
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2181,9 +2181,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; moss-wrapped plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        96,
-        137,
-        183
+        120,
+        172,
+        229
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2199,9 +2199,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; moss-wrapped a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        98,
-        140,
-        186
+        162,
+        231,
+        307
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2217,9 +2217,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; moss-wrapped glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        100,
-        143,
-        190
+        160,
+        229,
+        304
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2235,9 +2235,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; moss-wrapped the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        102,
-        146,
-        194
+        184,
+        263,
+        350
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2253,9 +2253,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; moss-wrapped glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        104,
-        148,
-        197
+        188,
+        267,
+        355
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2271,9 +2271,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; moss-wrapped the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        106,
-        151,
-        201
+        117,
+        167,
+        222
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2289,9 +2289,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; sky-lit soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        108,
-        154,
-        204
+        146,
+        208,
+        276
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2307,9 +2307,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; sky-lit pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        110,
-        157,
-        208
+        127,
+        181,
+        240
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2325,9 +2325,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; sky-lit plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        112,
-        160,
-        212
+        140,
+        200,
+        265
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2343,9 +2343,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; sky-lit a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        114,
-        162,
-        215
+        189,
+        268,
+        355
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2361,9 +2361,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; sky-lit glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        116,
-        165,
-        219
+        186,
+        264,
+        351
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2379,9 +2379,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; sky-lit the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        118,
-        168,
-        222
+        213,
+        303,
+        400
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2397,9 +2397,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; sky-lit glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        120,
-        171,
-        226
+        216,
+        308,
+        407
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2415,9 +2415,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; sky-lit the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        122,
-        174,
-        230
+        135,
+        192,
+        254
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2433,9 +2433,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; blood-warm soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        124,
-        176,
-        233
+        168,
+        238,
+        315
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2451,9 +2451,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; blood-warm pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        126,
-        179,
-        237
+        145,
+        206,
+        273
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2469,9 +2469,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; blood-warm plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        128,
-        182,
-        240
+        160,
+        228,
+        300
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2487,9 +2487,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; blood-warm a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        130,
-        185,
-        244
+        215,
+        306,
+        403
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2505,9 +2505,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; blood-warm glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        132,
-        188,
-        248
+        212,
+        301,
+        397
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2523,9 +2523,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; blood-warm the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        134,
-        190,
-        251
+        242,
+        342,
+        452
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2541,9 +2541,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; blood-warm glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        136,
-        193,
-        255
+        245,
+        348,
+        459
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2559,9 +2559,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; blood-warm the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        138,
-        196,
-        258
+        152,
+        216,
+        284
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2577,9 +2577,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; lantern-bright soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        140,
-        199,
-        262
+        189,
+        269,
+        354
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2595,9 +2595,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; lantern-bright pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        142,
-        202,
-        266
+        164,
+        233,
+        306
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2613,9 +2613,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; lantern-bright plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        144,
-        204,
-        269
+        180,
+        255,
+        337
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2631,9 +2631,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; lantern-bright a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        146,
-        207,
-        273
+        241,
+        342,
+        451
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2649,9 +2649,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; lantern-bright glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        148,
-        210,
-        276
+        237,
+        336,
+        442
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2667,9 +2667,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; lantern-bright the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        150,
-        213,
-        280
+        270,
+        384,
+        504
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2685,9 +2685,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; lantern-bright glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        152,
-        216,
-        284
+        274,
+        389,
+        512
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2703,9 +2703,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; lantern-bright the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        154,
-        218,
-        287
+        170,
+        240,
+        316
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2721,9 +2721,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; spell-stained soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        156,
-        221,
-        291
+        211,
+        299,
+        393
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2739,9 +2739,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; spell-stained pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        158,
-        224,
-        294
+        182,
+        258,
+        339
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2757,9 +2757,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; spell-stained plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        160,
-        227,
-        298
+        200,
+        284,
+        373
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2775,9 +2775,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; spell-stained a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        162,
-        230,
-        302
+        268,
+        380,
+        499
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2793,9 +2793,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; spell-stained glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        164,
-        232,
-        305
+        263,
+        372,
+        488
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2811,9 +2811,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; spell-stained the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        166,
-        235,
-        309
+        299,
+        423,
+        557
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2829,9 +2829,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; spell-stained glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        168,
-        238,
-        312
+        303,
+        429,
+        562
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2847,9 +2847,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; spell-stained the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        170,
-        241,
-        316
+        188,
+        266,
+        348
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2865,9 +2865,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; glass-dark soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        172,
-        244,
-        320
+        233,
+        330,
+        432
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2883,9 +2883,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; glass-dark pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        174,
-        246,
-        323
+        201,
+        283,
+        372
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2901,9 +2901,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; glass-dark plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        176,
-        249,
-        327
+        220,
+        312,
+        409
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2919,9 +2919,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; glass-dark a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        178,
-        252,
-        330
+        294,
+        416,
+        545
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2937,9 +2937,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; glass-dark glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        180,
-        255,
-        334
+        288,
+        408,
+        535
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2955,9 +2955,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; glass-dark the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        182,
-        258,
-        338
+        328,
+        465,
+        609
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2973,9 +2973,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; glass-dark glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        184,
-        260,
-        341
+        332,
+        468,
+        614
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -2991,9 +2991,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; glass-dark the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        186,
-        263,
-        345
+        205,
+        290,
+        380
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3009,9 +3009,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; moon-silver soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        188,
-        266,
-        348
+        254,
+        360,
+        470
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3027,9 +3027,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; moon-silver pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        190,
-        269,
-        352
+        219,
+        310,
+        405
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3045,9 +3045,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; moon-silver plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        192,
-        272,
-        356
+        240,
+        340,
+        445
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3063,9 +3063,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; moon-silver a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        194,
-        274,
-        359
+        321,
+        453,
+        593
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3081,9 +3081,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent attack reach boost; moon-silver glass bends attacks a little wider.",
       "kind": "stat_upgrade",
       "cost": [
-        196,
-        277,
-        363
+        314,
+        444,
+        581
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3099,9 +3099,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent fire-rate boost; moon-silver the mechanism snaps attacks into rhythm.",
       "kind": "stat_upgrade",
       "cost": [
-        198,
-        280,
-        366
+        357,
+        504,
+        659
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3117,9 +3117,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent percentage damage boost; moon-silver glyphs strengthen scaling pressure.",
       "kind": "stat_upgrade",
       "cost": [
-        200,
-        283,
-        370
+        360,
+        510,
+        666
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3135,9 +3135,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent relic-linked level-up weighting boost; moon-silver the needle favours skills tied to boss relics.",
       "kind": "stat_upgrade",
       "cost": [
-        202,
-        286,
-        374
+        223,
+        315,
+        412
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3153,9 +3153,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent movement speed boost; sun-gilded soles carry each climb faster.",
       "kind": "stat_upgrade",
       "cost": [
-        204,
-        288,
-        377
+        276,
+        389,
+        509
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3171,9 +3171,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent pickup reach boost; sun-gilded pull loose drops closer before they fade.",
       "kind": "stat_upgrade",
       "cost": [
-        206,
-        291,
-        381
+        237,
+        335,
+        439
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3189,9 +3189,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent maximum HP boost; sun-gilded plates give the next floor more margin.",
       "kind": "stat_upgrade",
       "cost": [
-        208,
-        294,
-        384
+        260,
+        368,
+        480
       ],
       "maxTier": 3,
       "spriteId": "quest",
@@ -3207,9 +3207,9 @@ globalThis.TapSurvivorContent = {
       "description": "Adds a small permanent flat damage boost; sun-gilded a sharper strike chips enemies sooner.",
       "kind": "stat_upgrade",
       "cost": [
-        210,
-        297,
-        388
+        347,
+        491,
+        641
       ],
       "maxTier": 3,
       "spriteId": "quest",
