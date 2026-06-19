@@ -4,41 +4,30 @@ This file is an optional repo-local checkpoint for a Tap Survivor task. It is ho
 
 ## Active Goal
 
-Prepare Play privacy and Data safety docs
+Add Prettier before commit skill
 
 ## Status
 
 - State: in progress
-- Started: 2026-06-18T20:00:59.572Z
+- Started: 2026-06-19T00:00:00.060Z
 - Owner: Frank / OpenClaw
 
 ## Files Likely Involved
 
 - `docs/CURRENT_TASK.md`
-- `docs/PRIVACY_POLICY_DRAFT.md`
-- `docs/PLAY_DATA_SAFETY_WORKSHEET.md`
-- `docs/PLAY_PERMISSIONS_WORKSHEET.md`
-- `docs/RELEASE_CHECKLIST.md`
-- `docs/PLAY_STORE_ANDROID_PREP.md`
+- `docs/AGENT_CODEBASE_CONTEXT.md`
+- `docs/CONTENT_EXTENSION_GUIDE.md`
 
 ## Files Changed
 
-- `docs/PRIVACY_POLICY_DRAFT.md` adds the draft privacy policy.
-- `docs/PLAY_DATA_SAFETY_WORKSHEET.md` adds the Play Data safety worksheet.
-- `docs/PLAY_PERMISSIONS_WORKSHEET.md` adds the Android permissions worksheet.
-- `docs/RELEASE_CHECKLIST.md` links the privacy/Data safety/permissions docs.
-- `docs/PLAY_STORE_ANDROID_PREP.md` links the privacy/Data safety/permissions docs.
-- `docs/CURRENT_TASK.md` records this docs-only task.
+- Pending.
 
 ## Validation Plan
 
 Run the smallest command that proves the change:
 
 ```bash
-npm run check:format-hygiene
 npm run agent:check
-npm test
-git diff --check
 ```
 
 Result:

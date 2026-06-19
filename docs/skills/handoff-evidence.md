@@ -36,8 +36,9 @@ Create a clear snapshot of branch, changes, validation, risks, and next step.
 3. Run validation only if required by the handoff.
 4. When a task claims specific files were reformatted, split, generated, or updated, run `npm run check:commit-evidence` against those files after commit.
 5. When a task had explicit allowed or forbidden files, include `npm run check:task-scope` in the final handoff evidence.
-6. Summarize commits, changed files, commands, validation, blockers, and next step.
-7. Do not make unrelated fixes.
+6. Before final commit evidence, if any changed files are supported by Prettier, run `docs/skills/prettier-before-commit.md`.
+7. Summarize commits, changed files, commands, validation, blockers, and next step.
+8. Do not make unrelated fixes.
 
 ## Commands
 

@@ -20,5 +20,6 @@ Before editing this repo:
 16. For Android/GitHub.io runtime changes, read `docs/RUNTIME_PARITY.md`.
 17. For Android packaging/release prep, read `docs/PLAY_STORE_ANDROID_PREP.md`.
 18. Do not hand-edit `www/`, fork gameplay between GitHub.io and Android, or commit signing secrets.
+19. Before committing, if the task changed Prettier-supported files, run `docs/skills/prettier-before-commit.md`.
 
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.

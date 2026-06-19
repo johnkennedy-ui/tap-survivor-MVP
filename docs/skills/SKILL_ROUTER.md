@@ -62,4 +62,6 @@ If verifying that a task touched only permitted files, use `docs/skills/task-sco
 
 If editing CI or GitHub Actions, use `docs/skills/ci-gate.md`.
 
+If a task changed JS, MJS, Markdown, JSON, YAML, or CSS files and is ready to commit, use `docs/skills/prettier-before-commit.md` before committing.
+
 If the selected skill's forbidden files include a file that must be edited to satisfy the task, stop and report the conflict.
