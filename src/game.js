@@ -260,6 +260,7 @@ const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
   closeLevelUpMenu,
   closeEndScreen,
   setGameSpeed,
+  playStartLaugh: audioSystem.playStartLaugh,
   toggleAudioMute,
   isAudioMuted: audioSystem.isMuted,
   persist,
@@ -294,7 +295,8 @@ function startRun() {
   ui.levelUp.classList.add("hidden");
   shellUi.closeRunMenu(false);
   resetGameState();
-  showOnceBanner("first_run_movement", "Tap or drag on the arena to move. Use Menu for Rewards, Inventory, Shop, pause, and exit.");
+  game.awaitingFirstMoveInput = true;
+  showMovementGateBanner();
 }
 
 function endRun(reason) {
@@ -376,7 +378,19 @@ function showBanner(message, duration = 5200) {
   ui.questBanner.textContent = message;
   ui.questBanner.classList.remove("hidden");
   clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), duration);
+  if (duration > 0) {
+    bannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), duration);
+  }
+}
+
+function showMovementGateBanner() {
+  showBanner("Click/tap to move", 0);
+}
+
+function hideMovementGateBanner() {
+  if (!ui.questBanner || ui.questBanner.textContent !== "Click/tap to move") return;
+  clearTimeout(bannerTimer);
+  ui.questBanner.classList.add("hidden");
 }
 
 function showOnceBanner(id, message, duration) {
@@ -511,6 +525,7 @@ function startRuntime() {
   globalThis.TapSurvivorInput.bindMovementInput({
     canvas,
     getGame: () => game,
+    onFirstMoveInput: hideMovementGateBanner,
   });
 
   spriteSystem.loadSprites();

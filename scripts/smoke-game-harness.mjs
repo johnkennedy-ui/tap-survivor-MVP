@@ -64,6 +64,9 @@ function makeElement(id = "") {
     setAttribute(name, value) {
       this[name] = value;
     },
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 960, height: 540 };
+    },
     click() {
       this.listeners?.get("click")?.({ target: this });
     },
@@ -101,6 +104,9 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
   const ids = [
     "game",
     "startRun",
+    "titleScreen",
+    "titleStartGame",
+    "startTransition",
     "startMenu",
     "startMenuStartRun",
     "startMenuOpenShop",
@@ -185,6 +191,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       return 1;
     },
     setTimeout: (callback) => {
+      context.__timeouts += 1;
       callback();
       return 1;
     },
@@ -205,6 +212,36 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
       };
     },
     __audioPlays: [],
+    __timeouts: 0,
+    __startLaughOscillators: 0,
+    AudioContext: function FakeAudioContext() {
+      this.currentTime = 0;
+      this.destination = {};
+      this.resume = () => Promise.resolve();
+      this.createGain = () => ({
+        connect() {},
+        gain: {
+          setValueAtTime() {},
+          exponentialRampToValueAtTime() {},
+        },
+      });
+      this.createBiquadFilter = () => ({
+        connect() {},
+        frequency: { setValueAtTime() {} },
+        Q: { setValueAtTime() {} },
+      });
+      this.createOscillator = () => ({
+        connect() {},
+        frequency: {
+          setValueAtTime() {},
+          exponentialRampToValueAtTime() {},
+        },
+        start() {
+          context.__startLaughOscillators += 1;
+        },
+        stop() {},
+      });
+    },
     localStorage: {
       store: new Map(),
       getItem(key) {

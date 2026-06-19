@@ -46,19 +46,22 @@
         check("app document loads", Boolean(app));
         check("canvas exists", Boolean(app.getElementById("game")));
         check("index chrome is absent", !app.querySelector("aside") && !app.getElementById("startRun") && !app.getElementById("runHud"));
+        check("title screen exists", Boolean(app.getElementById("titleScreen")));
+        check("title screen is visible first", !app.getElementById("titleScreen").classList.contains("hidden"));
+        check("title screen shop button is absent", !app.getElementById("titleScreen").textContent.includes("Shop"));
         check("start menu exists", Boolean(app.getElementById("startMenu")));
-        check("start menu is visible", !app.getElementById("startMenu").classList.contains("hidden"));
-        check("start menu shop button exists", Boolean(app.getElementById("startMenuOpenShop")));
+        check("start menu waits behind title screen", app.getElementById("startMenu").classList.contains("hidden"));
+        check("start menu shop button is absent", !app.getElementById("startMenuOpenShop"));
         check("fullscreen button exists", Boolean(app.getElementById("fullscreenButton")));
 
-        app.getElementById("startMenuOpenShop").click();
-        await wait(100);
-        check("shop opens", !app.getElementById("shopModal").classList.contains("hidden"));
-        check("shop renders items", app.getElementById("shopItems").children.length >= 4);
-        check("shop shows coins", app.getElementById("shopCoinHud").textContent.includes("Coins: 35"));
-        app.getElementById("closeShopBottom").click();
+        app.getElementById("titleStartGame").click();
         await wait(50);
-        check("shop closes and returns to start menu", app.getElementById("shopModal").classList.contains("hidden") && !app.getElementById("startMenu").classList.contains("hidden"));
+        check("start game hides title screen", app.getElementById("titleScreen").classList.contains("hidden"));
+        check("start game shows transition first", !app.getElementById("startTransition").classList.contains("hidden"));
+        check("start menu waits for transition", app.getElementById("startMenu").classList.contains("hidden"));
+        await wait(500);
+        check("transition hides after delay", app.getElementById("startTransition").classList.contains("hidden"));
+        check("start game shows start menu", !app.getElementById("startMenu").classList.contains("hidden"));
 
         app.getElementById("openMenu").click();
         await wait(50);

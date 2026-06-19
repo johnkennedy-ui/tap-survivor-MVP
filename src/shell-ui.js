@@ -13,6 +13,7 @@ function createShellUiController({
   closeLevelUpMenu,
   closeEndScreen,
   setGameSpeed,
+  playStartLaugh,
   toggleAudioMute,
   isAudioMuted,
   persist,
@@ -23,8 +24,11 @@ function createShellUiController({
     runUpgradeSprite: (upgradeId) => globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades?.[upgradeId],
     spriteSource: (definition) => typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
   };
+  let currentScreen = "title";
+  let startTransitionTimer = 0;
 
   function openRunMenu() {
+    if (currentScreen === "startingTransition") return;
     ui.runMenu.classList.remove("hidden");
     ui.openMenu.setAttribute("aria-expanded", "true");
     ui.exitRun.disabled = !getGame()?.running;
@@ -50,11 +54,28 @@ function createShellUiController({
   }
 
   function showStartMenu() {
+    ui.titleScreen?.classList.add("hidden");
+    ui.startTransition?.classList.add("hidden");
     ui.startMenu.classList.remove("hidden");
+    currentScreen = "start";
   }
 
   function closeStartMenu() {
     ui.startMenu.classList.add("hidden");
+    currentScreen = "game";
+  }
+
+  function startGameFromTitle() {
+    if (currentScreen !== "title") return;
+    playStartLaugh?.();
+    currentScreen = "startingTransition";
+    ui.titleScreen?.classList.add("hidden");
+    ui.startTransition?.classList.remove("hidden");
+    if (startTransitionTimer) clearTimeout(startTransitionTimer);
+    startTransitionTimer = setTimeout(() => {
+      startTransitionTimer = 0;
+      showStartMenu();
+    }, 450);
   }
 
   function toggleRunMenu() {
@@ -366,9 +387,10 @@ function createShellUiController({
 
   function bind() {
     ui.startRun?.addEventListener("click", startRun);
+    ui.titleStartGame?.addEventListener("click", startGameFromTitle);
     ui.startMenuStartRun.addEventListener("click", startRun);
     ui.openShop?.addEventListener("click", openShopMenu);
-    ui.startMenuOpenShop.addEventListener("click", openShopMenu);
+    ui.startMenuOpenShop?.addEventListener("click", openShopMenu);
     ui.closeShop.addEventListener("click", closeShopMenu);
     ui.closeShopBottom.addEventListener("click", closeShopMenu);
     ui.openMenu.addEventListener("click", toggleRunMenu);
@@ -405,6 +427,7 @@ function createShellUiController({
     closeRunMenu,
     closeShopMenu,
     closeStartMenu,
+    startGameFromTitle,
     showStartMenu,
   };
 }

@@ -210,7 +210,7 @@ check("relic slots unlock by tower floor", saveDefaults.includes("towerFloor: 1"
 check("relics have inventory icons", (content.relics || []).every((relic) => relic.iconPath) && assets.includes("relicIcon") && shellUi.includes("assetResolver.relicIcon"));
 check("weapon slot relics exist", (content.relics || []).some((relic) => relic.weaponSlotBonus > 0) && (content.relics || []).some((relic) => relic.weaponSlotBonus < 0 && relic.weaponDamageMultiplier === 2) && relics.includes("getWeaponDamageMultiplier"));
 check("run move speed spreads over five tiers", content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.maxTier === 5 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.effects?.some((effect) => effect.stat === "speed" && effect.value === 20));
-check("coin shop exists", index.includes('id="startMenuOpenShop"') && index.includes('id="shopItems"') && shop.includes("createShopSystem"));
+check("coin shop exists", index.includes('id="shopItems"') && shop.includes("createShopSystem"));
 check("shop items are content-driven", (content.shopItems || []).length >= 12 && shop.includes("shopItemDefs"));
 check("shop items have distinct sprites", (content.shopItems || []).every((item) => item.spritePath) && shop.includes("shop-item-sprite"));
 check("shop purchases persist", saveDefaults.includes("shopPurchases") && saveNormalize.includes("normalizeShopPurchases") && shop.includes("save.shopPurchases"));
@@ -219,7 +219,14 @@ check("shop prices inflate after purchases", shop.includes("purchasedTierCount")
 check("coin rewards scale toward floor 100 shop buyout", pickups.includes("function coinValue") && pickups.includes("(floor - 1) * 0.06") && pickups.includes("game.towerFloor") && shop.includes("SHOP_FLOOR_PRICE_RATE = 0.03"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => weaponFire.includes(token)) && game.includes("getShopBonuses"));
+check("title screen starts first", index.includes('id="titleScreen" class="modal"') && index.includes('id="startMenu" class="modal hidden"') && shellUi.includes('currentScreen = "title"'));
+check("title Start Game enters start flow", index.includes('id="titleStartGame"') && shellUi.includes("function startGameFromTitle") && shellUi.includes("showStartMenu();"));
+check("title Start Game plays procedural laugh once", audio.includes("function playStartLaugh") && audio.includes("createOscillator") && shellUi.includes("if (currentScreen !== \"title\") return") && shellUi.includes("playStartLaugh?.()") && game.includes("playStartLaugh: audioSystem.playStartLaugh"));
+check("title Start Game runs one brief transition", index.includes('id="startTransition" class="modal hidden"') && ui.includes("startTransition") && shellUi.includes('currentScreen = "startingTransition"') && shellUi.includes("startTransitionTimer") && shellUi.includes("setTimeout") && shellUi.includes("}, 450);"));
+check("pre-game movement gate blocks gameplay update", game.includes("game.awaitingFirstMoveInput = true") && runUpdate.includes("if (game.awaitingFirstMoveInput) return;") && game.includes('showBanner("Click/tap to move", 0)'));
+check("pre-game movement gate input clears freeze", input.includes("game.awaitingFirstMoveInput = false") && input.includes("onFirstMoveInput?.()") && game.includes("onFirstMoveInput: hideMovementGateBanner"));
 check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && shellUi.includes("function showStartMenu"));
+check("start menu hides shop entry", !index.includes('id="startMenuOpenShop"'));
 check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && shellUi.includes("function closeShopMenu"));
 check("modal boxes scroll", styles.includes(".modal-box") && styles.includes("overflow-y: auto") && styles.includes("overscroll-behavior: contain"));
 check("run menu pauses game", index.includes('id="openMenu"') && shellUi.includes("openRunMenu") && shellUi.includes('pauseReason = "menu"'));
@@ -237,7 +244,7 @@ check("tower floor progresses after boss clear", saveDefaults.includes("towerFlo
 check("boss clears grant relics", saveDefaults.includes("unlockedRelics") && saveDefaults.includes("equippedRelics") && relics.includes("grantRandomRelic") && game.includes("lastFloorClear"));
 check("every fifth floor has super boss relic drop", enemies.includes("superBoss") && game.includes("relicDropCount") && game.includes("clearedFloor % 5 === 0 ? 2 : 1"));
 check("boss kills feed boss quest chain", runtime.includes("addQuestProgressGroup(bossQuestIds, 1)"));
-check("reusable banner system exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showBanner") && game.includes("showOnceBanner") && game.includes("first_run_movement") && game.includes("first_shop_visit") && game.includes("first_quest_completion") && game.includes("first_boss_fight") && game.includes("first_super_boss_fight") && styles.includes(".quest-banner"));
+check("reusable banner system exists", index.includes('id="questBanner"') && quests.includes("onQuestComplete") && game.includes("showBanner") && game.includes("Click/tap to move") && game.includes("first_shop_visit") && game.includes("first_quest_completion") && game.includes("first_boss_fight") && game.includes("first_super_boss_fight") && styles.includes(".quest-banner"));
 check("boss health bar renders at screen top", renderHud.includes("drawBossHealthBar") && renderHud.includes("boss.hp / boss.maxHp") && renderHud.includes("SUPER BOSS"));
 check("boss special charge bar renders at screen top", renderHud.includes("drawBossSpecialBar") && renderHud.includes("bossAttackCooldownMax") && renderHud.includes("SPECIAL"));
 check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice") && enemies.includes('type: "boss_drop"') && enemies.includes("landingX") && renderHud.includes("drawBossSpawnNotice") && rendering.includes("boss_drop"));
