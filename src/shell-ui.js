@@ -56,12 +56,13 @@ function createShellUiController({
   function showStartMenu() {
     ui.titleScreen?.classList.add("hidden");
     ui.startTransition?.classList.add("hidden");
-    ui.startMenu.classList.remove("hidden");
+    ui.startMenu?.classList.remove("hidden");
     currentScreen = "start";
   }
 
   function closeStartMenu() {
-    ui.startMenu.classList.add("hidden");
+    ui.startMenu?.classList.add("hidden");
+    ui.startTransition?.classList.add("hidden");
     currentScreen = "game";
   }
 
@@ -74,7 +75,7 @@ function createShellUiController({
     if (startTransitionTimer) clearTimeout(startTransitionTimer);
     startTransitionTimer = setTimeout(() => {
       startTransitionTimer = 0;
-      showStartMenu();
+      startRun();
     }, 450);
   }
 
@@ -94,9 +95,9 @@ function createShellUiController({
     const fullscreen = Boolean(isFullscreen());
     const label = fullscreen ? "Exit Full Screen" : "Full Screen";
     ui.fullscreenButton.textContent = label;
-    ui.startMenuFullscreen.textContent = label;
+    if (ui.startMenuFullscreen) ui.startMenuFullscreen.textContent = label;
     ui.fullscreenButton.setAttribute("aria-pressed", String(fullscreen));
-    ui.startMenuFullscreen.setAttribute("aria-pressed", String(fullscreen));
+    ui.startMenuFullscreen?.setAttribute("aria-pressed", String(fullscreen));
   }
 
   function toggleFullscreen() {
@@ -388,7 +389,7 @@ function createShellUiController({
   function bind() {
     ui.startRun?.addEventListener("click", startRun);
     ui.titleStartGame?.addEventListener("click", startGameFromTitle);
-    ui.startMenuStartRun.addEventListener("click", startRun);
+    ui.startMenuStartRun?.addEventListener("click", startRun);
     ui.openShop?.addEventListener("click", openShopMenu);
     ui.startMenuOpenShop?.addEventListener("click", openShopMenu);
     ui.closeShop.addEventListener("click", closeShopMenu);
@@ -400,7 +401,7 @@ function createShellUiController({
     ui.menuInventoryTab.addEventListener("click", () => showRunMenuTab("inventory"));
     ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
     ui.fullscreenButton.addEventListener("click", toggleFullscreen);
-    ui.startMenuFullscreen.addEventListener("click", toggleFullscreen);
+    ui.startMenuFullscreen?.addEventListener("click", toggleFullscreen);
     ui.exitRun.addEventListener("click", exitRun);
     ui.resetSave?.addEventListener("click", resetSave);
     ui.closeEnd.addEventListener("click", closeEndScreen);
