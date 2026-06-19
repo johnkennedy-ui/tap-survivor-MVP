@@ -19,7 +19,7 @@ harness.elements.get("openShop").click();
 check("shop opens from main menu", !harness.elements.get("shopModal").classList.contains("hidden"));
 check("first shop visit banner is recorded", harness.context.__tapSurvivorHarness.getSave().seenBanners.includes("first_shop_visit"));
 check("shop renders coin balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 25"));
-check("shop renders content items", harness.elements.get("shopItems").children.length >= 4);
+check("shop renders expanded content items", harness.elements.get("shopItems").children.length >= 100);
 
 const firstItem = harness.elements.get("shopItems").children[0];
 const buyButton = firstItem.children[0];
@@ -33,7 +33,7 @@ harness.context.TapSurvivorEffects.addShopItemBonus(registryBonuses, { effect: {
 check("shop bonus registry applies stat tiers", registryBonuses.speed === 20);
 check("shop rerenders balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 5"));
 check("shop shows inflation notice", harness.elements.get("shopNotice").textContent.includes("Inflation huh."));
-check("other shop item price inflates", harness.elements.get("shopItems").children[1].innerHTML.includes("Needs 20 coins"));
+check("other shop item price inflates", harness.elements.get("shopItems").children[1].innerHTML.includes("Needs 19 coins"));
 
 harness.elements.get("closeShop").click();
 check("shop closes", harness.elements.get("shopModal").classList.contains("hidden"));
@@ -57,7 +57,7 @@ const floorHundred = createGameHarness({
 floorHundred.elements.get("openShop").click();
 const floorHundredFirstItem = floorHundred.elements.get("shopItems").children[0];
 floorHundredFirstItem.children[0].click();
-check("floor 100 shop prices stay buyout-scale", floorHundred.elements.get("shopItems").children[1].innerHTML.includes("Cost: 78 coins"));
+check("floor 100 shop prices stay buyout-scale", floorHundred.elements.get("shopItems").children[1].innerHTML.includes("Cost: 73 coins"));
 
 if (process.exitCode) {
   console.error("\nShop smoke failed.");

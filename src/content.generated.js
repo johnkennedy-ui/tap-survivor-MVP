@@ -1418,6 +1418,1806 @@ globalThis.TapSurvivorContent = {
         "stat": "fireRate",
         "value": 0.75
       }
+    },
+    {
+      "id": "generic_shop_001",
+      "name": "Tower Boots 1",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        12,
+        20,
+        32
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_002",
+      "name": "Tower Charm 2",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        14,
+        22,
+        35
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_003",
+      "name": "Tower Guard 3",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        16,
+        25,
+        39
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_004",
+      "name": "Tower Edge 4",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        18,
+        28,
+        42
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_005",
+      "name": "Tower Lens 5",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        20,
+        31,
+        46
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_006",
+      "name": "Tower Spring 6",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        22,
+        34,
+        50
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_007",
+      "name": "Tower Rune 7",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        24,
+        36,
+        53
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_008",
+      "name": "Tower Compass 8",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        26,
+        39,
+        57
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_009",
+      "name": "Tower Boots 9",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        28,
+        42,
+        60
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_010",
+      "name": "Tower Charm 10",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        30,
+        45,
+        64
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_011",
+      "name": "Tower Guard 11",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        32,
+        48,
+        68
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_012",
+      "name": "Tower Edge 12",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        34,
+        50,
+        71
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_013",
+      "name": "Tower Lens 13",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        36,
+        53,
+        75
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_014",
+      "name": "Tower Spring 14",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        38,
+        56,
+        78
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_015",
+      "name": "Tower Rune 15",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        40,
+        59,
+        82
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_016",
+      "name": "Tower Compass 16",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        42,
+        62,
+        86
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_017",
+      "name": "Tower Boots 17",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        44,
+        64,
+        89
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_018",
+      "name": "Tower Charm 18",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        46,
+        67,
+        93
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_019",
+      "name": "Tower Guard 19",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        48,
+        70,
+        96
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_020",
+      "name": "Tower Edge 20",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        50,
+        73,
+        100
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_021",
+      "name": "Tower Lens 21",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        52,
+        76,
+        104
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_022",
+      "name": "Tower Spring 22",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        54,
+        78,
+        107
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_023",
+      "name": "Tower Rune 23",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        56,
+        81,
+        111
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_024",
+      "name": "Tower Compass 24",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        58,
+        84,
+        114
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_025",
+      "name": "Tower Boots 25",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        60,
+        87,
+        118
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_026",
+      "name": "Tower Charm 26",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        62,
+        90,
+        122
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_027",
+      "name": "Tower Guard 27",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        64,
+        92,
+        125
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_028",
+      "name": "Tower Edge 28",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        66,
+        95,
+        129
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_029",
+      "name": "Tower Lens 29",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        68,
+        98,
+        132
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_030",
+      "name": "Tower Spring 30",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        70,
+        101,
+        136
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_031",
+      "name": "Tower Rune 31",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        72,
+        104,
+        140
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_032",
+      "name": "Tower Compass 32",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        74,
+        106,
+        143
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_033",
+      "name": "Tower Boots 33",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        76,
+        109,
+        147
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_034",
+      "name": "Tower Charm 34",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        78,
+        112,
+        150
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_035",
+      "name": "Tower Guard 35",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        80,
+        115,
+        154
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_036",
+      "name": "Tower Edge 36",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        82,
+        118,
+        158
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_037",
+      "name": "Tower Lens 37",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        84,
+        120,
+        161
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_038",
+      "name": "Tower Spring 38",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        86,
+        123,
+        165
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_039",
+      "name": "Tower Rune 39",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        88,
+        126,
+        168
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_040",
+      "name": "Tower Compass 40",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        90,
+        129,
+        172
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_041",
+      "name": "Tower Boots 41",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        92,
+        132,
+        176
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_042",
+      "name": "Tower Charm 42",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        94,
+        134,
+        179
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_043",
+      "name": "Tower Guard 43",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        96,
+        137,
+        183
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_044",
+      "name": "Tower Edge 44",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        98,
+        140,
+        186
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_045",
+      "name": "Tower Lens 45",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        100,
+        143,
+        190
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_046",
+      "name": "Tower Spring 46",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        102,
+        146,
+        194
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_047",
+      "name": "Tower Rune 47",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        104,
+        148,
+        197
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_048",
+      "name": "Tower Compass 48",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        106,
+        151,
+        201
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_049",
+      "name": "Tower Boots 49",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        108,
+        154,
+        204
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_050",
+      "name": "Tower Charm 50",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        110,
+        157,
+        208
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_051",
+      "name": "Tower Guard 51",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        112,
+        160,
+        212
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_052",
+      "name": "Tower Edge 52",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        114,
+        162,
+        215
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_053",
+      "name": "Tower Lens 53",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        116,
+        165,
+        219
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_054",
+      "name": "Tower Spring 54",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        118,
+        168,
+        222
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_055",
+      "name": "Tower Rune 55",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        120,
+        171,
+        226
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_056",
+      "name": "Tower Compass 56",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        122,
+        174,
+        230
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_057",
+      "name": "Tower Boots 57",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        124,
+        176,
+        233
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_058",
+      "name": "Tower Charm 58",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        126,
+        179,
+        237
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_059",
+      "name": "Tower Guard 59",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        128,
+        182,
+        240
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_060",
+      "name": "Tower Edge 60",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        130,
+        185,
+        244
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_061",
+      "name": "Tower Lens 61",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        132,
+        188,
+        248
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_062",
+      "name": "Tower Spring 62",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        134,
+        190,
+        251
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_063",
+      "name": "Tower Rune 63",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        136,
+        193,
+        255
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_064",
+      "name": "Tower Compass 64",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        138,
+        196,
+        258
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_065",
+      "name": "Tower Boots 65",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        140,
+        199,
+        262
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_066",
+      "name": "Tower Charm 66",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        142,
+        202,
+        266
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_067",
+      "name": "Tower Guard 67",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        144,
+        204,
+        269
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_068",
+      "name": "Tower Edge 68",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        146,
+        207,
+        273
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_069",
+      "name": "Tower Lens 69",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        148,
+        210,
+        276
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_070",
+      "name": "Tower Spring 70",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        150,
+        213,
+        280
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_071",
+      "name": "Tower Rune 71",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        152,
+        216,
+        284
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_072",
+      "name": "Tower Compass 72",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        154,
+        218,
+        287
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_073",
+      "name": "Tower Boots 73",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        156,
+        221,
+        291
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_074",
+      "name": "Tower Charm 74",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        158,
+        224,
+        294
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_075",
+      "name": "Tower Guard 75",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        160,
+        227,
+        298
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_076",
+      "name": "Tower Edge 76",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        162,
+        230,
+        302
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_077",
+      "name": "Tower Lens 77",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        164,
+        232,
+        305
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_078",
+      "name": "Tower Spring 78",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        166,
+        235,
+        309
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_079",
+      "name": "Tower Rune 79",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        168,
+        238,
+        312
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_080",
+      "name": "Tower Compass 80",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        170,
+        241,
+        316
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_081",
+      "name": "Tower Boots 81",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        172,
+        244,
+        320
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_082",
+      "name": "Tower Charm 82",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        174,
+        246,
+        323
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_083",
+      "name": "Tower Guard 83",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        176,
+        249,
+        327
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_084",
+      "name": "Tower Edge 84",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        178,
+        252,
+        330
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_085",
+      "name": "Tower Lens 85",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        180,
+        255,
+        334
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_086",
+      "name": "Tower Spring 86",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        182,
+        258,
+        338
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_087",
+      "name": "Tower Rune 87",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        184,
+        260,
+        341
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_088",
+      "name": "Tower Compass 88",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        186,
+        263,
+        345
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_089",
+      "name": "Tower Boots 89",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        188,
+        266,
+        348
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_090",
+      "name": "Tower Charm 90",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        190,
+        269,
+        352
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_091",
+      "name": "Tower Guard 91",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        192,
+        272,
+        356
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_092",
+      "name": "Tower Edge 92",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        194,
+        274,
+        359
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_093",
+      "name": "Tower Lens 93",
+      "description": "Adds a small permanent attack reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        196,
+        277,
+        363
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_094",
+      "name": "Tower Spring 94",
+      "description": "Adds a small permanent fire-rate boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        198,
+        280,
+        366
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_095",
+      "name": "Tower Rune 95",
+      "description": "Adds a small permanent percentage damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        200,
+        283,
+        370
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_096",
+      "name": "Tower Compass 96",
+      "description": "Slightly improves relic-linked level-up weighting.",
+      "kind": "stat_upgrade",
+      "cost": [
+        202,
+        286,
+        374
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-relic-compass.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_097",
+      "name": "Tower Boots 97",
+      "description": "Adds a small permanent movement speed boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        204,
+        288,
+        377
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_098",
+      "name": "Tower Charm 98",
+      "description": "Adds a small permanent pickup reach boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        206,
+        291,
+        381
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_099",
+      "name": "Tower Guard 99",
+      "description": "Adds a small permanent maximum HP boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        208,
+        294,
+        384
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+    },
+    {
+      "id": "generic_shop_100",
+      "name": "Tower Edge 100",
+      "description": "Adds a small permanent flat damage boost.",
+      "kind": "stat_upgrade",
+      "cost": [
+        210,
+        297,
+        388
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
     }
   ],
   "levels": [

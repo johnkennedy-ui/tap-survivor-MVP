@@ -1,6 +1,6 @@
 (() => {
 const SHOP_FLOOR_PRICE_RATE = 0.03;
-const SHOP_INFLATION_RATE = 0.08;
+const SHOP_INFLATION_RATE = 0.025;
 
 function createShopSystem({
   ui,
@@ -19,8 +19,12 @@ function createShopSystem({
     const baseCost = Array.isArray(item.cost) ? item.cost[tier] : item.cost;
     const floor = Math.max(1, getSave().towerFloor || 1);
     const floorMultiplier = floor <= 1 ? 1 : 1 + (floor - 1) * SHOP_FLOOR_PRICE_RATE;
-    const inflationMultiplier = 1 + purchasedTierCount(item.id) * SHOP_INFLATION_RATE;
+    const inflationMultiplier = taperedInflationMultiplier(purchasedTierCount(item.id));
     return Math.ceil(baseCost * floorMultiplier * inflationMultiplier);
+  }
+
+  function taperedInflationMultiplier(purchasedTierCount) {
+    return 1 + Math.log1p(Math.max(0, purchasedTierCount)) * SHOP_INFLATION_RATE;
   }
 
   function purchasedTierCount(excludedItemId = "") {

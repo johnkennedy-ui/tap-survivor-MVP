@@ -1,7 +1,7 @@
 import { readContent, readContentSchema, validateContent } from "./content-tools.mjs";
 
 const SHOP_FLOOR_PRICE_RATE = 0.03;
-const SHOP_INFLATION_RATE = 0.08;
+const SHOP_INFLATION_RATE = 0.025;
 const COIN_FLOOR_REWARD_RATE = 0.06;
 const NORMAL_COIN_BASE_VALUE = 1;
 const BOSS_COIN_BASE_VALUE = 12;
@@ -28,7 +28,7 @@ function floorPriceMultiplier(towerFloor) {
 }
 
 function inflationMultiplier(purchasedTierCount) {
-  return 1 + purchasedTierCount * SHOP_INFLATION_RATE;
+  return 1 + Math.log1p(Math.max(0, purchasedTierCount)) * SHOP_INFLATION_RATE;
 }
 
 function itemCosts(item) {
