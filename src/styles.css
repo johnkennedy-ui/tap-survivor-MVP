@@ -220,10 +220,16 @@ section + section {
 .choice-list,
 .relic-inventory-list,
 .relic-icon-grid,
-.relic-grid,
-.shop-grid {
+.relic-grid {
   display: grid;
   gap: 8px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 10px;
+  align-items: stretch;
 }
 
 .node,
@@ -249,12 +255,37 @@ section + section {
   align-items: start;
 }
 
+.shop-item {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 212px;
+}
+
+.shop-item-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #46566a;
+  border-radius: 6px;
+  background: rgba(10, 15, 22, 0.42);
+}
+
 .relic-icon,
 .relic-character-sprite,
 .shop-item-sprite {
   width: 38px;
   height: 38px;
   image-rendering: pixelated;
+}
+
+.shop-item-copy {
+  min-width: 0;
+}
+
+.shop-item-copy span {
+  font-size: 12px;
+  line-height: 1.32;
 }
 
 .relic-loadout {

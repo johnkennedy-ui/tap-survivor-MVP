@@ -94,8 +94,10 @@ function createShopSystem({
       const el = document.createElement("div");
       el.className = `shop-item ${affordable ? "available" : "locked"}`;
       el.innerHTML = `
-        ${item.spritePath ? `<img class="shop-item-sprite" src="${item.spritePath}" alt="" />` : ""}
-        <div>
+        <div class="shop-item-icon">
+          ${item.spritePath ? `<img class="shop-item-sprite" src="${item.spritePath}" alt="" />` : ""}
+        </div>
+        <div class="shop-item-copy">
           <strong>${item.name}</strong>
           <span>${item.description}</span><br />
           <span>Tier: ${tier}/${item.maxTier}</span><br />
