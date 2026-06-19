@@ -38,6 +38,7 @@ function createShellUiController({
       game.pauseReason = "menu";
     }
     showRunMenuTab("progress");
+    shopSystem.renderShop();
     renderInventory();
     renderMeta();
   }
@@ -121,11 +122,15 @@ function createShellUiController({
   }
 
   function showRunMenuTab(tab) {
+    const shop = tab === "shop";
     const inventory = tab === "inventory";
     ui.menuProgressTab.classList.toggle("active", tab === "progress");
+    ui.menuShopTab.classList.toggle("active", shop);
     ui.menuInventoryTab.classList.toggle("active", inventory);
     ui.menuProgressPanel.classList.toggle("hidden", tab !== "progress");
+    ui.menuShopPanel.classList.toggle("hidden", !shop);
     ui.menuInventoryPanel.classList.toggle("hidden", !inventory);
+    if (shop) shopSystem.renderShop();
     if (inventory) renderInventory();
   }
 
@@ -386,6 +391,7 @@ function createShellUiController({
     ui.openMenu.addEventListener("click", toggleRunMenu);
     ui.closeMenu.addEventListener("click", () => closeRunMenu(true));
     ui.menuProgressTab.addEventListener("click", () => showRunMenuTab("progress"));
+    ui.menuShopTab.addEventListener("click", () => showRunMenuTab("shop"));
     ui.menuInventoryTab.addEventListener("click", () => showRunMenuTab("inventory"));
     ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
     ui.fullscreenButton.addEventListener("click", toggleFullscreen);
