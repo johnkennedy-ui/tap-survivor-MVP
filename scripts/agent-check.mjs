@@ -1,5 +1,9 @@
 import { spawnSync } from "node:child_process";
 
+const configuredTimeoutMs = Number(process.env.AGENT_CHECK_COMMAND_TIMEOUT_MS || 120000);
+const commandTimeoutMs =
+  Number.isFinite(configuredTimeoutMs) && configuredTimeoutMs > 0 ? configuredTimeoutMs : 120000;
+
 const fullChecks = [
   ["git", ["diff", "--check"]],
   ["npm", ["run", "format:check"]],
@@ -60,10 +64,18 @@ const fullChecks = [
 ];
 
 function changedFiles() {
+  const label = "git status --short --untracked-files=all";
   const result = spawnSync("git", ["status", "--short", "--untracked-files=all"], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    timeout: commandTimeoutMs,
   });
+  if (result.error?.code === "ETIMEDOUT") {
+    printCommandOutput(result);
+    console.error(`FAIL ${label} timed out after ${commandTimeoutMs}ms`);
+    console.error("Agent validation failed fast because a child command exceeded its timeout.");
+    process.exit(1);
+  }
   if (result.status !== 0 || !result.stdout.trim()) return [];
   return result.stdout
     .trim()
@@ -71,6 +83,15 @@ function changedFiles() {
     .map((line) => line.replace(/^[ MARCUD?!]{1,2}\s+/, "").trim())
     .map((file) => file.split(" -> ").pop())
     .filter(Boolean);
+}
+
+function printCommandOutput(result) {
+  if (result.stdout) {
+    process.stdout.write(result.stdout);
+  }
+  if (result.stderr) {
+    process.stderr.write(result.stderr);
+  }
 }
 
 function focusedChecks(files) {
@@ -194,6 +215,7 @@ const full =
 const checks = full ? fullChecks : focusedChecks(files);
 
 console.log(full ? "Mode: full" : "Mode: focused");
+console.log(`Command timeout: ${commandTimeoutMs}ms`);
 if (!full) {
   console.log("Changed files:");
   files.forEach((file) => console.log(`- ${file}`));
@@ -205,13 +227,16 @@ for (const [command, args] of checks) {
   const result = spawnSync(command, args, {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    timeout: commandTimeoutMs,
   });
 
-  if (result.stdout) {
-    process.stdout.write(result.stdout);
-  }
-  if (result.stderr) {
-    process.stderr.write(result.stderr);
+  printCommandOutput(result);
+
+  if (result.error?.code === "ETIMEDOUT") {
+    failed = true;
+    console.log(`FAIL ${label} timed out after ${commandTimeoutMs}ms`);
+    console.log("Agent validation failed fast because a child command exceeded its timeout.");
+    break;
   }
 
   if (result.status !== 0) {

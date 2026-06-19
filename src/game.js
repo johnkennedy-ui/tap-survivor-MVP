@@ -124,7 +124,7 @@ const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
   shopItemDefs,
   getSave: () => save,
   getGame: () => game,
-  onShopVisit: () => showOnceBanner("first_shop_visit", "Shop spends coins on permanent power. Use Menu > Shop during a run, or Shop before starting, to buy upgrades."),
+  onShopVisit: () => showOnceBanner("first_shop_visit", "Coins buy permanent power upgrades."),
   persist,
   renderMeta,
 });
@@ -213,7 +213,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
       superBoss ? "first_super_boss_fight" : "first_boss_fight",
       superBoss
         ? "Super bosses combine powers. Keep moving, use Menu > Inventory to review relics, and expect two relic picks if you win."
-        : "Boss fight. Watch the top health bar and special meter. Open Menu if you need to pause and check Rewards, Inventory, or Shop.",
+        : "Boss fight. Watch the top health bar and special meter. Open Menu if you need to pause and check Rewards or Inventory.",
     ),
   distance,
   clamp,
@@ -295,6 +295,8 @@ function startRun() {
   ui.levelUp.classList.add("hidden");
   shellUi.closeRunMenu(false);
   resetGameState();
+  game.awaitingFirstMoveInput = true;
+  showMovementGateBanner();
 }
 
 function endRun(reason) {
@@ -379,6 +381,16 @@ function showBanner(message, duration = 5200) {
   if (duration > 0) {
     bannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), duration);
   }
+}
+
+function showMovementGateBanner() {
+  showBanner("Click/tap to move", 0);
+}
+
+function hideMovementGateBanner() {
+  if (!ui.questBanner || ui.questBanner.textContent !== "Click/tap to move") return;
+  clearTimeout(bannerTimer);
+  ui.questBanner.classList.add("hidden");
 }
 
 function showOnceBanner(id, message, duration) {
@@ -514,10 +526,25 @@ function startRuntime() {
     canvas,
     getGame: () => game,
   });
+  bindFirstMoveGate();
 
   spriteSystem.loadSprites();
   renderMeta();
   requestAnimationFrame(loop);
+}
+
+function bindFirstMoveGate() {
+  const clearGate = (event) => {
+    if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
+    const rect = canvas.getBoundingClientRect();
+    const point = event.touches ? event.touches[0] : event;
+    game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
+    game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
+    game.awaitingFirstMoveInput = false;
+    hideMovementGateBanner();
+  };
+  canvas.addEventListener("mousedown", clearGate);
+  canvas.addEventListener("touchstart", clearGate);
 }
 
 function bindLifecycleFlush() {

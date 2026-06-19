@@ -63,13 +63,14 @@ const LONG_LINE_ALLOWANCES = new Map([
   ["scripts/verify-mvp.mjs:212", "exact snippet assertion"],
   ["scripts/verify-mvp.mjs:224", "exact snippet assertion"],
   ["scripts/verify-mvp.mjs:225", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:231", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:245", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:250", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:254", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:259", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:280", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:303", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:227", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:232", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:246", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:251", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:255", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:260", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:281", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:304", "exact snippet assertion"],
 ]);
 
 function isIgnored(path) {

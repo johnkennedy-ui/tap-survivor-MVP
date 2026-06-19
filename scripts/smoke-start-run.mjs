@@ -11,6 +11,11 @@ function startDefaultRun(testHarness) {
   testHarness.elements.get("titleStartGame").click();
 }
 
+function startAndClearMovementGate(testHarness) {
+  startDefaultRun(testHarness);
+  testHarness.elements.get("game").listeners.get("mousedown")({ clientX: 640, clientY: 270, buttons: 1 });
+}
+
 check("initial HUD is idle", harness.elements.get("runHud").textContent.includes("Start a run"));
 check("title screen is visible first", !harness.elements.get("titleScreen").classList.contains("hidden"));
 
@@ -23,11 +28,16 @@ harness.frame(1000);
 
 const startedGame = harness.context.__tapSurvivorHarness.getGame();
 check("start game enters running state", startedGame.running === true);
+check("movement gate starts frozen", startedGame.awaitingFirstMoveInput === true);
+check("movement gate banner is visible", harness.elements.get("questBanner").textContent === "Click/tap to move");
+check("movement gate blocks timer progression", startedGame.elapsed === 0);
 
 harness.elements.get("game").listeners.get("mousedown")({ clientX: 640, clientY: 270, buttons: 1 });
 harness.frame(1050);
 check("movement input sets target", startedGame.player.targetX > startedGame.player.x);
-check("start game advances timer without extra input gate", startedGame.elapsed > 0);
+check("first movement input clears gate", startedGame.awaitingFirstMoveInput === false);
+check("movement gate banner hides", harness.elements.get("questBanner").classList.contains("hidden"));
+check("start game advances timer after first movement input", startedGame.elapsed > 0);
 
 const hud = harness.elements.get("runHud").textContent;
 check("start game begins a timed run", hud.includes("Time 0:00"));
@@ -53,7 +63,7 @@ check("pagehide flush persists current save", persisted.coins === 42);
 
 function projectileSkillShot(upgradeId) {
   const skillHarness = createGameHarness();
-  startDefaultRun(skillHarness);
+  startAndClearMovementGate(skillHarness);
   skillHarness.frame(1000);
   const game = skillHarness.context.__tapSurvivorHarness.getGame();
   const player = game.player;
@@ -90,7 +100,7 @@ check("heavy projectiles fire slower", heavyShot.timer > 0.78 && heavyShot.timer
 
 function voidMineShot() {
   const mineHarness = createGameHarness();
-  startDefaultRun(mineHarness);
+  startAndClearMovementGate(mineHarness);
   mineHarness.frame(1000);
   const save = mineHarness.context.__tapSurvivorHarness.getSave();
   save.towerFloor = 10;
