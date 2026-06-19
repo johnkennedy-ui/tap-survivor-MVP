@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 
 const root = new URL("..", import.meta.url).pathname;
 const required = process.env.SMOKE_BROWSER_REQUIRED === "1";
+const browserTimeoutMs = Number(process.env.SMOKE_BROWSER_TIMEOUT_MS || 15000);
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -48,6 +49,7 @@ function runBrowser(browser, url) {
   ], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
+    timeout: browserTimeoutMs,
   });
 }
 
@@ -88,6 +90,10 @@ server.listen(0, "127.0.0.1", () => {
   for (const browser of candidateBrowsers()) {
     const result = runBrowser(browser, url);
     if (result.error?.code === "ENOENT") continue;
+    if (result.error?.code === "ETIMEDOUT") {
+      lastError = `Browser ${browser} timed out after ${browserTimeoutMs}ms.`;
+      continue;
+    }
     const output = `${result.stdout || ""}\n${result.stderr || ""}`;
     if (result.status === 0 && output.includes("SMOKE_BROWSER_PASS")) {
       console.log(`# Browser Smoke\nPASS ${browser}`);
