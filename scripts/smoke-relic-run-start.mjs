@@ -22,7 +22,7 @@ const harness = createGameHarness({
   },
 });
 
-harness.elements.get("startMenuStartRun").click();
+harness.elements.get("titleStartGame").click();
 const game = harness.context.__tapSurvivorHarness.getGame();
 
 assert("focus relic starts linked run skill at +1", game?.runUpgradeTiers?.run_move_speed === 1);

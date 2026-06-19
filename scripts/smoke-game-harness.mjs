@@ -103,14 +103,9 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
   const elements = new Map();
   const ids = [
     "game",
-    "startRun",
     "titleScreen",
     "titleStartGame",
     "startTransition",
-    "startMenu",
-    "startMenuStartRun",
-    "startMenuOpenShop",
-    "startMenuFullscreen",
     "openShop",
     "resetSave",
     "toggleDebug",

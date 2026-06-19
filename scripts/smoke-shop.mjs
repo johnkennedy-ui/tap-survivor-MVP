@@ -38,7 +38,7 @@ check("other shop item price inflates", harness.elements.get("shopItems").childr
 harness.elements.get("closeShop").click();
 check("shop closes", harness.elements.get("shopModal").classList.contains("hidden"));
 
-harness.elements.get("startRun").click();
+harness.elements.get("titleStartGame").click();
 harness.elements.get("openMenu").click();
 harness.elements.get("menuShopTab").click();
 check("run menu shop tab renders items", harness.elements.get("menuShopItems").children.length >= 4);

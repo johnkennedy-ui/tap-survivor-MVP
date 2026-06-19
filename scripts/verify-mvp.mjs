@@ -219,14 +219,13 @@ check("shop prices inflate after purchases", shop.includes("purchasedTierCount")
 check("coin rewards scale toward floor 100 shop buyout", pickups.includes("function coinValue") && pickups.includes("(floor - 1) * 0.06") && pickups.includes("game.towerFloor") && shop.includes("SHOP_FLOOR_PRICE_RATE = 0.03"));
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => weaponFire.includes(token)) && game.includes("getShopBonuses"));
-check("title screen starts first", index.includes('id="titleScreen" class="modal"') && index.includes('id="startMenu" class="modal hidden"') && shellUi.includes('currentScreen = "title"'));
-check("title Start Game enters start flow", index.includes('id="titleStartGame"') && shellUi.includes("function startGameFromTitle") && shellUi.includes("showStartMenu();"));
+check("title screen starts first", index.includes('id="titleScreen" class="modal"') && !index.includes('id="startMenu"') && shellUi.includes('currentScreen = "title"'));
+check("title Start Game starts run after transition", index.includes('id="titleStartGame"') && shellUi.includes("function startGameFromTitle") && shellUi.includes("startRun();"));
 check("title Start Game plays procedural laugh once", audio.includes("function playStartLaugh") && audio.includes("createOscillator") && shellUi.includes("if (currentScreen !== \"title\") return") && shellUi.includes("playStartLaugh?.()") && game.includes("playStartLaugh: audioSystem.playStartLaugh"));
 check("title Start Game runs one brief transition", index.includes('id="startTransition" class="modal hidden"') && ui.includes("startTransition") && shellUi.includes('currentScreen = "startingTransition"') && shellUi.includes("startTransitionTimer") && shellUi.includes("setTimeout") && shellUi.includes("}, 450);"));
 check("pre-game movement gate blocks gameplay update", game.includes("game.awaitingFirstMoveInput = true") && runUpdate.includes("if (game.awaitingFirstMoveInput) return;") && game.includes('showBanner("Click/tap to move", 0)'));
 check("pre-game movement gate input clears freeze", input.includes("game.awaitingFirstMoveInput = false") && input.includes("onFirstMoveInput?.()") && game.includes("onFirstMoveInput: hideMovementGateBanner"));
-check("start menu exists", index.includes('id="startMenu"') && index.includes('id="startMenuStartRun"') && shellUi.includes("function showStartMenu"));
-check("start menu hides shop entry", !index.includes('id="startMenuOpenShop"'));
+check("intermediate start run screen is absent", !index.includes('id="startMenu"') && !index.includes('id="startMenuStartRun"') && !index.includes('id="startMenuOpenShop"'));
 check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && shellUi.includes("function closeShopMenu"));
 check("modal boxes scroll", styles.includes(".modal-box") && styles.includes("overflow-y: auto") && styles.includes("overscroll-behavior: contain"));
 check("run menu pauses game", index.includes('id="openMenu"') && shellUi.includes("openRunMenu") && shellUi.includes('pauseReason = "menu"'));

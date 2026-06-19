@@ -49,8 +49,7 @@
         check("title screen exists", Boolean(app.getElementById("titleScreen")));
         check("title screen is visible first", !app.getElementById("titleScreen").classList.contains("hidden"));
         check("title screen shop button is absent", !app.getElementById("titleScreen").textContent.includes("Shop"));
-        check("start menu exists", Boolean(app.getElementById("startMenu")));
-        check("start menu waits behind title screen", app.getElementById("startMenu").classList.contains("hidden"));
+        check("intermediate start menu is absent", !app.getElementById("startMenu"));
         check("start menu shop button is absent", !app.getElementById("startMenuOpenShop"));
         check("fullscreen button exists", Boolean(app.getElementById("fullscreenButton")));
 
@@ -58,10 +57,9 @@
         await wait(50);
         check("start game hides title screen", app.getElementById("titleScreen").classList.contains("hidden"));
         check("start game shows transition first", !app.getElementById("startTransition").classList.contains("hidden"));
-        check("start menu waits for transition", app.getElementById("startMenu").classList.contains("hidden"));
         await wait(500);
         check("transition hides after delay", app.getElementById("startTransition").classList.contains("hidden"));
-        check("start game shows start menu", !app.getElementById("startMenu").classList.contains("hidden"));
+        check("start game creates game state", Boolean(frame.contentWindow.__tapSurvivorHarness?.getGame?.()?.running));
 
         app.getElementById("openMenu").click();
         await wait(50);
@@ -69,11 +67,6 @@
         app.getElementById("openMenu").click();
         await wait(50);
         check("menu button closes menu", app.getElementById("runMenu").classList.contains("hidden"));
-
-        app.getElementById("startMenuStartRun").click();
-        await wait(100);
-        check("start run creates game state", Boolean(frame.contentWindow.__tapSurvivorHarness?.getGame?.()?.running));
-        check("start menu hides during run", app.getElementById("startMenu").classList.contains("hidden"));
 
         app.getElementById("openMenu").click();
         await wait(50);

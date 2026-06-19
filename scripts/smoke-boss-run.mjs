@@ -8,7 +8,8 @@ function check(name, pass) {
 }
 
 harness.speedButtons[2].click();
-harness.elements.get("startRun").click();
+harness.elements.get("titleStartGame").click();
+harness.elements.get("game").listeners.get("mousedown")({ clientX: 640, clientY: 270, buttons: 1 });
 harness.runFrames(610);
 
 const hud = harness.elements.get("runHud").textContent;

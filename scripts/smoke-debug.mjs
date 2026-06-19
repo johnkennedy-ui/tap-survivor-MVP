@@ -7,7 +7,7 @@ function check(name, pass) {
 
 const floorOne = createGameHarness({ fakeCombat: true });
 floorOne.elements.get("toggleDebug").click();
-floorOne.elements.get("startRun").click();
+floorOne.elements.get("titleStartGame").click();
 floorOne.frame(1000);
 
 const floorOneStats = floorOne.elements.get("debugStats").textContent;
@@ -20,7 +20,7 @@ const floorThree = createGameHarness({
   initialSave: { towerFloor: 3 },
 });
 floorThree.elements.get("toggleDebug").click();
-floorThree.elements.get("startRun").click();
+floorThree.elements.get("titleStartGame").click();
 floorThree.frame(1000);
 
 const floorThreeStats = floorThree.elements.get("debugStats").textContent;

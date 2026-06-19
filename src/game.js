@@ -289,7 +289,7 @@ const runUi = globalThis.TapSurvivorRunUi.createRunUi({
 });
 
 function startRun() {
-  shellUi.closeStartMenu();
+  shellUi.closeStartFlow();
   shopSystem.closeShop();
   runUi.hideEndScreen();
   ui.levelUp.classList.add("hidden");
@@ -472,7 +472,7 @@ function exitRun() {
 
 function closeEndScreen() {
   runUi.hideEndScreen();
-  shellUi.showStartMenu();
+  shellUi.showTitleScreen();
 }
 
 function loop(now) {
@@ -504,7 +504,7 @@ function resetSave() {
     ui.levelUp.classList.add("hidden");
     shopSystem.closeShop();
     shellUi.closeRunMenu(false);
-    shellUi.showStartMenu();
+    shellUi.showTitleScreen();
     persist();
     renderMeta();
   };

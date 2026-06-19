@@ -53,15 +53,14 @@ function createShellUiController({
     }
   }
 
-  function showStartMenu() {
-    ui.titleScreen?.classList.add("hidden");
+  function showTitleScreen() {
+    ui.titleScreen?.classList.remove("hidden");
     ui.startTransition?.classList.add("hidden");
-    ui.startMenu?.classList.remove("hidden");
-    currentScreen = "start";
+    currentScreen = "title";
   }
 
-  function closeStartMenu() {
-    ui.startMenu?.classList.add("hidden");
+  function closeStartFlow() {
+    ui.titleScreen?.classList.add("hidden");
     ui.startTransition?.classList.add("hidden");
     currentScreen = "game";
   }
@@ -95,9 +94,7 @@ function createShellUiController({
     const fullscreen = Boolean(isFullscreen());
     const label = fullscreen ? "Exit Full Screen" : "Full Screen";
     ui.fullscreenButton.textContent = label;
-    if (ui.startMenuFullscreen) ui.startMenuFullscreen.textContent = label;
     ui.fullscreenButton.setAttribute("aria-pressed", String(fullscreen));
-    ui.startMenuFullscreen?.setAttribute("aria-pressed", String(fullscreen));
   }
 
   function toggleFullscreen() {
@@ -115,13 +112,13 @@ function createShellUiController({
   }
 
   function openShopMenu() {
-    closeStartMenu();
+    closeStartFlow();
     shopSystem.openShop();
   }
 
   function closeShopMenu() {
     shopSystem.closeShop();
-    if (!getGame()?.running) showStartMenu();
+    if (!getGame()?.running) showTitleScreen();
   }
 
   function showRunMenuTab(tab) {
@@ -387,11 +384,8 @@ function createShellUiController({
   }
 
   function bind() {
-    ui.startRun?.addEventListener("click", startRun);
     ui.titleStartGame?.addEventListener("click", startGameFromTitle);
-    ui.startMenuStartRun?.addEventListener("click", startRun);
     ui.openShop?.addEventListener("click", openShopMenu);
-    ui.startMenuOpenShop?.addEventListener("click", openShopMenu);
     ui.closeShop.addEventListener("click", closeShopMenu);
     ui.closeShopBottom.addEventListener("click", closeShopMenu);
     ui.openMenu.addEventListener("click", toggleRunMenu);
@@ -401,7 +395,6 @@ function createShellUiController({
     ui.menuInventoryTab.addEventListener("click", () => showRunMenuTab("inventory"));
     ui.closeLevelUp.addEventListener("click", closeLevelUpMenu);
     ui.fullscreenButton.addEventListener("click", toggleFullscreen);
-    ui.startMenuFullscreen?.addEventListener("click", toggleFullscreen);
     ui.exitRun.addEventListener("click", exitRun);
     ui.resetSave?.addEventListener("click", resetSave);
     ui.closeEnd.addEventListener("click", closeEndScreen);
@@ -425,11 +418,11 @@ function createShellUiController({
 
   return {
     bind,
+    closeStartFlow,
     closeRunMenu,
     closeShopMenu,
-    closeStartMenu,
     startGameFromTitle,
-    showStartMenu,
+    showTitleScreen,
   };
 }
 

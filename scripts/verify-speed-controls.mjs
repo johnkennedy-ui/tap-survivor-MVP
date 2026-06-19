@@ -95,14 +95,9 @@ function makeElement(id = "") {
 const elements = new Map();
 const ids = [
   "game",
-  "startRun",
   "titleScreen",
   "titleStartGame",
   "startTransition",
-  "startMenu",
-  "startMenuStartRun",
-  "startMenuOpenShop",
-  "startMenuFullscreen",
   "openShop",
   "resetSave",
   "toggleDebug",
@@ -268,7 +263,7 @@ speedButtons[2].click();
 check("x5 click updates body speed", context.document.body.dataset.gameSpeed === "5");
 check("x5 click marks button pressed", speedButtons[2]["aria-pressed"] === "true");
 
-elements.get("startRun").click();
+elements.get("titleStartGame").click();
 listeners.get("game:mousedown")?.({ clientX: 640, clientY: 270, buttons: 1 });
 for (let frame = 0; frame < 20; frame += 1) {
   rafCallback(1000 + frame * 50);

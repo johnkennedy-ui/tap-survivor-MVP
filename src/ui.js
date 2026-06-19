@@ -2,14 +2,9 @@
 function createUi() {
   return {
     canvas: document.getElementById("game"),
-    startRun: document.getElementById("startRun"),
     titleScreen: document.getElementById("titleScreen"),
     titleStartGame: document.getElementById("titleStartGame"),
     startTransition: document.getElementById("startTransition"),
-    startMenu: document.getElementById("startMenu"),
-    startMenuStartRun: document.getElementById("startMenuStartRun"),
-    startMenuOpenShop: document.getElementById("startMenuOpenShop"),
-    startMenuFullscreen: document.getElementById("startMenuFullscreen"),
     openShop: document.getElementById("openShop"),
     resetSave: document.getElementById("resetSave"),
     toggleDebug: document.getElementById("toggleDebug"),
