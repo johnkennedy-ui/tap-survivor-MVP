@@ -1061,12 +1061,13 @@ globalThis.TapSurvivorContent = {
       "damage": 9,
       "touchCooldown": 0.55,
       "xp": 1,
-      "assetId": "drifter"
+      "assetId": "drifter",
+      "minTowerFloor": 1
     },
     {
       "id": "skitter",
       "name": "Skitter",
-      "color": "#ffd166",
+      "color": "#64f0a7",
       "radius": 9,
       "hp": 11,
       "hpScale": 0.08,
@@ -1075,7 +1076,8 @@ globalThis.TapSurvivorContent = {
       "damage": 7,
       "touchCooldown": 0.38,
       "xp": 1,
-      "assetId": "skitter"
+      "assetId": "skitter",
+      "minTowerFloor": 2
     },
     {
       "id": "bulwark",
@@ -1089,7 +1091,8 @@ globalThis.TapSurvivorContent = {
       "damage": 14,
       "touchCooldown": 0.75,
       "xp": 2,
-      "assetId": "bulwark"
+      "assetId": "bulwark",
+      "minTowerFloor": 3
     },
     {
       "id": "hexer",
@@ -1108,7 +1111,75 @@ globalThis.TapSurvivorContent = {
       "attackRange": 260,
       "projectileCooldown": 1.35,
       "projectileSpeed": 235,
-      "projectileDamage": 10
+      "projectileDamage": 10,
+      "projectileRadius": 7,
+      "projectileColor": "#b794ff"
+    },
+    {
+      "id": "verdant_skitter",
+      "name": "Verdant Skitter",
+      "color": "#2ee66f",
+      "radius": 10,
+      "hp": 24,
+      "hpScale": 0.08,
+      "speed": 112,
+      "speedScale": 0.08,
+      "damage": 9,
+      "touchCooldown": 0.34,
+      "xp": 2,
+      "assetId": "verdant_skitter",
+      "minTowerFloor": 5
+    },
+    {
+      "id": "dusk_crawler",
+      "name": "Dusk Crawler",
+      "color": "#3d4665",
+      "radius": 15,
+      "hp": 42,
+      "hpScale": 0.1,
+      "speed": 70,
+      "speedScale": 0.05,
+      "damage": 12,
+      "touchCooldown": 0.58,
+      "xp": 3,
+      "assetId": "dusk_crawler",
+      "minTowerFloor": 6
+    },
+    {
+      "id": "crimson_hexer",
+      "name": "Crimson Hexer",
+      "color": "#ff465d",
+      "radius": 13,
+      "hp": 38,
+      "hpScale": 0.1,
+      "speed": 54,
+      "speedScale": 0.05,
+      "damage": 11,
+      "touchCooldown": 0.62,
+      "xp": 3,
+      "assetId": "crimson_hexer",
+      "minTowerFloor": 7,
+      "attackRange": 285,
+      "projectileCooldown": 1.05,
+      "projectileSpeed": 290,
+      "projectileDamage": 13,
+      "projectileRadius": 8,
+      "projectileColor": "#ff3f3f"
+    },
+    {
+      "id": "obsidian_bulwark",
+      "name": "Obsidian Bulwark",
+      "color": "#8f1726",
+      "radius": 24,
+      "hp": 92,
+      "hpScale": 0.12,
+      "speed": 30,
+      "speedScale": 0.03,
+      "damage": 18,
+      "touchCooldown": 0.86,
+      "xp": 4,
+      "assetId": "obsidian_bulwark",
+      "minTowerFloor": 8
     }
   ],
   "bossConfig": {
@@ -3227,11 +3298,17 @@ globalThis.TapSurvivorContent = {
       "startsAt": 0,
       "enemyIds": [
         "drifter",
-        "hexer"
+        "skitter",
+        "bulwark",
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
       ],
       "spawnCount": 2,
       "spawnRateMultiplier": 1,
-      "notes": "Opening wave; mirrors the old first enemy window."
+      "notes": "Opening wave; tower floor gating decides which enemy types are eligible."
     },
     {
       "id": "floor_skitter_mix",
@@ -3240,11 +3317,16 @@ globalThis.TapSurvivorContent = {
       "enemyIds": [
         "drifter",
         "skitter",
-        "hexer"
+        "bulwark",
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
       ],
       "spawnCount": 2,
       "spawnRateMultiplier": 1,
-      "notes": "Adds fast enemies at the old 30 second unlock point."
+      "notes": "Mid-run mix still respects tower-floor enemy unlocks."
     },
     {
       "id": "floor_bulwark_mix",
@@ -3254,11 +3336,15 @@ globalThis.TapSurvivorContent = {
         "drifter",
         "skitter",
         "bulwark",
-        "hexer"
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
       ],
       "spawnCount": 2,
       "spawnRateMultiplier": 1,
-      "notes": "Adds heavy enemies at the old 60 second unlock point."
+      "notes": "Heavier mix once more tower-floor enemy types are available."
     },
     {
       "id": "floor_pressure",
@@ -3268,7 +3354,11 @@ globalThis.TapSurvivorContent = {
         "drifter",
         "skitter",
         "bulwark",
-        "hexer"
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
       ],
       "spawnCount": 3,
       "spawnRateMultiplier": 1.08,
@@ -3382,9 +3472,13 @@ globalThis.TapSurvivorContent = {
       },
       "enemies": {
         "drifter": "assets/generated/tower/sheet-20260614/spider-brown.png?v=sheet-20260614",
-        "skitter": "assets/generated/tower/sheet-20260614/spider-red.png?v=sheet-20260614",
+        "skitter": "assets/generated/tower/sheet-20260614/spider-green.png?v=sheet-20260614",
         "bulwark": "assets/generated/tower/sheet-20260614/crystal-golem.png?v=sheet-20260614",
         "hexer": "assets/generated/tower/sheet-20260614/necromancer-hexer.png?v=sheet-20260614",
+        "verdant_skitter": "assets/generated/tower/sheet-20260614/spider-green.png?v=sheet-20260614",
+        "dusk_crawler": "assets/generated/tower/sheet-20260614/spider-black.png?v=sheet-20260614",
+        "crimson_hexer": "assets/generated/tower/sheet-20260614/spider-red.png?v=sheet-20260614",
+        "obsidian_bulwark": "assets/generated/tower/sheet-20260614/crystal-golem.png?v=sheet-20260614",
         "boss": "assets/generated/tower/sheet-20260614/demon-boss.png?v=sheet-20260614"
       },
       "weapons": {

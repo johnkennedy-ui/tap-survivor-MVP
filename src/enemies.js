@@ -52,8 +52,10 @@ function createEnemySystem({
       0.32,
       (1.1 - game.elapsed / 150) / (floorDifficulty(game.towerFloor).spawnRate * levelSpawnRate),
     );
+    const availableTypes = levelEnemyTypes(level);
+    if (!availableTypes.length) return;
     spawnPatternPositions(spawnCount).forEach((position, index) => {
-      const type = chooseEnemyType(index, levelEnemyTypes(level));
+      const type = chooseEnemyType(index, availableTypes);
       spawnEnemy(type, position);
     });
   }
@@ -69,7 +71,9 @@ function createEnemySystem({
   function levelEnemyTypes(level) {
     if (!level?.enemyIds?.length) return availableEnemyTypes();
     const game = getGame();
-    const configured = level.enemyIds.map((id) => enemyTypeById[id]).filter((type) => type && isEnemyAvailable(type, game));
+    const configured = level.enemyIds
+      .map((id) => enemyTypeById[id])
+      .filter((type) => type && isEnemyAvailable(type, game));
     return configured.length ? configured : availableEnemyTypes();
   }
 
@@ -85,6 +89,7 @@ function createEnemySystem({
   }
 
   function chooseEnemyType(offset = 0, available = availableEnemyTypes()) {
+    if (!available.length) return null;
     return available[(Math.floor(Math.random() * available.length) + offset) % available.length];
   }
 
@@ -122,6 +127,7 @@ function createEnemySystem({
   }
 
   function spawnEnemy(type, position) {
+    if (!type) return;
     const game = getGame();
     const difficulty = floorDifficulty(game.towerFloor);
     const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
@@ -131,11 +137,12 @@ function createEnemySystem({
       name: type.name,
       color: type.color,
       assetId: type.assetId || type.id,
+      towerFloor: game.towerFloor,
       x: position.x,
       y: position.y,
       radius: type.radius,
-      hp: (type.hp + game.elapsed * type.hpScale) * difficulty.hp,
-      speed: type.speed + game.elapsed * type.speedScale,
+      hp: type.hp,
+      speed: type.speed,
       damage: type.damage * difficulty.damage,
       touchCooldown: type.touchCooldown,
       xp: type.xp,

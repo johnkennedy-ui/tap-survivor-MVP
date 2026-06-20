@@ -132,6 +132,7 @@ check("player uses wizard sprite", content.assets?.sprites?.player?.includes("wi
 check("wizard sprite flips by facing", sprites.includes("flipX") && rendering.includes("playerFacesLeft") && rendering.includes("flipX: playerFacesLeft(p)"));
 check("wizard uses movement and attack animation sprites", content.assets?.sprites?.playerAnimations?.walk && content.assets?.sprites?.playerAnimations?.cast_orb && sprites.includes("playerAnimations") && rendering.includes("playerSpriteId") && weaponFire.includes("setPlayerAttackAnimation") && runUpdate.includes("updatePlayerAnimation"));
 check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
+check("enemy floor tint steps every five floors to 100", enemies.includes("towerFloor: game.towerFloor") && rendering.includes("function drawEnemyFloorTint") && rendering.includes("Math.floor((floor - 1) / 5)") && rendering.includes("clamp(Math.floor(enemy.towerFloor || 1), 1, 100)"));
 check("beam and cone effects can use weapon sprites", weaponFire.includes("weaponId,") && rendering.includes("drawSprite(`weapon:${weapon.assetId || beam.weaponId}`") && rendering.includes("spriteHeight"));
 const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
 check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
@@ -142,7 +143,27 @@ check("user enemy sprite sheet exists", content.assets?.sources?.some((source) =
 check("user skill effect atlases exist", [1, 2, 3, 4, 5].every((batch) => content.assets?.sources?.some((source) => source.id === `user_skill_effect_sheet_20260615_batch_${String(batch).padStart(2, "0")}` && source.commercialUse === true && source.attributionRequired === false)) && Object.keys(content.weapons || {}).every((id) => Array.isArray(content.assets?.sprites?.weapons?.[id]?.frames) && content.assets.sprites.weapons[id].src?.includes("skill-effects/split/skill-")) && (content.runUpgrades || []).every((upgrade) => Array.isArray(content.assets?.sprites?.runUpgrades?.[upgrade.id]?.frames) && content.assets.sprites.runUpgrades[upgrade.id].src?.includes("skill-effects/split/skill-")));
 check("skill effects have tunable scale and transparency", Object.keys(content.weapons || {}).every((id) => Number.isFinite(content.assets?.sprites?.weapons?.[id]?.effectScale) && Number.isFinite(content.assets?.sprites?.weapons?.[id]?.effectAlpha)) && (content.runUpgrades || []).every((upgrade) => Number.isFinite(content.assets?.sprites?.runUpgrades?.[upgrade.id]?.effectScale) && Number.isFinite(content.assets?.sprites?.runUpgrades?.[upgrade.id]?.effectAlpha)) && sprites.includes("options.alpha") && rendering.includes("skillEffectTuning") && rendering.includes("effectAlpha") && rendering.includes("effectScale"));
 check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));
-check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
+check(
+  "tower floors one through eight introduce enemies",
+  [1, 2, 3, 4, 5, 6, 7, 8].every((floor) =>
+    (content.enemyTypes || []).some((enemy) => enemy.minTowerFloor === floor),
+  ),
+);
+check(
+  "eight enemy types exist",
+  (content.enemyTypes || []).filter((enemy) =>
+    [
+      "drifter",
+      "skitter",
+      "bulwark",
+      "hexer",
+      "verdant_skitter",
+      "dusk_crawler",
+      "crimson_hexer",
+      "obsidian_bulwark",
+    ].includes(enemy.id),
+  ).length === 8,
+);
 check("ranged enemy unlocks after floor three", (content.enemyTypes || []).some((enemy) => enemy.id === "hexer" && enemy.minTowerFloor === 4 && enemy.attackRange && enemy.projectileCooldown) && enemies.includes("isEnemyAvailable"));
 check("default character registry entry exists", (content.characters || []).some((character) => character.id === "character_default" && character.spriteId === "player"));
 check("content levels drive enemy waves", (content.levels || []).length >= 3 && content.levels.some((level) => level.enemyIds?.includes("bulwark")) && runtime.includes("activeLevelDef") && runtime.includes("levelEnemyTypes"));

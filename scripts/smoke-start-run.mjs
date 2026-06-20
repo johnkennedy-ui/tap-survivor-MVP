@@ -145,8 +145,9 @@ check("void mine waits before exploding", voidMine.armDelayBeforeExplosion > 1.8
 check("void mine area scales with upgrades and relics", voidMine.armedMine.radius > 160);
 check("void mine explodes after delay", voidMine.enemyHpAfterExplosion < 100);
 
-function normalEnemySpawnShot() {
+function normalEnemySpawnShot(towerFloor = 1) {
   const spawnHarness = createGameHarness();
+  spawnHarness.context.__tapSurvivorHarness.getSave().towerFloor = towerFloor;
   startAndClearMovementGate(spawnHarness);
   spawnHarness.frame(1000);
   spawnHarness.frame(1050);
@@ -169,6 +170,18 @@ function enemyStartsOffscreen(enemy, width, height) {
 
 const normalSpawn = normalEnemySpawnShot();
 check("normal enemies spawn off screen", normalSpawn.enemies.length > 0 && normalSpawn.enemies.every((enemy) => enemyStartsOffscreen(enemy, normalSpawn.width, normalSpawn.height)));
+check(
+  "normal enemies use fixed content hp and speed",
+  normalSpawn.enemies[0]?.type === "drifter" && normalSpawn.enemies[0]?.hp === 18 && normalSpawn.enemies[0]?.speed === 52,
+);
+check("floor one only spawns floor-one enemies", normalSpawn.enemies.every((enemy) => enemy.type === "drifter"));
+
+const floorFourSpawn = normalEnemySpawnShot(4);
+check(
+  "floor four excludes higher-floor enemies",
+  floorFourSpawn.enemies.length > 0 &&
+    floorFourSpawn.enemies.every((enemy) => ["drifter", "skitter", "bulwark", "hexer"].includes(enemy.type)),
+);
 
 if (process.exitCode) {
   console.error("\nStart-run smoke failed.");
