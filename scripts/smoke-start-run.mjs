@@ -145,6 +145,31 @@ check("void mine waits before exploding", voidMine.armDelayBeforeExplosion > 1.8
 check("void mine area scales with upgrades and relics", voidMine.armedMine.radius > 160);
 check("void mine explodes after delay", voidMine.enemyHpAfterExplosion < 100);
 
+function normalEnemySpawnShot() {
+  const spawnHarness = createGameHarness();
+  startAndClearMovementGate(spawnHarness);
+  spawnHarness.frame(1000);
+  spawnHarness.frame(1050);
+  const game = spawnHarness.context.__tapSurvivorHarness.getGame();
+  return {
+    enemies: game.enemies,
+    width: spawnHarness.elements.get("game").width,
+    height: spawnHarness.elements.get("game").height,
+  };
+}
+
+function enemyStartsOffscreen(enemy, width, height) {
+  return (
+    enemy.x + enemy.radius < 0 ||
+    enemy.x - enemy.radius > width ||
+    enemy.y + enemy.radius < 0 ||
+    enemy.y - enemy.radius > height
+  );
+}
+
+const normalSpawn = normalEnemySpawnShot();
+check("normal enemies spawn off screen", normalSpawn.enemies.length > 0 && normalSpawn.enemies.every((enemy) => enemyStartsOffscreen(enemy, normalSpawn.width, normalSpawn.height)));
+
 if (process.exitCode) {
   console.error("\nStart-run smoke failed.");
   process.exit(process.exitCode);

@@ -24,12 +24,22 @@ function createEnemySystem({
   const sideEntryMargin = bossConfig.sideEntryMargin || 150;
   const entryOffsetX = bossConfig.entryOffsetX || 52;
   const entryOffsetY = bossConfig.entryOffsetY || 72;
+  const spawnEntryMargin = bossConfig.spawnEntryMargin || 72;
   const boltConfig = bossConfig.enemyBolt || {};
   const projectileScaling = bossConfig.projectileScaling || {};
   const fallbackAbility = bossKinds[0] || "warden";
   const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
   const enemyTypeById = Object.fromEntries(enemyTypes.map((enemy) => [enemy.id, enemy]));
   const orderedLevelDefs = [...levelDefs].sort((a, b) => a.startsAt - b.startsAt);
+  const behaviorSystem = globalThis.TapSurvivorEnemyBehaviors.createEnemyBehaviorSystem({
+    canvas,
+    bossAbilities,
+    boltConfig,
+    getGame,
+    distance,
+    clamp,
+    damagePlayer,
+  });
 
   function spawnEnemies(dt) {
     const game = getGame();
@@ -80,20 +90,35 @@ function createEnemySystem({
 
   function spawnPatternPositions(count) {
     const game = getGame();
-    const p = game.player;
     const baseAngle = Math.random() * Math.PI * 2;
     const pattern = Math.floor(Math.random() * 4);
     return Array.from({ length: count }, (_, index) => {
       const mirrored = index % 2 === 0 ? 0 : Math.PI;
       const angleOffsets = [mirrored, index * 0.85, (index - 0.5) * 0.55, index * 1.7];
-      const radiusOffsets = [0, index * 42, index % 2 === 0 ? -45 : 70, index * 95];
       const angle = baseAngle + angleOffsets[pattern];
-      const radius = 220 + Math.random() * 110 + radiusOffsets[pattern];
-      return {
-        x: clamp(p.x + Math.cos(angle) * radius, 18, canvas.width - 18),
-        y: clamp(p.y + Math.sin(angle) * radius, 18, canvas.height - 18),
-      };
+      return offscreenSpawnPosition(game.player, angle);
     });
+  }
+
+  function offscreenSpawnPosition(player, angle) {
+    const dirX = Math.cos(angle);
+    const dirY = Math.sin(angle);
+    const edgeDistance = distanceToExpandedCanvasEdge(player, dirX, dirY);
+    return {
+      x: player.x + dirX * edgeDistance,
+      y: player.y + dirY * edgeDistance,
+    };
+  }
+
+  function distanceToExpandedCanvasEdge(player, dirX, dirY) {
+    const edgeDistances = [];
+    if (Math.abs(dirX) > 0.0001) {
+      edgeDistances.push(((dirX > 0 ? canvas.width + spawnEntryMargin : -spawnEntryMargin) - player.x) / dirX);
+    }
+    if (Math.abs(dirY) > 0.0001) {
+      edgeDistances.push(((dirY > 0 ? canvas.height + spawnEntryMargin : -spawnEntryMargin) - player.y) / dirY);
+    }
+    return Math.min(...edgeDistances.filter((value) => value > 0));
   }
 
   function spawnEnemy(type, position) {
@@ -246,7 +271,7 @@ function createEnemySystem({
       game.bossSpawnNotice.life -= dt;
       if (game.bossSpawnNotice.life <= 0) game.bossSpawnNotice = null;
     }
-    updateBossAttacks(dt);
+    behaviorSystem.updateBossAttacks(dt);
     const boss = game.enemies.find((enemy) => enemy.boss);
     if (!boss || boss.dropTimer > 0) return;
     game.bossAttackTimer -= dt;
@@ -254,7 +279,7 @@ function createEnemySystem({
       const chargerBoss = hasBossAbility(boss, "charger");
       const wardenBoss = hasBossAbility(boss, "warden");
       if (chargerBoss) {
-        startBossCharge(boss);
+        behaviorSystem.startBossCharge(boss);
       }
       if (wardenBoss) {
         const shockwave = bossAbilities.warden.shockwave;
@@ -286,167 +311,12 @@ function createEnemySystem({
     return boss.bossAbilities?.includes(ability) || boss.bossKind === ability;
   }
 
-  function startBossCharge(boss) {
-    const game = getGame();
-    const p = game.player;
-    const dx = p.x - boss.x;
-    const dy = p.y - boss.y;
-    const dist = Math.max(1, Math.hypot(dx, dy));
-    boss.chargeState = "windup";
-    boss.chargeTimer = bossAbilities.charger.windup;
-    boss.chargeDirX = dx / dist;
-    boss.chargeDirY = dy / dist;
-    boss.chargeSpeed = boss.superBoss ? bossAbilities.charger.superChargeSpeed : bossAbilities.charger.chargeSpeed;
-  }
-
-  function updateBossAttacks(dt) {
-    const game = getGame();
-    const p = game.player;
-    game.bossAttacks.forEach((attack) => {
-      attack.age += dt;
-      if (!attack.hit && attack.age >= attack.windup) {
-        attack.hit = true;
-        if (attack.type === "boss_slash" ? playerInSlash(p, attack) : distance(p, attack) <= p.radius + attack.radius) {
-          damagePlayer?.(attack.damage, { type: attack.type, attack });
-        }
-      }
-    });
-    game.bossAttacks = game.bossAttacks.filter((attack) => attack.age <= attack.windup + 0.35);
-  }
-
-  function playerInSlash(player, attack) {
-    const dx = player.x - attack.x;
-    const dy = player.y - attack.y;
-    const dist = Math.max(1, Math.hypot(dx, dy));
-    const dot = (dx / dist) * attack.dirX + (dy / dist) * attack.dirY;
-    return dist <= attack.radius + player.radius && dot >= Math.cos(attack.arc / 2);
-  }
-
-  function updateEnemies(dt) {
-    const game = getGame();
-    const p = game.player;
-    game.enemies.forEach((enemy) => {
-      if (enemy.boss && enemy.dropTimer > 0) {
-        enemy.dropTimer = Math.max(0, enemy.dropTimer - dt);
-        const progress = 1 - enemy.dropTimer / enemy.dropWindup;
-        enemy.x = enemy.startX + (enemy.landingX - enemy.startX) * progress;
-        enemy.y = enemy.startY + (enemy.landingY - enemy.startY) * progress;
-        return;
-      }
-      const dx = p.x - enemy.x;
-      const dy = p.y - enemy.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
-        applyEnemyTouch(enemy, dt);
-        return;
-      }
-      const ranged = enemy.attackRange && enemy.projectileCooldown;
-      if (!ranged || dist > enemy.attackRange * 0.72) {
-        enemy.x += (dx / dist) * enemy.speed * dt;
-        enemy.y += (dy / dist) * enemy.speed * dt;
-      }
-      if (ranged && dist <= enemy.attackRange) {
-        enemy.shootTimer -= dt;
-        if (enemy.shootTimer <= 0) {
-          enemy.shootTimer = enemy.projectileCooldown;
-          spawnEnemyBolt(enemy, dx / dist, dy / dist);
-        }
-      }
-      applyEnemyTouch(enemy, dt);
-    });
-  }
-
-  function updateBossCharge(boss, dt) {
-    if (!boss.chargeState) return false;
-    const game = getGame();
-    boss.chargeTimer -= dt;
-    if (boss.chargeState === "windup") {
-      if (boss.chargeTimer <= 0) {
-        boss.chargeState = "charging";
-        boss.chargeTimer = bossAbilities.charger.duration;
-      }
-      return true;
-    }
-    boss.x = clamp(boss.x + boss.chargeDirX * boss.chargeSpeed * dt, boss.radius, canvas.width - boss.radius);
-    boss.y = clamp(boss.y + boss.chargeDirY * boss.chargeSpeed * dt, boss.radius, canvas.height - boss.radius);
-    if (boss.chargeTimer <= 0) {
-      const slash = bossAbilities.charger.slash;
-      game.bossAttacks.push({
-        type: "boss_slash",
-        x: boss.x + boss.chargeDirX * slash.offset,
-        y: boss.y + boss.chargeDirY * slash.offset,
-        dirX: boss.chargeDirX,
-        dirY: boss.chargeDirY,
-        arc: Math.PI * slash.arcPi,
-        radius: boss.superBoss ? slash.superRadius : slash.radius,
-        damage: boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
-        age: 0,
-        windup: slash.windup,
-        hit: false,
-      });
-      boss.chargeState = "";
-    }
-    return true;
-  }
-
-  function applyEnemyTouch(enemy, dt) {
-    const game = getGame();
-    const p = game.player;
-    enemy.touchTimer -= dt;
-    if (distance(enemy, p) < p.radius + enemy.radius && enemy.touchTimer <= 0) {
-      damagePlayer?.(enemy.damage, { type: "touch", enemy });
-      enemy.touchTimer = enemy.touchCooldown;
-    }
-  }
-
-  function spawnEnemyBolt(enemy, dirX, dirY) {
-    const game = getGame();
-    game.enemyBolts.push({
-      x: enemy.x,
-      y: enemy.y,
-      vx: dirX * enemy.projectileSpeed,
-      vy: dirY * enemy.projectileSpeed,
-      radius: boltConfig.radius || 5,
-      damage: enemy.projectileDamage,
-      life: boltConfig.life || 2.2,
-      maxLife: boltConfig.life || 2.2,
-      color: enemy.color,
-    });
-  }
-
-  function updateEnemyBolts(dt) {
-    const game = getGame();
-    const p = game.player;
-    game.enemyBolts.forEach((bolt) => {
-      bolt.x += bolt.vx * dt;
-      bolt.y += bolt.vy * dt;
-      bolt.life -= dt;
-      if (distance(bolt, p) <= bolt.radius + p.radius) {
-        if (p.projectileBlockReady) {
-          p.projectileBlockReady = false;
-          p.projectileBlockCharge = 0;
-        } else {
-          damagePlayer?.(bolt.damage, { type: "projectile", bolt });
-        }
-        bolt.life = 0;
-      }
-    });
-    game.enemyBolts = game.enemyBolts.filter(
-      (bolt) =>
-        bolt.life > 0 &&
-        bolt.x > -24 &&
-        bolt.x < canvas.width + 24 &&
-        bolt.y > -24 &&
-        bolt.y < canvas.height + 24,
-    );
-  }
-
   return {
     spawnEnemies,
     spawnBoss,
     updateBossSpecials,
-    updateEnemies,
-    updateEnemyBolts,
+    updateEnemies: behaviorSystem.updateEnemies,
+    updateEnemyBolts: behaviorSystem.updateEnemyBolts,
   };
 }
 

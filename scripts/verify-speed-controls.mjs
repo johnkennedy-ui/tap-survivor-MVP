@@ -27,6 +27,7 @@ const weaponTargetingSource = readFileSync(join(root, "src/weapon-targeting.js")
 const weaponCooldownsSource = readFileSync(join(root, "src/weapon-cooldowns.js"), "utf8");
 const weaponBehaviorsSource = readFileSync(join(root, "src/weapon-behaviors.js"), "utf8");
 const weaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "utf8");
+const enemyBehaviorsSource = readFileSync(join(root, "src/enemy-behaviors.js"), "utf8");
 const enemiesSource = readFileSync(join(root, "src/enemies.js"), "utf8");
 const combatSource = readFileSync(join(root, "src/combat.js"), "utf8");
 const uiSource = readFileSync(join(root, "src/ui.js"), "utf8");
@@ -237,6 +238,7 @@ vm.runInContext(weaponTargetingSource, context);
 vm.runInContext(weaponCooldownsSource, context);
 vm.runInContext(weaponBehaviorsSource, context);
 vm.runInContext(weaponFireSource, context);
+vm.runInContext(enemyBehaviorsSource, context);
 vm.runInContext(enemiesSource, context);
 vm.runInContext(combatSource, context);
 vm.runInContext(uiSource, context);

@@ -40,6 +40,7 @@ const balance = readRequired("src/balance.js");
 const weaponProjectiles = readRequired("src/weapon-projectiles.js");
 const weaponTargeting = readRequired("src/weapon-targeting.js");
 const weaponFire = readRequired("src/weapon-fire.js");
+const enemyBehaviors = readRequired("src/enemy-behaviors.js");
 const enemies = readRequired("src/enemies.js");
 const combat = readRequired("src/combat.js");
 const ui = readRequired("src/ui.js");
@@ -74,7 +75,7 @@ const contentTools = readRequired("scripts/content-tools.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
 const staleText = `${index}\n${contentSource}\n${generatedContent}\n${agentContext}`;
-const runtime = `${game}\n${combat}\n${weaponFire}\n${enemies}\n${runState}\n${runUpdate}`;
+const runtime = `${game}\n${combat}\n${weaponFire}\n${enemyBehaviors}\n${enemies}\n${runState}\n${runUpdate}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
@@ -98,6 +99,7 @@ check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(inde
 check("index loads weapon projectile helpers", /src="src\/weapon-projectiles\.js(\?[^"]+)?"/.test(index));
 check("index loads weapon targeting helpers", /src="src\/weapon-targeting\.js(\?[^"]+)?"/.test(index));
 check("index loads weapon fire module", /src="src\/weapon-fire\.js(\?[^"]+)?"/.test(index));
+check("index loads enemy behavior helpers", /src="src\/enemy-behaviors\.js(\?[^"]+)?"/.test(index));
 check("index loads enemies module", /src="src\/enemies\.js(\?[^"]+)?"/.test(index));
 check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
 check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
@@ -149,7 +151,7 @@ check("enemy spawns are content-counted and patterned", runtime.includes("spawnP
 check("enemy projectiles update through combat loop", runState.includes("enemyBolts") && combat.includes("updateEnemyBolts") && runUpdate.includes("combat.updateEnemyBolts(dt)") && rendering.includes("drawEnemyBolt"));
 check("enemy projectiles are high-visibility", content.bossConfig?.enemyBolt?.radius >= 7 && rendering.includes("tailX") && rendering.includes("bolt.radius + 4"));
 check("enemy projectile pacing scales by tower floor", enemies.includes("projectileFireRateScale") && enemies.includes("scaledProjectileCooldown") && enemies.includes("scaledProjectileSpeed") && content.bossConfig?.projectileScaling?.fireRateBase < 1 && content.bossConfig?.projectileScaling?.fireRateMax > 1);
-check("shield pulse clears enemy projectiles and charges block", weaponFire.includes('weaponId === "shield_pulse"') && weaponFire.includes("destroyEnemyProjectilesInRange") && weaponFire.includes("chargeProjectileBlock") && runState.includes("projectileBlockCharge") && enemies.includes("projectileBlockReady") && rendering.includes("drawProjectileBlockBar"));
+check("shield pulse clears enemy projectiles and charges block", weaponFire.includes('weaponId === "shield_pulse"') && weaponFire.includes("destroyEnemyProjectilesInRange") && weaponFire.includes("chargeProjectileBlock") && runState.includes("projectileBlockCharge") && enemyBehaviors.includes("projectileBlockReady") && rendering.includes("drawProjectileBlockBar"));
 check("speed multiplier scales game loop", game.includes("let gameSpeed = 1") && game.includes("runUpdater.update(dt * gameSpeed)") && game.includes("setGameSpeed"));
 check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.includes("fireWeapon"));
 check("weapon kind dispatch table exists", weaponFire.includes("weaponKindHandlers") && ["radial", "beam", "cone", "chain", "projectile", "target_area", "lingering_area", "mine"].every((kind) => weaponFire.includes(`${kind}:`)));
@@ -257,7 +259,7 @@ check("boss health bar renders at screen top", renderHud.includes("drawBossHealt
 check("boss special charge bar renders at screen top", renderHud.includes("drawBossSpecialBar") && renderHud.includes("bossAttackCooldownMax") && renderHud.includes("SPECIAL"));
 check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice") && enemies.includes('type: "boss_drop"') && enemies.includes("landingX") && renderHud.includes("drawBossSpawnNotice") && rendering.includes("boss_drop"));
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
-check("boss variants include charger and turret", content.bossAbilities?.charger && content.bossAbilities?.turret && enemies.includes("startBossCharge") && enemies.includes('type: "boss_slash"') && enemies.includes("projectileCooldown") && rendering.includes("drawBossSlash"));
+check("boss variants include charger and turret", content.bossAbilities?.charger && content.bossAbilities?.turret && enemyBehaviors.includes("startBossCharge") && enemyBehaviors.includes('type: "boss_slash"') && enemies.includes("projectileCooldown") && rendering.includes("drawBossSlash"));
 check("super bosses combine two boss abilities", enemies.includes("superBossAbilityCount") && enemies.includes("chooseBossAbilities") && enemies.includes("bossAbilities") && enemies.includes("hasBossAbility"));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
@@ -289,6 +291,7 @@ check("shared run state helper exists", runState.includes("TapSurvivorRunState")
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && game.includes("TapSurvivorRunUpdate"));
 check("shared weapon helpers exist", weaponProjectiles.includes("TapSurvivorWeaponProjectiles") && weaponTargeting.includes("TapSurvivorWeaponTargeting") && weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
 check("shared enemy helper exists", enemies.includes("TapSurvivorEnemies") && combat.includes("TapSurvivorEnemies"));
+check("shared enemy behavior helper exists", enemyBehaviors.includes("TapSurvivorEnemyBehaviors") && enemies.includes("TapSurvivorEnemyBehaviors"));
 check("shared balance helper exists", balance.includes("TapSurvivorBalance") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && game.includes("TapSurvivorDebug"));
 check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && game.includes("TapSurvivorShellUi"));

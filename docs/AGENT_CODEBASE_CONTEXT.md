@@ -32,7 +32,8 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/pickups.js`: XP, floor-scaled coin, and heart drop spawning, attraction, collection, and pickup text updates.
 - `src/shop.js`: coin shop rendering, floor-scaled and purchase-inflated prices, purchases, persistence, item sprites, run-start bonuses, in-run shop-tab rendering, and immediate in-run player stat bonuses.
 - `src/combat.js`: combat orchestration, damage accounting, enemy reap/loot handoff, and combat effects.
-- `src/enemies.js`: enemy spawning, spawn patterns, melee/ranged enemy updates, randomized boss spawning, and boss special attacks.
+- `src/enemies.js`: enemy spawning, spawn patterns, randomized boss spawning, and boss special attack orchestration.
+- `src/enemy-behaviors.js`: enemy movement, contact damage, ranged enemy shots, boss charge movement, boss attack hit resolution, and enemy-bolt updates.
 - `src/rendering.js`: canvas drawing orchestration for arena, entities, effects, and projectiles.
 - `src/render-hud.js`: canvas HUD drawing for floor badge, boss notice/health, and the weapon skill rail.
 - `src/weapon-fire.js`: public weapon-fire integration entry point, equipped weapon timers, weapon dispatch, attack animation, and weapon burst triggers.
@@ -74,7 +75,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Run ticking/player movement: `src/run-update.js`.
 - Coin shop: `src/shop.js` plus `shopItems` content and the in-run shop tab in `src/shell-ui.js`.
 - Economy tuning: run `npm run economy:check` before monetization-route work; it reports shop tiers, stat lanes, buyout cost, price scaling, inflation, and coin reward scaling.
-- Enemy and boss behavior: `src/enemies.js`; boss ability tuning lives in `content/tap-survivor-content.json`.
+- Enemy and boss behavior: `src/enemies.js` owns spawning/orchestration, `src/enemy-behaviors.js` owns movement and attack update behavior; boss ability tuning lives in `content/tap-survivor-content.json`.
 - Weapon firing behavior: `src/weapon-fire.js` remains the public integration entry point.
   Cooldown/stat scaling lives in `src/weapon-cooldowns.js`, projectile behavior in
   `src/weapon-projectiles.js`, targeting in `src/weapon-targeting.js`, and non-projectile
@@ -91,7 +92,7 @@ The project is mixed but mostly registry-driven:
 - Supported content tooling templates/defaults, shop item field rules, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
 - Supported runtime behavior IDs for weapon kinds and boss ability kinds are also listed in `content/tap-survivor-schema.json`; content validation rejects unsupported IDs before runtime.
 - `src/content.generated.js` exposes the content registry as `globalThis.TapSurvivorContent` and the content schema as `globalThis.TapSurvivorContentSchema`.
-- Weapon behavior dispatch lives in `src/weapon-fire.js`; enemy lifecycle behavior lives in `src/enemies.js`.
+- Weapon behavior dispatch lives in `src/weapon-fire.js`; enemy spawn orchestration lives in `src/enemies.js`; enemy movement/attack behavior lives in `src/enemy-behaviors.js`.
 - Weapon damage upgrades are generated from weapon definitions in `src/upgrades.js`.
 - Run-upgrade one-shot effects and shop item stat bonuses use shared handlers in `src/effects.js`; shop bonus stats come from the generated schema at runtime, and combat-scaling run upgrades are read by tier ID in `src/weapon-fire.js`.
 - UI layout is HTML/CSS-driven.
