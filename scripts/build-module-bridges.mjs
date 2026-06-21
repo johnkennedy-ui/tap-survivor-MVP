@@ -14,6 +14,12 @@ const bridges = [
     globalName: "TapSurvivorMath",
     exports: ["clamp", "distance", "formatTime", "randomRange"],
   },
+  {
+    source: "src/modules/weapon-targeting.js",
+    target: "src/weapon-targeting.js",
+    globalName: "TapSurvivorWeaponTargeting",
+    exports: ["nearestEnemy"],
+  },
 ];
 
 for (const bridge of bridges) {

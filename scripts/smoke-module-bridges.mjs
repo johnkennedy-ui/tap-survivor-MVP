@@ -8,12 +8,15 @@ import {
   randomRange as moduleRandomRange,
 } from "../src/modules/math.js";
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
+import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-targeting.js";
 
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
+const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
+const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(
@@ -88,6 +91,33 @@ const moduleRandom = moduleRandomRange(2, 4);
 const bridgeRandom = bridgeMath.randomRange(2, 4);
 check("module randomRange returns number in range", moduleRandom >= 2 && moduleRandom < 4);
 check("bridge randomRange returns number in range", bridgeRandom >= 2 && bridgeRandom < 4);
+
+check("module exports nearestEnemy", typeof moduleNearestEnemy === "function");
+check("bridge assigns globalThis.TapSurvivorWeaponTargeting", Boolean(bridgeTargeting));
+check(
+  "weapon targeting bridge source has generated banner",
+  hasGeneratedBanner(targetingBridge.source)
+);
+check("bridge exposes nearestEnemy", typeof bridgeTargeting?.nearestEnemy === "function");
+
+const targetingGame = {
+  player: { x: 0, y: 0 },
+  enemies: [
+    { id: "far", x: 8, y: 0 },
+    { id: "near", x: 3, y: 4 },
+    { id: "mid", x: 6, y: 0 },
+  ],
+};
+const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const moduleTarget = moduleNearestEnemy(targetingGame, distance);
+const bridgeTarget = bridgeTargeting.nearestEnemy(targetingGame, distance);
+check("module nearestEnemy fixture selects nearest enemy", moduleTarget?.id === "near");
+check("module and bridge targeting output match", moduleTarget === bridgeTarget);
+check(
+  "module and bridge targeting empty-enemy fallback match",
+  moduleNearestEnemy({ player: { x: 0, y: 0 }, enemies: [] }, distance) === null &&
+    bridgeTargeting.nearestEnemy({ player: { x: 0, y: 0 }, enemies: [] }, distance) === null
+);
 
 if (process.exitCode) {
   process.exit(process.exitCode);
