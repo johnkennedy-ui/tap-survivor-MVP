@@ -8,15 +8,18 @@ import {
   randomRange as moduleRandomRange,
 } from "../src/modules/math.js";
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
+import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
 import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-targeting.js";
 
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
+const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
+const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldowns?.createWeaponScaling;
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(
@@ -119,6 +122,68 @@ check(
     bridgeTargeting.nearestEnemy({ player: { x: 0, y: 0 }, enemies: [] }, distance) === null
 );
 
+check("module exports createWeaponScaling", typeof createModuleWeaponScaling === "function");
+check(
+  "bridge assigns globalThis.TapSurvivorWeaponCooldowns",
+  Boolean(cooldownBridge.context.TapSurvivorWeaponCooldowns)
+);
+check(
+  "weapon cooldown bridge source has generated banner",
+  hasGeneratedBanner(cooldownBridge.source)
+);
+check("bridge exposes createWeaponScaling", typeof createBridgeWeaponScaling === "function");
+
+const previousContent = Reflect.get(globalThis, "TapSurvivorContent");
+const hadPreviousContent = Reflect.has(globalThis, "TapSurvivorContent");
+const runUpgrades = [
+  {
+    id: "run_projectile_focus",
+    projectileCooldownMultiplier: 0.9,
+    projectileDamageMultiplier: 1.15,
+  },
+  {
+    id: "run_projectile_scale",
+    projectileDamageMultiplier: 1.05,
+  },
+];
+Reflect.set(globalThis, "TapSurvivorContent", { runUpgrades });
+cooldownBridge.context.TapSurvivorContent = { runUpgrades };
+
+const scalingFixture = createScalingFixture();
+const moduleScaling = createModuleWeaponScaling(scalingFixture);
+const bridgeScaling = createBridgeWeaponScaling(scalingFixture);
+const moduleScalingResults = scalingSnapshot(moduleScaling, scalingFixture.weaponDefs.bolt);
+const bridgeScalingResults = scalingSnapshot(bridgeScaling, scalingFixture.weaponDefs.bolt);
+check(
+  "module and bridge cooldown scaling output match",
+  JSON.stringify(moduleScalingResults) === JSON.stringify(bridgeScalingResults)
+);
+check("weaponCooldown fixture is finite", Number.isFinite(moduleScalingResults.weaponCooldown));
+check("weaponSfxOptions fixture has playbackRate", moduleScalingResults.weaponSfxOptions.playbackRate > 0);
+check("weaponReach fixture is finite", Number.isFinite(moduleScalingResults.weaponReach));
+check("weaponWidth fixture is finite", Number.isFinite(moduleScalingResults.weaponWidth));
+check("projectileRadius fixture is finite", Number.isFinite(moduleScalingResults.projectileRadius));
+check("weaponDamage fixture is finite", Number.isFinite(moduleScalingResults.weaponDamage));
+check(
+  "projectileSkillModifier fixture is finite",
+  Number.isFinite(moduleScalingResults.projectileSkillModifier)
+);
+
+const fallbackFixture = createFallbackScalingFixture();
+const fallbackScaling = createModuleWeaponScaling(fallbackFixture);
+const fallbackBridgeScaling = createBridgeWeaponScaling(fallbackFixture);
+const fallbackSnapshot = scalingSnapshot(fallbackScaling, fallbackFixture.weaponDefs.bolt);
+const fallbackBridgeSnapshot = scalingSnapshot(fallbackBridgeScaling, fallbackFixture.weaponDefs.bolt);
+check(
+  "module and bridge optional callback fallback output match",
+  JSON.stringify(fallbackSnapshot) === JSON.stringify(fallbackBridgeSnapshot)
+);
+if (hadPreviousContent) {
+  Reflect.set(globalThis, "TapSurvivorContent", previousContent);
+} else {
+  Reflect.deleteProperty(globalThis, "TapSurvivorContent");
+}
+
 if (process.exitCode) {
   process.exit(process.exitCode);
 }
@@ -140,6 +205,90 @@ function pricingSnapshot(pricing) {
     orbTier: pricing.tierFor(shopItemDefs[1]),
     orbCost: pricing.costFor(shopItemDefs[1], 0),
     orbCanBuy: pricing.canBuy(shopItemDefs[1]),
+  };
+}
+
+function createScalingFixture() {
+  const tiers = new Map([
+    ["attack_radius", 2],
+    ["bolt_upgrade", 3],
+    ["fire_rate", 2],
+    ["flat_damage", 1],
+    ["percent_damage", 2],
+  ]);
+  const runTiers = new Map([
+    ["run_attack_radius", 1],
+    ["run_fire_rate", 1],
+    ["run_flat_damage", 2],
+    ["run_percent_damage", 1],
+    ["run_projectile_focus", 2],
+    ["run_projectile_scale", 1],
+  ]);
+  return {
+    weaponDefs: {
+      bolt: {
+        id: "bolt",
+        kind: "projectile",
+        cooldown: 1.2,
+        damage: 14,
+        range: 90,
+        radius: 8,
+        upgradeId: "bolt_upgrade",
+        width: 18,
+      },
+    },
+    getUpgradeTier: (id) => tiers.get(id) || 0,
+    getRunUpgradeTier: (id) => runTiers.get(id) || 0,
+    getShopBonuses: () => ({
+      attackRadius: 1,
+      fireRate: 1,
+      flatDamage: 2,
+      percentDamage: 1,
+    }),
+    getRelicSpecialEffects: () => ({
+      areaRadiusBonus: 0.1,
+      beamWidthBonus: 0.05,
+      cooldownReduction: 0.08,
+      damageBonus: 0.2,
+      projectileSizeBonus: 0.15,
+    }),
+    getWeaponDamageMultiplier: () => 1.25,
+    clamp: moduleClamp,
+  };
+}
+
+function createFallbackScalingFixture() {
+  return {
+    weaponDefs: {
+      bolt: {
+        id: "bolt",
+        kind: "projectile",
+        cooldown: 1.2,
+        damage: 14,
+        range: 90,
+        radius: 8,
+        upgradeId: "bolt_upgrade",
+        width: 18,
+      },
+    },
+    getUpgradeTier: () => 0,
+    getRunUpgradeTier: () => 0,
+    clamp: moduleClamp,
+  };
+}
+
+function scalingSnapshot(scaling, weapon) {
+  return {
+    projectileRadius: scaling.projectileRadius(weapon),
+    projectileSkillModifier: scaling.projectileSkillModifier(
+      weapon,
+      "projectileDamageMultiplier"
+    ),
+    weaponCooldown: scaling.weaponCooldown(weapon),
+    weaponDamage: scaling.weaponDamage(weapon.id),
+    weaponReach: scaling.weaponReach(weapon),
+    weaponSfxOptions: scaling.weaponSfxOptions(weapon),
+    weaponWidth: scaling.weaponWidth(weapon),
   };
 }
 

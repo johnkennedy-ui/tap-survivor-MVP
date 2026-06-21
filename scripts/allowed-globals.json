@@ -84,6 +84,7 @@
     "src/level-up.js": 6,
     "src/map-system.js": 1,
     "src/math.js": 1,
+    "src/modules/weapon-cooldowns.js": 1,
     "src/pickups.js": 1,
     "src/progression.js": 1,
     "src/quests.js": 1,

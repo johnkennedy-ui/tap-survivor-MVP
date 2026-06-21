@@ -1,4 +1,53 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/weapon-cooldowns.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
+  /**
+   * @typedef {{
+   *   id?: string,
+   *   kind?: string,
+   *   cooldown: number,
+   *   damage: number,
+   *   range?: number,
+   *   radius?: number,
+   *   upgradeId?: string,
+   *   width?: number
+   * }} WeaponDef
+   * @typedef {Record<string, WeaponDef>} WeaponDefs
+   * @typedef {{ fireRate?: number, attackRadius?: number, percentDamage?: number, flatDamage?: number }} ShopBonuses
+   * @typedef {{
+   *   areaRadiusBonus?: number,
+   *   beamWidthBonus?: number,
+   *   cooldownReduction?: number,
+   *   damageBonus?: number,
+   *   projectileSizeBonus?: number
+   * }} RelicSpecialEffects
+   * @typedef {{ playbackRate: number, minGapMs: number }} WeaponSfxOptions
+   * @typedef {{
+   *   projectileRadius(weapon: WeaponDef): number,
+   *   projectileSkillModifier(weapon: WeaponDef, field: string): number,
+   *   weaponCooldown(weapon: WeaponDef): number,
+   *   weaponDamage(weaponId: string): number,
+   *   weaponReach(weapon: WeaponDef): number,
+   *   weaponSfxOptions(weapon: WeaponDef): WeaponSfxOptions,
+   *   weaponWidth(weapon: WeaponDef): number
+   * }} WeaponScalingApi
+   */
+
+  /**
+   * @param {{
+   *   weaponDefs: WeaponDefs,
+   *   getUpgradeTier: (id: string | undefined) => number,
+   *   getRunUpgradeTier: (id: string) => number,
+   *   getShopBonuses?: () => ShopBonuses,
+   *   getRelicSpecialEffects?: () => RelicSpecialEffects,
+   *   getWeaponDamageMultiplier?: () => number,
+   *   clamp: (value: number, min: number, max: number) => number
+   * }} options
+   * @returns {WeaponScalingApi}
+   */
   function createWeaponScaling({
     weaponDefs,
     getUpgradeTier,

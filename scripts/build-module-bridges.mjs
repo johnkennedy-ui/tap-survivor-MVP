@@ -20,6 +20,12 @@ const bridges = [
     globalName: "TapSurvivorWeaponTargeting",
     exports: ["nearestEnemy"],
   },
+  {
+    source: "src/modules/weapon-cooldowns.js",
+    target: "src/weapon-cooldowns.js",
+    globalName: "TapSurvivorWeaponCooldowns",
+    exports: ["createWeaponScaling"],
+  },
 ];
 
 for (const bridge of bridges) {
