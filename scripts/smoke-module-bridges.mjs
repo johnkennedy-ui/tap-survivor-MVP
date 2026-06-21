@@ -3,6 +3,12 @@ import vm from "node:vm";
 
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import {
+  choiceId as moduleChoiceId,
+  shopFocusBonus as moduleShopFocusBonus,
+  shuffleChoices as moduleShuffleChoices,
+  weightedChoices as moduleWeightedChoices,
+} from "../src/modules/level-up-choices.js";
+import {
   clamp as moduleClamp,
   distance as moduleDistance,
   formatTime as moduleFormatTime,
@@ -17,6 +23,7 @@ import {
 import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-targeting.js";
 
 const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
+const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -24,6 +31,7 @@ const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cool
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
+const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
@@ -78,6 +86,94 @@ check(
 const mutableFloorOne = moduleFloorDifficulty(1);
 mutableFloorOne.hp = 99;
 check("floorDifficulty returns copies", moduleFloorDifficulty(1).hp === 0.9);
+
+check("module exports choiceId", typeof moduleChoiceId === "function");
+check("module exports shopFocusBonus", typeof moduleShopFocusBonus === "function");
+check("module exports shuffleChoices", typeof moduleShuffleChoices === "function");
+check("module exports weightedChoices", typeof moduleWeightedChoices === "function");
+check("bridge assigns globalThis.TapSurvivorLevelUpChoices", Boolean(bridgeChoices));
+check(
+  "level-up choices bridge source has generated banner",
+  hasGeneratedBanner(choicesBridge.source)
+);
+for (const exportName of ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"]) {
+  check(`bridge exposes ${exportName}`, typeof bridgeChoices?.[exportName] === "function");
+}
+
+const weaponChoice = { weaponId: "laser", name: "Laser" };
+const runChoice = { runUpgradeId: "run_damage", name: "Damage" };
+const unknownChoice = { name: "Repair" };
+check("choiceId weapon fixture is unchanged", moduleChoiceId(weaponChoice) === "weapon:laser");
+check("choiceId run-upgrade fixture is unchanged", moduleChoiceId(runChoice) === "run:run_damage");
+check("choiceId unknown fixture is unchanged", moduleChoiceId(unknownChoice) === "run:Repair");
+check(
+  "module and bridge choiceId output match",
+  JSON.stringify([weaponChoice, runChoice, unknownChoice].map(moduleChoiceId)) ===
+    JSON.stringify([weaponChoice, runChoice, unknownChoice].map(bridgeChoices.choiceId))
+);
+
+check("shopFocusBonus empty fixture is unchanged", moduleShopFocusBonus({}) === 0);
+check(
+  "shopFocusBonus relic compass fixture is unchanged",
+  moduleShopFocusBonus({ shopPurchases: { relic_compass: 3 } }) === 1.5
+);
+check(
+  "module and bridge shopFocusBonus output match",
+  JSON.stringify([{}, { shopPurchases: { relic_compass: 3 } }].map(moduleShopFocusBonus)) ===
+    JSON.stringify([{}, { shopPurchases: { relic_compass: 3 } }].map(bridgeChoices.shopFocusBonus))
+);
+
+const choices = [
+  { name: "Alpha", runUpgradeId: "alpha" },
+  { name: "Beta", runUpgradeId: "beta" },
+  { name: "Gamma", runUpgradeId: "gamma" },
+];
+const moduleWeighted = withRandomSequence([0.9, 0.2, 0.4], () =>
+  moduleWeightedChoices(choices, (choice) => (choice.runUpgradeId === "beta" ? 3 : 1)).map(
+    moduleChoiceId
+  )
+);
+const bridgeWeighted = withBridgeRandomSequence(choicesBridge, [0.9, 0.2, 0.4], () =>
+  bridgeChoices.weightedChoices(choices, (choice) => (choice.runUpgradeId === "beta" ? 3 : 1)).map(
+    bridgeChoices.choiceId
+  )
+);
+check("weightedChoices deterministic fixture is unchanged", moduleWeighted[0] === "run:beta");
+check(
+  "module and bridge weightedChoices output match",
+  JSON.stringify(moduleWeighted) === JSON.stringify(bridgeWeighted)
+);
+
+const moduleWeightedFallback = withRandomSequence([0.3, 0.1, 0.2], () =>
+  moduleWeightedChoices(choices, () => 0).map(moduleChoiceId)
+);
+const bridgeWeightedFallback = withBridgeRandomSequence(choicesBridge, [0.3, 0.1, 0.2], () =>
+  bridgeChoices.weightedChoices(choices, () => 0).map(bridgeChoices.choiceId)
+);
+check(
+  "weightedChoices zero-weight fallback uses random order",
+  JSON.stringify(moduleWeightedFallback) === JSON.stringify(["run:beta", "run:gamma", "run:alpha"])
+);
+check(
+  "module and bridge weightedChoices fallback output match",
+  JSON.stringify(moduleWeightedFallback) === JSON.stringify(bridgeWeightedFallback)
+);
+
+const moduleShuffled = withRandomSequence([0.3, 0.1, 0.2], () => moduleShuffleChoices(choices));
+const bridgeShuffled = withBridgeRandomSequence(choicesBridge, [0.3, 0.1, 0.2], () =>
+  bridgeChoices.shuffleChoices(choices)
+);
+check("shuffleChoices returns a separate array", moduleShuffled !== choices);
+check(
+  "shuffleChoices preserves all input choices",
+  JSON.stringify(moduleShuffled.map(moduleChoiceId).sort()) ===
+    JSON.stringify(choices.map(moduleChoiceId).sort())
+);
+check(
+  "module and bridge shuffleChoices output match",
+  JSON.stringify(moduleShuffled.map(moduleChoiceId)) ===
+    JSON.stringify(bridgeShuffled.map(bridgeChoices.choiceId))
+);
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(
@@ -559,6 +655,34 @@ function approxVectorEqual(left, right) {
 
 function approxEqual(left, right, epsilon = 1e-9) {
   return Math.abs(left - right) <= epsilon;
+}
+
+function withRandomSequence(sequence, callback) {
+  const previousRandom = Math.random;
+  let index = 0;
+  Math.random = () => sequence[index++ % sequence.length];
+  try {
+    return callback();
+  } finally {
+    Math.random = previousRandom;
+  }
+}
+
+function withBridgeRandomSequence(bridge, sequence, callback) {
+  const hadMath = Reflect.has(bridge.context, "Math");
+  const bridgeMath = hadMath ? bridge.context.Math : Object.create(Math);
+  const previousRandom = bridgeMath.random;
+  let index = 0;
+  bridgeMath.random = () => sequence[index++ % sequence.length];
+  bridge.context.Math = bridgeMath;
+  try {
+    return callback();
+  } finally {
+    bridgeMath.random = previousRandom;
+    if (!hadMath) {
+      Reflect.deleteProperty(bridge.context, "Math");
+    }
+  }
 }
 
 /**

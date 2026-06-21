@@ -9,6 +9,12 @@ const bridges = [
     exports: ["floorDifficulty"],
   },
   {
+    source: "src/modules/level-up-choices.js",
+    target: "src/level-up-choices.js",
+    globalName: "TapSurvivorLevelUpChoices",
+    exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",
