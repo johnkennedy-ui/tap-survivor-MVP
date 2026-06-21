@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck content tooling
+        run: npm run typecheck:content
+
       - name: Check formatting
         run: npm run format:check
 

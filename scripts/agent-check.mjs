@@ -8,6 +8,7 @@ const fullChecks = [
   ["git", ["diff", "--check"]],
   ["npm", ["run", "format:check"]],
   ["npm", ["run", "check:format-hygiene"]],
+  ["npm", ["run", "typecheck:content"]],
   ["node", ["--check", "scripts/agent-finish.mjs"]],
   ["node", ["--check", "scripts/agent-start.mjs"]],
   ["node", ["--check", "scripts/agent-handoff.mjs"]],
@@ -124,6 +125,18 @@ function focusedChecks(files) {
     )
   ) {
     checks.push(["npm", ["run", "smoke:add-content"]]);
+  }
+  if (
+    files.some(
+      (file) =>
+        file.startsWith("scripts/content/") ||
+        file === "scripts/content-tools.mjs" ||
+        file === "tsconfig.content.json" ||
+        file === "package.json" ||
+        file === "package-lock.json"
+    )
+  ) {
+    checks.push(["npm", ["run", "typecheck:content"]]);
   }
   if (
     files.some(
