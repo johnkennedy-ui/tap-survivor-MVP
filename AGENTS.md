@@ -25,5 +25,6 @@ Before editing this repo:
 21. Dev-only balance runtime selection lives in `src/balance-runtime.js`; keep production default behaviour on the `default` profile.
 22. Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` is only the compatibility export surface.
 23. Content tooling type contracts are JSDoc-checked with `npm run typecheck:content`; keep those contracts scoped to `scripts/content/*.mjs` and the barrel.
+24. Do not add new `window.*` or `globalThis.*` runtime coupling. Run `npm run check:globals`; update `docs/GLOBAL_STATE_INVENTORY.md` and `scripts/allowed-globals.json` only for deliberate global migration/removal work.
 
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.

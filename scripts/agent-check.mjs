@@ -8,6 +8,7 @@ const fullChecks = [
   ["git", ["diff", "--check"]],
   ["npm", ["run", "format:check"]],
   ["npm", ["run", "check:format-hygiene"]],
+  ["npm", ["run", "check:globals"]],
   ["npm", ["run", "typecheck:content"]],
   ["node", ["--check", "scripts/agent-finish.mjs"]],
   ["node", ["--check", "scripts/agent-start.mjs"]],
@@ -189,6 +190,10 @@ function focusedChecks(files) {
     files.some(
       (file) =>
         file.startsWith("src/") ||
+        file === "index.html" ||
+        file === "scripts/check-globals.mjs" ||
+        file === "scripts/allowed-globals.json" ||
+        file === "docs/GLOBAL_STATE_INVENTORY.md" ||
         file.startsWith("docs/") ||
         file === "AGENTS.md" ||
         file === "README.md" ||
@@ -196,6 +201,17 @@ function focusedChecks(files) {
     )
   ) {
     checks.push(["npm", ["run", "check:format-hygiene"]]);
+  }
+  if (
+    files.some(
+      (file) =>
+        file.startsWith("src/") ||
+        file === "index.html" ||
+        file.startsWith("scripts/") ||
+        file === "scripts/allowed-globals.json"
+    )
+  ) {
+    checks.push(["npm", ["run", "check:globals"]]);
   }
   if (files.some((file) => file.startsWith("src/") && /\.(js)$/.test(file))) {
     checks.push(["npm", ["run", "verify:script-order"]]);

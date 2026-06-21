@@ -14,6 +14,7 @@
     "typecheck:content": "tsc -p tsconfig.content.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "check:globals": "node scripts/check-globals.mjs",
     "check:format-hygiene": "node scripts/check-format-hygiene.mjs",
     "check:commit-evidence": "node scripts/check-commit-evidence.mjs",
     "check:package-id": "node scripts/check-package-id.mjs",

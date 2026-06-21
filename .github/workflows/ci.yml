@@ -33,6 +33,9 @@ jobs:
       - name: Typecheck content tooling
         run: npm run typecheck:content
 
+      - name: Check global usage
+        run: npm run check:globals
+
       - name: Check formatting
         run: npm run format:check
 
