@@ -46,7 +46,10 @@
 Use `npm run build:content` to assemble these domains into `src/content.generated.js`.
 The generated file also embeds `globalThis.TapSurvivorBalanceProfiles` so dev tools can select a safe local profile without remote loading.
 Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` remains the compatibility export surface. Future agents should edit the focused file that owns the relevant responsibility.
-Content tooling contracts are checked with `npm run typecheck:content`. Keep JSDoc and no-emit TypeScript checks scoped to `scripts/content/*.mjs` and the compatibility barrel unless a later task explicitly broadens the typing surface.
+Type contracts live under `types/` and are checked with `npm run typecheck`.
+The check is no-emit and currently scoped to `scripts/content/*.mjs`, the compatibility barrel, and `src/content-registry.js`.
+Keep JSDoc contracts as the current step before any full TypeScript migration.
+Do not convert runtime files to TypeScript without a separate migration task.
 
 ## Balance Profiles
 

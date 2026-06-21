@@ -16,6 +16,7 @@
     "frank:evidence": "node scripts/frank-evidence.mjs",
     "build:content": "node scripts/build-content.mjs",
     "build:web": "npm run build:content && node scripts/build-web.mjs",
+    "typecheck": "npm run typecheck:content",
     "typecheck:content": "tsc -p tsconfig.content.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

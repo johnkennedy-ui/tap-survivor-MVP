@@ -9,5 +9,10 @@
     "target": "ES2023",
     "types": ["node"]
   },
-  "include": ["scripts/content-tools.mjs", "scripts/content/*.mjs"]
+  "include": [
+    "types/**/*.d.ts",
+    "scripts/content-tools.mjs",
+    "scripts/content/*.mjs",
+    "src/content-registry.js"
+  ]
 }

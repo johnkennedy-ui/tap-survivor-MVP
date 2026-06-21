@@ -9,7 +9,7 @@ const fullChecks = [
   ["npm", ["run", "format:check"]],
   ["npm", ["run", "check:format-hygiene"]],
   ["npm", ["run", "check:globals"]],
-  ["npm", ["run", "typecheck:content"]],
+  ["npm", ["run", "typecheck"]],
   ["node", ["--check", "scripts/agent-finish.mjs"]],
   ["node", ["--check", "scripts/agent-start.mjs"]],
   ["node", ["--check", "scripts/agent-handoff.mjs"]],
@@ -144,7 +144,7 @@ function focusedChecks(files) {
         file === "package-lock.json"
     )
   ) {
-    checks.push(["npm", ["run", "typecheck:content"]]);
+    checks.push(["npm", ["run", "typecheck"]]);
   }
   if (
     files.some(

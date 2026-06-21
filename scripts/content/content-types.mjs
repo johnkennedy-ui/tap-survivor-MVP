@@ -1,50 +1,24 @@
 /**
- * @typedef {string | number | boolean | null} JsonPrimitive
- * @typedef {any} JsonValue
- * @typedef {{ [key: string]: JsonValue }} JsonObject
+ * @typedef {import("../../types/content.js").JsonPrimitive} JsonPrimitive
+ * @typedef {import("../../types/content.js").JsonValue} JsonValue
+ * @typedef {import("../../types/content.js").JsonObject} JsonObject
  *
- * @typedef {{ id?: string, [key: string]: any }} ContentEntry
- * @typedef {{
- *   schemaVersion?: number,
- *   weapons?: Record<string, ContentEntry>,
- *   weaponUnlocks?: ContentEntry[],
- *   metaUpgrades?: ContentEntry[],
- *   runUpgrades?: ContentEntry[],
- *   quests?: Record<string, ContentEntry>,
- *   questGroups?: Record<string, string[]>,
- *   enemyTypes?: ContentEntry[],
- *   bossConfig?: ContentEntry,
- *   bossAbilities?: Record<string, ContentEntry>,
- *   characters?: ContentEntry[],
- *   shopItems?: ContentEntry[],
- *   relics?: ContentEntry[],
- *   levels?: ContentEntry[],
- *   maps?: ContentEntry[],
- *   assets?: ContentEntry,
- *   tuning?: ContentEntry,
- *   activeBalanceProfile?: string,
- *   [key: string]: any
- * }} ContentRecord
+ * @typedef {import("../../types/content.js").ContentEntry} ContentEntry
+ * @typedef {import("../../types/content.js").ContentRecord} ContentRecord
  *
- * @typedef {{ [key: string]: any }} SchemaRule
- * @typedef {{
- *   fieldRules?: Record<string, SchemaRule>,
- *   effectRegistries?: Record<string, JsonObject>,
- *   behaviorRegistries?: Record<string, { ids?: string[] }>,
- *   templates?: Record<string, JsonObject>,
- *   [key: string]: any
- * }} ContentSchema
+ * @typedef {import("../../types/content.js").ContentEntry} SchemaRule
+ * @typedef {import("../../types/content.js").ContentSchema} ContentSchema
  *
- * @typedef {Record<string, Record<string, JsonValue> | JsonValue>} BalanceOverrideSection
- * @typedef {Record<string, BalanceOverrideSection>} BalanceOverrides
- * @typedef {{ profileId?: string, overrides?: BalanceOverrides, [key: string]: any }} BalanceProfile
- * @typedef {{ section: string, id: string, field: string, before: JsonValue | undefined, after: JsonValue | undefined }} BalanceChange
+ * @typedef {import("../../types/balance.js").BalanceOverrideSection} BalanceOverrideSection
+ * @typedef {import("../../types/balance.js").BalanceOverrides} BalanceOverrides
+ * @typedef {import("../../types/balance.js").BalanceProfile} BalanceProfile
+ * @typedef {import("../../types/balance.js").BalanceChange} BalanceChange
  *
- * @typedef {{ _: string[], [key: string]: string | boolean | string[] }} ParsedArgs
- * @typedef {(message: string) => void} ValidationFailure
- * @typedef {(value: unknown, owner: string, min?: number) => void} RequireNumber
- * @typedef {(value: unknown, owner: string) => void} RequireString
- * @typedef {(value: unknown, owner: string) => void} ValidateSpritePath
+ * @typedef {import("../../types/content.js").ParsedArgs} ParsedArgs
+ * @typedef {import("../../types/content.js").ValidationFailure} ValidationFailure
+ * @typedef {import("../../types/content.js").RequireNumber} RequireNumber
+ * @typedef {import("../../types/content.js").RequireString} RequireString
+ * @typedef {import("../../types/content.js").ValidateSpritePath} ValidateSpritePath
  */
 
 export {};

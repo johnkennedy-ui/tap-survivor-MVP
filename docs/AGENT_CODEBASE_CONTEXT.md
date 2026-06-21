@@ -66,6 +66,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 
 - Content registry: `content/registry/*.json`, assembled by `scripts/content/content-assembly.mjs`.
 - Content schema/manifest: `content/tap-survivor-schema.json`.
+- No-emit type contracts: `types/`, checked by `npm run typecheck`.
 - Content add templates: `content/tap-survivor-schema.json` under `templates`; `scripts/add-content.mjs` reads those defaults.
 - Content build: `scripts/build-content.mjs`.
 - Content validation: `scripts/content/content-validation.mjs` and `scripts/validate-content.mjs`.
@@ -198,6 +199,9 @@ The project is mixed but mostly registry-driven:
 - Prefer `content/registry/*.json`, `content/balance/*.json`, and `scripts/add-content.mjs` over manual code edits.
 - Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` remains the compatibility export surface.
 - Future agents should edit the focused file that owns the relevant responsibility.
+- Type contracts live under `types/`; JSDoc imports them for content tooling and `src/content-registry.js`.
+- `npm run typecheck` is no-emit and currently scoped to the content/tooling slice. Run it after content tooling, schema, or content-registry changes.
+- JSDoc contracts are the current step before any full TypeScript migration; do not convert runtime files to TypeScript without a separate migration task.
 - Run `npm run build:content` after content registry edits.
 - Run the smallest relevant validation, usually `npm run validate:content` for registry-only edits or `npm test` for code changes.
 - Save evidence of inspected files, changed files, and validation output.

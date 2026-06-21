@@ -24,7 +24,9 @@ Before editing this repo:
 20. For balance-only experiments, use `content/balance/*.json` and validate with `npm run balance:check`; do not change runtime code for numeric tuning-only work.
 21. Dev-only balance runtime selection lives in `src/balance-runtime.js`; keep production default behaviour on the `default` profile.
 22. Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` is only the compatibility export surface.
-23. Content tooling type contracts are JSDoc-checked with `npm run typecheck:content`; keep those contracts scoped to `scripts/content/*.mjs` and the barrel.
+23. Content tooling type contracts live under `types/` and are JSDoc-checked with `npm run typecheck`.
+    Keep those contracts scoped to `scripts/content/*.mjs`, the barrel, and `src/content-registry.js` unless a separate task broadens them.
+    Do not convert runtime files to TypeScript without a separate migration task.
 24. Do not add new `window.*` or `globalThis.*` runtime coupling. Run `npm run check:globals`; update `docs/GLOBAL_STATE_INVENTORY.md` and `scripts/allowed-globals.json` only for deliberate global migration/removal work.
 25. New math helper consumers should receive/import math helpers explicitly instead of reading `globalThis.TapSurvivorMath`; keep the existing compatibility bridge only until the script-order runtime is migrated.
 26. New HUD renderer consumers should receive/import `createHudRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderHud`; keep the existing compatibility bridge only until the rendering stack is migrated.
