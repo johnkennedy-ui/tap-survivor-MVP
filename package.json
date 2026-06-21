@@ -11,6 +11,7 @@
     "agent:prepush": "node scripts/agent-prepush.mjs",
     "build:content": "node scripts/build-content.mjs",
     "build:web": "npm run build:content && node scripts/build-web.mjs",
+    "typecheck:content": "tsc -p tsconfig.content.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:format-hygiene": "node scripts/check-format-hygiene.mjs",
@@ -71,6 +72,8 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
-    "prettier": "^3.8.4"
+    "@types/node": "^26.0.0",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3"
   }
 }

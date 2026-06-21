@@ -1,10 +1,20 @@
 import { readFileSync } from "node:fs";
 import { schemaPath } from "./content-paths.mjs";
 
+/** @typedef {import("./content-types.mjs").ContentSchema} ContentSchema */
+/** @typedef {import("./content-types.mjs").ContentEntry} ContentEntry */
+/** @typedef {import("./content-types.mjs").ParsedArgs} ParsedArgs */
+
+/** @returns {ContentSchema} */
 export function readContentSchema() {
   return JSON.parse(readFileSync(schemaPath, "utf8"));
 }
 
+/**
+ * @param {Record<string, ContentEntry>} quests
+ * @param {string} previousId
+ * @param {string} nextId
+ */
 export function linkQuestAfter(quests, previousId, nextId) {
   const previous = quests?.[previousId];
   if (!previous) throw new Error(`Missing --after quest: ${previousId}`);
@@ -17,7 +27,9 @@ export function linkQuestAfter(quests, previousId, nextId) {
   previous.opensQuests = [...new Set([...(previous.opensQuests || []), nextId])];
 }
 
+/** @param {string[]} args */
 export function parseArgs(args) {
+  /** @type {ParsedArgs} */
   const parsed = { _: [] };
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];

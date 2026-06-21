@@ -3,6 +3,24 @@ import { join } from "node:path";
 import { root } from "./content-paths.mjs";
 import { readContentSchema } from "./content-schema.mjs";
 
+/** @typedef {import("./content-types.mjs").ContentEntry} ContentEntry */
+/** @typedef {import("./content-types.mjs").ContentRecord} ContentRecord */
+/** @typedef {import("./content-types.mjs").ContentSchema} ContentSchema */
+/** @typedef {import("./content-types.mjs").RequireNumber} RequireNumber */
+/** @typedef {import("./content-types.mjs").RequireString} RequireString */
+/** @typedef {import("./content-types.mjs").ValidateSpritePath} ValidateSpritePath */
+/** @typedef {import("./content-types.mjs").ValidationFailure} ValidationFailure */
+
+/**
+ * @param {ContentEntry[]} shopItems
+ * @param {{
+ *   fail: ValidationFailure,
+ *   requireNumber: RequireNumber,
+ *   requireString: RequireString,
+ *   schema: ContentSchema,
+ *   validateSpritePath: ValidateSpritePath
+ * }} helpers
+ */
 function validateShopItems(shopItems, { fail, requireNumber, requireString, schema, validateSpritePath }) {
   const seenShopItems = new Set();
   const shopItemEffectStats = schema.effectRegistries?.shopItem?.stats || [];
@@ -49,7 +67,9 @@ function validateShopItems(shopItems, { fail, requireNumber, requireString, sche
   });
 }
 
+/** @param {ContentRecord} content */
 export function validateContent(content) {
+  /** @type {string[]} */
   const errors = [];
   const weapons = content.weapons || {};
   const weaponUnlocks = content.weaponUnlocks || [];

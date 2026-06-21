@@ -357,7 +357,8 @@ check(
   pkg.includes('"smoke:content-tools"') &&
     addContent.includes("--after previous_id") &&
     addContent.includes("linkQuestAfter") &&
-    contentTools.includes('export * from "./content/content-schema.mjs"') &&
+    contentTools.includes("linkQuestAfter") &&
+    contentTools.includes('from "./content/content-schema.mjs"') &&
     contentSchemaTools.includes("function linkQuestAfter"),
 );
 check("sound effect wiring helper exists", pkg.includes('"sfx:add"') && addSfx.includes("run-upgrade") && addSfx.includes("content.assets.sfx[bucket]") && agentCheck.includes("scripts/add-sfx.mjs"));

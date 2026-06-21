@@ -2,6 +2,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { contentPath, registryDir } from "./content-paths.mjs";
 
+/** @typedef {import("./content-types.mjs").ContentRecord} ContentRecord */
+/** @typedef {import("./content-types.mjs").JsonValue} JsonValue */
+
+/** @type {string[]} */
 const domainFiles = [
   "weapons",
   "run-upgrades",
@@ -18,8 +22,11 @@ const domainFiles = [
   "tuning",
 ];
 
+/** @returns {ContentRecord} */
 export function assembleRegistryContent() {
+  /** @type {ContentRecord} */
   const legacy = existsSync(contentPath) ? JSON.parse(readFileSync(contentPath, "utf8")) : {};
+  /** @type {ContentRecord} */
   const content = { schemaVersion: legacy.schemaVersion || 1 };
   domainFiles.forEach((name) => {
     const file = join(registryDir, `${name}.json`);
@@ -32,6 +39,7 @@ export function assembleRegistryContent() {
   return content;
 }
 
+/** @param {ContentRecord} content */
 export function writeRegistryContent(content) {
   mkdirSync(registryDir, { recursive: true });
   writeJson(join(registryDir, "weapons.json"), {
@@ -64,10 +72,19 @@ export function writeRegistryContent(content) {
   writeJson(join(registryDir, "tuning.json"), { tuning: content.tuning || {} });
 }
 
+/**
+ * @param {string} file
+ * @param {JsonValue | undefined} value
+ */
 function writeJson(file, value) {
   writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+/**
+ * @param {Record<string, JsonValue | undefined>} target
+ * @param {Record<string, JsonValue | undefined> | undefined} source
+ * @returns {Record<string, JsonValue | undefined>}
+ */
 function deepMerge(target, source) {
   Object.entries(source || {}).forEach(([key, value]) => {
     if (isPlainObject(value) && isPlainObject(target[key])) {
@@ -79,6 +96,7 @@ function deepMerge(target, source) {
   return target;
 }
 
+/** @param {unknown} value */
 export function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
