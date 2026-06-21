@@ -38,6 +38,15 @@
         "localLicense": "assets/generated/tower/sheet-20260614/README.md"
       },
       {
+        "id": "user_enemy_boss_sprite_sheets_20260621",
+        "name": "User Provided Enemy and Boss Sprite Sheets",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/spritesheets/README.md"
+      },
+      {
         "id": "user_skill_sfx_20260615",
         "name": "User Provided Skill Sound Effects",
         "license": "User provided for this project",
@@ -114,6 +123,52 @@
         "crimson_hexer": "assets/generated/tower/sheet-20260614/spider-red.png?v=sheet-20260614",
         "obsidian_bulwark": "assets/generated/tower/sheet-20260614/crystal-golem.png?v=sheet-20260614",
         "boss": "assets/generated/tower/sheet-20260614/demon-boss.png?v=sheet-20260614"
+      },
+      "spriteSheets": {
+        "enemies": {
+          "id": "enemy_sheet_tower_pack",
+          "path": "assets/generated/tower/spritesheets/enemies-tower-pack.png?v=spritesheets-20260621",
+          "kind": "spritesheet",
+          "columns": 6,
+          "rows": 8,
+          "animations": {
+            "drifter": { "row": 0, "frames": [0, 1, 2, 3, 4, 5], "fps": 8, "loop": true },
+            "skitter": { "row": 1, "frames": [0, 1, 2, 3, 4, 5], "fps": 12, "loop": true },
+            "bulwark": { "row": 2, "frames": [0, 1, 2, 3, 4, 5], "fps": 7, "loop": true },
+            "hexer": { "row": 3, "frames": [0, 1, 2, 3, 4, 5], "fps": 8, "loop": true },
+            "verdant_skitter": { "row": 4, "frames": [0, 1, 2, 3, 4, 5], "fps": 13, "loop": true },
+            "dusk_crawler": { "row": 5, "frames": [0, 1, 2, 3, 4, 5], "fps": 9, "loop": true },
+            "crimson_hexer": { "row": 6, "frames": [0, 1, 2, 3, 4, 5], "fps": 9, "loop": true },
+            "obsidian_bulwark": { "row": 7, "frames": [0, 1, 2, 3, 4, 5], "fps": 7, "loop": true }
+          }
+        },
+        "bosses": {
+          "id": "boss_sheet_tower_pack",
+          "path": "assets/generated/tower/spritesheets/bosses-tower-pack.png?v=spritesheets-20260621",
+          "kind": "spritesheet",
+          "columns": 9,
+          "rows": 3,
+          "animations": {
+            "warden": {
+              "row": 0,
+              "idle": { "frames": [0, 1, 2], "fps": 5, "loop": true },
+              "windup": { "frames": [3, 4, 5], "fps": 8, "loop": false },
+              "release": { "frames": [6, 7, 8], "fps": 10, "loop": false }
+            },
+            "charger": {
+              "row": 1,
+              "idle": { "frames": [0, 1, 2], "fps": 6, "loop": true },
+              "windup": { "frames": [3, 4, 5], "fps": 9, "loop": false },
+              "release": { "frames": [6, 7, 8], "fps": 12, "loop": false }
+            },
+            "turret": {
+              "row": 2,
+              "idle": { "frames": [0, 1, 2], "fps": 5, "loop": true },
+              "windup": { "frames": [3, 4, 5], "fps": 8, "loop": false },
+              "release": { "frames": [6, 7, 8], "fps": 10, "loop": false }
+            }
+          }
+        }
       },
       "weapons": {
         "spark_bolt": {

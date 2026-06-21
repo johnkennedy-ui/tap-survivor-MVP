@@ -12,17 +12,23 @@
       const game = getGame();
       const p = game.player;
       game.enemies.forEach((enemy) => {
+        const previousX = enemy.x;
+        const previousY = enemy.y;
+        enemy.animTime = (enemy.animTime || 0) + dt;
+        enemy.attackVisualTimer = Math.max(0, (enemy.attackVisualTimer || 0) - dt);
         if (enemy.boss && enemy.dropTimer > 0) {
           enemy.dropTimer = Math.max(0, enemy.dropTimer - dt);
           const progress = 1 - enemy.dropTimer / enemy.dropWindup;
           enemy.x = enemy.startX + (enemy.landingX - enemy.startX) * progress;
           enemy.y = enemy.startY + (enemy.landingY - enemy.startY) * progress;
+          updateEnemyVelocity(enemy, previousX, previousY, dt);
           return;
         }
         const dx = p.x - enemy.x;
         const dy = p.y - enemy.y;
         const dist = Math.max(1, Math.hypot(dx, dy));
         if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
+          updateEnemyVelocity(enemy, previousX, previousY, dt);
           applyEnemyTouch(enemy, dt);
           return;
         }
@@ -39,6 +45,7 @@
           }
         }
         applyEnemyTouch(enemy, dt);
+        updateEnemyVelocity(enemy, previousX, previousY, dt);
       });
     }
 
@@ -137,6 +144,7 @@
 
     function spawnEnemyBolt(enemy, dirX, dirY) {
       const game = getGame();
+      enemy.attackVisualTimer = 0.26;
       game.enemyBolts.push({
         x: enemy.x,
         y: enemy.y,
@@ -148,6 +156,12 @@
         maxLife: boltConfig.life || 2.2,
         color: enemy.color,
       });
+    }
+
+    function updateEnemyVelocity(enemy, previousX, previousY, dt) {
+      const divisor = Math.max(dt, 0.0001);
+      enemy.vx = (enemy.x - previousX) / divisor;
+      enemy.vy = (enemy.y - previousY) / divisor;
     }
 
     function updateEnemyBolts(dt) {

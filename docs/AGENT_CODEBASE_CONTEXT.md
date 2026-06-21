@@ -43,6 +43,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/weapon-behaviors.js`: non-projectile weapon behavior handlers for beams, cones, radial pulses, chains, target areas, lingering areas, mines, and area/beam/burst updates.
 - `src/math.js`: shared math and formatting helpers for runtime modules.
 - `src/sprites.js`: shared sprite loading and canvas draw helper with per-size raster caching for SVG sprite performance.
+- `src/sprite-sheet-renderer.js`: focused animated sprite-sheet drawer for enemy and boss sheet frames; it extends the existing `TapSurvivorSprites` namespace and returns false for fallback rendering.
 - `src/assets.js`: shared resolver for effect sprites, clean icons, relic icons, level-up icons, and fallback asset paths.
 - `src/upgrades.js`: generated weapon upgrade definitions plus the small run-upgrade effect interpreter.
 - `src/styles.css`: page, panel, modal, and responsive styling.
@@ -117,6 +118,7 @@ The project is mixed but mostly registry-driven:
 - Maps: use `npm run add:content -- map <id> ...` or edit `content/registry/maps.json`.
 - Characters: use `npm run add:content -- character <id> ...` or edit `content/registry/characters.json`.
 - Sprites/assets: add files under `assets/<source>/<pack>/`, register source/license in `assets.sources`, then map logical IDs in `assets.sprites`.
+- Enemy/boss sprite sheets live under `assets/generated/tower/spritesheets/` and are registered in `assets.sprites.spriteSheets`; validate them with `npm run verify:assets` and `npm run smoke:spritesheets`.
 
 ## Where Not To Edit Unless Necessary
 

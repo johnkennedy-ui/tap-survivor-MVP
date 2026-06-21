@@ -29,6 +29,7 @@ Before editing this repo:
 25. New math helper consumers should receive/import math helpers explicitly instead of reading `globalThis.TapSurvivorMath`; keep the existing compatibility bridge only until the script-order runtime is migrated.
 26. New HUD renderer consumers should receive/import `createHudRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderHud`; keep the existing compatibility bridge only until the rendering stack is migrated.
 27. New enemy renderer consumers should receive/import `createEnemyRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderEnemies`; keep the existing compatibility bridge only until the rendering stack is migrated.
+28. Enemy/boss sprite-sheet work belongs in `assets.sprites.spriteSheets` metadata plus `src/sprite-sheet-renderer.js`; preserve fallback order: sheet frame, existing single sprite/SVG, then shape rendering.
 
 ## Frank Anti-Lockup Tools
 

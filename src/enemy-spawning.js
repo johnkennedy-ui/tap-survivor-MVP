@@ -126,6 +126,10 @@ function createEnemySpawnSystem({
       projectileSpeed: speed,
       projectileDamage: (type.projectileDamage || type.damage) * difficulty.damage,
       shootTimer: Math.random() * cooldown,
+      animTime: Math.random(),
+      attackVisualTimer: 0,
+      vx: 0,
+      vy: 0,
     });
   }
 

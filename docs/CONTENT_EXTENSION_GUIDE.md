@@ -168,6 +168,15 @@ npm run add:content -- character character_runner --name "Runner" --description 
 6. Do not hard-code asset paths in `src/game.js`, `src/combat.js`, or `src/rendering.js`.
 7. Run `npm run build:content && npm run validate:content`.
 
+## Add Enemy Or Boss Sprite-Sheet Animation
+
+1. Put runtime sheets under `assets/generated/tower/spritesheets/`.
+2. Register sheet metadata under `assets.sprites.spriteSheets` in `content/registry/assets.json`.
+3. Enemy sheet rows currently map to `drifter`, `skitter`, `bulwark`, `hexer`, `verdant_skitter`, `dusk_crawler`, `crimson_hexer`, and `obsidian_bulwark`.
+4. Boss sheet rows currently map to `warden`, `charger`, and `turret`; each boss row defines `idle`, `windup`, and `release`.
+5. Runtime fallback order is sprite-sheet frame, then `assets.sprites.enemies`, then shape rendering.
+6. Run `npm run build:content`, `npm run validate:content`, `npm run verify:assets`, `npm run smoke:assets`, and `npm run smoke:spritesheets`.
+
 ## Extract Sprites From A Sheet
 
 Use `scripts/extract-sprites.mjs` to split PNG sheets into trimmed PNG files.

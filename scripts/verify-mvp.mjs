@@ -26,6 +26,7 @@ const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
 const math = readRequired("src/math.js");
 const sprites = readRequired("src/sprites.js");
+const spriteSheetRenderer = readRequired("src/sprite-sheet-renderer.js");
 const assets = readRequired("src/assets.js");
 const audio = readRequired("src/audio.js");
 const quests = readRequired("src/quests.js");
@@ -321,6 +322,7 @@ check(
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
+check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && index.includes("src/sprite-sheet-renderer.js") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
 check("shared asset resolver exists", assets.includes("TapSurvivorAssets") && levelUp.includes("TapSurvivorAssets") && shellUi.includes("TapSurvivorAssets"));
 check("shared audio helper exists", audio.includes("TapSurvivorAudio") && game.includes("TapSurvivorAudio") && audio.includes("setMuted"));
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
@@ -385,7 +387,7 @@ check(
 );
 check("sound effect wiring helper exists", pkg.includes('"sfx:add"') && addSfx.includes("run-upgrade") && addSfx.includes("content.assets.sfx[bucket]") && agentCheck.includes("scripts/add-sfx.mjs"));
 check("focused agent maintenance tooling exists", pkg.includes('"agent:finish"') && pkg.includes('"content:check"') && pkg.includes('"verify:assets"') && agentCheck.includes("focusedChecks") && agentPrepush.includes("--full"));
-check("asset and audio regression smokes exist", pkg.includes('"smoke:assets"') && pkg.includes('"smoke:audio"') && smokeAssetResolver.includes("weapon choice uses clean icon source") && smokeAudioScaling.includes("fast weapon playback rate is applied") && agentCheck.includes("smoke:assets") && agentCheck.includes("smoke:audio"));
+check("asset and audio regression smokes exist", pkg.includes('"smoke:assets"') && pkg.includes('"smoke:spritesheets"') && pkg.includes('"smoke:audio"') && smokeAssetResolver.includes("weapon choice uses clean icon source") && smokeAudioScaling.includes("fast weapon playback rate is applied") && agentCheck.includes("smoke:assets") && agentCheck.includes("smoke:spritesheets") && agentCheck.includes("smoke:audio"));
 check("sprite sheet extraction helper exists", pkg.includes('"sprites:extract"') && extractSprites.includes("autoDetectSprites") && extractSprites.includes("trimBounds") && extractSprites.includes("writePng"));
 check("sprite extraction smoke exists", pkg.includes('"smoke:sprite-extract"') && smokeExtractSprites.includes("auto extraction writes two sprites") && agentCheck.includes("smoke:sprite-extract"));
 

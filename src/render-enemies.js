@@ -1,9 +1,11 @@
 (() => {
-function createEnemyRenderer({ ctx, drawSprite, clamp }) {
-  function drawEnemy(enemy) {
+function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clamp }) {
+  function drawEnemy(enemy, game) {
     const enemySprite = enemy.boss ? "enemy:boss" : `enemy:${enemy.assetId || enemy.type}`;
     const spriteSize = enemy.boss ? Math.max(92, enemy.radius * 2.9) : Math.max(34, enemy.radius * 3.8);
-    const enemyDrawn = drawSprite(enemySprite, enemy.x, enemy.y, spriteSize);
+    const enemyDrawn = drawEnemySpriteSheet(enemy, game, spriteSize) || drawSprite(enemySprite, enemy.x, enemy.y, spriteSize, 0, {
+      flipX: enemyFacesLeft(enemy),
+    });
     if (!enemyDrawn) {
       ctx.fillStyle = enemy.boss ? "#ff4f8b" : enemy.color;
       ctx.beginPath();
@@ -29,6 +31,66 @@ function createEnemyRenderer({ ctx, drawSprite, clamp }) {
     } else if (enemy.type === "bulwark") {
       strokeEnemyRing(enemy, "#dff6ff", 3);
     }
+  }
+
+  function drawEnemySpriteSheet(enemy, game, spriteSize) {
+    if (!spriteSheetRenderer?.drawAnimation) return false;
+    const animationTime = Number(enemy.animTime || 0);
+    if (enemy.boss) {
+      const bossAnimationId = bossAnimationIdFor(enemy);
+      return spriteSheetRenderer.drawAnimation(
+        "bosses",
+        bossAnimationId,
+        bossAnimationState(enemy, game, bossAnimationId),
+        enemy.x,
+        enemy.y,
+        spriteSize,
+        spriteSize,
+        { flipX: enemyFacesLeft(enemy), time: animationTime },
+      );
+    }
+    return spriteSheetRenderer.drawAnimation(
+      "enemies",
+      enemy.assetId || enemy.type,
+      "idle",
+      enemy.x,
+      enemy.y,
+      spriteSize,
+      spriteSize,
+      { flipX: enemyFacesLeft(enemy), time: animationTime },
+    );
+  }
+
+  function bossAnimationIdFor(enemy) {
+    if (enemy.bossKind) return enemy.bossKind;
+    return enemy.bossAbilities?.[0] || "warden";
+  }
+
+  function bossAnimationState(enemy, game, animationId) {
+    if (animationId === "charger") {
+      if (enemy.chargeState === "windup") return "windup";
+      if (enemy.chargeState === "charging") return "release";
+    }
+    if (animationId === "warden") {
+      const shockwave = activeBossAttack(game, "shockwave", enemy);
+      if (shockwave) return shockwave.age < shockwave.windup ? "windup" : "release";
+      if (enemy.dropTimer > 0) return "windup";
+    }
+    if (animationId === "turret") {
+      if ((enemy.attackVisualTimer || 0) > 0) return "release";
+      if (enemy.shootTimer <= Math.min(0.45, (enemy.projectileCooldown || 1) * 0.28)) return "windup";
+    }
+    return "idle";
+  }
+
+  function activeBossAttack(game, type, enemy) {
+    return game?.bossAttacks?.find((attack) => attack.type === type && Math.hypot(attack.x - enemy.x, attack.y - enemy.y) <= Math.max(190, enemy.radius * 5));
+  }
+
+  function enemyFacesLeft(enemy) {
+    if (Number.isFinite(enemy.vx)) return enemy.vx < -1;
+    if (Number.isFinite(enemy.chargeDirX)) return enemy.chargeDirX < -0.1;
+    return false;
   }
 
   function drawEnemyFloorTint(enemy, spriteSize) {

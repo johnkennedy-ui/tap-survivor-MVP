@@ -299,6 +299,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null, sear
     "src/content-registry.js",
     "src/map-system.js",
     "src/progression.js",
+    "src/sprite-sheet-renderer.js",
     "src/render-skill-rail.js",
     "src/render-hud.js",
     "src/render-enemies.js",

@@ -1,17 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
+import { readContent } from "./content-tools.mjs";
 
 const domain = process.argv[2] || "help";
-const content = readJson("content/tap-survivor-content.json");
+const content = readContent();
 const files = new Map();
 let failed = false;
 
 function read(path) {
   if (!files.has(path)) files.set(path, existsSync(path) ? readFileSync(path, "utf8") : "");
   return files.get(path);
-}
-
-function readJson(path) {
-  return JSON.parse(readFileSync(path, "utf8"));
 }
 
 function check(name, pass) {
@@ -25,10 +22,16 @@ function usage() {
 
 function verifyAssets() {
   const sprites = content.assets?.sprites || {};
+  const spriteSheets = sprites.spriteSheets || {};
   check("asset resolver module is loaded", read("index.html").includes("src/assets.js") && read("src/assets.js").includes("createAssetResolver"));
   check("weapons have effect sprites and clean icons", Object.keys(content.weapons || {}).every((id) => sprites.weapons?.[id]?.src && sprites.weapons?.[id]?.iconSrc));
   check("run upgrades have effect sprites and clean icons", (content.runUpgrades || []).every((upgrade) => sprites.runUpgrades?.[upgrade.id]?.src && sprites.runUpgradeIcons?.[upgrade.id]));
-  check("split skill sprites are used", Object.values(sprites.weapons || {}).every((sprite) => sprite.src?.includes("skill-effects/split/skill-")) && Object.values(sprites.runUpgrades || {}).every((sprite) => sprite.src?.includes("skill-effects/split/skill-")));
+  check(
+    "split skill sprites are used",
+    Object.values(sprites.weapons || {}).every((sprite) => sprite.src?.includes("skill-effects/split/skill-")) &&
+      Object.values(sprites.runUpgrades || {}).every((sprite) => sprite.src?.includes("skill-effects/split/skill-")),
+  );
+  check("enemy and boss sprite sheets are registered", spriteSheets.enemies?.path?.includes("spritesheets/enemies-tower-pack.png") && spriteSheets.bosses?.path?.includes("spritesheets/bosses-tower-pack.png"));
 }
 
 function verifyAudio() {

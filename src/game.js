@@ -36,7 +36,12 @@ const {
   content,
   upgradeContent,
 });
-const spriteSystem = globalThis.TapSurvivorSprites.createSpriteSystem({ ctx, spriteDefs });
+const spriteHelpers = globalThis.TapSurvivorSprites;
+const spriteSystem = spriteHelpers.createSpriteSystem({ ctx, spriteDefs });
+const spriteSheetRenderer = spriteHelpers.createSpriteSheetRenderer({
+  ctx,
+  spriteSheets: spriteDefs.spriteSheets || {},
+});
 const audioSystem = globalThis.TapSurvivorAudio.createAudioSystem({ sfxDefs });
 const mapSystem = globalThis.TapSurvivorMapSystem.createMapSystem({
   mapDefs,
@@ -374,6 +379,7 @@ const renderer = globalThis.TapSurvivorRendering.createRenderer({
   createHudRenderer: globalThis.TapSurvivorRenderHud.createHudRenderer,
   drawImage: spriteSystem.drawImage,
   drawSprite: spriteSystem.drawSprite,
+  spriteSheetRenderer,
   weaponDefs,
 });
 

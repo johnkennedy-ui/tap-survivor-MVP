@@ -1,5 +1,5 @@
 (() => {
-function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, drawImage, drawSprite, weaponDefs }) {
+function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, drawImage, drawSprite, spriteSheetRenderer, weaponDefs }) {
   const skillEffectSprites = globalThis.TapSurvivorContent?.assets?.sprites?.weapons || {};
   const hudRenderer = createHudRenderer({
     canvas,
@@ -12,6 +12,7 @@ function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRend
   const enemyRenderer = createEnemyRenderer({
     ctx,
     drawSprite,
+    spriteSheetRenderer,
     clamp,
   });
 
@@ -30,7 +31,7 @@ function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRend
     game.lootDrops.forEach(drawLoot);
     game.bolts.forEach(drawBolt);
     game.enemyBolts.forEach(enemyRenderer.drawEnemyBolt);
-    game.enemies.forEach(enemyRenderer.drawEnemy);
+    game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
     game.beams.forEach(drawBeam);
     game.pickupTexts.forEach(drawPickupText);
     drawPlayer(game.player);

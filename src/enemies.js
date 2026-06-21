@@ -110,6 +110,10 @@ function createEnemySystem({
       projectileSpeed: turretSpeed,
       projectileDamage: (superBoss ? bossAbilities.turret.superProjectileDamage : bossAbilities.turret.projectileDamage) * difficulty.damage,
       shootTimer: turretBoss ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game) : 0,
+      animTime: 0,
+      attackVisualTimer: 0,
+      vx: 0,
+      vy: 0,
     };
     const cooldown = nextBossAttackCooldown(boss);
     game.bossAttackTimer = cooldown;

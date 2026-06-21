@@ -92,6 +92,7 @@ export function validateContent(content) {
   const runUpgradePlayerStats = schema.effectRegistries?.runUpgrade?.playerStatAddStats || [];
   const weaponBehaviorKinds = schema.behaviorRegistries?.weaponKinds?.ids || [];
   const bossAbilityKinds = schema.behaviorRegistries?.bossAbilityKinds?.ids || [];
+  const spriteSheets = assets.sprites?.spriteSheets || {};
 
   const seenUnlocks = new Set();
   const seenMetaUpgrades = new Set();
@@ -248,7 +249,7 @@ export function validateContent(content) {
         fail(`enemy ${enemy.id} has unsupported behaviorKind ${enemy.behaviorKind}`);
       }
     }
-    if (enemy.assetId && assets.sprites?.enemies && !assets.sprites.enemies[enemy.assetId]) {
+    if (enemy.assetId && assets.sprites?.enemies && !assets.sprites.enemies[enemy.assetId] && !spriteSheets.enemies?.animations?.[enemy.assetId]) {
       fail(`enemy ${enemy.id} references missing enemy asset ${enemy.assetId}`);
     }
   });
@@ -258,6 +259,9 @@ export function validateContent(content) {
     (Array.isArray(bossConfig.abilityIds) ? bossConfig.abilityIds : []).forEach((abilityId) => {
       requireString(abilityId, "bossConfig.abilityIds item");
       if (!bossAbilities[abilityId]) fail(`bossConfig references missing boss ability ${abilityId}`);
+      if (!assets.sprites?.enemies?.boss && !spriteSheets.bosses?.animations?.[abilityId]) {
+        fail(`bossConfig ability ${abilityId} has no boss sprite sheet animation or fallback boss sprite`);
+      }
       if (bossAbilityKinds.length && !bossAbilityKinds.includes(abilityId)) {
         fail(`bossConfig references unsupported boss ability ${abilityId}`);
       }
@@ -345,6 +349,7 @@ export function validateContent(content) {
   });
 
   function validateSpritePath(value, owner) {
+    if (owner === "assets.sprites.spriteSheets") return;
     if (typeof value === "string") {
       const localPath = value.split("?")[0];
       if (!existsSync(join(root, localPath))) fail(`${owner} references missing asset ${value}`);
@@ -357,6 +362,7 @@ export function validateContent(content) {
 
   validateSpritePath(assets.sprites, "assets.sprites");
   validateSpritePath(assets.sfx, "assets.sfx");
+  validateSpriteSheets(spriteSheets);
 
   validateShopItems(shopItems, { fail, requireNumber, requireString, schema, validateSpritePath });
 
@@ -446,4 +452,38 @@ export function validateContent(content) {
   }
 
   return errors;
+
+  function validateSpriteSheets(sheets) {
+    if (!sheets) return;
+    requireObject(sheets, "assets.sprites.spriteSheets");
+    Object.entries(sheets).forEach(([sheetKey, sheet]) => {
+      requireString(sheet.id, `assets.sprites.spriteSheets.${sheetKey}.id`);
+      requireString(sheet.path, `assets.sprites.spriteSheets.${sheetKey}.path`);
+      if (sheet.kind !== "spritesheet") fail(`assets.sprites.spriteSheets.${sheetKey}.kind must be spritesheet`);
+      requireNumber(sheet.columns, `assets.sprites.spriteSheets.${sheetKey}.columns`, 1);
+      requireNumber(sheet.rows, `assets.sprites.spriteSheets.${sheetKey}.rows`, 1);
+      validateSpritePath(sheet.path, `assets.sprites.spriteSheets.${sheetKey}.path`);
+      requireObject(sheet.animations, `assets.sprites.spriteSheets.${sheetKey}.animations`);
+      Object.entries(sheet.animations || {}).forEach(([animationId, animation]) => {
+        const states = Array.isArray(animation.frames)
+          ? { default: animation }
+          : Object.fromEntries(Object.entries(animation || {}).filter(([, value]) => value && typeof value === "object"));
+        Object.entries(states).forEach(([state, stateAnimation]) => {
+          const row = stateAnimation.row ?? animation.row;
+          requireNumber(row, `assets.sprites.spriteSheets.${sheetKey}.${animationId}.${state}.row`, 0);
+          if (Number.isFinite(row) && row >= sheet.rows) {
+            fail(`assets.sprites.spriteSheets.${sheetKey}.${animationId}.${state}.row is outside sheet rows`);
+          }
+          requireArray(stateAnimation.frames, `assets.sprites.spriteSheets.${sheetKey}.${animationId}.${state}.frames`);
+          (Array.isArray(stateAnimation.frames) ? stateAnimation.frames : []).forEach((frame) => {
+            requireNumber(frame, `assets.sprites.spriteSheets.${sheetKey}.${animationId}.${state}.frames item`, 0);
+            if (Number.isFinite(frame) && frame >= sheet.columns) {
+              fail(`assets.sprites.spriteSheets.${sheetKey}.${animationId}.${state}.frame ${frame} is outside sheet columns`);
+            }
+          });
+          requireNumber(stateAnimation.fps, `assets.sprites.spriteSheets.${sheetKey}.${animationId}.${state}.fps`, 1);
+        });
+      });
+    });
+  }
 }
