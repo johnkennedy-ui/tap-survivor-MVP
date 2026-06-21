@@ -5,7 +5,7 @@ const ctx = canvas.getContext("2d");
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";
 
-const content = globalThis.TapSurvivorContent || {};
+const content = globalThis.TapSurvivorBalanceRuntime?.content?.() || globalThis.TapSurvivorContent || {};
 const upgradeContent = globalThis.TapSurvivorUpgrades || {};
 const { clamp, distance, randomRange, formatTime } = globalThis.TapSurvivorMath;
 const { questOpenIds } = globalThis.TapSurvivorQuests;
@@ -38,6 +38,11 @@ const {
 });
 const spriteSystem = globalThis.TapSurvivorSprites.createSpriteSystem({ ctx, spriteDefs });
 const audioSystem = globalThis.TapSurvivorAudio.createAudioSystem({ sfxDefs });
+const mapSystem = globalThis.TapSurvivorMapSystem.createMapSystem({
+  mapDefs,
+  levelDefs,
+  spriteDefs,
+});
 
 const storageAdapter = globalThis.TapSurvivorStorage.createStorageAdapter({
   saveKey,
@@ -147,6 +152,7 @@ const relicSystem = globalThis.TapSurvivorRelics.createRelicSystem({
 
 const runStateSystem = globalThis.TapSurvivorRunState.createRunStateSystem({
   canvas,
+  mapSystem,
   getSave: () => save,
   getShopBonuses: () => shopSystem.getShopBonuses(),
   getUpgradeTier,
@@ -205,6 +211,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   bossConfig,
   bossAbilities,
   levelDefs,
+  getActiveFloorDef: () => game?.activeFloor,
   weaponDefs,
   getGame: () => game,
   getUpgradeTier,
@@ -257,6 +264,7 @@ runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
   showLevelUp: () => levelUpSystem.showLevelUp(),
   endRun,
   getRelicSpecialEffects,
+  mapSystem,
   clamp,
 });
 
@@ -287,6 +295,7 @@ const debugSystem = globalThis.TapSurvivorDebug.createDebugSystem({
   getRunUpgradeTier,
   maxEquippedWeapons,
   getWeaponDamageMultiplier,
+  getActiveProfile: () => globalThis.TapSurvivorDebugBalance?.getActiveProfile?.() || "default",
   relicDefs,
   runUpgradeDefs,
 });

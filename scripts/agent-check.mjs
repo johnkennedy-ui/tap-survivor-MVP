@@ -30,6 +30,8 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-audio-scaling.mjs"]],
   ["node", ["--check", "scripts/smoke-content-tools.mjs"]],
   ["node", ["--check", "scripts/smoke-add-content.mjs"]],
+  ["node", ["--check", "scripts/smoke-balance-runtime.mjs"]],
+  ["node", ["--check", "scripts/smoke-map-runtime.mjs"]],
   ["node", ["--check", "scripts/smoke-relic-run-start.mjs"]],
   ["node", ["--check", "scripts/extract-sprites.mjs"]],
   ["node", ["--check", "scripts/smoke-extract-sprites.mjs"]],
@@ -59,6 +61,8 @@ const fullChecks = [
   ["npm", ["run", "smoke:quest-flow"]],
   ["npm", ["run", "smoke:content-tools"]],
   ["npm", ["run", "smoke:add-content"]],
+  ["npm", ["run", "smoke:balance-runtime"]],
+  ["npm", ["run", "smoke:map-runtime"]],
   ["npm", ["run", "smoke:sprite-extract"]],
   ["npm", ["test"]],
 ];

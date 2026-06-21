@@ -5,6 +5,7 @@ import vm from "node:vm";
 const root = new URL("..", import.meta.url).pathname;
 const source = readFileSync(join(root, "src/game.js"), "utf8");
 const contentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
+const balanceRuntimeSource = readFileSync(join(root, "src/balance-runtime.js"), "utf8");
 const mathSource = readFileSync(join(root, "src/math.js"), "utf8");
 const spritesSource = readFileSync(join(root, "src/sprites.js"), "utf8");
 const audioSource = readFileSync(join(root, "src/audio.js"), "utf8");
@@ -18,6 +19,7 @@ const saveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const effectsSource = readFileSync(join(root, "src/effects.js"), "utf8");
 const upgradeSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const contentRegistrySource = readFileSync(join(root, "src/content-registry.js"), "utf8");
+const mapSystemSource = readFileSync(join(root, "src/map-system.js"), "utf8");
 const progressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const renderSkillRailSource = readFileSync(join(root, "src/render-skill-rail.js"), "utf8");
 const renderHudSource = readFileSync(join(root, "src/render-hud.js"), "utf8");
@@ -213,6 +215,9 @@ const context = {
       this.store.delete(key);
     },
   },
+  location: {
+    search: "",
+  },
   document: {
     body: { dataset: {} },
     getElementById(id) {
@@ -229,6 +234,7 @@ const context = {
 
 vm.createContext(context);
 vm.runInContext(contentSource, context);
+vm.runInContext(balanceRuntimeSource, context);
 vm.runInContext(mathSource, context);
 vm.runInContext(spritesSource, context);
 vm.runInContext(audioSource, context);
@@ -242,6 +248,7 @@ vm.runInContext(saveSource, context);
 vm.runInContext(effectsSource, context);
 vm.runInContext(upgradeSource, context);
 vm.runInContext(contentRegistrySource, context);
+vm.runInContext(mapSystemSource, context);
 vm.runInContext(progressionSource, context);
 vm.runInContext(renderSkillRailSource, context);
 vm.runInContext(renderHudSource, context);

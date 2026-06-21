@@ -8,6 +8,7 @@
     getRunUpgradeTier,
     maxEquippedWeapons,
     getWeaponDamageMultiplier,
+    getActiveProfile,
     relicDefs,
     runUpgradeDefs,
   }) {
@@ -47,6 +48,10 @@
 
       ui.debugStats.textContent = [
         `Floor: ${floor}`,
+        `Balance profile: ${getActiveProfile?.() || "default"}`,
+        `Map: ${game?.activeMap?.name || game?.activeMap?.id || "default"}`,
+        `Floor content: ${game?.activeFloor?.name || game?.activeFloor?.id || "none"}`,
+        `Map modifiers: ${Object.keys(game?.mapModifiers || {}).length ? JSON.stringify(game.mapModifiers) : "none"}`,
         `Enemy HP x${difficulty.hp.toFixed(2)}`,
         `Enemy DMG x${difficulty.damage.toFixed(2)}`,
         `Spawn pressure x${difficulty.spawnRate.toFixed(2)}`,

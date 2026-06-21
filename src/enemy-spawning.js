@@ -3,6 +3,7 @@ function createEnemySpawnSystem({
   canvas,
   enemyTypes,
   levelDefs = [],
+  getActiveFloorDef,
   getGame,
   floorDifficulty,
   spawnEntryMargin = 72,
@@ -32,6 +33,8 @@ function createEnemySpawnSystem({
   }
 
   function activeLevelDef() {
+    const resolved = getActiveFloorDef?.();
+    if (resolved) return resolved;
     const game = getGame();
     return orderedLevelDefs.reduce(
       (active, level) => (game.elapsed >= level.startsAt ? level : active),

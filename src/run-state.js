@@ -1,5 +1,5 @@
 (() => {
-  function createRunStateSystem({ canvas, getSave, getShopBonuses, getUpgradeTier, maxEquippedWeapons }) {
+  function createRunStateSystem({ canvas, mapSystem, getSave, getShopBonuses, getUpgradeTier, maxEquippedWeapons }) {
     function createPlayer() {
       const moveTier = getUpgradeTier("move_speed");
       const pickupTier = getUpgradeTier("pickup_radius");
@@ -28,7 +28,7 @@
     }
 
     function resetGameState() {
-      return {
+      const run = {
         running: true,
         paused: false,
         pauseReason: "",
@@ -62,6 +62,8 @@
         levelUps: 0,
         endReason: "",
       };
+      mapSystem?.applyToGame?.(run);
+      return run;
     }
 
     function applyRunMetaUpgrades(game) {

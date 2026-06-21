@@ -7072,3 +7072,20 @@ globalThis.TapSurvivorContentSchema = {
     ]
   }
 };
+globalThis.TapSurvivorBalanceProfiles = [
+  {
+    "profileId": "default",
+    "description": "Default balance profile. Empty overrides preserve committed registry values.",
+    "overrides": {}
+  },
+  {
+    "profileId": "dev-fast",
+    "description": "Developer-only profile placeholder. Add local numeric overrides here for faster testing.",
+    "overrides": {}
+  },
+  {
+    "profileId": "testing",
+    "description": "Automated-test profile placeholder. Empty by default to avoid gameplay drift.",
+    "overrides": {}
+  }
+];

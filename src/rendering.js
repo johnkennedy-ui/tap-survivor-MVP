@@ -63,7 +63,8 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
   }
 
   function drawArena(game) {
-    const backgroundDrawn = drawImage?.("background:tower_floor", 0, 0, canvas.width, canvas.height);
+    const backgroundId = game?.background?.spriteId || "background:tower_floor";
+    const backgroundDrawn = drawImage?.(backgroundId, 0, 0, canvas.width, canvas.height);
     if (!backgroundDrawn) {
       ctx.fillStyle = "#17202c";
       ctx.fillRect(0, 0, canvas.width, canvas.height);

@@ -11,6 +11,7 @@
     showLevelUp,
     endRun,
     getRelicSpecialEffects,
+    mapSystem,
     clamp,
   }) {
     function movePlayer(player, dt) {
@@ -35,6 +36,7 @@
       const player = game.player;
       if (game.awaitingFirstMoveInput) return;
       game.elapsed += dt;
+      mapSystem?.applyToGame?.(game);
       addQuestProgressGroup(survivalQuestIds, dt);
       if (game.elapsed >= game.duration) {
         combat.spawnBoss();

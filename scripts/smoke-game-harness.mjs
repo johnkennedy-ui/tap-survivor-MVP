@@ -99,7 +99,7 @@ function readSource(path) {
   return readFileSync(join(root, path), "utf8");
 }
 
-export function createGameHarness({ fakeCombat = false, initialSave = null } = {}) {
+export function createGameHarness({ fakeCombat = false, initialSave = null, search = "", storageEntries = {} } = {}) {
   const elements = new Map();
   const ids = [
     "game",
@@ -251,6 +251,9 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
         this.store.delete(key);
       },
     },
+    location: {
+      search,
+    },
     document: {
       body: { dataset: {} },
       visibilityState: "visible",
@@ -272,10 +275,14 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
   if (initialSave) {
     context.localStorage.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
   }
+  Object.entries(storageEntries).forEach(([key, value]) => {
+    context.localStorage.store.set(key, value);
+  });
 
   vm.createContext(context);
   [
     "src/content.generated.js",
+    "src/balance-runtime.js",
     "src/assets.js",
     "src/math.js",
     "src/sprites.js",
@@ -290,6 +297,7 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "src/effects.js",
     "src/upgrades.js",
     "src/content-registry.js",
+    "src/map-system.js",
     "src/progression.js",
     "src/render-skill-rail.js",
     "src/render-hud.js",

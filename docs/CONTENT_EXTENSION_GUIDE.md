@@ -15,6 +15,7 @@
 - Machine-readable content schema: `content/tap-survivor-schema.json`.
 - Balance profiles: `content/balance/*.json`.
 - Generated content and schema globals: `src/content.generated.js`.
+- Dev-only runtime balance bridge: `src/balance-runtime.js`.
 - Sprites and licenses: `assets/<source>/<pack>/`.
 - Agent docs: `docs/`.
 
@@ -43,6 +44,7 @@
 - Numeric tuning such as shop and loot rates: `content/registry/tuning.json`.
 
 Use `npm run build:content` to assemble these domains into `src/content.generated.js`.
+The generated file also embeds `globalThis.TapSurvivorBalanceProfiles` so dev tools can select a safe local profile without remote loading.
 
 ## Balance Profiles
 
@@ -203,6 +205,8 @@ npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/gen
 - `npm run build:content` passes.
 - `npm run validate:content` passes.
 - `npm run balance:check` passes after editing `content/balance/*.json`.
+- Runtime profile selection is dev-only through `?balance=<profile>`, `localStorage.tapSurvivor.balanceProfile`, or `window.TapSurvivorDebugBalance.setProfile("<profile>")`.
+- Local overrides use `window.TapSurvivorDebugBalance.applyOverrides(overrides)`, are rejected for unknown IDs/fields, and stay in memory unless `saveOverrides()` is called.
 - `npm run content:summary`, `npm run balance:summary`, and `npm run balance:diff -- <profile>` show expected values after structural or balance work.
 - `npm run verify:script-order` passes after `index.html` or `src/*.js` script dependency changes.
 - `npm run audit:quests` passes if quests or unlock gates changed.
