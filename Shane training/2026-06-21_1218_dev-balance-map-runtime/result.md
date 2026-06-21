@@ -5,6 +5,7 @@ Request: add dev-only runtime balance profile selection, local override sandbox,
 Files inspected included content registry/balance JSON, content tooling, schema, runtime game/combat/spawn/render/shop/pickup modules, docs, README, and AGENTS.md.
 
 Implemented:
+
 - Generated `globalThis.TapSurvivorBalanceProfiles` from `content/balance/*.json`.
 - Added `src/balance-runtime.js` for dev-only `?balance=...`, `localStorage.tapSurvivor.balanceProfile`, and `window.TapSurvivorDebugBalance`.
 - Added `src/map-system.js` to resolve active map/floor/background/modifiers and expose them on run state.
@@ -15,6 +16,7 @@ Implemented:
 - Left `scripts/content-tools.mjs` unsplit; it owns assembly, validation, balance overlays, and reporting, so splitting it in this slice would broaden review risk.
 
 Validation:
+
 - `npm run verify:script-order` PASS
 - `npm run build:content` PASS
 - `npm run validate:content` PASS
@@ -31,5 +33,6 @@ Validation:
 - `npm run agent:check` PASS
 
 Remaining follow-up:
+
 - Split `scripts/content-tools.mjs` in a separate low-risk refactor.
 - Add real map content only when gameplay/art direction is ready.
