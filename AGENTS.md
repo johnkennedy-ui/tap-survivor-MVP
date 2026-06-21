@@ -23,5 +23,6 @@ Before editing this repo:
 19. Before committing, if the task changed Prettier-supported files, run `docs/skills/prettier-before-commit.md`.
 20. For balance-only experiments, use `content/balance/*.json` and validate with `npm run balance:check`; do not change runtime code for numeric tuning-only work.
 21. Dev-only balance runtime selection lives in `src/balance-runtime.js`; keep production default behaviour on the `default` profile.
+22. Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` is only the compatibility export surface.
 
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.

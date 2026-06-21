@@ -83,6 +83,7 @@ const smokeExtractSprites = readRequired("scripts/smoke-extract-sprites.mjs");
 const smokeAssetResolver = readRequired("scripts/smoke-asset-resolver.mjs");
 const smokeAudioScaling = readRequired("scripts/smoke-audio-scaling.mjs");
 const contentTools = readRequired("scripts/content-tools.mjs");
+const contentSchemaTools = readRequired("scripts/content/content-schema.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
 const staleText = `${index}\n${contentSource}\n${generatedContent}\n${agentContext}`;
@@ -351,7 +352,14 @@ check("workflow builds shared www runtime", workflow.includes("npm run build:web
 check("workflow checks runtime parity", workflow.includes("npm run check:runtime-parity"));
 check("workflow publishes only www", workflow.includes("cp -R www/.") && !workflow.includes("cp -R assets content docs src scripts"));
 check("cache keys auto-bump before prepush", pkg.includes('"cache:bump"') && agentPrepush.includes("Cache Key Bump") && cacheBump.includes("content/tap-survivor-content.json") && cacheBump.includes("auto-"));
-check("quest chain helper can link follow-ups", pkg.includes('"smoke:content-tools"') && addContent.includes("--after previous_id") && addContent.includes("linkQuestAfter") && contentTools.includes("function linkQuestAfter"));
+check(
+  "quest chain helper can link follow-ups",
+  pkg.includes('"smoke:content-tools"') &&
+    addContent.includes("--after previous_id") &&
+    addContent.includes("linkQuestAfter") &&
+    contentTools.includes('export * from "./content/content-schema.mjs"') &&
+    contentSchemaTools.includes("function linkQuestAfter"),
+);
 check("sound effect wiring helper exists", pkg.includes('"sfx:add"') && addSfx.includes("run-upgrade") && addSfx.includes("content.assets.sfx[bucket]") && agentCheck.includes("scripts/add-sfx.mjs"));
 check("focused agent maintenance tooling exists", pkg.includes('"agent:finish"') && pkg.includes('"content:check"') && pkg.includes('"verify:assets"') && agentCheck.includes("focusedChecks") && agentPrepush.includes("--full"));
 check("asset and audio regression smokes exist", pkg.includes('"smoke:assets"') && pkg.includes('"smoke:audio"') && smokeAssetResolver.includes("weapon choice uses clean icon source") && smokeAudioScaling.includes("fast weapon playback rate is applied") && agentCheck.includes("smoke:assets") && agentCheck.includes("smoke:audio"));

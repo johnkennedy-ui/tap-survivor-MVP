@@ -45,6 +45,7 @@
 
 Use `npm run build:content` to assemble these domains into `src/content.generated.js`.
 The generated file also embeds `globalThis.TapSurvivorBalanceProfiles` so dev tools can select a safe local profile without remote loading.
+Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` remains the compatibility export surface. Future agents should edit the focused file that owns the relevant responsibility.
 
 ## Balance Profiles
 

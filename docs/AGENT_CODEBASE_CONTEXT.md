@@ -63,11 +63,11 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 
 ## Main Gameplay Systems
 
-- Content registry: `content/registry/*.json`, assembled by `scripts/content-tools.mjs`.
+- Content registry: `content/registry/*.json`, assembled by `scripts/content/content-assembly.mjs`.
 - Content schema/manifest: `content/tap-survivor-schema.json`.
 - Content add templates: `content/tap-survivor-schema.json` under `templates`; `scripts/add-content.mjs` reads those defaults.
 - Content build: `scripts/build-content.mjs`.
-- Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`; shop-item validation is split into a dedicated helper inside `content-tools`.
+- Content validation: `scripts/content/content-validation.mjs` and `scripts/validate-content.mjs`.
 - Balance profiles: `content/balance/default.json`, `content/balance/dev-fast.json`, and `content/balance/testing.json`.
 - Economy/shop balance check: `scripts/economy-check.mjs`.
 - Balance reports/checks: `scripts/balance-summary.mjs`, `scripts/balance-diff.mjs`, and `scripts/balance-check.mjs`.
@@ -190,7 +190,8 @@ The project is mixed but mostly registry-driven:
 - Check `docs/CHANGELOG_AGENT.md` when changing structure or command workflows.
 - Make one content or structure change at a time.
 - Prefer `content/registry/*.json`, `content/balance/*.json`, and `scripts/add-content.mjs` over manual code edits.
-- `scripts/content-tools.mjs` still owns assembly, balance overlays, validation, and reporting helpers. It is intentionally left whole until a separate extraction can split it with lower review risk.
+- Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` remains the compatibility export surface.
+- Future agents should edit the focused file that owns the relevant responsibility.
 - Run `npm run build:content` after content registry edits.
 - Run the smallest relevant validation, usually `npm run validate:content` for registry-only edits or `npm test` for code changes.
 - Save evidence of inspected files, changed files, and validation output.
