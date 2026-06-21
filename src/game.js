@@ -369,6 +369,7 @@ function toggleAudioMute() {
 const renderer = globalThis.TapSurvivorRendering.createRenderer({
   canvas,
   ctx,
+  clamp,
   drawImage: spriteSystem.drawImage,
   drawSprite: spriteSystem.drawSprite,
   weaponDefs,

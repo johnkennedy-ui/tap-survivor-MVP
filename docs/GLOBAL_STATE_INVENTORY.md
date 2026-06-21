@@ -2,11 +2,13 @@
 
 This inventory records current runtime global/state coupling before migration. It is a snapshot, not a removal plan.
 
-Run `npm run check:globals` before changing runtime globals. Do not add new `window.*` or `globalThis.*` usage without deliberately updating this inventory and `scripts/allowed-globals.json`.
+Run `npm run check:globals` before changing runtime globals. Do not add new `window.*` or `globalThis.*` usage without
+deliberately updating this inventory and `scripts/allowed-globals.json`.
 
 ## Global Namespace Coupling
 
-The runtime currently uses a script-order global namespace instead of ES module imports. Most files publish or consume one `globalThis.TapSurvivor*` object.
+The runtime currently uses a script-order global namespace instead of ES module imports. Most files publish or consume one
+`globalThis.TapSurvivor*` object.
 
 Primary bootstrap coupling:
 - `src/game.js` wires the run by reading the shared `TapSurvivor*` globals and holding top-level run state.
@@ -16,6 +18,9 @@ Primary bootstrap coupling:
 Generated content globals:
 - `src/content.generated.js` publishes `TapSurvivorContent`, `TapSurvivorContentSchema`, and `TapSurvivorBalanceProfiles`.
 - `src/balance-runtime.js` reads those generated globals, applies the active dev balance profile/overrides, then republishes `TapSurvivorContent` and exposes `TapSurvivorBalanceRuntime` plus `TapSurvivorDebugBalance`.
+- `src/math.js` still owns the `TapSurvivorMath` compatibility bridge. `src/rendering.js` and `src/render-hud.js`
+  now receive `clamp` through factory arguments instead of reading `globalThis.TapSurvivorMath`; `src/game.js` remains
+  the script-order bootstrap reader until the runtime can safely become ESM.
 
 Runtime module globals:
 - Core data/systems: `TapSurvivorContentRegistry`, `TapSurvivorProgression`, `TapSurvivorMapSystem`, `TapSurvivorBalance`, `TapSurvivorEffects`.
@@ -26,8 +31,11 @@ Runtime module globals:
 - Gameplay systems: `TapSurvivorRunState`, `TapSurvivorRunUpdate`, `TapSurvivorRunLifecycle`, `TapSurvivorEnemies`,
   `TapSurvivorEnemyBehaviors`, `TapSurvivorEnemySpawning`, `TapSurvivorCombat`, `TapSurvivorCombatDamage`,
   `TapSurvivorPickups`, `TapSurvivorShop`, `TapSurvivorShopPricing`, `TapSurvivorRelics`.
-- Weapon systems: `TapSurvivorWeaponTargeting`, `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`, `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`, `TapSurvivorLevelUpChoices`.
-- Utilities/debug: `TapSurvivorMath`, `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`, `TapSurvivorGameBanners`, `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
+- Weapon systems: `TapSurvivorWeaponTargeting`, `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`,
+  `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`,
+  `TapSurvivorLevelUpChoices`.
+- Utilities/debug: `TapSurvivorMath`, `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`,
+  `TapSurvivorGameBanners`, `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
 
 Browser/platform globals:
 - `globalThis.localStorage` and `globalThis.location` are used by dev balance profile/override selection.
@@ -65,7 +73,8 @@ Current DOM/game coupling is concentrated in:
 
 ## Guard Policy
 
-`npm run check:globals` scans `src`, `scripts`, and `index.html` for real `window.*` / `globalThis.*` code usage while ignoring strings/comments. It reports every current allowed usage with file and line number, and fails if:
+`npm run check:globals` scans `src`, `scripts`, and `index.html` for real `window.*` / `globalThis.*` code usage while
+ignoring strings/comments. It reports every current allowed usage with file and line number, and fails if:
 - a new global expression appears, or
 - a scanned file has more global usages than `scripts/allowed-globals.json` permits.
 

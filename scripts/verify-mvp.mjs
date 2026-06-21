@@ -311,7 +311,15 @@ check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon s
 check("local save exists", game.includes("tap-survivor-mvp-save-v2") && storageAdapter.includes("localStorage") && storageAdapter.includes("getSaveRaw"));
 check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game.includes("TapSurvivorQuests"));
 check("shared save helpers exist", save.includes("TapSurvivorSave") && saveDefaults.includes("TapSurvivorSaveDefaults") && saveMigrations.includes("TapSurvivorSaveMigrations") && saveNormalize.includes("TapSurvivorSaveNormalize") && game.includes("TapSurvivorSave") && storageAdapter.includes("TapSurvivorStorage"));
-check("shared math helpers exist", math.includes("TapSurvivorMath") && game.includes("TapSurvivorMath") && rendering.includes("TapSurvivorMath") && renderHud.includes("TapSurvivorMath"));
+check(
+  "shared math helpers exist",
+  math.includes("TapSurvivorMath") &&
+    game.includes("TapSurvivorMath") &&
+    rendering.includes("clamp") &&
+    renderHud.includes("clamp") &&
+    !rendering.includes("globalThis.TapSurvivorMath") &&
+    !renderHud.includes("globalThis.TapSurvivorMath"),
+);
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
 check("shared asset resolver exists", assets.includes("TapSurvivorAssets") && levelUp.includes("TapSurvivorAssets") && shellUi.includes("TapSurvivorAssets"));
 check("shared audio helper exists", audio.includes("TapSurvivorAudio") && game.includes("TapSurvivorAudio") && audio.includes("setMuted"));

@@ -1,12 +1,11 @@
 (() => {
-const { clamp } = globalThis.TapSurvivorMath;
-
-function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
+function createRenderer({ canvas, ctx, clamp, drawImage, drawSprite, weaponDefs }) {
   const skillEffectSprites = globalThis.TapSurvivorContent?.assets?.sprites?.weapons || {};
   const hudRenderer = globalThis.TapSurvivorRenderHud.createHudRenderer({
     canvas,
     ctx,
     roundedRectPath,
+    clamp,
     drawSprite,
     weaponDefs,
   });
