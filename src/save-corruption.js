@@ -1,4 +1,29 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/save-corruption.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
+  /**
+   * @typedef {Record<string, unknown>} SaveData
+   * @typedef {{ setCorruptBackupRaw?: (raw: string) => void }} CorruptBackupStorage
+   * @typedef {() => SaveData} DefaultSaveFn
+   * @typedef {(save: SaveData) => SaveData} NormalizeAndMigrateSaveFn
+   * @typedef {{
+   *   fromRaw(raw: string | null | undefined): SaveData,
+   *   getLastLoadWarning(): string | null,
+   *   storageReadFailed(): SaveData
+   * }} SaveLoadHandler
+   */
+
+  /**
+   * @param {{
+   *   defaultSave: DefaultSaveFn,
+   *   normalizeAndMigrateSave: NormalizeAndMigrateSaveFn,
+   *   storage?: CorruptBackupStorage
+   * }} options
+   * @returns {SaveLoadHandler}
+   */
   function createSaveLoadHandler({ defaultSave, normalizeAndMigrateSave, storage }) {
     let lastLoadWarning = null;
 

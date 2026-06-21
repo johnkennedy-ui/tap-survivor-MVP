@@ -15,6 +15,7 @@ import {
   formatTime as moduleFormatTime,
   randomRange as moduleRandomRange,
 } from "../src/modules/math.js";
+import { createSaveLoadHandler as createModuleSaveLoadHandler } from "../src/modules/save-corruption.js";
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
 import {
@@ -26,6 +27,7 @@ import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-target
 const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
+const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -35,6 +37,7 @@ const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
 const bridgeMapSystem = mapBridge.context.TapSurvivorMapSystem;
+const bridgeSaveCorruption = saveCorruptionBridge.context.TapSurvivorSaveCorruption;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
@@ -234,6 +237,45 @@ check("applyToGame null fixture returns null", moduleMapSnapshot.nullApply === n
 check(
   "module and bridge map system output match",
   JSON.stringify(moduleMapSnapshot) === JSON.stringify(bridgeMapSnapshot)
+);
+
+check("module exports createSaveLoadHandler", typeof createModuleSaveLoadHandler === "function");
+check(
+  "bridge assigns globalThis.TapSurvivorSaveCorruption",
+  Boolean(bridgeSaveCorruption)
+);
+check(
+  "save corruption bridge source has generated banner",
+  hasGeneratedBanner(saveCorruptionBridge.source)
+);
+check(
+  "bridge exposes createSaveLoadHandler",
+  typeof bridgeSaveCorruption?.createSaveLoadHandler === "function"
+);
+
+const moduleSaveLoadSnapshot = saveLoadSnapshot(createModuleSaveLoadHandler);
+const bridgeSaveLoadSnapshot = saveLoadSnapshot(bridgeSaveCorruption.createSaveLoadHandler);
+check("missing raw save normalizes empty object", moduleSaveLoadSnapshot.empty.normalized[0] === "{}");
+check("missing raw save has no warning", moduleSaveLoadSnapshot.empty.warning === null);
+check(
+  "valid raw save normalizes parsed object",
+  moduleSaveLoadSnapshot.valid.normalized[0] === "{\"coins\":7}"
+);
+check("valid raw save has no warning", moduleSaveLoadSnapshot.valid.warning === null);
+check("corrupt raw save returns default save", moduleSaveLoadSnapshot.corrupt.result.defaulted === true);
+check("corrupt raw save sets warning", moduleSaveLoadSnapshot.corrupt.warning === "corrupt-save");
+check("corrupt raw save backs up raw value", moduleSaveLoadSnapshot.corrupt.backups[0] === "{bad");
+check(
+  "storageReadFailed returns default save",
+  moduleSaveLoadSnapshot.storageFailed.result.defaulted === true
+);
+check(
+  "storageReadFailed sets warning",
+  moduleSaveLoadSnapshot.storageFailed.warning === "storage-read-failed"
+);
+check(
+  "module and bridge save load output match",
+  JSON.stringify(moduleSaveLoadSnapshot) === JSON.stringify(bridgeSaveLoadSnapshot)
 );
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
@@ -873,6 +915,54 @@ function snapshotResolvedMap(resolved) {
     floorPool: resolved.floorPool.map((floor) => floor.id),
     mapId: resolved.map?.id || "",
     modifiers: resolved.modifiers,
+  };
+}
+
+function saveLoadSnapshot(createSaveLoadHandler) {
+  return {
+    empty: runSaveLoadCase(createSaveLoadHandler, ""),
+    valid: runSaveLoadCase(createSaveLoadHandler, "{\"coins\":7}"),
+    corrupt: runSaveLoadCase(createSaveLoadHandler, "{bad"),
+    storageFailed: runStorageReadFailedCase(createSaveLoadHandler),
+  };
+}
+
+function runSaveLoadCase(createSaveLoadHandler, raw) {
+  const backups = [];
+  const normalized = [];
+  const handler = createSaveLoadHandler({
+    defaultSave: () => ({ defaulted: true }),
+    normalizeAndMigrateSave: (save) => {
+      normalized.push(JSON.stringify(save));
+      return { normalized: true, save };
+    },
+    storage: {
+      setCorruptBackupRaw: (backupRaw) => backups.push(backupRaw),
+    },
+  });
+  const initialWarning = handler.getLastLoadWarning();
+  const result = handler.fromRaw(raw);
+  return {
+    backups,
+    initialWarning,
+    normalized,
+    result,
+    warning: handler.getLastLoadWarning(),
+  };
+}
+
+function runStorageReadFailedCase(createSaveLoadHandler) {
+  const handler = createSaveLoadHandler({
+    defaultSave: () => ({ defaulted: true }),
+    normalizeAndMigrateSave: (save) => ({ normalized: true, save }),
+    storage: {},
+  });
+  const initialWarning = handler.getLastLoadWarning();
+  const result = handler.storageReadFailed();
+  return {
+    initialWarning,
+    result,
+    warning: handler.getLastLoadWarning(),
   };
 }
 

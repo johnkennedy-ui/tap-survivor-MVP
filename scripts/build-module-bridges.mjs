@@ -21,6 +21,12 @@ const bridges = [
     exports: ["createMapSystem"],
   },
   {
+    source: "src/modules/save-corruption.js",
+    target: "src/save-corruption.js",
+    globalName: "TapSurvivorSaveCorruption",
+    exports: ["createSaveLoadHandler"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",
