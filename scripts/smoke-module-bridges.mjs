@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
+import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import {
   clamp as moduleClamp,
   distance as moduleDistance,
@@ -15,17 +16,68 @@ import {
 } from "../src/modules/weapon-projectiles.js";
 import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-targeting.js";
 
+const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
 
+const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldowns?.createWeaponScaling;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
+
+check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
+check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
+check("balance bridge source has generated banner", hasGeneratedBanner(balanceBridge.source));
+check("bridge exposes floorDifficulty", typeof bridgeBalance?.floorDifficulty === "function");
+
+const balanceFixtures = [1, 2, 3, 4, 0, null, undefined];
+const moduleBalanceResults = balanceFixtures.map((floor) => moduleFloorDifficulty(floor));
+const bridgeBalanceResults = balanceFixtures.map((floor) => bridgeBalance.floorDifficulty(floor));
+check(
+  "module and bridge balance output match",
+  JSON.stringify(moduleBalanceResults) === JSON.stringify(bridgeBalanceResults)
+);
+check(
+  "floorDifficulty floor one value is unchanged",
+  JSON.stringify(moduleFloorDifficulty(1)) ===
+    JSON.stringify({ hp: 0.9, damage: 0.85, spawnRate: 0.9 })
+);
+check(
+  "floorDifficulty floor two value is unchanged",
+  JSON.stringify(moduleFloorDifficulty(2)) ===
+    JSON.stringify({ hp: 1.1, damage: 1, spawnRate: 1 })
+);
+check(
+  "floorDifficulty floor three value is unchanged",
+  JSON.stringify(moduleFloorDifficulty(3)) ===
+    JSON.stringify({ hp: 1.33, damage: 1.15, spawnRate: 1.08 })
+);
+check(
+  "floorDifficulty floor four scaling is unchanged",
+  JSON.stringify(moduleFloorDifficulty(4)) ===
+    JSON.stringify({ hp: 1.53, damage: 1.2799999999999998, spawnRate: 1.1300000000000001 })
+);
+check(
+  "floorDifficulty invalid floors use floor one fallback",
+  JSON.stringify([
+    moduleFloorDifficulty(0),
+    moduleFloorDifficulty(null),
+    moduleFloorDifficulty(undefined),
+  ]) ===
+    JSON.stringify([
+      { hp: 0.9, damage: 0.85, spawnRate: 0.9 },
+      { hp: 0.9, damage: 0.85, spawnRate: 0.9 },
+      { hp: 0.9, damage: 0.85, spawnRate: 0.9 },
+    ])
+);
+const mutableFloorOne = moduleFloorDifficulty(1);
+mutableFloorOne.hp = 99;
+check("floorDifficulty returns copies", moduleFloorDifficulty(1).hp === 0.9);
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(

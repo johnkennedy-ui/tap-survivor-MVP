@@ -3,6 +3,12 @@ import path from "node:path";
 
 const bridges = [
   {
+    source: "src/modules/balance.js",
+    target: "src/balance.js",
+    globalName: "TapSurvivorBalance",
+    exports: ["floorDifficulty"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",

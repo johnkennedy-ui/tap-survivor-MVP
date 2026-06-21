@@ -46,6 +46,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/content-summary.mjs"]],
   ["node", ["--check", "scripts/economy-check.mjs"]],
   ["node", ["--check", "scripts/check-script-order.mjs"]],
+  ["node", ["--check", "src/modules/balance.js"]],
   ["node", ["--check", "src/modules/math.js"]],
   ["node", ["--check", "src/modules/shop-pricing.js"]],
   ["node", ["--check", "src/modules/weapon-cooldowns.js"]],
@@ -166,6 +167,8 @@ function focusedChecks(files) {
   if (
     files.some(
       (file) =>
+        file === "src/balance.js" ||
+        file === "src/modules/balance.js" ||
         file === "src/shop-pricing.js" ||
         file === "src/math.js" ||
         file === "src/modules/math.js" ||
