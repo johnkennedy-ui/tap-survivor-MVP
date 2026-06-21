@@ -1,0 +1,208 @@
+diff --git a/scripts/check-format-hygiene.mjs b/scripts/check-format-hygiene.mjs
+index 5b35383..ee5fe14 100644
+--- a/scripts/check-format-hygiene.mjs
++++ b/scripts/check-format-hygiene.mjs
+@@ -40,37 +40,38 @@ const LONG_LINE_ALLOWANCES = new Map([
+   // MVP verifier assertions keep exact snippets beside their labels.
+   ["scripts/verify-mvp.mjs:130", "exact snippet assertion"],
+   ["scripts/verify-mvp.mjs:133", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:138", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:135", "exact snippet assertion"],
+   ["scripts/verify-mvp.mjs:139", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:141", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:140", "exact snippet assertion"],
+   ["scripts/verify-mvp.mjs:142", "exact snippet assertion"],
+   ["scripts/verify-mvp.mjs:143", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:149", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:153", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:154", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:161", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:162", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:177", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:195", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:196", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:197", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:203", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:205", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:208", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:210", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:211", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:213", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:214", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:144", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:170", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:174", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:175", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:182", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:183", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:198", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:216", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:217", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:218", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:224", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:226", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:229", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:231", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:232", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:234", "exact snippet assertion"],
+   ["scripts/verify-mvp.mjs:235", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:236", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:238", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:243", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:256", "exact snippet assertion"],
+   ["scripts/verify-mvp.mjs:257", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:262", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:266", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:271", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:259", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:264", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:278", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:283", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:287", "exact snippet assertion"],
+   ["scripts/verify-mvp.mjs:292", "exact snippet assertion"],
+-  ["scripts/verify-mvp.mjs:316", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:313", "exact snippet assertion"],
++  ["scripts/verify-mvp.mjs:337", "exact snippet assertion"],
+ ]);
+ 
+ function isIgnored(path) {
+diff --git a/scripts/verify-mvp.mjs b/scripts/verify-mvp.mjs
+index 167e9e8..d5f6085 100644
+--- a/scripts/verify-mvp.mjs
++++ b/scripts/verify-mvp.mjs
+@@ -132,6 +132,7 @@ check("player uses wizard sprite", content.assets?.sprites?.player?.includes("wi
+ check("wizard sprite flips by facing", sprites.includes("flipX") && rendering.includes("playerFacesLeft") && rendering.includes("flipX: playerFacesLeft(p)"));
+ check("wizard uses movement and attack animation sprites", content.assets?.sprites?.playerAnimations?.walk && content.assets?.sprites?.playerAnimations?.cast_orb && sprites.includes("playerAnimations") && rendering.includes("playerSpriteId") && weaponFire.includes("setPlayerAttackAnimation") && runUpdate.includes("updatePlayerAnimation"));
+ check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
++check("enemy floor tint steps every five floors to 100", enemies.includes("towerFloor: game.towerFloor") && rendering.includes("function drawEnemyFloorTint") && rendering.includes("Math.floor((floor - 1) / 5)") && rendering.includes("clamp(Math.floor(enemy.towerFloor || 1), 1, 100)"));
+ check("beam and cone effects can use weapon sprites", weaponFire.includes("weaponId,") && rendering.includes("drawSprite(`weapon:${weapon.assetId || beam.weaponId}`") && rendering.includes("spriteHeight"));
+ const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
+ check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
+@@ -142,7 +143,27 @@ check("user enemy sprite sheet exists", content.assets?.sources?.some((source) =
+ check("user skill effect atlases exist", [1, 2, 3, 4, 5].every((batch) => content.assets?.sources?.some((source) => source.id === `user_skill_effect_sheet_20260615_batch_${String(batch).padStart(2, "0")}` && source.commercialUse === true && source.attributionRequired === false)) && Object.keys(content.weapons || {}).every((id) => Array.isArray(content.assets?.sprites?.weapons?.[id]?.frames) && content.assets.sprites.weapons[id].src?.includes("skill-effects/split/skill-")) && (content.runUpgrades || []).every((upgrade) => Array.isArray(content.assets?.sprites?.runUpgrades?.[upgrade.id]?.frames) && content.assets.sprites.runUpgrades[upgrade.id].src?.includes("skill-effects/split/skill-")));
+ check("skill effects have tunable scale and transparency", Object.keys(content.weapons || {}).every((id) => Number.isFinite(content.assets?.sprites?.weapons?.[id]?.effectScale) && Number.isFinite(content.assets?.sprites?.weapons?.[id]?.effectAlpha)) && (content.runUpgrades || []).every((upgrade) => Number.isFinite(content.assets?.sprites?.runUpgrades?.[upgrade.id]?.effectScale) && Number.isFinite(content.assets?.sprites?.runUpgrades?.[upgrade.id]?.effectAlpha)) && sprites.includes("options.alpha") && rendering.includes("skillEffectTuning") && rendering.includes("effectAlpha") && rendering.includes("effectScale"));
+ check("tower background renders", sprites.includes("background:") && sprites.includes("drawImage") && rendering.includes('background:tower_floor') && game.includes("drawImage: spriteSystem.drawImage"));
+-check("three enemy types exist", (content.enemyTypes || []).filter((enemy) => ["drifter", "skitter", "bulwark"].includes(enemy.id)).length === 3);
++check(
++  "tower floors one through eight introduce enemies",
++  [1, 2, 3, 4, 5, 6, 7, 8].every((floor) =>
++    (content.enemyTypes || []).some((enemy) => enemy.minTowerFloor === floor),
++  ),
++);
++check(
++  "eight enemy types exist",
++  (content.enemyTypes || []).filter((enemy) =>
++    [
++      "drifter",
++      "skitter",
++      "bulwark",
++      "hexer",
++      "verdant_skitter",
++      "dusk_crawler",
++      "crimson_hexer",
++      "obsidian_bulwark",
++    ].includes(enemy.id),
++  ).length === 8,
++);
+ check("ranged enemy unlocks after floor three", (content.enemyTypes || []).some((enemy) => enemy.id === "hexer" && enemy.minTowerFloor === 4 && enemy.attackRange && enemy.projectileCooldown) && enemies.includes("isEnemyAvailable"));
+ check("default character registry entry exists", (content.characters || []).some((character) => character.id === "character_default" && character.spriteId === "player"));
+ check("content levels drive enemy waves", (content.levels || []).length >= 3 && content.levels.some((level) => level.enemyIds?.includes("bulwark")) && runtime.includes("activeLevelDef") && runtime.includes("levelEnemyTypes"));
+diff --git a/src/enemies.js b/src/enemies.js
+index e1c1f53..f70cc8d 100644
+--- a/src/enemies.js
++++ b/src/enemies.js
+@@ -52,8 +52,10 @@ function createEnemySystem({
+       0.32,
+       (1.1 - game.elapsed / 150) / (floorDifficulty(game.towerFloor).spawnRate * levelSpawnRate),
+     );
++    const availableTypes = levelEnemyTypes(level);
++    if (!availableTypes.length) return;
+     spawnPatternPositions(spawnCount).forEach((position, index) => {
+-      const type = chooseEnemyType(index, levelEnemyTypes(level));
++      const type = chooseEnemyType(index, availableTypes);
+       spawnEnemy(type, position);
+     });
+   }
+@@ -69,7 +71,9 @@ function createEnemySystem({
+   function levelEnemyTypes(level) {
+     if (!level?.enemyIds?.length) return availableEnemyTypes();
+     const game = getGame();
+-    const configured = level.enemyIds.map((id) => enemyTypeById[id]).filter((type) => type && isEnemyAvailable(type, game));
++    const configured = level.enemyIds
++      .map((id) => enemyTypeById[id])
++      .filter((type) => type && isEnemyAvailable(type, game));
+     return configured.length ? configured : availableEnemyTypes();
+   }
+ 
+@@ -85,6 +89,7 @@ function createEnemySystem({
+   }
+ 
+   function chooseEnemyType(offset = 0, available = availableEnemyTypes()) {
++    if (!available.length) return null;
+     return available[(Math.floor(Math.random() * available.length) + offset) % available.length];
+   }
+ 
+@@ -122,6 +127,7 @@ function createEnemySystem({
+   }
+ 
+   function spawnEnemy(type, position) {
++    if (!type) return;
+     const game = getGame();
+     const difficulty = floorDifficulty(game.towerFloor);
+     const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
+@@ -131,11 +137,12 @@ function createEnemySystem({
+       name: type.name,
+       color: type.color,
+       assetId: type.assetId || type.id,
++      towerFloor: game.towerFloor,
+       x: position.x,
+       y: position.y,
+       radius: type.radius,
+-      hp: (type.hp + game.elapsed * type.hpScale) * difficulty.hp,
+-      speed: type.speed + game.elapsed * type.speedScale,
++      hp: type.hp,
++      speed: type.speed,
+       damage: type.damage * difficulty.damage,
+       touchCooldown: type.touchCooldown,
+       xp: type.xp,
+diff --git a/src/rendering.js b/src/rendering.js
+index c17d321..701f328 100644
+--- a/src/rendering.js
++++ b/src/rendering.js
+@@ -179,7 +179,10 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
+       ctx.font = "700 14px sans-serif";
+       const label = enemy.superBoss ? "SUPER" : enemy.bossKind === "turret" ? "TURRET" : enemy.bossKind === "charger" ? "CHARGE" : "BOSS";
+       ctx.fillText(label, enemy.x - label.length * 3.6, enemy.y - enemy.radius - 10);
+-    } else if (enemy.type === "skitter") {
++    } else {
++      drawEnemyFloorTint(enemy, spriteSize);
++    }
++    if (enemy.type === "skitter") {
+       ctx.fillStyle = "#17202c";
+       ctx.beginPath();
+       ctx.arc(enemy.x, enemy.y, 3, 0, Math.PI * 2);
+@@ -189,6 +192,24 @@ function createRenderer({ canvas, ctx, drawImage, drawSprite, weaponDefs }) {
+     }
+   }
+ 
++  function drawEnemyFloorTint(enemy, spriteSize) {
++    const floor = clamp(Math.floor(enemy.towerFloor || 1), 1, 100);
++    const bucket = Math.floor((floor - 1) / 5);
++    const progress = bucket / 19;
++    const red = Math.round(52 + progress * 154);
++    const green = Math.round(230 - progress * 190);
++    const blue = Math.round(190 - progress * 162);
++    const alpha = 0.12 + progress * 0.14;
++    ctx.save();
++    ctx.globalCompositeOperation = "multiply";
++    ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
++    ctx.beginPath();
++    ctx.arc(enemy.x, enemy.y, Math.max(enemy.radius + 4, spriteSize * 0.36), 0, Math.PI * 2);
++    ctx.fill();
++    ctx.restore();
++    strokeEnemyRing(enemy, `rgba(${red}, ${green}, ${blue}, ${0.48 + progress * 0.28})`, 2 + progress * 2);
++  }
++
+   function strokeEnemyRing(enemy, color, width) {
+     ctx.strokeStyle = color;
+     ctx.lineWidth = width;

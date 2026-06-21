@@ -291,7 +291,9 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     "src/upgrades.js",
     "src/content-registry.js",
     "src/progression.js",
+    "src/render-skill-rail.js",
     "src/render-hud.js",
+    "src/render-enemies.js",
     "src/rendering.js",
     "src/balance.js",
   ].forEach((path) => vm.runInContext(readSource(path), context));
@@ -337,21 +339,30 @@ export function createGameHarness({ fakeCombat = false, initialSave = null } = {
     vm.runInContext(readSource("src/weapon-behaviors.js"), context);
     vm.runInContext(readSource("src/weapon-fire.js"), context);
     vm.runInContext(readSource("src/enemy-behaviors.js"), context);
+    vm.runInContext(readSource("src/enemy-spawning.js"), context);
     vm.runInContext(readSource("src/enemies.js"), context);
+    vm.runInContext(readSource("src/combat-damage.js"), context);
     vm.runInContext(readSource("src/combat.js"), context);
   }
 
+  vm.runInContext(readSource("src/ui-progression.js"), context);
   vm.runInContext(readSource("src/ui.js"), context);
   vm.runInContext(readSource("src/run-ui.js"), context);
+  vm.runInContext(readSource("src/level-up-choices.js"), context);
   vm.runInContext(readSource("src/level-up.js"), context);
   vm.runInContext(readSource("src/input.js"), context);
   vm.runInContext(readSource("src/pickups.js"), context);
+  vm.runInContext(readSource("src/shop-pricing.js"), context);
   vm.runInContext(readSource("src/shop.js"), context);
   vm.runInContext(readSource("src/relics.js"), context);
   vm.runInContext(readSource("src/run-state.js"), context);
   vm.runInContext(readSource("src/run-update.js"), context);
   vm.runInContext(readSource("src/debug.js"), context);
+  vm.runInContext(readSource("src/shell-relic-ui.js"), context);
   vm.runInContext(readSource("src/shell-ui.js"), context);
+  vm.runInContext(readSource("src/game-banners.js"), context);
+  vm.runInContext(readSource("src/run-lifecycle.js"), context);
+  vm.runInContext(readSource("src/game-runtime.js"), context);
   vm.runInContext(`${readSource("src/game.js")}\nglobalThis.__tapSurvivorHarness = { getGame: () => game, getSave: () => save };`, context);
 
   return {

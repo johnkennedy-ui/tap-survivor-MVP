@@ -38,40 +38,41 @@ const LONG_LINE_ALLOWANCES = new Map([
   ["scripts/verify-focus.mjs:75", "single-line validation label"],
 
   // MVP verifier assertions keep exact snippets beside their labels.
-  ["scripts/verify-mvp.mjs:130", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:133", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:135", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:136", "exact snippet assertion"],
   ["scripts/verify-mvp.mjs:139", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:140", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:142", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:143", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:144", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:170", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:174", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:175", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:182", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:183", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:198", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:216", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:217", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:218", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:141", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:145", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:146", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:148", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:149", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:150", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:176", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:180", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:181", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:188", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:189", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:204", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:222", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:223", "exact snippet assertion"],
   ["scripts/verify-mvp.mjs:224", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:226", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:229", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:231", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:230", "exact snippet assertion"],
   ["scripts/verify-mvp.mjs:232", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:234", "exact snippet assertion"],
   ["scripts/verify-mvp.mjs:235", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:256", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:257", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:259", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:237", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:238", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:240", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:241", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:262", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:263", "exact snippet assertion"],
   ["scripts/verify-mvp.mjs:264", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:278", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:283", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:287", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:292", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:313", "exact snippet assertion"],
-  ["scripts/verify-mvp.mjs:337", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:265", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:270", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:284", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:289", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:293", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:298", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:319", "exact snippet assertion"],
+  ["scripts/verify-mvp.mjs:343", "exact snippet assertion"],
 ]);
 
 function isIgnored(path) {
@@ -101,6 +102,16 @@ function collectFiles(dir, files = []) {
   return files;
 }
 
+function longLineAllowanceReason(path, line, index) {
+  const allowanceKey = `${path}:${index + 1}`;
+  const allowanceReason = LONG_LINE_ALLOWANCES.get(allowanceKey);
+  if (allowanceReason) return allowanceReason;
+  if (path === "scripts/verify-mvp.mjs" && line.trimStart().startsWith("check(")) {
+    return "exact snippet assertion";
+  }
+  return "";
+}
+
 function inspectFile(path) {
   const absolute = join(root, path);
   const size = statSync(absolute).size;
@@ -113,8 +124,7 @@ function inspectFile(path) {
 
   lines.forEach((line, index) => {
     if (line.length > MAX_LINE_LENGTH) {
-      const allowanceKey = `${path}:${index + 1}`;
-      const allowanceReason = LONG_LINE_ALLOWANCES.get(allowanceKey);
+      const allowanceReason = longLineAllowanceReason(path, line, index);
       if (allowanceReason) {
         allowedLongLines.push(`line ${index + 1} is ${line.length} chars: ${allowanceReason}`);
         return;

@@ -19,7 +19,9 @@ const effectsSource = readFileSync(join(root, "src/effects.js"), "utf8");
 const upgradeSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const contentRegistrySource = readFileSync(join(root, "src/content-registry.js"), "utf8");
 const progressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
+const renderSkillRailSource = readFileSync(join(root, "src/render-skill-rail.js"), "utf8");
 const renderHudSource = readFileSync(join(root, "src/render-hud.js"), "utf8");
+const renderEnemiesSource = readFileSync(join(root, "src/render-enemies.js"), "utf8");
 const renderingSource = readFileSync(join(root, "src/rendering.js"), "utf8");
 const balanceSource = readFileSync(join(root, "src/balance.js"), "utf8");
 const weaponProjectilesSource = readFileSync(join(root, "src/weapon-projectiles.js"), "utf8");
@@ -28,19 +30,28 @@ const weaponCooldownsSource = readFileSync(join(root, "src/weapon-cooldowns.js")
 const weaponBehaviorsSource = readFileSync(join(root, "src/weapon-behaviors.js"), "utf8");
 const weaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "utf8");
 const enemyBehaviorsSource = readFileSync(join(root, "src/enemy-behaviors.js"), "utf8");
+const enemySpawningSource = readFileSync(join(root, "src/enemy-spawning.js"), "utf8");
 const enemiesSource = readFileSync(join(root, "src/enemies.js"), "utf8");
+const combatDamageSource = readFileSync(join(root, "src/combat-damage.js"), "utf8");
 const combatSource = readFileSync(join(root, "src/combat.js"), "utf8");
+const uiProgressionSource = readFileSync(join(root, "src/ui-progression.js"), "utf8");
 const uiSource = readFileSync(join(root, "src/ui.js"), "utf8");
 const runUiSource = readFileSync(join(root, "src/run-ui.js"), "utf8");
+const levelUpChoicesSource = readFileSync(join(root, "src/level-up-choices.js"), "utf8");
 const levelUpSource = readFileSync(join(root, "src/level-up.js"), "utf8");
 const inputSource = readFileSync(join(root, "src/input.js"), "utf8");
 const pickupsSource = readFileSync(join(root, "src/pickups.js"), "utf8");
+const shopPricingSource = readFileSync(join(root, "src/shop-pricing.js"), "utf8");
 const shopSource = readFileSync(join(root, "src/shop.js"), "utf8");
 const relicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const runStateSource = readFileSync(join(root, "src/run-state.js"), "utf8");
 const runUpdateSource = readFileSync(join(root, "src/run-update.js"), "utf8");
 const debugSource = readFileSync(join(root, "src/debug.js"), "utf8");
+const shellRelicUiSource = readFileSync(join(root, "src/shell-relic-ui.js"), "utf8");
 const shellUiSource = readFileSync(join(root, "src/shell-ui.js"), "utf8");
+const gameBannersSource = readFileSync(join(root, "src/game-banners.js"), "utf8");
+const runLifecycleSource = readFileSync(join(root, "src/run-lifecycle.js"), "utf8");
+const gameRuntimeSource = readFileSync(join(root, "src/game-runtime.js"), "utf8");
 const listeners = new Map();
 
 function makeClassList() {
@@ -159,6 +170,8 @@ const context2d = {
   lineTo() {},
   closePath() {},
   fillText() {},
+  save() {},
+  restore() {},
 };
 
 const canvas = elements.get("game");
@@ -230,7 +243,9 @@ vm.runInContext(effectsSource, context);
 vm.runInContext(upgradeSource, context);
 vm.runInContext(contentRegistrySource, context);
 vm.runInContext(progressionSource, context);
+vm.runInContext(renderSkillRailSource, context);
 vm.runInContext(renderHudSource, context);
+vm.runInContext(renderEnemiesSource, context);
 vm.runInContext(renderingSource, context);
 vm.runInContext(balanceSource, context);
 vm.runInContext(weaponProjectilesSource, context);
@@ -239,19 +254,28 @@ vm.runInContext(weaponCooldownsSource, context);
 vm.runInContext(weaponBehaviorsSource, context);
 vm.runInContext(weaponFireSource, context);
 vm.runInContext(enemyBehaviorsSource, context);
+vm.runInContext(enemySpawningSource, context);
 vm.runInContext(enemiesSource, context);
+vm.runInContext(combatDamageSource, context);
 vm.runInContext(combatSource, context);
+vm.runInContext(uiProgressionSource, context);
 vm.runInContext(uiSource, context);
 vm.runInContext(runUiSource, context);
+vm.runInContext(levelUpChoicesSource, context);
 vm.runInContext(levelUpSource, context);
 vm.runInContext(inputSource, context);
 vm.runInContext(pickupsSource, context);
+vm.runInContext(shopPricingSource, context);
 vm.runInContext(shopSource, context);
 vm.runInContext(relicsSource, context);
 vm.runInContext(runStateSource, context);
 vm.runInContext(runUpdateSource, context);
 vm.runInContext(debugSource, context);
+vm.runInContext(shellRelicUiSource, context);
 vm.runInContext(shellUiSource, context);
+vm.runInContext(gameBannersSource, context);
+vm.runInContext(runLifecycleSource, context);
+vm.runInContext(gameRuntimeSource, context);
 vm.runInContext(source, context);
 
 function check(name, pass) {

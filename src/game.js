@@ -54,17 +54,23 @@ const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
 });
 
 let save = saveSystem.defaultSave();
+const bannerSystem = globalThis.TapSurvivorGameBanners.createGameBannerSystem({
+  ui,
+  getSave: () => save,
+  persist,
+});
 const questSystem = globalThis.TapSurvivorQuests.createQuestSystem({
   questDefs,
   getSave: () => save,
   persist,
   renderMeta,
-  onQuestComplete: showQuestBanner,
+  onQuestComplete: bannerSystem.showQuestBanner,
 });
 let game = null;
 let lastFrame = performance.now();
-let gameSpeed = 1;
 let runUpdater = null;
+let runLifecycle = null;
+let gameRuntime = null;
 
 function persist() {
   return saveSystem.persist(save);
@@ -124,8 +130,8 @@ const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
   shopItemDefs,
   getSave: () => save,
   getGame: () => game,
-  onShopVisit: () => showOnceBanner("first_shop_visit", "Coins buy permanent power upgrades."),
-  onPurchaseNotice: (message) => showBanner(message),
+  onShopVisit: () => bannerSystem.showOnceBanner("first_shop_visit", "Coins buy permanent power upgrades."),
+  onPurchaseNotice: (message) => bannerSystem.showBanner(message),
   playPurchaseSfx: audioSystem.playShopPurchase,
   persist,
   renderMeta,
@@ -160,6 +166,7 @@ function resetGameState() {
   game = runStateSystem.resetGameState();
   globalThis.TapSurvivorEffects.applyRelicSpecialEffects(game, getRelicSpecialEffects());
   applyRelicStartingRunUpgrades(game);
+  return game;
 }
 
 function applyRelicStartingRunUpgrades(run) {
@@ -211,7 +218,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   advanceTowerFloor,
   endRun,
   onBossSpawn: ({ superBoss }) =>
-    showOnceBanner(
+    bannerSystem.showOnceBanner(
       superBoss ? "first_super_boss_fight" : "first_boss_fight",
       superBoss
         ? "Super bosses combine powers. Keep moving, use Menu > Inventory to review relics, and expect two relic picks if you win."
@@ -285,134 +292,36 @@ const runUi = globalThis.TapSurvivorRunUi.createRunUi({
   formatTime,
   getGame: () => game,
   getSave: () => save,
-  getGameSpeed: () => gameSpeed,
+  getGameSpeed: () => gameRuntime?.getGameSpeed() || 1,
   maxEquippedWeapons,
   renderDebug: () => debugSystem.render(),
 });
 
+runLifecycle = globalThis.TapSurvivorRunLifecycle.createRunLifecycle({
+  ui,
+  getGame: () => game,
+  getSave: () => save,
+  resetGameState,
+  shopSystem,
+  shellUi,
+  runUi,
+  relicSystem,
+  persist,
+  renderMeta,
+  updateRunHud,
+  showMovementGateBanner: bannerSystem.showMovementGateBanner,
+});
+
 function startRun() {
-  shellUi.closeStartFlow();
-  shopSystem.closeShop();
-  runUi.hideEndScreen();
-  ui.levelUp.classList.add("hidden");
-  shellUi.closeRunMenu(false);
-  resetGameState();
-  game.awaitingFirstMoveInput = true;
-  showMovementGateBanner();
+  runLifecycle.startRun();
 }
 
 function endRun(reason) {
-  if (!game) return;
-  game.running = false;
-  game.endReason = reason;
-  runUi.showEndScreen(reason);
-  persist();
-  renderMeta();
+  runLifecycle.endRun(reason);
 }
 
 function advanceTowerFloor() {
-  if (!game) return;
-  const clearedFloor = game.towerFloor || 1;
-  const relicDropCount = clearedFloor % 5 === 0 ? 2 : 1;
-  showRelicChoice(clearedFloor, relicDropCount, []);
-}
-
-function showRelicChoice(clearedFloor, remainingPicks, awardedRelics) {
-  const choices = relicSystem.relicChoices(save, game.player.equippedWeapons, 3);
-  if (!choices.length) {
-    finishBossClear(clearedFloor, awardedRelics);
-    return;
-  }
-  game.paused = true;
-  game.pauseReason = "relic";
-  ui.relicChoiceTitle.textContent = remainingPicks > 1 ? `Choose Relic ${awardedRelics.length + 1}` : "Choose Relic";
-  ui.relicChoiceText.textContent = "Pick one reward shaped by your current weapons.";
-  ui.relicChoices.innerHTML = "";
-  choices.forEach((relic) => {
-    const button = document.createElement("button");
-    button.className = relic.rarity === "green" ? "green-relic" : "";
-    if (relic.backgroundColor && typeof button.style?.setProperty === "function") button.style.setProperty("--relic-bg", relic.backgroundColor);
-    else if (relic.backgroundColor && button.style) button.style["--relic-bg"] = relic.backgroundColor;
-    button.innerHTML = `
-      <img class="level-choice-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
-      <strong>${relic.name}</strong><br /><span>${relic.description}</span>
-      ${relic.specialAbility ? `<br /><span>${relic.specialAbility.label}: ${relic.specialAbility.description}</span>` : ""}
-    `;
-    button.addEventListener("click", () => {
-      const granted = relicSystem.grantRelic(save, relic);
-      const nextAwarded = granted ? [...awardedRelics, granted] : awardedRelics;
-      if (remainingPicks > 1) {
-        showRelicChoice(clearedFloor, remainingPicks - 1, nextAwarded);
-      } else {
-        finishBossClear(clearedFloor, nextAwarded);
-      }
-    });
-    ui.relicChoices.appendChild(button);
-  });
-  ui.relicChoice.classList.remove("hidden");
-}
-
-function finishBossClear(clearedFloor, awardedRelics) {
-  ui.relicChoice.classList.add("hidden");
-  save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
-  persist();
-  resetGameState();
-  game.lastFloorClear = {
-    floor: clearedFloor,
-    relicName: awardedRelics.length ? awardedRelics.map((relic) => relic.name).join(" + ") : "No locked relics remaining",
-  };
-  updateRunHud();
-  renderMeta();
-}
-
-let bannerTimer = 0;
-function hasSeenBanner(id) {
-  return save.seenBanners?.includes(id);
-}
-
-function markBannerSeen(id) {
-  save.seenBanners = [...new Set([...(save.seenBanners || []), id])];
-  persist();
-}
-
-function showBanner(message, duration = 5200) {
-  if (!ui.questBanner || !message) return;
-  ui.questBanner.textContent = message;
-  ui.questBanner.classList.remove("hidden");
-  clearTimeout(bannerTimer);
-  if (duration > 0) {
-    bannerTimer = setTimeout(() => ui.questBanner.classList.add("hidden"), duration);
-  }
-}
-
-function showMovementGateBanner() {
-  showBanner("Click/tap to move", 0);
-}
-
-function hideMovementGateBanner() {
-  if (!ui.questBanner || ui.questBanner.textContent !== "Click/tap to move") return;
-  clearTimeout(bannerTimer);
-  ui.questBanner.classList.add("hidden");
-}
-
-function showOnceBanner(id, message, duration) {
-  if (hasSeenBanner(id)) return false;
-  markBannerSeen(id);
-  showBanner(message, duration);
-  return true;
-}
-
-function showQuestBanner(quest, reward) {
-  if (!quest) return;
-  const firstQuest = !hasSeenBanner("first_quest_completion");
-  if (firstQuest) {
-    markBannerSeen("first_quest_completion");
-  }
-  showBanner(
-    firstQuest
-      ? `${quest.name} complete +${reward} QP. Open Menu > Rewards to spend Quest Points and review quests.`
-      : `${quest.name} complete +${reward} QP`,
-  );
+  runLifecycle.advanceTowerFloor();
 }
 
 function maxEquippedWeapons() {
@@ -480,116 +389,43 @@ function closeEndScreen() {
 function loop(now) {
   const dt = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
-  runUpdater.update(dt * gameSpeed);
+  runUpdater.update(dt * (gameRuntime?.getGameSpeed() || 1));
   draw();
   updateRunHud();
   requestAnimationFrame(loop);
 }
 
 function setGameSpeed(speed) {
-  if (![1, 2, 5].includes(speed)) return;
-  gameSpeed = speed;
-  document.body.dataset.gameSpeed = String(speed);
-  ui.speedButtons.forEach((button) => {
-    const active = Number(button.dataset.speed) === speed;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-pressed", String(active));
-  });
-  updateRunHud();
+  gameRuntime.setGameSpeed(speed);
 }
 
 function resetSave() {
-  const resetAfterRemove = () => {
-    save = saveSystem.defaultSave();
-    game = null;
-    runUi.hideEndScreen();
-    ui.levelUp.classList.add("hidden");
-    shopSystem.closeShop();
-    shellUi.closeRunMenu(false);
-    shellUi.showTitleScreen();
-    persist();
-    renderMeta();
-  };
-  const removed = saveSystem.removeSave();
-  if (removed && typeof removed.then === "function") {
-    void removed.then(resetAfterRemove);
-  } else {
-    resetAfterRemove();
-  }
+  gameRuntime.resetSave();
 }
 
-function startRuntime() {
-  shellUi.bind();
-  debugSystem.bind();
-  setGameSpeed(1);
-  bindLifecycleFlush();
+gameRuntime = globalThis.TapSurvivorGameRuntime.createGameRuntimeController({
+  canvas,
+  ui,
+  documentRef: document,
+  globalRef: globalThis,
+  getGame: () => game,
+  setGame: (nextGame) => {
+    game = nextGame;
+  },
+  getSave: () => save,
+  setSave: (nextSave) => {
+    save = nextSave;
+  },
+  saveSystem,
+  shellUi,
+  shopSystem,
+  runUi,
+  debugSystem,
+  spriteSystem,
+  bannerSystem,
+  persist,
+  renderMeta,
+  loop,
+});
 
-  globalThis.TapSurvivorInput.bindMovementInput({
-    canvas,
-    getGame: () => game,
-  });
-  bindFirstMoveGate();
-
-  spriteSystem.loadSprites();
-  renderMeta();
-  requestAnimationFrame(loop);
-}
-
-function bindFirstMoveGate() {
-  const clearGate = (event) => {
-    if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
-    const rect = canvas.getBoundingClientRect();
-    const point = event.touches ? event.touches[0] : event;
-    game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
-    game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
-    game.awaitingFirstMoveInput = false;
-    hideMovementGateBanner();
-  };
-  canvas.addEventListener("mousedown", clearGate);
-  canvas.addEventListener("touchstart", clearGate);
-}
-
-function bindLifecycleFlush() {
-  const flush = () => {
-    void flushSave();
-  };
-  if (document?.addEventListener) {
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") flush();
-    });
-  }
-  globalThis.addEventListener?.("pagehide", flush);
-  globalThis.addEventListener?.("beforeunload", flush);
-  bindCapacitorAppLifecycle(flush);
-}
-
-function bindCapacitorAppLifecycle(flush) {
-  const app = globalThis.Capacitor?.Plugins?.App;
-  if (!app?.addListener) return;
-  try {
-    const listener = app.addListener("appStateChange", ({ isActive }) => {
-      if (!isActive) flush();
-    });
-    if (listener?.catch) listener.catch(() => {});
-  } catch {
-    // Browser and test runtimes may not expose Capacitor App events.
-  }
-}
-
-function initializeRuntime() {
-  const loaded = saveSystem.loadSave();
-  if (loaded && typeof loaded.then === "function") {
-    void loaded.then((loadedSave) => {
-      save = loadedSave;
-      startRuntime();
-    }).catch(() => {
-      save = saveSystem.defaultSave();
-      startRuntime();
-    });
-    return;
-  }
-  save = loaded;
-  startRuntime();
-}
-
-initializeRuntime();
+gameRuntime.initializeRuntime();

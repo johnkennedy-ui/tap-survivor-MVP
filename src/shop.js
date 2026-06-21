@@ -1,7 +1,4 @@
 (() => {
-const SHOP_FLOOR_PRICE_RATE = 0.03;
-const SHOP_INFLATION_RATE = 0.025;
-
 function createShopSystem({
   ui,
   shopItemDefs,
@@ -13,42 +10,20 @@ function createShopSystem({
   persist,
   renderMeta,
 }) {
-  function tierFor(item) {
-    return getSave().shopPurchases?.[item.id] || 0;
-  }
-
-  function costFor(item, tier) {
-    const baseCost = Array.isArray(item.cost) ? item.cost[tier] : item.cost;
-    const floor = Math.max(1, getSave().towerFloor || 1);
-    const floorMultiplier = floor <= 1 ? 1 : 1 + (floor - 1) * SHOP_FLOOR_PRICE_RATE;
-    const inflationMultiplier = taperedInflationMultiplier(purchasedTierCount(item.id));
-    return Math.ceil(baseCost * floorMultiplier * inflationMultiplier);
-  }
-
-  function taperedInflationMultiplier(purchasedTierCount) {
-    return 1 + Math.log1p(Math.max(0, purchasedTierCount)) * SHOP_INFLATION_RATE;
-  }
-
-  function purchasedTierCount(excludedItemId = "") {
-    const purchases = getSave().shopPurchases || {};
-    return shopItemDefs.reduce((total, item) => {
-      if (item.id === excludedItemId) return total;
-      return total + (purchases[item.id] || 0);
-    }, 0);
-  }
+  const pricing = globalThis.TapSurvivorShopPricing.createShopPricing({
+    shopItemDefs,
+    getSave,
+  });
 
   function canBuy(item) {
-    const save = getSave();
-    const tier = tierFor(item);
-    const cost = costFor(item, tier);
-    return tier < item.maxTier && save.coins >= cost;
+    return pricing.canBuy(item);
   }
 
   function buyItem(item) {
     if (!canBuy(item)) return;
     const save = getSave();
-    const tier = tierFor(item);
-    const cost = costFor(item, tier);
+    const tier = pricing.tierFor(item);
+    const cost = pricing.costFor(item, tier);
     save.coins -= cost;
     save.shopPurchases[item.id] = tier + 1;
     playPurchaseSfx?.();
@@ -92,9 +67,9 @@ function createShopSystem({
     }
 
     shopItemDefs.forEach((item) => {
-      const tier = tierFor(item);
+      const tier = pricing.tierFor(item);
       const maxed = tier >= item.maxTier;
-      const cost = costFor(item, tier);
+      const cost = pricing.costFor(item, tier);
       const affordable = !maxed && save.coins >= cost;
       const el = document.createElement("div");
       el.className = `shop-item ${affordable ? "available" : "locked"}`;

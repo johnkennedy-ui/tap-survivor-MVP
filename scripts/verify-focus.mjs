@@ -47,16 +47,18 @@ function verifyContent() {
 
 function verifyRelics() {
   const shellUi = read("src/shell-ui.js");
+  const shellRelicUi = read("src/shell-relic-ui.js");
+  const combatDamage = read("src/combat-damage.js");
   const combat = read("src/combat.js");
   const weaponProjectiles = read("src/weapon-projectiles.js");
-  const enemies = read("src/enemies.js");
+  const enemyBehaviors = read("src/enemy-behaviors.js");
   const pickups = read("src/pickups.js");
   const rendering = read("src/rendering.js");
   const relics = content.relics || [];
   const greenRelics = relics.filter((relic) => relic.rarity === "green");
   check("relics target existing run upgrades", (content.relics || []).every((relic) => (content.runUpgrades || []).some((upgrade) => upgrade.id === relic.targetUpgradeId)));
-  check("relic inventory uses central icon resolver", shellUi.includes("assetResolver.relicIcon"));
-  check("locked relic popup exists", shellUi.includes("Locked, play more to unlock this skill."));
+  check("relic inventory uses central icon resolver", shellRelicUi.includes("assetResolver.relicIcon"));
+  check("locked relic popup exists", shellRelicUi.includes("Locked, play more to unlock this skill."));
   check(
     "generated random relic pool has no floor prefixes",
     relics.every((relic) => !/^floor_\d{3}_/.test(relic.id)),
@@ -99,16 +101,16 @@ function verifyRelics() {
   );
   check(
     "green relic UI background is wired",
-    shellUi.includes("green-relic") && read("src/styles.css").includes(".green-relic"),
+    shellRelicUi.includes("green-relic") && read("src/styles.css").includes(".green-relic"),
   );
   check(
     "green relic runtime effects are wired",
     combat.includes("damagePlayer") &&
-      combat.includes("lifestealOnKill") &&
-      combat.includes("killExplosionDamage") &&
+      combatDamage.includes("lifestealOnKill") &&
+      combatDamage.includes("killExplosionDamage") &&
       weaponProjectiles.includes("projectileSpeedBonus") &&
       weaponProjectiles.includes("doubleShotCount") &&
-      enemies.includes("damagePlayer?.") &&
+      enemyBehaviors.includes("damagePlayer?.") &&
       pickups.includes("coinMultiplier") &&
       rendering.includes("invincibleTimer"),
   );

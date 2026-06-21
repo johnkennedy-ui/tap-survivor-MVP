@@ -1,21 +1,4 @@
 (() => {
-function shuffleChoices(choices) {
-  return choices
-    .map((choice) => ({ choice, sort: Math.random() }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ choice }) => choice);
-}
-
-function weightedChoices(choices, weightForChoice) {
-  return choices
-    .map((choice) => ({
-      choice,
-      sort: Math.random() / Math.max(1, weightForChoice(choice)),
-    }))
-    .sort((a, b) => a.sort - b.sort)
-    .map(({ choice }) => choice);
-}
-
 function createLevelUpSystem({
   ui,
   weaponDefs,
@@ -28,6 +11,7 @@ function createLevelUpSystem({
   activeQuestWeaponIds,
   playChoiceSfx,
 }) {
+  const { choiceId, shopFocusBonus, weightedChoices } = globalThis.TapSurvivorLevelUpChoices;
   const assetResolver = globalThis.TapSurvivorAssets?.createAssetResolver?.() || {
     fallbackSkillIcon: globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
     choiceIconDefinition: () => globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
@@ -156,10 +140,6 @@ function createLevelUpSystem({
     ui.levelUp.classList.remove("hidden");
   }
 
-  function shopFocusBonus(save) {
-    return (save.shopPurchases?.relic_compass || 0) * 0.5;
-  }
-
   function createChoiceIcon(choice) {
     const path = assetResolver.choiceIconPath(choice) || fallbackSkillIcon;
     const image = document.createElement("img");
@@ -167,10 +147,6 @@ function createLevelUpSystem({
     image.src = path;
     image.alt = "";
     return image;
-  }
-
-  function choiceId(choice) {
-    return choice.weaponId ? `weapon:${choice.weaponId}` : `run:${choice.runUpgradeId || choice.name}`;
   }
 
   function closeLevelUpMenu() {
