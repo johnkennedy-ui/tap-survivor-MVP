@@ -29,4 +29,11 @@ Before editing this repo:
 25. New math helper consumers should receive/import math helpers explicitly instead of reading `globalThis.TapSurvivorMath`; keep the existing compatibility bridge only until the script-order runtime is migrated.
 26. New HUD renderer consumers should receive/import `createHudRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderHud`; keep the existing compatibility bridge only until the rendering stack is migrated.
 
+## Frank Anti-Lockup Tools
+
+- Run `npm run frank:heartbeat -- --task "<task>" --phase "<phase>"` before and after each major phase.
+- Use `npm run frank:run -- "<command>" --timeout <seconds>` for validation commands expected to take more than a few seconds.
+- If the same command fails twice, stop, update Frank status with `--blocker`, and report instead of continuing.
+- If blocked, write the blocker into `.agent/frank-status.json` with `npm run frank:heartbeat -- --blocker "<reason>"` and stop.
+
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.
