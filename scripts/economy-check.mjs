@@ -9,6 +9,14 @@ const BOSS_COIN_BASE_VALUE = 12;
 const content = readContent();
 const schema = readContentSchema();
 const shopItems = content.shopItems || [];
+const tuning = content.tuning || {};
+const shopTuning = tuning.shop || {};
+const lootTuning = tuning.loot || {};
+const shopFloorPriceRate = shopTuning.floorPriceRate ?? SHOP_FLOOR_PRICE_RATE;
+const shopInflationRate = shopTuning.inflationRate ?? SHOP_INFLATION_RATE;
+const coinFloorRewardRate = lootTuning.coinFloorRewardRate ?? COIN_FLOOR_REWARD_RATE;
+const normalCoinBaseValue = lootTuning.normalCoinBaseValue ?? NORMAL_COIN_BASE_VALUE;
+const bossCoinBaseValue = lootTuning.bossCoinBaseValue ?? BOSS_COIN_BASE_VALUE;
 const supportedStats = schema.effectRegistries?.shopItem?.stats || [];
 const errors = validateContent(content).map((error) => `content validation: ${error}`);
 const warnings = [];
@@ -19,16 +27,16 @@ function formatNumber(value) {
 
 function coinValue(baseValue, towerFloor) {
   const floor = Math.max(1, Math.floor(towerFloor || 1));
-  return Math.ceil(baseValue * (1 + (floor - 1) * COIN_FLOOR_REWARD_RATE));
+  return Math.ceil(baseValue * (1 + (floor - 1) * coinFloorRewardRate));
 }
 
 function floorPriceMultiplier(towerFloor) {
   const floor = Math.max(1, Math.floor(towerFloor || 1));
-  return floor <= 1 ? 1 : 1 + (floor - 1) * SHOP_FLOOR_PRICE_RATE;
+  return floor <= 1 ? 1 : 1 + (floor - 1) * shopFloorPriceRate;
 }
 
 function inflationMultiplier(purchasedTierCount) {
-  return 1 + Math.log1p(Math.max(0, purchasedTierCount)) * SHOP_INFLATION_RATE;
+  return 1 + Math.log1p(Math.max(0, purchasedTierCount)) * shopInflationRate;
 }
 
 function itemCosts(item) {
@@ -101,11 +109,11 @@ shopItems.forEach((item) => {
 });
 
 console.log("\n## Scaling Samples");
-console.log(`- shop floor price rate: ${formatNumber(SHOP_FLOOR_PRICE_RATE * 100)}% per floor after floor 1`);
-console.log(`- shop inflation rate: ${formatNumber(SHOP_INFLATION_RATE * 100)}% per other purchased tier`);
-console.log(`- coin reward floor rate: ${formatNumber(COIN_FLOOR_REWARD_RATE * 100)}% per floor after floor 1`);
-console.log(`- normal coin value by floor: ${floorSamples.map((floor) => `${floor}: ${coinValue(NORMAL_COIN_BASE_VALUE, floor)}`).join(", ")}`);
-console.log(`- boss coin value by floor: ${floorSamples.map((floor) => `${floor}: ${coinValue(BOSS_COIN_BASE_VALUE, floor)}`).join(", ")}`);
+console.log(`- shop floor price rate: ${formatNumber(shopFloorPriceRate * 100)}% per floor after floor 1`);
+console.log(`- shop inflation rate: ${formatNumber(shopInflationRate * 100)}% per other purchased tier`);
+console.log(`- coin reward floor rate: ${formatNumber(coinFloorRewardRate * 100)}% per floor after floor 1`);
+console.log(`- normal coin value by floor: ${floorSamples.map((floor) => `${floor}: ${coinValue(normalCoinBaseValue, floor)}`).join(", ")}`);
+console.log(`- boss coin value by floor: ${floorSamples.map((floor) => `${floor}: ${coinValue(bossCoinBaseValue, floor)}`).join(", ")}`);
 console.log(`- ${firstItem?.id || "first item"} tier 1 price by floor: ${firstItemSamples}`);
 console.log(`- inflation multipliers: ${purchaseSamples.map((count) => `${count} purchases: x${formatNumber(inflationMultiplier(count))}`).join(", ")}`);
 

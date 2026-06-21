@@ -1,0 +1,76 @@
+{
+  "levels": [
+    {
+      "id": "floor_intro",
+      "name": "Floor Intro",
+      "startsAt": 0,
+      "enemyIds": [
+        "drifter",
+        "skitter",
+        "bulwark",
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
+      ],
+      "spawnCount": 2,
+      "spawnRateMultiplier": 1,
+      "notes": "Opening wave; tower floor gating decides which enemy types are eligible."
+    },
+    {
+      "id": "floor_skitter_mix",
+      "name": "Skitter Mix",
+      "startsAt": 30,
+      "enemyIds": [
+        "drifter",
+        "skitter",
+        "bulwark",
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
+      ],
+      "spawnCount": 2,
+      "spawnRateMultiplier": 1,
+      "notes": "Mid-run mix still respects tower-floor enemy unlocks."
+    },
+    {
+      "id": "floor_bulwark_mix",
+      "name": "Bulwark Mix",
+      "startsAt": 60,
+      "enemyIds": [
+        "drifter",
+        "skitter",
+        "bulwark",
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
+      ],
+      "spawnCount": 2,
+      "spawnRateMultiplier": 1,
+      "notes": "Heavier mix once more tower-floor enemy types are available."
+    },
+    {
+      "id": "floor_pressure",
+      "name": "Floor Pressure",
+      "startsAt": 110,
+      "enemyIds": [
+        "drifter",
+        "skitter",
+        "bulwark",
+        "hexer",
+        "verdant_skitter",
+        "dusk_crawler",
+        "crimson_hexer",
+        "obsidian_bulwark"
+      ],
+      "spawnCount": 3,
+      "spawnRateMultiplier": 1.08,
+      "notes": "Late-run pressure now lives in content instead of spawn code."
+    }
+  ]
+}

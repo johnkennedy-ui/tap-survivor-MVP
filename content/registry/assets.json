@@ -1,0 +1,1781 @@
+{
+  "assets": {
+    "sources": [
+      {
+        "id": "kenney_desert_shooter_pack",
+        "name": "Kenney Desert Shooter Pack 1.0",
+        "license": "CC0",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "https://kenney.nl/assets/desert-shooter-pack",
+        "localLicense": "assets/kenney/desert-shooter/License.txt"
+      },
+      {
+        "id": "generated_tower_floor",
+        "name": "Generated Tower Floor Background",
+        "license": "Generated original asset",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "local",
+        "localLicense": "assets/generated/tower/License.txt"
+      },
+      {
+        "id": "generated_tower_sprites",
+        "name": "Generated Tower Sprite Set",
+        "license": "Generated original SVG assets",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "local",
+        "localLicense": "assets/generated/tower/sprites/License.txt"
+      },
+      {
+        "id": "user_enemy_sprite_sheet_20260614",
+        "name": "User Provided Enemy Sprite Sheet",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram:file/AgACAgQAAxkBAAJZNmovHYBCP9zQ3i33d3CAhGf0UW_vAAIqD2sb0fF5UfdIhMdfCDz4AQADAgADdwADPAQ",
+        "localLicense": "assets/generated/tower/sheet-20260614/README.md"
+      },
+      {
+        "id": "user_skill_sfx_20260615",
+        "name": "User Provided Skill Sound Effects",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/sfx/License.txt"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_01",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 01",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram:file/AgACAgQAAxkBAAJZ5GovP0n_zqdywCRIFnBNHtM_CBpDAAJRD2sb0fF5USsxl8VE0EiyAQADAgADdwADPAQ",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_02",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 02",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_03",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 03",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_04",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 04",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      },
+      {
+        "id": "user_skill_effect_sheet_20260615_batch_05",
+        "name": "User Provided Skill Effect Sprite Sheet Batch 05",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/skill-effects/README.md"
+      }
+    ],
+    "sprites": {
+      "player": "assets/generated/tower/sheet-20260614/wizard-idle-staff.png?v=sheet-20260614-player",
+      "playerAnimations": {
+        "walk": "assets/generated/tower/sheet-20260614/wizard-walk-staff.png?v=sheet-20260614-player",
+        "cast_orb": "assets/generated/tower/sheet-20260614/wizard-cast-orb.png?v=sheet-20260614-player",
+        "cast_beam": "assets/generated/tower/sheet-20260614/wizard-cast-beam.png?v=sheet-20260614-player",
+        "sweep": "assets/generated/tower/sheet-20260614/wizard-sweep.png?v=sheet-20260614-player",
+        "ready": "assets/generated/tower/sheet-20260614/wizard-ready.png?v=sheet-20260614-player"
+      },
+      "backgrounds": {
+        "tower_floor": "assets/generated/tower/tower-floor-bg.png?v=generated-20260611"
+      },
+      "enemies": {
+        "drifter": "assets/generated/tower/sheet-20260614/spider-brown.png?v=sheet-20260614",
+        "skitter": "assets/generated/tower/sheet-20260614/spider-green.png?v=sheet-20260614",
+        "bulwark": "assets/generated/tower/sheet-20260614/crystal-golem.png?v=sheet-20260614",
+        "hexer": "assets/generated/tower/sheet-20260614/necromancer-hexer.png?v=sheet-20260614",
+        "verdant_skitter": "assets/generated/tower/sheet-20260614/spider-green.png?v=sheet-20260614",
+        "dusk_crawler": "assets/generated/tower/sheet-20260614/spider-black.png?v=sheet-20260614",
+        "crimson_hexer": "assets/generated/tower/sheet-20260614/spider-red.png?v=sheet-20260614",
+        "obsidian_bulwark": "assets/generated/tower/sheet-20260614/crystal-golem.png?v=sheet-20260614",
+        "boss": "assets/generated/tower/sheet-20260614/demon-boss.png?v=sheet-20260614"
+      },
+      "weapons": {
+        "spark_bolt": {
+          "src": "assets/generated/tower/skill-effects/split/skill-01-spark_bolt.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 48,
+              "y": 42,
+              "width": 160,
+              "height": 145
+            },
+            {
+              "x": 270,
+              "y": 28,
+              "width": 200,
+              "height": 155
+            },
+            {
+              "x": 548,
+              "y": 50,
+              "width": 215,
+              "height": 120
+            },
+            {
+              "x": 815,
+              "y": 48,
+              "width": 220,
+              "height": 118
+            },
+            {
+              "x": 1085,
+              "y": 58,
+              "width": 210,
+              "height": 88
+            },
+            {
+              "x": 1380,
+              "y": 45,
+              "width": 145,
+              "height": 130
+            }
+          ],
+          "iconScale": 1.1,
+          "effectScale": 1.45,
+          "effectAlpha": 0.86,
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260614-weapons"
+        },
+        "prism_beam": {
+          "src": "assets/generated/tower/skill-effects/split/skill-02-prism_beam.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 52,
+              "y": 27,
+              "width": 160,
+              "height": 145
+            },
+            {
+              "x": 262,
+              "y": 14,
+              "width": 255,
+              "height": 150
+            },
+            {
+              "x": 540,
+              "y": 32,
+              "width": 555,
+              "height": 105
+            },
+            {
+              "x": 805,
+              "y": 32,
+              "width": 300,
+              "height": 105
+            },
+            {
+              "x": 1138,
+              "y": 59,
+              "width": 215,
+              "height": 55
+            },
+            {
+              "x": 1405,
+              "y": 54,
+              "width": 150,
+              "height": 65
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 1.05,
+          "effectAlpha": 0.76,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260614-weapons"
+        },
+        "frost_orb": {
+          "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 52,
+              "y": 26,
+              "width": 175,
+              "height": 130
+            },
+            {
+              "x": 285,
+              "y": 16,
+              "width": 140,
+              "height": 130
+            },
+            {
+              "x": 520,
+              "y": 31,
+              "width": 205,
+              "height": 105
+            },
+            {
+              "x": 788,
+              "y": 31,
+              "width": 200,
+              "height": 105
+            },
+            {
+              "x": 1088,
+              "y": 31,
+              "width": 210,
+              "height": 105
+            },
+            {
+              "x": 1382,
+              "y": 26,
+              "width": 150,
+              "height": 110
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.25,
+          "effectAlpha": 0.86,
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
+        },
+        "flame_wave": {
+          "src": "assets/generated/tower/skill-effects/split/skill-04-flame_wave.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 44,
+              "y": 55,
+              "width": 105,
+              "height": 105
+            },
+            {
+              "x": 175,
+              "y": 20,
+              "width": 190,
+              "height": 150
+            },
+            {
+              "x": 342,
+              "y": 5,
+              "width": 220,
+              "height": 165
+            },
+            {
+              "x": 588,
+              "y": 0,
+              "width": 295,
+              "height": 170
+            },
+            {
+              "x": 765,
+              "y": 0,
+              "width": 400,
+              "height": 170
+            },
+            {
+              "x": 1110,
+              "y": 55,
+              "width": 430,
+              "height": 105
+            }
+          ],
+          "iconScale": 0.95,
+          "effectScale": 1,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-flame-wave.svg?v=generated-20260614-weapons"
+        },
+        "saw_drone": {
+          "src": "assets/generated/tower/skill-effects/split/skill-05-saw_drone.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 50,
+              "y": 42,
+              "width": 132,
+              "height": 115
+            },
+            {
+              "x": 252,
+              "y": 25,
+              "width": 190,
+              "height": 125
+            },
+            {
+              "x": 490,
+              "y": 30,
+              "width": 165,
+              "height": 120
+            },
+            {
+              "x": 725,
+              "y": 30,
+              "width": 175,
+              "height": 120
+            },
+            {
+              "x": 962,
+              "y": 30,
+              "width": 190,
+              "height": 120
+            },
+            {
+              "x": 1210,
+              "y": 30,
+              "width": 168,
+              "height": 120
+            },
+            {
+              "x": 1408,
+              "y": 30,
+              "width": 132,
+              "height": 125
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 0.92,
+          "effectAlpha": 0.88,
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-saw-drone.svg?v=generated-20260614-weapons"
+        },
+        "void_mine": {
+          "src": "assets/generated/tower/skill-effects/split/skill-06-void_mine.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 0.96,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-void-mine.svg?v=generated-20260614-weapons"
+        },
+        "chain_spark": {
+          "src": "assets/generated/tower/skill-effects/split/skill-07-chain_spark.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.95,
+          "effectScale": 1,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
+        },
+        "moon_glaive": {
+          "src": "assets/generated/tower/skill-effects/split/skill-08-moon_glaive.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.08,
+          "effectScale": 1.08,
+          "effectAlpha": 0.86,
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
+        },
+        "meteor_pin": {
+          "src": "assets/generated/tower/skill-effects/split/skill-09-meteor_pin.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.92,
+          "effectScale": 0.95,
+          "effectAlpha": 0.82,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
+        },
+        "acid_pool": {
+          "src": "assets/generated/tower/skill-effects/split/skill-10-acid_pool.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.95,
+          "effectScale": 1,
+          "effectAlpha": 0.72,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-acid-pool.svg?v=generated-20260614-weapons"
+        },
+        "shield_pulse": {
+          "src": "assets/generated/tower/skill-effects/split/skill-11-shield_pulse.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 1,
+          "effectAlpha": 0.72,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
+        },
+        "nova_burst": {
+          "src": "assets/generated/tower/skill-effects/split/skill-12-nova_burst.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 1,
+          "effectAlpha": 0.7,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
+        }
+      },
+      "ui": {
+        "coin": "assets/generated/tower/sprites/pickup-coin.svg?v=generated-20260614-pickups",
+        "heart": "assets/generated/tower/sprites/pickup-heart.svg?v=generated-20260614-pickups",
+        "quest": "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
+      },
+      "runUpgrades": {
+        "run_move_speed": {
+          "src": "assets/generated/tower/skill-effects/split/skill-13-run_move_speed.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.05,
+          "effectAlpha": 0.82,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop"
+        },
+        "run_pickup_radius": {
+          "src": "assets/generated/tower/skill-effects/split/skill-14-run_pickup_radius.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1,
+          "effectScale": 1,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop"
+        },
+        "run_max_hp": {
+          "src": "assets/generated/tower/skill-effects/split/skill-15-run_max_hp.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 0.9,
+          "effectAlpha": 0.82,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop"
+        },
+        "run_attack_radius": {
+          "src": "assets/generated/tower/skill-effects/split/skill-16-run_attack_radius.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.95,
+          "effectScale": 1,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop"
+        },
+        "run_fire_rate": {
+          "src": "assets/generated/tower/skill-effects/split/skill-17-run_fire_rate.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1,
+          "effectScale": 1,
+          "effectAlpha": 0.8,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop"
+        },
+        "run_flat_damage": {
+          "src": "assets/generated/tower/skill-effects/split/skill-18-run_flat_damage.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.95,
+          "effectScale": 0.95,
+          "effectAlpha": 0.82,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop"
+        },
+        "run_percent_damage": {
+          "src": "assets/generated/tower/skill-effects/split/skill-19-run_percent_damage.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 0.9,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop"
+        },
+        "run_projectile_pierce": {
+          "src": "assets/generated/tower/skill-effects/split/skill-20-run_projectile_pierce.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.05,
+          "effectAlpha": 0.82,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons"
+        },
+        "run_wall_bounce": {
+          "src": "assets/generated/tower/skill-effects/split/skill-21-run_wall_bounce.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.05,
+          "effectAlpha": 0.8,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons"
+        },
+        "run_split_shot": {
+          "src": "assets/generated/tower/skill-effects/split/skill-22-run_split_shot.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.95,
+          "effectScale": 0.95,
+          "effectAlpha": 0.82,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
+        },
+        "run_explosive_hit": {
+          "src": "assets/generated/tower/skill-effects/split/skill-23-run_explosive_hit.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 0.9,
+          "effectAlpha": 0.76,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons"
+        },
+        "run_split_on_hit": {
+          "src": "assets/generated/tower/skill-effects/split/skill-24-run_split_on_hit.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1,
+          "effectScale": 1,
+          "effectAlpha": 0.82,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons"
+        },
+        "run_haste_projectiles": {
+          "src": "assets/generated/tower/skill-effects/split/skill-20-run_projectile_pierce.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.05,
+          "effectAlpha": 0.84,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260614-weapons"
+        },
+        "run_heavy_projectiles": {
+          "src": "assets/generated/tower/skill-effects/split/skill-24-run_split_on_hit.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1.05,
+          "effectScale": 1.05,
+          "effectAlpha": 0.78,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
+        }
+      },
+      "runUpgradeIcons": {
+        "run_move_speed": "assets/generated/tower/sprites/shop-training-boots.svg?v=generated-20260614-shop",
+        "run_pickup_radius": "assets/generated/tower/sprites/shop-coin-magnet.svg?v=generated-20260614-shop",
+        "run_max_hp": "assets/generated/tower/sprites/shop-reinforced-vest.svg?v=generated-20260614-shop",
+        "run_attack_radius": "assets/generated/tower/sprites/shop-arcane-lens.svg?v=generated-20260614-shop",
+        "run_fire_rate": "assets/generated/tower/sprites/shop-clockwork-trigger.svg?v=generated-20260614-shop",
+        "run_flat_damage": "assets/generated/tower/sprites/shop-weapon-polish.svg?v=generated-20260614-shop",
+        "run_percent_damage": "assets/generated/tower/sprites/shop-tower-grimoire.svg?v=generated-20260614-shop",
+        "run_projectile_pierce": "assets/generated/tower/sprites/weapon-moon-glaive.svg?v=generated-20260614-weapons",
+        "run_wall_bounce": "assets/generated/tower/sprites/weapon-shield-pulse.svg?v=generated-20260614-weapons",
+        "run_split_shot": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons",
+        "run_explosive_hit": "assets/generated/tower/sprites/weapon-nova-burst.svg?v=generated-20260614-weapons",
+        "run_split_on_hit": "assets/generated/tower/sprites/weapon-meteor-pin.svg?v=generated-20260614-weapons",
+        "run_haste_projectiles": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260614-weapons",
+        "run_heavy_projectiles": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
+      }
+    }
+  }
+}

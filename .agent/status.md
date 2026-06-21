@@ -37,3 +37,5 @@
 2026-06-21 02:11 BST - Continued requested splits: extracted normal enemy wave spawning to `src/enemy-spawning.js` and HUD skill/upgrade rails to `src/render-skill-rail.js`. Required validation passed again.
 2026-06-21 08:54 BST - Continuing Tap Survivor split: extracting game runtime/reset/speed binding from `src/game.js` into `src/game-runtime.js`; validation to follow.
 2026-06-21 09:00 BST - Game runtime split validated. `npm test` and `npm run agent:check` passed after updating VM harnesses/verifiers to load `src/game-runtime.js`.
+2026-06-21 09:47 BST - Content workbench architecture task: split source content into `content/registry/*.json`, added `content/balance/*.json` profiles, balance report scripts, generator coverage, validation rules, and docs. Final validation pending.
+2026-06-21 09:59 BST - Content workbench architecture validated: required content, balance, smoke, npm test, and full `npm run agent:check` all passed. Patch remains local and uncommitted.

@@ -1,7 +1,8 @@
-import { readContent, validateContent } from "./content-tools.mjs";
+import { assembleRegistryContent, readContent, validateBalanceProfiles, validateContent } from "./content-tools.mjs";
 
 const content = readContent();
-const errors = validateContent(content);
+const sourceContent = assembleRegistryContent();
+const errors = [...validateContent(content), ...validateBalanceProfiles(sourceContent).map((error) => `balance profile: ${error}`)];
 
 console.log("# Tap Survivor Content Validation");
 
@@ -17,3 +18,4 @@ console.log(`PASS ${(content.enemyTypes || []).length} enemy types`);
 console.log(`PASS ${(content.characters || []).length} characters`);
 console.log(`PASS ${(content.shopItems || []).length} shop items`);
 console.log(`PASS ${(content.levels || []).length} level entries`);
+console.log(`PASS ${(content.maps || []).length} map entries`);

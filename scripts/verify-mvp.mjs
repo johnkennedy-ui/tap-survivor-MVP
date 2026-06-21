@@ -268,7 +268,7 @@ check(
     game.includes("onPurchaseNotice: (message) => bannerSystem.showBanner(message)") &&
     shop.includes("Inflation huh."),
 );
-check("coin rewards scale toward floor 100 shop buyout", pickups.includes("function coinValue") && pickups.includes("(floor - 1) * 0.06") && pickups.includes("game.towerFloor") && shopPricing.includes("SHOP_FLOOR_PRICE_RATE = 0.03"));
+check("coin rewards scale toward floor 100 shop buyout", pickups.includes("function coinValue") && pickups.includes("(floor - 1) * coinFloorRewardRate") && pickups.includes("game.towerFloor") && shopPricing.includes("SHOP_FLOOR_PRICE_RATE = 0.03") && content.tuning?.loot?.coinFloorRewardRate === 0.06);
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
 check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => weaponFire.includes(token)) && game.includes("getShopBonuses"));
 check("title screen starts first", index.includes('id="titleScreen" class="modal"') && !index.includes('id="startMenu"') && shellUi.includes('currentScreen = "title"'));

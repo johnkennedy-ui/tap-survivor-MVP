@@ -1,0 +1,2020 @@
+{
+  "shopItems": [
+    {
+      "id": "training_boots",
+      "name": "Fleetfoot Initiate Boots",
+      "description": "Start each run with more movement speed; soft tower leather gives the first stride extra pace.",
+      "kind": "stat_upgrade",
+      "cost": [
+        27,
+        48,
+        75
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/001_fleetfoot_initiate_boots.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "speed",
+        "value": 10
+      }
+    },
+    {
+      "id": "coin_magnet",
+      "name": "Glimmerpull Lodestone",
+      "description": "Start each run with a larger pickup radius; stray coins and shards tug toward you sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        21,
+        37,
+        58
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/002_glimmerpull_lodestone.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 10
+      }
+    },
+    {
+      "id": "reinforced_vest",
+      "name": "Ironleaf Guard Vest",
+      "description": "Start each run with more maximum HP; layered plates absorb the first mistakes of a climb.",
+      "kind": "stat_upgrade",
+      "cost": [
+        30,
+        53,
+        83
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/003_ironleaf_guard_vest.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "maxHp",
+        "value": 15
+      }
+    },
+    {
+      "id": "weapon_polish",
+      "name": "Razor Sheen Oil",
+      "description": "Start each run with more flat weapon damage; every blade and bolt lands with a cleaner bite.",
+      "kind": "stat_upgrade",
+      "cost": [
+        50,
+        83,
+        124
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/004_razor_sheen_oil.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 2
+      }
+    },
+    {
+      "id": "arcane_lens",
+      "name": "Farstrike Moonlens",
+      "description": "Start each run with wider attack reach; moon-glass stretches the edge of every strike.",
+      "kind": "stat_upgrade",
+      "cost": [
+        45,
+        74,
+        116
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/005_farstrike_moonlens.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 1
+      }
+    },
+    {
+      "id": "clockwork_trigger",
+      "name": "Ratchetfire Trigger",
+      "description": "Start each run with faster auto-attacks; a ticking gear shortens the gap between shots.",
+      "kind": "stat_upgrade",
+      "cost": [
+        62,
+        101,
+        152
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/006_ratchetfire_trigger.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "fireRate",
+        "value": 1
+      }
+    },
+    {
+      "id": "tower_grimoire",
+      "name": "Runesurge Grimoire",
+      "description": "Start each run with stronger percentage damage; tower ink amplifies every scaling bonus.",
+      "kind": "stat_upgrade",
+      "cost": [
+        72,
+        119,
+        177
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/007_runesurge_grimoire.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 1
+      }
+    },
+    {
+      "id": "relic_compass",
+      "name": "Relic-Seeker Compass",
+      "description": "Boss relics push their linked skills harder in level-up choices; the needle leans toward bound power.",
+      "kind": "stat_upgrade",
+      "cost": [
+        50,
+        83,
+        122
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/008_relic_seeker_compass.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.5
+      }
+    },
+    {
+      "id": "aether_soles",
+      "name": "Skythread Aether Soles",
+      "description": "Add a smaller extra movement boost for tower climbs; the soles lift just before your step lands.",
+      "kind": "stat_upgrade",
+      "cost": [
+        75,
+        125,
+        183
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/009_skythread_aether_soles.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "speed",
+        "value": 6
+      }
+    },
+    {
+      "id": "soul_satchel",
+      "name": "Graveglow Soul Satchel",
+      "description": "Pull pickups in from farther away on higher floors; the bag drinks in loose treasure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        58,
+        99,
+        148
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/010_graveglow_soul_satchel.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 7
+      }
+    },
+    {
+      "id": "ember_whetstone",
+      "name": "Cinderbite Whetstone",
+      "description": "Add more flat weapon damage for later floors; a hot edge keeps its bite longer.",
+      "kind": "stat_upgrade",
+      "cost": [
+        116,
+        190,
+        273
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/011_cinderbite_whetstone.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 3
+      }
+    },
+    {
+      "id": "chrono_spring",
+      "name": "Ticklash Chrono Spring",
+      "description": "Slightly increase weapon firing pace before each run; the coil snaps attacks forward.",
+      "kind": "stat_upgrade",
+      "cost": [
+        137,
+        224,
+        324
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "spritePath": "assets/generated/tower/sprites/shop-items/012_ticklash_chrono_spring.png?v=shop-pack-20260619",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.75
+      }
+    },
+    {
+      "id": "generic_shop_001",
+      "name": "Ashen Strider Boots",
+      "description": "Adds a small permanent movement speed boost; ash-etched soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        17,
+        27,
+        44
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/013_ashen_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_002",
+      "name": "Ashen Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; ash-etched pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        17,
+        26,
+        41
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/014_ashen_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_003",
+      "name": "Ashen Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; ash-etched plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        20,
+        32,
+        49
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/015_ashen_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_004",
+      "name": "Ashen Fang Edge",
+      "description": "Adds a small permanent flat damage boost; ash-etched a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        30,
+        47,
+        70
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/016_ashen_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_005",
+      "name": "Ashen Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; ash-etched glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        32,
+        50,
+        74
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/017_ashen_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_006",
+      "name": "Ashen Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; ash-etched the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        40,
+        62,
+        90
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/018_ashen_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_007",
+      "name": "Ashen Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; ash-etched glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        44,
+        65,
+        96
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/019_ashen_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_008",
+      "name": "Ashen Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; ash-etched the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        29,
+        43,
+        63
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/020_ashen_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_009",
+      "name": "Copper Strider Boots",
+      "description": "Adds a small permanent movement speed boost; copper-bound soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        38,
+        57,
+        81
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/021_copper_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_010",
+      "name": "Copper Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; copper-bound pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        35,
+        52,
+        74
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/022_copper_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_011",
+      "name": "Copper Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; copper-bound plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        40,
+        60,
+        85
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/023_copper_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_012",
+      "name": "Copper Fang Edge",
+      "description": "Adds a small permanent flat damage boost; copper-bound a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        57,
+        83,
+        118
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/024_copper_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_013",
+      "name": "Copper Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; copper-bound glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        58,
+        85,
+        120
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/025_copper_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_014",
+      "name": "Copper Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; copper-bound the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        69,
+        101,
+        141
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/026_copper_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_015",
+      "name": "Copper Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; copper-bound glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        72,
+        107,
+        148
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/027_copper_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_016",
+      "name": "Copper Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; copper-bound the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        47,
+        69,
+        95
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/028_copper_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_017",
+      "name": "Brass Strider Boots",
+      "description": "Adds a small permanent movement speed boost; brass-rung soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        60,
+        87,
+        121
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/029_brass_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_018",
+      "name": "Brass Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; brass-rung pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        53,
+        78,
+        107
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/030_brass_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_019",
+      "name": "Brass Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; brass-rung plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        60,
+        88,
+        120
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/031_brass_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_020",
+      "name": "Brass Fang Edge",
+      "description": "Adds a small permanent flat damage boost; brass-rung a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        83,
+        121,
+        165
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/032_brass_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_021",
+      "name": "Brass Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; brass-rung glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        84,
+        122,
+        167
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/033_brass_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_022",
+      "name": "Brass Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; brass-rung the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        98,
+        141,
+        193
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/034_brass_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_023",
+      "name": "Brass Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; brass-rung glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        101,
+        146,
+        200
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/035_brass_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_024",
+      "name": "Brass Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; brass-rung the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        64,
+        93,
+        126
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/036_brass_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_025",
+      "name": "Sable Strider Boots",
+      "description": "Adds a small permanent movement speed boost; shadow-dyed soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        81,
+        118,
+        160
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/037_sable_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_026",
+      "name": "Sable Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; shadow-dyed pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        72,
+        104,
+        141
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/038_sable_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_027",
+      "name": "Sable Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; shadow-dyed plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        80,
+        115,
+        157
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/039_sable_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_028",
+      "name": "Sable Fang Edge",
+      "description": "Adds a small permanent flat damage boost; shadow-dyed a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        109,
+        157,
+        213
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/040_sable_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_029",
+      "name": "Sable Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; shadow-dyed glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        109,
+        157,
+        212
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/041_sable_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_030",
+      "name": "Sable Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; shadow-dyed the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        126,
+        182,
+        245
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/042_sable_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_031",
+      "name": "Sable Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; shadow-dyed glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        130,
+        188,
+        252
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/043_sable_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_032",
+      "name": "Sable Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; shadow-dyed the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        82,
+        117,
+        158
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/044_sable_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_033",
+      "name": "Ivory Strider Boots",
+      "description": "Adds a small permanent movement speed boost; bone-white soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        103,
+        148,
+        199
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/045_ivory_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_034",
+      "name": "Ivory Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; bone-white pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        90,
+        129,
+        173
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/046_ivory_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_035",
+      "name": "Ivory Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; bone-white plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        100,
+        144,
+        193
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/047_ivory_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_036",
+      "name": "Ivory Fang Edge",
+      "description": "Adds a small permanent flat damage boost; bone-white a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        136,
+        195,
+        261
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/048_ivory_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_037",
+      "name": "Ivory Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; bone-white glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        135,
+        192,
+        258
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/049_ivory_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_038",
+      "name": "Ivory Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; bone-white the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        155,
+        222,
+        297
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/050_ivory_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_039",
+      "name": "Ivory Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; bone-white glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        159,
+        227,
+        303
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/051_ivory_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_040",
+      "name": "Ivory Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; bone-white the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        100,
+        142,
+        190
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/052_ivory_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_041",
+      "name": "Verdant Strider Boots",
+      "description": "Adds a small permanent movement speed boost; moss-wrapped soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        125,
+        179,
+        238
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/053_verdant_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_042",
+      "name": "Verdant Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; moss-wrapped pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        109,
+        155,
+        206
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/054_verdant_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_043",
+      "name": "Verdant Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; moss-wrapped plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        120,
+        172,
+        229
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/055_verdant_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_044",
+      "name": "Verdant Fang Edge",
+      "description": "Adds a small permanent flat damage boost; moss-wrapped a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        162,
+        231,
+        307
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/056_verdant_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_045",
+      "name": "Verdant Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; moss-wrapped glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        160,
+        229,
+        304
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/057_verdant_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_046",
+      "name": "Verdant Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; moss-wrapped the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        184,
+        263,
+        350
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/058_verdant_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_047",
+      "name": "Verdant Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; moss-wrapped glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        188,
+        267,
+        355
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/059_verdant_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_048",
+      "name": "Verdant Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; moss-wrapped the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        117,
+        167,
+        222
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/060_verdant_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_049",
+      "name": "Azure Strider Boots",
+      "description": "Adds a small permanent movement speed boost; sky-lit soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        146,
+        208,
+        276
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/061_azure_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_050",
+      "name": "Azure Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; sky-lit pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        127,
+        181,
+        240
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/062_azure_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_051",
+      "name": "Azure Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; sky-lit plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        140,
+        200,
+        265
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/063_azure_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_052",
+      "name": "Azure Fang Edge",
+      "description": "Adds a small permanent flat damage boost; sky-lit a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        189,
+        268,
+        355
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/064_azure_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_053",
+      "name": "Azure Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; sky-lit glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        186,
+        264,
+        351
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/065_azure_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_054",
+      "name": "Azure Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; sky-lit the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        213,
+        303,
+        400
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/066_azure_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_055",
+      "name": "Azure Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; sky-lit glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        216,
+        308,
+        407
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/067_azure_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_056",
+      "name": "Azure Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; sky-lit the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        135,
+        192,
+        254
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/068_azure_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_057",
+      "name": "Crimson Strider Boots",
+      "description": "Adds a small permanent movement speed boost; blood-warm soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        168,
+        238,
+        315
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/069_crimson_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_058",
+      "name": "Crimson Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; blood-warm pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        145,
+        206,
+        273
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/070_crimson_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_059",
+      "name": "Crimson Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; blood-warm plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        160,
+        228,
+        300
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/071_crimson_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_060",
+      "name": "Crimson Fang Edge",
+      "description": "Adds a small permanent flat damage boost; blood-warm a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        215,
+        306,
+        403
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/072_crimson_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_061",
+      "name": "Crimson Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; blood-warm glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        212,
+        301,
+        397
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/073_crimson_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_062",
+      "name": "Crimson Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; blood-warm the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        242,
+        342,
+        452
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/074_crimson_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_063",
+      "name": "Crimson Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; blood-warm glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        245,
+        348,
+        459
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/075_crimson_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_064",
+      "name": "Crimson Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; blood-warm the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        152,
+        216,
+        284
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/076_crimson_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_065",
+      "name": "Amber Strider Boots",
+      "description": "Adds a small permanent movement speed boost; lantern-bright soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        189,
+        269,
+        354
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/077_amber_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_066",
+      "name": "Amber Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; lantern-bright pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        164,
+        233,
+        306
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/078_amber_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_067",
+      "name": "Amber Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; lantern-bright plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        180,
+        255,
+        337
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/079_amber_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_068",
+      "name": "Amber Fang Edge",
+      "description": "Adds a small permanent flat damage boost; lantern-bright a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        241,
+        342,
+        451
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/080_amber_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_069",
+      "name": "Amber Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; lantern-bright glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        237,
+        336,
+        442
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/081_amber_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_070",
+      "name": "Amber Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; lantern-bright the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        270,
+        384,
+        504
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/082_amber_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_071",
+      "name": "Amber Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; lantern-bright glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        274,
+        389,
+        512
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/083_amber_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_072",
+      "name": "Amber Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; lantern-bright the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        170,
+        240,
+        316
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/084_amber_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_073",
+      "name": "Violet Strider Boots",
+      "description": "Adds a small permanent movement speed boost; spell-stained soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        211,
+        299,
+        393
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/085_violet_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_074",
+      "name": "Violet Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; spell-stained pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        182,
+        258,
+        339
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/086_violet_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_075",
+      "name": "Violet Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; spell-stained plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        200,
+        284,
+        373
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/087_violet_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_076",
+      "name": "Violet Fang Edge",
+      "description": "Adds a small permanent flat damage boost; spell-stained a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        268,
+        380,
+        499
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/088_violet_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_077",
+      "name": "Violet Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; spell-stained glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        263,
+        372,
+        488
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/089_violet_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_078",
+      "name": "Violet Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; spell-stained the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        299,
+        423,
+        557
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/090_violet_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_079",
+      "name": "Violet Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; spell-stained glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        303,
+        429,
+        562
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/091_violet_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_080",
+      "name": "Violet Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; spell-stained the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        188,
+        266,
+        348
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/092_violet_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_081",
+      "name": "Obsidian Strider Boots",
+      "description": "Adds a small permanent movement speed boost; glass-dark soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        233,
+        330,
+        432
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/093_obsidian_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_082",
+      "name": "Obsidian Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; glass-dark pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        201,
+        283,
+        372
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/094_obsidian_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_083",
+      "name": "Obsidian Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; glass-dark plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        220,
+        312,
+        409
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/095_obsidian_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_084",
+      "name": "Obsidian Fang Edge",
+      "description": "Adds a small permanent flat damage boost; glass-dark a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        294,
+        416,
+        545
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/096_obsidian_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_085",
+      "name": "Obsidian Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; glass-dark glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        288,
+        408,
+        535
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/097_obsidian_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_086",
+      "name": "Obsidian Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; glass-dark the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        328,
+        465,
+        609
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/098_obsidian_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_087",
+      "name": "Obsidian Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; glass-dark glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        332,
+        468,
+        614
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/099_obsidian_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_088",
+      "name": "Obsidian Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; glass-dark the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        205,
+        290,
+        380
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/100_obsidian_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_089",
+      "name": "Silver Strider Boots",
+      "description": "Adds a small permanent movement speed boost; moon-silver soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        254,
+        360,
+        470
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/101_silver_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_090",
+      "name": "Silver Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; moon-silver pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        219,
+        310,
+        405
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/102_silver_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_091",
+      "name": "Silver Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; moon-silver plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        240,
+        340,
+        445
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/103_silver_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_092",
+      "name": "Silver Fang Edge",
+      "description": "Adds a small permanent flat damage boost; moon-silver a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        321,
+        453,
+        593
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/104_silver_fang_edge.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_093",
+      "name": "Silver Horizon Lens",
+      "description": "Adds a small permanent attack reach boost; moon-silver glass bends attacks a little wider.",
+      "kind": "stat_upgrade",
+      "cost": [
+        314,
+        444,
+        581
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "attackRadius",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/105_silver_horizon_lens.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_094",
+      "name": "Silver Quickcoil Spring",
+      "description": "Adds a small permanent fire-rate boost; moon-silver the mechanism snaps attacks into rhythm.",
+      "kind": "stat_upgrade",
+      "cost": [
+        357,
+        504,
+        659
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "fireRate",
+        "value": 0.1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/106_silver_quickcoil_spring.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_095",
+      "name": "Silver Surge Rune",
+      "description": "Adds a small permanent percentage damage boost; moon-silver glyphs strengthen scaling pressure.",
+      "kind": "stat_upgrade",
+      "cost": [
+        360,
+        510,
+        666
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "percentDamage",
+        "value": 0.15
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/107_silver_surge_rune.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_096",
+      "name": "Silver Fate Compass",
+      "description": "Adds a small permanent relic-linked level-up weighting boost; moon-silver the needle favours skills tied to boss relics.",
+      "kind": "stat_upgrade",
+      "cost": [
+        223,
+        315,
+        412
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "relicFocus",
+        "value": 0.05
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/108_silver_fate_compass.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_097",
+      "name": "Golden Strider Boots",
+      "description": "Adds a small permanent movement speed boost; sun-gilded soles carry each climb faster.",
+      "kind": "stat_upgrade",
+      "cost": [
+        276,
+        389,
+        509
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "speed",
+        "value": 1
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/109_golden_strider_boots.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_098",
+      "name": "Golden Lure Charm",
+      "description": "Adds a small permanent pickup reach boost; sun-gilded pull loose drops closer before they fade.",
+      "kind": "stat_upgrade",
+      "cost": [
+        237,
+        335,
+        439
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "pickupRadius",
+        "value": 2
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/110_golden_lure_charm.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_099",
+      "name": "Golden Bastion Guard",
+      "description": "Adds a small permanent maximum HP boost; sun-gilded plates give the next floor more margin.",
+      "kind": "stat_upgrade",
+      "cost": [
+        260,
+        368,
+        480
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "maxHp",
+        "value": 3
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/111_golden_bastion_guard.png?v=shop-pack-20260619"
+    },
+    {
+      "id": "generic_shop_100",
+      "name": "Golden Fang Edge",
+      "description": "Adds a small permanent flat damage boost; sun-gilded a sharper strike chips enemies sooner.",
+      "kind": "stat_upgrade",
+      "cost": [
+        347,
+        491,
+        641
+      ],
+      "maxTier": 3,
+      "spriteId": "quest",
+      "effect": {
+        "stat": "flatDamage",
+        "value": 0.5
+      },
+      "spritePath": "assets/generated/tower/sprites/shop-items/112_golden_fang_edge.png?v=shop-pack-20260619"
+    }
+  ]
+}

@@ -6750,5 +6750,17 @@
       "iconPath": "assets/generated/tower/sprites/relics/super_boss_aether_gravity_relic.svg?v=relic-icons-20260615",
       "startingTierBonus": 2
     }
-  ]
+  ],
+  "maps": [],
+  "tuning": {
+    "shop": {
+      "floorPriceRate": 0.03,
+      "inflationRate": 0.025
+    },
+    "loot": {
+      "coinFloorRewardRate": 0.06,
+      "normalCoinBaseValue": 1,
+      "bossCoinBaseValue": 12
+    }
+  }
 }

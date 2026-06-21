@@ -1,0 +1,5 @@
+{
+  "profileId": "testing",
+  "description": "Automated-test profile placeholder. Empty by default to avoid gameplay drift.",
+  "overrides": {}
+}

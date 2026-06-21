@@ -1,0 +1,5 @@
+{
+  "profileId": "default",
+  "description": "Default balance profile. Empty overrides preserve committed registry values.",
+  "overrides": {}
+}

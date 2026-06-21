@@ -1,0 +1,5 @@
+{
+  "profileId": "dev-fast",
+  "description": "Developer-only profile placeholder. Add local numeric overrides here for faster testing.",
+  "overrides": {}
+}

@@ -28,6 +28,8 @@ const {
   bossConfig,
   bossAbilities,
   levelDefs,
+  mapDefs,
+  tuningDefs,
   shopItemDefs,
   relicDefs,
 } = globalThis.TapSurvivorContentRegistry.createContentRegistry({
@@ -128,6 +130,7 @@ const uiRenderer = globalThis.TapSurvivorUi.createUiRenderer({
 const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
   ui,
   shopItemDefs,
+  pricingConfig: tuningDefs.shop,
   getSave: () => save,
   getGame: () => game,
   onShopVisit: () => bannerSystem.showOnceBanner("first_shop_visit", "Coins buy permanent power upgrades."),
@@ -187,6 +190,7 @@ function applyRelicStartingRunUpgrades(run) {
 const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
   getGame: () => game,
   getSave: () => save,
+  lootConfig: tuningDefs.loot,
   getRelicSpecialEffects,
   persist,
   renderMeta,

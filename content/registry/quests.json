@@ -1,0 +1,587 @@
+{
+  "quests": {
+    "spark_bolt_mastery": {
+      "name": "Spark Basics",
+      "description": "Deal 300 damage with Spark Bolt.",
+      "weaponId": "spark_bolt",
+      "target": 300,
+      "rewardQp": 1,
+      "opensQuest": "heavy_hits",
+      "opensQuests": [
+        "spark_bolt_expert"
+      ]
+    },
+    "spark_bolt_expert": {
+      "name": "Spark Specialist",
+      "description": "Deal 1,500 damage with Spark Bolt.",
+      "weaponId": "spark_bolt",
+      "target": 1500,
+      "rewardQp": 3,
+      "opensQuest": "spark_bolt_master"
+    },
+    "spark_bolt_master": {
+      "name": "Spark Master",
+      "description": "Deal 6,000 damage with Spark Bolt.",
+      "weaponId": "spark_bolt",
+      "target": 6000,
+      "rewardQp": 5
+    },
+    "first_blood": {
+      "name": "First Blood",
+      "description": "Defeat 15 enemies.",
+      "target": 15,
+      "rewardQp": 1,
+      "opensQuest": "crowd_control"
+    },
+    "gatherer": {
+      "name": "Field Gatherer",
+      "description": "Collect 25 XP gems.",
+      "target": 25,
+      "rewardQp": 1,
+      "opensQuest": "rapid_growth",
+      "opensQuests": [
+        "gem_hoarder"
+      ]
+    },
+    "survivor_60": {
+      "name": "Hold the Line",
+      "description": "Survive for 60 seconds.",
+      "target": 60,
+      "rewardQp": 1,
+      "opensQuest": "survivor_180"
+    },
+    "crowd_control": {
+      "name": "Crowd Control",
+      "description": "Defeat 50 enemies.",
+      "target": 50,
+      "rewardQp": 2,
+      "opensQuest": "exterminator"
+    },
+    "rapid_growth": {
+      "name": "Rapid Growth",
+      "description": "Gain 4 levels.",
+      "target": 4,
+      "rewardQp": 2,
+      "opensQuest": "power_climb"
+    },
+    "heavy_hits": {
+      "name": "Heavy Hits",
+      "description": "Deal 2,500 total weapon damage.",
+      "target": 2500,
+      "rewardQp": 2,
+      "opensQuest": "damage_dealer"
+    },
+    "survivor_180": {
+      "name": "Long Stand",
+      "description": "Survive for 180 seconds.",
+      "target": 180,
+      "rewardQp": 2,
+      "opensQuest": "survivor_300"
+    },
+    "survivor_300": {
+      "name": "Five-Minute Stand",
+      "description": "Survive for 300 seconds.",
+      "target": 300,
+      "rewardQp": 3,
+      "opensQuest": "survivor_420"
+    },
+    "survivor_420": {
+      "name": "Overtime Stand",
+      "description": "Survive for 420 seconds.",
+      "target": 420,
+      "rewardQp": 6,
+      "opensQuest": "survivor_600"
+    },
+    "survivor_600": {
+      "name": "Tower Endurance",
+      "description": "Survive for 600 seconds.",
+      "target": 600,
+      "rewardQp": 9
+    },
+    "exterminator": {
+      "name": "Exterminator",
+      "description": "Defeat 150 enemies.",
+      "target": 150,
+      "rewardQp": 3,
+      "opensQuest": "reaper"
+    },
+    "reaper": {
+      "name": "Reaper",
+      "description": "Defeat 350 enemies.",
+      "target": 350,
+      "rewardQp": 4,
+      "opensQuest": "warlord"
+    },
+    "warlord": {
+      "name": "Warlord",
+      "description": "Defeat 600 enemies.",
+      "target": 600,
+      "rewardQp": 7,
+      "opensQuest": "legion_breaker"
+    },
+    "legion_breaker": {
+      "name": "Legion Breaker",
+      "description": "Defeat 1,000 enemies.",
+      "target": 1000,
+      "rewardQp": 9,
+      "opensQuest": "army_ender"
+    },
+    "army_ender": {
+      "name": "Army Ender",
+      "description": "Defeat 1,500 enemies.",
+      "target": 1500,
+      "rewardQp": 11
+    },
+    "power_climb": {
+      "name": "Power Climb",
+      "description": "Gain 8 levels.",
+      "target": 8,
+      "rewardQp": 3,
+      "opensQuest": "apex_growth"
+    },
+    "apex_growth": {
+      "name": "Apex Growth",
+      "description": "Gain 12 levels.",
+      "target": 12,
+      "rewardQp": 4,
+      "opensQuest": "transcendent_growth"
+    },
+    "transcendent_growth": {
+      "name": "Transcendent Growth",
+      "description": "Gain 16 levels.",
+      "target": 16,
+      "rewardQp": 6,
+      "opensQuest": "limitless_growth"
+    },
+    "limitless_growth": {
+      "name": "Limitless Growth",
+      "description": "Gain 20 levels.",
+      "target": 20,
+      "rewardQp": 8,
+      "opensQuest": "tower_transcendent"
+    },
+    "tower_transcendent": {
+      "name": "Tower Transcendent",
+      "description": "Gain 25 levels.",
+      "target": 25,
+      "rewardQp": 10
+    },
+    "damage_dealer": {
+      "name": "Damage Dealer",
+      "description": "Deal 10,000 total weapon damage.",
+      "target": 10000,
+      "rewardQp": 3,
+      "opensQuest": "apocalypse_damage"
+    },
+    "apocalypse_damage": {
+      "name": "Apocalypse Damage",
+      "description": "Deal 25,000 total weapon damage.",
+      "target": 25000,
+      "rewardQp": 4,
+      "opensQuest": "worldbreaker_damage"
+    },
+    "worldbreaker_damage": {
+      "name": "Worldbreaker Damage",
+      "description": "Deal 50,000 total weapon damage.",
+      "target": 50000,
+      "rewardQp": 7,
+      "opensQuest": "cataclysm_damage"
+    },
+    "cataclysm_damage": {
+      "name": "Cataclysm Damage",
+      "description": "Deal 100,000 total weapon damage.",
+      "target": 100000,
+      "rewardQp": 9,
+      "opensQuest": "oblivion_damage"
+    },
+    "oblivion_damage": {
+      "name": "Oblivion Damage",
+      "description": "Deal 200,000 total weapon damage.",
+      "target": 200000,
+      "rewardQp": 11
+    },
+    "gem_hoarder": {
+      "name": "Gem Hoarder",
+      "description": "Collect 75 XP gems.",
+      "target": 75,
+      "rewardQp": 2,
+      "opensQuest": "gem_flood"
+    },
+    "gem_flood": {
+      "name": "Gem Flood",
+      "description": "Collect 150 XP gems.",
+      "target": 150,
+      "rewardQp": 3,
+      "opensQuest": "gem_storm"
+    },
+    "gem_storm": {
+      "name": "Gem Storm",
+      "description": "Collect 300 XP gems.",
+      "target": 300,
+      "rewardQp": 5,
+      "opensQuest": "gem_typhoon"
+    },
+    "gem_typhoon": {
+      "name": "Gem Typhoon",
+      "description": "Collect 500 XP gems.",
+      "target": 500,
+      "rewardQp": 8,
+      "opensQuest": "gem_singularity"
+    },
+    "gem_singularity": {
+      "name": "Gem Singularity",
+      "description": "Collect 800 XP gems.",
+      "target": 800,
+      "rewardQp": 10
+    },
+    "use_laser_run": {
+      "name": "Use Laser in a run",
+      "description": "Fire Prism Beam during a run.",
+      "weaponId": "prism_beam",
+      "target": 1,
+      "rewardQp": 2
+    },
+    "laser_damage_5000": {
+      "name": "Deal 5,000 damage with Laser",
+      "description": "Deal 5,000 total damage with Prism Beam.",
+      "weaponId": "prism_beam",
+      "target": 5000,
+      "rewardQp": 2,
+      "opensQuest": "prism_beam_expert"
+    },
+    "prism_beam_expert": {
+      "name": "Prism Specialist",
+      "description": "Deal 15,000 damage with Prism Beam.",
+      "weaponId": "prism_beam",
+      "target": 15000,
+      "rewardQp": 4,
+      "opensQuest": "prism_beam_master"
+    },
+    "prism_beam_master": {
+      "name": "Prism Master",
+      "description": "Deal 45,000 damage with Prism Beam.",
+      "weaponId": "prism_beam",
+      "target": 45000,
+      "rewardQp": 7
+    },
+    "frost_orb_mastery": {
+      "name": "Frost Control",
+      "description": "Deal 350 damage with Frost Orb.",
+      "weaponId": "frost_orb",
+      "target": 350,
+      "rewardQp": 2,
+      "opensQuest": "frost_orb_expert"
+    },
+    "frost_orb_expert": {
+      "name": "Frost Specialist",
+      "description": "Deal 2,000 damage with Frost Orb.",
+      "weaponId": "frost_orb",
+      "target": 2000,
+      "rewardQp": 3,
+      "opensQuest": "frost_orb_master"
+    },
+    "frost_orb_master": {
+      "name": "Frost Master",
+      "description": "Deal 8,000 damage with Frost Orb.",
+      "weaponId": "frost_orb",
+      "target": 8000,
+      "rewardQp": 5
+    },
+    "flame_wave_mastery": {
+      "name": "Flame Sweep",
+      "description": "Deal 350 damage with Flame Wave.",
+      "weaponId": "flame_wave",
+      "target": 350,
+      "rewardQp": 2,
+      "opensQuest": "flame_wave_expert"
+    },
+    "flame_wave_expert": {
+      "name": "Flame Specialist",
+      "description": "Deal 2,000 damage with Flame Wave.",
+      "weaponId": "flame_wave",
+      "target": 2000,
+      "rewardQp": 3,
+      "opensQuest": "flame_wave_master"
+    },
+    "flame_wave_master": {
+      "name": "Flame Master",
+      "description": "Deal 8,000 damage with Flame Wave.",
+      "weaponId": "flame_wave",
+      "target": 8000,
+      "rewardQp": 5
+    },
+    "chain_spark_mastery": {
+      "name": "Arc Current",
+      "description": "Deal 350 damage with Chain Spark.",
+      "weaponId": "chain_spark",
+      "target": 350,
+      "rewardQp": 2,
+      "opensQuest": "chain_spark_expert"
+    },
+    "chain_spark_expert": {
+      "name": "Arc Specialist",
+      "description": "Deal 2,000 damage with Chain Spark.",
+      "weaponId": "chain_spark",
+      "target": 2000,
+      "rewardQp": 3,
+      "opensQuest": "chain_spark_master"
+    },
+    "chain_spark_master": {
+      "name": "Arc Master",
+      "description": "Deal 8,000 damage with Chain Spark.",
+      "weaponId": "chain_spark",
+      "target": 8000,
+      "rewardQp": 5
+    },
+    "void_mine_mastery": {
+      "name": "Trap Field",
+      "description": "Deal 500 damage with Void Mine.",
+      "weaponId": "void_mine",
+      "target": 500,
+      "rewardQp": 2,
+      "opensQuest": "void_mine_expert"
+    },
+    "void_mine_expert": {
+      "name": "Mine Specialist",
+      "description": "Deal 2,500 damage with Void Mine.",
+      "weaponId": "void_mine",
+      "target": 2500,
+      "rewardQp": 3,
+      "opensQuest": "void_mine_master"
+    },
+    "void_mine_master": {
+      "name": "Mine Master",
+      "description": "Deal 10,000 damage with Void Mine.",
+      "weaponId": "void_mine",
+      "target": 10000,
+      "rewardQp": 5
+    },
+    "acid_pool_mastery": {
+      "name": "Corrosion Field",
+      "description": "Deal 500 damage with Acid Pool.",
+      "weaponId": "acid_pool",
+      "target": 500,
+      "rewardQp": 2,
+      "opensQuest": "acid_pool_expert"
+    },
+    "acid_pool_expert": {
+      "name": "Acid Specialist",
+      "description": "Deal 2,500 damage with Acid Pool.",
+      "weaponId": "acid_pool",
+      "target": 2500,
+      "rewardQp": 3,
+      "opensQuest": "acid_pool_master"
+    },
+    "acid_pool_master": {
+      "name": "Acid Master",
+      "description": "Deal 10,000 damage with Acid Pool.",
+      "weaponId": "acid_pool",
+      "target": 10000,
+      "rewardQp": 5
+    },
+    "saw_drone_mastery": {
+      "name": "Close Orbit",
+      "description": "Deal 500 damage with Saw Drone.",
+      "weaponId": "saw_drone",
+      "target": 500,
+      "rewardQp": 2,
+      "opensQuest": "saw_drone_expert"
+    },
+    "saw_drone_expert": {
+      "name": "Drone Specialist",
+      "description": "Deal 2,500 damage with Saw Drone.",
+      "weaponId": "saw_drone",
+      "target": 2500,
+      "rewardQp": 3,
+      "opensQuest": "saw_drone_master"
+    },
+    "saw_drone_master": {
+      "name": "Drone Master",
+      "description": "Deal 10,000 damage with Saw Drone.",
+      "weaponId": "saw_drone",
+      "target": 10000,
+      "rewardQp": 5
+    },
+    "shield_pulse_mastery": {
+      "name": "Pulse Guard",
+      "description": "Deal 500 damage with Shield Pulse.",
+      "weaponId": "shield_pulse",
+      "target": 500,
+      "rewardQp": 2,
+      "opensQuest": "shield_pulse_expert"
+    },
+    "shield_pulse_expert": {
+      "name": "Pulse Specialist",
+      "description": "Deal 2,500 damage with Shield Pulse.",
+      "weaponId": "shield_pulse",
+      "target": 2500,
+      "rewardQp": 3,
+      "opensQuest": "shield_pulse_master"
+    },
+    "shield_pulse_master": {
+      "name": "Pulse Master",
+      "description": "Deal 10,000 damage with Shield Pulse.",
+      "weaponId": "shield_pulse",
+      "target": 10000,
+      "rewardQp": 5
+    },
+    "moon_glaive_mastery": {
+      "name": "Lunar Cut",
+      "description": "Deal 650 damage with Moon Glaive.",
+      "weaponId": "moon_glaive",
+      "target": 650,
+      "rewardQp": 3,
+      "opensQuest": "moon_glaive_expert"
+    },
+    "moon_glaive_expert": {
+      "name": "Glaive Specialist",
+      "description": "Deal 3,000 damage with Moon Glaive.",
+      "weaponId": "moon_glaive",
+      "target": 3000,
+      "rewardQp": 4,
+      "opensQuest": "moon_glaive_master"
+    },
+    "moon_glaive_master": {
+      "name": "Glaive Master",
+      "description": "Deal 12,000 damage with Moon Glaive.",
+      "weaponId": "moon_glaive",
+      "target": 12000,
+      "rewardQp": 6
+    },
+    "meteor_pin_mastery": {
+      "name": "Meteor Mark",
+      "description": "Deal 800 damage with Meteor Pin.",
+      "weaponId": "meteor_pin",
+      "target": 800,
+      "rewardQp": 3,
+      "opensQuest": "meteor_pin_expert"
+    },
+    "meteor_pin_expert": {
+      "name": "Meteor Specialist",
+      "description": "Deal 4,000 damage with Meteor Pin.",
+      "weaponId": "meteor_pin",
+      "target": 4000,
+      "rewardQp": 4,
+      "opensQuest": "meteor_pin_master"
+    },
+    "meteor_pin_master": {
+      "name": "Meteor Master",
+      "description": "Deal 16,000 damage with Meteor Pin.",
+      "weaponId": "meteor_pin",
+      "target": 16000,
+      "rewardQp": 6
+    },
+    "nova_burst_mastery": {
+      "name": "Nova Core",
+      "description": "Deal 1,000 damage with Nova Burst.",
+      "weaponId": "nova_burst",
+      "target": 1000,
+      "rewardQp": 4,
+      "opensQuest": "nova_burst_expert"
+    },
+    "nova_burst_expert": {
+      "name": "Nova Specialist",
+      "description": "Deal 5,000 damage with Nova Burst.",
+      "weaponId": "nova_burst",
+      "target": 5000,
+      "rewardQp": 5,
+      "opensQuest": "nova_burst_master"
+    },
+    "nova_burst_master": {
+      "name": "Nova Master",
+      "description": "Deal 20,000 damage with Nova Burst.",
+      "weaponId": "nova_burst",
+      "target": 20000,
+      "rewardQp": 7
+    },
+    "boss_hunter": {
+      "name": "Boss Hunter",
+      "description": "Defeat the first tower boss.",
+      "target": 1,
+      "rewardQp": 4,
+      "opensQuest": "boss_slayer"
+    },
+    "boss_slayer": {
+      "name": "Boss Slayer",
+      "description": "Defeat 3 bosses.",
+      "target": 3,
+      "rewardQp": 6,
+      "opensQuest": "boss_reaper"
+    },
+    "boss_reaper": {
+      "name": "Boss Reaper",
+      "description": "Defeat 5 bosses.",
+      "target": 5,
+      "rewardQp": 8,
+      "opensQuest": "boss_legend"
+    },
+    "boss_legend": {
+      "name": "Boss Legend",
+      "description": "Defeat 10 bosses.",
+      "target": 10,
+      "rewardQp": 10,
+      "opensQuest": "boss_myth"
+    },
+    "boss_myth": {
+      "name": "Boss Myth",
+      "description": "Defeat 15 bosses.",
+      "target": 15,
+      "rewardQp": 12
+    }
+  },
+  "questGroups": {
+    "starter": [
+      "spark_bolt_mastery",
+      "first_blood",
+      "gatherer",
+      "survivor_60"
+    ],
+    "kill": [
+      "first_blood",
+      "crowd_control",
+      "exterminator",
+      "reaper",
+      "warlord",
+      "legion_breaker",
+      "army_ender"
+    ],
+    "damage": [
+      "heavy_hits",
+      "damage_dealer",
+      "apocalypse_damage",
+      "worldbreaker_damage",
+      "cataclysm_damage",
+      "oblivion_damage"
+    ],
+    "survival": [
+      "survivor_60",
+      "survivor_180",
+      "survivor_300",
+      "survivor_420",
+      "survivor_600"
+    ],
+    "xp": [
+      "gatherer",
+      "gem_hoarder",
+      "gem_flood",
+      "gem_storm",
+      "gem_typhoon",
+      "gem_singularity"
+    ],
+    "level": [
+      "rapid_growth",
+      "power_climb",
+      "apex_growth",
+      "transcendent_growth",
+      "limitless_growth",
+      "tower_transcendent"
+    ],
+    "boss": [
+      "boss_hunter",
+      "boss_slayer",
+      "boss_reaper",
+      "boss_legend",
+      "boss_myth"
+    ]
+  }
+}

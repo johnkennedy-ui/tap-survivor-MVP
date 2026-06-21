@@ -1,10 +1,8 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { addContentFromArgs } from "./add-content.mjs";
+import { readContent, readContentSchema } from "./content-tools.mjs";
 
-const root = new URL("..", import.meta.url).pathname;
-const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(root, "content/tap-survivor-schema.json"), "utf8"));
+const content = readContent();
+const schema = readContentSchema();
 let failed = false;
 
 function runAddContent(args) {
@@ -66,6 +64,56 @@ check("level add-content succeeds", runAddContent([
   "drifter,skitter",
 ]));
 check("level is added", content.levels.some((level) => level.id === "smoke_schema_level"));
+
+check("run-upgrade add-content succeeds", runAddContent([
+  "run-upgrade",
+  "smoke_schema_run_upgrade",
+  "--name",
+  "Smoke Schema Run Upgrade",
+  "--description",
+  "Added by smoke test.",
+]));
+check("run-upgrade is added", content.runUpgrades.some((upgrade) => upgrade.id === "smoke_schema_run_upgrade"));
+
+check("relic add-content succeeds", runAddContent([
+  "relic",
+  "smoke_schema_relic",
+  "--name",
+  "Smoke Schema Relic",
+  "--description",
+  "Added by smoke test.",
+  "--target-upgrade",
+  "run_fire_rate",
+]));
+check("relic is added", content.relics.some((relic) => relic.id === "smoke_schema_relic"));
+
+check("enemy add-content succeeds", runAddContent([
+  "enemy",
+  "smoke_schema_enemy",
+  "--name",
+  "Smoke Schema Enemy",
+  "--color",
+  "#ffffff",
+]));
+check("enemy is added", content.enemyTypes.some((enemy) => enemy.id === "smoke_schema_enemy"));
+
+check("boss add-content succeeds", runAddContent([
+  "boss",
+  "smoke_schema_boss",
+  "--name",
+  "Smoke Schema Boss",
+  "--color",
+  "#ff4f8b",
+]));
+check("boss is added", Boolean(content.bossAbilities.smoke_schema_boss));
+
+check("map add-content succeeds", runAddContent([
+  "map",
+  "smoke_schema_map",
+  "--name",
+  "Smoke Schema Map",
+]));
+check("map is added", content.maps.some((map) => map.id === "smoke_schema_map"));
 
 check("character add-content succeeds", runAddContent([
   "character",

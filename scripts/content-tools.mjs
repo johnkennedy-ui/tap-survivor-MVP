@@ -1,16 +1,169 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 export const root = new URL("..", import.meta.url).pathname;
 export const contentPath = process.env.TAP_SURVIVOR_CONTENT_PATH
   ? resolve(process.env.TAP_SURVIVOR_CONTENT_PATH)
   : join(root, "content/tap-survivor-content.json");
+export const registryDir = process.env.TAP_SURVIVOR_REGISTRY_DIR
+  ? resolve(process.env.TAP_SURVIVOR_REGISTRY_DIR)
+  : join(root, "content/registry");
+export const balanceDir = process.env.TAP_SURVIVOR_BALANCE_DIR
+  ? resolve(process.env.TAP_SURVIVOR_BALANCE_DIR)
+  : join(root, "content/balance");
 export const schemaPath = process.env.TAP_SURVIVOR_SCHEMA_PATH
   ? resolve(process.env.TAP_SURVIVOR_SCHEMA_PATH)
   : join(root, "content/tap-survivor-schema.json");
+export const defaultBalanceProfile = process.env.TAP_SURVIVOR_BALANCE_PROFILE || "default";
+
+const domainFiles = [
+  "weapons",
+  "run-upgrades",
+  "quests",
+  "enemies",
+  "bosses",
+  "characters",
+  "shop-items",
+  "floors",
+  "assets",
+  "audio",
+  "relics",
+  "maps",
+  "tuning",
+];
+
+const balanceOverrideRules = {
+  weapons: {
+    collection: "weapons",
+    fields: [
+      "damage",
+      "cooldown",
+      "radius",
+      "range",
+      "width",
+      "speed",
+      "pierce",
+      "jumps",
+      "duration",
+      "tick",
+      "armDelay",
+      "explosionLife",
+      "spawnOffset",
+      "count",
+    ],
+  },
+  enemies: {
+    collection: "enemyTypes",
+    list: true,
+    fields: [
+      "hp",
+      "speed",
+      "xp",
+      "damage",
+      "radius",
+      "touchCooldown",
+      "attackRange",
+      "projectileCooldown",
+      "projectileSpeed",
+      "projectileDamage",
+      "minTowerFloor",
+    ],
+  },
+  relics: {
+    collection: "relics",
+    list: true,
+    fields: [
+      "selectionWeightBonus",
+      "startingTierBonus",
+      "maxTierBonus",
+      "weaponSlotBonus",
+      "weaponDamageMultiplier",
+    ],
+    nested: {
+      "specialAbility.modifiers": "numberMap",
+    },
+  },
+  shopItems: {
+    collection: "shopItems",
+    list: true,
+    fields: ["cost", "maxTier"],
+    nested: {
+      "effect.value": "number",
+    },
+  },
+  levels: {
+    collection: "levels",
+    list: true,
+    fields: ["startsAt", "spawnCount", "spawnRateMultiplier"],
+    arrays: ["enemyIds"],
+  },
+  maps: {
+    collection: "maps",
+    list: true,
+    fields: [],
+    arrays: ["floorIds"],
+    nested: {
+      modifiers: "numberMap",
+    },
+  },
+  bossConfig: {
+    singleton: true,
+    fields: [
+      "normalAbilityCount",
+      "superAbilityCount",
+      "baseHp",
+      "hpPerKill",
+      "superHpMultiplier",
+      "touchDamage",
+      "touchCooldown",
+      "noticeLife",
+      "dropWindup",
+      "sideEntryMargin",
+      "entryOffsetX",
+      "entryOffsetY",
+      "defaultAttackCooldown",
+    ],
+    nested: {
+      drop: "numberMap",
+      enemyBolt: "numberMap",
+      projectileScaling: "numberMap",
+    },
+  },
+  bossAbilities: {
+    collection: "bossAbilities",
+    fields: [
+      "speed",
+      "attackCooldown",
+      "windup",
+      "duration",
+      "chargeSpeed",
+      "superChargeSpeed",
+      "attackRange",
+      "projectileCooldown",
+      "projectileSpeed",
+      "projectileDamage",
+      "superProjectileDamage",
+      "initialShootTimer",
+    ],
+    nested: {
+      shockwave: "numberMap",
+      slash: "numberMap",
+    },
+  },
+  tuning: {
+    singleton: true,
+    nested: {
+      shop: "numberMap",
+      loot: "numberMap",
+    },
+  },
+};
 
 export function readContent() {
-  return JSON.parse(readFileSync(contentPath, "utf8"));
+  const content = process.env.TAP_SURVIVOR_CONTENT_PATH || !existsSync(registryDir)
+    ? JSON.parse(readFileSync(contentPath, "utf8"))
+    : assembleRegistryContent();
+  return applyBalanceProfile(content, defaultBalanceProfile);
 }
 
 export function readContentSchema() {
@@ -18,7 +171,302 @@ export function readContentSchema() {
 }
 
 export function writeContent(content) {
+  if (!process.env.TAP_SURVIVOR_CONTENT_PATH && existsSync(registryDir)) {
+    writeRegistryContent(content);
+  }
   writeFileSync(contentPath, `${JSON.stringify(content, null, 2)}\n`);
+}
+
+export function assembleRegistryContent() {
+  const legacy = existsSync(contentPath) ? JSON.parse(readFileSync(contentPath, "utf8")) : {};
+  const content = { schemaVersion: legacy.schemaVersion || 1 };
+  domainFiles.forEach((name) => {
+    const file = join(registryDir, `${name}.json`);
+    if (!existsSync(file)) return;
+    deepMerge(content, JSON.parse(readFileSync(file, "utf8")));
+  });
+  content.assets ||= {};
+  content.maps ||= [];
+  content.tuning ||= {};
+  return content;
+}
+
+export function writeRegistryContent(content) {
+  mkdirSync(registryDir, { recursive: true });
+  writeJson(join(registryDir, "weapons.json"), {
+    weapons: content.weapons || {},
+    weaponUnlocks: content.weaponUnlocks || [],
+    metaUpgrades: content.metaUpgrades || [],
+  });
+  writeJson(join(registryDir, "relics.json"), { relics: content.relics || [] });
+  writeJson(join(registryDir, "shop-items.json"), { shopItems: content.shopItems || [] });
+  writeJson(join(registryDir, "run-upgrades.json"), { runUpgrades: content.runUpgrades || [] });
+  writeJson(join(registryDir, "enemies.json"), { enemyTypes: content.enemyTypes || [] });
+  writeJson(join(registryDir, "bosses.json"), {
+    bossConfig: content.bossConfig || {},
+    bossAbilities: content.bossAbilities || {},
+  });
+  writeJson(join(registryDir, "floors.json"), { levels: content.levels || [] });
+  writeJson(join(registryDir, "maps.json"), { maps: content.maps || [] });
+  writeJson(join(registryDir, "quests.json"), {
+    quests: content.quests || {},
+    questGroups: content.questGroups || {},
+  });
+  writeJson(join(registryDir, "characters.json"), { characters: content.characters || [] });
+  writeJson(join(registryDir, "assets.json"), {
+    assets: {
+      sources: content.assets?.sources || [],
+      sprites: content.assets?.sprites || {},
+    },
+  });
+  writeJson(join(registryDir, "audio.json"), { assets: { sfx: content.assets?.sfx || {} } });
+  writeJson(join(registryDir, "tuning.json"), { tuning: content.tuning || {} });
+}
+
+export function readBalanceProfile(profileId = defaultBalanceProfile) {
+  const file = join(balanceDir, `${profileId}.json`);
+  if (!existsSync(file)) throw new Error(`Missing balance profile: ${profileId}`);
+  return JSON.parse(readFileSync(file, "utf8"));
+}
+
+export function readBalanceProfiles() {
+  if (!existsSync(balanceDir)) return [];
+  return readdirSync(balanceDir)
+    .filter((file) => file.endsWith(".json"))
+    .sort()
+    .map((file) => JSON.parse(readFileSync(join(balanceDir, file), "utf8")));
+}
+
+export function applyBalanceProfile(content, profileId = defaultBalanceProfile) {
+  if (!profileId) return structuredClone(content);
+  const profile = readBalanceProfile(profileId);
+  const cloned = structuredClone(content);
+  applyBalanceOverrides(cloned, profile.overrides || {});
+  if (profileId !== "default") cloned.activeBalanceProfile = profile.profileId || profileId;
+  return cloned;
+}
+
+export function validateBalanceProfile(profile, content = assembleRegistryContent()) {
+  const errors = [];
+  const fail = (message) => errors.push(message);
+  if (!profile || typeof profile !== "object" || Array.isArray(profile)) {
+    return ["balance profile must be an object"];
+  }
+  if (!profile.profileId || typeof profile.profileId !== "string") fail("balance profile profileId must be a non-empty string");
+  if (!profile.overrides || typeof profile.overrides !== "object" || Array.isArray(profile.overrides)) {
+    fail(`balance profile ${profile.profileId || "unknown"} overrides must be an object`);
+    return errors;
+  }
+  validateBalanceOverrides(profile.overrides, content, fail);
+  return errors;
+}
+
+export function validateBalanceProfiles(content = assembleRegistryContent()) {
+  return readBalanceProfiles().flatMap((profile) =>
+    validateBalanceProfile(profile, content).map((error) => `${profile.profileId || "unknown"}: ${error}`),
+  );
+}
+
+export function changedBalanceValues(baseContent, profile) {
+  const overlaid = structuredClone(baseContent);
+  applyBalanceOverrides(overlaid, profile.overrides || {});
+  return collectOverrideChanges(baseContent, overlaid, profile.overrides || {});
+}
+
+function writeJson(file, value) {
+  writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function deepMerge(target, source) {
+  Object.entries(source || {}).forEach(([key, value]) => {
+    if (isPlainObject(value) && isPlainObject(target[key])) {
+      deepMerge(target[key], value);
+    } else {
+      target[key] = value;
+    }
+  });
+  return target;
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function collectionById(content, collection, list) {
+  const value = content[collection] || (list ? [] : {});
+  if (!list) return value;
+  return Object.fromEntries(value.map((item) => [item.id, item]));
+}
+
+function targetForOverride(content, section, id) {
+  const rule = balanceOverrideRules[section];
+  if (!rule) return null;
+  if (rule.singleton) return content[section] || {};
+  return collectionById(content, rule.collection, rule.list)[id] || null;
+}
+
+function applyBalanceOverrides(content, overrides) {
+  Object.entries(overrides || {}).forEach(([section, sectionOverrides]) => {
+    const rule = balanceOverrideRules[section];
+    if (!rule) return;
+    if (rule.singleton) {
+      applyOverrideObject(content[section] ||= {}, sectionOverrides, rule);
+      return;
+    }
+    Object.entries(sectionOverrides || {}).forEach(([id, override]) => {
+      const target = targetForOverride(content, section, id);
+      if (target) applyOverrideObject(target, override, rule);
+    });
+  });
+}
+
+function applyOverrideObject(target, override, rule) {
+  Object.entries(override || {}).forEach(([field, value]) => {
+    if (rule.fields?.includes(field) || rule.arrays?.includes(field)) {
+      target[field] = value;
+      return;
+    }
+    const nestedRule = rule.nested?.[field];
+    if (nestedRule === "numberMap") {
+      target[field] = { ...(target[field] || {}), ...value };
+      return;
+    }
+    if (nestedRule === "number") {
+      setNestedValue(target, field, value);
+      return;
+    }
+    if (field.includes(".") && rule.nested?.[field] === "number") {
+      setNestedValue(target, field, value);
+    }
+  });
+}
+
+function setNestedValue(target, path, value) {
+  const parts = path.split(".");
+  let cursor = target;
+  parts.slice(0, -1).forEach((part) => {
+    cursor[part] ||= {};
+    cursor = cursor[part];
+  });
+  cursor[parts.at(-1)] = value;
+}
+
+function valueAtPath(target, path) {
+  return path.split(".").reduce((cursor, part) => cursor?.[part], target);
+}
+
+function collectOverrideChanges(baseContent, overlaidContent, overrides) {
+  const changes = [];
+  Object.entries(overrides || {}).forEach(([section, sectionOverrides]) => {
+    const rule = balanceOverrideRules[section];
+    if (!rule) return;
+    if (rule.singleton) {
+      collectObjectChanges(changes, section, "", baseContent[section] || {}, overlaidContent[section] || {}, sectionOverrides, rule);
+      return;
+    }
+    Object.entries(sectionOverrides || {}).forEach(([id, override]) => {
+      const base = targetForOverride(baseContent, section, id) || {};
+      const overlaid = targetForOverride(overlaidContent, section, id) || {};
+      collectObjectChanges(changes, section, id, base, overlaid, override, rule);
+    });
+  });
+  return changes;
+}
+
+function collectObjectChanges(changes, section, id, base, overlaid, override, rule) {
+  Object.entries(override || {}).forEach(([field, value]) => {
+    if (rule.nested?.[field] === "numberMap") {
+      Object.keys(value || {}).forEach((nestedField) => {
+        const path = `${field}.${nestedField}`;
+        changes.push({ section, id, field: path, before: valueAtPath(base, path), after: valueAtPath(overlaid, path) });
+      });
+      return;
+    }
+    changes.push({ section, id, field, before: valueAtPath(base, field), after: valueAtPath(overlaid, field) });
+  });
+}
+
+function validateBalanceOverrides(overrides, content, fail) {
+  Object.entries(overrides || {}).forEach(([section, sectionOverrides]) => {
+    const rule = balanceOverrideRules[section];
+    if (!rule) {
+      fail(`unknown balance override section ${section}`);
+      return;
+    }
+    if (!isPlainObject(sectionOverrides)) {
+      fail(`balance override section ${section} must be an object`);
+      return;
+    }
+    if (rule.singleton) {
+      validateOverrideObject(section, "", sectionOverrides, rule, content, fail);
+      return;
+    }
+    Object.entries(sectionOverrides).forEach(([id, override]) => {
+      if (!targetForOverride(content, section, id)) fail(`balance override ${section}.${id} points at unknown ID`);
+      validateOverrideObject(section, id, override, rule, content, fail);
+    });
+  });
+}
+
+function validateOverrideObject(section, id, override, rule, content, fail) {
+  if (!isPlainObject(override)) {
+    fail(`balance override ${section}${id ? `.${id}` : ""} must be an object`);
+    return;
+  }
+  Object.entries(override).forEach(([field, value]) => {
+    if (rule.fields?.includes(field)) {
+      validateNumericOverride(section, id, field, value, fail);
+      return;
+    }
+    if (rule.arrays?.includes(field)) {
+      if (!Array.isArray(value)) fail(`balance override ${section}${id ? `.${id}` : ""}.${field} must be an array`);
+      validateReferenceArray(section, id, field, value, content, fail);
+      return;
+    }
+    const nestedRule = rule.nested?.[field];
+    if (nestedRule === "numberMap") {
+      if (!isPlainObject(value)) {
+        fail(`balance override ${section}${id ? `.${id}` : ""}.${field} must be an object of numbers`);
+        return;
+      }
+      Object.entries(value).forEach(([nestedField, nestedValue]) => validateNumericOverride(section, id, `${field}.${nestedField}`, nestedValue, fail));
+      return;
+    }
+    if (nestedRule === "number") {
+      validateNumericOverride(section, id, field, value, fail);
+      return;
+    }
+    fail(`balance override ${section}${id ? `.${id}` : ""}.${field} is not supported`);
+  });
+}
+
+function validateNumericOverride(section, id, field, value, fail) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => validateNumericOverride(section, id, `${field}[${index}]`, item, fail));
+    return;
+  }
+  if (!Number.isFinite(value)) {
+    fail(`balance override ${section}${id ? `.${id}` : ""}.${field} must be numeric`);
+  }
+  if (Number.isFinite(value) && value < 0 && !field.includes("weaponSlotBonus")) {
+    fail(`balance override ${section}${id ? `.${id}` : ""}.${field} must be >= 0`);
+  }
+}
+
+function validateReferenceArray(section, id, field, value, content, fail) {
+  if (!Array.isArray(value)) return;
+  if (section === "levels" && field === "enemyIds") {
+    const enemies = new Set((content.enemyTypes || []).map((enemy) => enemy.id));
+    value.forEach((enemyId) => {
+      if (!enemies.has(enemyId)) fail(`balance override levels.${id}.enemyIds references unknown enemy ${enemyId}`);
+    });
+  }
+  if (section === "maps" && field === "floorIds") {
+    const floors = new Set((content.levels || []).map((level) => level.id));
+    value.forEach((floorId) => {
+      if (!floors.has(floorId)) fail(`balance override maps.${id}.floorIds references unknown floor ${floorId}`);
+    });
+  }
 }
 
 export function linkQuestAfter(quests, previousId, nextId) {
@@ -94,7 +542,9 @@ export function validateContent(content) {
   const shopItems = content.shopItems || [];
   const relics = content.relics || [];
   const levels = content.levels || [];
+  const maps = content.maps || [];
   const assets = content.assets || {};
+  const tuning = content.tuning || {};
   const schema = readContentSchema();
   const runUpgradeEffectTypes = schema.effectRegistries?.runUpgrade?.types || [];
   const runUpgradePlayerStats = schema.effectRegistries?.runUpgrade?.playerStatAddStats || [];
@@ -108,6 +558,7 @@ export function validateContent(content) {
   const seenCharacters = new Set();
   const seenRelics = new Set();
   const seenLevels = new Set();
+  const seenMaps = new Set();
 
   function fail(message) {
     errors.push(message);
@@ -143,7 +594,9 @@ export function validateContent(content) {
   requireArray(shopItems, "shopItems");
   requireArray(relics, "relics");
   requireArray(levels, "levels");
+  requireArray(maps, "maps");
   if (content.assets) requireObject(assets, "assets");
+  if (content.tuning) requireObject(tuning, "tuning");
 
   Object.entries(weapons).forEach(([id, weapon]) => {
     requireString(id, "weapon id");
@@ -156,6 +609,9 @@ export function validateContent(content) {
     requireString(weapon.upgradeId, `weapon ${id}.upgradeId`);
     requireNumber(weapon.cooldown, `weapon ${id}.cooldown`, 0.01);
     requireNumber(weapon.damage, `weapon ${id}.damage`, 0);
+    if (weapon.assetId && assets.sprites?.weapons && !assets.sprites.weapons[weapon.assetId]) {
+      fail(`weapon ${id} references missing weapon asset ${weapon.assetId}`);
+    }
   });
 
   weaponUnlocks.forEach((unlock) => {
@@ -244,6 +700,15 @@ export function validateContent(content) {
     seenEnemies.add(enemy.id);
     ["name", "color"].forEach((field) => requireString(enemy[field], `enemy ${enemy.id}.${field}`));
     ["radius", "hp", "speed", "damage", "xp"].forEach((field) => requireNumber(enemy[field], `enemy ${enemy.id}.${field}`, 0));
+    if (enemy.behaviorKind) {
+      const behaviorKinds = schema.behaviorRegistries?.enemyBehaviorKinds?.ids || [];
+      if (behaviorKinds.length && !behaviorKinds.includes(enemy.behaviorKind)) {
+        fail(`enemy ${enemy.id} has unsupported behaviorKind ${enemy.behaviorKind}`);
+      }
+    }
+    if (enemy.assetId && assets.sprites?.enemies && !assets.sprites.enemies[enemy.assetId]) {
+      fail(`enemy ${enemy.id} references missing enemy asset ${enemy.assetId}`);
+    }
   });
 
   if (bossConfig.abilityIds !== undefined) {
@@ -291,9 +756,6 @@ export function validateContent(content) {
   }
   Object.entries(bossAbilities).forEach(([id, ability]) => {
     requireString(id, "boss ability id");
-    if (bossAbilityKinds.length && !bossAbilityKinds.includes(id)) {
-      fail(`boss ability ${id} is not registered in schema behaviorRegistries.bossAbilityKinds`);
-    }
     ["name", "color"].forEach((field) => requireString(ability[field], `boss ability ${id}.${field}`));
     ["speed", "attackCooldown"].forEach((field) => requireNumber(ability[field], `boss ability ${id}.${field}`, 0));
     if (id === "warden") {
@@ -321,6 +783,9 @@ export function validateContent(content) {
     ["name", "description", "spriteId"].forEach((field) =>
       requireString(character[field], `character ${character.id}.${field}`),
     );
+    if (assets.sprites?.player && character.spriteId !== "player" && !assets.sprites?.characters?.[character.spriteId]) {
+      fail(`character ${character.id} references missing character sprite ${character.spriteId}`);
+    }
   });
 
   (assets.sources || []).forEach((source) => {
@@ -365,8 +830,26 @@ export function validateContent(content) {
     requireNumber(relic.startingTierBonus, `relic ${relic.id}.startingTierBonus`, 0);
     requireNumber(relic.maxTierBonus, `relic ${relic.id}.maxTierBonus`, 0);
     if (relic.iconPath) validateSpritePath(relic.iconPath, `relic ${relic.id}.iconPath`);
+    if (relic.specialAbility) {
+      const supportedKinds = schema.behaviorRegistries?.relicSpecialKinds?.ids || [];
+      const specialKind = relic.specialAbility.kind || "modifiers";
+      if (supportedKinds.length && !supportedKinds.includes(specialKind)) {
+        fail(`relic ${relic.id} has unsupported specialAbility.kind ${specialKind}`);
+      }
+      if (relic.specialAbility.modifiers) {
+        requireObject(relic.specialAbility.modifiers, `relic ${relic.id}.specialAbility.modifiers`);
+        const validStats = schema.effectRegistries?.relic?.modifierStats || [];
+        Object.entries(relic.specialAbility.modifiers || {}).forEach(([stat, value]) => {
+          if (validStats.length && !validStats.includes(stat)) {
+            fail(`relic ${relic.id} has unsupported specialAbility modifier ${stat}`);
+          }
+          requireNumber(value, `relic ${relic.id}.specialAbility.modifiers.${stat}`, 0);
+        });
+      }
+    }
   });
 
+  const knownEnemyIds = new Set(enemyTypes.map((enemy) => enemy.id));
   levels.forEach((level) => {
     requireString(level.id, "level.id");
     if (seenLevels.has(level.id)) fail(`duplicate level ${level.id}`);
@@ -377,7 +860,7 @@ export function validateContent(content) {
       requireArray(level.enemyIds, `level ${level.id}.enemyIds`);
       (Array.isArray(level.enemyIds) ? level.enemyIds : []).forEach((enemyId) => {
         requireString(enemyId, `level ${level.id}.enemyIds item`);
-        if (!seenEnemies.has(enemyId)) fail(`level ${level.id} references missing enemy ${enemyId}`);
+        if (!knownEnemyIds.has(enemyId)) fail(`level ${level.id} references missing enemy ${enemyId}`);
       });
     }
     if (level.spawnCount !== undefined) requireNumber(level.spawnCount, `level ${level.id}.spawnCount`, 1);
@@ -386,6 +869,39 @@ export function validateContent(content) {
     }
     if (level.notes !== undefined) requireString(level.notes, `level ${level.id}.notes`);
   });
+
+  const knownLevelIds = new Set(levels.map((level) => level.id));
+  maps.forEach((map) => {
+    requireString(map.id, "map.id");
+    if (seenMaps.has(map.id)) fail(`duplicate map ${map.id}`);
+    seenMaps.add(map.id);
+    requireString(map.name, `map ${map.id}.name`);
+    if (map.floorIds) {
+      requireArray(map.floorIds, `map ${map.id}.floorIds`);
+      (Array.isArray(map.floorIds) ? map.floorIds : []).forEach((floorId) => {
+        requireString(floorId, `map ${map.id}.floorIds item`);
+        if (!knownLevelIds.has(floorId)) fail(`map ${map.id} references missing floor ${floorId}`);
+      });
+    }
+    if (map.backgroundAsset) validateSpritePath(map.backgroundAsset, `map ${map.id}.backgroundAsset`);
+    if (map.modifiers) {
+      requireObject(map.modifiers, `map ${map.id}.modifiers`);
+      Object.entries(map.modifiers || {}).forEach(([key, value]) => requireNumber(value, `map ${map.id}.modifiers.${key}`, 0));
+    }
+  });
+
+  if (tuning.shop) {
+    requireObject(tuning.shop, "tuning.shop");
+    ["floorPriceRate", "inflationRate"].forEach((field) => {
+      if (tuning.shop[field] !== undefined) requireNumber(tuning.shop[field], `tuning.shop.${field}`, 0);
+    });
+  }
+  if (tuning.loot) {
+    requireObject(tuning.loot, "tuning.loot");
+    ["coinFloorRewardRate", "normalCoinBaseValue", "bossCoinBaseValue"].forEach((field) => {
+      if (tuning.loot[field] !== undefined) requireNumber(tuning.loot[field], `tuning.loot.${field}`, 0);
+    });
+  }
 
   return errors;
 }

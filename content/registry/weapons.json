@@ -1,0 +1,338 @@
+{
+  "weapons": {
+    "spark_bolt": {
+      "name": "Spark Bolt",
+      "description": "Fast single-target projectile.",
+      "upgradeId": "spark_damage",
+      "cooldown": 0.55,
+      "damage": 12,
+      "kind": "projectile",
+      "speed": 420,
+      "radius": 5,
+      "color": "#ffd166",
+      "assetId": "spark_bolt"
+    },
+    "prism_beam": {
+      "name": "Prism Beam",
+      "description": "Piercing laser line.",
+      "upgradeId": "laser_damage",
+      "cooldown": 1.2,
+      "damage": 32,
+      "kind": "beam",
+      "range": 430,
+      "width": 24,
+      "color": "#b794ff",
+      "opensQuest": "use_laser_run",
+      "assetId": "prism_beam"
+    },
+    "frost_orb": {
+      "name": "Frost Orb",
+      "description": "Slow projectile with heavier impact.",
+      "upgradeId": "frost_damage",
+      "cooldown": 0.95,
+      "damage": 22,
+      "kind": "projectile",
+      "speed": 300,
+      "radius": 8,
+      "color": "#8de7ff"
+    },
+    "flame_wave": {
+      "name": "Flame Wave",
+      "description": "Short cone that burns nearby enemies.",
+      "upgradeId": "flame_damage",
+      "cooldown": 1.15,
+      "damage": 26,
+      "kind": "cone",
+      "range": 210,
+      "width": 62,
+      "color": "#ff8a4c"
+    },
+    "saw_drone": {
+      "name": "Saw Drone",
+      "description": "Large slow saw ball that travels in a straight line.",
+      "upgradeId": "saw_damage",
+      "cooldown": 1.2,
+      "damage": 24,
+      "kind": "projectile",
+      "speed": 165,
+      "radius": 20,
+      "pierce": 1,
+      "color": "#d8dde8"
+    },
+    "void_mine": {
+      "name": "Void Mine",
+      "description": "Drops a delayed mine behind you that explodes after 2 seconds.",
+      "upgradeId": "void_damage",
+      "cooldown": 1.65,
+      "damage": 36,
+      "kind": "mine",
+      "range": 86,
+      "armDelay": 2,
+      "explosionLife": 0.32,
+      "spawnOffset": 62,
+      "color": "#7964ff"
+    },
+    "chain_spark": {
+      "name": "Chain Spark",
+      "description": "Jumps through several nearby enemies.",
+      "upgradeId": "chain_damage",
+      "cooldown": 1.05,
+      "damage": 18,
+      "kind": "chain",
+      "jumps": 4,
+      "range": 280,
+      "color": "#f6f871"
+    },
+    "moon_glaive": {
+      "name": "Moon Glaive",
+      "description": "Large piercing blade projectile.",
+      "upgradeId": "glaive_damage",
+      "cooldown": 1.35,
+      "damage": 30,
+      "kind": "projectile",
+      "speed": 250,
+      "radius": 12,
+      "pierce": 3,
+      "color": "#b7f7d4"
+    },
+    "meteor_pin": {
+      "name": "Meteor Pin",
+      "description": "Calls a strike on the nearest enemy.",
+      "upgradeId": "meteor_damage",
+      "cooldown": 1.8,
+      "damage": 44,
+      "kind": "target_area",
+      "range": 72,
+      "color": "#ff5f56"
+    },
+    "acid_pool": {
+      "name": "Acid Pool",
+      "description": "Leaves a damaging patch under enemies.",
+      "upgradeId": "acid_damage",
+      "cooldown": 1.55,
+      "damage": 12,
+      "kind": "lingering_area",
+      "range": 86,
+      "duration": 2.4,
+      "tick": 0.45,
+      "color": "#9be564"
+    },
+    "shield_pulse": {
+      "name": "Shield Pulse",
+      "description": "Reliable personal-space burst.",
+      "upgradeId": "shield_damage",
+      "cooldown": 1.25,
+      "damage": 24,
+      "kind": "radial",
+      "range": 128,
+      "color": "#64b5ff"
+    },
+    "nova_burst": {
+      "name": "Nova Burst",
+      "description": "Slow, wide blast around the player.",
+      "upgradeId": "nova_damage",
+      "cooldown": 2.2,
+      "damage": 42,
+      "kind": "radial",
+      "range": 170,
+      "color": "#ff74c8"
+    }
+  },
+  "weaponUnlocks": [
+    {
+      "id": "unlock_laser",
+      "weaponId": "prism_beam",
+      "cost": 1,
+      "branch": "Core",
+      "requiresQuest": "spark_bolt_mastery",
+      "opensQuest": "use_laser_run"
+    },
+    {
+      "id": "unlock_frost_orb",
+      "weaponId": "frost_orb",
+      "cost": 1,
+      "branch": "Control",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "frost_orb_mastery"
+    },
+    {
+      "id": "unlock_flame_wave",
+      "weaponId": "flame_wave",
+      "cost": 1,
+      "branch": "Area",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "flame_wave_mastery"
+    },
+    {
+      "id": "unlock_chain_spark",
+      "weaponId": "chain_spark",
+      "cost": 1,
+      "branch": "Arc",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "chain_spark_mastery"
+    },
+    {
+      "id": "unlock_void_mine",
+      "weaponId": "void_mine",
+      "cost": 2,
+      "branch": "Control",
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "frost_orb_mastery",
+      "opensQuest": "void_mine_mastery"
+    },
+    {
+      "id": "unlock_acid_pool",
+      "weaponId": "acid_pool",
+      "cost": 2,
+      "branch": "Control",
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "frost_orb_mastery",
+      "opensQuest": "acid_pool_mastery"
+    },
+    {
+      "id": "unlock_saw_drone",
+      "weaponId": "saw_drone",
+      "cost": 2,
+      "branch": "Area",
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "flame_wave_mastery",
+      "opensQuest": "saw_drone_mastery"
+    },
+    {
+      "id": "unlock_shield_pulse",
+      "weaponId": "shield_pulse",
+      "cost": 2,
+      "branch": "Area",
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "flame_wave_mastery",
+      "opensQuest": "shield_pulse_mastery"
+    },
+    {
+      "id": "unlock_moon_glaive",
+      "weaponId": "moon_glaive",
+      "cost": 2,
+      "branch": "Arc",
+      "requiresNode": "unlock_chain_spark",
+      "requiresQuest": "chain_spark_mastery",
+      "opensQuest": "moon_glaive_mastery"
+    },
+    {
+      "id": "unlock_meteor_pin",
+      "weaponId": "meteor_pin",
+      "cost": 3,
+      "branch": "Arc",
+      "requiresNode": "unlock_moon_glaive",
+      "requiresQuest": "moon_glaive_mastery",
+      "opensQuest": "meteor_pin_mastery"
+    },
+    {
+      "id": "unlock_nova_burst",
+      "weaponId": "nova_burst",
+      "cost": 3,
+      "branch": "Core",
+      "requiresNode": "unlock_shield_pulse",
+      "requiresQuest": "shield_pulse_mastery",
+      "opensQuest": "nova_burst_mastery"
+    }
+  ],
+  "metaUpgrades": [
+    {
+      "id": "move_speed",
+      "name": "Move Speed",
+      "description": "Move faster during runs.",
+      "cost": [
+        1,
+        2,
+        3
+      ],
+      "maxTier": 3,
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "first_blood"
+    },
+    {
+      "id": "pickup_radius",
+      "name": "Pickup Radius",
+      "description": "Collect XP from farther away.",
+      "cost": [
+        1,
+        2,
+        3
+      ],
+      "maxTier": 3,
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "gatherer"
+    },
+    {
+      "id": "max_hp",
+      "name": "Max HP",
+      "description": "Start each run with more health.",
+      "cost": [
+        1,
+        2,
+        3
+      ],
+      "maxTier": 3,
+      "requiresNode": "unlock_shield_pulse",
+      "requiresQuest": "survivor_60"
+    },
+    {
+      "id": "attack_radius",
+      "name": "Attack Radius",
+      "description": "Increase projectile size and area weapon reach.",
+      "cost": [
+        1,
+        2,
+        3
+      ],
+      "maxTier": 3,
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "crowd_control"
+    },
+    {
+      "id": "fire_rate",
+      "name": "Fire Rate",
+      "description": "Reduce weapon cooldowns.",
+      "cost": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "maxTier": 5,
+      "requiresNode": "unlock_chain_spark",
+      "requiresQuest": "rapid_growth"
+    },
+    {
+      "id": "flat_damage",
+      "name": "Flat Damage",
+      "description": "Add fixed damage to every weapon hit.",
+      "cost": [
+        1,
+        2,
+        3
+      ],
+      "maxTier": 3,
+      "requiresNode": "unlock_saw_drone",
+      "requiresQuest": "heavy_hits"
+    },
+    {
+      "id": "percent_damage",
+      "name": "Percent Damage",
+      "description": "Multiply all weapon damage.",
+      "cost": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "maxTier": 5,
+      "requiresNode": "unlock_meteor_pin",
+      "requiresQuest": "boss_hunter"
+    }
+  ]
+}

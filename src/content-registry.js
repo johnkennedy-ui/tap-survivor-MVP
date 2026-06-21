@@ -29,6 +29,8 @@
       shopItemDefs: content.shopItems || [],
       relicDefs: content.relics || [],
       levelDefs: content.levels || [],
+      mapDefs: content.maps || [],
+      tuningDefs: content.tuning || {},
     };
   }
 

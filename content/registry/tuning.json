@@ -1,0 +1,13 @@
+{
+  "tuning": {
+    "shop": {
+      "floorPriceRate": 0.03,
+      "inflationRate": 0.025
+    },
+    "loot": {
+      "coinFloorRewardRate": 0.06,
+      "normalCoinBaseValue": 1,
+      "bossCoinBaseValue": 12
+    }
+  }
+}

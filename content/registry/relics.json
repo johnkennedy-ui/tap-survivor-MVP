@@ -1,0 +1,1578 @@
+{
+  "relics": [
+    {
+      "id": "move_speed_focus_relic",
+      "name": "Blink Invincibility Relic",
+      "description": "The first hit makes you blink and grants a short invincibility window. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/move_speed_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "blink_invincibility",
+        "label": "Blink Invincibility",
+        "description": "The first hit makes you blink and grants a short invincibility window.",
+        "modifiers": {
+          "blinkInvulnerabilitySeconds": 1.8
+        }
+      }
+    },
+    {
+      "id": "move_speed_mastery_relic",
+      "name": "Instant Teleport Relic",
+      "description": "Getting hit instantly teleports you away before the next blow can land. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/move_speed_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "instant_teleport",
+        "label": "Instant Teleport",
+        "description": "Getting hit instantly teleports you away before the next blow can land.",
+        "modifiers": {
+          "teleportOnHitCooldown": 3.5,
+          "teleportDistance": 190
+        }
+      }
+    },
+    {
+      "id": "pickup_radius_focus_relic",
+      "name": "Greedy Aura Relic",
+      "description": "Your pickup aura blooms wide enough to drag rewards from dangerous lanes. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/pickup_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "greedy_aura",
+        "label": "Greedy Aura",
+        "description": "Your pickup aura blooms wide enough to drag rewards from dangerous lanes.",
+        "modifiers": {
+          "pickupRadiusMultiplier": 0.75
+        }
+      }
+    },
+    {
+      "id": "pickup_radius_mastery_relic",
+      "name": "Treasure Bloom Relic",
+      "description": "Coins collected are doubled by a greedy green bloom. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "treasure_bloom",
+        "label": "Treasure Bloom",
+        "description": "Coins collected are doubled by a greedy green bloom.",
+        "modifiers": {
+          "coinMultiplier": 1
+        }
+      }
+    },
+    {
+      "id": "max_hp_focus_relic",
+      "name": "Overgrown Heart Relic",
+      "description": "Begin every run with a huge bonus heartwood health pool. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/max_hp_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "overgrown_heart",
+        "label": "Overgrown Heart",
+        "description": "Begin every run with a huge bonus heartwood health pool.",
+        "modifiers": {
+          "maxHpBonus": 160
+        }
+      }
+    },
+    {
+      "id": "max_hp_mastery_relic",
+      "name": "Half-Life Reprieve Relic",
+      "description": "Hits are softened by a stubborn green shell. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/max_hp_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "half_life_reprieve",
+        "label": "Half-Life Reprieve",
+        "description": "Hits are softened by a stubborn green shell.",
+        "modifiers": {
+          "damageReduction": 0.5
+        }
+      }
+    },
+    {
+      "id": "attack_radius_focus_relic",
+      "name": "Widened Circles Relic",
+      "description": "Area and aura weapons swell far beyond their normal footprint. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/attack_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "widened_circles",
+        "label": "Widened Circles",
+        "description": "Area and aura weapons swell far beyond their normal footprint.",
+        "modifiers": {
+          "areaRadiusBonus": 0.65
+        }
+      }
+    },
+    {
+      "id": "attack_radius_mastery_relic",
+      "name": "Wide Beams Relic",
+      "description": "Beam and cone weapons carve wider lanes through the tower. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/attack_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "wide_beams",
+        "label": "Wide Beams",
+        "description": "Beam and cone weapons carve wider lanes through the tower.",
+        "modifiers": {
+          "beamWidthBonus": 0.85
+        }
+      }
+    },
+    {
+      "id": "fire_rate_focus_relic",
+      "name": "Rapid Bloom Relic",
+      "description": "All weapons cycle faster as the relic keeps feeding them sparks. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/fire_rate_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "rapid_bloom",
+        "label": "Rapid Bloom",
+        "description": "All weapons cycle faster as the relic keeps feeding them sparks.",
+        "modifiers": {
+          "cooldownReduction": 0.55
+        }
+      }
+    },
+    {
+      "id": "fire_rate_mastery_relic",
+      "name": "Double Shot Relic",
+      "description": "Projectile weapons fire a second angled shot every volley. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/fire_rate_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "double_shot",
+        "label": "Double Shot",
+        "description": "Projectile weapons fire a second angled shot every volley.",
+        "modifiers": {
+          "doubleShotCount": 1
+        }
+      }
+    },
+    {
+      "id": "flat_damage_focus_relic",
+      "name": "Thornbite Relic",
+      "description": "Enemies that touch you are stabbed by a green retaliation thorn. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/flat_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "thornbite",
+        "label": "Thornbite",
+        "description": "Enemies that touch you are stabbed by a green retaliation thorn.",
+        "modifiers": {
+          "thornDamage": 90
+        }
+      }
+    },
+    {
+      "id": "flat_damage_mastery_relic",
+      "name": "Life Steal on Kill Relic",
+      "description": "Every kill drinks life from the tower and heals you. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/flat_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "life_steal_on_kill",
+        "label": "Life Steal on Kill",
+        "description": "Every kill drinks life from the tower and heals you.",
+        "modifiers": {
+          "lifestealOnKill": 0.04
+        }
+      }
+    },
+    {
+      "id": "percent_damage_focus_relic",
+      "name": "Boss Bane Relic",
+      "description": "Bosses take reckless extra damage from every weapon. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/percent_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "boss_bane",
+        "label": "Boss Bane",
+        "description": "Bosses take reckless extra damage from every weapon.",
+        "modifiers": {
+          "bossDamageBonus": 1.25
+        }
+      }
+    },
+    {
+      "id": "percent_damage_mastery_relic",
+      "name": "Wild Damage Relic",
+      "description": "All weapon damage surges with unstable green growth. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/percent_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "wild_damage",
+        "label": "Wild Damage",
+        "description": "All weapon damage surges with unstable green growth.",
+        "modifiers": {
+          "damageBonus": 0.65
+        }
+      }
+    },
+    {
+      "id": "haste_projectiles_focus_relic",
+      "name": "Haste Projectiles Focus Relic",
+      "description": "Start each run with +1 Haste Projectiles tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_haste_projectiles",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/haste_projectiles_focus_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "haste_projectiles_mastery_relic",
+      "name": "Haste Projectiles Mastery Relic",
+      "description": "Start each run with +2 Haste Projectiles tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_haste_projectiles",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/haste_projectiles_mastery_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "heavy_projectiles_focus_relic",
+      "name": "Heavy Projectiles Focus Relic",
+      "description": "Start each run with +1 Heavy Projectiles tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_heavy_projectiles",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/heavy_projectiles_focus_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "heavy_projectiles_mastery_relic",
+      "name": "Heavy Projectiles Mastery Relic",
+      "description": "Start each run with +2 Heavy Projectiles tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_heavy_projectiles",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/heavy_projectiles_mastery_relic.svg?v=relic-icons-20260617",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "projectile_pierce_focus_relic",
+      "name": "Projectile Speed Relic",
+      "description": "Projectile weapons fly much faster and reach targets sooner. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "projectile_speed",
+        "label": "Projectile Speed",
+        "description": "Projectile weapons fly much faster and reach targets sooner.",
+        "modifiers": {
+          "projectileSpeedBonus": 0.9
+        }
+      }
+    },
+    {
+      "id": "projectile_pierce_mastery_relic",
+      "name": "Heavy Projectiles Relic",
+      "description": "Projectile weapons become enormous, harder-to-miss chunks. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "heavy_projectiles",
+        "label": "Heavy Projectiles",
+        "description": "Projectile weapons become enormous, harder-to-miss chunks.",
+        "modifiers": {
+          "projectileSizeBonus": 0.75
+        }
+      }
+    },
+    {
+      "id": "wall_bounce_focus_relic",
+      "name": "Fifty-Fifty Dodge Relic",
+      "description": "Half of incoming hits are simply dodged. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/wall_bounce_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "fifty_fifty_dodge",
+        "label": "Fifty-Fifty Dodge",
+        "description": "Half of incoming hits are simply dodged.",
+        "modifiers": {
+          "dodgeChance": 0.5
+        }
+      }
+    },
+    {
+      "id": "wall_bounce_mastery_relic",
+      "name": "Safe Rebound Relic",
+      "description": "Dodges are common and successful dodges make you visibly flicker. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/wall_bounce_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "safe_rebound",
+        "label": "Safe Rebound",
+        "description": "Dodges are common and successful dodges make you visibly flicker.",
+        "modifiers": {
+          "dodgeChance": 0.35,
+          "blinkInvulnerabilitySeconds": 0.6
+        }
+      }
+    },
+    {
+      "id": "split_shot_focus_relic",
+      "name": "Mimic Grimoire Relic",
+      "description": "The grimoire imitates your training and floods each run with bonus XP. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/split_shot_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "mimic_grimoire",
+        "label": "Mimic Grimoire",
+        "description": "The grimoire imitates your training and floods each run with bonus XP.",
+        "modifiers": {
+          "xpMultiplier": 1.25
+        }
+      }
+    },
+    {
+      "id": "split_shot_mastery_relic",
+      "name": "Many Hands Relic",
+      "description": "Projectiles fire faster, split wider, and build into chaotic volleys. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/split_shot_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "many_hands",
+        "label": "Many Hands",
+        "description": "Projectiles fire faster, split wider, and build into chaotic volleys.",
+        "modifiers": {
+          "doubleShotCount": 1,
+          "projectileSpeedBonus": 0.35
+        }
+      }
+    },
+    {
+      "id": "explosive_hit_focus_relic",
+      "name": "Death Burst Relic",
+      "description": "Kills burst outward and hurt nearby enemies. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/explosive_hit_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "death_burst",
+        "label": "Death Burst",
+        "description": "Kills burst outward and hurt nearby enemies.",
+        "modifiers": {
+          "killExplosionDamage": 70,
+          "killExplosionRadius": 90
+        }
+      }
+    },
+    {
+      "id": "explosive_hit_mastery_relic",
+      "name": "Chain Bloom Relic",
+      "description": "Kills detonate in larger bursts that can start cascading clears. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/explosive_hit_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "chain_bloom",
+        "label": "Chain Bloom",
+        "description": "Kills detonate in larger bursts that can start cascading clears.",
+        "modifiers": {
+          "killExplosionDamage": 130,
+          "killExplosionRadius": 135
+        }
+      }
+    },
+    {
+      "id": "split_on_hit_focus_relic",
+      "name": "Green Sprint Relic",
+      "description": "Movement speed surges hard enough to reshape positioning. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/split_on_hit_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "green_sprint",
+        "label": "Green Sprint",
+        "description": "Movement speed surges hard enough to reshape positioning.",
+        "modifiers": {
+          "speedMultiplier": 0.6
+        }
+      }
+    },
+    {
+      "id": "split_on_hit_mastery_relic",
+      "name": "Full Overgrowth Relic",
+      "description": "Health, speed, and pickup reach all grow at once. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/split_on_hit_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "full_overgrowth",
+        "label": "Full Overgrowth",
+        "description": "Health, speed, and pickup reach all grow at once.",
+        "modifiers": {
+          "maxHpMultiplier": 0.6,
+          "speedMultiplier": 0.35,
+          "pickupRadiusMultiplier": 0.35
+        }
+      }
+    },
+    {
+      "id": "tower_arsenal_relic",
+      "name": "Mimic Arsenal Relic",
+      "description": "Every weapon hits harder while projectiles launch faster. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 0,
+      "maxTierBonus": 0,
+      "weaponSlotBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/tower_arsenal_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 0,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "mimic_arsenal",
+        "label": "Mimic Arsenal",
+        "description": "Every weapon hits harder while projectiles launch faster.",
+        "modifiers": {
+          "damageBonus": 0.35,
+          "projectileSpeedBonus": 0.45
+        }
+      }
+    },
+    {
+      "id": "focused_channel_relic",
+      "name": "Obsessed Focus Relic",
+      "description": "Run skills appear more often while weapon cooldowns collapse. Keeps its linked run skill bonuses too.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 0,
+      "maxTierBonus": 0,
+      "weaponSlotBonus": -1,
+      "weaponDamageMultiplier": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/focused_channel_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 0,
+      "rarity": "green",
+      "backgroundColor": "#17633a",
+      "specialAbility": {
+        "id": "obsessed_focus",
+        "label": "Obsessed Focus",
+        "description": "Run skills appear more often while weapon cooldowns collapse.",
+        "modifiers": {
+          "cooldownReduction": 0.35,
+          "damageBonus": 0.25
+        }
+      }
+    },
+    {
+      "id": "random_ember_move_speed_focus_relic",
+      "name": "Ember Move Speed Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ember_move_speed_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_ember_move_speed_obsessed_relic",
+      "name": "Ember Move Speed Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Move Speed tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ember_move_speed_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_ember_move_speed_mastery_relic",
+      "name": "Ember Move Speed Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Move Speed tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ember_move_speed_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_frost_pickup_radius_focus_relic",
+      "name": "Frost Pickup Radius Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_frost_pickup_radius_obsessed_relic",
+      "name": "Frost Pickup Radius Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Pickup Radius tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_frost_pickup_radius_mastery_relic",
+      "name": "Frost Pickup Radius Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Pickup Radius tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_storm_max_hp_focus_relic",
+      "name": "Storm Max Hp Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_storm_max_hp_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_storm_max_hp_obsessed_relic",
+      "name": "Storm Max Hp Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Max HP tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_storm_max_hp_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_storm_max_hp_mastery_relic",
+      "name": "Storm Max Hp Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Max HP tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_storm_max_hp_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_moon_attack_radius_focus_relic",
+      "name": "Moon Attack Radius Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_moon_attack_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_moon_attack_radius_obsessed_relic",
+      "name": "Moon Attack Radius Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Attack Radius tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_moon_attack_radius_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_moon_attack_radius_mastery_relic",
+      "name": "Moon Attack Radius Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Attack Radius tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_moon_attack_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_sun_fire_rate_focus_relic",
+      "name": "Sun Fire Rate Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_sun_fire_rate_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_sun_fire_rate_obsessed_relic",
+      "name": "Sun Fire Rate Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Fire Rate tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_sun_fire_rate_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_sun_fire_rate_mastery_relic",
+      "name": "Sun Fire Rate Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Fire Rate tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_sun_fire_rate_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_void_flat_damage_focus_relic",
+      "name": "Void Flat Damage Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_void_flat_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_void_flat_damage_obsessed_relic",
+      "name": "Void Flat Damage Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Flat Damage tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_void_flat_damage_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_void_flat_damage_mastery_relic",
+      "name": "Void Flat Damage Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Flat Damage tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_void_flat_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_iron_percent_damage_focus_relic",
+      "name": "Iron Percent Damage Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_iron_percent_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_iron_percent_damage_obsessed_relic",
+      "name": "Iron Percent Damage Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Percent Damage tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_iron_percent_damage_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_iron_percent_damage_mastery_relic",
+      "name": "Iron Percent Damage Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Percent Damage tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_iron_percent_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_crystal_projectile_pierce_focus_relic",
+      "name": "Crystal Projectile Pierce Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_crystal_projectile_pierce_obsessed_relic",
+      "name": "Crystal Projectile Pierce Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Piercing Shots tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_crystal_projectile_pierce_mastery_relic",
+      "name": "Crystal Projectile Pierce Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Piercing Shots tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_thorn_wall_bounce_focus_relic",
+      "name": "Thorn Wall Bounce Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_thorn_wall_bounce_obsessed_relic",
+      "name": "Thorn Wall Bounce Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Ricochet Shots tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_thorn_wall_bounce_mastery_relic",
+      "name": "Thorn Wall Bounce Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Ricochet Shots tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_echo_split_shot_focus_relic",
+      "name": "Echo Split Shot Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_echo_split_shot_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_echo_split_shot_obsessed_relic",
+      "name": "Echo Split Shot Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Split Fire tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_echo_split_shot_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_echo_split_shot_mastery_relic",
+      "name": "Echo Split Shot Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Split Fire tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_echo_split_shot_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_rune_explosive_hit_focus_relic",
+      "name": "Rune Explosive Hit Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_rune_explosive_hit_obsessed_relic",
+      "name": "Rune Explosive Hit Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Explosive Hits tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_rune_explosive_hit_mastery_relic",
+      "name": "Rune Explosive Hit Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Explosive Hits tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_aether_split_on_hit_focus_relic",
+      "name": "Aether Split On Hit Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_aether_split_on_hit_obsessed_relic",
+      "name": "Aether Split On Hit Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Splinter Shots tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_aether_split_on_hit_mastery_relic",
+      "name": "Aether Split On Hit Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Splinter Shots tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_onyx_move_speed_focus_relic",
+      "name": "Onyx Move Speed Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_onyx_move_speed_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_onyx_move_speed_obsessed_relic",
+      "name": "Onyx Move Speed Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Move Speed tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_onyx_move_speed_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_onyx_move_speed_mastery_relic",
+      "name": "Onyx Move Speed Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Move Speed tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_onyx_move_speed_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_silver_pickup_radius_focus_relic",
+      "name": "Silver Pickup Radius Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_silver_pickup_radius_obsessed_relic",
+      "name": "Silver Pickup Radius Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Pickup Radius tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_silver_pickup_radius_mastery_relic",
+      "name": "Silver Pickup Radius Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Pickup Radius tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_gold_max_hp_focus_relic",
+      "name": "Gold Max Hp Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_gold_max_hp_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_gold_max_hp_obsessed_relic",
+      "name": "Gold Max Hp Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Max HP tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_gold_max_hp_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_gold_max_hp_mastery_relic",
+      "name": "Gold Max Hp Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Max HP tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_gold_max_hp_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_prism_attack_radius_focus_relic",
+      "name": "Prism Attack Radius Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_prism_attack_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_prism_attack_radius_obsessed_relic",
+      "name": "Prism Attack Radius Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Attack Radius tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_prism_attack_radius_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_prism_attack_radius_mastery_relic",
+      "name": "Prism Attack Radius Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Attack Radius tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_prism_attack_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_ashen_fire_rate_focus_relic",
+      "name": "Ashen Fire Rate Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_ashen_fire_rate_obsessed_relic",
+      "name": "Ashen Fire Rate Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Fire Rate tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_ashen_fire_rate_mastery_relic",
+      "name": "Ashen Fire Rate Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Fire Rate tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_verdant_flat_damage_focus_relic",
+      "name": "Verdant Flat Damage Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_verdant_flat_damage_obsessed_relic",
+      "name": "Verdant Flat Damage Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Flat Damage tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_verdant_flat_damage_mastery_relic",
+      "name": "Verdant Flat Damage Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Flat Damage tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_azure_percent_damage_focus_relic",
+      "name": "Azure Percent Damage Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_azure_percent_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_azure_percent_damage_obsessed_relic",
+      "name": "Azure Percent Damage Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Percent Damage tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_azure_percent_damage_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_azure_percent_damage_mastery_relic",
+      "name": "Azure Percent Damage Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Percent Damage tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_azure_percent_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_scarlet_projectile_pierce_focus_relic",
+      "name": "Scarlet Projectile Pierce Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_scarlet_projectile_pierce_obsessed_relic",
+      "name": "Scarlet Projectile Pierce Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Piercing Shots tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_scarlet_projectile_pierce_mastery_relic",
+      "name": "Scarlet Projectile Pierce Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Piercing Shots tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_ivory_wall_bounce_focus_relic",
+      "name": "Ivory Wall Bounce Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Ricochet Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_ivory_wall_bounce_obsessed_relic",
+      "name": "Ivory Wall Bounce Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Ricochet Shots tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_ivory_wall_bounce_mastery_relic",
+      "name": "Ivory Wall Bounce Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Ricochet Shots tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_wall_bounce",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_obsidian_split_shot_focus_relic",
+      "name": "Obsidian Split Shot Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Split Fire tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_obsidian_split_shot_obsessed_relic",
+      "name": "Obsidian Split Shot Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Split Fire tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_obsidian_split_shot_mastery_relic",
+      "name": "Obsidian Split Shot Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Split Fire tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_shot",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_celestial_explosive_hit_focus_relic",
+      "name": "Celestial Explosive Hit Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Explosive Hits tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_celestial_explosive_hit_obsessed_relic",
+      "name": "Celestial Explosive Hit Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Explosive Hits tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_celestial_explosive_hit_mastery_relic",
+      "name": "Celestial Explosive Hit Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Explosive Hits tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_explosive_hit",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_spectral_split_on_hit_focus_relic",
+      "name": "Spectral Split On Hit Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Splinter Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_spectral_split_on_hit_obsessed_relic",
+      "name": "Spectral Split On Hit Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Splinter Shots tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_spectral_split_on_hit_mastery_relic",
+      "name": "Spectral Split On Hit Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Splinter Shots tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_split_on_hit",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_arcane_move_speed_focus_relic",
+      "name": "Arcane Move Speed Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Move Speed tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_arcane_move_speed_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_arcane_move_speed_obsessed_relic",
+      "name": "Arcane Move Speed Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Move Speed tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_arcane_move_speed_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_arcane_move_speed_mastery_relic",
+      "name": "Arcane Move Speed Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Move Speed tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_move_speed",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_arcane_move_speed_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_wild_pickup_radius_focus_relic",
+      "name": "Wild Pickup Radius Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Pickup Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_wild_pickup_radius_obsessed_relic",
+      "name": "Wild Pickup Radius Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Pickup Radius tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_wild_pickup_radius_mastery_relic",
+      "name": "Wild Pickup Radius Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Pickup Radius tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_clockwork_max_hp_focus_relic",
+      "name": "Clockwork Max Hp Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Max HP tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_clockwork_max_hp_obsessed_relic",
+      "name": "Clockwork Max Hp Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Max HP tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_clockwork_max_hp_mastery_relic",
+      "name": "Clockwork Max Hp Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Max HP tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_max_hp",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_gilded_attack_radius_focus_relic",
+      "name": "Gilded Attack Radius Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Attack Radius tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_gilded_attack_radius_obsessed_relic",
+      "name": "Gilded Attack Radius Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Attack Radius tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_gilded_attack_radius_mastery_relic",
+      "name": "Gilded Attack Radius Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Attack Radius tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_attack_radius",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_soul_fire_rate_focus_relic",
+      "name": "Soul Fire Rate Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Fire Rate tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_soul_fire_rate_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_soul_fire_rate_obsessed_relic",
+      "name": "Soul Fire Rate Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Fire Rate tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_soul_fire_rate_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_soul_fire_rate_mastery_relic",
+      "name": "Soul Fire Rate Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Fire Rate tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_soul_fire_rate_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_meteor_flat_damage_focus_relic",
+      "name": "Meteor Flat Damage Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Flat Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_meteor_flat_damage_obsessed_relic",
+      "name": "Meteor Flat Damage Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Flat Damage tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_meteor_flat_damage_mastery_relic",
+      "name": "Meteor Flat Damage Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Flat Damage tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_flat_damage",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_nova_percent_damage_focus_relic",
+      "name": "Nova Percent Damage Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Percent Damage tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_nova_percent_damage_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_nova_percent_damage_obsessed_relic",
+      "name": "Nova Percent Damage Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Percent Damage tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_nova_percent_damage_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_nova_percent_damage_mastery_relic",
+      "name": "Nova Percent Damage Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Percent Damage tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_nova_percent_damage_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "random_tower_projectile_pierce_focus_relic",
+      "name": "Tower Projectile Pierce Focus Relic",
+      "description": "A random tower relic. Start each run with +1 Piercing Shots tier, increase its max tier by 1, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 2,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_focus_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 1
+    },
+    {
+      "id": "random_tower_projectile_pierce_obsessed_relic",
+      "name": "Tower Projectile Pierce Obsessed Relic",
+      "description": "A random tower relic. Start each run with +2 Piercing Shots tiers, increase its max tier by 2, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_obsessed_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "random_tower_projectile_pierce_mastery_relic",
+      "name": "Tower Projectile Pierce Mastery Relic",
+      "description": "A random tower relic. Start each run with +3 Piercing Shots tiers, increase its max tier by 3, and weight it in level-up choices.",
+      "targetUpgradeId": "run_projectile_pierce",
+      "selectionWeightBonus": 5,
+      "maxTierBonus": 3,
+      "iconPath": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_mastery_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 3
+    },
+    {
+      "id": "super_boss_arsenal_cache_relic",
+      "name": "Super Boss Arsenal Cache Relic",
+      "description": "A rare random super-boss relic. Start each run with +2 Percent Damage tiers, increase its max tier by 1, and add a special loadout twist.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 1,
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_arsenal_cache_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "weaponSlotBonus": 1
+    },
+    {
+      "id": "super_boss_focused_channel_relic",
+      "name": "Super Boss Focused Channel Relic",
+      "description": "A rare random super-boss relic. Start each run with +2 Percent Damage tiers, increase its max tier by 2, and add a special loadout twist.",
+      "targetUpgradeId": "run_percent_damage",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_focused_channel_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2,
+      "weaponDamageMultiplier": 1.35
+    },
+    {
+      "id": "super_boss_quickening_core_relic",
+      "name": "Super Boss Quickening Core Relic",
+      "description": "A rare random super-boss relic. Start each run with +2 Fire Rate tiers, increase its max tier by 2, and add a special loadout twist.",
+      "targetUpgradeId": "run_fire_rate",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_quickening_core_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    },
+    {
+      "id": "super_boss_aether_gravity_relic",
+      "name": "Super Boss Aether Gravity Relic",
+      "description": "A rare random super-boss relic. Start each run with +2 Pickup Radius tiers, increase its max tier by 2, and add a special loadout twist.",
+      "targetUpgradeId": "run_pickup_radius",
+      "selectionWeightBonus": 3,
+      "maxTierBonus": 2,
+      "iconPath": "assets/generated/tower/sprites/relics/super_boss_aether_gravity_relic.svg?v=relic-icons-20260615",
+      "startingTierBonus": 2
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "assets": {
+    "sfx": {
+      "weapons": {
+        "spark_bolt": "assets/generated/tower/sfx/spark_bolt.wav?v=sfx-20260615",
+        "prism_beam": "assets/generated/tower/sfx/prism_beam.wav?v=sfx-20260615",
+        "frost_orb": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615",
+        "flame_wave": "assets/generated/tower/sfx/flame_wave.wav?v=sfx-20260615",
+        "saw_drone": "assets/generated/tower/sfx/saw_drone.wav?v=sfx-20260615",
+        "void_mine": "assets/generated/tower/sfx/void_mine.wav?v=sfx-20260615",
+        "chain_spark": "assets/generated/tower/sfx/chain_spark.wav?v=sfx-20260615",
+        "moon_glaive": "assets/generated/tower/sfx/moon_glaive.wav?v=sfx-20260615",
+        "meteor_pin": "assets/generated/tower/sfx/meteor_pin.wav?v=sfx-20260615",
+        "acid_pool": "assets/generated/tower/sfx/acid_pool.wav?v=sfx-20260615",
+        "shield_pulse": "assets/generated/tower/sfx/shield_pulse.wav?v=sfx-20260615",
+        "nova_burst": "assets/generated/tower/sfx/nova_burst.wav?v=sfx-20260615"
+      },
+      "runUpgrades": {
+        "run_move_speed": "assets/generated/tower/sfx/run_move_speed.wav?v=sfx-20260615",
+        "run_pickup_radius": "assets/generated/tower/sfx/run_pickup_radius.wav?v=sfx-20260615",
+        "run_max_hp": "assets/generated/tower/sfx/run_max_hp.wav?v=sfx-20260615",
+        "run_attack_radius": "assets/generated/tower/sfx/run_attack_radius.wav?v=sfx-20260615",
+        "run_fire_rate": "assets/generated/tower/sfx/run_fire_rate.wav?v=sfx-20260615",
+        "run_flat_damage": "assets/generated/tower/sfx/run_flat_damage.wav?v=sfx-20260615",
+        "run_percent_damage": "assets/generated/tower/sfx/run_percent_damage.wav?v=sfx-20260615",
+        "run_projectile_pierce": "assets/generated/tower/sfx/run_projectile_pierce.wav?v=sfx-20260615",
+        "run_wall_bounce": "assets/generated/tower/sfx/run_wall_bounce.wav?v=sfx-20260615",
+        "run_split_shot": "assets/generated/tower/sfx/run_split_shot.wav?v=sfx-20260615",
+        "run_explosive_hit": "assets/generated/tower/sfx/run_explosive_hit.wav?v=sfx-20260615",
+        "run_split_on_hit": "assets/generated/tower/sfx/run_split_on_hit.wav?v=sfx-20260615",
+        "run_haste_projectiles": "assets/generated/tower/sfx/run_projectile_pierce.wav?v=sfx-20260615",
+        "run_heavy_projectiles": "assets/generated/tower/sfx/run_split_on_hit.wav?v=sfx-20260615"
+      }
+    }
+  }
+}

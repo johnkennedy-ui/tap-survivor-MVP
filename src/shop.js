@@ -2,6 +2,7 @@
 function createShopSystem({
   ui,
   shopItemDefs,
+  pricingConfig,
   getSave,
   getGame,
   onShopVisit,
@@ -12,6 +13,7 @@ function createShopSystem({
 }) {
   const pricing = globalThis.TapSurvivorShopPricing.createShopPricing({
     shopItemDefs,
+    pricingConfig,
     getSave,
   });
 

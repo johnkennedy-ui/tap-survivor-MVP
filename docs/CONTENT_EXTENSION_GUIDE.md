@@ -10,8 +10,10 @@
 
 ## Folder Conventions
 
-- Source content registry: `content/tap-survivor-content.json`.
+- Source content registry: `content/registry/*.json`.
+- Compatibility mirror: `content/tap-survivor-content.json`; tooling keeps it assembled for older scripts.
 - Machine-readable content schema: `content/tap-survivor-schema.json`.
+- Balance profiles: `content/balance/*.json`.
 - Generated content and schema globals: `src/content.generated.js`.
 - Sprites and licenses: `assets/<source>/<pack>/`.
 - Agent docs: `docs/`.
@@ -24,9 +26,38 @@
 - Run `npm run smoke:add-content` after changing `scripts/add-content.mjs`, schema templates, or content-tool path handling.
 - `src/content.generated.js` exposes `globalThis.TapSurvivorContentSchema`; runtime modules can use generated schema constants when they need supported content lists.
 
+## Content Domains
+
+- Weapons, unlocks, and meta upgrades: `content/registry/weapons.json`.
+- Run upgrades: `content/registry/run-upgrades.json`.
+- Relics: `content/registry/relics.json`.
+- Shop items: `content/registry/shop-items.json`.
+- Enemies: `content/registry/enemies.json`.
+- Boss config and boss abilities: `content/registry/bosses.json`.
+- Floors/waves: `content/registry/floors.json`.
+- Maps/biomes: `content/registry/maps.json`.
+- Quests and quest groups: `content/registry/quests.json`.
+- Characters: `content/registry/characters.json`.
+- Asset sources and sprite paths: `content/registry/assets.json`.
+- Audio/SFX paths: `content/registry/audio.json`.
+- Numeric tuning such as shop and loot rates: `content/registry/tuning.json`.
+
+Use `npm run build:content` to assemble these domains into `src/content.generated.js`.
+
+## Balance Profiles
+
+- Default balance: `content/balance/default.json`; it preserves current values.
+- Dev/test examples: `content/balance/dev-fast.json`, `content/balance/testing.json`.
+- Select a build-time profile with `TAP_SURVIVOR_BALANCE_PROFILE=<profile> npm run build:content`.
+- Validate profiles with `npm run balance:check`.
+- Inspect available profiles with `npm run balance:summary`.
+- Compare a profile with base registry values with `npm run balance:diff -- <profile>`.
+
+Balance overrides are for numeric tuning and safe existing-ID list replacements only. New behavior kinds, new runtime effects, new weapon behavior dispatch, and new UI behavior still require code changes.
+
 ## Add A Weapon
 
-1. Add the weapon under `weapons` in `content/tap-survivor-content.json`.
+1. Prefer `npm run add:content -- weapon <id> ...`, or edit `content/registry/weapons.json`.
 2. Give it `name`, `description`, `upgradeId`, `cooldown`, `damage`, `kind`, `color`, and kind-specific fields.
 3. Use only weapon `kind` values listed in `content/tap-survivor-schema.json` unless you are also adding runtime behavior in `src/weapon-fire.js`.
 4. Add a matching `weaponUnlocks` entry with `id`, `weaponId`, `cost`, `branch`, and any gates.
@@ -39,7 +70,7 @@
 Shortcut:
 
 ```bash
-node scripts/add-content.mjs weapon frost_example --name "Frost Example" --description "Example projectile." --kind projectile --damage 10 --cooldown 1 --color "#8de7ff" --unlock-cost 1 --branch Control
+npm run add:content -- weapon frost_example --name "Frost Example" --description "Example projectile." --kind projectile --damage 10 --cooldown 1 --color "#8de7ff" --unlock-cost 1 --branch Control
 ```
 
 ## Add A Quest
@@ -53,22 +84,22 @@ node scripts/add-content.mjs weapon frost_example --name "Frost Example" --descr
 Shortcut:
 
 ```bash
-node scripts/add-content.mjs quest next_boss_trial --name "Next Boss Trial" --description "Defeat 20 bosses." --target 20 --reward 14 --group boss --after boss_myth
+npm run add:content -- quest next_boss_trial --name "Next Boss Trial" --description "Defeat 20 bosses." --target 20 --reward 14 --group boss --after boss_myth
 ```
 
 ## Add A Skill Or Upgrade
 
 1. Check whether the change is a meta upgrade or an in-run upgrade.
-2. For meta upgrades, add to `metaUpgrades` in `content/tap-survivor-content.json`.
+2. For meta upgrades, add to `metaUpgrades` in `content/registry/weapons.json`.
 3. For weapon damage upgrades, set or update the weapon `upgradeId`; `src/upgrades.js` generates the upgrade.
-4. For in-run upgrades, add to `runUpgrades` in `content/tap-survivor-content.json`.
+4. For in-run upgrades, prefer `npm run add:content -- run-upgrade <id> ...`, or edit `content/registry/run-upgrades.json`.
 5. Use stable IDs and avoid duplicating an existing stat modifier.
 6. Run `npm run build:content && npm run validate:content`.
 7. Run `npm test` if the upgrade can affect gameplay.
 
 ## Add An Item
 
-1. Add the item to `shopItems` in `content/tap-survivor-content.json`.
+1. Prefer `npm run add:content -- shop-item <id> ...`, or edit `content/registry/shop-items.json`.
 2. Include `id`, `name`, `description`, `kind`, `cost`, `maxTier`, and optional `effect`.
 3. Keep `effect.stat` aligned with `content/tap-survivor-schema.json`.
 4. `stat_upgrade` items with supported effect stats are applied by `src/shop.js`/`src/combat.js`.
@@ -78,12 +109,12 @@ node scripts/add-content.mjs quest next_boss_trial --name "Next Boss Trial" --de
 Shortcut:
 
 ```bash
-node scripts/add-content.mjs shop-item quick_boots --name "Quick Boots" --description "Move faster." --kind stat_upgrade --cost 100 --effect-stat speed --effect-value 5 --max-tier 1
+npm run add:content -- shop-item quick_boots --name "Quick Boots" --description "Move faster." --kind stat_upgrade --cost 100 --effect-stat speed --effect-value 5 --max-tier 1
 ```
 
 ## Add A Level
 
-1. Add the level to `levels` in `content/tap-survivor-content.json`.
+1. Prefer `npm run add:content -- floor <id> ...`, or edit `content/registry/floors.json`.
 2. Include `id`, `name`, `startsAt`, optional `enemyIds`, `spawnCount`, `spawnRateMultiplier`, and `notes`.
 3. Keep timing in seconds.
 4. Run `npm run build:content && npm run validate:content`.
@@ -91,12 +122,12 @@ node scripts/add-content.mjs shop-item quick_boots --name "Quick Boots" --descri
 Shortcut:
 
 ```bash
-node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --starts-at 420 --enemies drifter,skitter,bulwark --spawn-count 3 --spawn-rate 1.1
+npm run add:content -- floor desert_overtime --name "Desert Overtime" --starts-at 420 --enemies drifter,skitter,bulwark --spawn-count 3 --spawn-rate 1.1
 ```
 
 ## Tune Boss Abilities
 
-1. Edit `bossConfig` and `bossAbilities` in `content/tap-survivor-content.json`.
+1. Edit `bossConfig` and `bossAbilities` in `content/registry/bosses.json`.
 2. Keep `bossConfig.abilityIds` aligned with keys in `bossAbilities`.
 3. Use boss ability IDs listed in `content/tap-survivor-schema.json` unless extending `src/enemies.js` for a new ability behavior.
 4. Run `npm run build:content && npm test`.
@@ -111,7 +142,7 @@ node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --st
 
 ## Add A Character
 
-1. Add the character to `characters` in `content/tap-survivor-content.json`.
+1. Prefer `npm run add:content -- character <id> ...`, or edit `content/registry/characters.json`.
 2. Include `id`, `name`, `description`, `spriteId`, and optional `notes`.
 3. Add or reuse a sprite ID under `assets.sprites`.
 4. Do not add character-selection UI unless explicitly requested.
@@ -120,7 +151,7 @@ node scripts/add-content.mjs level desert_overtime --name "Desert Overtime" --st
 Shortcut:
 
 ```bash
-node scripts/add-content.mjs character character_runner --name "Runner" --description "Example fast survivor." --sprite player
+npm run add:content -- character character_runner --name "Runner" --description "Example fast survivor." --sprite player
 ```
 
 ## Add Or Move Sprites And Assets
@@ -168,8 +199,11 @@ npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/gen
 ## Validation Checklist
 
 - Content JSON parses.
+- Domain registry assembly succeeds.
 - `npm run build:content` passes.
 - `npm run validate:content` passes.
+- `npm run balance:check` passes after editing `content/balance/*.json`.
+- `npm run content:summary`, `npm run balance:summary`, and `npm run balance:diff -- <profile>` show expected values after structural or balance work.
 - `npm run verify:script-order` passes after `index.html` or `src/*.js` script dependency changes.
 - `npm run audit:quests` passes if quests or unlock gates changed.
 - `npm test` passes if gameplay code, combat, rendering, upgrades, or script load order changed.

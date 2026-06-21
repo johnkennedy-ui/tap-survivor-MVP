@@ -11,7 +11,7 @@ Before editing this repo:
 7. Use `npm run agent:status` for a quick repo overview when needed.
 8. Treat `docs/CURRENT_TASK.md` as optional housekeeping only. Do not use it as the source of truth for the active request; the conversation and current git diff are authoritative.
 9. Inspect only the files relevant to the requested change.
-10. Prefer content edits in `content/tap-survivor-content.json` plus `npm run build:content`.
+10. Prefer content edits in `content/registry/*.json` via `npm run add:content -- <type> <id> ...`, then run `npm run build:content`.
 11. Do not edit `src/content.generated.js` by hand.
 12. Do not rewrite the game loop, renderer, or combat system unless the task specifically requires it.
 13. Use `npm run agent:handoff` when handing the repo to another agent or resuming later.
@@ -21,5 +21,6 @@ Before editing this repo:
 17. For Android packaging/release prep, read `docs/PLAY_STORE_ANDROID_PREP.md`.
 18. Do not hand-edit `www/`, fork gameplay between GitHub.io and Android, or commit signing secrets.
 19. Before committing, if the task changed Prettier-supported files, run `docs/skills/prettier-before-commit.md`.
+20. For balance-only experiments, use `content/balance/*.json` and validate with `npm run balance:check`; do not change runtime code for numeric tuning-only work.
 
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.

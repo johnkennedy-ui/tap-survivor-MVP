@@ -8,7 +8,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 
 - Engine/framework: no external game engine; plain browser JavaScript, HTML canvas, HTML, and CSS.
 - Module style: browser globals loaded by `index.html` in script order.
-- Runtime content source: `src/content.generated.js`, generated from `content/tap-survivor-content.json`.
+- Runtime content source: `src/content.generated.js`, generated from `content/registry/*.json` and optional `content/balance/*.json` overlays.
 - Runtime schema source: `src/content.generated.js` also exposes `globalThis.TapSurvivorContentSchema`, generated from `content/tap-survivor-schema.json`.
 
 ## Folder Map
@@ -46,7 +46,9 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/assets.js`: shared resolver for effect sprites, clean icons, relic icons, level-up icons, and fallback asset paths.
 - `src/upgrades.js`: generated weapon upgrade definitions plus the small run-upgrade effect interpreter.
 - `src/styles.css`: page, panel, modal, and responsive styling.
-- `content/tap-survivor-content.json`: source registry for weapons, weapon unlocks, quests, enemies, characters, shop items, levels, and asset IDs.
+- `content/registry/`: source registry domains for weapons, relics, shop items, run upgrades, enemies, bosses, floors, maps, quests, characters, assets, audio, and tuning.
+- `content/balance/`: build-time balance overlay profiles.
+- `content/tap-survivor-content.json`: assembled compatibility mirror for older scripts.
 - `src/content.generated.js`: generated content bundle; do not edit directly.
 - `assets/`: committed sprite and license files.
 - `www/`: generated, git-ignored shared runtime output used by both GitHub Pages and Capacitor Android.
@@ -61,12 +63,14 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 
 ## Main Gameplay Systems
 
-- Content registry: `content/tap-survivor-content.json`.
+- Content registry: `content/registry/*.json`, assembled by `scripts/content-tools.mjs`.
 - Content schema/manifest: `content/tap-survivor-schema.json`.
 - Content add templates: `content/tap-survivor-schema.json` under `templates`; `scripts/add-content.mjs` reads those defaults.
 - Content build: `scripts/build-content.mjs`.
 - Content validation: `scripts/content-tools.mjs` and `scripts/validate-content.mjs`; shop-item validation is split into a dedicated helper inside `content-tools`.
+- Balance profiles: `content/balance/default.json`, `content/balance/dev-fast.json`, and `content/balance/testing.json`.
 - Economy/shop balance check: `scripts/economy-check.mjs`.
+- Balance reports/checks: `scripts/balance-summary.mjs`, `scripts/balance-diff.mjs`, and `scripts/balance-check.mjs`.
 - Browser global load-order check: `scripts/check-script-order.mjs`.
 - Quest graph audit: `scripts/audit-quests.mjs`.
 - Save/meta progression: `src/save.js`, `src/progression.js`, `src/run-state.js`, and orchestration in `src/game.js`.
@@ -88,7 +92,8 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 
 The project is mixed but mostly registry-driven:
 
-- Weapons, unlock nodes, meta upgrades, run upgrades, quests, quest groups, enemies, characters, shop items, levels, asset sources, and sprite paths are config-driven in `content/tap-survivor-content.json`.
+- Weapons, unlock nodes, meta upgrades, run upgrades, quests, quest groups, enemies, characters, shop items, levels, maps, asset sources, sprite paths, audio, and tuning are config-driven in `content/registry/*.json`.
+- Balance profiles may safely override known numeric fields and known-ID floor/map lists at build time.
 - Supported content tooling templates/defaults, shop item field rules, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
 - Supported runtime behavior IDs for weapon kinds and boss ability kinds are also listed in `content/tap-survivor-schema.json`; content validation rejects unsupported IDs before runtime.
 - `src/content.generated.js` exposes the content registry as `globalThis.TapSurvivorContent` and the content schema as `globalThis.TapSurvivorContentSchema`.
@@ -99,13 +104,17 @@ The project is mixed but mostly registry-driven:
 
 ## Where To Add Content
 
-- Weapons: add to `content/tap-survivor-content.json` under `weapons`, use a `kind` listed in `content/tap-survivor-schema.json`, add a `weaponUnlocks` entry, add related quests if needed, then run `npm run build:content`.
-- Meta upgrades: add to `metaUpgrades` in `content/tap-survivor-content.json`; keep gates pointed at existing `weaponUnlocks` and `quests`.
+- Weapons: use `npm run add:content -- weapon <id> ...` or edit `content/registry/weapons.json`; use a `kind` listed in `content/tap-survivor-schema.json`.
+- Meta upgrades: add to `metaUpgrades` in `content/registry/weapons.json`; keep gates pointed at existing `weaponUnlocks` and `quests`.
 - Weapon damage upgrades: set `upgradeId` on the weapon entry; `src/upgrades.js` generates the upgrade.
-- Run upgrades: add to `runUpgrades` in `content/tap-survivor-content.json`; use supported effects only unless extending `src/upgrades.js`.
-- Items: add to `shopItems` in `content/tap-survivor-content.json`; keep effect stats aligned with `content/tap-survivor-schema.json`.
-- Levels: add to `levels` in `content/tap-survivor-content.json`.
-- Characters: add to `characters` in `content/tap-survivor-content.json`.
+- Run upgrades: use `npm run add:content -- run-upgrade <id> ...` or edit `content/registry/run-upgrades.json`; use supported effects only unless extending `src/upgrades.js`.
+- Relics: use `npm run add:content -- relic <id> ...` or edit `content/registry/relics.json`; supported modifier keys live in schema.
+- Items: use `npm run add:content -- shop-item <id> ...` or edit `content/registry/shop-items.json`.
+- Enemies: use `npm run add:content -- enemy <id> ...` or edit `content/registry/enemies.json`; new behavior kinds need runtime code.
+- Bosses: use `npm run add:content -- boss <id> ...` for inactive tuning entries; adding to `bossConfig.abilityIds` needs runtime-supported ability behavior.
+- Floors: use `npm run add:content -- floor <id> ...` or edit `content/registry/floors.json`.
+- Maps: use `npm run add:content -- map <id> ...` or edit `content/registry/maps.json`.
+- Characters: use `npm run add:content -- character <id> ...` or edit `content/registry/characters.json`.
 - Sprites/assets: add files under `assets/<source>/<pack>/`, register source/license in `assets.sources`, then map logical IDs in `assets.sprites`.
 
 ## Where Not To Edit Unless Necessary
@@ -127,6 +136,9 @@ The project is mixed but mostly registry-driven:
 - Build local release AAB: `npm run android:bundle:local`
 - Validate content only: `npm run validate:content`
 - Content map summary: `npm run content:summary`
+- Balance profile summary: `npm run balance:summary`
+- Balance profile validation: `npm run balance:check`
+- Balance profile diff: `npm run balance:diff -- <profile>`
 - Economy/shop balance report: `npm run economy:check`
 - Verify browser global script order: `npm run verify:script-order`
 - Audit quest graph: `npm run audit:quests`
@@ -176,7 +188,7 @@ The project is mixed but mostly registry-driven:
 - Use the conversation and current git diff as the source of truth for the active request. `docs/CURRENT_TASK.md` is optional housekeeping and may be stale.
 - Check `docs/CHANGELOG_AGENT.md` when changing structure or command workflows.
 - Make one content or structure change at a time.
-- Prefer `content/tap-survivor-content.json` and `scripts/add-content.mjs` over manual code edits.
+- Prefer `content/registry/*.json`, `content/balance/*.json`, and `scripts/add-content.mjs` over manual code edits.
 - Run `npm run build:content` after content registry edits.
 - Run the smallest relevant validation, usually `npm run validate:content` for registry-only edits or `npm test` for code changes.
 - Save evidence of inspected files, changed files, and validation output.

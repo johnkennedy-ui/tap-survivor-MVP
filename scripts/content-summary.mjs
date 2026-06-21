@@ -13,6 +13,8 @@ const characters = content.characters || [];
 const shopItems = content.shopItems || [];
 const relics = content.relics || [];
 const levels = content.levels || [];
+const maps = content.maps || [];
+const tuning = content.tuning || {};
 const validationErrors = validateContent(content);
 
 function idsFromMap(value) {
@@ -86,6 +88,7 @@ console.log(`- characters: ${characters.length}`);
 console.log(`- shop items: ${shopItems.length}`);
 console.log(`- relics: ${relics.length}`);
 console.log(`- levels: ${levels.length}`);
+console.log(`- maps: ${maps.length}`);
 
 printList(
   "Weapons",
@@ -152,7 +155,13 @@ printList(
 
 printList("Ungrouped Quests", ungroupedQuestIds);
 printList("Terminal Quests", terminalQuestIds);
-printList("Enemy Types", idsFromList(enemyTypes));
+printList(
+  "Enemy Types",
+  enemyTypes.map((enemy) => {
+    const ranged = enemy.attackRange ? ` | range ${enemy.attackRange} | projectile ${enemy.projectileDamage || enemy.damage}/${enemy.projectileCooldown}s` : "";
+    return `${enemy.id} | hp ${enemy.hp} | speed ${enemy.speed} | damage ${enemy.damage} | xp ${enemy.xp} | min floor ${enemy.minTowerFloor || 1}${ranged}`;
+  }),
+);
 printList("Boss Abilities", idsFromMap(bossAbilities));
 printList("Characters", idsFromList(characters));
 printList(
@@ -163,7 +172,25 @@ printList(
     return `${item.id} | ${item.kind} | costs ${costs}${effect}`;
   }),
 );
-printList("Levels", idsFromList(levels));
+printList(
+  "Floors",
+  levels.map((level) => {
+    const enemies = level.enemyIds?.length ? level.enemyIds.join(", ") : "default pool";
+    return `${level.id} | starts ${level.startsAt}s | spawn ${level.spawnCount || 2} | rate x${level.spawnRateMultiplier || 1} | enemies ${enemies}`;
+  }),
+);
+printList(
+  "Maps",
+  maps.map((map) => {
+    const floors = map.floorIds?.length ? map.floorIds.join(", ") : "none";
+    return `${map.id} | floors ${floors} | background ${map.backgroundAsset || "none"}`;
+  }),
+);
+
+console.log("\n## Tuning");
+console.log(`- shop floor price rate: ${tuning.shop?.floorPriceRate ?? "default"}`);
+console.log(`- shop inflation rate: ${tuning.shop?.inflationRate ?? "default"}`);
+console.log(`- coin floor reward rate: ${tuning.loot?.coinFloorRewardRate ?? "default"}`);
 
 printList("Missing Or Dangling References", [...validationErrors, ...missingReferences]);
 

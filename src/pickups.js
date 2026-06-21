@@ -2,6 +2,7 @@
 function createPickupSystem({
   getGame,
   getSave,
+  lootConfig = {},
   getRelicSpecialEffects,
   persist,
   renderMeta,
@@ -9,10 +10,20 @@ function createPickupSystem({
   distance,
   randomRange,
 }) {
+  const coinFloorRewardRate = Number.isFinite(lootConfig.coinFloorRewardRate)
+    ? lootConfig.coinFloorRewardRate
+    : 0.06;
+  const normalCoinBaseValue = Number.isFinite(lootConfig.normalCoinBaseValue)
+    ? lootConfig.normalCoinBaseValue
+    : 1;
+  const bossCoinBaseValue = Number.isFinite(lootConfig.bossCoinBaseValue)
+    ? lootConfig.bossCoinBaseValue
+    : 12;
+
   function spawnLootDrops(enemy) {
     const game = getGame();
     if (enemy.boss || Math.random() < 0.34) {
-      const value = coinValue(enemy.boss ? 12 : 1, game.towerFloor);
+      const value = coinValue(enemy.boss ? bossCoinBaseValue : normalCoinBaseValue, game.towerFloor);
       game.lootDrops.push({
         type: "coin",
         x: enemy.x + randomRange(-10, 10),
@@ -34,7 +45,7 @@ function createPickupSystem({
 
   function coinValue(baseValue, towerFloor) {
     const floor = Math.max(1, Math.floor(towerFloor || 1));
-    return Math.ceil(baseValue * (1 + (floor - 1) * 0.06));
+    return Math.ceil(baseValue * (1 + (floor - 1) * coinFloorRewardRate));
   }
 
   function pullDropTowardPlayer(drop, player, speed, dt) {

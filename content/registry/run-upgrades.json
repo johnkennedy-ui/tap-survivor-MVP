@@ -1,0 +1,128 @@
+{
+  "runUpgrades": [
+    {
+      "id": "run_move_speed",
+      "name": "Move Speed",
+      "description": "Move faster for this run.",
+      "maxTier": 5,
+      "effects": [
+        {
+          "type": "playerStatAdd",
+          "stat": "speed",
+          "value": 20
+        }
+      ]
+    },
+    {
+      "id": "run_pickup_radius",
+      "name": "Pickup Radius",
+      "description": "Collect XP from farther away this run.",
+      "maxTier": 3,
+      "effects": [
+        {
+          "type": "playerStatAdd",
+          "stat": "pickupRadius",
+          "value": 22
+        }
+      ]
+    },
+    {
+      "id": "run_max_hp",
+      "name": "Max HP",
+      "description": "Recover and increase HP for this run.",
+      "maxTier": 3,
+      "effects": [
+        {
+          "type": "playerStatAdd",
+          "stat": "maxHp",
+          "value": 18
+        },
+        {
+          "type": "playerHeal",
+          "value": 36
+        }
+      ]
+    },
+    {
+      "id": "run_attack_radius",
+      "name": "Attack Radius",
+      "description": "Increase projectile size and area reach for this run.",
+      "maxTier": 3
+    },
+    {
+      "id": "run_fire_rate",
+      "name": "Fire Rate",
+      "description": "Reduce weapon cooldowns for this run.",
+      "maxTier": 8,
+      "family": "attack_speed"
+    },
+    {
+      "id": "run_flat_damage",
+      "name": "Flat Damage",
+      "description": "Add fixed damage to every weapon hit this run.",
+      "maxTier": 3
+    },
+    {
+      "id": "run_percent_damage",
+      "name": "Percent Damage",
+      "description": "Multiply all weapon damage this run.",
+      "maxTier": 8,
+      "family": "damage"
+    },
+    {
+      "id": "run_haste_projectiles",
+      "name": "Haste Projectiles",
+      "description": "Projectile weapons fly faster and fire faster, but each hit deals less damage.",
+      "maxTier": 1,
+      "family": "projectile",
+      "projectileSpeedMultiplier": 1.65,
+      "projectileCooldownMultiplier": 0.65,
+      "projectileDamageMultiplier": 0.7
+    },
+    {
+      "id": "run_heavy_projectiles",
+      "name": "Heavy Projectiles",
+      "description": "Projectile weapons fly slower and fire slower, but each hit deals triple base damage.",
+      "maxTier": 1,
+      "family": "projectile",
+      "projectileSpeedMultiplier": 0.55,
+      "projectileCooldownMultiplier": 1.45,
+      "projectileDamageMultiplier": 3
+    },
+    {
+      "id": "run_projectile_pierce",
+      "name": "Piercing Shots",
+      "description": "Projectiles pierce extra enemies.",
+      "maxTier": 3,
+      "family": "projectile"
+    },
+    {
+      "id": "run_wall_bounce",
+      "name": "Ricochet Shots",
+      "description": "Projectiles bounce off arena walls.",
+      "maxTier": 2,
+      "family": "projectile"
+    },
+    {
+      "id": "run_split_shot",
+      "name": "Split Fire",
+      "description": "Projectile weapons fire extra angled shots.",
+      "maxTier": 2,
+      "family": "projectile"
+    },
+    {
+      "id": "run_explosive_hit",
+      "name": "Explosive Hits",
+      "description": "Projectile hits burst for area damage.",
+      "maxTier": 3,
+      "family": "projectile"
+    },
+    {
+      "id": "run_split_on_hit",
+      "name": "Splinter Shots",
+      "description": "Projectile hits split into two smaller arrows.",
+      "maxTier": 2,
+      "family": "projectile"
+    }
+  ]
+}
