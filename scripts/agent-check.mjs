@@ -21,6 +21,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/agent-release.mjs"]],
   ["node", ["--check", "scripts/check-deploy.mjs"]],
   ["node", ["--check", "scripts/build-web.mjs"]],
+  ["node", ["--check", "scripts/build-module-bridges.mjs"]],
   ["node", ["--check", "scripts/check-format-hygiene.mjs"]],
   ["node", ["--check", "scripts/check-runtime-parity.mjs"]],
   ["node", ["--check", "scripts/add-sfx.mjs"]],
@@ -37,6 +38,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-add-content.mjs"]],
   ["node", ["--check", "scripts/smoke-balance-runtime.mjs"]],
   ["node", ["--check", "scripts/smoke-map-runtime.mjs"]],
+  ["node", ["--check", "scripts/smoke-module-bridges.mjs"]],
   ["node", ["--check", "scripts/smoke-relic-run-start.mjs"]],
   ["node", ["--check", "scripts/extract-sprites.mjs"]],
   ["node", ["--check", "scripts/prep-spritesheets.mjs"]],
@@ -44,11 +46,13 @@ const fullChecks = [
   ["node", ["--check", "scripts/content-summary.mjs"]],
   ["node", ["--check", "scripts/economy-check.mjs"]],
   ["node", ["--check", "scripts/check-script-order.mjs"]],
+  ["node", ["--check", "src/modules/shop-pricing.js"]],
   ["node", ["--check", "src/effects.js"]],
   ["node", ["--check", "src/render-hud.js"]],
   ["npm", ["run", "content:check"]],
   ["npm", ["run", "content:summary"]],
   ["npm", ["run", "economy:check"]],
+  ["npm", ["run", "build:bridges"]],
   ["npm", ["run", "verify:script-order"]],
   ["npm", ["run", "verify:assets"]],
   ["npm", ["run", "verify:audio"]],
@@ -65,6 +69,7 @@ const fullChecks = [
   ["npm", ["run", "smoke:start-run"]],
   ["npm", ["run", "smoke:boss-run"]],
   ["npm", ["run", "smoke:shop"]],
+  ["npm", ["run", "smoke:module-bridges"]],
   ["npm", ["run", "smoke:relic-run-start"]],
   ["npm", ["run", "smoke:debug"]],
   ["npm", ["run", "smoke:quest-flow"]],
@@ -138,6 +143,7 @@ function focusedChecks(files) {
     files.some(
       (file) =>
         file.startsWith("scripts/content/") ||
+        file.startsWith("src/modules/") ||
         file === "scripts/content-tools.mjs" ||
         file === "tsconfig.content.json" ||
         file === "package.json" ||
@@ -152,6 +158,23 @@ function focusedChecks(files) {
     )
   ) {
     checks.push(["npm", ["run", "economy:check"]]);
+  }
+  if (
+    files.some(
+      (file) =>
+        file === "src/shop-pricing.js" ||
+        file === "src/modules/shop-pricing.js" ||
+        file === "scripts/build-module-bridges.mjs" ||
+        file === "scripts/smoke-module-bridges.mjs" ||
+        file === "package.json"
+    )
+  ) {
+    checks.push(
+      ["npm", ["run", "build:bridges"]],
+      ["npm", ["run", "verify:script-order"]],
+      ["npm", ["run", "smoke:module-bridges"]],
+      ["npm", ["run", "smoke:shop"]]
+    );
   }
   if (
     files.some(

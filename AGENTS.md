@@ -32,6 +32,8 @@ Before editing this repo:
 26. New HUD renderer consumers should receive/import `createHudRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderHud`; keep the existing compatibility bridge only until the rendering stack is migrated.
 27. New enemy renderer consumers should receive/import `createEnemyRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderEnemies`; keep the existing compatibility bridge only until the rendering stack is migrated.
 28. Enemy/boss sprite-sheet work belongs in `assets.sprites.spriteSheets` metadata plus `src/sprite-sheet-renderer.js`; preserve fallback order: sheet frame, existing single sprite/SVG, then shape rendering.
+29. For ES-module migration slices, keep the real implementation in `src/modules/` and generate the classic bridge with `npm run build:bridges`.
+    Do not hand-edit generated bridge files such as `src/shop-pricing.js`, and do not remove script-order/global contracts until a separate runtime-entry migration.
 
 ## Frank Anti-Lockup Tools
 

@@ -13,6 +13,7 @@
     "types/**/*.d.ts",
     "scripts/content-tools.mjs",
     "scripts/content/*.mjs",
+    "src/modules/shop-pricing.js",
     "src/content-registry.js"
   ]
 }
