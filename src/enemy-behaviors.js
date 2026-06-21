@@ -8,6 +8,32 @@
     clamp,
     damagePlayer,
   }) {
+    const safeProjectileColor = "#b794ff";
+
+    function resolveEnemyProjectileColor(enemyType) {
+      return firstColor(
+        enemyType?.projectileColor,
+        enemyType?.spriteAccentColor,
+        enemyType?.accentColor,
+        enemyType?.color,
+        safeProjectileColor,
+      );
+    }
+
+    function resolveBossProjectileColor(bossAbility) {
+      return firstColor(
+        bossAbility?.projectileColor,
+        bossAbility?.spriteAccentColor,
+        bossAbility?.accentColor,
+        bossAbility?.color,
+        safeProjectileColor,
+      );
+    }
+
+    function firstColor(...colors) {
+      return colors.find((color) => typeof color === "string" && color.trim()) || safeProjectileColor;
+    }
+
     function updateEnemies(dt) {
       const game = getGame();
       const p = game.player;
@@ -144,6 +170,7 @@
 
     function spawnEnemyBolt(enemy, dirX, dirY) {
       const game = getGame();
+      const projectileColor = resolveEnemyProjectileColor(enemy);
       enemy.attackVisualTimer = 0.26;
       game.enemyBolts.push({
         x: enemy.x,
@@ -154,7 +181,9 @@
         damage: enemy.projectileDamage,
         life: boltConfig.life || 2.2,
         maxLife: boltConfig.life || 2.2,
-        color: enemy.color,
+        color: projectileColor,
+        trailColor: projectileColor,
+        glowColor: projectileColor,
       });
     }
 
@@ -196,6 +225,8 @@
     }
 
     return {
+      resolveBossProjectileColor,
+      resolveEnemyProjectileColor,
       startBossCharge,
       updateBossAttacks,
       updateEnemies,

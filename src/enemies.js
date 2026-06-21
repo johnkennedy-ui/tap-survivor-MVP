@@ -49,6 +49,7 @@ function createEnemySystem({
     spawnEntryMargin,
     scaledProjectileCooldown,
     scaledProjectileSpeed,
+    resolveEnemyProjectileColor: behaviorSystem.resolveEnemyProjectileColor,
   });
 
   function spawnBoss() {
@@ -109,6 +110,7 @@ function createEnemySystem({
       projectileCooldown: turretCooldown,
       projectileSpeed: turretSpeed,
       projectileDamage: (superBoss ? bossAbilities.turret.superProjectileDamage : bossAbilities.turret.projectileDamage) * difficulty.damage,
+      projectileColor: turretBoss ? behaviorSystem.resolveBossProjectileColor(bossAbilities.turret) : undefined,
       shootTimer: turretBoss ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game) : 0,
       animTime: 0,
       attackVisualTimer: 0,
@@ -219,6 +221,8 @@ function createEnemySystem({
   }
 
   return {
+    resolveBossProjectileColor: behaviorSystem.resolveBossProjectileColor,
+    resolveEnemyProjectileColor: behaviorSystem.resolveEnemyProjectileColor,
     spawnEnemies: spawnSystem.spawnEnemies,
     spawnBoss,
     updateBossSpecials,

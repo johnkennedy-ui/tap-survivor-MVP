@@ -1261,7 +1261,8 @@ globalThis.TapSurvivorContent = {
       "projectileSpeed": 280,
       "projectileDamage": 15,
       "superProjectileDamage": 20,
-      "initialShootTimer": 0.8
+      "initialShootTimer": 0.8,
+      "projectileColor": "#b794ff"
     }
   },
   "characters": [

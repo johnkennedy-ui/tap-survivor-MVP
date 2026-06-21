@@ -9,6 +9,7 @@ function createEnemySpawnSystem({
   spawnEntryMargin = 72,
   scaledProjectileCooldown,
   scaledProjectileSpeed,
+  resolveEnemyProjectileColor,
 }) {
   const enemyTypeById = Object.fromEntries(enemyTypes.map((enemy) => [enemy.id, enemy]));
   const orderedLevelDefs = [...levelDefs].sort((a, b) => a.startsAt - b.startsAt);
@@ -125,6 +126,7 @@ function createEnemySpawnSystem({
       projectileCooldown: cooldown,
       projectileSpeed: speed,
       projectileDamage: (type.projectileDamage || type.damage) * difficulty.damage,
+      projectileColor: resolveEnemyProjectileColor?.(type) || type.projectileColor || type.color,
       shootTimer: Math.random() * cooldown,
       animTime: Math.random(),
       attackVisualTimer: 0,

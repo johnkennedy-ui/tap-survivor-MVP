@@ -123,6 +123,12 @@ export function validateContent(content) {
     if (!value || typeof value !== "string") fail(`${owner} must be a non-empty string`);
   }
 
+  function validateColor(value, owner) {
+    if (value !== undefined && (typeof value !== "string" || !/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value))) {
+      fail(`${owner} must be a valid hex color`);
+    }
+  }
+
   requireObject(content, "content");
   requireObject(weapons, "weapons");
   requireArray(weaponUnlocks, "weaponUnlocks");
@@ -242,6 +248,9 @@ export function validateContent(content) {
     if (seenEnemies.has(enemy.id)) fail(`duplicate enemy ${enemy.id}`);
     seenEnemies.add(enemy.id);
     ["name", "color"].forEach((field) => requireString(enemy[field], `enemy ${enemy.id}.${field}`));
+    ["color", "projectileColor", "spriteAccentColor", "accentColor"].forEach((field) =>
+      validateColor(enemy[field], `enemy ${enemy.id}.${field}`),
+    );
     ["radius", "hp", "speed", "damage", "xp"].forEach((field) => requireNumber(enemy[field], `enemy ${enemy.id}.${field}`, 0));
     if (enemy.behaviorKind) {
       const behaviorKinds = schema.behaviorRegistries?.enemyBehaviorKinds?.ids || [];
@@ -303,6 +312,9 @@ export function validateContent(content) {
   Object.entries(bossAbilities).forEach(([id, ability]) => {
     requireString(id, "boss ability id");
     ["name", "color"].forEach((field) => requireString(ability[field], `boss ability ${id}.${field}`));
+    ["color", "projectileColor", "spriteAccentColor", "accentColor"].forEach((field) =>
+      validateColor(ability[field], `boss ability ${id}.${field}`),
+    );
     ["speed", "attackCooldown"].forEach((field) => requireNumber(ability[field], `boss ability ${id}.${field}`, 0));
     if (id === "warden") {
       requireObject(ability.shockwave, "boss ability warden.shockwave");

@@ -81,6 +81,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - Coin shop: `src/shop.js` plus `shopItems` content and the in-run shop tab in `src/shell-ui.js`.
 - Economy tuning: run `npm run economy:check` before monetization-route work; it reports shop tiers, stat lanes, buyout cost, price scaling, inflation, and coin reward scaling.
 - Enemy and boss behavior: `src/enemies.js` owns spawning/orchestration, `src/enemy-behaviors.js` owns movement and attack update behavior; boss ability tuning lives in `content/registry/bosses.json`.
+- Enemy and boss projectile colours are visual-only content metadata. Use `projectileColor` first, with `spriteAccentColor`, `accentColor`, `color`, and a safe fallback handled by `src/enemy-behaviors.js`.
 - Weapon firing behavior: `src/weapon-fire.js` remains the public integration entry point.
   Cooldown/stat scaling lives in `src/weapon-cooldowns.js`, projectile behavior in
   `src/weapon-projectiles.js`, targeting in `src/weapon-targeting.js`, and non-projectile
@@ -119,6 +120,7 @@ The project is mixed but mostly registry-driven:
 - Characters: use `npm run add:content -- character <id> ...` or edit `content/registry/characters.json`.
 - Sprites/assets: add files under `assets/<source>/<pack>/`, register source/license in `assets.sources`, then map logical IDs in `assets.sprites`.
 - Enemy/boss sprite sheets live under `assets/generated/tower/spritesheets/` and are registered in `assets.sprites.spriteSheets`; validate them with `npm run verify:assets` and `npm run smoke:spritesheets`.
+- Ranged enemy and projectile boss colours should be configured with `projectileColor` in the enemy or boss ability registry. Validate with `npm run smoke:projectile-colors`; never tune combat numbers for a projectile-colour-only request.
 
 ## Where Not To Edit Unless Necessary
 

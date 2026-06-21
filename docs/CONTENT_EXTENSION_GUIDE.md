@@ -177,6 +177,17 @@ npm run add:content -- character character_runner --name "Runner" --description 
 5. Runtime fallback order is sprite-sheet frame, then `assets.sprites.enemies`, then shape rendering.
 6. Run `npm run build:content`, `npm run validate:content`, `npm run verify:assets`, `npm run smoke:assets`, and `npm run smoke:spritesheets`.
 
+## Configure Enemy Or Boss Projectile Colour
+
+Projectile colour is visual-only. Do not change projectile damage, speed, cooldown, lifetime, hitbox, or spawn rules when editing colour fields.
+
+- For ranged enemies, prefer `projectileColor` in `content/registry/enemies.json`.
+- Enemy projectile colour resolves as `projectileColor`, then `spriteAccentColor`, then `accentColor`, then `color`, then a safe fallback.
+- For boss abilities that fire projectiles, prefer `projectileColor` in `content/registry/bosses.json`.
+- Boss projectile colour resolves as `projectileColor`, then `spriteAccentColor`, then `accentColor`, then `color`, then a safe fallback.
+- `projectileColor`, `spriteAccentColor`, and `accentColor` are optional hex colour strings and are not mandatory for enemies that do not fire projectiles.
+- Run `npm run build:content`, `npm run validate:content`, and `npm run smoke:projectile-colors` after changing projectile colour metadata.
+
 ## Extract Sprites From A Sheet
 
 Use `scripts/extract-sprites.mjs` to split PNG sheets into trimmed PNG files.

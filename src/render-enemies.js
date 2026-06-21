@@ -124,25 +124,28 @@ function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clamp }) {
     const tailX = bolt.x - (bolt.vx / speed) * bolt.radius * 3.2;
     const tailY = bolt.y - (bolt.vy / speed) * bolt.radius * 3.2;
     const alpha = clamp((bolt.life || 0) / (bolt.maxLife || 1), 0.3, 1);
+    const color = bolt.color || "#b794ff";
+    const trailColor = bolt.trailColor || color;
+    const glowColor = bolt.glowColor || color;
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.strokeStyle = "#ffffff";
+    ctx.strokeStyle = withAlpha(glowColor, 0.55);
     ctx.lineWidth = Math.max(4, bolt.radius * 0.8);
     ctx.beginPath();
     ctx.moveTo(tailX, tailY);
     ctx.lineTo(bolt.x, bolt.y);
     ctx.stroke();
-    ctx.strokeStyle = bolt.color;
+    ctx.strokeStyle = trailColor;
     ctx.lineWidth = Math.max(2, bolt.radius * 0.45);
     ctx.beginPath();
     ctx.moveTo(tailX, tailY);
     ctx.lineTo(bolt.x, bolt.y);
     ctx.stroke();
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = withAlpha(glowColor, 0.42);
     ctx.beginPath();
     ctx.arc(bolt.x, bolt.y, bolt.radius + 4, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = bolt.color;
+    ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(bolt.x, bolt.y, bolt.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -150,6 +153,16 @@ function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clamp }) {
     ctx.lineWidth = 3;
     ctx.stroke();
     ctx.restore();
+  }
+
+  function withAlpha(color, alpha) {
+    const match = typeof color === "string" ? /^#([0-9a-f]{6})$/i.exec(color.trim()) : null;
+    if (!match) return color;
+    const value = Number.parseInt(match[1], 16);
+    const r = (value >> 16) & 255;
+    const g = (value >> 8) & 255;
+    const b = value & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   return {
