@@ -1,26 +1,30 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
+import {
+  clamp as moduleClamp,
+  distance as moduleDistance,
+  formatTime as moduleFormatTime,
+  randomRange as moduleRandomRange,
+} from "../src/modules/math.js";
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 
-const bridgeSource = readFileSync(new URL("../src/shop-pricing.js", import.meta.url), "utf8");
-const bridgeContext = { console };
-bridgeContext.globalThis = bridgeContext;
-vm.createContext(bridgeContext);
-vm.runInContext(bridgeSource, bridgeContext, { filename: "src/shop-pricing.js" });
+const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
+const mathBridge = loadBridge("../src/math.js", "src/math.js");
 
-const createBridgeShopPricing = bridgeContext.TapSurvivorShopPricing?.createShopPricing;
+const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
+const bridgeMath = mathBridge.context.TapSurvivorMath;
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(
   "bridge assigns globalThis.TapSurvivorShopPricing",
-  Boolean(bridgeContext.TapSurvivorShopPricing)
+  Boolean(pricingBridge.context.TapSurvivorShopPricing)
 );
 check("bridge exposes createShopPricing", typeof createBridgeShopPricing === "function");
-check("bridge source has generated banner", bridgeSource.startsWith("// GENERATED FILE."));
+check("shop pricing bridge source has generated banner", hasGeneratedBanner(pricingBridge.source));
 check(
   "bridge source assigns only the pricing global",
-  bridgeSource.includes("globalThis.TapSurvivorShopPricing")
+  pricingBridge.source.includes("globalThis.TapSurvivorShopPricing")
 );
 
 const shopItemDefs = [
@@ -53,6 +57,38 @@ check(
   JSON.stringify(moduleResults) === JSON.stringify(bridgeResults)
 );
 
+check("module exports clamp", typeof moduleClamp === "function");
+check("module exports distance", typeof moduleDistance === "function");
+check("module exports formatTime", typeof moduleFormatTime === "function");
+check("module exports randomRange", typeof moduleRandomRange === "function");
+check("bridge assigns globalThis.TapSurvivorMath", Boolean(bridgeMath));
+check("math bridge source has generated banner", hasGeneratedBanner(mathBridge.source));
+for (const exportName of ["clamp", "distance", "formatTime", "randomRange"]) {
+  check(`bridge exposes math ${exportName}`, typeof bridgeMath?.[exportName] === "function");
+}
+
+const mathResults = {
+  clamp: moduleClamp(12, 0, 10),
+  distance: moduleDistance({ x: 0, y: 0 }, { x: 3, y: 4 }),
+  formatTime: moduleFormatTime(65),
+};
+const bridgeMathResults = {
+  clamp: bridgeMath.clamp(12, 0, 10),
+  distance: bridgeMath.distance({ x: 0, y: 0 }, { x: 3, y: 4 }),
+  formatTime: bridgeMath.formatTime(65),
+};
+check("module clamp fixture is unchanged", mathResults.clamp === 10);
+check("module distance fixture is unchanged", mathResults.distance === 5);
+check("module formatTime fixture is unchanged", mathResults.formatTime === "1:05");
+check(
+  "module and bridge deterministic math output match",
+  JSON.stringify(mathResults) === JSON.stringify(bridgeMathResults)
+);
+const moduleRandom = moduleRandomRange(2, 4);
+const bridgeRandom = bridgeMath.randomRange(2, 4);
+check("module randomRange returns number in range", moduleRandom >= 2 && moduleRandom < 4);
+check("bridge randomRange returns number in range", bridgeRandom >= 2 && bridgeRandom < 4);
+
 if (process.exitCode) {
   process.exit(process.exitCode);
 }
@@ -75,6 +111,28 @@ function pricingSnapshot(pricing) {
     orbCost: pricing.costFor(shopItemDefs[1], 0),
     orbCanBuy: pricing.canBuy(shopItemDefs[1]),
   };
+}
+
+/**
+ * @param {string} path
+ * @param {string} filename
+ * @returns {{ source: string, context: Record<string, unknown> }}
+ */
+function loadBridge(path, filename) {
+  const source = readFileSync(new URL(path, import.meta.url), "utf8");
+  const context = { console };
+  context.globalThis = context;
+  vm.createContext(context);
+  vm.runInContext(source, context, { filename });
+  return { source, context };
+}
+
+/**
+ * @param {string} source
+ * @returns {boolean}
+ */
+function hasGeneratedBanner(source) {
+  return source.startsWith("// GENERATED FILE.");
 }
 
 /**

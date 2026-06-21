@@ -8,6 +8,12 @@ const bridges = [
     globalName: "TapSurvivorShopPricing",
     exports: ["createShopPricing"],
   },
+  {
+    source: "src/modules/math.js",
+    target: "src/math.js",
+    globalName: "TapSurvivorMath",
+    exports: ["clamp", "distance", "formatTime", "randomRange"],
+  },
 ];
 
 for (const bridge of bridges) {
