@@ -52,13 +52,22 @@ function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clamp }) {
     return spriteSheetRenderer.drawAnimation(
       "enemies",
       enemy.assetId || enemy.type,
-      "idle",
+      enemyAnimationState(enemy),
       enemy.x,
       enemy.y,
       spriteSize,
       spriteSize,
       { flipX: enemyFacesLeft(enemy), time: animationTime },
     );
+  }
+
+  function enemyAnimationState(enemy) {
+    if (isRangedEnemy(enemy) && (enemy.attackVisualTimer || 0) > 0) return "attack";
+    return "default";
+  }
+
+  function isRangedEnemy(enemy) {
+    return !enemy?.boss && Boolean(enemy?.attackRange && enemy?.projectileCooldown);
   }
 
   function bossAnimationIdFor(enemy) {
@@ -168,6 +177,7 @@ function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clamp }) {
   return {
     drawEnemy,
     drawEnemyBolt,
+    enemyAnimationState,
   };
 }
 

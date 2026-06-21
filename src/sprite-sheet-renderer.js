@@ -47,7 +47,7 @@ function createSpriteSheetRenderer({ ctx, spriteSheets = {} }) {
     const definition = sheet?.animations?.[animationId];
     if (!definition) return null;
     if (Array.isArray(definition.frames)) return definition;
-    return definition[state] || definition.idle || null;
+    return definition[state] || definition.idle || definition.default || null;
   }
 
   function selectedFrame(animation, time = 0) {

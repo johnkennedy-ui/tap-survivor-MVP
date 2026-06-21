@@ -3540,16 +3540,24 @@ globalThis.TapSurvivorContent = {
             },
             "hexer": {
               "row": 3,
-              "frames": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5
-              ],
-              "fps": 8,
-              "loop": true
+              "default": {
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 8,
+                "loop": true
+              },
+              "attack": {
+                "frames": [
+                  3,
+                  4,
+                  5
+                ],
+                "fps": 10,
+                "loop": false
+              }
             },
             "verdant_skitter": {
               "row": 4,
@@ -3579,16 +3587,24 @@ globalThis.TapSurvivorContent = {
             },
             "crimson_hexer": {
               "row": 6,
-              "frames": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5
-              ],
-              "fps": 9,
-              "loop": true
+              "default": {
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 9,
+                "loop": true
+              },
+              "attack": {
+                "frames": [
+                  3,
+                  4,
+                  5
+                ],
+                "fps": 11,
+                "loop": false
+              }
             },
             "obsidian_bulwark": {
               "row": 7,

@@ -188,6 +188,17 @@ Projectile colour is visual-only. Do not change projectile damage, speed, cooldo
 - `projectileColor`, `spriteAccentColor`, and `accentColor` are optional hex colour strings and are not mandatory for enemies that do not fire projectiles.
 - Run `npm run build:content`, `npm run validate:content`, and `npm run smoke:projectile-colors` after changing projectile colour metadata.
 
+## Configure Ranged Enemy Visual Attack States
+
+Ranged enemy attack animation is visual-only. Do not change projectile timing, damage, speed, cooldown, targeting, hitboxes, movement, spawn rules, or enemy stats when editing these fields.
+
+- `src/enemy-behaviors.js` sets `attackVisualTimer` briefly when an enemy bolt is spawned.
+- `src/render-enemies.js` resolves ranged enemies with `attackVisualTimer > 0` to the `attack` sprite-sheet state; otherwise it uses `default`.
+- Enemy sprite-sheet metadata can use a row-level `default` and `attack` shape, for example `hexer.default.frames` and `hexer.attack.frames`.
+- Current ranged attack mappings use frames `0,1,2` for `default` and `3,4,5` for `attack` on `hexer` and `crimson_hexer`.
+- If an enemy has no `attack` state, the sprite-sheet renderer falls back to `idle` or `default`, then the normal sprite/SVG and shape fallback path remains available.
+- Run `npm run build:content`, `npm run validate:content`, `npm run smoke:spritesheets`, and `npm run smoke:enemy-visual-states` after changing ranged enemy visual-state metadata.
+
 ## Extract Sprites From A Sheet
 
 Use `scripts/extract-sprites.mjs` to split PNG sheets into trimmed PNG files.

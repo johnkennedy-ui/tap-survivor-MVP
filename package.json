@@ -59,6 +59,7 @@
     "smoke:browser": "node scripts/smoke-browser.mjs",
     "smoke:assets": "node scripts/smoke-asset-resolver.mjs",
     "smoke:projectile-colors": "node scripts/smoke-projectile-colors.mjs",
+    "smoke:enemy-visual-states": "node scripts/smoke-enemy-visual-states.mjs",
     "smoke:spritesheets": "node scripts/smoke-spritesheets.mjs",
     "smoke:audio": "node scripts/smoke-audio-scaling.mjs",
     "smoke:quest-flow": "node scripts/smoke-quest-flow.mjs",

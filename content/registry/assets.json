@@ -135,10 +135,18 @@
             "drifter": { "row": 0, "frames": [0, 1, 2, 3, 4, 5], "fps": 8, "loop": true },
             "skitter": { "row": 1, "frames": [0, 1, 2, 3, 4, 5], "fps": 12, "loop": true },
             "bulwark": { "row": 2, "frames": [0, 1, 2, 3, 4, 5], "fps": 7, "loop": true },
-            "hexer": { "row": 3, "frames": [0, 1, 2, 3, 4, 5], "fps": 8, "loop": true },
+            "hexer": {
+              "row": 3,
+              "default": { "frames": [0, 1, 2], "fps": 8, "loop": true },
+              "attack": { "frames": [3, 4, 5], "fps": 10, "loop": false }
+            },
             "verdant_skitter": { "row": 4, "frames": [0, 1, 2, 3, 4, 5], "fps": 13, "loop": true },
             "dusk_crawler": { "row": 5, "frames": [0, 1, 2, 3, 4, 5], "fps": 9, "loop": true },
-            "crimson_hexer": { "row": 6, "frames": [0, 1, 2, 3, 4, 5], "fps": 9, "loop": true },
+            "crimson_hexer": {
+              "row": 6,
+              "default": { "frames": [0, 1, 2], "fps": 9, "loop": true },
+              "attack": { "frames": [3, 4, 5], "fps": 11, "loop": false }
+            },
             "obsidian_bulwark": { "row": 7, "frames": [0, 1, 2, 3, 4, 5], "fps": 7, "loop": true }
           }
         },
