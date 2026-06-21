@@ -1,10 +1,83 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/weapon-projectiles.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
+  /**
+   * @typedef {{ x: number, y: number, radius?: number, hp?: number }} PointLike
+   * @typedef {{
+   *   id?: string,
+   *   kind?: string,
+   *   speed: number,
+   *   color?: string,
+   *   pierce?: number
+   * }} WeaponDef
+   * @typedef {Record<string, WeaponDef>} WeaponDefs
+   * @typedef {{ width: number, height: number }} ProjectileCanvas
+   * @typedef {{ x: number, y: number }} Player
+   * @typedef {{ x: number, y: number, radius: number, hp?: number }} Enemy
+   * @typedef {{
+   *   weaponId: string,
+   *   x: number,
+   *   y: number,
+   *   vx: number,
+   *   vy: number,
+   *   radius: number,
+   *   damage: number,
+   *   life: number,
+   *   pierce: number,
+   *   bounces: number,
+   *   splitDepth: number,
+   *   hit: Set<Enemy>,
+   *   color?: string
+   * }} ProjectileBolt
+   * @typedef {{ x: number, y: number, radius: number, color?: string, life: number, visualOnly: boolean }} AreaEffect
+   * @typedef {{ player: Player, bolts: ProjectileBolt[], enemies: Enemy[], areas: AreaEffect[] }} ProjectileGame
+   * @typedef {{
+   *   fireProjectile(weaponId: string): void,
+   *   spawnProjectileBolt(
+   *     weaponId: string,
+   *     x: number,
+   *     y: number,
+   *     vx: number,
+   *     vy: number,
+   *     overrides?: Partial<ProjectileBolt>
+   *   ): void,
+   *   updateBolts(dt: number): void
+   * }} WeaponProjectileSystem
+   */
+
+  /**
+   * @param {number} vx
+   * @param {number} vy
+   * @param {number} angle
+   * @returns {[number, number]}
+   */
   function rotateVector(vx, vy, angle) {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     return [vx * cos - vy * sin, vx * sin + vy * cos];
   }
 
+  /**
+   * @param {{
+   *   canvas: ProjectileCanvas,
+   *   weaponDefs: WeaponDefs,
+   *   getGame: () => ProjectileGame,
+   *   getRunUpgradeTier: (id: string) => number,
+   *   getRelicSpecialEffects?: () => { doubleShotCount?: number, projectileSpeedBonus?: number },
+   *   nearestEnemy: () => Enemy | null,
+   *   projectileRadius: (weapon: WeaponDef) => number,
+   *   weaponDamage: (weaponId: string) => number,
+   *   projectileSkillModifier: (weapon: WeaponDef, field: string) => number,
+   *   damageEnemy: (enemy: Enemy, damage: number, weaponId: string) => void,
+   *   reapEnemies: () => void,
+   *   distance: (a: PointLike, b: PointLike) => number,
+   *   clamp: (value: number, min: number, max: number) => number
+   * }} options
+   * @returns {WeaponProjectileSystem}
+   */
   function createWeaponProjectileSystem({
     canvas,
     weaponDefs,

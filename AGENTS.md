@@ -36,6 +36,7 @@ Before editing this repo:
     Do not hand-edit generated bridge files such as `src/shop-pricing.js`, and do not remove script-order/global contracts until a separate runtime-entry migration.
     `src/modules/math.js` owns math helper implementation; `src/math.js` is a generated compatibility bridge.
     `src/modules/weapon-cooldowns.js` owns weapon cooldown/stat-scaling implementation; `src/weapon-cooldowns.js` is a generated compatibility bridge.
+    `src/modules/weapon-projectiles.js` owns projectile weapon implementation; `src/weapon-projectiles.js` is a generated compatibility bridge.
     `src/modules/weapon-targeting.js` owns weapon-targeting implementation; `src/weapon-targeting.js` is a generated compatibility bridge.
 
 ## Frank Anti-Lockup Tools

@@ -26,6 +26,12 @@ const bridges = [
     globalName: "TapSurvivorWeaponCooldowns",
     exports: ["createWeaponScaling"],
   },
+  {
+    source: "src/modules/weapon-projectiles.js",
+    target: "src/weapon-projectiles.js",
+    globalName: "TapSurvivorWeaponProjectiles",
+    exports: ["createWeaponProjectileSystem", "rotateVector"],
+  },
 ];
 
 for (const bridge of bridges) {

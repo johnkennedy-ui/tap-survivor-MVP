@@ -9,17 +9,23 @@ import {
 } from "../src/modules/math.js";
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
+import {
+  createWeaponProjectileSystem as createModuleWeaponProjectileSystem,
+  rotateVector as moduleRotateVector,
+} from "../src/modules/weapon-projectiles.js";
 import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-targeting.js";
 
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
+const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
 
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldowns?.createWeaponScaling;
+const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(
@@ -178,6 +184,85 @@ check(
   "module and bridge optional callback fallback output match",
   JSON.stringify(fallbackSnapshot) === JSON.stringify(fallbackBridgeSnapshot)
 );
+
+check("module exports rotateVector", typeof moduleRotateVector === "function");
+check(
+  "module exports createWeaponProjectileSystem",
+  typeof createModuleWeaponProjectileSystem === "function"
+);
+check("bridge assigns globalThis.TapSurvivorWeaponProjectiles", Boolean(bridgeProjectiles));
+check(
+  "weapon projectiles bridge source has generated banner",
+  hasGeneratedBanner(projectileBridge.source)
+);
+check("bridge exposes rotateVector", typeof bridgeProjectiles?.rotateVector === "function");
+check(
+  "bridge exposes createWeaponProjectileSystem",
+  typeof bridgeProjectiles?.createWeaponProjectileSystem === "function"
+);
+
+const moduleRotated = moduleRotateVector(1, 0, Math.PI / 2);
+const bridgeRotated = bridgeProjectiles.rotateVector(1, 0, Math.PI / 2);
+check(
+  "module rotateVector fixture is unchanged",
+  approxEqual(moduleRotated[0], 0) && approxEqual(moduleRotated[1], 1)
+);
+check(
+  "module and bridge rotateVector output match",
+  approxVectorEqual(moduleRotated, bridgeRotated)
+);
+
+const moduleProjectileFire = runProjectileFireFixture(createModuleWeaponProjectileSystem);
+const bridgeProjectileFire = runProjectileFireFixture(bridgeProjectiles.createWeaponProjectileSystem);
+check(
+  "module and bridge projectile fire output match",
+  JSON.stringify(moduleProjectileFire) === JSON.stringify(bridgeProjectileFire)
+);
+check("projectile fire fixture spawns one bolt", moduleProjectileFire.boltCount === 1);
+check("projectile fire fixture direction uses target vector", approxEqual(moduleProjectileFire.vx, 6));
+check("projectile fire fixture speed uses target vector", approxEqual(moduleProjectileFire.vy, 8));
+check("projectile fire fixture radius is injected", moduleProjectileFire.radius === 7);
+check("projectile fire fixture damage is injected", moduleProjectileFire.damage === 21);
+check("projectile fire fixture color is preserved", moduleProjectileFire.color === "#abc123");
+check("projectile fire fixture life is unchanged", moduleProjectileFire.life === 1.8);
+
+const moduleNoTarget = runNoTargetProjectileFixture(createModuleWeaponProjectileSystem);
+const bridgeNoTarget = runNoTargetProjectileFixture(bridgeProjectiles.createWeaponProjectileSystem);
+check("module no-target fixture spawns no bolts", moduleNoTarget.boltCount === 0);
+check(
+  "module and bridge no-target output match",
+  JSON.stringify(moduleNoTarget) === JSON.stringify(bridgeNoTarget)
+);
+
+const moduleSplitDouble = runSplitDoubleProjectileFixture(createModuleWeaponProjectileSystem);
+const bridgeSplitDouble = runSplitDoubleProjectileFixture(
+  bridgeProjectiles.createWeaponProjectileSystem
+);
+check("split/double fixture spawns expected bolt count", moduleSplitDouble.boltCount === 4);
+check(
+  "module and bridge split/double output match",
+  JSON.stringify(moduleSplitDouble) === JSON.stringify(bridgeSplitDouble)
+);
+
+const moduleBounce = runWallBounceFixture(createModuleWeaponProjectileSystem);
+const bridgeBounce = runWallBounceFixture(bridgeProjectiles.createWeaponProjectileSystem);
+check("wall bounce fixture flips velocity", moduleBounce.vx > 0);
+check("wall bounce fixture decreases bounce count", moduleBounce.bounces === 0);
+check(
+  "module and bridge wall bounce output match",
+  JSON.stringify(moduleBounce) === JSON.stringify(bridgeBounce)
+);
+
+const moduleCollision = runCollisionFixture(createModuleWeaponProjectileSystem);
+const bridgeCollision = runCollisionFixture(bridgeProjectiles.createWeaponProjectileSystem);
+check("collision fixture calls damageEnemy", moduleCollision.damageCalls.length === 1);
+check("collision fixture passes expected damage", moduleCollision.damageCalls[0]?.damage === 21);
+check("collision fixture passes expected weapon ID", moduleCollision.damageCalls[0]?.weaponId === "bolt");
+check("collision fixture calls reapEnemies", moduleCollision.reapCount === 1);
+check(
+  "module and bridge collision output match",
+  JSON.stringify(moduleCollision) === JSON.stringify(bridgeCollision)
+);
 if (hadPreviousContent) {
   Reflect.set(globalThis, "TapSurvivorContent", previousContent);
 } else {
@@ -290,6 +375,138 @@ function scalingSnapshot(scaling, weapon) {
     weaponSfxOptions: scaling.weaponSfxOptions(weapon),
     weaponWidth: scaling.weaponWidth(weapon),
   };
+}
+
+function runProjectileFireFixture(createWeaponProjectileSystem) {
+  const fixture = createProjectileFixture();
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.fireProjectile("bolt");
+  const bolt = fixture.game.bolts[0];
+  return {
+    boltCount: fixture.game.bolts.length,
+    x: bolt?.x,
+    y: bolt?.y,
+    vx: rounded(bolt?.vx),
+    vy: rounded(bolt?.vy),
+    radius: bolt?.radius,
+    damage: bolt?.damage,
+    life: bolt?.life,
+    pierce: bolt?.pierce,
+    bounces: bolt?.bounces,
+    color: bolt?.color,
+  };
+}
+
+function runNoTargetProjectileFixture(createWeaponProjectileSystem) {
+  const fixture = createProjectileFixture({ nearestEnemy: () => null });
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.fireProjectile("bolt");
+  return {
+    boltCount: fixture.game.bolts.length,
+  };
+}
+
+function runSplitDoubleProjectileFixture(createWeaponProjectileSystem) {
+  const fixture = createProjectileFixture({
+    getRunUpgradeTier: (id) => (id === "run_split_shot" ? 1 : 0),
+    getRelicSpecialEffects: () => ({ doubleShotCount: 1 }),
+  });
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.fireProjectile("bolt");
+  return {
+    boltCount: fixture.game.bolts.length,
+  };
+}
+
+function runWallBounceFixture(createWeaponProjectileSystem) {
+  const fixture = createProjectileFixture({
+    getRunUpgradeTier: (id) => (id === "run_wall_bounce" ? 1 : 0),
+  });
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.spawnProjectileBolt("bolt", 4, 20, -10, 0);
+  system.updateBolts(0.1);
+  const bolt = fixture.game.bolts[0];
+  return {
+    x: bolt?.x,
+    vx: bolt?.vx,
+    bounces: bolt?.bounces,
+    reapCount: fixture.reapCount(),
+  };
+}
+
+function runCollisionFixture(createWeaponProjectileSystem) {
+  const enemy = { id: "enemy", x: 4, y: 0, radius: 5, hp: 10 };
+  const fixture = createProjectileFixture({
+    enemies: [enemy],
+  });
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.spawnProjectileBolt("bolt", 0, 0, 0, 0);
+  system.updateBolts(0);
+  return {
+    damageCalls: fixture.damageCalls,
+    reapCount: fixture.reapCount(),
+    remainingBolts: fixture.game.bolts.length,
+  };
+}
+
+function createProjectileFixture(overrides = {}) {
+  const target = { id: "target", x: 3, y: 4, radius: 4, hp: 10 };
+  const game = {
+    player: { x: 0, y: 0 },
+    bolts: [],
+    enemies: overrides.enemies || [target],
+    areas: [],
+  };
+  const damageCalls = [];
+  let reapCount = 0;
+  const weaponDefs = {
+    bolt: {
+      id: "bolt",
+      kind: "projectile",
+      color: "#abc123",
+      damage: 21,
+      pierce: 0,
+      radius: 7,
+      speed: 10,
+    },
+  };
+  const getRunUpgradeTier = overrides.getRunUpgradeTier || (() => 0);
+  return {
+    damageCalls,
+    game,
+    options: {
+      canvas: { width: 100, height: 100 },
+      weaponDefs,
+      getGame: () => game,
+      getRunUpgradeTier,
+      getRelicSpecialEffects: overrides.getRelicSpecialEffects || (() => ({})),
+      nearestEnemy: overrides.nearestEnemy || (() => target),
+      projectileRadius: () => 7,
+      weaponDamage: () => 21,
+      projectileSkillModifier: () => 1,
+      damageEnemy: (enemy, damage, weaponId) => {
+        damageCalls.push({ enemyId: enemy.id, damage, weaponId });
+      },
+      reapEnemies: () => {
+        reapCount += 1;
+      },
+      distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+      clamp: moduleClamp,
+    },
+    reapCount: () => reapCount,
+  };
+}
+
+function rounded(value) {
+  return Number(value?.toFixed(6));
+}
+
+function approxVectorEqual(left, right) {
+  return approxEqual(left[0], right[0]) && approxEqual(left[1], right[1]);
+}
+
+function approxEqual(left, right, epsilon = 1e-9) {
+  return Math.abs(left - right) <= epsilon;
 }
 
 /**
