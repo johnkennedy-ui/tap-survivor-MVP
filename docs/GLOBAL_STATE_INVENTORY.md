@@ -24,6 +24,9 @@ Generated content globals:
 - `src/render-hud.js` still owns the `TapSurvivorRenderHud` compatibility bridge. `src/rendering.js` now receives
   `createHudRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderHud`; `src/game.js` remains
   the script-order bootstrap reader until the rendering stack can safely become ESM.
+- `src/render-enemies.js` still owns the `TapSurvivorRenderEnemies` compatibility bridge. `src/rendering.js` now receives
+  `createEnemyRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderEnemies`; `src/game.js`
+  remains the script-order bootstrap reader until the rendering stack can safely become ESM.
 
 Runtime module globals:
 - Core data/systems: `TapSurvivorContentRegistry`, `TapSurvivorProgression`, `TapSurvivorMapSystem`, `TapSurvivorBalance`, `TapSurvivorEffects`.

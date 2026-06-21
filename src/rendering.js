@@ -1,5 +1,5 @@
 (() => {
-function createRenderer({ canvas, ctx, clamp, createHudRenderer, drawImage, drawSprite, weaponDefs }) {
+function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, drawImage, drawSprite, weaponDefs }) {
   const skillEffectSprites = globalThis.TapSurvivorContent?.assets?.sprites?.weapons || {};
   const hudRenderer = createHudRenderer({
     canvas,
@@ -9,7 +9,7 @@ function createRenderer({ canvas, ctx, clamp, createHudRenderer, drawImage, draw
     drawSprite,
     weaponDefs,
   });
-  const enemyRenderer = globalThis.TapSurvivorRenderEnemies.createEnemyRenderer({
+  const enemyRenderer = createEnemyRenderer({
     ctx,
     drawSprite,
     clamp,

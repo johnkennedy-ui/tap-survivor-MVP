@@ -28,6 +28,7 @@ Before editing this repo:
 24. Do not add new `window.*` or `globalThis.*` runtime coupling. Run `npm run check:globals`; update `docs/GLOBAL_STATE_INVENTORY.md` and `scripts/allowed-globals.json` only for deliberate global migration/removal work.
 25. New math helper consumers should receive/import math helpers explicitly instead of reading `globalThis.TapSurvivorMath`; keep the existing compatibility bridge only until the script-order runtime is migrated.
 26. New HUD renderer consumers should receive/import `createHudRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderHud`; keep the existing compatibility bridge only until the rendering stack is migrated.
+27. New enemy renderer consumers should receive/import `createEnemyRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderEnemies`; keep the existing compatibility bridge only until the rendering stack is migrated.
 
 ## Frank Anti-Lockup Tools
 

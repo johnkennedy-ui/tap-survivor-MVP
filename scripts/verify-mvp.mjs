@@ -337,6 +337,13 @@ check(
     rendering.includes("createHudRenderer") &&
     !rendering.includes("globalThis.TapSurvivorRenderHud"),
 );
+check(
+  "shared enemy renderer helper exists",
+  renderEnemies.includes("TapSurvivorRenderEnemies") &&
+    game.includes("TapSurvivorRenderEnemies") &&
+    rendering.includes("createEnemyRenderer") &&
+    !rendering.includes("globalThis.TapSurvivorRenderEnemies"),
+);
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && game.includes("TapSurvivorRunUi"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && levelUpChoices.includes("TapSurvivorLevelUpChoices") && game.includes("TapSurvivorLevelUp"));
