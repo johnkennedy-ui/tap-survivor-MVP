@@ -370,6 +370,7 @@ const renderer = globalThis.TapSurvivorRendering.createRenderer({
   canvas,
   ctx,
   clamp,
+  createHudRenderer: globalThis.TapSurvivorRenderHud.createHudRenderer,
   drawImage: spriteSystem.drawImage,
   drawSprite: spriteSystem.drawSprite,
   weaponDefs,

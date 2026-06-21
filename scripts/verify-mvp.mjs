@@ -329,7 +329,14 @@ check("sprite atlases support animated frames", sprites.includes("currentFrameIn
 check("enemy sprites draw larger than hit radius", renderEnemies.includes("spriteSize") && renderEnemies.includes("Math.max(34") && renderEnemies.includes("Math.max(92"));
 check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
 check("shared progression helper exists", progression.includes("TapSurvivorProgression") && game.includes("TapSurvivorProgression"));
-check("shared HUD renderer helper exists", renderHud.includes("TapSurvivorRenderHud") && renderSkillRail.includes("TapSurvivorRenderSkillRail") && rendering.includes("TapSurvivorRenderHud"));
+check(
+  "shared HUD renderer helper exists",
+  renderHud.includes("TapSurvivorRenderHud") &&
+    renderSkillRail.includes("TapSurvivorRenderSkillRail") &&
+    game.includes("TapSurvivorRenderHud") &&
+    rendering.includes("createHudRenderer") &&
+    !rendering.includes("globalThis.TapSurvivorRenderHud"),
+);
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && game.includes("TapSurvivorRunUi"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && levelUpChoices.includes("TapSurvivorLevelUpChoices") && game.includes("TapSurvivorLevelUp"));

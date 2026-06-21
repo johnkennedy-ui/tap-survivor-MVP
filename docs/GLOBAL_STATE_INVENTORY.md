@@ -21,6 +21,9 @@ Generated content globals:
 - `src/math.js` still owns the `TapSurvivorMath` compatibility bridge. `src/rendering.js` and `src/render-hud.js`
   now receive `clamp` through factory arguments instead of reading `globalThis.TapSurvivorMath`; `src/game.js` remains
   the script-order bootstrap reader until the runtime can safely become ESM.
+- `src/render-hud.js` still owns the `TapSurvivorRenderHud` compatibility bridge. `src/rendering.js` now receives
+  `createHudRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderHud`; `src/game.js` remains
+  the script-order bootstrap reader until the rendering stack can safely become ESM.
 
 Runtime module globals:
 - Core data/systems: `TapSurvivorContentRegistry`, `TapSurvivorProgression`, `TapSurvivorMapSystem`, `TapSurvivorBalance`, `TapSurvivorEffects`.
