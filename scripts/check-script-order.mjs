@@ -4,24 +4,51 @@ import { join } from "node:path";
 const root = new URL("..", import.meta.url).pathname;
 const indexPath = join(root, "index.html");
 const index = readFileSync(indexPath, "utf8");
-const scriptSources = [...index.matchAll(/<script\s+src="([^"]+)"><\/script>/g)].map((match) => match[1].split("?")[0]);
 const globalPattern = /\bglobalThis\.(TapSurvivor[A-Za-z0-9_]+)/g;
 const providedPattern = /\bglobalThis\.(TapSurvivor[A-Za-z0-9_]+)\s*=/g;
+const scriptSources = extractLocalScriptSources(index);
 const provided = new Map();
 const failures = [];
+
+/**
+ * @param {string} html
+ * @returns {string[]}
+ */
+export function extractLocalScriptSources(html) {
+  return [...html.matchAll(/<script\b[^>]*>/gi)]
+    .map((match) => match[0].match(/\bsrc\s*=\s*(["'])(.*?)\1/i)?.[2])
+    .filter(Boolean)
+    .map((src) => src.split("?")[0])
+    .filter(isLocalScript);
+}
 
 function uniqueMatches(source, pattern) {
   return [...new Set([...source.matchAll(pattern)].map((match) => match[1]))].sort();
 }
 
-function isLocalScript(path) {
-  return path.startsWith("src/") || path.startsWith("scripts/");
+function isLocalScript(src) {
+  if (/^(?:[a-z]+:)?\/\//i.test(src) || src.startsWith("/") || src.startsWith("data:")) return false;
+  return src.startsWith("src/") || src.startsWith("scripts/");
+}
+
+function runSelfCheck() {
+  const actual = extractLocalScriptSources(`
+    <script src="src/classic.js?v=1"></script>
+    <script type="module" src='src/module.js'></script>
+    <script defer src = "scripts/tool.mjs?cache=2"></script>
+    <script src="https://example.invalid/external.js"></script>
+    <script src="/absolute/local.js"></script>
+  `);
+  const expected = ["src/classic.js", "src/module.js", "scripts/tool.mjs"];
+  if (actual.join("\n") !== expected.join("\n")) {
+    throw new Error(`script src extraction self-check failed: ${actual.join(", ")}`);
+  }
 }
 
 console.log("# Tap Survivor Script Order Check");
+runSelfCheck();
 
 scriptSources.forEach((src, index) => {
-  if (!isLocalScript(src)) return;
   const path = join(root, src);
   if (!existsSync(path)) {
     failures.push(`${src} is referenced by index.html but missing on disk`);
