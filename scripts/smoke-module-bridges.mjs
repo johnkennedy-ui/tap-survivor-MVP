@@ -8,6 +8,7 @@ import {
   shuffleChoices as moduleShuffleChoices,
   weightedChoices as moduleWeightedChoices,
 } from "../src/modules/level-up-choices.js";
+import { createMapSystem as createModuleMapSystem } from "../src/modules/map-system.js";
 import {
   clamp as moduleClamp,
   distance as moduleDistance,
@@ -24,6 +25,7 @@ import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-target
 
 const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
+const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -32,6 +34,7 @@ const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
+const bridgeMapSystem = mapBridge.context.TapSurvivorMapSystem;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
@@ -173,6 +176,64 @@ check(
   "module and bridge shuffleChoices output match",
   JSON.stringify(moduleShuffled.map(moduleChoiceId)) ===
     JSON.stringify(bridgeShuffled.map(bridgeChoices.choiceId))
+);
+
+check("module exports createMapSystem", typeof createModuleMapSystem === "function");
+check("bridge assigns globalThis.TapSurvivorMapSystem", Boolean(bridgeMapSystem));
+check("map system bridge source has generated banner", hasGeneratedBanner(mapBridge.source));
+check("bridge exposes createMapSystem", typeof bridgeMapSystem?.createMapSystem === "function");
+
+const moduleFallbackMap = mapSystemSnapshot(createModuleMapSystem(createFallbackMapFixture()));
+const bridgeFallbackMap = mapSystemSnapshot(bridgeMapSystem.createMapSystem(createFallbackMapFixture()));
+check("fallback map fixture uses default tower", moduleFallbackMap.fallback.mapId === "default_tower");
+check("fallback map fixture uses tower background", moduleFallbackMap.fallback.backgroundId === "tower_floor");
+check(
+  "module and bridge fallback map output match",
+  JSON.stringify(moduleFallbackMap) === JSON.stringify(bridgeFallbackMap)
+);
+
+const mapFixture = createMapFixture();
+const moduleMapSystem = createModuleMapSystem(mapFixture);
+const bridgeMapSystemInstance = bridgeMapSystem.createMapSystem(mapFixture);
+const moduleMapSnapshot = mapSystemSnapshot(moduleMapSystem);
+const bridgeMapSnapshot = mapSystemSnapshot(bridgeMapSystemInstance);
+const moduleMapBackgroundFallback = mapSystemSnapshot(
+  createModuleMapSystem(createMapBackgroundFallbackFixture())
+);
+const bridgeMapBackgroundFallback = mapSystemSnapshot(
+  bridgeMapSystem.createMapSystem(createMapBackgroundFallbackFixture())
+);
+check("map selection fixture uses modulo floor selection", moduleMapSnapshot.floorTwo.mapId === "ice");
+check("floor selection fixture uses elapsed startsAt", moduleMapSnapshot.floorTwo.floorId === "ice_late");
+check("floorIds fixture limits floor pool", moduleMapSnapshot.floorTwo.floorPool.join(",") === "ice_late,ice_early");
+check("floor background fixture resolves direct asset", moduleMapSnapshot.floorTwo.backgroundId === "ice_bg");
+check(
+  "map background fallback fixture resolves map asset",
+  moduleMapBackgroundFallback.floorOne.backgroundId === "forest_bg"
+);
+check(
+  "module and bridge map background fallback output match",
+  JSON.stringify(moduleMapBackgroundFallback) === JSON.stringify(bridgeMapBackgroundFallback)
+);
+check(
+  "fallback background fixture uses tower floor",
+  moduleMapSnapshot.noConfiguredBackground.backgroundId === "tower_floor"
+);
+check("modifier merge fixture lets floor override map", moduleMapSnapshot.floorTwo.modifiers.density === 4);
+check("modifier merge fixture keeps map-only modifier", moduleMapSnapshot.floorTwo.modifiers.weather === "snow");
+check("modifier merge fixture adds floor-only modifier", moduleMapSnapshot.floorTwo.modifiers.elite === true);
+check("applyToGame fixture mutates activeMap", moduleMapSnapshot.applied.activeMapId === "ice");
+check("applyToGame fixture mutates activeFloor", moduleMapSnapshot.applied.activeFloorId === "ice_late");
+check("applyToGame fixture mutates mapModifiers", moduleMapSnapshot.applied.modifiers.density === 4);
+check("applyToGame fixture mutates background", moduleMapSnapshot.applied.backgroundId === "ice_bg");
+check(
+  "applyToGame fixture mutates floorPool",
+  moduleMapSnapshot.applied.floorPool.join(",") === "ice_late,ice_early"
+);
+check("applyToGame null fixture returns null", moduleMapSnapshot.nullApply === null);
+check(
+  "module and bridge map system output match",
+  JSON.stringify(moduleMapSnapshot) === JSON.stringify(bridgeMapSnapshot)
 );
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
@@ -683,6 +744,136 @@ function withBridgeRandomSequence(bridge, sequence, callback) {
       Reflect.deleteProperty(bridge.context, "Math");
     }
   }
+}
+
+function createFallbackMapFixture() {
+  return {
+    mapDefs: [],
+    levelDefs: [
+      {
+        id: "fallback_floor",
+        startsAt: 0,
+      },
+    ],
+    spriteDefs: {
+      backgrounds: {
+        tower_floor: "tower.png",
+      },
+    },
+  };
+}
+
+function createMapFixture() {
+  return {
+    mapDefs: [
+      {
+        id: "forest",
+        name: "Forest",
+        floorIds: ["forest_floor"],
+        backgroundAsset: "forest.png",
+        modifiers: { density: 1, weather: "rain" },
+      },
+      {
+        id: "ice",
+        name: "Ice",
+        floorIds: ["ice_early", "ice_late"],
+        backgroundAsset: "missing-map-bg.png",
+        modifiers: { density: 2, weather: "snow" },
+      },
+      {
+        id: "void",
+        name: "Void",
+        modifiers: { density: 3 },
+      },
+    ],
+    levelDefs: [
+      {
+        id: "forest_floor",
+        startsAt: 0,
+      },
+      {
+        id: "ice_late",
+        startsAt: 30,
+        backgroundAsset: "ice.png",
+        modifiers: { density: 4, elite: true },
+      },
+      {
+        id: "ice_early",
+        startsAt: 0,
+        modifiers: { density: 3 },
+      },
+      {
+        id: "void_floor",
+        startsAt: 0,
+      },
+    ],
+    spriteDefs: {
+      backgrounds: {
+        forest_bg: "forest.png",
+        ice_bg: { src: "ice.png" },
+        tower_floor: "tower.png",
+      },
+    },
+  };
+}
+
+function createMapBackgroundFallbackFixture() {
+  return {
+    mapDefs: [
+      {
+        id: "forest",
+        floorIds: ["forest_floor"],
+        backgroundAsset: "forest.png",
+      },
+    ],
+    levelDefs: [
+      {
+        id: "forest_floor",
+        startsAt: 0,
+      },
+    ],
+    spriteDefs: {
+      backgrounds: {
+        forest_bg: "forest.png",
+      },
+    },
+  };
+}
+
+function mapSystemSnapshot(system) {
+  const fallback = system.resolve({ towerFloor: 1, elapsed: 0 });
+  const floorOne = system.resolve({ towerFloor: 1, elapsed: 0 });
+  const floorTwo = system.resolve({ towerFloor: 2, elapsed: 40 });
+  const noConfiguredBackground = system.resolve({ towerFloor: 3, elapsed: 0 });
+  const game = { towerFloor: 2, elapsed: 40 };
+  const applied = system.applyToGame(game);
+  return {
+    applied: {
+      activeFloorId: game.activeFloor?.id || "",
+      activeMapId: game.activeMap?.id || "",
+      backgroundId: game.background?.id || "",
+      floorPool: game.floorPool?.map((floor) => floor.id) || [],
+      modifiers: game.mapModifiers || {},
+      returnedMapId: applied?.map?.id || "",
+    },
+    fallback: snapshotResolvedMap(fallback),
+    floorOne: snapshotResolvedMap(floorOne),
+    floorTwo: snapshotResolvedMap(floorTwo),
+    noConfiguredBackground: snapshotResolvedMap(noConfiguredBackground),
+    nullApply: system.applyToGame(null),
+  };
+}
+
+function snapshotResolvedMap(resolved) {
+  return {
+    backgroundAsset: resolved.background.asset,
+    backgroundId: resolved.background.id,
+    backgroundSpriteId: resolved.background.spriteId,
+    floorId: resolved.floor?.id || "",
+    floorPool: resolved.floorPool.map((floor) => floor.id),
+    mapId: resolved.map?.id || "",
+    modifiers: resolved.modifiers,
+  };
 }
 
 /**

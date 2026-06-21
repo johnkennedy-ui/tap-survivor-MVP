@@ -15,6 +15,12 @@ const bridges = [
     exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
   },
   {
+    source: "src/modules/map-system.js",
+    target: "src/map-system.js",
+    globalName: "TapSurvivorMapSystem",
+    exports: ["createMapSystem"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",
