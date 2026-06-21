@@ -10,8 +10,9 @@
 
 ## Folder Conventions
 
-- Source content registry: `content/registry/*.json`.
+- Source content registry and routine edit target: `content/registry/*.json`.
 - Compatibility mirror: `content/tap-survivor-content.json`; tooling keeps it assembled for older scripts.
+  Do not edit the mirror for routine content work.
 - Machine-readable content schema: `content/tap-survivor-schema.json`.
 - Balance profiles: `content/balance/*.json`.
 - Generated content and schema globals: `src/content.generated.js`.

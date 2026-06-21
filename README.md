@@ -20,10 +20,10 @@ See `docs/RUNTIME_PARITY.md` for the shared GitHub Pages and Android runtime rul
 
 For routine update paths, see `docs/MAINTENANCE.md`.
 
-Game content source now lives in `content/registry/*.json`.
+Game content source of truth lives in `content/registry/*.json`.
 Balance profiles live in `content/balance/*.json`.
 Do not hand-edit `src/content.generated.js`; rebuild it from the registry and balance sources.
-`content/tap-survivor-content.json` is kept as a legacy compatibility mirror for older tooling.
+`content/tap-survivor-content.json` is a legacy compatibility mirror for older tooling, not the routine edit target.
 
 ```bash
 npm run build:content

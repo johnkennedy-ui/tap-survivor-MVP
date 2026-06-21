@@ -49,7 +49,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/styles.css`: page, panel, modal, and responsive styling.
 - `content/registry/`: source registry domains for weapons, relics, shop items, run upgrades, enemies, bosses, floors, maps, quests, characters, assets, audio, and tuning.
 - `content/balance/`: build-time balance overlay profiles.
-- `content/tap-survivor-content.json`: assembled compatibility mirror for older scripts.
+- `content/tap-survivor-content.json`: assembled compatibility mirror for older scripts, not the routine edit target.
 - `src/content.generated.js`: generated content bundle; do not edit directly.
 - `assets/`: committed sprite and license files.
 - `www/`: generated, git-ignored shared runtime output used by both GitHub Pages and Capacitor Android.
