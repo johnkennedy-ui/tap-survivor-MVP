@@ -59,6 +59,7 @@ const fullChecks = [
   ["node", ["--check", "src/modules/save.js"]],
   ["node", ["--check", "src/modules/game-dependencies.js"]],
   ["node", ["--check", "src/modules/game-runtime.js"]],
+  ["node", ["--check", "src/modules/combat-damage.js"]],
   ["node", ["--check", "src/modules/pickups.js"]],
   ["node", ["--check", "src/modules/run-lifecycle.js"]],
   ["node", ["--check", "src/modules/run-state.js"]],
@@ -213,6 +214,8 @@ function focusedChecks(files) {
         file === "src/modules/game-runtime.js" ||
         file === "src/game-dependencies.js" ||
         file === "src/modules/game-dependencies.js" ||
+        file === "src/combat-damage.js" ||
+        file === "src/modules/combat-damage.js" ||
         file === "src/pickups.js" ||
         file === "src/modules/pickups.js" ||
         file === "src/run-update.js" ||

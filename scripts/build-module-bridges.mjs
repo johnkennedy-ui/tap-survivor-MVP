@@ -122,6 +122,12 @@ const bridges = [
     globalName: "TapSurvivorPickups",
     exports: ["createPickupSystem"],
   },
+  {
+    source: "src/modules/combat-damage.js",
+    target: "src/combat-damage.js",
+    globalName: "TapSurvivorCombatDamage",
+    exports: ["createCombatDamageSystem"],
+  },
 ];
 
 for (const bridge of bridges) {

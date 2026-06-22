@@ -46,6 +46,7 @@ Before editing this repo:
     `src/modules/game-dependencies.js` owns the runtime dependency bag seam, including the input binder passed into the runtime controller.
     `src/game-dependencies.js` is a generated compatibility bridge loaded immediately before `src/game.js`.
     `src/modules/pickups.js` owns XP/loot pickup spawning, attraction, collection, and pickup text aging; `src/pickups.js` is a generated compatibility bridge.
+    `src/modules/combat-damage.js` owns combat damage, player damage, enemy reap, XP drop, loot handoff, and boss defeat handling; `src/combat-damage.js` is a generated compatibility bridge.
     `src/modules/run-lifecycle.js` owns run lifecycle start/end/boss-clear behavior; `src/run-lifecycle.js` is a generated compatibility bridge.
     `src/modules/run-state.js` owns run state/player reset construction; `src/run-state.js` is a generated compatibility bridge.
     `src/modules/run-ui.js` owns run HUD/end-screen rendering; `src/run-ui.js` is a generated compatibility bridge.

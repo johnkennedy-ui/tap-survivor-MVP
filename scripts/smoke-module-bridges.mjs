@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
 import { createPickupSystem as createModulePickupSystem } from "../src/modules/pickups.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
 import { createRunStateSystem as createModuleRunStateSystem } from "../src/modules/run-state.js";
@@ -99,6 +100,14 @@ const pickupsBridge = loadBridge("../src/pickups.js", "src/pickups.js", {
     random: Math.random,
   },
 });
+const combatDamageBridge = loadBridge("../src/combat-damage.js", "src/combat-damage.js", {
+  Math: {
+    ceil: Math.ceil,
+    max: Math.max,
+    min: Math.min,
+    random: Math.random,
+  },
+});
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
@@ -120,6 +129,7 @@ const bridgeRunState = runStateBridge.context.TapSurvivorRunState;
 const bridgeRunUi = runUiBridge.context.TapSurvivorRunUi;
 const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
 const bridgePickups = pickupsBridge.context.TapSurvivorPickups;
+const bridgeCombatDamage = combatDamageBridge.context.TapSurvivorCombatDamage;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -917,6 +927,51 @@ check("pickup loot drops are removed after collection", modulePickupSnapshot.loo
 check("pickup texts rise and expire", modulePickupSnapshot.texts.remaining === 1);
 check("pickup texts update y position", modulePickupSnapshot.texts.firstY === 86);
 
+check("module exports createCombatDamageSystem", typeof createModuleCombatDamageSystem === "function");
+check("bridge assigns globalThis.TapSurvivorCombatDamage", Boolean(bridgeCombatDamage));
+check(
+  "combat damage bridge source has generated banner",
+  hasGeneratedBanner(combatDamageBridge.source)
+);
+check(
+  "bridge exposes createCombatDamageSystem",
+  typeof bridgeCombatDamage?.createCombatDamageSystem === "function"
+);
+
+const moduleCombatDamageSnapshot = combatDamageSnapshot(createModuleCombatDamageSystem, Math);
+const bridgeCombatDamageSnapshot = combatDamageSnapshot(
+  bridgeCombatDamage.createCombatDamageSystem,
+  combatDamageBridge.context.Math
+);
+check(
+  "module and bridge combat damage output match",
+  JSON.stringify(moduleCombatDamageSnapshot) === JSON.stringify(bridgeCombatDamageSnapshot)
+);
+check("combat damage exposes damageEnemy", moduleCombatDamageSnapshot.exposesDamageEnemy);
+check("combat damage exposes damagePlayer", moduleCombatDamageSnapshot.exposesDamagePlayer);
+check("combat damage exposes reapEnemies", moduleCombatDamageSnapshot.exposesReapEnemies);
+check("combat damage applies boss damage bonus", moduleCombatDamageSnapshot.enemy.bossHp === 5);
+check("combat damage returns capped damage dealt", moduleCombatDamageSnapshot.enemy.dealt === 15);
+check("combat damage records weapon damage", moduleCombatDamageSnapshot.enemy.weaponDamage === 15);
+check("combat damage records damage quests", moduleCombatDamageSnapshot.enemy.damageQuestValue === 15);
+check("combat damage records weapon quest progress", moduleCombatDamageSnapshot.enemy.weaponQuestValue === 15);
+check("combat damage ignores invincible player", moduleCombatDamageSnapshot.player.invincibleDamage === 0);
+check("combat damage dodge sets blink timer", moduleCombatDamageSnapshot.player.dodgeBlink === 0.35);
+check("combat damage applies reduction", moduleCombatDamageSnapshot.player.reducedDamage === 15);
+check("combat damage applies thorn damage", moduleCombatDamageSnapshot.player.thornEnemyHp === 6);
+check("combat damage teleports player", moduleCombatDamageSnapshot.player.teleportX === 80);
+check("combat damage sets blink invulnerability", moduleCombatDamageSnapshot.player.invincibleTimer === 1);
+check("combat damage reaps dead enemies", moduleCombatDamageSnapshot.reap.remainingEnemies === 1);
+check("combat damage increments kills", moduleCombatDamageSnapshot.reap.kills === 2);
+check("combat damage creates XP drops", moduleCombatDamageSnapshot.reap.xpDrops === "7:3,12:8");
+check("combat damage spawns loot drops", moduleCombatDamageSnapshot.reap.lootDrops === "normal,boss");
+check("combat damage applies lifesteal", moduleCombatDamageSnapshot.reap.playerHp === 100);
+check("combat damage applies kill explosion", moduleCombatDamageSnapshot.reap.aliveEnemyHp === 2);
+check("combat damage records kill quests", moduleCombatDamageSnapshot.reap.killQuestValue === 2);
+check("combat damage records boss quests", moduleCombatDamageSnapshot.reap.bossQuestValue === 1);
+check("combat damage advances tower after boss", moduleCombatDamageSnapshot.reap.advanceTowerFloor === 1);
+check("combat damage marks boss defeated", moduleCombatDamageSnapshot.reap.bossDefeated);
+
 check("module exports createRunLifecycle", typeof createModuleRunLifecycle === "function");
 check("bridge assigns globalThis.TapSurvivorRunLifecycle", Boolean(bridgeRunLifecycle));
 check("run lifecycle bridge source has generated banner", hasGeneratedBanner(runLifecycleBridge.source));
@@ -1633,6 +1688,152 @@ function withPickupRandomSequence(mathRef, values, callback) {
   mathRef.random = () => values[index++] ?? values[values.length - 1];
   try {
     callback();
+  } finally {
+    mathRef.random = previousRandom;
+  }
+}
+
+function combatDamageSnapshot(createCombatDamageSystem, mathRef) {
+  let effects = {};
+  let game = createCombatDamageGame();
+  const questGroupCalls = [];
+  const weaponQuestCalls = [];
+  const lootDrops = [];
+  let advanceTowerFloorCalls = 0;
+  const system = createCombatDamageSystem({
+    canvas: { height: 100, width: 100 },
+    getGame: () => game,
+    getRelicSpecialEffects: () => effects,
+    addQuestProgressForWeapon(weaponId, value) {
+      weaponQuestCalls.push({ value, weaponId });
+    },
+    addQuestProgressGroup(ids, value) {
+      questGroupCalls.push({ ids, value });
+    },
+    killQuestIds: ["kill"],
+    damageQuestIds: ["damage"],
+    bossQuestIds: ["boss"],
+    spawnLootDrops(enemy) {
+      lootDrops.push(enemy.boss ? "boss" : "normal");
+    },
+    advanceTowerFloor() {
+      advanceTowerFloorCalls += 1;
+    },
+    distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+    clamp: (value, min, max) => Math.max(min, Math.min(max, value)),
+  });
+
+  effects = { bossDamageBonus: 0.5 };
+  const boss = { boss: true, hp: 20 };
+  const dealt = system.damageEnemy(boss, 10, "laser");
+  const enemy = {
+    bossHp: boss.hp,
+    damageQuestValue: questGroupCalls.find((call) => call.ids[0] === "damage")?.value,
+    dealt,
+    weaponDamage: game.weaponDamage.laser,
+    weaponQuestValue: weaponQuestCalls.find((call) => call.weaponId === "laser")?.value,
+  };
+
+  game = createCombatDamageGame();
+  effects = {};
+  game.player.invincibleTimer = 1;
+  const invincibleDamage = system.damagePlayer(10);
+
+  game = createCombatDamageGame();
+  effects = { dodgeChance: 1 };
+  withCombatRandomSequence(mathRef, [0], () => {
+    system.damagePlayer(10);
+  });
+  const dodgeBlink = game.player.blinkTimer;
+
+  game = createCombatDamageGame();
+  const thornEnemy = { hp: 10 };
+  effects = {
+    blinkInvulnerabilitySeconds: 1,
+    damageReduction: 0.25,
+    teleportDistance: 30,
+    teleportOnHitCooldown: 2,
+    thornDamage: 4,
+  };
+  const reducedDamage = withCombatRandomSequence(mathRef, [0.6, 0.4], () =>
+    system.damagePlayer(20, { enemy: thornEnemy })
+  );
+  const player = {
+    dodgeBlink,
+    invincibleDamage,
+    invincibleTimer: game.player.invincibleTimer,
+    reducedDamage,
+    teleportX: game.player.x,
+    thornEnemyHp: thornEnemy.hp,
+  };
+
+  game = createCombatDamageGame();
+  const normalDead = { boss: false, hp: 0, radius: 5, x: 0, xp: 3, y: 0 };
+  const aliveEnemy = { boss: false, hp: 10, radius: 5, x: 5, xp: 2, y: 0 };
+  const bossDead = { boss: true, hp: 0, radius: 8, x: 20, xp: 8, y: 0 };
+  game.enemies = [normalDead, aliveEnemy, bossDead];
+  effects = {
+    killExplosionDamage: 4,
+    killExplosionRadius: 10,
+    lifestealOnKill: 0.2,
+  };
+  questGroupCalls.length = 0;
+  lootDrops.length = 0;
+  advanceTowerFloorCalls = 0;
+  system.reapEnemies();
+  const reap = {
+    advanceTowerFloor: advanceTowerFloorCalls,
+    aliveEnemyHp: game.enemies[0]?.hp,
+    bossDefeated: game.bossDefeated,
+    bossQuestValue: questGroupCalls.filter((call) => call.ids[0] === "boss").length,
+    killQuestValue: questGroupCalls
+      .filter((call) => call.ids[0] === "kill")
+      .reduce((total, call) => total + call.value, 0),
+    kills: game.kills,
+    lootDrops: lootDrops.join(","),
+    playerHp: game.player.hp,
+    remainingEnemies: game.enemies.length,
+    xpDrops: game.xpDrops.map((drop) => `${drop.radius}:${drop.value}`).join(","),
+  };
+
+  return {
+    enemy,
+    exposesDamageEnemy: typeof system.damageEnemy === "function",
+    exposesDamagePlayer: typeof system.damagePlayer === "function",
+    exposesReapEnemies: typeof system.reapEnemies === "function",
+    player,
+    reap,
+  };
+}
+
+function createCombatDamageGame() {
+  return {
+    bossDefeated: false,
+    enemies: [],
+    kills: 0,
+    player: {
+      blinkTimer: 0,
+      hp: 100,
+      invincibleTimer: 0,
+      maxHp: 100,
+      radius: 10,
+      targetX: 50,
+      targetY: 50,
+      teleportCooldown: 0,
+      x: 50,
+      y: 50,
+    },
+    weaponDamage: {},
+    xpDrops: [],
+  };
+}
+
+function withCombatRandomSequence(mathRef, values, callback) {
+  const previousRandom = mathRef.random;
+  let index = 0;
+  mathRef.random = () => values[index++] ?? values[values.length - 1];
+  try {
+    return callback();
   } finally {
     mathRef.random = previousRandom;
   }
