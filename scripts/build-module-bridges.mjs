@@ -98,6 +98,12 @@ const bridges = [
     globalName: "TapSurvivorRunLifecycle",
     exports: ["createRunLifecycle"],
   },
+  {
+    source: "src/modules/run-state.js",
+    target: "src/run-state.js",
+    globalName: "TapSurvivorRunState",
+    exports: ["createRunStateSystem"],
+  },
 ];
 
 for (const bridge of bridges) {

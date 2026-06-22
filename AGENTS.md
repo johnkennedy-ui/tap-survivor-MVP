@@ -46,6 +46,7 @@ Before editing this repo:
     `src/modules/game-dependencies.js` owns the runtime dependency bag seam, including the input binder passed into the runtime controller.
     `src/game-dependencies.js` is a generated compatibility bridge loaded immediately before `src/game.js`.
     `src/modules/run-lifecycle.js` owns run lifecycle start/end/boss-clear behavior; `src/run-lifecycle.js` is a generated compatibility bridge.
+    `src/modules/run-state.js` owns run state/player reset construction; `src/run-state.js` is a generated compatibility bridge.
     Keep save consumers on `globalThis.TapSurvivorSaveMigrations` and `globalThis.TapSurvivorSaveNormalize` for now.
     Keep `game.js` as the classic side-effectful runtime composer until a separate runtime-entry migration.
     Do not hand-edit generated save bridges or change save defaults, migrations, normalization semantics, corrupt-save backup, storage behavior, persistence semantics, or runtime initialization while moving these bridges.

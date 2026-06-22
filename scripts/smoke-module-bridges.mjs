@@ -5,6 +5,7 @@ import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
+import { createRunStateSystem as createModuleRunStateSystem } from "../src/modules/run-state.js";
 import {
   choiceId as moduleChoiceId,
   shopFocusBonus as moduleShopFocusBonus,
@@ -82,6 +83,7 @@ const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
 const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecycle.js");
+const runStateBridge = loadBridge("../src/run-state.js", "src/run-state.js");
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
@@ -99,6 +101,7 @@ const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
+const bridgeRunState = runStateBridge.context.TapSurvivorRunState;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -896,6 +899,42 @@ check("run lifecycle boss clear opens relic choice", moduleRunLifecycleSnapshot.
 check("run lifecycle relic click advances tower floor", moduleRunLifecycleSnapshot.relic.saveTowerFloor === 6);
 check("run lifecycle relic click records floor clear", moduleRunLifecycleSnapshot.relic.lastFloorClearFloor === 5);
 check("run lifecycle relic click updates HUD", moduleRunLifecycleSnapshot.relic.updateRunHud === 1);
+
+check("module exports createRunStateSystem", typeof createModuleRunStateSystem === "function");
+check("bridge assigns globalThis.TapSurvivorRunState", Boolean(bridgeRunState));
+check("run state bridge source has generated banner", hasGeneratedBanner(runStateBridge.source));
+check(
+  "bridge exposes createRunStateSystem",
+  typeof bridgeRunState?.createRunStateSystem === "function"
+);
+
+const moduleRunStateSnapshot = runStateSnapshot(createModuleRunStateSystem);
+const bridgeRunStateSnapshot = runStateSnapshot(bridgeRunState.createRunStateSystem);
+check(
+  "module and bridge run state output match",
+  JSON.stringify(moduleRunStateSnapshot) === JSON.stringify(bridgeRunStateSnapshot)
+);
+check("run state reset returns running run", moduleRunStateSnapshot.reset.running === true);
+check("run state reset returns unpaused run", moduleRunStateSnapshot.reset.paused === false);
+check("run state reset clears elapsed", moduleRunStateSnapshot.reset.elapsed === 0);
+check("run state reset uses 150 second duration", moduleRunStateSnapshot.reset.duration === 150);
+check("run state reset uses save tower floor", moduleRunStateSnapshot.reset.towerFloor === 7);
+check("run state reset centers player x", moduleRunStateSnapshot.reset.playerX === 480);
+check("run state reset centers player y", moduleRunStateSnapshot.reset.playerY === 270);
+check("run state reset centers target x", moduleRunStateSnapshot.reset.targetX === 480);
+check("run state reset centers target y", moduleRunStateSnapshot.reset.targetY === 270);
+check("run state reset equips spark bolt", moduleRunStateSnapshot.reset.equippedWeapons.includes("spark_bolt"));
+check("run state reset applies shop and meta speed", moduleRunStateSnapshot.reset.playerSpeed === 241);
+check("run state reset applies shop and meta pickup radius", moduleRunStateSnapshot.reset.pickupRadius === 97);
+check("run state reset applies shop and meta max hp", moduleRunStateSnapshot.reset.maxHp === 170);
+check("run state reset calls map apply", moduleRunStateSnapshot.reset.mapApplied === 1);
+check("run state reset initializes combat collections", moduleRunStateSnapshot.reset.emptyCollections);
+check("run state reset initializes state maps", moduleRunStateSnapshot.reset.emptyStateMaps);
+check("run state meta upgrades leave null game unchanged", moduleRunStateSnapshot.meta.nullSafe);
+check("run state meta upgrades raise speed", moduleRunStateSnapshot.meta.speed === 257);
+check("run state meta upgrades raise pickup radius", moduleRunStateSnapshot.meta.pickupRadius === 108);
+check("run state meta upgrades raise max hp", moduleRunStateSnapshot.meta.maxHp === 180);
+check("run state meta upgrades heal hp delta", moduleRunStateSnapshot.meta.hp === 120);
 if (hadPreviousContent) {
   Reflect.set(globalThis, "TapSurvivorContent", previousContent);
 } else {
@@ -1576,6 +1615,91 @@ function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
     noGame: noGameSnapshot,
     relic: relicSnapshot,
     start: startSnapshot,
+  };
+}
+
+function runStateSnapshot(createRunStateSystem) {
+  const calls = {
+    mapApplied: 0,
+  };
+  const tiers = {
+    max_hp: 2,
+    move_speed: 1,
+    pickup_radius: 2,
+  };
+  const system = createRunStateSystem({
+    canvas: { width: 960, height: 540 },
+    mapSystem: {
+      applyToGame(run) {
+        calls.mapApplied += 1;
+        run.mapApplied = true;
+      },
+    },
+    getSave: () => ({ towerFloor: 7 }),
+    getShopBonuses: () => ({
+      maxHp: 30,
+      pickupRadius: 7,
+      speed: 32,
+    }),
+    getUpgradeTier: (id) => tiers[id] || 0,
+    maxEquippedWeapons: () => 4,
+  });
+  const run = system.resetGameState();
+  const resetSnapshot = {
+    duration: run.duration,
+    elapsed: run.elapsed,
+    emptyCollections: [
+      run.enemies,
+      run.xpDrops,
+      run.lootDrops,
+      run.pickupTexts,
+      run.bolts,
+      run.enemyBolts,
+      run.beams,
+      run.areas,
+      run.weaponBursts,
+      run.bossAttacks,
+    ].every((collection) => Array.isArray(collection) && collection.length === 0),
+    emptyStateMaps: [run.weaponTimers, run.runUpgradeTiers, run.weaponDamage].every(
+      (value) => value && !Array.isArray(value) && Object.keys(value).length === 0
+    ),
+    equippedWeapons: run.player.equippedWeapons,
+    mapApplied: calls.mapApplied,
+    maxHp: run.player.maxHp,
+    paused: run.paused,
+    pickupRadius: run.player.pickupRadius,
+    playerSpeed: run.player.speed,
+    playerX: run.player.x,
+    playerY: run.player.y,
+    running: run.running,
+    targetX: run.player.targetX,
+    targetY: run.player.targetY,
+    towerFloor: run.towerFloor,
+  };
+
+  system.applyRunMetaUpgrades(null);
+  const metaGame = {
+    player: {
+      hp: 60,
+      maxHp: 120,
+      pickupRadius: 40,
+      speed: 100,
+    },
+  };
+  tiers.max_hp = 4;
+  tiers.move_speed = 3;
+  tiers.pickup_radius = 3;
+  system.applyRunMetaUpgrades(metaGame);
+
+  return {
+    meta: {
+      hp: metaGame.player.hp,
+      maxHp: metaGame.player.maxHp,
+      nullSafe: true,
+      pickupRadius: metaGame.player.pickupRadius,
+      speed: metaGame.player.speed,
+    },
+    reset: resetSnapshot,
   };
 }
 

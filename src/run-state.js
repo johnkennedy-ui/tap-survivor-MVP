@@ -1,5 +1,17 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/run-state.js
+// Run: npm run build:bridges
 (() => {
-  function createRunStateSystem({ canvas, mapSystem, getSave, getShopBonuses, getUpgradeTier, maxEquippedWeapons }) {
+  "use strict";
+
+  function createRunStateSystem({
+    canvas,
+    mapSystem,
+    getSave,
+    getShopBonuses,
+    getUpgradeTier,
+    maxEquippedWeapons,
+  }) {
     function createPlayer() {
       const moveTier = getUpgradeTier("move_speed");
       const pickupTier = getUpgradeTier("pickup_radius");
