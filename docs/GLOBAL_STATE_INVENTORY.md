@@ -11,7 +11,8 @@ The runtime currently uses a script-order global namespace instead of ES module 
 `globalThis.TapSurvivor*` object.
 
 Primary bootstrap coupling:
-- `src/game.js` wires the run by reading the shared `TapSurvivor*` globals and holding top-level run state.
+- `src/game-dependencies.js` collects the `TapSurvivor*` dependency bag for `src/game.js`.
+- `src/game.js` wires the run from that dependency bag and holds top-level run state.
 - `index.html` script order remains the dependency graph until runtime modules are migrated.
 - `scripts/check-script-order.mjs` verifies the current script-order contract.
 
@@ -29,6 +30,7 @@ Generated content globals:
   remains the script-order bootstrap reader until the rendering stack can safely become ESM.
 
 Runtime module globals:
+- Bootstrap seam: `TapSurvivorGameDependencies`.
 - Core data/systems: `TapSurvivorContentRegistry`, `TapSurvivorProgression`, `TapSurvivorMapSystem`, `TapSurvivorBalance`, `TapSurvivorEffects`.
 - Save/storage: `TapSurvivorStorage`, `TapSurvivorSaveDefaults`, `TapSurvivorSaveMigrations`, `TapSurvivorSaveNormalize`, `TapSurvivorSaveCorruption`, `TapSurvivorSave`.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,

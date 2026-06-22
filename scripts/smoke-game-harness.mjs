@@ -386,6 +386,7 @@ export function createGameHarness({
   } else {
     vm.runInContext(readSource("src/game-runtime.js"), context);
   }
+  vm.runInContext(readSource("src/game-dependencies.js"), context);
 
   const previousInput = Reflect.get(globalThis, "TapSurvivorInput");
   const hadInput = Reflect.has(globalThis, "TapSurvivorInput");

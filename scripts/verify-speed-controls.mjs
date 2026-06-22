@@ -55,6 +55,7 @@ const shellUiSource = readFileSync(join(root, "src/shell-ui.js"), "utf8");
 const gameBannersSource = readFileSync(join(root, "src/game-banners.js"), "utf8");
 const runLifecycleSource = readFileSync(join(root, "src/run-lifecycle.js"), "utf8");
 const gameRuntimeSource = readFileSync(join(root, "src/game-runtime.js"), "utf8");
+const gameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 const listeners = new Map();
 
 function makeClassList() {
@@ -285,6 +286,7 @@ vm.runInContext(shellUiSource, context);
 vm.runInContext(gameBannersSource, context);
 vm.runInContext(runLifecycleSource, context);
 vm.runInContext(gameRuntimeSource, context);
+vm.runInContext(gameDependenciesSource, context);
 vm.runInContext(source, context);
 
 function check(name, pass) {

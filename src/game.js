@@ -1,14 +1,48 @@
-const ui = globalThis.TapSurvivorUi.createUi();
+const dependencies = globalThis.TapSurvivorGameDependencies.createGameDependencyBag({
+  globalRef: globalThis,
+});
+const {
+  audio: audioDependencies,
+  combat: combatDependencies,
+  content,
+  contentRegistry,
+  debug: debugDependencies,
+  debugBalance,
+  effects,
+  gameBanners,
+  gameRuntime: gameRuntimeDependencies,
+  levelUp,
+  mapSystem: mapSystemDependencies,
+  math,
+  pickups,
+  progression,
+  quests,
+  relics,
+  renderEnemies,
+  renderHud,
+  rendering,
+  runLifecycle: runLifecycleDependencies,
+  runState,
+  runUi: runUiDependencies,
+  runUpdate,
+  save: saveDependencies,
+  shellUi: shellUiDependencies,
+  shop,
+  sprites,
+  storage,
+  ui: uiDependencies,
+  upgrades: upgradeContent,
+} = dependencies;
+
+const ui = uiDependencies.createUi();
 const canvas = ui.canvas;
 const ctx = canvas.getContext("2d");
 
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";
 
-const content = globalThis.TapSurvivorBalanceRuntime?.content?.() || globalThis.TapSurvivorContent || {};
-const upgradeContent = globalThis.TapSurvivorUpgrades || {};
-const { clamp, distance, randomRange, formatTime } = globalThis.TapSurvivorMath;
-const { questOpenIds } = globalThis.TapSurvivorQuests;
+const { clamp, distance, randomRange, formatTime } = math;
+const { questOpenIds } = quests;
 const {
   weaponDefs,
   weaponUnlocks,
@@ -32,28 +66,28 @@ const {
   tuningDefs,
   shopItemDefs,
   relicDefs,
-} = globalThis.TapSurvivorContentRegistry.createContentRegistry({
+} = contentRegistry.createContentRegistry({
   content,
   upgradeContent,
 });
-const spriteHelpers = globalThis.TapSurvivorSprites;
+const spriteHelpers = sprites;
 const spriteSystem = spriteHelpers.createSpriteSystem({ ctx, spriteDefs });
 const spriteSheetRenderer = spriteHelpers.createSpriteSheetRenderer({
   ctx,
   spriteSheets: spriteDefs.spriteSheets || {},
 });
-const audioSystem = globalThis.TapSurvivorAudio.createAudioSystem({ sfxDefs });
-const mapSystem = globalThis.TapSurvivorMapSystem.createMapSystem({
+const audioSystem = audioDependencies.createAudioSystem({ sfxDefs });
+const mapSystem = mapSystemDependencies.createMapSystem({
   mapDefs,
   levelDefs,
   spriteDefs,
 });
 
-const storageAdapter = globalThis.TapSurvivorStorage.createStorageAdapter({
+const storageAdapter = storage.createStorageAdapter({
   saveKey,
   legacySaveKey,
 });
-const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
+const saveSystem = saveDependencies.createSaveSystem({
   saveKey,
   legacySaveKey,
   starterQuestIds,
@@ -66,12 +100,12 @@ const saveSystem = globalThis.TapSurvivorSave.createSaveSystem({
 });
 
 let save = saveSystem.defaultSave();
-const bannerSystem = globalThis.TapSurvivorGameBanners.createGameBannerSystem({
+const bannerSystem = gameBanners.createGameBannerSystem({
   ui,
   getSave: () => save,
   persist,
 });
-const questSystem = globalThis.TapSurvivorQuests.createQuestSystem({
+const questSystem = quests.createQuestSystem({
   questDefs,
   getSave: () => save,
   persist,
@@ -100,7 +134,7 @@ function addQuestProgressGroup(ids, amount) {
   questSystem.addQuestProgressGroup(ids, amount);
 }
 
-const progressionSystem = globalThis.TapSurvivorProgression.createProgressionSystem({
+const progressionSystem = progression.createProgressionSystem({
   weaponDefs,
   weaponUnlocks,
   upgradeDefs,
@@ -121,7 +155,7 @@ const {
   buyUpgrade,
 } = progressionSystem;
 
-const uiRenderer = globalThis.TapSurvivorUi.createUiRenderer({
+const uiRenderer = uiDependencies.createUiRenderer({
   ui,
   weaponDefs,
   weaponUnlocks,
@@ -137,7 +171,7 @@ const uiRenderer = globalThis.TapSurvivorUi.createUiRenderer({
   buyUpgrade,
 });
 
-const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
+const shopSystem = shop.createShopSystem({
   ui,
   shopItemDefs,
   pricingConfig: tuningDefs.shop,
@@ -150,12 +184,12 @@ const shopSystem = globalThis.TapSurvivorShop.createShopSystem({
   renderMeta,
 });
 
-const relicSystem = globalThis.TapSurvivorRelics.createRelicSystem({
+const relicSystem = relics.createRelicSystem({
   relicDefs,
   weaponDefs,
 });
 
-const runStateSystem = globalThis.TapSurvivorRunState.createRunStateSystem({
+const runStateSystem = runState.createRunStateSystem({
   canvas,
   mapSystem,
   getSave: () => save,
@@ -178,7 +212,7 @@ function renderQuests(container) {
 
 function resetGameState() {
   game = runStateSystem.resetGameState();
-  globalThis.TapSurvivorEffects.applyRelicSpecialEffects(game, getRelicSpecialEffects());
+  effects.applyRelicSpecialEffects(game, getRelicSpecialEffects());
   applyRelicStartingRunUpgrades(game);
   return game;
 }
@@ -198,7 +232,7 @@ function applyRelicStartingRunUpgrades(run) {
   });
 }
 
-const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
+const pickupSystem = pickups.createPickupSystem({
   getGame: () => game,
   getSave: () => save,
   lootConfig: tuningDefs.loot,
@@ -210,7 +244,7 @@ const pickupSystem = globalThis.TapSurvivorPickups.createPickupSystem({
   randomRange,
 });
 
-const combat = globalThis.TapSurvivorCombat.createCombatSystem({
+const combat = combatDependencies.createCombatSystem({
   canvas,
   enemyTypes,
   bossConfig,
@@ -244,7 +278,7 @@ const combat = globalThis.TapSurvivorCombat.createCombatSystem({
   clamp,
 });
 
-const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
+const levelUpSystem = levelUp.createLevelUpSystem({
   ui,
   weaponDefs,
   runUpgradeDefs,
@@ -257,7 +291,7 @@ const levelUpSystem = globalThis.TapSurvivorLevelUp.createLevelUpSystem({
   playChoiceSfx: playLevelChoiceSfx,
 });
 
-runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
+runUpdater = runUpdate.createRunUpdater({
   canvas,
   getGame: () => game,
   combat,
@@ -273,7 +307,7 @@ runUpdater = globalThis.TapSurvivorRunUpdate.createRunUpdater({
   clamp,
 });
 
-const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
+const shellUi = shellUiDependencies.createShellUiController({
   ui,
   getGame: () => game,
   getSave: () => save,
@@ -293,19 +327,19 @@ const shellUi = globalThis.TapSurvivorShellUi.createShellUiController({
   renderMeta,
 });
 
-const debugSystem = globalThis.TapSurvivorDebug.createDebugSystem({
+const debugSystem = debugDependencies.createDebugSystem({
   ui,
   getGame: () => game,
   getSave: () => save,
   getRunUpgradeTier,
   maxEquippedWeapons,
   getWeaponDamageMultiplier,
-  getActiveProfile: () => globalThis.TapSurvivorDebugBalance?.getActiveProfile?.() || "default",
+  getActiveProfile: () => debugBalance?.getActiveProfile?.() || "default",
   relicDefs,
   runUpgradeDefs,
 });
 
-const runUi = globalThis.TapSurvivorRunUi.createRunUi({
+const runUi = runUiDependencies.createRunUi({
   ui,
   formatTime,
   getGame: () => game,
@@ -315,7 +349,7 @@ const runUi = globalThis.TapSurvivorRunUi.createRunUi({
   renderDebug: () => debugSystem.render(),
 });
 
-runLifecycle = globalThis.TapSurvivorRunLifecycle.createRunLifecycle({
+runLifecycle = runLifecycleDependencies.createRunLifecycle({
   ui,
   getGame: () => game,
   getSave: () => save,
@@ -371,12 +405,12 @@ function toggleAudioMute() {
   return audioSystem.toggleMuted();
 }
 
-const renderer = globalThis.TapSurvivorRendering.createRenderer({
+const renderer = rendering.createRenderer({
   canvas,
   ctx,
   clamp,
-  createEnemyRenderer: globalThis.TapSurvivorRenderEnemies.createEnemyRenderer,
-  createHudRenderer: globalThis.TapSurvivorRenderHud.createHudRenderer,
+  createEnemyRenderer: renderEnemies.createEnemyRenderer,
+  createHudRenderer: renderHud.createHudRenderer,
   drawImage: spriteSystem.drawImage,
   drawSprite: spriteSystem.drawSprite,
   spriteSheetRenderer,
@@ -425,7 +459,7 @@ function resetSave() {
   gameRuntime.resetSave();
 }
 
-gameRuntime = globalThis.TapSurvivorGameRuntime.createGameRuntimeController({
+gameRuntime = gameRuntimeDependencies.createGameRuntimeController({
   canvas,
   ui,
   documentRef: document,

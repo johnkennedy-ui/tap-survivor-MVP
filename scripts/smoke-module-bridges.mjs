@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
+import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import {
   choiceId as moduleChoiceId,
@@ -78,6 +79,7 @@ const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-tar
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
+const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
@@ -93,6 +95,7 @@ const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldowns?.createWeaponScaling;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
+const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -797,6 +800,33 @@ check("game runtime reset clears game state", moduleGameRuntimeSnapshot.gameAfte
 check("game runtime reset persists once", moduleGameRuntimeSnapshot.persistCount === 2);
 check("game runtime binds movement input", moduleGameRuntimeSnapshot.movementBinds === 1);
 check("game runtime schedules loop", moduleGameRuntimeSnapshot.rafCount === 1);
+
+check("module exports createGameDependencyBag", typeof createModuleGameDependencyBag === "function");
+check(
+  "bridge assigns globalThis.TapSurvivorGameDependencies",
+  Boolean(bridgeGameDependencies)
+);
+check(
+  "game dependencies bridge source has generated banner",
+  hasGeneratedBanner(gameDependenciesBridge.source)
+);
+check(
+  "bridge exposes createGameDependencyBag",
+  typeof bridgeGameDependencies?.createGameDependencyBag === "function"
+);
+
+const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
+const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
+  bridgeGameDependencies.createGameDependencyBag
+);
+check(
+  "module and bridge game dependency bag output match",
+  JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
+);
+check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
+check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
+check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
+check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
 if (hadPreviousContent) {
   Reflect.set(globalThis, "TapSurvivorContent", previousContent);
 } else {
@@ -1133,6 +1163,70 @@ function gameRuntimeSnapshot(createGameRuntimeController, runtimeGlobal) {
     speedAfterInvalid,
     speedAfterSet,
     spriteLoads: calls.spriteLoads,
+  };
+}
+
+function gameDependenciesSnapshot(createGameDependencyBag) {
+  const requiredNames = [
+    "TapSurvivorAudio",
+    "TapSurvivorCombat",
+    "TapSurvivorContentRegistry",
+    "TapSurvivorDebug",
+    "TapSurvivorEffects",
+    "TapSurvivorGameBanners",
+    "TapSurvivorGameRuntime",
+    "TapSurvivorLevelUp",
+    "TapSurvivorMapSystem",
+    "TapSurvivorMath",
+    "TapSurvivorPickups",
+    "TapSurvivorProgression",
+    "TapSurvivorQuests",
+    "TapSurvivorRelics",
+    "TapSurvivorRenderEnemies",
+    "TapSurvivorRenderHud",
+    "TapSurvivorRendering",
+    "TapSurvivorRunLifecycle",
+    "TapSurvivorRunState",
+    "TapSurvivorRunUi",
+    "TapSurvivorRunUpdate",
+    "TapSurvivorSave",
+    "TapSurvivorShellUi",
+    "TapSurvivorShop",
+    "TapSurvivorSprites",
+    "TapSurvivorStorage",
+    "TapSurvivorUi",
+  ];
+  const globalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
+  globalRef.TapSurvivorBalanceRuntime = {
+    content: () => ({ id: "override" }),
+  };
+  globalRef.TapSurvivorContent = { id: "fallback" };
+  globalRef.TapSurvivorDebugBalance = {
+    getActiveProfile: () => "testing",
+  };
+  const bag = createGameDependencyBag({ globalRef });
+
+  const fallbackGlobalRef = { ...globalRef };
+  delete fallbackGlobalRef.TapSurvivorBalanceRuntime;
+  delete fallbackGlobalRef.TapSurvivorUpgrades;
+  const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
+
+  const missingGlobalRef = { ...globalRef };
+  delete missingGlobalRef.TapSurvivorAudio;
+  let missingError = "";
+  try {
+    createGameDependencyBag({ globalRef: missingGlobalRef });
+  } catch (error) {
+    missingError = error.message;
+  }
+
+  return {
+    contentId: bag.content.id,
+    debugProfile: bag.debugBalance.getActiveProfile(),
+    emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
+    fallbackContentId: fallbackBag.content.id,
+    hasMath: bag.math.name === "TapSurvivorMath",
+    missingError,
   };
 }
 

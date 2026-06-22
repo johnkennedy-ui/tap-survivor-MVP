@@ -21,6 +21,7 @@ const game = readRequired("src/game.js");
 const gameBanners = readRequired("src/game-banners.js");
 const runLifecycle = readRequired("src/run-lifecycle.js");
 const gameRuntime = readRequired("src/game-runtime.js");
+const gameDependencies = readRequired("src/game-dependencies.js");
 const styles = readRequired("src/styles.css");
 const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
@@ -89,6 +90,7 @@ const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
 const staleText = `${index}\n${contentSource}\n${generatedContent}\n${agentContext}`;
 const runtime = `${game}\n${gameBanners}\n${runLifecycle}\n${combat}\n${combatDamage}\n${weaponFire}\n${enemyBehaviors}\n${enemySpawning}\n${enemies}\n${runState}\n${runUpdate}`;
+const runtimeEntry = `${game}\n${gameDependencies}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
@@ -136,6 +138,7 @@ check("index loads debug module", /src="src\/debug\.js(\?[^"]+)?"/.test(index));
 check("index loads shell relic UI module", /src="src\/shell-relic-ui\.js(\?[^"]+)?"/.test(index));
 check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
 check("index loads game runtime module", /src="src\/game-runtime\.js(\?[^"]+)?"/.test(index));
+check("index loads game dependencies module", /src="src\/game-dependencies\.js(\?[^"]+)?"/.test(index));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
 check("speed controls exist", ["data-speed=\"1\"", "data-speed=\"2\"", "data-speed=\"5\""].every((id) => index.includes(id)) && styles.includes(".speed-controls"));
@@ -307,60 +310,60 @@ check("super bosses combine two boss abilities", enemies.includes("superBossAbil
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
-check("debug balance system exists", debug.includes("createDebugSystem") && game.includes("TapSurvivorDebug"));
+check("debug balance system exists", debug.includes("createDebugSystem") && runtimeEntry.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
 check("local save exists", game.includes("tap-survivor-mvp-save-v2") && storageAdapter.includes("localStorage") && storageAdapter.includes("getSaveRaw"));
-check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && game.includes("TapSurvivorQuests"));
-check("shared save helpers exist", save.includes("TapSurvivorSave") && saveDefaults.includes("TapSurvivorSaveDefaults") && saveMigrations.includes("TapSurvivorSaveMigrations") && saveNormalize.includes("TapSurvivorSaveNormalize") && game.includes("TapSurvivorSave") && storageAdapter.includes("TapSurvivorStorage"));
+check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && runtimeEntry.includes("TapSurvivorQuests"));
+check("shared save helpers exist", save.includes("TapSurvivorSave") && saveDefaults.includes("TapSurvivorSaveDefaults") && saveMigrations.includes("TapSurvivorSaveMigrations") && saveNormalize.includes("TapSurvivorSaveNormalize") && runtimeEntry.includes("TapSurvivorSave") && storageAdapter.includes("TapSurvivorStorage"));
 check(
   "shared math helpers exist",
   math.includes("TapSurvivorMath") &&
-    game.includes("TapSurvivorMath") &&
+    runtimeEntry.includes("TapSurvivorMath") &&
     rendering.includes("clamp") &&
     renderHud.includes("clamp") &&
     !rendering.includes("globalThis.TapSurvivorMath") &&
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
-check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && game.includes("TapSurvivorSprites"));
+check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && runtimeEntry.includes("TapSurvivorSprites"));
 check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && index.includes("src/sprite-sheet-renderer.js") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
 check("shared asset resolver exists", assets.includes("TapSurvivorAssets") && levelUp.includes("TapSurvivorAssets") && shellUi.includes("TapSurvivorAssets"));
-check("shared audio helper exists", audio.includes("TapSurvivorAudio") && game.includes("TapSurvivorAudio") && audio.includes("setMuted"));
+check("shared audio helper exists", audio.includes("TapSurvivorAudio") && runtimeEntry.includes("TapSurvivorAudio") && audio.includes("setMuted"));
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
 check("sprite cache trims transparent padding", sprites.includes("trimmedSpriteBounds") && sprites.includes("getImageData") && sprites.includes("spriteBounds"));
 check("sprite atlases support animated frames", sprites.includes("currentFrameIndex") && sprites.includes("transparentColor") && sprites.includes("spriteSourceBounds"));
 check("enemy sprites draw larger than hit radius", renderEnemies.includes("spriteSize") && renderEnemies.includes("Math.max(34") && renderEnemies.includes("Math.max(92"));
-check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && game.includes("TapSurvivorContentRegistry"));
-check("shared progression helper exists", progression.includes("TapSurvivorProgression") && game.includes("TapSurvivorProgression"));
+check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && runtimeEntry.includes("TapSurvivorContentRegistry"));
+check("shared progression helper exists", progression.includes("TapSurvivorProgression") && runtimeEntry.includes("TapSurvivorProgression"));
 check(
   "shared HUD renderer helper exists",
   renderHud.includes("TapSurvivorRenderHud") &&
     renderSkillRail.includes("TapSurvivorRenderSkillRail") &&
-    game.includes("TapSurvivorRenderHud") &&
+    runtimeEntry.includes("TapSurvivorRenderHud") &&
     rendering.includes("createHudRenderer") &&
     !rendering.includes("globalThis.TapSurvivorRenderHud"),
 );
 check(
   "shared enemy renderer helper exists",
   renderEnemies.includes("TapSurvivorRenderEnemies") &&
-    game.includes("TapSurvivorRenderEnemies") &&
+    runtimeEntry.includes("TapSurvivorRenderEnemies") &&
     rendering.includes("createEnemyRenderer") &&
     !rendering.includes("globalThis.TapSurvivorRenderEnemies"),
 );
-check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && game.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
-check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && game.includes("TapSurvivorRunUi"));
-check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && levelUpChoices.includes("TapSurvivorLevelUpChoices") && game.includes("TapSurvivorLevelUp"));
+check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && runtimeEntry.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
+check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && runtimeEntry.includes("TapSurvivorRunUi"));
+check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && levelUpChoices.includes("TapSurvivorLevelUpChoices") && runtimeEntry.includes("TapSurvivorLevelUp"));
 check("shared input helper exists", input.includes("TapSurvivorInput") && gameRuntime.includes("TapSurvivorInput"));
-check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && game.includes("TapSurvivorPickups"));
-check("shared shop helper exists", shop.includes("TapSurvivorShop") && shopPricing.includes("TapSurvivorShopPricing") && game.includes("TapSurvivorShop"));
-check("shared relic helper exists", relics.includes("TapSurvivorRelics") && game.includes("TapSurvivorRelics"));
-check("shared run state helper exists", runState.includes("TapSurvivorRunState") && game.includes("TapSurvivorRunState"));
-check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && game.includes("TapSurvivorRunUpdate"));
+check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && runtimeEntry.includes("TapSurvivorPickups"));
+check("shared shop helper exists", shop.includes("TapSurvivorShop") && shopPricing.includes("TapSurvivorShopPricing") && runtimeEntry.includes("TapSurvivorShop"));
+check("shared relic helper exists", relics.includes("TapSurvivorRelics") && runtimeEntry.includes("TapSurvivorRelics"));
+check("shared run state helper exists", runState.includes("TapSurvivorRunState") && runtimeEntry.includes("TapSurvivorRunState"));
+check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && runtimeEntry.includes("TapSurvivorRunUpdate"));
 check("shared weapon helpers exist", weaponProjectiles.includes("TapSurvivorWeaponProjectiles") && weaponTargeting.includes("TapSurvivorWeaponTargeting") && weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
 check("shared enemy helper exists", enemies.includes("TapSurvivorEnemies") && enemySpawning.includes("TapSurvivorEnemySpawning") && combat.includes("TapSurvivorEnemies"));
 check("shared enemy behavior helper exists", enemyBehaviors.includes("TapSurvivorEnemyBehaviors") && enemies.includes("TapSurvivorEnemyBehaviors"));
 check("shared balance helper exists", balance.includes("TapSurvivorBalance") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
-check("shared debug helper exists", debug.includes("TapSurvivorDebug") && game.includes("TapSurvivorDebug"));
-check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && shellRelicUi.includes("TapSurvivorShellRelicUi") && game.includes("TapSurvivorShellUi"));
+check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));
+check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && shellRelicUi.includes("TapSurvivorShellRelicUi") && runtimeEntry.includes("TapSurvivorShellUi"));
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));

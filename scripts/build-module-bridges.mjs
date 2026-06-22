@@ -86,6 +86,12 @@ const bridges = [
     globalName: "TapSurvivorGameRuntime",
     exports: ["createGameRuntimeController"],
   },
+  {
+    source: "src/modules/game-dependencies.js",
+    target: "src/game-dependencies.js",
+    globalName: "TapSurvivorGameDependencies",
+    exports: ["createGameDependencyBag"],
+  },
 ];
 
 for (const bridge of bridges) {

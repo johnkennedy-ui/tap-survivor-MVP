@@ -57,6 +57,7 @@ const fullChecks = [
   ["node", ["--check", "src/modules/save-migrations.js"]],
   ["node", ["--check", "src/modules/save-normalize.js"]],
   ["node", ["--check", "src/modules/save.js"]],
+  ["node", ["--check", "src/modules/game-dependencies.js"]],
   ["node", ["--check", "src/modules/game-runtime.js"]],
   ["node", ["--check", "src/modules/shop-pricing.js"]],
   ["node", ["--check", "src/modules/weapon-cooldowns.js"]],
@@ -205,6 +206,8 @@ function focusedChecks(files) {
         file === "src/modules/weapon-targeting.js" ||
         file === "src/game-runtime.js" ||
         file === "src/modules/game-runtime.js" ||
+        file === "src/game-dependencies.js" ||
+        file === "src/modules/game-dependencies.js" ||
         file === "scripts/smoke-game-harness.mjs" ||
         file === "scripts/smoke-game-runtime-module.mjs" ||
         file === "scripts/build-module-bridges.mjs" ||
@@ -298,6 +301,8 @@ function focusedChecks(files) {
       (file) =>
         file === "src/modules/game-runtime.js" ||
         file === "src/game-runtime.js" ||
+        file === "src/modules/game-dependencies.js" ||
+        file === "src/game-dependencies.js" ||
         file === "scripts/smoke-game-harness.mjs" ||
         file === "scripts/smoke-game-runtime-module.mjs" ||
         file === "package.json"
