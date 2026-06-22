@@ -1,4 +1,9 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/run-update.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
   function createRunUpdater({
     canvas,
     getGame,

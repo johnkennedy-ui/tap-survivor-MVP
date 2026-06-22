@@ -6,6 +6,7 @@ import { createGameDependencyBag as createModuleGameDependencyBag } from "../src
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
 import { createRunStateSystem as createModuleRunStateSystem } from "../src/modules/run-state.js";
+import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import {
   choiceId as moduleChoiceId,
   shopFocusBonus as moduleShopFocusBonus,
@@ -84,6 +85,7 @@ const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
 const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecycle.js");
 const runStateBridge = loadBridge("../src/run-state.js", "src/run-state.js");
+const runUpdateBridge = loadBridge("../src/run-update.js", "src/run-update.js");
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
@@ -102,6 +104,7 @@ const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
 const bridgeRunState = runStateBridge.context.TapSurvivorRunState;
+const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -935,6 +938,44 @@ check("run state meta upgrades raise speed", moduleRunStateSnapshot.meta.speed =
 check("run state meta upgrades raise pickup radius", moduleRunStateSnapshot.meta.pickupRadius === 108);
 check("run state meta upgrades raise max hp", moduleRunStateSnapshot.meta.maxHp === 180);
 check("run state meta upgrades heal hp delta", moduleRunStateSnapshot.meta.hp === 120);
+
+check("module exports createRunUpdater", typeof createModuleRunUpdater === "function");
+check("bridge assigns globalThis.TapSurvivorRunUpdate", Boolean(bridgeRunUpdate));
+check("run update bridge source has generated banner", hasGeneratedBanner(runUpdateBridge.source));
+check("bridge exposes createRunUpdater", typeof bridgeRunUpdate?.createRunUpdater === "function");
+
+const moduleRunUpdateSnapshot = runUpdateSnapshot(createModuleRunUpdater);
+const bridgeRunUpdateSnapshot = runUpdateSnapshot(bridgeRunUpdate.createRunUpdater);
+check(
+  "module and bridge run update output match",
+  JSON.stringify(moduleRunUpdateSnapshot) === JSON.stringify(bridgeRunUpdateSnapshot)
+);
+check("run updater exposes update", moduleRunUpdateSnapshot.exposesUpdate);
+check("run updater exposes collectXp", moduleRunUpdateSnapshot.exposesCollectXp);
+check("run update with no game is no-op", moduleRunUpdateSnapshot.noOps.noGame);
+check("run update with stopped game is no-op", moduleRunUpdateSnapshot.noOps.stopped);
+check("run update with paused game is no-op", moduleRunUpdateSnapshot.noOps.paused);
+check("run update while awaiting movement is no-op", moduleRunUpdateSnapshot.noOps.awaiting);
+check("run update increments elapsed", moduleRunUpdateSnapshot.active.elapsed === 10.1);
+check("run update applies map system", moduleRunUpdateSnapshot.active.mapApplied === 1);
+check("run update records survival quest dt", moduleRunUpdateSnapshot.active.survivalQuestValue === 0.2);
+check("run update spawns boss at duration", moduleRunUpdateSnapshot.active.bossCalls === 1);
+check("run update moves player toward target", moduleRunUpdateSnapshot.active.playerX === 30);
+check("run update clamps player to canvas bounds", moduleRunUpdateSnapshot.active.playerY === 18);
+check("run update marks player moving", moduleRunUpdateSnapshot.active.moving === true);
+check("run update sets player facing", moduleRunUpdateSnapshot.active.facingX === 1);
+check("run update keeps relic timers non-negative", moduleRunUpdateSnapshot.active.timersNonNegative);
+check("run update clears expired action sprite", moduleRunUpdateSnapshot.active.actionSprite === "");
+check("run update calls combat and pickup systems in order", moduleRunUpdateSnapshot.active.callOrderMatches);
+check("run update ends defeated player run", moduleRunUpdateSnapshot.active.endReason === "Player defeated");
+check("run update collectXp without player is no-op", moduleRunUpdateSnapshot.collect.noPlayerNoOp);
+check("run update collectXp applies relic multiplier", moduleRunUpdateSnapshot.collect.playerXp === 2);
+check("run update collectXp increments collected XP", moduleRunUpdateSnapshot.collect.xpCollected === 3);
+check("run update collectXp records original XP quest value", moduleRunUpdateSnapshot.collect.xpQuestValue === 2);
+check("run update collectXp levels player", moduleRunUpdateSnapshot.collect.level === 2);
+check("run update collectXp increments level ups", moduleRunUpdateSnapshot.collect.levelUps === 1);
+check("run update collectXp records level quest", moduleRunUpdateSnapshot.collect.levelQuestValue === 1);
+check("run update collectXp shows level-up UI", moduleRunUpdateSnapshot.collect.showLevelUp === 1);
 if (hadPreviousContent) {
   Reflect.set(globalThis, "TapSurvivorContent", previousContent);
 } else {
@@ -1700,6 +1741,203 @@ function runStateSnapshot(createRunStateSystem) {
       speed: metaGame.player.speed,
     },
     reset: resetSnapshot,
+  };
+}
+
+function runUpdateSnapshot(createRunUpdater) {
+  const survivalQuestIds = ["survive"];
+  const xpQuestIds = ["xp"];
+  const levelQuestIds = ["level"];
+  let currentGame = null;
+  const calls = [];
+  const questCalls = [];
+  let showLevelUpCalls = 0;
+  let endReason = "";
+
+  const combat = Object.fromEntries(
+    [
+      "spawnBoss",
+      "spawnEnemies",
+      "updateEnemies",
+      "updateEnemyBolts",
+      "updateBossSpecials",
+      "updateWeapons",
+      "updateBolts",
+      "updateAreas",
+      "updateBeams",
+      "updateWeaponBursts",
+    ].map((name) => [
+      name,
+      () => {
+        calls.push(name);
+      },
+    ])
+  );
+  const pickupSystem = Object.fromEntries(
+    ["updateXpDrops", "updateLootDrops", "updatePickupTexts"].map((name) => [
+      name,
+      () => {
+        calls.push(name);
+      },
+    ])
+  );
+  const updater = createRunUpdater({
+    canvas: { width: 120, height: 80 },
+    getGame: () => currentGame,
+    combat,
+    pickupSystem,
+    addQuestProgressGroup(ids, value) {
+      questCalls.push({ ids, value });
+      calls.push(`quest:${ids[0]}:${value}`);
+    },
+    survivalQuestIds,
+    xpQuestIds,
+    levelQuestIds,
+    showLevelUp() {
+      showLevelUpCalls += 1;
+    },
+    endRun(reason) {
+      endReason = reason;
+      calls.push("endRun");
+    },
+    getRelicSpecialEffects: () => ({ xpMultiplier: 0.5 }),
+    mapSystem: {
+      applyToGame(game) {
+        game.mapApplied = (game.mapApplied || 0) + 1;
+        calls.push("map");
+      },
+    },
+    clamp: (value, min, max) => Math.max(min, Math.min(max, value)),
+  });
+
+  function runNoOp(game) {
+    currentGame = game;
+    const beforeElapsed = game?.elapsed;
+    calls.length = 0;
+    updater.update(0.2);
+    return calls.length === 0 && game?.elapsed === beforeElapsed;
+  }
+
+  const noOps = {
+    awaiting: runNoOp({
+      awaitingFirstMoveInput: true,
+      elapsed: 1,
+      paused: false,
+      running: true,
+    }),
+    noGame: runNoOp(null),
+    paused: runNoOp({
+      elapsed: 1,
+      paused: true,
+      running: true,
+    }),
+    stopped: runNoOp({
+      elapsed: 1,
+      paused: false,
+      running: false,
+    }),
+  };
+
+  currentGame = {
+    awaitingFirstMoveInput: false,
+    duration: 10,
+    elapsed: 9.9,
+    levelUps: 0,
+    mapApplied: 0,
+    paused: false,
+    player: {
+      actionSprite: "slash",
+      actionTimer: 0.1,
+      blinkTimer: 0.05,
+      facingX: 0,
+      facingY: 0,
+      hp: 0,
+      invincibleTimer: 0.2,
+      speed: 100,
+      targetX: 110,
+      targetY: 10,
+      teleportCooldown: 0.3,
+      x: 10,
+      y: 10,
+    },
+    running: true,
+    xpCollected: 0,
+  };
+  calls.length = 0;
+  questCalls.length = 0;
+  updater.update(0.2);
+  const expectedOrder = [
+    "map",
+    "quest:survive:0.2",
+    "spawnBoss",
+    "spawnEnemies",
+    "updateEnemies",
+    "updateEnemyBolts",
+    "updateBossSpecials",
+    "updateWeapons",
+    "updateBolts",
+    "updateAreas",
+    "updateBeams",
+    "updateWeaponBursts",
+    "updateXpDrops",
+    "updateLootDrops",
+    "updatePickupTexts",
+    "endRun",
+  ];
+  const activeSnapshot = {
+    actionSprite: currentGame.player.actionSprite,
+    actionTimer: currentGame.player.actionTimer,
+    blinkTimer: currentGame.player.blinkTimer,
+    bossCalls: calls.filter((call) => call === "spawnBoss").length,
+    callOrderMatches: JSON.stringify(calls) === JSON.stringify(expectedOrder),
+    elapsed: currentGame.elapsed,
+    endReason,
+    facingX: currentGame.player.facingX,
+    mapApplied: currentGame.mapApplied,
+    moving: currentGame.player.moving,
+    playerX: currentGame.player.x,
+    playerY: currentGame.player.y,
+    survivalQuestValue: questCalls.find((call) => call.ids === survivalQuestIds)?.value,
+    timersNonNegative:
+      currentGame.player.invincibleTimer === 0 &&
+      currentGame.player.blinkTimer === 0 &&
+      currentGame.player.teleportCooldown === 0.09999999999999998,
+  };
+
+  currentGame = { player: null };
+  calls.length = 0;
+  questCalls.length = 0;
+  updater.collectXp(2);
+  const noPlayerNoOp = calls.length === 0 && questCalls.length === 0;
+
+  currentGame = {
+    levelUps: 0,
+    player: {
+      level: 1,
+      xp: 4,
+      xpToLevel: 5,
+    },
+    xpCollected: 0,
+  };
+  questCalls.length = 0;
+  showLevelUpCalls = 0;
+  updater.collectXp(2);
+
+  return {
+    active: activeSnapshot,
+    collect: {
+      level: currentGame.player.level,
+      levelQuestValue: questCalls.find((call) => call.ids === levelQuestIds)?.value,
+      levelUps: currentGame.levelUps,
+      noPlayerNoOp,
+      playerXp: currentGame.player.xp,
+      showLevelUp: showLevelUpCalls,
+      xpCollected: currentGame.xpCollected,
+      xpQuestValue: questCalls.find((call) => call.ids === xpQuestIds)?.value,
+    },
+    exposesCollectXp: typeof updater.collectXp === "function",
+    exposesUpdate: typeof updater.update === "function",
+    noOps,
   };
 }
 
