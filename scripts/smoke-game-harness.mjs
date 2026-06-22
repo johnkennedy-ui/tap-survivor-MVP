@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 
+import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+
 const root = new URL("..", import.meta.url).pathname;
 
 function makeClassList() {
@@ -99,7 +101,13 @@ function readSource(path) {
   return readFileSync(join(root, path), "utf8");
 }
 
-export function createGameHarness({ fakeCombat = false, initialSave = null, search = "", storageEntries = {} } = {}) {
+export function createGameHarness({
+  fakeCombat = false,
+  gameRuntimeMode = "classic",
+  initialSave = null,
+  search = "",
+  storageEntries = {},
+} = {}) {
   const elements = new Map();
   const ids = [
     "game",
@@ -371,8 +379,33 @@ export function createGameHarness({ fakeCombat = false, initialSave = null, sear
   vm.runInContext(readSource("src/shell-ui.js"), context);
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
-  vm.runInContext(readSource("src/game-runtime.js"), context);
-  vm.runInContext(`${readSource("src/game.js")}\nglobalThis.__tapSurvivorHarness = { getGame: () => game, getSave: () => save };`, context);
+  if (gameRuntimeMode === "module") {
+    context.TapSurvivorGameRuntime = {
+      createGameRuntimeController: createModuleGameRuntimeController,
+    };
+  } else {
+    vm.runInContext(readSource("src/game-runtime.js"), context);
+  }
+
+  const previousInput = Reflect.get(globalThis, "TapSurvivorInput");
+  const hadInput = Reflect.has(globalThis, "TapSurvivorInput");
+  if (gameRuntimeMode === "module") {
+    Reflect.set(globalThis, "TapSurvivorInput", context.TapSurvivorInput);
+  }
+  try {
+    vm.runInContext(
+      `${readSource("src/game.js")}\nglobalThis.__tapSurvivorHarness = { getGame: () => game, getSave: () => save };`,
+      context
+    );
+  } finally {
+    if (gameRuntimeMode === "module") {
+      if (hadInput) {
+        Reflect.set(globalThis, "TapSurvivorInput", previousInput);
+      } else {
+        Reflect.deleteProperty(globalThis, "TapSurvivorInput");
+      }
+    }
+  }
 
   return {
     context,

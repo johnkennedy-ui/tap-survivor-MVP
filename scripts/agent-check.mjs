@@ -39,6 +39,8 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-balance-runtime.mjs"]],
   ["node", ["--check", "scripts/smoke-map-runtime.mjs"]],
   ["node", ["--check", "scripts/smoke-module-bridges.mjs"]],
+  ["node", ["--check", "scripts/smoke-game-runtime-module.mjs"]],
+  ["node", ["scripts/smoke-game-runtime-module.mjs"]],
   ["node", ["--check", "scripts/smoke-relic-run-start.mjs"]],
   ["node", ["--check", "scripts/extract-sprites.mjs"]],
   ["node", ["--check", "scripts/prep-spritesheets.mjs"]],
@@ -203,6 +205,8 @@ function focusedChecks(files) {
         file === "src/modules/weapon-targeting.js" ||
         file === "src/game-runtime.js" ||
         file === "src/modules/game-runtime.js" ||
+        file === "scripts/smoke-game-harness.mjs" ||
+        file === "scripts/smoke-game-runtime-module.mjs" ||
         file === "scripts/build-module-bridges.mjs" ||
         file === "scripts/smoke-module-bridges.mjs" ||
         file === "package.json"
@@ -288,6 +292,18 @@ function focusedChecks(files) {
   }
   if (files.some((file) => file.startsWith("src/") && /\.(js)$/.test(file))) {
     checks.push(["npm", ["run", "verify:script-order"]]);
+  }
+  if (
+    files.some(
+      (file) =>
+        file === "src/modules/game-runtime.js" ||
+        file === "src/game-runtime.js" ||
+        file === "scripts/smoke-game-harness.mjs" ||
+        file === "scripts/smoke-game-runtime-module.mjs" ||
+        file === "package.json"
+    )
+  ) {
+    checks.push(["node", ["scripts/smoke-game-runtime-module.mjs"]]);
   }
   return dedupeChecks(checks);
 }
