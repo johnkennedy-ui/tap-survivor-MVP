@@ -116,6 +116,12 @@ const bridges = [
     globalName: "TapSurvivorRunUi",
     exports: ["createRunUi"],
   },
+  {
+    source: "src/modules/pickups.js",
+    target: "src/pickups.js",
+    globalName: "TapSurvivorPickups",
+    exports: ["createPickupSystem"],
+  },
 ];
 
 for (const bridge of bridges) {

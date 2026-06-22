@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+import { createPickupSystem as createModulePickupSystem } from "../src/modules/pickups.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
 import { createRunStateSystem as createModuleRunStateSystem } from "../src/modules/run-state.js";
 import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
@@ -88,6 +89,16 @@ const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecy
 const runStateBridge = loadBridge("../src/run-state.js", "src/run-state.js");
 const runUiBridge = loadBridge("../src/run-ui.js", "src/run-ui.js");
 const runUpdateBridge = loadBridge("../src/run-update.js", "src/run-update.js");
+const pickupsBridge = loadBridge("../src/pickups.js", "src/pickups.js", {
+  Math: {
+    ceil: Math.ceil,
+    floor: Math.floor,
+    hypot: Math.hypot,
+    max: Math.max,
+    min: Math.min,
+    random: Math.random,
+  },
+});
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
@@ -108,6 +119,7 @@ const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
 const bridgeRunState = runStateBridge.context.TapSurvivorRunState;
 const bridgeRunUi = runUiBridge.context.TapSurvivorRunUi;
 const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
+const bridgePickups = pickupsBridge.context.TapSurvivorPickups;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -870,6 +882,41 @@ check(
   moduleGameDependenciesSnapshot.missingInputError.includes("TapSurvivorInput.bindMovementInput")
 );
 
+check("module exports createPickupSystem", typeof createModulePickupSystem === "function");
+check("bridge assigns globalThis.TapSurvivorPickups", Boolean(bridgePickups));
+check("pickups bridge source has generated banner", hasGeneratedBanner(pickupsBridge.source));
+check("bridge exposes createPickupSystem", typeof bridgePickups?.createPickupSystem === "function");
+
+const modulePickupSnapshot = pickupSnapshot(createModulePickupSystem, Math);
+const bridgePickupSnapshot = pickupSnapshot(bridgePickups.createPickupSystem, pickupsBridge.context.Math);
+check(
+  "module and bridge pickup output match",
+  JSON.stringify(modulePickupSnapshot) === JSON.stringify(bridgePickupSnapshot)
+);
+check("pickup system exposes spawnLootDrops", modulePickupSnapshot.exposesSpawnLootDrops);
+check("pickup system exposes updateXpDrops", modulePickupSnapshot.exposesUpdateXpDrops);
+check("pickup system exposes updateLootDrops", modulePickupSnapshot.exposesUpdateLootDrops);
+check("pickup system exposes updatePickupTexts", modulePickupSnapshot.exposesUpdatePickupTexts);
+check("pickup boss drops coin and heart", modulePickupSnapshot.bossDrop.types === "coin,heart");
+check("pickup boss drops use boss radii", modulePickupSnapshot.bossDrop.radii === "10,11");
+check("pickup boss coin value scales by floor", modulePickupSnapshot.bossDrop.coinValue === 27);
+check("pickup normal enemy deterministic coin drops", modulePickupSnapshot.normalDrop.types === "coin");
+check("pickup normal enemy uses normal radius", modulePickupSnapshot.normalDrop.radii === "7");
+check("pickup normal coin value scales by floor", modulePickupSnapshot.normalDrop.coinValue === 9);
+check("pickup XP drops collect XP", modulePickupSnapshot.xp.collectXpValue === 5);
+check("pickup XP drops add text", modulePickupSnapshot.xp.text === "+5 XP");
+check("pickup XP drops are removed after collection", modulePickupSnapshot.xp.remainingDrops === 0);
+check("pickup coin loot applies relic multiplier", modulePickupSnapshot.loot.coins === 25);
+check(
+  "pickup coin loot persists and renders meta",
+  modulePickupSnapshot.loot.persist === 1 && modulePickupSnapshot.loot.renderMeta === 1
+);
+check("pickup heart loot heals without exceeding max", modulePickupSnapshot.loot.playerHp === 100);
+check("pickup loot drops add pickup text", modulePickupSnapshot.loot.texts === "+15,+20 HP");
+check("pickup loot drops are removed after collection", modulePickupSnapshot.loot.remainingDrops === 0);
+check("pickup texts rise and expire", modulePickupSnapshot.texts.remaining === 1);
+check("pickup texts update y position", modulePickupSnapshot.texts.firstY === 86);
+
 check("module exports createRunLifecycle", typeof createModuleRunLifecycle === "function");
 check("bridge assigns globalThis.TapSurvivorRunLifecycle", Boolean(bridgeRunLifecycle));
 check("run lifecycle bridge source has generated banner", hasGeneratedBanner(runLifecycleBridge.source));
@@ -1467,6 +1514,128 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingError,
     missingInputError,
   };
+}
+
+function pickupSnapshot(createPickupSystem, mathRef) {
+  const save = { coins: 10 };
+  let game = createPickupGame();
+  let persistCount = 0;
+  let renderMetaCount = 0;
+  const collectedXp = [];
+  const system = createPickupSystem({
+    getGame: () => game,
+    getSave: () => save,
+    lootConfig: {
+      bossCoinBaseValue: 18,
+      coinFloorRewardRate: 0.125,
+      normalCoinBaseValue: 6,
+    },
+    getRelicSpecialEffects: () => ({ coinMultiplier: 0.5 }),
+    persist() {
+      persistCount += 1;
+    },
+    renderMeta() {
+      renderMetaCount += 1;
+    },
+    collectXp(value) {
+      collectedXp.push(value);
+    },
+    distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+    randomRange: () => 0,
+  });
+
+  game = createPickupGame();
+  system.spawnLootDrops({ boss: true, x: 30, y: 40 });
+  const bossDrop = dropSummary(game.lootDrops);
+
+  game = createPickupGame();
+  withPickupRandomSequence(mathRef, [0.1, 0.5], () => {
+    system.spawnLootDrops({ boss: false, x: 30, y: 40 });
+  });
+  const normalDrop = dropSummary(game.lootDrops);
+
+  game = createPickupGame();
+  game.xpDrops = [{ radius: 3, value: 5, x: 0, y: 0 }];
+  system.updateXpDrops(0.1);
+  const xp = {
+    collectXpValue: collectedXp[0],
+    remainingDrops: game.xpDrops.length,
+    text: game.pickupTexts[0]?.text,
+  };
+
+  game = createPickupGame();
+  game.lootDrops = [
+    { radius: 3, type: "coin", value: 10, x: 0, y: 0 },
+    { healPercent: 0.2, radius: 3, type: "heart", x: 0, y: 0 },
+  ];
+  system.updateLootDrops(0.1);
+  const loot = {
+    coins: save.coins,
+    persist: persistCount,
+    playerHp: game.player.hp,
+    remainingDrops: game.lootDrops.length,
+    renderMeta: renderMetaCount,
+    texts: game.pickupTexts.map((text) => text.text).join(","),
+  };
+
+  game = createPickupGame();
+  game.pickupTexts = [
+    { life: 0.6, maxLife: 0.85, text: "keep", x: 0, y: 100 },
+    { life: 0.1, maxLife: 0.85, text: "expire", x: 0, y: 60 },
+  ];
+  system.updatePickupTexts(0.5);
+  const texts = {
+    firstY: game.pickupTexts[0]?.y,
+    remaining: game.pickupTexts.length,
+  };
+
+  return {
+    bossDrop,
+    exposesSpawnLootDrops: typeof system.spawnLootDrops === "function",
+    exposesUpdateLootDrops: typeof system.updateLootDrops === "function",
+    exposesUpdatePickupTexts: typeof system.updatePickupTexts === "function",
+    exposesUpdateXpDrops: typeof system.updateXpDrops === "function",
+    loot,
+    normalDrop,
+    texts,
+    xp,
+  };
+}
+
+function createPickupGame() {
+  return {
+    lootDrops: [],
+    pickupTexts: [],
+    player: {
+      hp: 90,
+      maxHp: 100,
+      pickupRadius: 100,
+      radius: 10,
+      x: 0,
+      y: 0,
+    },
+    towerFloor: 5,
+    xpDrops: [],
+  };
+}
+
+function dropSummary(drops) {
+  return {
+    coinValue: drops.find((drop) => drop.type === "coin")?.value,
+    radii: drops.map((drop) => drop.radius).join(","),
+    types: drops.map((drop) => drop.type).join(","),
+  };
+}
+
+function withPickupRandomSequence(mathRef, values, callback) {
+  const previousRandom = mathRef.random;
+  let index = 0;
+  mathRef.random = () => values[index++] ?? values[values.length - 1];
+  try {
+    callback();
+  } finally {
+    mathRef.random = previousRandom;
+  }
 }
 
 function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {

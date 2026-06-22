@@ -27,6 +27,8 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/run-ui.js`: generated classic compatibility bridge for `TapSurvivorRunUi`; do not hand-edit it.
 - `src/modules/run-update.js`: real ES-module implementation for run ticking/player movement/XP updates.
 - `src/run-update.js`: generated classic compatibility bridge for `TapSurvivorRunUpdate`; do not hand-edit it.
+- `src/modules/pickups.js`: real ES-module implementation for XP/loot pickups and pickup text aging.
+- `src/pickups.js`: generated classic compatibility bridge for `TapSurvivorPickups`; do not hand-edit it.
 - `src/quests.js`: quest opening, completion, progress, and active quest weapon helpers.
 - `src/progression.js`: skill-tree gate checks and weapon/meta upgrade purchase handlers.
 - `src/modules/save.js`: real ES-module implementation for save-system orchestration, loading, storage orchestration, and persistence.
@@ -44,7 +46,6 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/ui.js`: DOM lookup helper for game UI elements.
 - `src/level-up.js`: level-up choice generation and level-up modal behavior.
 - `src/input.js`: canvas pointer/touch movement input binding.
-- `src/pickups.js`: XP, floor-scaled coin, and heart drop spawning, attraction, collection, and pickup text updates.
 - `src/shop.js`: coin shop rendering, floor-scaled and purchase-inflated prices, purchases, persistence, item sprites, run-start bonuses, in-run shop-tab rendering, and immediate in-run player stat bonuses.
 - `src/modules/shop-pricing.js`: real ES-module implementation for shop pricing logic.
 - `src/shop-pricing.js`: generated classic compatibility bridge for `TapSurvivorShopPricing`; do not hand-edit it.

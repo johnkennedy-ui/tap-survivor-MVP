@@ -17,6 +17,7 @@ Primary bootstrap coupling:
 - `src/run-state.js` is the generated classic bridge for run state/player reset construction.
 - `src/run-ui.js` is the generated classic bridge for run HUD/end-screen rendering.
 - `src/run-update.js` is the generated classic bridge for run ticking/player movement/XP updates.
+- `src/pickups.js` is the generated classic bridge for XP/loot pickup spawning, collection, and pickup text aging.
 - `index.html` script order remains the dependency graph until runtime modules are migrated.
 - `scripts/check-script-order.mjs` verifies the current script-order contract.
 
@@ -87,6 +88,7 @@ Current DOM/game coupling is concentrated in:
 - `src/modules/run-state.js` owns run state/player reset construction; `src/run-state.js` is the generated classic bridge.
 - `src/modules/run-ui.js` owns run HUD/end-screen rendering; `src/run-ui.js` is the generated classic bridge.
 - `src/modules/run-update.js` owns run ticking/player movement/XP updates; `src/run-update.js` is the generated classic bridge.
+- `src/modules/pickups.js` owns XP/loot pickup spawning, collection, and pickup text aging; `src/pickups.js` is the generated classic bridge.
 - `src/game.js`, which passes game/save/system references into UI, runtime, combat, shop, relic, and render systems.
 
 ## Guard Policy
