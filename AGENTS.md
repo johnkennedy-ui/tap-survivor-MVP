@@ -42,8 +42,10 @@ Before editing this repo:
     `src/modules/save-defaults.js` owns default save construction; `src/save-defaults.js` is a generated compatibility bridge.
     `src/modules/save-migrations.js` owns save migration implementation; `src/save-migrations.js` is a generated compatibility bridge.
     `src/modules/save-normalize.js` owns save normalization implementation; `src/save-normalize.js` is a generated compatibility bridge.
+    `src/modules/save.js` owns save-system orchestration; `src/save.js` is a generated compatibility bridge.
     Keep save consumers on `globalThis.TapSurvivorSaveMigrations` and `globalThis.TapSurvivorSaveNormalize` for now.
-    Do not hand-edit generated save bridges or change save defaults, migrations, normalization semantics, corrupt-save backup, or storage behavior while moving these bridges.
+    Keep `game.js` on `globalThis.TapSurvivorSave.createSaveSystem` until a separate runtime-entry migration.
+    Do not hand-edit generated save bridges or change save defaults, migrations, normalization semantics, corrupt-save backup, storage behavior, persistence semantics, or runtime initialization while moving these bridges.
     `src/modules/weapon-cooldowns.js` owns weapon cooldown/stat-scaling implementation; `src/weapon-cooldowns.js` is a generated compatibility bridge.
     `src/modules/weapon-projectiles.js` owns projectile weapon implementation; `src/weapon-projectiles.js` is a generated compatibility bridge.
     `src/modules/weapon-targeting.js` owns weapon-targeting implementation; `src/weapon-targeting.js` is a generated compatibility bridge.

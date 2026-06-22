@@ -45,6 +45,12 @@ const bridges = [
     exports: ["arrayValue", "createSaveNormalizer", "objectValue"],
   },
   {
+    source: "src/modules/save.js",
+    target: "src/save.js",
+    globalName: "TapSurvivorSave",
+    exports: ["createSaveSystem"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",

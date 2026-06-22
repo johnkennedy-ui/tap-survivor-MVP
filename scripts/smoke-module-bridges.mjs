@@ -22,6 +22,7 @@ import {
 } from "../src/modules/save-defaults.js";
 globalThis["TapSurvivorSaveDefaults"] = {
   CURRENT_SAVE_VERSION: moduleCurrentSaveVersion,
+  createDefaultSave: createModuleDefaultSave,
 };
 const { isPlainObject: moduleIsPlainObject, migrateSave: moduleMigrateSave } = await import(
   "../src/modules/save-migrations.js"
@@ -35,6 +36,15 @@ const {
   createSaveNormalizer: createModuleSaveNormalizer,
   objectValue: moduleObjectValue,
 } = await import("../src/modules/save-normalize.js");
+globalThis["TapSurvivorSaveNormalize"] = {
+  arrayValue: moduleArrayValue,
+  createSaveNormalizer: createModuleSaveNormalizer,
+  objectValue: moduleObjectValue,
+};
+globalThis["TapSurvivorSaveCorruption"] = {
+  createSaveLoadHandler: createModuleSaveLoadHandler,
+};
+const { createSaveSystem: createModuleSaveSystem } = await import("../src/modules/save.js");
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
 import {
@@ -55,6 +65,12 @@ const saveNormalizeBridge = loadBridge("../src/save-normalize.js", "src/save-nor
   TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
   TapSurvivorSaveMigrations: saveMigrationsBridge.context.TapSurvivorSaveMigrations,
 });
+const saveBridge = loadBridge("../src/save.js", "src/save.js", {
+  TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
+  TapSurvivorSaveMigrations: saveMigrationsBridge.context.TapSurvivorSaveMigrations,
+  TapSurvivorSaveNormalize: saveNormalizeBridge.context.TapSurvivorSaveNormalize,
+  TapSurvivorSaveCorruption: saveCorruptionBridge.context.TapSurvivorSaveCorruption,
+});
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -68,6 +84,7 @@ const bridgeSaveCorruption = saveCorruptionBridge.context.TapSurvivorSaveCorrupt
 const bridgeSaveDefaults = saveDefaultsBridge.context.TapSurvivorSaveDefaults;
 const bridgeSaveMigrations = saveMigrationsBridge.context.TapSurvivorSaveMigrations;
 const bridgeSaveNormalize = saveNormalizeBridge.context.TapSurvivorSaveNormalize;
+const bridgeSave = saveBridge.context.TapSurvivorSave;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
@@ -475,6 +492,41 @@ check(
   "positive upgrade tiers open linked quests",
   moduleNormalizeSnapshot.complex.activeQuests.includes("speed_quest") &&
     moduleNormalizeSnapshot.complex.activeQuests.includes("upgrade_quest")
+);
+
+check("module exports createSaveSystem", typeof createModuleSaveSystem === "function");
+check("bridge assigns globalThis.TapSurvivorSave", Boolean(bridgeSave));
+check("save bridge source has generated banner", hasGeneratedBanner(saveBridge.source));
+check("bridge exposes createSaveSystem", typeof bridgeSave?.createSaveSystem === "function");
+const moduleSaveSystemSnapshot = saveSystemSnapshot(createModuleSaveSystem, globalThis);
+const bridgeSaveSystemSnapshot = saveSystemSnapshot(bridgeSave.createSaveSystem, saveBridge.context);
+check(
+  "module and bridge save system output match",
+  JSON.stringify(moduleSaveSystemSnapshot) === JSON.stringify(bridgeSaveSystemSnapshot)
+);
+check(
+  "defaultSave parity fixture keeps starter quest",
+  JSON.stringify(moduleSaveSystemSnapshot.defaultSave.activeQuests) === JSON.stringify(["starter"])
+);
+check("normalizeSave parity fixture clamps coins", moduleSaveSystemSnapshot.normalized.coins === 9);
+check("loadSave handles valid raw saves", moduleSaveSystemSnapshot.validLoad.coins === 7);
+check("loadSave handles corrupt raw saves", moduleSaveSystemSnapshot.corruptLoad.coins === 0);
+check("corrupt load warning delegates", moduleSaveSystemSnapshot.corruptWarning === "corrupt-save");
+check("corrupt load backs up raw value", moduleSaveSystemSnapshot.corruptBackups[0] === "{bad");
+check("storage read failure returns default", moduleSaveSystemSnapshot.failedLoad.coins === 0);
+check("storage read failure warning delegates", moduleSaveSystemSnapshot.failedWarning === "storage-read-failed");
+check("persist writes JSON through storage adapter", moduleSaveSystemSnapshot.persistWrites.length === 1);
+check(
+  "persist refreshes unlockedUpgrades",
+  JSON.stringify(moduleSaveSystemSnapshot.persistSave.unlockedUpgrades) === JSON.stringify(["damage"])
+);
+check("removeSave delegates to storage adapter", moduleSaveSystemSnapshot.removed === true);
+check("provided storage adapter bypasses fallback factory", moduleSaveSystemSnapshot.providedFallbackCalls === 0);
+check("fallback storage factory is called", moduleSaveSystemSnapshot.fallbackCalls.length === 1);
+check(
+  "fallback storage receives save keys",
+  JSON.stringify(moduleSaveSystemSnapshot.fallbackCalls[0]) ===
+    JSON.stringify({ saveKey: "save-key", legacySaveKey: "legacy-key" })
 );
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
@@ -1221,6 +1273,128 @@ function saveNormalizeSnapshot(createSaveNormalizer) {
       completedQuests: ["completed"],
       questProgress: [],
     }),
+  };
+}
+
+function saveSystemSnapshot(createSaveSystem, globalScope) {
+  const fallbackCalls = [];
+  const fallbackStorage = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 5 }));
+  const previousStorage = globalScope.TapSurvivorStorage;
+  globalScope.TapSurvivorStorage = {
+    createStorageAdapter(options) {
+      fallbackCalls.push(options);
+      return fallbackStorage;
+    },
+  };
+
+  const providedStorage = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 7 }));
+  const system = createSaveSystem({
+    ...createSaveSystemFixture(),
+    storageAdapter: providedStorage,
+  });
+  const defaultSave = system.defaultSave();
+  const normalized = system.normalizeSave({
+    coins: 9.8,
+    towerFloor: 2,
+    unlockedWeapons: [],
+    upgradeTiers: {},
+  });
+  const validLoad = system.loadSave();
+
+  const corruptStorage = createStorageFixture("{bad");
+  const corruptSystem = createSaveSystem({
+    ...createSaveSystemFixture(),
+    storageAdapter: corruptStorage,
+  });
+  const corruptLoad = corruptSystem.loadSave();
+  const corruptWarning = corruptSystem.getLastLoadWarning();
+
+  const failedStorage = createStorageFixture(null, { failRead: true });
+  const failedSystem = createSaveSystem({
+    ...createSaveSystemFixture(),
+    storageAdapter: failedStorage,
+  });
+  const failedLoad = failedSystem.loadSave();
+  const failedWarning = failedSystem.getLastLoadWarning();
+
+  const persistSave = {
+    ...defaultSave,
+    upgradeTiers: { damage: 2, speed: 0 },
+    unlockedUpgrades: [],
+  };
+  const persistResult = system.persist(persistSave);
+  const removed = system.removeSave();
+  const providedFallbackCalls = fallbackCalls.length;
+
+  const fallbackSystem = createSaveSystem(createSaveSystemFixture());
+  const fallbackDefault = fallbackSystem.defaultSave();
+
+  if (previousStorage === undefined) {
+    delete globalScope.TapSurvivorStorage;
+  } else {
+    globalScope.TapSurvivorStorage = previousStorage;
+  }
+
+  return {
+    defaultSave,
+    normalized,
+    validLoad,
+    corruptLoad,
+    corruptWarning,
+    corruptBackups: corruptStorage.backups,
+    failedLoad,
+    failedWarning,
+    persistResult,
+    persistSave,
+    persistWrites: providedStorage.writes,
+    removed,
+    removeCount: providedStorage.removeCount,
+    providedFallbackCalls,
+    fallbackCalls,
+    fallbackDefault,
+  };
+}
+
+function createSaveSystemFixture() {
+  return {
+    saveKey: "save-key",
+    legacySaveKey: "legacy-key",
+    starterQuestIds: ["starter"],
+    questDefs: {
+      starter: {},
+      completed: { opens: ["follow"] },
+      follow: {},
+      weapon_quest: {},
+      damage_quest: {},
+    },
+    weaponUnlocks: [{ id: "node_laser", opensQuest: "weapon_quest" }],
+    upgradeDefs: [{ id: "damage", opensQuest: "damage_quest" }],
+    shopItemDefs: [{ id: "boots", maxTier: 2 }],
+    questOpenIds: (quest) => quest?.opens || [],
+  };
+}
+
+function createStorageFixture(raw, options = {}) {
+  return {
+    backups: [],
+    removeCount: 0,
+    writes: [],
+    getSaveRaw() {
+      if (options.failRead) throw new Error("storage read failed");
+      return raw;
+    },
+    setCorruptBackupRaw(value) {
+      this.backups.push(value);
+      return true;
+    },
+    setSaveRaw(value) {
+      this.writes.push(value);
+      return true;
+    },
+    removeSaveRaw() {
+      this.removeCount += 1;
+      return true;
+    },
   };
 }
 

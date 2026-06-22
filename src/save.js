@@ -1,4 +1,9 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/save.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
   const { createDefaultSave } = globalThis.TapSurvivorSaveDefaults;
 
   const { migrateSave } = globalThis.TapSurvivorSaveMigrations;
