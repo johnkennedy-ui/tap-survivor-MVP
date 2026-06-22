@@ -59,6 +59,7 @@ const fullChecks = [
   ["node", ["--check", "src/modules/save.js"]],
   ["node", ["--check", "src/modules/game-dependencies.js"]],
   ["node", ["--check", "src/modules/game-runtime.js"]],
+  ["node", ["--check", "src/modules/run-lifecycle.js"]],
   ["node", ["--check", "src/modules/shop-pricing.js"]],
   ["node", ["--check", "src/modules/weapon-cooldowns.js"]],
   ["node", ["--check", "src/modules/weapon-projectiles.js"]],

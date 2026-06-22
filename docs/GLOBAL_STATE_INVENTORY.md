@@ -13,6 +13,7 @@ The runtime currently uses a script-order global namespace instead of ES module 
 Primary bootstrap coupling:
 - `src/game-dependencies.js` collects the `TapSurvivor*` dependency bag for `src/game.js`, including `TapSurvivorInput.bindMovementInput`.
 - `src/game.js` wires the run from that dependency bag and holds top-level run state.
+- `src/run-lifecycle.js` is the generated classic bridge for run start/end/boss-clear behavior.
 - `index.html` script order remains the dependency graph until runtime modules are migrated.
 - `scripts/check-script-order.mjs` verifies the current script-order contract.
 
@@ -79,6 +80,7 @@ Current DOM/game coupling is concentrated in:
 - `src/input.js` for canvas/keyboard/touch/mouse binding.
 - `src/modules/game-runtime.js` owns the runtime controller implementation and receives input binding through dependency injection.
   `src/game-runtime.js` is the generated classic bridge until the browser entrypoint migrates away from script-order globals.
+- `src/modules/run-lifecycle.js` owns run lifecycle behavior; `src/run-lifecycle.js` is the generated classic bridge.
 - `src/game.js`, which passes game/save/system references into UI, runtime, combat, shop, relic, and render systems.
 
 ## Guard Policy

@@ -92,6 +92,12 @@ const bridges = [
     globalName: "TapSurvivorGameDependencies",
     exports: ["createGameDependencyBag"],
   },
+  {
+    source: "src/modules/run-lifecycle.js",
+    target: "src/run-lifecycle.js",
+    globalName: "TapSurvivorRunLifecycle",
+    exports: ["createRunLifecycle"],
+  },
 ];
 
 for (const bridge of bridges) {

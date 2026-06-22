@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
 import {
   choiceId as moduleChoiceId,
   shopFocusBonus as moduleShopFocusBonus,
@@ -80,6 +81,7 @@ const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cool
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
+const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecycle.js");
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
@@ -96,6 +98,7 @@ const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldo
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
+const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -857,6 +860,42 @@ check(
   "dependency bag reports missing input binder",
   moduleGameDependenciesSnapshot.missingInputError.includes("TapSurvivorInput.bindMovementInput")
 );
+
+check("module exports createRunLifecycle", typeof createModuleRunLifecycle === "function");
+check("bridge assigns globalThis.TapSurvivorRunLifecycle", Boolean(bridgeRunLifecycle));
+check("run lifecycle bridge source has generated banner", hasGeneratedBanner(runLifecycleBridge.source));
+check(
+  "bridge exposes createRunLifecycle",
+  typeof bridgeRunLifecycle?.createRunLifecycle === "function"
+);
+
+const moduleRunLifecycleSnapshot = runLifecycleSnapshot(createModuleRunLifecycle, globalThis);
+const bridgeRunLifecycleSnapshot = runLifecycleSnapshot(
+  bridgeRunLifecycle.createRunLifecycle,
+  runLifecycleBridge.context
+);
+check(
+  "module and bridge run lifecycle output match",
+  JSON.stringify(moduleRunLifecycleSnapshot) === JSON.stringify(bridgeRunLifecycleSnapshot)
+);
+check("run lifecycle start closes start flow", moduleRunLifecycleSnapshot.start.closeStartFlow === 1);
+check("run lifecycle start closes shop", moduleRunLifecycleSnapshot.start.closeShop === 1);
+check("run lifecycle start hides end screen", moduleRunLifecycleSnapshot.start.hideEndScreen === 1);
+check("run lifecycle start hides level-up UI", moduleRunLifecycleSnapshot.start.levelUpHidden);
+check("run lifecycle start closes run menu", moduleRunLifecycleSnapshot.start.closeRunMenuArg === false);
+check("run lifecycle start resets game state", moduleRunLifecycleSnapshot.start.resetGameState === 1);
+check("run lifecycle start waits for first movement", moduleRunLifecycleSnapshot.start.awaitingFirstMoveInput);
+check("run lifecycle start shows movement gate banner", moduleRunLifecycleSnapshot.start.showMovementGateBanner === 1);
+check("run lifecycle end with no game is no-op", moduleRunLifecycleSnapshot.noGame.noOp);
+check("run lifecycle end stops game", moduleRunLifecycleSnapshot.end.running === false);
+check("run lifecycle end stores reason", moduleRunLifecycleSnapshot.end.endReason === "defeat");
+check("run lifecycle end shows end screen", moduleRunLifecycleSnapshot.end.showEndScreenReason === "defeat");
+check("run lifecycle end persists once", moduleRunLifecycleSnapshot.end.persist === 1);
+check("run lifecycle end renders meta", moduleRunLifecycleSnapshot.end.renderMeta === 1);
+check("run lifecycle boss clear opens relic choice", moduleRunLifecycleSnapshot.relic.choiceVisible);
+check("run lifecycle relic click advances tower floor", moduleRunLifecycleSnapshot.relic.saveTowerFloor === 6);
+check("run lifecycle relic click records floor clear", moduleRunLifecycleSnapshot.relic.lastFloorClearFloor === 5);
+check("run lifecycle relic click updates HUD", moduleRunLifecycleSnapshot.relic.updateRunHud === 1);
 if (hadPreviousContent) {
   Reflect.set(globalThis, "TapSurvivorContent", previousContent);
 } else {
@@ -1303,6 +1342,240 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,
+  };
+}
+
+function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
+  const previousDocument = Reflect.get(runtimeGlobal, "document");
+  const hadDocument = Reflect.has(runtimeGlobal, "document");
+  const calls = {
+    closeRunMenu: [],
+    closeShop: 0,
+    closeStartFlow: 0,
+    hideEndScreen: 0,
+    levelUpHidden: false,
+    persist: 0,
+    relicChoiceHidden: false,
+    relicChoiceVisible: false,
+    renderMeta: 0,
+    resetGameState: 0,
+    showEndScreen: [],
+    showMovementGateBanner: 0,
+    updateRunHud: 0,
+  };
+  const clickedButtons = [];
+  const documentRef = {
+    createElement(tagName) {
+      const listeners = new Map();
+      const button = {
+        tagName,
+        className: "",
+        innerHTML: "",
+        style: {
+          values: {},
+          setProperty(name, value) {
+            this.values[name] = value;
+          },
+        },
+        addEventListener(type, handler) {
+          listeners.set(type, handler);
+        },
+        click() {
+          listeners.get("click")?.();
+        },
+      };
+      clickedButtons.push(button);
+      return button;
+    },
+  };
+  Reflect.set(runtimeGlobal, "document", documentRef);
+
+  function createFixture(initialGame) {
+    let game = initialGame;
+    const save = { towerFloor: 5 };
+    const resetGames = [];
+    const ui = {
+      levelUp: {
+        classList: {
+          add(name) {
+            if (name === "hidden") calls.levelUpHidden = true;
+          },
+        },
+      },
+      relicChoice: {
+        classList: {
+          add(name) {
+            if (name === "hidden") calls.relicChoiceHidden = true;
+          },
+          remove(name) {
+            if (name === "hidden") calls.relicChoiceVisible = true;
+          },
+        },
+      },
+      relicChoiceText: { textContent: "" },
+      relicChoiceTitle: { textContent: "" },
+      relicChoices: {
+        children: [],
+        innerHTML: "stale",
+        appendChild(button) {
+          this.children.push(button);
+        },
+      },
+    };
+    const controller = createRunLifecycle({
+      ui,
+      getGame: () => game,
+      getSave: () => save,
+      resetGameState: () => {
+        calls.resetGameState += 1;
+        game = {
+          awaitingFirstMoveInput: false,
+          lastFloorClear: null,
+          paused: false,
+          player: { equippedWeapons: ["spark_bolt"] },
+          running: true,
+          towerFloor: 5,
+        };
+        resetGames.push(game);
+        return game;
+      },
+      shopSystem: {
+        closeShop() {
+          calls.closeShop += 1;
+        },
+      },
+      shellUi: {
+        closeRunMenu(value) {
+          calls.closeRunMenu.push(value);
+        },
+        closeStartFlow() {
+          calls.closeStartFlow += 1;
+        },
+      },
+      runUi: {
+        hideEndScreen() {
+          calls.hideEndScreen += 1;
+        },
+        showEndScreen(reason) {
+          calls.showEndScreen.push(reason);
+        },
+      },
+      relicSystem: {
+        relicChoices() {
+          return [
+            {
+              backgroundColor: "#193c2b",
+              description: "Adds a test relic.",
+              iconPath: "test-relic.png",
+              name: "Test Relic",
+              rarity: "green",
+              specialAbility: {
+                description: "Test special.",
+                label: "Special",
+              },
+            },
+          ];
+        },
+        grantRelic() {
+          return { name: "Test Relic" };
+        },
+      },
+      persist() {
+        calls.persist += 1;
+      },
+      renderMeta() {
+        calls.renderMeta += 1;
+      },
+      updateRunHud() {
+        calls.updateRunHud += 1;
+      },
+      showMovementGateBanner() {
+        calls.showMovementGateBanner += 1;
+      },
+    });
+    return { controller, getGame: () => game, resetGames, save, ui };
+  }
+
+  const startFixture = createFixture({
+    awaitingFirstMoveInput: false,
+    paused: false,
+    player: { equippedWeapons: ["spark_bolt"] },
+    running: false,
+    towerFloor: 5,
+  });
+  startFixture.controller.startRun();
+  const startedGame = startFixture.getGame();
+  const startSnapshot = {
+    awaitingFirstMoveInput: startedGame.awaitingFirstMoveInput,
+    closeRunMenuArg: calls.closeRunMenu.at(-1),
+    closeShop: calls.closeShop,
+    closeStartFlow: calls.closeStartFlow,
+    hideEndScreen: calls.hideEndScreen,
+    levelUpHidden: calls.levelUpHidden,
+    resetGameState: calls.resetGameState,
+    showMovementGateBanner: calls.showMovementGateBanner,
+  };
+
+  const noGameCallStart = {
+    persist: calls.persist,
+    renderMeta: calls.renderMeta,
+    showEndScreen: calls.showEndScreen.length,
+  };
+  createFixture(null).controller.endRun("timeout");
+  const noGameSnapshot = {
+    noOp:
+      calls.persist === noGameCallStart.persist &&
+      calls.renderMeta === noGameCallStart.renderMeta &&
+      calls.showEndScreen.length === noGameCallStart.showEndScreen,
+  };
+
+  const endFixture = createFixture({
+    player: { equippedWeapons: ["spark_bolt"] },
+    running: true,
+    towerFloor: 5,
+  });
+  const persistBeforeEnd = calls.persist;
+  const renderMetaBeforeEnd = calls.renderMeta;
+  endFixture.controller.endRun("defeat");
+  const endedGame = endFixture.getGame();
+  const endSnapshot = {
+    endReason: endedGame.endReason,
+    persist: calls.persist - persistBeforeEnd,
+    renderMeta: calls.renderMeta - renderMetaBeforeEnd,
+    running: endedGame.running,
+    showEndScreenReason: calls.showEndScreen.at(-1),
+  };
+
+  const relicFixture = createFixture({
+    paused: false,
+    player: { equippedWeapons: ["spark_bolt"] },
+    running: true,
+    towerFloor: 5,
+  });
+  const updateBeforeRelic = calls.updateRunHud;
+  relicFixture.controller.advanceTowerFloor();
+  const choiceVisible = calls.relicChoiceVisible && relicFixture.ui.relicChoices.children.length === 1;
+  relicFixture.ui.relicChoices.children[0]?.click();
+  relicFixture.ui.relicChoices.children[1]?.click();
+  const relicGame = relicFixture.getGame();
+  const relicSnapshot = {
+    choiceVisible,
+    lastFloorClearFloor: relicGame.lastFloorClear?.floor,
+    saveTowerFloor: relicFixture.save.towerFloor,
+    updateRunHud: calls.updateRunHud - updateBeforeRelic,
+  };
+
+  if (hadDocument) {
+    Reflect.set(runtimeGlobal, "document", previousDocument);
+  } else {
+    Reflect.deleteProperty(runtimeGlobal, "document");
+  }
+
+  return {
+    end: endSnapshot,
+    noGame: noGameSnapshot,
+    relic: relicSnapshot,
+    start: startSnapshot,
   };
 }
 
