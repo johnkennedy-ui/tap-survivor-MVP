@@ -39,6 +39,12 @@ const bridges = [
     exports: ["isPlainObject", "migrateSave"],
   },
   {
+    source: "src/modules/save-normalize.js",
+    target: "src/save-normalize.js",
+    globalName: "TapSurvivorSaveNormalize",
+    exports: ["arrayValue", "createSaveNormalizer", "objectValue"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",

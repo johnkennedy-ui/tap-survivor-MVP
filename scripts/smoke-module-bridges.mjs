@@ -26,6 +26,15 @@ globalThis["TapSurvivorSaveDefaults"] = {
 const { isPlainObject: moduleIsPlainObject, migrateSave: moduleMigrateSave } = await import(
   "../src/modules/save-migrations.js"
 );
+globalThis["TapSurvivorSaveMigrations"] = {
+  isPlainObject: moduleIsPlainObject,
+  migrateSave: moduleMigrateSave,
+};
+const {
+  arrayValue: moduleArrayValue,
+  createSaveNormalizer: createModuleSaveNormalizer,
+  objectValue: moduleObjectValue,
+} = await import("../src/modules/save-normalize.js");
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
 import {
@@ -42,6 +51,10 @@ const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defau
 const saveMigrationsBridge = loadBridge("../src/save-migrations.js", "src/save-migrations.js", {
   TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
 });
+const saveNormalizeBridge = loadBridge("../src/save-normalize.js", "src/save-normalize.js", {
+  TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
+  TapSurvivorSaveMigrations: saveMigrationsBridge.context.TapSurvivorSaveMigrations,
+});
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -54,6 +67,7 @@ const bridgeMapSystem = mapBridge.context.TapSurvivorMapSystem;
 const bridgeSaveCorruption = saveCorruptionBridge.context.TapSurvivorSaveCorruption;
 const bridgeSaveDefaults = saveDefaultsBridge.context.TapSurvivorSaveDefaults;
 const bridgeSaveMigrations = saveMigrationsBridge.context.TapSurvivorSaveMigrations;
+const bridgeSaveNormalize = saveNormalizeBridge.context.TapSurvivorSaveNormalize;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
@@ -381,6 +395,86 @@ check(
 check(
   "module and bridge migration output match",
   JSON.stringify(moduleMigrationResults) === JSON.stringify(bridgeMigrationResults)
+);
+
+check("module exports arrayValue", typeof moduleArrayValue === "function");
+check("module exports objectValue", typeof moduleObjectValue === "function");
+check("module exports createSaveNormalizer", typeof createModuleSaveNormalizer === "function");
+check("bridge assigns globalThis.TapSurvivorSaveNormalize", Boolean(bridgeSaveNormalize));
+check(
+  "save normalize bridge source has generated banner",
+  hasGeneratedBanner(saveNormalizeBridge.source)
+);
+for (const exportName of ["arrayValue", "createSaveNormalizer", "objectValue"]) {
+  check(`bridge exposes save normalize ${exportName}`, typeof bridgeSaveNormalize?.[exportName] === "function");
+}
+check("arrayValue returns arrays", moduleArrayValue(["alpha"])[0] === "alpha");
+check("arrayValue falls back to empty array", JSON.stringify(moduleArrayValue("alpha")) === JSON.stringify([]));
+check("objectValue returns plain objects", moduleObjectValue({ alpha: 1 }).alpha === 1);
+check("objectValue falls back to empty object", JSON.stringify(moduleObjectValue([])) === JSON.stringify({}));
+check(
+  "module and bridge save normalize helper output match",
+  JSON.stringify([
+    moduleArrayValue(["alpha"]),
+    moduleArrayValue("alpha"),
+    moduleObjectValue({ alpha: 1 }),
+    moduleObjectValue([]),
+  ]) ===
+    JSON.stringify([
+      bridgeSaveNormalize.arrayValue(["alpha"]),
+      bridgeSaveNormalize.arrayValue("alpha"),
+      bridgeSaveNormalize.objectValue({ alpha: 1 }),
+      bridgeSaveNormalize.objectValue([]),
+    ])
+);
+
+const moduleNormalizeSnapshot = saveNormalizeSnapshot(createModuleSaveNormalizer);
+const bridgeNormalizeSnapshot = saveNormalizeSnapshot(bridgeSaveNormalize.createSaveNormalizer);
+check(
+  "module and bridge normalizeSave output match",
+  JSON.stringify(moduleNormalizeSnapshot) === JSON.stringify(bridgeNormalizeSnapshot)
+);
+check("invalid input normalizes to current save version", moduleNormalizeSnapshot.invalid.saveVersion === 3);
+check("invalid input normalizes to default save coins", moduleNormalizeSnapshot.invalid.coins === 0);
+check("coins are floored and clamped", moduleNormalizeSnapshot.complex.coins === 0);
+check("towerFloor is floored and clamped", moduleNormalizeSnapshot.complex.towerFloor === 2);
+check(
+  "unlockedWeapons includes spark bolt and dedupes",
+  JSON.stringify(moduleNormalizeSnapshot.complex.unlockedWeapons) === JSON.stringify(["spark_bolt", "laser"])
+);
+check(
+  "seenBanners array normalizes and dedupes",
+  JSON.stringify(moduleNormalizeSnapshot.complex.seenBanners) === JSON.stringify(["intro", "boss"])
+);
+check(
+  "unlockedRelics dedupe",
+  JSON.stringify(moduleNormalizeSnapshot.complex.unlockedRelics) ===
+    JSON.stringify(["r1", "r2", "r3", "r4", "r5", "r6"])
+);
+check(
+  "equippedRelics dedupe filter and cap",
+  JSON.stringify(moduleNormalizeSnapshot.complex.equippedRelics) ===
+    JSON.stringify(["r1", "r2", "r3", "r4", "r5"])
+);
+check(
+  "shopPurchases clamp tiers and drop unknown items",
+  JSON.stringify(moduleNormalizeSnapshot.complex.shopPurchases) === JSON.stringify({ boots: 2, orb: 1 })
+);
+check("default starter quests are ensured open", moduleNormalizeSnapshot.complex.activeQuests.includes("starter"));
+check("completed quests open follow-up quests", moduleNormalizeSnapshot.complex.activeQuests.includes("follow"));
+check(
+  "unlocked weapon nodes open linked quests",
+  moduleNormalizeSnapshot.complex.activeQuests.includes("weapon_quest")
+);
+check("unlocked upgrades backfill upgrade tiers", moduleNormalizeSnapshot.complex.upgradeTiers.damage === 1);
+check(
+  "positive upgrade tiers populate unlockedUpgrades",
+  JSON.stringify(moduleNormalizeSnapshot.complex.unlockedUpgrades.sort()) === JSON.stringify(["damage", "speed"])
+);
+check(
+  "positive upgrade tiers open linked quests",
+  moduleNormalizeSnapshot.complex.activeQuests.includes("speed_quest") &&
+    moduleNormalizeSnapshot.complex.activeQuests.includes("upgrade_quest")
 );
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
@@ -1068,6 +1162,65 @@ function runStorageReadFailedCase(createSaveLoadHandler) {
     initialWarning,
     result,
     warning: handler.getLastLoadWarning(),
+  };
+}
+
+function saveNormalizeSnapshot(createSaveNormalizer) {
+  const questDefs = {
+    starter: {},
+    completed: { opens: ["follow"] },
+    follow: {},
+    weapon_quest: {},
+    upgrade_quest: {},
+    speed_quest: {},
+  };
+  const normalizer = createSaveNormalizer({
+    defaultSave: () => ({
+      saveVersion: 3,
+      coins: 0,
+      towerFloor: 1,
+      unlockedWeapons: ["spark_bolt"],
+      unlockedNodes: [],
+      upgradeTiers: {},
+      unlockedUpgrades: [],
+      shopPurchases: {},
+      seenBanners: [],
+      unlockedRelics: [],
+      equippedRelics: [],
+      activeQuests: ["starter"],
+      completedQuests: [],
+      questProgress: {},
+    }),
+    questDefs,
+    weaponUnlocks: [{ id: "node_laser", opensQuest: "weapon_quest" }],
+    upgradeDefs: [
+      { id: "damage", opensQuest: "upgrade_quest" },
+      { id: "speed", opensQuest: "speed_quest" },
+    ],
+    shopItemById: new Map([
+      ["boots", { id: "boots", maxTier: 2 }],
+      ["orb", { id: "orb", maxTier: 1 }],
+    ]),
+    questOpenIds: (quest) => quest?.opens || [],
+  });
+
+  return {
+    invalid: normalizer.normalizeSave(null),
+    complex: normalizer.normalizeSave({
+      coins: -3.4,
+      towerFloor: 2.9,
+      unlockedWeapons: ["laser", "spark_bolt", "laser"],
+      unlockedNodes: ["node_laser"],
+      upgradeTiers: { speed: 2 },
+      unlockedUpgrades: ["damage"],
+      shopPurchases: { boots: 4, orb: 1, unknown: 3 },
+      seenBanners: ["intro", "intro", "boss"],
+      unlockedRelics: ["r1", "r1", "r2", "r3", "r4", "r5", "r6"],
+      equippedRelics: ["r1", "missing", "r2", "r2", "r3", "r4", "r5", "r6"],
+      activeQuests: [],
+      completedQuests: ["completed"],
+      questProgress: [],
+    }),
   };
 }
 
