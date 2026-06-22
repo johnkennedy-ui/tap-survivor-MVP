@@ -20,10 +20,15 @@
     debugSystem,
     spriteSystem,
     bannerSystem,
+    bindMovementInput,
     persist,
     renderMeta,
     loop,
   }) {
+    if (typeof bindMovementInput !== "function") {
+      throw new Error("Missing Tap Survivor runtime dependency: bindMovementInput must be a function");
+    }
+
     let gameSpeed = 1;
 
     function getGameSpeed() {
@@ -68,7 +73,7 @@
       setGameSpeed(1);
       bindLifecycleFlush();
 
-      globalThis.TapSurvivorInput.bindMovementInput({
+      bindMovementInput({
         canvas,
         getGame,
       });

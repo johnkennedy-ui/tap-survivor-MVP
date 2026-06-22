@@ -779,15 +779,38 @@ check(
 check("bridge assigns globalThis.TapSurvivorGameRuntime", Boolean(bridgeGameRuntime));
 check("game runtime bridge source has generated banner", hasGeneratedBanner(gameRuntimeBridge.source));
 check(
+  "game runtime module does not read TapSurvivorInput directly",
+  !readFileSync(new URL("../src/modules/game-runtime.js", import.meta.url), "utf8").includes(
+    "globalThis.TapSurvivorInput"
+  )
+);
+check(
   "bridge exposes createGameRuntimeController",
   typeof bridgeGameRuntime?.createGameRuntimeController === "function"
 );
 
-const moduleGameRuntimeSnapshot = gameRuntimeSnapshot(createModuleGameRuntimeController, globalThis);
-const bridgeGameRuntimeSnapshot = gameRuntimeSnapshot(
-  bridgeGameRuntime.createGameRuntimeController,
-  gameRuntimeBridge.context
+const moduleGameRuntimeErrors = gameRuntimeDependencyErrors(createModuleGameRuntimeController);
+check(
+  "module game runtime reports missing bindMovementInput",
+  moduleGameRuntimeErrors.missing.includes("bindMovementInput")
 );
+check(
+  "module game runtime rejects non-function bindMovementInput",
+  moduleGameRuntimeErrors.invalid.includes("bindMovementInput")
+);
+
+const bridgeGameRuntimeErrors = gameRuntimeDependencyErrors(bridgeGameRuntime.createGameRuntimeController);
+check(
+  "bridge game runtime reports missing bindMovementInput",
+  bridgeGameRuntimeErrors.missing.includes("bindMovementInput")
+);
+check(
+  "bridge game runtime rejects non-function bindMovementInput",
+  bridgeGameRuntimeErrors.invalid.includes("bindMovementInput")
+);
+
+const moduleGameRuntimeSnapshot = gameRuntimeSnapshot(createModuleGameRuntimeController);
+const bridgeGameRuntimeSnapshot = gameRuntimeSnapshot(bridgeGameRuntime.createGameRuntimeController);
 check(
   "module and bridge game runtime output match",
   JSON.stringify(moduleGameRuntimeSnapshot) === JSON.stringify(bridgeGameRuntimeSnapshot)
@@ -799,6 +822,8 @@ check("game runtime speed setter rejects unsupported values", moduleGameRuntimeS
 check("game runtime reset clears game state", moduleGameRuntimeSnapshot.gameAfterReset === null);
 check("game runtime reset persists once", moduleGameRuntimeSnapshot.persistCount === 2);
 check("game runtime binds movement input", moduleGameRuntimeSnapshot.movementBinds === 1);
+check("game runtime passes canvas to injected input", moduleGameRuntimeSnapshot.movementCanvasWidth === 960);
+check("game runtime passes getGame to injected input", moduleGameRuntimeSnapshot.movementGetGameRunning === true);
 check("game runtime schedules loop", moduleGameRuntimeSnapshot.rafCount === 1);
 
 check("module exports createGameDependencyBag", typeof createModuleGameDependencyBag === "function");
@@ -824,9 +849,14 @@ check(
   JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
 );
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
+check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
+check(
+  "dependency bag reports missing input binder",
+  moduleGameDependenciesSnapshot.missingInputError.includes("TapSurvivorInput.bindMovementInput")
+);
 if (hadPreviousContent) {
   Reflect.set(globalThis, "TapSurvivorContent", previousContent);
 } else {
@@ -1013,9 +1043,28 @@ function runCollisionFixture(createWeaponProjectileSystem) {
   };
 }
 
-function gameRuntimeSnapshot(createGameRuntimeController, runtimeGlobal) {
-  const previousInput = Reflect.get(runtimeGlobal, "TapSurvivorInput");
-  const hadInput = Reflect.has(runtimeGlobal, "TapSurvivorInput");
+function gameRuntimeDependencyErrors(createGameRuntimeController) {
+  const { controllerOptions: baseOptions } = createGameRuntimeOptions();
+  const { bindMovementInput, ...missingOptions } = baseOptions;
+  let missing = "";
+  let invalid = "";
+  try {
+    createGameRuntimeController(missingOptions);
+  } catch (error) {
+    missing = error.message;
+  }
+  try {
+    createGameRuntimeController({
+      ...baseOptions,
+      bindMovementInput: "not-a-function",
+    });
+  } catch (error) {
+    invalid = error.message;
+  }
+  return { missing, invalid };
+}
+
+function createGameRuntimeOptions(overrides = {}) {
   const calls = {
     debugBind: 0,
     movementBinds: 0,
@@ -1072,70 +1121,86 @@ function gameRuntimeSnapshot(createGameRuntimeController, runtimeGlobal) {
     running: true,
   };
   let save = { coins: 0 };
-  Reflect.set(runtimeGlobal, "TapSurvivorInput", {
-    bindMovementInput() {
-      calls.movementBinds += 1;
-    },
-  });
 
-  const controller = createGameRuntimeController({
-    canvas,
-    ui: {
-      levelUp: { classList: { add() {} } },
-      speedButtons: buttons,
+  return {
+    buttons,
+    calls,
+    controllerOptions: {
+      canvas,
+      ui: {
+        levelUp: { classList: { add() {} } },
+        speedButtons: buttons,
+      },
+      documentRef,
+      globalRef,
+      getGame: () => game,
+      setGame: (nextGame) => {
+        game = nextGame;
+      },
+      getSave: () => save,
+      setSave: (nextSave) => {
+        save = nextSave;
+      },
+      saveSystem: {
+        defaultSave: () => ({ coins: 0 }),
+        loadSave: () => ({ coins: 7 }),
+        removeSave: () => true,
+      },
+      shellUi: {
+        bind: () => {
+          calls.shellBind += 1;
+        },
+        closeRunMenu() {},
+        showTitleScreen() {},
+      },
+      shopSystem: {
+        closeShop() {},
+      },
+      runUi: {
+        hideEndScreen() {},
+        updateRunHud() {},
+      },
+      debugSystem: {
+        bind: () => {
+          calls.debugBind += 1;
+        },
+      },
+      spriteSystem: {
+        loadSprites: () => {
+          calls.spriteLoads += 1;
+        },
+      },
+      bannerSystem: {
+        hideMovementGateBanner() {},
+      },
+      bindMovementInput({ canvas: inputCanvas, getGame: inputGetGame }) {
+        calls.movementBinds += 1;
+        calls.movementCanvasWidth = inputCanvas.width;
+        calls.movementGetGameRunning = inputGetGame()?.running === true;
+      },
+      persist: () => {
+        calls.persist += 1;
+      },
+      renderMeta() {},
+      loop() {},
+      ...overrides,
     },
     documentRef,
-    globalRef,
-    getGame: () => game,
-    setGame: (nextGame) => {
-      game = nextGame;
-    },
-    getSave: () => save,
-    setSave: (nextSave) => {
-      save = nextSave;
-    },
-    saveSystem: {
-      defaultSave: () => ({ coins: 0 }),
-      loadSave: () => ({ coins: 7 }),
-      removeSave: () => true,
-    },
-    shellUi: {
-      bind: () => {
-        calls.shellBind += 1;
-      },
-      closeRunMenu() {},
-      showTitleScreen() {},
-    },
-    shopSystem: {
-      closeShop() {},
-    },
-    runUi: {
-      hideEndScreen() {},
-      updateRunHud() {},
-    },
-    debugSystem: {
-      bind: () => {
-        calls.debugBind += 1;
-      },
-    },
-    spriteSystem: {
-      loadSprites: () => {
-        calls.spriteLoads += 1;
-      },
-    },
-    bannerSystem: {
-      hideMovementGateBanner() {},
-    },
-    persist: () => {
-      calls.persist += 1;
-    },
-    renderMeta() {},
-    loop() {},
-  });
+    documentListeners,
+    getGameState: () => game,
+    getSaveState: () => save,
+  };
+}
+
+function gameRuntimeSnapshot(createGameRuntimeController) {
+  const { buttons, calls, controllerOptions, documentRef, documentListeners, getGameState, getSaveState } =
+    createGameRuntimeOptions();
+
+  const controller = createGameRuntimeController(controllerOptions);
 
   controller.initializeRuntime();
   const initialSpeed = controller.getGameSpeed();
-  const loadedSaveCoins = save.coins;
+  const loadedSaveCoins = getSaveState().coins;
   controller.setGameSpeed(5);
   const speedAfterSet = controller.getGameSpeed();
   controller.setGameSpeed(3);
@@ -1144,18 +1209,14 @@ function gameRuntimeSnapshot(createGameRuntimeController, runtimeGlobal) {
   documentListeners.get("visibilitychange")?.();
   controller.resetSave();
 
-  if (hadInput) {
-    Reflect.set(runtimeGlobal, "TapSurvivorInput", previousInput);
-  } else {
-    Reflect.deleteProperty(runtimeGlobal, "TapSurvivorInput");
-  }
-
   return {
     activeButtons: buttons.map((button) => button.classList.active),
     debugBind: calls.debugBind,
-    gameAfterReset: game,
+    gameAfterReset: getGameState(),
     initialSpeed,
     movementBinds: calls.movementBinds,
+    movementCanvasWidth: calls.movementCanvasWidth,
+    movementGetGameRunning: calls.movementGetGameRunning,
     persistCount: calls.persist,
     rafCount: calls.raf,
     saveCoins: loadedSaveCoins,
@@ -1204,6 +1265,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.TapSurvivorDebugBalance = {
     getActiveProfile: () => "testing",
   };
+  function bindMovementInput() {}
+  globalRef.TapSurvivorInput = {
+    bindMovementInput,
+  };
   const bag = createGameDependencyBag({ globalRef });
 
   const fallbackGlobalRef = { ...globalRef };
@@ -1220,13 +1285,24 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingError = error.message;
   }
 
+  const missingInputGlobalRef = { ...globalRef };
+  delete missingInputGlobalRef.TapSurvivorInput;
+  let missingInputError = "";
+  try {
+    createGameDependencyBag({ globalRef: missingInputGlobalRef });
+  } catch (error) {
+    missingInputError = error.message;
+  }
+
   return {
     contentId: bag.content.id,
     debugProfile: bag.debugBalance.getActiveProfile(),
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
     hasMath: bag.math.name === "TapSurvivorMath",
+    hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
+    missingInputError,
   };
 }
 

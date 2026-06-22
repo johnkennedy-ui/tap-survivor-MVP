@@ -10,6 +10,12 @@ export function createGameDependencyBag({ globalRef }) {
     effects: requireGlobal(globalRef, "TapSurvivorEffects"),
     gameBanners: requireGlobal(globalRef, "TapSurvivorGameBanners"),
     gameRuntime: requireGlobal(globalRef, "TapSurvivorGameRuntime"),
+    input: {
+      bindMovementInput: requireFunction(
+        globalRef?.TapSurvivorInput?.bindMovementInput,
+        "globalThis.TapSurvivorInput.bindMovementInput"
+      ),
+    },
     levelUp: requireGlobal(globalRef, "TapSurvivorLevelUp"),
     mapSystem: requireGlobal(globalRef, "TapSurvivorMapSystem"),
     math: requireGlobal(globalRef, "TapSurvivorMath"),
@@ -38,6 +44,13 @@ function requireGlobal(globalRef, name) {
   const value = globalRef?.[name];
   if (!value) {
     throw new Error(`Missing Tap Survivor runtime dependency: globalThis.${name}`);
+  }
+  return value;
+}
+
+function requireFunction(value, name) {
+  if (typeof value !== "function") {
+    throw new Error(`Missing Tap Survivor runtime dependency: ${name}`);
   }
   return value;
 }

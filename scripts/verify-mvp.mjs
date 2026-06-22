@@ -352,7 +352,14 @@ check(
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && runtimeEntry.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && runtimeEntry.includes("TapSurvivorRunUi"));
 check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && levelUpChoices.includes("TapSurvivorLevelUpChoices") && runtimeEntry.includes("TapSurvivorLevelUp"));
-check("shared input helper exists", input.includes("TapSurvivorInput") && gameRuntime.includes("TapSurvivorInput"));
+check(
+  "shared input helper exists",
+  input.includes("TapSurvivorInput") &&
+    runtimeEntry.includes("TapSurvivorInput") &&
+    gameDependencies.includes("bindMovementInput") &&
+    gameRuntime.includes("bindMovementInput") &&
+    !gameRuntime.includes("globalThis.TapSurvivorInput"),
+);
 check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && runtimeEntry.includes("TapSurvivorPickups"));
 check("shared shop helper exists", shop.includes("TapSurvivorShop") && shopPricing.includes("TapSurvivorShopPricing") && runtimeEntry.includes("TapSurvivorShop"));
 check("shared relic helper exists", relics.includes("TapSurvivorRelics") && runtimeEntry.includes("TapSurvivorRelics"));
