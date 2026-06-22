@@ -16,6 +16,10 @@ import {
   randomRange as moduleRandomRange,
 } from "../src/modules/math.js";
 import { createSaveLoadHandler as createModuleSaveLoadHandler } from "../src/modules/save-corruption.js";
+import {
+  CURRENT_SAVE_VERSION as moduleCurrentSaveVersion,
+  createDefaultSave as createModuleDefaultSave,
+} from "../src/modules/save-defaults.js";
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
 import {
@@ -28,6 +32,7 @@ const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
+const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defaults.js");
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -38,6 +43,7 @@ const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
 const bridgeMapSystem = mapBridge.context.TapSurvivorMapSystem;
 const bridgeSaveCorruption = saveCorruptionBridge.context.TapSurvivorSaveCorruption;
+const bridgeSaveDefaults = saveDefaultsBridge.context.TapSurvivorSaveDefaults;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
@@ -276,6 +282,35 @@ check(
 check(
   "module and bridge save load output match",
   JSON.stringify(moduleSaveLoadSnapshot) === JSON.stringify(bridgeSaveLoadSnapshot)
+);
+
+check("module exports CURRENT_SAVE_VERSION", moduleCurrentSaveVersion === 3);
+check("module exports createDefaultSave", typeof createModuleDefaultSave === "function");
+check("bridge assigns globalThis.TapSurvivorSaveDefaults", Boolean(bridgeSaveDefaults));
+check(
+  "save defaults bridge source has generated banner",
+  hasGeneratedBanner(saveDefaultsBridge.source)
+);
+check(
+  "bridge exposes CURRENT_SAVE_VERSION",
+  bridgeSaveDefaults?.CURRENT_SAVE_VERSION === moduleCurrentSaveVersion
+);
+check(
+  "bridge exposes createDefaultSave",
+  typeof bridgeSaveDefaults?.createDefaultSave === "function"
+);
+const saveDefaultFixture = { starterQuestIds: ["daily_one", "daily_two"] };
+const moduleDefaultSave = createModuleDefaultSave(saveDefaultFixture);
+const bridgeDefaultSave = bridgeSaveDefaults.createDefaultSave(saveDefaultFixture);
+check("default save fixture keeps schema version", moduleDefaultSave.saveVersion === 3);
+check(
+  "default save fixture copies starter quests",
+  JSON.stringify(moduleDefaultSave.activeQuests) === JSON.stringify(["daily_one", "daily_two"])
+);
+check("default save fixture starts with spark bolt", moduleDefaultSave.unlockedWeapons[0] === "spark_bolt");
+check(
+  "module and bridge default save output match",
+  JSON.stringify(moduleDefaultSave) === JSON.stringify(bridgeDefaultSave)
 );
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");

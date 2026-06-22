@@ -39,6 +39,7 @@ Before editing this repo:
     `src/modules/map-system.js` owns map/floor resolver implementation; `src/map-system.js` is a generated compatibility bridge.
     `src/modules/math.js` owns math helper implementation; `src/math.js` is a generated compatibility bridge.
     `src/modules/save-corruption.js` owns corrupt-save load handling; `src/save-corruption.js` is a generated compatibility bridge.
+    `src/modules/save-defaults.js` owns default save construction; `src/save-defaults.js` is a generated compatibility bridge.
     `src/modules/weapon-cooldowns.js` owns weapon cooldown/stat-scaling implementation; `src/weapon-cooldowns.js` is a generated compatibility bridge.
     `src/modules/weapon-projectiles.js` owns projectile weapon implementation; `src/weapon-projectiles.js` is a generated compatibility bridge.
     `src/modules/weapon-targeting.js` owns weapon-targeting implementation; `src/weapon-targeting.js` is a generated compatibility bridge.

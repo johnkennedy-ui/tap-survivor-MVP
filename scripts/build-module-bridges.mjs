@@ -27,6 +27,12 @@ const bridges = [
     exports: ["createSaveLoadHandler"],
   },
   {
+    source: "src/modules/save-defaults.js",
+    target: "src/save-defaults.js",
+    globalName: "TapSurvivorSaveDefaults",
+    exports: ["CURRENT_SAVE_VERSION", "createDefaultSave"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",
@@ -83,8 +89,12 @@ async function buildClassicBridge({ source, target, globalName, exports }) {
       new RegExp(`\\bexport\\s+function\\s+${exportName}\\s*\\(`),
       `function ${exportName}(`
     );
+    classicSource = classicSource.replace(
+      new RegExp(`\\bexport\\s+const\\s+${exportName}\\s*=`),
+      `const ${exportName} =`
+    );
     if (classicSource === previousSource) {
-      throw new Error(`${source} must export function ${exportName}`);
+      throw new Error(`${source} must export function or const ${exportName}`);
     }
   }
 

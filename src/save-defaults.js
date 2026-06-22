@@ -1,4 +1,9 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/save-defaults.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
   const CURRENT_SAVE_VERSION = 3;
 
   function createDefaultSave({ starterQuestIds }) {
