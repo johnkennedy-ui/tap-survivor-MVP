@@ -80,6 +80,12 @@ const bridges = [
     globalName: "TapSurvivorWeaponProjectiles",
     exports: ["createWeaponProjectileSystem", "rotateVector"],
   },
+  {
+    source: "src/modules/game-runtime.js",
+    target: "src/game-runtime.js",
+    globalName: "TapSurvivorGameRuntime",
+    exports: ["createGameRuntimeController"],
+  },
 ];
 
 for (const bridge of bridges) {

@@ -55,6 +55,7 @@ const fullChecks = [
   ["node", ["--check", "src/modules/save-migrations.js"]],
   ["node", ["--check", "src/modules/save-normalize.js"]],
   ["node", ["--check", "src/modules/save.js"]],
+  ["node", ["--check", "src/modules/game-runtime.js"]],
   ["node", ["--check", "src/modules/shop-pricing.js"]],
   ["node", ["--check", "src/modules/weapon-cooldowns.js"]],
   ["node", ["--check", "src/modules/weapon-projectiles.js"]],
@@ -200,6 +201,8 @@ function focusedChecks(files) {
         file === "src/modules/weapon-projectiles.js" ||
         file === "src/weapon-targeting.js" ||
         file === "src/modules/weapon-targeting.js" ||
+        file === "src/game-runtime.js" ||
+        file === "src/modules/game-runtime.js" ||
         file === "scripts/build-module-bridges.mjs" ||
         file === "scripts/smoke-module-bridges.mjs" ||
         file === "package.json"

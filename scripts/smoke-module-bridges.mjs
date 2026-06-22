@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
+import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import {
   choiceId as moduleChoiceId,
   shopFocusBonus as moduleShopFocusBonus,
@@ -76,6 +77,7 @@ const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
+const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
@@ -90,6 +92,7 @@ const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldowns?.createWeaponScaling;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
+const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -765,6 +768,35 @@ check(
   "module and bridge collision output match",
   JSON.stringify(moduleCollision) === JSON.stringify(bridgeCollision)
 );
+
+check(
+  "module exports createGameRuntimeController",
+  typeof createModuleGameRuntimeController === "function"
+);
+check("bridge assigns globalThis.TapSurvivorGameRuntime", Boolean(bridgeGameRuntime));
+check("game runtime bridge source has generated banner", hasGeneratedBanner(gameRuntimeBridge.source));
+check(
+  "bridge exposes createGameRuntimeController",
+  typeof bridgeGameRuntime?.createGameRuntimeController === "function"
+);
+
+const moduleGameRuntimeSnapshot = gameRuntimeSnapshot(createModuleGameRuntimeController, globalThis);
+const bridgeGameRuntimeSnapshot = gameRuntimeSnapshot(
+  bridgeGameRuntime.createGameRuntimeController,
+  gameRuntimeBridge.context
+);
+check(
+  "module and bridge game runtime output match",
+  JSON.stringify(moduleGameRuntimeSnapshot) === JSON.stringify(bridgeGameRuntimeSnapshot)
+);
+check("game runtime initializes with loaded save", moduleGameRuntimeSnapshot.saveCoins === 7);
+check("game runtime resets speed controls", moduleGameRuntimeSnapshot.initialSpeed === 1);
+check("game runtime speed setter accepts x5", moduleGameRuntimeSnapshot.speedAfterSet === 5);
+check("game runtime speed setter rejects unsupported values", moduleGameRuntimeSnapshot.speedAfterInvalid === 5);
+check("game runtime reset clears game state", moduleGameRuntimeSnapshot.gameAfterReset === null);
+check("game runtime reset persists once", moduleGameRuntimeSnapshot.persistCount === 2);
+check("game runtime binds movement input", moduleGameRuntimeSnapshot.movementBinds === 1);
+check("game runtime schedules loop", moduleGameRuntimeSnapshot.rafCount === 1);
 if (hadPreviousContent) {
   Reflect.set(globalThis, "TapSurvivorContent", previousContent);
 } else {
@@ -948,6 +980,159 @@ function runCollisionFixture(createWeaponProjectileSystem) {
     damageCalls: fixture.damageCalls,
     reapCount: fixture.reapCount(),
     remainingBolts: fixture.game.bolts.length,
+  };
+}
+
+function gameRuntimeSnapshot(createGameRuntimeController, runtimeGlobal) {
+  const previousInput = Reflect.get(runtimeGlobal, "TapSurvivorInput");
+  const hadInput = Reflect.has(runtimeGlobal, "TapSurvivorInput");
+  const calls = {
+    debugBind: 0,
+    movementBinds: 0,
+    persist: 0,
+    raf: 0,
+    shellBind: 0,
+    spriteLoads: 0,
+  };
+  const listeners = new Map();
+  const documentListeners = new Map();
+  const buttons = [1, 2, 5].map((speed) => ({
+    dataset: { speed: String(speed) },
+    classList: {
+      active: false,
+      toggle(name, force) {
+        if (name === "active") this.active = Boolean(force);
+      },
+    },
+    pressed: "",
+    setAttribute(name, value) {
+      if (name === "aria-pressed") this.pressed = value;
+    },
+  }));
+  const canvas = {
+    width: 960,
+    height: 540,
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 960, height: 540 };
+    },
+  };
+  const documentRef = {
+    body: { dataset: {} },
+    visibilityState: "visible",
+    addEventListener(type, handler) {
+      documentListeners.set(type, handler);
+    },
+  };
+  const globalRef = {
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    requestAnimationFrame(callback) {
+      calls.raf += 1;
+      calls.loop = callback;
+    },
+  };
+  let game = {
+    awaitingFirstMoveInput: true,
+    paused: false,
+    player: { targetX: 0, targetY: 0 },
+    running: true,
+  };
+  let save = { coins: 0 };
+  Reflect.set(runtimeGlobal, "TapSurvivorInput", {
+    bindMovementInput() {
+      calls.movementBinds += 1;
+    },
+  });
+
+  const controller = createGameRuntimeController({
+    canvas,
+    ui: {
+      levelUp: { classList: { add() {} } },
+      speedButtons: buttons,
+    },
+    documentRef,
+    globalRef,
+    getGame: () => game,
+    setGame: (nextGame) => {
+      game = nextGame;
+    },
+    getSave: () => save,
+    setSave: (nextSave) => {
+      save = nextSave;
+    },
+    saveSystem: {
+      defaultSave: () => ({ coins: 0 }),
+      loadSave: () => ({ coins: 7 }),
+      removeSave: () => true,
+    },
+    shellUi: {
+      bind: () => {
+        calls.shellBind += 1;
+      },
+      closeRunMenu() {},
+      showTitleScreen() {},
+    },
+    shopSystem: {
+      closeShop() {},
+    },
+    runUi: {
+      hideEndScreen() {},
+      updateRunHud() {},
+    },
+    debugSystem: {
+      bind: () => {
+        calls.debugBind += 1;
+      },
+    },
+    spriteSystem: {
+      loadSprites: () => {
+        calls.spriteLoads += 1;
+      },
+    },
+    bannerSystem: {
+      hideMovementGateBanner() {},
+    },
+    persist: () => {
+      calls.persist += 1;
+    },
+    renderMeta() {},
+    loop() {},
+  });
+
+  controller.initializeRuntime();
+  const initialSpeed = controller.getGameSpeed();
+  const loadedSaveCoins = save.coins;
+  controller.setGameSpeed(5);
+  const speedAfterSet = controller.getGameSpeed();
+  controller.setGameSpeed(3);
+  const speedAfterInvalid = controller.getGameSpeed();
+  documentRef.visibilityState = "hidden";
+  documentListeners.get("visibilitychange")?.();
+  controller.resetSave();
+
+  if (hadInput) {
+    Reflect.set(runtimeGlobal, "TapSurvivorInput", previousInput);
+  } else {
+    Reflect.deleteProperty(runtimeGlobal, "TapSurvivorInput");
+  }
+
+  return {
+    activeButtons: buttons.map((button) => button.classList.active),
+    debugBind: calls.debugBind,
+    gameAfterReset: game,
+    initialSpeed,
+    movementBinds: calls.movementBinds,
+    persistCount: calls.persist,
+    rafCount: calls.raf,
+    saveCoins: loadedSaveCoins,
+    shellBind: calls.shellBind,
+    speedAfterInvalid,
+    speedAfterSet,
+    spriteLoads: calls.spriteLoads,
   };
 }
 

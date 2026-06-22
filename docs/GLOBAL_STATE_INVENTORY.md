@@ -75,6 +75,7 @@ Other module-level state/caches:
 Current DOM/game coupling is concentrated in:
 - `src/ui.js`, `src/run-ui.js`, `src/shell-ui.js`, and `src/shell-relic-ui.js` for DOM element lookup/render/update.
 - `src/input.js` and `src/game-runtime.js` for canvas/keyboard/touch/mouse binding.
+- `src/modules/game-runtime.js` owns the runtime controller implementation; `src/game-runtime.js` is the generated classic bridge until the browser entrypoint migrates away from script-order globals.
 - `src/game.js`, which passes game/save/system references into UI, runtime, combat, shop, relic, and render systems.
 
 ## Guard Policy

@@ -1,4 +1,9 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/game-runtime.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
   function createGameRuntimeController({
     canvas,
     ui,
