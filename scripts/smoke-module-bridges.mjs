@@ -6,6 +6,7 @@ import { createGameDependencyBag as createModuleGameDependencyBag } from "../src
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
 import { createRunStateSystem as createModuleRunStateSystem } from "../src/modules/run-state.js";
+import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import {
   choiceId as moduleChoiceId,
@@ -85,6 +86,7 @@ const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
 const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecycle.js");
 const runStateBridge = loadBridge("../src/run-state.js", "src/run-state.js");
+const runUiBridge = loadBridge("../src/run-ui.js", "src/run-ui.js");
 const runUpdateBridge = loadBridge("../src/run-update.js", "src/run-update.js");
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
@@ -104,6 +106,7 @@ const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
 const bridgeRunState = runStateBridge.context.TapSurvivorRunState;
+const bridgeRunUi = runUiBridge.context.TapSurvivorRunUi;
 const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
@@ -939,6 +942,47 @@ check("run state meta upgrades raise pickup radius", moduleRunStateSnapshot.meta
 check("run state meta upgrades raise max hp", moduleRunStateSnapshot.meta.maxHp === 180);
 check("run state meta upgrades heal hp delta", moduleRunStateSnapshot.meta.hp === 120);
 
+check("module exports createRunUi", typeof createModuleRunUi === "function");
+check("bridge assigns globalThis.TapSurvivorRunUi", Boolean(bridgeRunUi));
+check("run ui bridge source has generated banner", hasGeneratedBanner(runUiBridge.source));
+check("bridge exposes createRunUi", typeof bridgeRunUi?.createRunUi === "function");
+
+const moduleRunUiSnapshot = runUiSnapshot(createModuleRunUi);
+const bridgeRunUiSnapshot = runUiSnapshot(bridgeRunUi.createRunUi);
+check(
+  "module and bridge run ui output match",
+  JSON.stringify(moduleRunUiSnapshot) === JSON.stringify(bridgeRunUiSnapshot)
+);
+check("run ui exposes updateRunHud", moduleRunUiSnapshot.exposesUpdateRunHud);
+check("run ui exposes showEndScreen", moduleRunUiSnapshot.exposesShowEndScreen);
+check("run ui exposes hideEndScreen", moduleRunUiSnapshot.exposesHideEndScreen);
+check("run ui no-game HUD includes start text", moduleRunUiSnapshot.noGame.includesStartText);
+check("run ui no-game HUD includes speed", moduleRunUiSnapshot.noGame.includesSpeed);
+check("run ui no-game HUD renders debug", moduleRunUiSnapshot.noGame.debugCalls === 1);
+check("run ui game HUD includes formatted elapsed", moduleRunUiSnapshot.gameHud.includesTime);
+check("run ui game HUD includes tower floor", moduleRunUiSnapshot.gameHud.includesFloor);
+check("run ui game HUD includes speed", moduleRunUiSnapshot.gameHud.includesSpeed);
+check("run ui game HUD includes player HP", moduleRunUiSnapshot.gameHud.includesHp);
+check("run ui game HUD includes save coins", moduleRunUiSnapshot.gameHud.includesCoins);
+check("run ui game HUD includes player level", moduleRunUiSnapshot.gameHud.includesLevel);
+check("run ui game HUD includes kills", moduleRunUiSnapshot.gameHud.includesKills);
+check("run ui game HUD includes laser damage", moduleRunUiSnapshot.gameHud.includesLaserDamage);
+check("run ui game HUD includes weapon count", moduleRunUiSnapshot.gameHud.includesWeapons);
+check("run ui game HUD includes boss HP", moduleRunUiSnapshot.gameHud.includesBossHp);
+check("run ui game HUD includes cleared floor", moduleRunUiSnapshot.gameHud.includesFloorClear);
+check("run ui game HUD renders debug", moduleRunUiSnapshot.gameHud.debugCalls === 2);
+check("run ui end screen includes result", moduleRunUiSnapshot.endScreen.includesResult);
+check("run ui end screen includes tower floor", moduleRunUiSnapshot.endScreen.includesFloor);
+check("run ui end screen includes survived time", moduleRunUiSnapshot.endScreen.includesTime);
+check("run ui end screen includes kills", moduleRunUiSnapshot.endScreen.includesKills);
+check("run ui end screen includes level", moduleRunUiSnapshot.endScreen.includesLevel);
+check("run ui end screen includes XP collected", moduleRunUiSnapshot.endScreen.includesXp);
+check("run ui end screen includes banked coins", moduleRunUiSnapshot.endScreen.includesCoins);
+check("run ui end screen includes laser damage", moduleRunUiSnapshot.endScreen.includesLaserDamage);
+check("run ui end screen includes quest points", moduleRunUiSnapshot.endScreen.includesQuestPoints);
+check("run ui showEndScreen opens end screen", moduleRunUiSnapshot.endScreen.opened);
+check("run ui hideEndScreen hides end screen", moduleRunUiSnapshot.endScreen.hidden);
+
 check("module exports createRunUpdater", typeof createModuleRunUpdater === "function");
 check("bridge assigns globalThis.TapSurvivorRunUpdate", Boolean(bridgeRunUpdate));
 check("run update bridge source has generated banner", hasGeneratedBanner(runUpdateBridge.source));
@@ -1741,6 +1785,118 @@ function runStateSnapshot(createRunStateSystem) {
       speed: metaGame.player.speed,
     },
     reset: resetSnapshot,
+  };
+}
+
+function runUiSnapshot(createRunUi) {
+  let currentGame = null;
+  const save = {
+    coins: 42,
+    questPoints: 9,
+  };
+  let debugCalls = 0;
+  const ui = {
+    endScreen: createClassElement(["hidden"]),
+    runHud: { textContent: "" },
+    runStats: { innerHTML: "" },
+  };
+  const controller = createRunUi({
+    ui,
+    formatTime: (value) => `fmt:${value}`,
+    getGame: () => currentGame,
+    getSave: () => save,
+    getGameSpeed: () => 5,
+    maxEquippedWeapons: () => 4,
+    renderDebug() {
+      debugCalls += 1;
+    },
+  });
+
+  controller.updateRunHud();
+  const noGameHud = ui.runHud.textContent;
+  const noGameDebugCalls = debugCalls;
+
+  currentGame = {
+    bossSpawned: false,
+    elapsed: 12.34,
+    enemies: [{ boss: true, hp: 12.2, maxHp: 50 }],
+    kills: 11,
+    laserDamage: 29.9,
+    lastFloorClear: {
+      floor: 7,
+      relicName: "Laser Lens",
+    },
+    player: {
+      equippedWeapons: ["spark_bolt", "laser"],
+      hp: 34.2,
+      level: 3,
+      maxHp: 80,
+    },
+    towerFloor: 8,
+    xpCollected: 17,
+  };
+  controller.updateRunHud();
+  const gameHud = ui.runHud.textContent;
+  const gameHudDebugCalls = debugCalls;
+  controller.showEndScreen("Player defeated");
+  const endStats = ui.runStats.innerHTML;
+  const opened = !ui.endScreen.classList.contains("hidden");
+  controller.hideEndScreen();
+  const hidden = ui.endScreen.classList.contains("hidden");
+
+  return {
+    endScreen: {
+      hidden,
+      includesCoins: endStats.includes("Coins banked: 42"),
+      includesFloor: endStats.includes("Tower floor: 8"),
+      includesKills: endStats.includes("Enemies defeated: 11"),
+      includesLaserDamage: endStats.includes("Laser damage dealt: 29"),
+      includesLevel: endStats.includes("Level reached: 3"),
+      includesQuestPoints: endStats.includes("Quest Points: 9 available"),
+      includesResult: endStats.includes("Result: Player defeated"),
+      includesTime: endStats.includes("Time survived: fmt:12.34"),
+      includesXp: endStats.includes("XP collected: 17"),
+      opened,
+    },
+    exposesHideEndScreen: typeof controller.hideEndScreen === "function",
+    exposesShowEndScreen: typeof controller.showEndScreen === "function",
+    exposesUpdateRunHud: typeof controller.updateRunHud === "function",
+    gameHud: {
+      debugCalls: gameHudDebugCalls,
+      includesBossHp: gameHud.includes("Boss HP 13/50"),
+      includesCoins: gameHud.includes("Coins 42"),
+      includesFloor: gameHud.includes("Floor 8"),
+      includesFloorClear: gameHud.includes("Cleared Floor 7: Laser Lens"),
+      includesHp: gameHud.includes("HP 35/80"),
+      includesKills: gameHud.includes("Kills 11"),
+      includesLaserDamage: gameHud.includes("Laser damage 29"),
+      includesLevel: gameHud.includes("Level 3"),
+      includesSpeed: gameHud.includes("Speed x5"),
+      includesTime: gameHud.includes("Time fmt:12.34"),
+      includesWeapons: gameHud.includes("Weapons 2/4"),
+    },
+    noGame: {
+      debugCalls: noGameDebugCalls,
+      includesSpeed: noGameHud.includes("Speed x5"),
+      includesStartText: noGameHud.includes("Start a run to test movement"),
+    },
+  };
+}
+
+function createClassElement(initialClasses = []) {
+  const classes = new Set(initialClasses);
+  return {
+    classList: {
+      add(className) {
+        classes.add(className);
+      },
+      contains(className) {
+        return classes.has(className);
+      },
+      remove(className) {
+        classes.delete(className);
+      },
+    },
   };
 }
 

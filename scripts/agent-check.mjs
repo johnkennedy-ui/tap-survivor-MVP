@@ -61,6 +61,7 @@ const fullChecks = [
   ["node", ["--check", "src/modules/game-runtime.js"]],
   ["node", ["--check", "src/modules/run-lifecycle.js"]],
   ["node", ["--check", "src/modules/run-state.js"]],
+  ["node", ["--check", "src/modules/run-ui.js"]],
   ["node", ["--check", "src/modules/run-update.js"]],
   ["node", ["--check", "src/modules/shop-pricing.js"]],
   ["node", ["--check", "src/modules/weapon-cooldowns.js"]],
@@ -213,6 +214,8 @@ function focusedChecks(files) {
         file === "src/modules/game-dependencies.js" ||
         file === "src/run-update.js" ||
         file === "src/modules/run-update.js" ||
+        file === "src/run-ui.js" ||
+        file === "src/modules/run-ui.js" ||
         file === "scripts/smoke-game-harness.mjs" ||
         file === "scripts/smoke-game-runtime-module.mjs" ||
         file === "scripts/build-module-bridges.mjs" ||

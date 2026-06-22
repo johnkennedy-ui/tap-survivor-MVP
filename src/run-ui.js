@@ -1,16 +1,36 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/run-ui.js
+// Run: npm run build:bridges
 (() => {
-  function createRunUi({ ui, formatTime, getGame, getSave, getGameSpeed, maxEquippedWeapons, renderDebug }) {
+  "use strict";
+
+  function createRunUi({
+    ui,
+    formatTime,
+    getGame,
+    getSave,
+    getGameSpeed,
+    maxEquippedWeapons,
+    renderDebug,
+  }) {
     function updateRunHud() {
       const game = getGame();
       if (!game) {
-        if (ui.runHud) ui.runHud.textContent = `Speed x${getGameSpeed()} | Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.`;
+        if (ui.runHud)
+          ui.runHud.textContent = `Speed x${getGameSpeed()} | Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.`;
         renderDebug();
         return;
       }
       const save = getSave();
       const boss = game.enemies.find((enemy) => enemy.boss);
-      const bossText = boss ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}` : game.bossSpawned ? " | Boss defeated" : "";
-      const floorText = game.lastFloorClear ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}` : "";
+      const bossText = boss
+        ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}`
+        : game.bossSpawned
+          ? " | Boss defeated"
+          : "";
+      const floorText = game.lastFloorClear
+        ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}`
+        : "";
       if (ui.runHud) {
         ui.runHud.textContent = [
           `Time ${formatTime(game.elapsed)}`,
@@ -32,16 +52,16 @@
       const save = getSave();
       if (!game) return;
       ui.runStats.innerHTML = `
-        <p>Result: ${reason}</p>
-        <p>Tower floor: ${game.towerFloor}</p>
-        <p>Time survived: ${formatTime(game.elapsed)}</p>
-        <p>Enemies defeated: ${game.kills}</p>
-        <p>Level reached: ${game.player.level}</p>
-        <p>XP collected: ${game.xpCollected}</p>
-        <p>Coins banked: ${save.coins}</p>
-        <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
-        <p>Quest Points: ${save.questPoints} available</p>
-      `;
+          <p>Result: ${reason}</p>
+          <p>Tower floor: ${game.towerFloor}</p>
+          <p>Time survived: ${formatTime(game.elapsed)}</p>
+          <p>Enemies defeated: ${game.kills}</p>
+          <p>Level reached: ${game.player.level}</p>
+          <p>XP collected: ${game.xpCollected}</p>
+          <p>Coins banked: ${save.coins}</p>
+          <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
+          <p>Quest Points: ${save.questPoints} available</p>
+        `;
       ui.endScreen.classList.remove("hidden");
     }
 

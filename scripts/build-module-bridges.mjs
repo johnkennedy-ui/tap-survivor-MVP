@@ -110,6 +110,12 @@ const bridges = [
     globalName: "TapSurvivorRunUpdate",
     exports: ["createRunUpdater"],
   },
+  {
+    source: "src/modules/run-ui.js",
+    target: "src/run-ui.js",
+    globalName: "TapSurvivorRunUi",
+    exports: ["createRunUi"],
+  },
 ];
 
 for (const bridge of bridges) {
