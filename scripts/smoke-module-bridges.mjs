@@ -20,6 +20,12 @@ import {
   CURRENT_SAVE_VERSION as moduleCurrentSaveVersion,
   createDefaultSave as createModuleDefaultSave,
 } from "../src/modules/save-defaults.js";
+globalThis["TapSurvivorSaveDefaults"] = {
+  CURRENT_SAVE_VERSION: moduleCurrentSaveVersion,
+};
+const { isPlainObject: moduleIsPlainObject, migrateSave: moduleMigrateSave } = await import(
+  "../src/modules/save-migrations.js"
+);
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
 import {
@@ -33,6 +39,9 @@ const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-cho
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
 const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defaults.js");
+const saveMigrationsBridge = loadBridge("../src/save-migrations.js", "src/save-migrations.js", {
+  TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
+});
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -44,6 +53,7 @@ const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
 const bridgeMapSystem = mapBridge.context.TapSurvivorMapSystem;
 const bridgeSaveCorruption = saveCorruptionBridge.context.TapSurvivorSaveCorruption;
 const bridgeSaveDefaults = saveDefaultsBridge.context.TapSurvivorSaveDefaults;
+const bridgeSaveMigrations = saveMigrationsBridge.context.TapSurvivorSaveMigrations;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
@@ -311,6 +321,66 @@ check("default save fixture starts with spark bolt", moduleDefaultSave.unlockedW
 check(
   "module and bridge default save output match",
   JSON.stringify(moduleDefaultSave) === JSON.stringify(bridgeDefaultSave)
+);
+
+check("module exports isPlainObject", typeof moduleIsPlainObject === "function");
+check("module exports migrateSave", typeof moduleMigrateSave === "function");
+check("bridge assigns globalThis.TapSurvivorSaveMigrations", Boolean(bridgeSaveMigrations));
+check(
+  "save migrations bridge source has generated banner",
+  hasGeneratedBanner(saveMigrationsBridge.source)
+);
+check("bridge exposes isPlainObject", typeof bridgeSaveMigrations?.isPlainObject === "function");
+check("bridge exposes migrateSave", typeof bridgeSaveMigrations?.migrateSave === "function");
+check("isPlainObject object fixture is unchanged", moduleIsPlainObject({}) === true);
+check("isPlainObject null fixture is unchanged", moduleIsPlainObject(null) === false);
+check("isPlainObject array fixture is unchanged", moduleIsPlainObject([]) === false);
+check(
+  "module and bridge isPlainObject output match",
+  JSON.stringify([{}, null, []].map(moduleIsPlainObject)) ===
+    JSON.stringify([{}, null, []].map(bridgeSaveMigrations.isPlainObject))
+);
+
+const saveMigrationFixtures = [
+  { saveVersion: 1 },
+  { saveVersion: 2 },
+  { saveVersion: 2, shopPurchases: { boots: 1 } },
+  { saveVersion: 3 },
+  { saveVersion: 3, seenBanners: ["boss_intro"] },
+  null,
+  { saveVersion: 1, shopPurchases: { boots: 2 }, seenBanners: ["floor_2"] },
+];
+const moduleMigrationResults = saveMigrationFixtures.map(moduleMigrateSave);
+const bridgeMigrationResults = saveMigrationFixtures.map(bridgeSaveMigrations.migrateSave);
+check("migrateSave version one fixture ends at current version", moduleMigrationResults[0].saveVersion === 3);
+check(
+  "migrateSave version one fixture applies version two shop purchases",
+  JSON.stringify(moduleMigrationResults[0].shopPurchases) === JSON.stringify({})
+);
+check(
+  "migrateSave version two fixture preserves shop purchases",
+  JSON.stringify(moduleMigrationResults[2].shopPurchases) === JSON.stringify({ boots: 1 })
+);
+check(
+  "migrateSave version two fixture applies version three seen banners",
+  JSON.stringify(moduleMigrationResults[1].seenBanners) === JSON.stringify([])
+);
+check(
+  "migrateSave version three fixture preserves seen banners",
+  JSON.stringify(moduleMigrationResults[4].seenBanners) === JSON.stringify(["boss_intro"])
+);
+check(
+  "migrateSave invalid fixture returns current version object",
+  moduleMigrationResults[5].saveVersion === 3 && moduleIsPlainObject(moduleMigrationResults[5])
+);
+check(
+  "migrateSave preserves existing migration fields",
+  JSON.stringify(moduleMigrationResults[6].shopPurchases) === JSON.stringify({ boots: 2 }) &&
+    JSON.stringify(moduleMigrationResults[6].seenBanners) === JSON.stringify(["floor_2"])
+);
+check(
+  "module and bridge migration output match",
+  JSON.stringify(moduleMigrationResults) === JSON.stringify(bridgeMigrationResults)
 );
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
@@ -1004,11 +1074,12 @@ function runStorageReadFailedCase(createSaveLoadHandler) {
 /**
  * @param {string} path
  * @param {string} filename
+ * @param {Record<string, unknown>} [globals]
  * @returns {{ source: string, context: Record<string, unknown> }}
  */
-function loadBridge(path, filename) {
+function loadBridge(path, filename, globals = {}) {
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
-  const context = { console };
+  const context = { console, ...globals };
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(source, context, { filename });

@@ -33,6 +33,12 @@ const bridges = [
     exports: ["CURRENT_SAVE_VERSION", "createDefaultSave"],
   },
   {
+    source: "src/modules/save-migrations.js",
+    target: "src/save-migrations.js",
+    globalName: "TapSurvivorSaveMigrations",
+    exports: ["isPlainObject", "migrateSave"],
+  },
+  {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
     globalName: "TapSurvivorShopPricing",

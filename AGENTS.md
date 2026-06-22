@@ -40,6 +40,8 @@ Before editing this repo:
     `src/modules/math.js` owns math helper implementation; `src/math.js` is a generated compatibility bridge.
     `src/modules/save-corruption.js` owns corrupt-save load handling; `src/save-corruption.js` is a generated compatibility bridge.
     `src/modules/save-defaults.js` owns default save construction; `src/save-defaults.js` is a generated compatibility bridge.
+    `src/modules/save-migrations.js` owns save migration implementation; `src/save-migrations.js` is a generated compatibility bridge.
+    Keep save consumers on `globalThis.TapSurvivorSaveMigrations` for now, do not hand-edit the generated bridge, and do not change save defaults, migrations, normalization, corrupt-save backup, or storage behavior while moving this bridge.
     `src/modules/weapon-cooldowns.js` owns weapon cooldown/stat-scaling implementation; `src/weapon-cooldowns.js` is a generated compatibility bridge.
     `src/modules/weapon-projectiles.js` owns projectile weapon implementation; `src/weapon-projectiles.js` is a generated compatibility bridge.
     `src/modules/weapon-targeting.js` owns weapon-targeting implementation; `src/weapon-targeting.js` is a generated compatibility bridge.
