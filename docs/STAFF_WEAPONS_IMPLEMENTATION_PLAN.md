@@ -2,208 +2,274 @@
 
 ## Scope
 
-This document audits the current Tap Survivor weapon, projectile, save, and shell UI surfaces in preparation for three future equippable staff weapons:
+This document audits the current Tap Survivor weapon, projectile, inventory/loadout, save,
+UI, and content systems in preparation for three future equippable staff weapons:
 
 - Lightning Staff
 - Fire Staff
 - Water Staff
 
-This is a planning slice only. No weapon content, runtime behavior, UI behavior, save migrations, generated files, assets, or gameplay changes are included here.
+This is an audit/design slice only. It intentionally adds no weapon content, runtime
+behavior, UI behavior, save migrations, generated files, assets, or gameplay changes.
 
-## 1. Current weapon system map
+## 1. Current Weapon System Map
 
-### Where weapons are defined
+### Weapon Definitions
 
 - Source weapon content lives in `content/registry/weapons.json`.
-- The registry currently defines weapons by ID with shared fields such as `name`,
-  `description`, `upgradeId`, `cooldown`, `damage`, `kind`, and `color`.
-- Kind-specific fields include `speed`, `radius`, `range`, `width`, `duration`, `tick`,
-  `pierce`, and mine timing fields.
-- Unlock graph data also lives in `content/registry/weapons.json` under `weaponUnlocks`.
-- Weapon-linked progression lives in `content/registry/quests.json` through per-weapon mastery chains.
-- Runtime registry assembly exposes `weaponDefs` and `weaponUnlocks` through `src/content-registry.js`.
+- Weapon entries are keyed by weapon ID and include shared fields such as `name`,
+  `description`, `upgradeId`, `cooldown`, `damage`, `kind`, `color`, and optional
+  `assetId`.
+- Kind-specific fields are already present in content:
+  - projectile-style fields: `speed`, `radius`, `pierce`
+  - beam/cone/area fields: `range`, `width`, `duration`, `tick`
+  - chain fields: `jumps`, `range`
+  - mine fields: `armDelay`, `explosionLife`, `spawnOffset`
+- Weapon unlock graph data lives in `weaponUnlocks` inside
+  `content/registry/weapons.json`.
+- Weapon-linked quest content lives in `content/registry/quests.json`; existing weapon
+  mastery quests use `weaponId`.
+- `src/content-registry.js` exposes generated content to runtime as `weaponDefs` and
+  `weaponUnlocks`.
 
-### How projectile visuals are resolved
+### Projectile And Effect Visual Resolution
 
-- Weapon visual metadata is content-driven through `content/registry/assets.json`.
-- `assets.sprites.weapons` contains per-weapon visual definitions such as sprite sheet frame data, icon sources, effect scale, and animation metadata.
-- Weapon entries can reference those visuals through `assetId` in `content/registry/weapons.json`.
-- Runtime projectile bolts in `src/modules/weapon-projectiles.js` only carry gameplay-facing values such as `weaponId`, `radius`, `damage`, `life`, `pierce`, `bounces`, and `color`.
-- Current projectile behavior code is therefore not self-describing enough to add unique staff visuals from content alone unless the new staffs can reuse the existing weapon effect rendering contract.
+- Weapon asset metadata is content-driven through `content/registry/assets.json`.
+- Weapon entries can point at `assets.sprites.weapons` through `assetId`; otherwise
+  runtime consumers can fall back to the weapon ID.
+- The projectile runtime in `src/modules/weapon-projectiles.js` creates bolt state with
+  gameplay values such as `weaponId`, position, velocity, `radius`, `damage`, `life`,
+  `pierce`, bounce/split state, hit tracking, and `color`.
+- The firing bridge in `src/weapon-fire.js` creates generic weapon burst state with
+  `weaponId`, radius, color, and lifetime.
+- Non-projectile behavior in `src/weapon-behaviors.js` creates beam and area state with
+  `weaponId`, coordinates, width/radius, color, and lifetime.
+- Current projectile/effect visuals are therefore mixed: content supplies sprite/color
+  metadata, while runtime code decides which live effect shape exists and which
+  `weaponId` is attached to it.
 
-### How firing behavior is selected
+### Firing Behavior Selection
 
-- `src/weapon-fire.js` is the public integration entry point.
-- `src/weapon-fire.js` dispatches by `weapon.kind` through a handler table:
+- `src/weapon-fire.js` is the public weapon-fire integration entry point.
+- It dispatches by `weapon.kind` through a fixed handler table:
   - `projectile` -> `src/modules/weapon-projectiles.js`
-  - `beam`, `cone`, `chain`, `target_area`, `lingering_area`, `mine`, `radial` -> `src/weapon-behaviors.js`
-- `src/modules/weapon-cooldowns.js` owns cooldown, damage, reach, width, projectile radius, and projectile-family run-upgrade scaling.
-- `src/modules/weapon-targeting.js` currently provides a simple nearest-enemy selector.
+  - `beam` -> `src/weapon-behaviors.js`
+  - `cone` -> `src/weapon-behaviors.js`
+  - `chain` -> `src/weapon-behaviors.js`
+  - `target_area` -> `src/weapon-behaviors.js`
+  - `lingering_area` -> `src/weapon-behaviors.js`
+  - `mine` -> `src/weapon-behaviors.js`
+  - `radial` -> `src/weapon-behaviors.js`
+- `src/modules/weapon-cooldowns.js` owns cooldown, damage, reach, width, projectile
+  radius, SFX timing, and projectile-family run-upgrade scaling.
+- `src/modules/weapon-targeting.js` currently exposes nearest-enemy targeting.
 
-### Content-driven, code-driven, or mixed?
+### Content-Driven, Code-Driven, Or Mixed?
 
-- Weapon definitions are content-driven.
-- Weapon kind selection is mixed: content chooses the `kind`, but code must already support that `kind`.
-- Projectile visuals are mixed: content provides asset mappings and color metadata, while runtime code decides what data is attached to live bolts and areas.
-- Firing behavior is code-driven inside existing handler families.
-- Conclusion: staff weapons are not purely content-only unless each staff can be represented as an existing supported `kind` with no new targeting, projectile state, or equip flow.
+- Weapon authoring is content-driven.
+- Supported weapon kinds are code-backed; content can select an existing `kind`, but
+  unsupported behavior requires runtime code.
+- Projectile-family stat scaling is mixed: content declares a projectile weapon, while
+  code applies projectile run-upgrade modifiers.
+- Unique behavior is code-driven unless it fits an existing behavior family.
+- Unique visuals are mixed: adding asset metadata may be content-only, but new live
+  visual shapes, impact timing, or per-weapon effect rules require runtime work.
+- Conclusion: the staff weapons are not safely content-only end to end.
 
-## 2. Inventory / loadout / equipment support audit
+## 2. Inventory / Loadout / Equipment Support Audit
 
-### Whether a real equip/loadout system already exists
+### Existing Equip/Loadout Support
 
-- A real inventory/loadout UI exists for relics.
-- `src/shell-ui.js` has an inventory tab and delegates inventory rendering to `src/shell-relic-ui.js`.
-- `src/shell-relic-ui.js` implements slot UI, equip, unequip, and capacity rules for relics.
-- The audited save files support `unlockedRelics` and `equippedRelics`.
-- The audited save files support `unlockedWeapons`, but they do not support persisted `equippedWeapons`.
-- `src/weapon-fire.js` clearly expects runtime `game.player.equippedWeapons`, which proves equipped weapons exist during play, but that loadout state is not represented in the audited save surfaces.
+- A real inventory tab exists in `src/shell-ui.js`.
+- The current inventory implementation delegates to `src/shell-relic-ui.js`.
+- `src/shell-relic-ui.js` implements relic slots, relic inventory, equip, unequip, and
+  capacity rules.
+- The audited save surfaces include `unlockedRelics` and `equippedRelics`.
+- The audited save surfaces include `unlockedWeapons`, but no persisted
+  `equippedWeapons`.
+- `src/weapon-fire.js` expects `game.player.equippedWeapons` during a run, so run-time
+  weapon equipment exists, but the audited UI/save files do not show a persistent weapon
+  loadout system.
 
-### Where UI changes would need to happen
+### UI Change Locations
 
-- The existing menu entry point is `src/shell-ui.js`.
-- The current inventory implementation is relic-specific in `src/shell-relic-ui.js`.
-- A future weapon loadout UI will likely need either:
-  - a parallel weapon inventory/loadout controller beside the relic UI, or
-  - an extension of the inventory tab so relic and weapon loadouts coexist cleanly.
-- Because the audited inventory implementation is relic-focused, weapon equip UI does not appear to be present yet.
+- `src/shell-ui.js` owns the run menu tab switching and inventory entry point.
+- `src/shell-relic-ui.js` is relic-specific, not a generic equipment controller.
+- A future weapon loadout UI should either:
+  - add a parallel weapon inventory/loadout controller and have `src/shell-ui.js` render
+    both relics and weapons in the inventory tab, or
+  - deliberately split the inventory UI into separate relic and weapon sections.
+- Weapon equip UI should be isolated from staff weapon content/behavior slices because it
+  changes product flow and persistence assumptions.
 
-### Whether save data already supports equipped weapons
+### Save Support For Equipped Weapons
 
-- `src/save-defaults.js` includes `unlockedWeapons`, but not `equippedWeapons`.
-- `src/save-normalize.js` normalizes `unlockedWeapons`, but not `equippedWeapons`.
-- `src/save-migrations.js` contains no weapon-loadout migration step.
-- Based on the audited files, persistent weapon loadout support does not yet exist.
+- `src/modules/save-defaults.js` defines `unlockedWeapons: ["spark_bolt"]`, but no
+  `equippedWeapons`.
+- `src/modules/save-normalize.js` normalizes `unlockedWeapons`, but no equipped weapon
+  loadout field.
+- `src/modules/save-migrations.js` has save versions up to `CURRENT_SAVE_VERSION = 3`
+  and no weapon-loadout migration step.
+- `src/save.js`, `src/save-defaults.js`, `src/save-migrations.js`, and
+  `src/save-normalize.js` are generated bridges; their owning source is under
+  `src/modules/`.
 
-### Whether new save defaults or migrations are required
+### Save Defaults / Migrations Needed?
 
-- If future weapon equip/loadout choices must persist between sessions, new save fields will be required.
-- That would require at minimum:
-  - save default support
-  - save normalization support
-  - a migration step for old saves
-- If the team chooses a temporary non-persistent loadout for an earlier slice, save
-  changes could be deferred.
-- The user goal explicitly says staffs must eventually be equippable from the
-  inventory/loadout UI, so save work is likely required before the feature is complete.
+- If the final staff feature requires persistent pre-run loadout choices, save defaults,
+  normalization, and a migration are required.
+- If an interim staff content slice only adds unlockable weapons that can be equipped
+  during a run through existing run-level mechanics, save work can be deferred.
+- The stated final requirement is inventory/loadout equip support, so save integration
+  should be planned as its own compatibility-sensitive slice.
 
-## 3. Staff weapons design
+## 3. Staff Weapons Design
 
-The MVP goal should be to keep all three staffs inside existing weapon families where possible and avoid inventing a brand new behavior kind unless audit-backed implementation later proves it is necessary.
+The MVP design should reuse existing behavior families first and only add runtime
+behavior when audit evidence proves the existing families cannot express the staff.
 
 ### Lightning Staff
 
-- Intended behavior: fast chain-oriented arc attack that hits the nearest target and jumps to nearby enemies.
-- Suggested runtime family: reuse `chain`.
-- Suggested visual: thin bright electric bolt or arc with yellow-blue tint, using a dedicated `assets.sprites.weapons` effect entry later.
-- MVP rule: prioritize reliable nearest-target chaining over complex fork logic.
+- Intended behavior: fast chain lightning that starts at the nearest enemy and jumps to
+  nearby targets.
+- MVP family: `chain`.
+- Projectile/effect visual: thin yellow-blue electric arc, using a dedicated future
+  `assets.sprites.weapons.lightning_staff` entry if rendering supports it cleanly.
+- MVP constraint: no branching fork logic in the first implementation; keep it readable
+  as a short sequence of jumps.
 
 ### Fire Staff
 
-- Intended behavior: straight projectile with explosive hit splash.
-- Suggested runtime family: reuse `projectile`, with later behavior support if a staff-specific effect is needed.
-- Suggested visual: orange-red ember bolt or fireball with a stronger burst frame on impact.
-- MVP rule: favor one primary projectile and modest area burst over persistent burn systems.
+- Intended behavior: direct fireball projectile with a small impact burst.
+- MVP family: `projectile`.
+- Projectile/effect visual: orange-red ember or fireball bolt, with a compact burst on
+  hit if the existing projectile/explosion flow can support it.
+- MVP constraint: no damage-over-time burn system in the first implementation. Reuse
+  projectile hit/explosive behavior where possible.
 
 ### Water Staff
 
-- Intended behavior: slower control-focused shot with wider body and softer area control.
-- Suggested runtime family: reuse `projectile` if large orb behavior is enough, or `lingering_area` if later inspection proves a puddle-style hit is better.
-- Suggested visual: blue-teal orb or wave shot with watery trail frames.
-- MVP rule: keep it to one readable control identity, either large slow projectile or short puddle, not both in the first implementation.
+- Intended behavior: slower control-flavored staff attack with a larger, more readable
+  hit shape.
+- MVP family: start with `projectile` as a slow blue orb; consider `lingering_area` only
+  if the future slice explicitly chooses a puddle-style identity.
+- Projectile/effect visual: blue-teal orb or wave with a soft splash/flow effect.
+- MVP constraint: choose one identity for the first version, either large slow orb or
+  short puddle, not both.
 
-## 4. Implementation risk assessment
+## 4. Implementation Risk Assessment
 
-### Content-only parts
+### Content-Only Parts
 
-- Adding weapon definitions, unlock nodes, mastery quests, and future asset registry entries is content-side work.
-- Reusing existing supported `kind` values reduces risk significantly.
-- `content/registry/weapons.json`, `content/registry/quests.json`, and `content/registry/assets.json` are the natural future content entry points.
+- Weapon definitions, unlock nodes, mastery quests, and weapon asset registry entries
+  are content-side work.
+- Content sources are `content/registry/weapons.json`, `content/registry/quests.json`,
+  and `content/registry/assets.json`.
+- `scripts/content/content-validation.mjs` validates weapon kind support, unlock
+  references, quest references, and `assetId` references.
+- Content-only work is safest when a staff uses an existing `kind` and existing visual
+  rendering paths.
 
-### Runtime-code parts
+### Runtime-Code Parts
 
-- Any staff behavior that cannot map cleanly onto `projectile`, `chain`, `beam`, `cone`, `radial`, `target_area`, `lingering_area`, or `mine` requires runtime changes.
-- Even when reusing `projectile`, unique on-hit or per-weapon special handling may
-  require code changes.
-- Current projectile behavior is largely family-based, not weapon-ID-specific beyond
-  inherited stats and generic projectile upgrades.
-- Visual differentiation may also need runtime rendering support if existing weapon effect rendering cannot express the desired staff look with the current asset contract alone.
+- New weapon kinds require `src/weapon-fire.js` dispatch support plus runtime behavior.
+- Weapon-specific projectile impact behavior likely belongs in
+  `src/modules/weapon-projectiles.js`.
+- New chain/beam/area behavior likely belongs in `src/weapon-behaviors.js`.
+- New targeting rules likely belong in `src/modules/weapon-targeting.js`.
+- Generated bridges such as `src/weapon-projectiles.js` and `src/weapon-targeting.js`
+  must be regenerated through the existing bridge flow, not edited directly.
 
-### UI / loadout parts
+### UI / Loadout Parts
 
-- Weapon equip/loadout UI is the largest missing product surface visible in the audited files.
-- The inventory tab is already wired, but its implementation is relic-specific.
-- This creates moderate-to-high risk for a combined weapon+UI slice if not separated.
+- Weapon loadout UI is the largest missing surface in the audited UI files.
+- Existing inventory UI is relic-specific, so staff equip/loadout should not be bundled
+  with the first content or behavior slice.
+- Future UI work should be validated with existing UI and save smoke scripts.
 
-### Save / migration risks
+### Save / Migration Risks
 
-- Persistent equipped weapon support is not visible in the audited save surfaces.
-- Adding it later will require schema, normalization, and migration work.
-- This is a compatibility-sensitive area and should be isolated into its own slice.
+- Persistent weapon loadouts need a new save field and backward-compatible migration.
+- The owning save files live under `src/modules/`; the root `src/save*.js` files are
+  generated bridges.
+- Save work must preserve existing `unlockedWeapons`, relic equip, quest, shop, and
+  migration behavior.
 
-### Generated-file risks
+### Generated-File Risks
 
-- `src/content.generated.js` must not be hand-edited.
-- `src/save.js`, `src/save-defaults.js`, `src/save-migrations.js`, `src/save-normalize.js`, and `src/weapon-projectiles.js` are generated bridge files in the audited surfaces and must not be edited directly.
-- Future runtime work must go through the owning `src/modules/` source or the non-generated source file listed by repo docs, followed by the existing build flow where required.
+- `src/content.generated.js` is generated and must not be hand-edited.
+- `www/` is generated output and must not be edited.
+- Generated runtime bridges must follow the repo's module bridge rules.
+- Content changes must start from `content/registry/*.json`.
 
-## 5. Proposed safe slice sequence
+## 5. Proposed Safe Slice Sequence
 
-### Slice 2: Audit-backed content and schema proof for one staff
+### Slice 2: One-Staff Content And Schema Proof
 
-- Goal: add the minimum content-side shape for one staff only if it can reuse an existing weapon `kind` without runtime changes.
-- Recommended candidate: Lightning Staff as `chain`, because `chain` already exists and has a clean nearest-target identity.
-- Files likely involved later:
+- Goal: add one staff as content only if it fits an existing supported `kind`.
+- Recommended candidate: Lightning Staff as `chain`, because the current `chain`
+  behavior already matches the simplest staff identity.
+- Future files likely involved:
   - `content/registry/weapons.json`
   - `content/registry/quests.json`
   - `content/registry/assets.json`
-- Stop condition:
-  - one staff exists as content only, or
-  - inspection during implementation proves a runtime behavior slice must come first.
+- Stop condition: one staff validates as content-only, or the slice proves runtime visual
+  or behavior support must come first.
 
-### Slice 3: Lightning Staff projectile / behavior support
+### Slice 3: Lightning Staff Behavior / Visual Support
 
-- Goal: implement any runtime behavior or effect support required specifically for Lightning Staff after the content-only attempt proves what is missing.
-- Preferred outcome: keep Lightning Staff inside existing `chain` behavior and only extend visuals if needed.
-- Files likely involved later:
+- Goal: make Lightning Staff read clearly in runtime without adding unrelated staff
+  content.
+- Preferred outcome: keep behavior on `chain` and only add the smallest visual support
+  needed.
+- Future files likely involved:
   - `src/weapon-behaviors.js`
-  - possibly `src/weapon-fire.js`
-  - possibly `src/modules/weapon-targeting.js`
-- Stop condition:
-  - Lightning Staff behavior and visuals are validated without touching save or UI.
+  - `src/weapon-fire.js` only if dispatch or attack animation needs adjustment
+  - `src/modules/weapon-targeting.js` only if chain targeting needs a supported helper
+  - generated bridge rebuild only if a module file changes
+- Stop condition: Lightning Staff behavior and visuals validate without UI or save work.
 
-### Slice 4: Fire Staff and Water Staff runtime/content follow-through
+### Slice 4: Fire Staff And Water Staff Content / Behavior
 
-- Goal: add the remaining two staffs using the smallest number of behavior extensions after Lightning Staff establishes the pattern.
-- Preferred order:
-  - Fire Staff first if it fits cleanly into existing projectile plus impact visuals.
-  - Water Staff second because it is the most likely to need control-style behavior tradeoffs.
-- Files likely involved later:
+- Goal: add Fire Staff and Water Staff after Lightning establishes the pattern.
+- Fire Staff should try `projectile` first and keep the impact burst simple.
+- Water Staff should try a slow `projectile` first; defer puddle/area behavior unless
+  specifically needed.
+- Future files likely involved:
   - `content/registry/weapons.json`
+  - `content/registry/quests.json`
   - `content/registry/assets.json`
-  - `content/registry/quests.json`
-  - `src/modules/weapon-projectiles.js` if per-weapon projectile handling is needed
-  - `src/weapon-behaviors.js` if Water Staff needs area control behavior
+  - `src/modules/weapon-projectiles.js` if per-weapon projectile impact support is
+    required
+  - `src/weapon-behaviors.js` only if Water Staff becomes area-based
 
-### Slice 5: Weapon equip / loadout UI and save integration
+### Slice 5: Weapon Equip / Loadout UI And Save Integration
 
-- Goal: make weapon choice persistent and player-facing through the inventory/loadout surfaces.
-- Files likely involved later:
+- Goal: make weapon choice persistent and player-facing through the inventory/loadout UI.
+- Keep this separate because it mixes UI, save compatibility, and product flow.
+- Future files likely involved:
   - `src/shell-ui.js`
-  - likely a new or extended inventory UI controller near `src/shell-relic-ui.js`
-  - owning save source modules corresponding to current generated save bridges
-- This slice should remain separate because it mixes UI, save compatibility, and product flow risk.
+  - a new or extended inventory/loadout controller near `src/shell-relic-ui.js`
+  - `src/modules/save-defaults.js`
+  - `src/modules/save-normalize.js`
+  - `src/modules/save-migrations.js`
+  - generated save bridge rebuild
+- Stop condition: saved weapon loadout persists, normalizes safely, and does not break
+  existing relic inventory behavior.
 
-### Slice 6: Balancing, quests, validation, and polish
+### Slice 6: Balancing, Quests, Validation, And Polish
 
-- Goal: tune cooldowns, damage, quest pacing, unlock placement, and visual consistency after mechanics and loadout are stable.
-- Files likely involved later:
+- Goal: tune cooldowns, damage, unlock placement, mastery quest pacing, run-upgrade
+  interactions, and visual consistency after mechanics and loadout are stable.
+- Future files likely involved:
   - `content/registry/weapons.json`
   - `content/registry/quests.json`
-  - `content/registry/run-upgrades.json` only if family interactions need adjustment
-  - `content/registry/shop-items.json` only if later balance work explicitly needs staff-related meta support
+  - `content/registry/run-upgrades.json` only if projectile-family interactions need
+    explicit adjustment
+  - `content/registry/shop-items.json` only if later balance work explicitly adds
+    staff-related meta support
 
-## 6. Validation matrix
+## 6. Validation Matrix
 
 Use existing repo scripts only.
 
@@ -217,6 +283,7 @@ Use existing repo scripts only.
 
 ### Slice 3
 
+- `npm run build:bridges` if any `src/modules/` file changes
 - `npm run agent:check`
 - `npm run smoke:start-run`
 - `npm run smoke:projectile-colors`
@@ -226,20 +293,22 @@ Use existing repo scripts only.
 ### Slice 4
 
 - `npm run build:content`
+- `npm run build:bridges` if any `src/modules/` file changes
 - `npm run validate:content`
 - `npm run agent:check`
 - `npm run smoke:start-run`
 - `npm run smoke:projectile-colors`
-- `npm run test`
+- `npm test`
 - `git diff --check`
 
 ### Slice 5
 
+- `npm run build:bridges`
 - `npm run agent:check`
 - `npm run smoke:save`
 - `npm run smoke:start-run`
 - `npm run verify:ui`
-- `npm run test`
+- `npm test`
 - `git diff --check`
 
 ### Slice 6
@@ -250,22 +319,30 @@ Use existing repo scripts only.
 - `npm run content:summary`
 - `npm run balance:check`
 - `npm run agent:check`
-- `npm run test`
+- `npm test`
 - `git diff --check`
 
-## 7. Hard boundaries
+## 7. Hard Boundaries
 
 - Do not hand-edit generated files.
+- Do not hand-edit `src/content.generated.js`.
+- Do not edit `www/`.
 - Content source of truth is `content/registry/*.json`.
-- `src/content.generated.js` is generated output, not an edit target.
-- Runtime bridge/generated files must follow existing bridge rules and be changed only through their owning source files.
+- Runtime bridge/generated files must follow existing bridge rules and be changed only
+  through their owning source files.
 - Save bridge/generated files must not be hand-edited.
 - One feature slice at a time.
-- Keep weapon content slices separate from persistent loadout/save compatibility unless the implementation slice explicitly requires both.
+- Keep weapon content, runtime behavior, UI/loadout, and save compatibility in separate
+  validated slices unless a future task explicitly broadens scope.
 
-## Audit conclusion
+## Audit Conclusion
 
-- Existing weapon authoring is registry-driven, but runtime behavior is mixed content-plus-code.
-- Unique staff visuals can likely start from the existing weapon asset registry pattern, but the audited runtime suggests visuals and per-weapon behavior may still need code support.
-- The clearest missing feature for the final goal is persistent weapon equip/loadout support.
-- Because relic loadout exists and weapon loadout persistence does not, staff weapons should not be treated as a content-only task end to end.
+- Existing weapon authoring is registry-driven, but runtime behavior is mixed
+  content-plus-code.
+- Lightning Staff has the cleanest MVP path through existing `chain` behavior.
+- Fire Staff and Water Staff can start as projectile-family designs, but unique impact
+  and control identity may require runtime support.
+- A persistent weapon equip/loadout UI does not appear to exist in the audited UI/save
+  surfaces.
+- Staff weapons should be treated as a multi-slice content, runtime, UI, and save
+  feature, not a single content-only change.
