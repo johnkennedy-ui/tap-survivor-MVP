@@ -306,7 +306,8 @@ for (let frame = 0; frame < 20; frame += 1) {
   rafCallback(1000 + frame * 50);
 }
 check("x5 advances run HUD speed", elements.get("runHud").textContent.includes("Speed x5"));
-check("x5 advances elapsed game time", elements.get("runHud").textContent.includes("Time 0:05"));
+rafCallback(2000);
+check("x5 advances elapsed game time after HUD throttle interval", elements.get("runHud").textContent.includes("Time 0:05"));
 
 if (process.exitCode) {
   console.error("\nSpeed control verification failed.");
