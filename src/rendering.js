@@ -1,11 +1,12 @@
 (() => {
-function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, drawImage, drawSprite, skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
+function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
   const hudRenderer = createHudRenderer({
     canvas,
     ctx,
     roundedRectPath,
     clamp,
     drawSprite,
+    runUpgradeDefs,
     weaponDefs,
   });
   const enemyRenderer = createEnemyRenderer({

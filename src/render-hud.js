@@ -1,6 +1,5 @@
 (() => {
-function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDefs, clamp }) {
-  const runUpgradeDefs = globalThis.TapSurvivorContent?.runUpgrades || [];
+function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, weaponDefs, runUpgradeDefs = [], clamp }) {
   const skillRail = globalThis.TapSurvivorRenderSkillRail.createSkillRailRenderer({
     canvas,
     ctx,

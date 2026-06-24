@@ -417,6 +417,7 @@ const renderer = rendering.createRenderer({
   createHudRenderer: renderHud.createHudRenderer,
   drawImage: spriteSystem.drawImage,
   drawSprite: spriteSystem.drawSprite,
+  runUpgradeDefs,
   skillEffectSprites,
   spriteSheetRenderer,
   weaponDefs,
