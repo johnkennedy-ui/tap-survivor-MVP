@@ -71,6 +71,7 @@ const {
   content,
   upgradeContent,
 });
+const skillEffectSprites = spriteDefs.weapons || {};
 const spriteHelpers = sprites;
 const spriteSystem = spriteHelpers.createSpriteSystem({ ctx, spriteDefs });
 const spriteSheetRenderer = spriteHelpers.createSpriteSheetRenderer({
@@ -416,6 +417,7 @@ const renderer = rendering.createRenderer({
   createHudRenderer: renderHud.createHudRenderer,
   drawImage: spriteSystem.drawImage,
   drawSprite: spriteSystem.drawSprite,
+  skillEffectSprites,
   spriteSheetRenderer,
   weaponDefs,
 });

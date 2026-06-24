@@ -97,7 +97,7 @@
     "src/render-enemies.js": 1,
     "src/render-hud.js": 3,
     "src/render-skill-rail.js": 1,
-    "src/rendering.js": 2,
+    "src/rendering.js": 1,
     "src/run-lifecycle.js": 1,
     "src/run-state.js": 1,
     "src/run-ui.js": 1,

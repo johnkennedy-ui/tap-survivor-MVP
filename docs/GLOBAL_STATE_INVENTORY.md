@@ -34,6 +34,8 @@ Generated content globals:
 - `src/render-enemies.js` still owns the `TapSurvivorRenderEnemies` compatibility bridge. `src/rendering.js` now receives
   `createEnemyRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderEnemies`; `src/game.js`
   remains the script-order bootstrap reader until the rendering stack can safely become ESM.
+- `src/rendering.js` now receives weapon skill-effect sprite metadata through factory wiring instead of reading
+  `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.
