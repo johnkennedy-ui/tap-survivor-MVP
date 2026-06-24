@@ -243,6 +243,19 @@ behavior when audit evidence proves the existing families cannot express the sta
     required
   - `src/weapon-behaviors.js` only if Water Staff becomes area-based
 
+### Slice 4 Result: Fire Staff And Water Staff Content Proofs
+
+- Added Fire Staff as `fire_staff`, a `projectile` weapon reusing the existing
+  `flame_wave` visual asset and Flame Wave SFX path.
+- Added Water Staff as `water_staff`, a slower `projectile` weapon reusing the existing
+  `frost_orb` visual asset and Frost Orb SFX path.
+- Lightning Staff remains `lightning_staff`, a `chain` weapon reusing the existing
+  `chain_spark` visual asset and Chain Spark SFX path.
+- All three staff weapons can appear in the MVP starting weapon selector once present
+  in `save.unlockedWeapons`.
+- Remaining future work: unique staff icons/effects, dedicated SFX, Fire Staff impact
+  burst identity, Water Staff control identity, and any final balance tuning.
+
 ### Slice 5: Weapon Equip / Loadout UI And Save Integration
 
 - Goal: make weapon choice persistent and player-facing through the inventory/loadout UI.

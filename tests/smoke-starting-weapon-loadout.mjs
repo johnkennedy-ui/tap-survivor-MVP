@@ -21,7 +21,7 @@ const loadoutHarness = createGameHarness({
   fakeCombat: true,
   initialSave: {
     saveVersion: 3,
-    unlockedWeapons: ["spark_bolt", "lightning_staff"],
+    unlockedWeapons: ["spark_bolt", "lightning_staff", "fire_staff", "water_staff"],
     selectedStartingWeapon: "spark_bolt",
   },
 });
@@ -33,6 +33,14 @@ check("inventory exposes starting weapon selector", Boolean(select));
 check(
   "Lightning Staff is selectable",
   select?.children?.some((option) => option.value === "lightning_staff")
+);
+check(
+  "Fire Staff is selectable",
+  select?.children?.some((option) => option.value === "fire_staff")
+);
+check(
+  "Water Staff is selectable",
+  select?.children?.some((option) => option.value === "water_staff")
 );
 
 select.value = "lightning_staff";

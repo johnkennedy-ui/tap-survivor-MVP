@@ -1839,6 +1839,13 @@
         "run_haste_projectiles": "assets/generated/tower/sprites/weapon-spark-rune.svg?v=generated-20260614-weapons",
         "run_heavy_projectiles": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
       }
+    },
+    "sfx": {
+      "weapons": {
+        "lightning_staff": "assets/generated/tower/sfx/chain_spark.wav?v=sfx-20260615",
+        "fire_staff": "assets/generated/tower/sfx/flame_wave.wav?v=sfx-20260615",
+        "water_staff": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615"
+      }
     }
   }
 }

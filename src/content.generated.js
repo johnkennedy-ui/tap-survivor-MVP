@@ -97,6 +97,30 @@ globalThis.TapSurvivorContent = {
       "color": "#8de7ff",
       "assetId": "chain_spark"
     },
+    "fire_staff": {
+      "name": "Fire Staff",
+      "description": "A staff focus that launches compact fire bolts.",
+      "upgradeId": "fire_staff_damage",
+      "cooldown": 0.9,
+      "damage": 24,
+      "kind": "projectile",
+      "speed": 360,
+      "radius": 7,
+      "color": "#ff7043",
+      "assetId": "flame_wave"
+    },
+    "water_staff": {
+      "name": "Water Staff",
+      "description": "A staff focus that sends slow blue orbs through enemies.",
+      "upgradeId": "water_staff_damage",
+      "cooldown": 1,
+      "damage": 22,
+      "kind": "projectile",
+      "speed": 270,
+      "radius": 10,
+      "color": "#5ed7ff",
+      "assetId": "frost_orb"
+    },
     "moon_glaive": {
       "name": "Moon Glaive",
       "description": "Large piercing blade projectile.",
@@ -196,6 +220,24 @@ globalThis.TapSurvivorContent = {
       "requiresNode": "unlock_chain_spark",
       "requiresQuest": "chain_spark_mastery",
       "opensQuest": "lightning_staff_mastery"
+    },
+    {
+      "id": "unlock_fire_staff",
+      "weaponId": "fire_staff",
+      "cost": 2,
+      "branch": "Area",
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "flame_wave_mastery",
+      "opensQuest": "fire_staff_mastery"
+    },
+    {
+      "id": "unlock_water_staff",
+      "weaponId": "water_staff",
+      "cost": 2,
+      "branch": "Control",
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "frost_orb_mastery",
+      "opensQuest": "water_staff_mastery"
     },
     {
       "id": "unlock_void_mine",
@@ -838,6 +880,52 @@ globalThis.TapSurvivorContent = {
       "name": "Storm Channel",
       "description": "Deal 8,500 damage with Lightning Staff.",
       "weaponId": "lightning_staff",
+      "target": 8500,
+      "rewardQp": 5
+    },
+    "fire_staff_mastery": {
+      "name": "Staff Ember",
+      "description": "Deal 400 damage with Fire Staff.",
+      "weaponId": "fire_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "fire_staff_expert"
+    },
+    "fire_staff_expert": {
+      "name": "Staff Pyre",
+      "description": "Deal 2,200 damage with Fire Staff.",
+      "weaponId": "fire_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "fire_staff_master"
+    },
+    "fire_staff_master": {
+      "name": "Flame Channel",
+      "description": "Deal 8,500 damage with Fire Staff.",
+      "weaponId": "fire_staff",
+      "target": 8500,
+      "rewardQp": 5
+    },
+    "water_staff_mastery": {
+      "name": "Staff Current",
+      "description": "Deal 400 damage with Water Staff.",
+      "weaponId": "water_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "water_staff_expert"
+    },
+    "water_staff_expert": {
+      "name": "Staff Tide",
+      "description": "Deal 2,200 damage with Water Staff.",
+      "weaponId": "water_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "water_staff_master"
+    },
+    "water_staff_master": {
+      "name": "Tide Channel",
+      "description": "Deal 8,500 damage with Water Staff.",
+      "weaponId": "water_staff",
       "target": 8500,
       "rewardQp": 5
     },
@@ -5429,6 +5517,9 @@ globalThis.TapSurvivorContent = {
     },
     "sfx": {
       "weapons": {
+        "lightning_staff": "assets/generated/tower/sfx/chain_spark.wav?v=sfx-20260615",
+        "fire_staff": "assets/generated/tower/sfx/flame_wave.wav?v=sfx-20260615",
+        "water_staff": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615",
         "spark_bolt": "assets/generated/tower/sfx/spark_bolt.wav?v=sfx-20260615",
         "prism_beam": "assets/generated/tower/sfx/prism_beam.wav?v=sfx-20260615",
         "frost_orb": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615",

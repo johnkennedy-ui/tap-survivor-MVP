@@ -95,6 +95,30 @@
       "color": "#8de7ff",
       "assetId": "chain_spark"
     },
+    "fire_staff": {
+      "name": "Fire Staff",
+      "description": "A staff focus that launches compact fire bolts.",
+      "upgradeId": "fire_staff_damage",
+      "cooldown": 0.9,
+      "damage": 24,
+      "kind": "projectile",
+      "speed": 360,
+      "radius": 7,
+      "color": "#ff7043",
+      "assetId": "flame_wave"
+    },
+    "water_staff": {
+      "name": "Water Staff",
+      "description": "A staff focus that sends slow blue orbs through enemies.",
+      "upgradeId": "water_staff_damage",
+      "cooldown": 1,
+      "damage": 22,
+      "kind": "projectile",
+      "speed": 270,
+      "radius": 10,
+      "color": "#5ed7ff",
+      "assetId": "frost_orb"
+    },
     "moon_glaive": {
       "name": "Moon Glaive",
       "description": "Large piercing blade projectile.",
@@ -194,6 +218,24 @@
       "requiresNode": "unlock_chain_spark",
       "requiresQuest": "chain_spark_mastery",
       "opensQuest": "lightning_staff_mastery"
+    },
+    {
+      "id": "unlock_fire_staff",
+      "weaponId": "fire_staff",
+      "cost": 2,
+      "branch": "Area",
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "flame_wave_mastery",
+      "opensQuest": "fire_staff_mastery"
+    },
+    {
+      "id": "unlock_water_staff",
+      "weaponId": "water_staff",
+      "cost": 2,
+      "branch": "Control",
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "frost_orb_mastery",
+      "opensQuest": "water_staff_mastery"
     },
     {
       "id": "unlock_void_mine",
