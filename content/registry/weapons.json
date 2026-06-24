@@ -92,8 +92,7 @@
       "kind": "chain",
       "jumps": 3,
       "range": 300,
-      "color": "#8de7ff",
-      "assetId": "chain_spark"
+      "color": "#8f7dff"
     },
     "fire_staff": {
       "name": "Fire Staff",
@@ -104,8 +103,7 @@
       "kind": "projectile",
       "speed": 360,
       "radius": 7,
-      "color": "#ff7043",
-      "assetId": "flame_wave"
+      "color": "#ff4f2f"
     },
     "water_staff": {
       "name": "Water Staff",
@@ -116,8 +114,7 @@
       "kind": "projectile",
       "speed": 270,
       "radius": 10,
-      "color": "#5ed7ff",
-      "assetId": "frost_orb"
+      "color": "#4ddcff"
     },
     "moon_glaive": {
       "name": "Moon Glaive",

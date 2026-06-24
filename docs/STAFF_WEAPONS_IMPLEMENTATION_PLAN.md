@@ -256,6 +256,23 @@ behavior when audit evidence proves the existing families cannot express the sta
 - Remaining future work: unique staff icons/effects, dedicated SFX, Fire Staff impact
   burst identity, Water Staff control identity, and any final balance tuning.
 
+### Visual Identity Slice Result
+
+- Added explicit staff visual identity metadata using existing supported content fields
+  only: `color`, `assets.sprites.weapons`, `iconScale`, `effectScale`, `effectAlpha`,
+  frame data, and existing `iconSrc` paths.
+- `lightning_staff` keeps `chain` behavior and now uses its own staff asset entry with
+  an electric blue-violet gameplay color and Chain Spark sheet/icon reuse.
+- `fire_staff` keeps `projectile` behavior and now uses its own staff asset entry with
+  a stronger orange-red gameplay color and Flame Wave sheet/icon reuse.
+- `water_staff` keeps `projectile` behavior and now uses its own staff asset entry with
+  a brighter blue-cyan gameplay color and Frost Orb sheet/icon reuse.
+- Runtime behavior, targeting, cooldowns, damage, save structure, loadout UI, and
+  progression were unchanged.
+- Final unique identity still needs dedicated staff art/icons, purpose-built SFX, and
+  runtime support if future slices require tinting, impact bursts, or water-control
+  mechanics beyond the existing behavior families.
+
 ### Slice 5: Weapon Equip / Loadout UI And Save Integration
 
 - Goal: make weapon choice persistent and player-facing through the inventory/loadout UI.
