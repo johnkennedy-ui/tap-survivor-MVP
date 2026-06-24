@@ -333,6 +333,29 @@
       "target": 8000,
       "rewardQp": 5
     },
+    "lightning_staff_mastery": {
+      "name": "Staff Current",
+      "description": "Deal 400 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "lightning_staff_expert"
+    },
+    "lightning_staff_expert": {
+      "name": "Staff Conduit",
+      "description": "Deal 2,200 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "lightning_staff_master"
+    },
+    "lightning_staff_master": {
+      "name": "Storm Channel",
+      "description": "Deal 8,500 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 8500,
+      "rewardQp": 5
+    },
     "void_mine_mastery": {
       "name": "Trap Field",
       "description": "Deal 500 damage with Void Mine.",

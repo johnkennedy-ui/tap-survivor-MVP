@@ -85,6 +85,18 @@ globalThis.TapSurvivorContent = {
       "range": 280,
       "color": "#f6f871"
     },
+    "lightning_staff": {
+      "name": "Lightning Staff",
+      "description": "A staff focus that arcs lightning through nearby enemies.",
+      "upgradeId": "lightning_damage",
+      "cooldown": 1.15,
+      "damage": 20,
+      "kind": "chain",
+      "jumps": 3,
+      "range": 300,
+      "color": "#8de7ff",
+      "assetId": "chain_spark"
+    },
     "moon_glaive": {
       "name": "Moon Glaive",
       "description": "Large piercing blade projectile.",
@@ -175,6 +187,15 @@ globalThis.TapSurvivorContent = {
       "requiresNode": "unlock_laser",
       "requiresQuest": "use_laser_run",
       "opensQuest": "chain_spark_mastery"
+    },
+    {
+      "id": "unlock_lightning_staff",
+      "weaponId": "lightning_staff",
+      "cost": 2,
+      "branch": "Arc",
+      "requiresNode": "unlock_chain_spark",
+      "requiresQuest": "chain_spark_mastery",
+      "opensQuest": "lightning_staff_mastery"
     },
     {
       "id": "unlock_void_mine",
@@ -795,6 +816,29 @@ globalThis.TapSurvivorContent = {
       "description": "Deal 8,000 damage with Chain Spark.",
       "weaponId": "chain_spark",
       "target": 8000,
+      "rewardQp": 5
+    },
+    "lightning_staff_mastery": {
+      "name": "Staff Current",
+      "description": "Deal 400 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "lightning_staff_expert"
+    },
+    "lightning_staff_expert": {
+      "name": "Staff Conduit",
+      "description": "Deal 2,200 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "lightning_staff_master"
+    },
+    "lightning_staff_master": {
+      "name": "Storm Channel",
+      "description": "Deal 8,500 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 8500,
       "rewardQp": 5
     },
     "void_mine_mastery": {
