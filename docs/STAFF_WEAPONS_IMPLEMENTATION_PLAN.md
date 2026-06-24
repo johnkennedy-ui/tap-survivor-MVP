@@ -323,6 +323,18 @@ Use existing repo scripts only.
 - `npm test`
 - `git diff --check`
 
+## Starting Weapon Loadout Result
+
+- Added a minimal optional `selectedStartingWeapon` save value that defaults to
+  `spark_bolt` and normalizes back to `spark_bolt` when the selected weapon is locked or
+  unknown.
+- Run state now starts with the selected unlocked weapon, allowing `lightning_staff` to
+  be the first weapon in a run without adding new weapon behavior.
+- The shell inventory now exposes a small MVP starting-weapon selector for unlocked
+  weapons only; relic loadout behavior is unchanged.
+- No save version bump or explicit migration was required because the default/normalize
+  path preserves old saves.
+
 ### Slice 6
 
 - `npm run build:content`

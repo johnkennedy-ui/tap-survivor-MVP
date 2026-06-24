@@ -9,6 +9,7 @@ export function createDefaultSave({ starterQuestIds }) {
     totalQuestPoints: 0,
     unlockedNodes: [],
     unlockedWeapons: ["spark_bolt"],
+    selectedStartingWeapon: "spark_bolt",
     upgradeTiers: {},
     unlockedUpgrades: [],
     shopPurchases: {},

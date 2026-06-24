@@ -23,6 +23,13 @@
     shopItemById,
     questOpenIds,
   }) {
+    const knownWeaponIds = new Set([
+      "spark_bolt",
+      ...arrayValue(weaponUnlocks)
+        .map((unlock) => unlock.weaponId)
+        .filter(Boolean),
+    ]);
+
     function normalizeShopPurchases(purchases) {
       const normalizedPurchases = {};
 
@@ -44,6 +51,10 @@
       normalized.unlockedWeapons = [
         ...new Set(["spark_bolt", ...arrayValue(normalized.unlockedWeapons)]),
       ];
+      normalized.selectedStartingWeapon = normalizeSelectedStartingWeapon(
+        normalized.selectedStartingWeapon,
+        normalized.unlockedWeapons
+      );
       normalized.coins = Math.max(0, Math.floor(normalized.coins || 0));
       normalized.towerFloor = Math.max(1, Math.floor(normalized.towerFloor || 1));
       normalized.unlockedNodes = arrayValue(normalized.unlockedNodes);
@@ -82,6 +93,17 @@
         .map(([id]) => id);
 
       return normalized;
+    }
+
+    function normalizeSelectedStartingWeapon(value, unlockedWeapons) {
+      if (
+        typeof value === "string" &&
+        knownWeaponIds.has(value) &&
+        unlockedWeapons.includes(value)
+      ) {
+        return value;
+      }
+      return "spark_bolt";
     }
 
     function starterQuestAndUnlocks(normalized, ensureQuestOpen) {

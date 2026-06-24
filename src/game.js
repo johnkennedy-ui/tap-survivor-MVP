@@ -197,6 +197,7 @@ const runStateSystem = runState.createRunStateSystem({
   getShopBonuses: () => shopSystem.getShopBonuses(),
   getUpgradeTier,
   maxEquippedWeapons,
+  weaponDefs,
 });
 
 function renderMeta() {
@@ -312,6 +313,7 @@ const shellUi = shellUiDependencies.createShellUiController({
   ui,
   getGame: () => game,
   getSave: () => save,
+  weaponDefs,
   relicDefs,
   relicSystem,
   shopSystem,

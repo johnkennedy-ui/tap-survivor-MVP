@@ -11,6 +11,7 @@
     getShopBonuses,
     getUpgradeTier,
     maxEquippedWeapons,
+    weaponDefs = {},
   }) {
     function createPlayer() {
       const moveTier = getUpgradeTier("move_speed");
@@ -35,8 +36,21 @@
         level: 1,
         xpToLevel: 5,
         maxWeapons: maxEquippedWeapons(),
-        equippedWeapons: ["spark_bolt"],
+        equippedWeapons: [startingWeaponId()],
       };
+    }
+
+    function startingWeaponId() {
+      const save = getSave();
+      const selected = save?.selectedStartingWeapon;
+      if (
+        typeof selected === "string" &&
+        weaponDefs[selected] &&
+        (save.unlockedWeapons || []).includes(selected)
+      ) {
+        return selected;
+      }
+      return "spark_bolt";
     }
 
     function resetGameState() {

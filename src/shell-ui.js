@@ -4,6 +4,7 @@ function createShellUiController({
   documentRef = document,
   getGame,
   getSave,
+  weaponDefs = {},
   relicDefs = [],
   relicSystem,
   shopSystem,
@@ -146,6 +147,49 @@ function createShellUiController({
 
   function renderInventory() {
     relicUi.renderInventory();
+    renderStartingWeaponSelector();
+  }
+
+  function renderStartingWeaponSelector() {
+    if (!ui.menuRelicInventory || !ui.menuRelicSlots) return;
+    const save = getSave();
+    const availableWeapons = (save.unlockedWeapons || [])
+      .filter((weaponId) => weaponDefs[weaponId])
+      .map((weaponId) => ({ id: weaponId, ...weaponDefs[weaponId] }));
+    if (!availableWeapons.length) return;
+    if (!availableWeapons.some((weapon) => weapon.id === save.selectedStartingWeapon)) {
+      save.selectedStartingWeapon = "spark_bolt";
+    }
+
+    const panel = documentRef.createElement("div");
+    panel.className = "relic-item available starting-weapon-panel";
+    const copy = documentRef.createElement("span");
+    copy.innerHTML = `
+      <strong>MVP starting weapon</strong>
+      <span>Choose the first weapon for your next run.</span>
+    `;
+
+    const select = documentRef.createElement("select");
+    select.className = "starting-weapon-select";
+    select.setAttribute("aria-label", "Starting weapon for next run");
+    availableWeapons.forEach((weapon) => {
+      const option = documentRef.createElement("option");
+      option.value = weapon.id;
+      option.textContent = weapon.name || weapon.id;
+      select.appendChild(option);
+    });
+    select.value = save.selectedStartingWeapon || "spark_bolt";
+    select.addEventListener("change", () => {
+      const nextWeaponId = select.value;
+      if (!weaponDefs[nextWeaponId] || !(save.unlockedWeapons || []).includes(nextWeaponId)) return;
+      save.selectedStartingWeapon = nextWeaponId;
+      persist?.();
+      renderMeta();
+    });
+
+    panel.appendChild(copy);
+    panel.appendChild(select);
+    ui.menuRelicInventory.prepend?.(panel) || ui.menuRelicInventory.appendChild(panel);
   }
 
   function bind() {
