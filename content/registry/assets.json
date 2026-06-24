@@ -580,6 +580,18 @@
           "animatedIcon": false,
           "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
         },
+        "lightning_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-07-chain_spark.png?v=skill-effects-20260615-split",
+          "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
+        },
+        "fire_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-04-flame_wave.png?v=skill-effects-20260615-split",
+          "iconSrc": "assets/generated/tower/sprites/weapon-flame-wave.svg?v=generated-20260614-weapons"
+        },
+        "water_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
+          "iconSrc": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
+        },
         "moon_glaive": {
           "src": "assets/generated/tower/skill-effects/split/skill-08-moon_glaive.png?v=skill-effects-20260615-split",
           "fps": 10,
