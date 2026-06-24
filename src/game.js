@@ -116,6 +116,8 @@ const questSystem = quests.createQuestSystem({
 });
 let game = null;
 let lastFrame = performance.now();
+const HUD_UPDATE_INTERVAL_MS = 250;
+let lastHudUpdateAt = -Infinity;
 let runUpdater = null;
 let runLifecycle = null;
 let gameRuntime = null;
@@ -431,6 +433,13 @@ function updateRunHud() {
   runUi.updateRunHud();
 }
 
+function maybeUpdateRunHud(now) {
+  const timestamp = Number.isFinite(now) ? now : performance.now();
+  if (timestamp - lastHudUpdateAt < HUD_UPDATE_INTERVAL_MS) return;
+  lastHudUpdateAt = timestamp;
+  updateRunHud();
+}
+
 function closeLevelUpMenu() {
   levelUpSystem.closeLevelUpMenu();
 }
@@ -453,7 +462,7 @@ function loop(now) {
   lastFrame = now;
   runUpdater.update(dt * (gameRuntime?.getGameSpeed() || 1));
   draw();
-  updateRunHud();
+  maybeUpdateRunHud(now);
   requestAnimationFrame(loop);
 }
 
