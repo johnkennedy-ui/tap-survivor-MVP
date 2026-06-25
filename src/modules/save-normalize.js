@@ -1,5 +1,8 @@
-const { CURRENT_SAVE_VERSION } = globalThis.TapSurvivorSaveDefaults;
-const { isPlainObject } = globalThis.TapSurvivorSaveMigrations;
+const DEFAULT_CURRENT_SAVE_VERSION = 3;
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
 
 export function arrayValue(value) {
   return Array.isArray(value) ? value : [];
@@ -10,7 +13,9 @@ export function objectValue(value) {
 }
 
 export function createSaveNormalizer({
+  currentSaveVersion = DEFAULT_CURRENT_SAVE_VERSION,
   defaultSave,
+  isPlainObject: isPlainObjectValue = isPlainObject,
   questDefs,
   weaponUnlocks,
   upgradeDefs,
@@ -40,8 +45,8 @@ export function createSaveNormalizer({
   }
 
   function normalizeSave(input) {
-    const normalized = { ...defaultSave(), ...(isPlainObject(input) ? input : {}) };
-    normalized.saveVersion = CURRENT_SAVE_VERSION;
+    const normalized = { ...defaultSave(), ...(isPlainObjectValue(input) ? input : {}) };
+    normalized.saveVersion = currentSaveVersion;
     normalized.unlockedWeapons = [
       ...new Set(["spark_bolt", ...arrayValue(normalized.unlockedWeapons)]),
     ];

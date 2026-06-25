@@ -17,6 +17,7 @@ export function createSaveSystem({
 }) {
   const { createDefaultSave } = saveDefaults;
   const { migrateSave } = saveMigrations;
+  const currentSaveVersion = saveDefaults.CURRENT_SAVE_VERSION;
   const shopItemById = new Map(shopItemDefs.map((item) => [item.id, item]));
   const storage =
     storageAdapter ||
@@ -30,7 +31,9 @@ export function createSaveSystem({
   }
 
   const { normalizeSave } = createSaveNormalizer({
+    currentSaveVersion,
     defaultSave,
+    isPlainObject: saveMigrations.isPlainObject,
     questDefs,
     weaponUnlocks,
     upgradeDefs,
@@ -60,7 +63,7 @@ export function createSaveSystem({
   function normalizeAndMigrateSave(input) {
     return normalizeSave({
       ...defaultSave(),
-      ...migrateSave(input),
+      ...migrateSave(input, { currentSaveVersion }),
     });
   }
 
