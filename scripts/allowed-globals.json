@@ -86,7 +86,7 @@
     "src/level-up.js": 4,
     "src/map-system.js": 1,
     "src/math.js": 1,
-    "src/modules/weapon-cooldowns.js": 1,
+    "src/modules/weapon-cooldowns.js": 0,
     "src/modules/save-migrations.js": 1,
     "src/modules/save-normalize.js": 2,
     "src/modules/save.js": 3,
@@ -117,7 +117,7 @@
     "src/ui.js": 2,
     "src/upgrades.js": 3,
     "src/weapon-behaviors.js": 1,
-    "src/weapon-cooldowns.js": 2,
+    "src/weapon-cooldowns.js": 1,
     "src/weapon-fire.js": 2,
     "src/weapon-projectiles.js": 1,
     "src/weapon-targeting.js": 1

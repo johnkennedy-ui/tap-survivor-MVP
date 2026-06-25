@@ -265,6 +265,7 @@ const pickupSystem = pickups.createPickupSystem({
 
 const combat = combatDependencies.createCombatSystem({
   canvas,
+  content,
   enemyTypes,
   bossConfig,
   bossAbilities,

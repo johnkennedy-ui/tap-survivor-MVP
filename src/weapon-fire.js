@@ -1,6 +1,7 @@
 (() => {
   function createWeaponFireSystem({
     canvas,
+    content,
     weaponDefs,
     getGame,
     getUpgradeTier,
@@ -20,6 +21,7 @@
   }) {
     const nearestEnemy = () => weaponTargeting.nearestEnemy(getGame(), distance);
     const scaling = weaponCooldowns.createWeaponScaling({
+      content,
       weaponDefs,
       getUpgradeTier,
       getRunUpgradeTier,

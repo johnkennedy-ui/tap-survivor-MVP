@@ -18,6 +18,10 @@
  *   damageBonus?: number,
  *   projectileSizeBonus?: number
  * }} RelicSpecialEffects
+ * @typedef {{
+ *   id: string,
+ *   [key: string]: number | string | undefined
+ * }} RunUpgradeDef
  * @typedef {{ playbackRate: number, minGapMs: number }} WeaponSfxOptions
  * @typedef {{
  *   projectileRadius(weapon: WeaponDef): number,
@@ -32,6 +36,7 @@
 
 /**
  * @param {{
+ *   content?: { runUpgrades?: RunUpgradeDef[] },
  *   weaponDefs: WeaponDefs,
  *   getUpgradeTier: (id: string | undefined) => number,
  *   getRunUpgradeTier: (id: string) => number,
@@ -43,6 +48,7 @@
  * @returns {WeaponScalingApi}
  */
 export function createWeaponScaling({
+  content = {},
   weaponDefs,
   getUpgradeTier,
   getRunUpgradeTier,
@@ -124,10 +130,10 @@ export function createWeaponScaling({
 
   function projectileSkillModifier(weapon, field) {
     if (weapon?.kind !== "projectile") return 1;
-    return (globalThis.TapSurvivorContent?.runUpgrades || []).reduce((multiplier, upgrade) => {
+    return (content?.runUpgrades || []).reduce((multiplier, upgrade) => {
       const tier = getRunUpgradeTier(upgrade.id);
       const value = upgrade[field];
-      if (!tier || !Number.isFinite(value)) return multiplier;
+      if (!tier || typeof value !== "number" || !Number.isFinite(value)) return multiplier;
       return multiplier * value ** tier;
     }, 1);
   }

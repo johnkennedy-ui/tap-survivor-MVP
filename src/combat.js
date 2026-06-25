@@ -1,6 +1,7 @@
 (() => {
 function createCombatSystem({
   canvas,
+  content,
   enemyTypes,
   bossConfig,
   bossAbilities,
@@ -58,6 +59,7 @@ function createCombatSystem({
   });
   const weaponFire = globalThis.TapSurvivorWeaponFire.createWeaponFireSystem({
     canvas,
+    content,
     weaponDefs,
     getGame,
     getUpgradeTier,

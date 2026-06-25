@@ -681,8 +681,6 @@ check(
 );
 check("bridge exposes createWeaponScaling", typeof createBridgeWeaponScaling === "function");
 
-const previousContent = Reflect.get(globalThis, "TapSurvivorContent");
-const hadPreviousContent = Reflect.has(globalThis, "TapSurvivorContent");
 const runUpgrades = [
   {
     id: "run_projectile_focus",
@@ -694,8 +692,6 @@ const runUpgrades = [
     projectileDamageMultiplier: 1.05,
   },
 ];
-Reflect.set(globalThis, "TapSurvivorContent", { runUpgrades });
-cooldownBridge.context.TapSurvivorContent = { runUpgrades };
 
 const scalingFixture = createScalingFixture();
 const moduleScaling = createModuleWeaponScaling(scalingFixture);
@@ -1132,12 +1128,6 @@ check("run update collectXp levels player", moduleRunUpdateSnapshot.collect.leve
 check("run update collectXp increments level ups", moduleRunUpdateSnapshot.collect.levelUps === 1);
 check("run update collectXp records level quest", moduleRunUpdateSnapshot.collect.levelQuestValue === 1);
 check("run update collectXp shows level-up UI", moduleRunUpdateSnapshot.collect.showLevelUp === 1);
-if (hadPreviousContent) {
-  Reflect.set(globalThis, "TapSurvivorContent", previousContent);
-} else {
-  Reflect.deleteProperty(globalThis, "TapSurvivorContent");
-}
-
 if (process.exitCode) {
   process.exit(process.exitCode);
 }
@@ -1179,6 +1169,7 @@ function createScalingFixture() {
     ["run_projectile_scale", 1],
   ]);
   return {
+    content: { runUpgrades },
     weaponDefs: {
       bolt: {
         id: "bolt",
