@@ -316,6 +316,15 @@ export function createGameHarness({
   ].forEach((path) => vm.runInContext(readSource(path), context));
 
   if (fakeCombat) {
+    context.TapSurvivorWeaponCooldowns = {
+      createWeaponScaling() {},
+    };
+    context.TapSurvivorWeaponProjectiles = {
+      createWeaponProjectileSystem() {},
+    };
+    context.TapSurvivorWeaponTargeting = {
+      nearestEnemy() {},
+    };
     context.TapSurvivorCombat = {
       createCombatSystem({ getGame }) {
         return {

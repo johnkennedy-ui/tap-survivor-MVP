@@ -38,6 +38,9 @@ export function createGameDependencyBag({ globalRef }) {
     storage: requireGlobal(globalRef, "TapSurvivorStorage"),
     ui: requireGlobal(globalRef, "TapSurvivorUi"),
     upgrades: globalRef.TapSurvivorUpgrades || {},
+    weaponCooldowns: requireGlobal(globalRef, "TapSurvivorWeaponCooldowns"),
+    weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
+    weaponTargeting: requireGlobal(globalRef, "TapSurvivorWeaponTargeting"),
   };
 }
 

@@ -14,10 +14,12 @@
     reapEnemies,
     distance,
     clamp,
+    weaponCooldowns,
+    weaponProjectiles,
+    weaponTargeting,
   }) {
-    const nearestEnemy = () =>
-      globalThis.TapSurvivorWeaponTargeting.nearestEnemy(getGame(), distance);
-    const scaling = globalThis.TapSurvivorWeaponCooldowns.createWeaponScaling({
+    const nearestEnemy = () => weaponTargeting.nearestEnemy(getGame(), distance);
+    const scaling = weaponCooldowns.createWeaponScaling({
       weaponDefs,
       getUpgradeTier,
       getRunUpgradeTier,
@@ -26,7 +28,7 @@
       getWeaponDamageMultiplier,
       clamp,
     });
-    const projectileSystem = globalThis.TapSurvivorWeaponProjectiles.createWeaponProjectileSystem({
+    const projectileSystem = weaponProjectiles.createWeaponProjectileSystem({
       canvas,
       weaponDefs,
       getGame,

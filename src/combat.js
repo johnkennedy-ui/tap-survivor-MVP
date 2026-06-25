@@ -25,6 +25,9 @@ function createCombatSystem({
   onBossSpawn,
   distance,
   clamp,
+  weaponCooldowns,
+  weaponProjectiles,
+  weaponTargeting,
 }) {
   const damageSystem = globalThis.TapSurvivorCombatDamage.createCombatDamageSystem({
     canvas,
@@ -68,6 +71,9 @@ function createCombatSystem({
     reapEnemies: damageSystem.reapEnemies,
     distance,
     clamp,
+    weaponCooldowns,
+    weaponProjectiles,
+    weaponTargeting,
     damagePlayer: damageSystem.damagePlayer,
   });
 

@@ -40,6 +40,9 @@ Generated content globals:
   `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
 - `src/render-hud.js` now receives run-upgrade definitions through `src/rendering.js` factory wiring instead of reading
   `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
+- `src/weapon-fire.js` now receives weapon targeting, cooldown scaling, and projectile helpers through combat factory
+  wiring instead of reading `globalThis.TapSurvivorWeaponTargeting`, `globalThis.TapSurvivorWeaponCooldowns`, and
+  `globalThis.TapSurvivorWeaponProjectiles` directly.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.

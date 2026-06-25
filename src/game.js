@@ -34,6 +34,9 @@ const {
   storage,
   ui: uiDependencies,
   upgrades: upgradeContent,
+  weaponCooldowns,
+  weaponProjectiles,
+  weaponTargeting,
 } = dependencies;
 
 const ui = uiDependencies.createUi();
@@ -282,6 +285,9 @@ const combat = combatDependencies.createCombatSystem({
     ),
   distance,
   clamp,
+  weaponCooldowns,
+  weaponProjectiles,
+  weaponTargeting,
 });
 
 const levelUpSystem = levelUp.createLevelUpSystem({

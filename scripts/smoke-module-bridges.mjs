@@ -885,6 +885,9 @@ check(
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
+check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
+check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
+check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
@@ -1523,6 +1526,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorSprites",
     "TapSurvivorStorage",
     "TapSurvivorUi",
+    "TapSurvivorWeaponCooldowns",
+    "TapSurvivorWeaponProjectiles",
+    "TapSurvivorWeaponTargeting",
   ];
   const globalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
   globalRef.TapSurvivorBalanceRuntime = {
@@ -1568,6 +1574,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     fallbackContentId: fallbackBag.content.id,
     hasMath: bag.math.name === "TapSurvivorMath",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
+    hasWeaponCooldowns: bag.weaponCooldowns.name === "TapSurvivorWeaponCooldowns",
+    hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
+    hasWeaponTargeting: bag.weaponTargeting.name === "TapSurvivorWeaponTargeting",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,
