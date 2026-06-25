@@ -13,6 +13,8 @@ const {
   debugBalance,
   effects,
   enemies,
+  enemyBehaviors,
+  enemySpawning,
   gameBanners,
   gameRuntime: gameRuntimeDependencies,
   input,
@@ -276,9 +278,12 @@ const pickupSystem = pickups.createPickupSystem({
 
 const combat = combatDependencies.createCombatSystem({
   canvas,
+  balance,
   combatDamage,
   content,
   enemies,
+  enemyBehaviors,
+  enemySpawning,
   enemyTypes,
   bossConfig,
   bossAbilities,

@@ -70,6 +70,9 @@ Generated content globals:
 - `src/combat.js` now receives combat damage, enemy system, and weapon fire dependencies through `src/game.js` factory
   wiring instead of reading `globalThis.TapSurvivorCombatDamage`, `globalThis.TapSurvivorEnemies`, and
   `globalThis.TapSurvivorWeaponFire` directly.
+- `src/enemies.js` now receives balance, enemy behavior, and enemy spawning dependencies through `src/game.js` and
+  `src/combat.js` factory wiring instead of reading `globalThis.TapSurvivorBalance`,
+  `globalThis.TapSurvivorEnemyBehaviors`, and `globalThis.TapSurvivorEnemySpawning` directly.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.

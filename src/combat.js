@@ -1,9 +1,12 @@
 (() => {
 function createCombatSystem({
   canvas,
+  balance,
   combatDamage,
   content,
   enemies,
+  enemyBehaviors,
+  enemySpawning,
   enemyTypes,
   bossConfig,
   bossAbilities,
@@ -49,6 +52,9 @@ function createCombatSystem({
   });
   const enemySystem = enemies.createEnemySystem({
     canvas,
+    balance,
+    enemyBehaviors,
+    enemySpawning,
     enemyTypes,
     bossConfig,
     bossAbilities,

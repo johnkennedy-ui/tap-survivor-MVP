@@ -18,6 +18,8 @@
       debugBalance: globalRef.TapSurvivorDebugBalance,
       effects: requireGlobal(globalRef, "TapSurvivorEffects"),
       enemies: requireGlobal(globalRef, "TapSurvivorEnemies"),
+      enemyBehaviors: requireGlobal(globalRef, "TapSurvivorEnemyBehaviors"),
+      enemySpawning: requireGlobal(globalRef, "TapSurvivorEnemySpawning"),
       gameBanners: requireGlobal(globalRef, "TapSurvivorGameBanners"),
       gameRuntime: requireGlobal(globalRef, "TapSurvivorGameRuntime"),
       input: {

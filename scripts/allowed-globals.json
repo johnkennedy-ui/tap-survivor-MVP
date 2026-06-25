@@ -74,7 +74,7 @@
     "src/content.generated.js": 3,
     "src/debug.js": 1,
     "src/effects.js": 2,
-    "src/enemies.js": 4,
+    "src/enemies.js": 1,
     "src/enemy-behaviors.js": 1,
     "src/enemy-spawning.js": 1,
     "src/game-banners.js": 1,

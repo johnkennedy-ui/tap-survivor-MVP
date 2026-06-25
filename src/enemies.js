@@ -1,6 +1,9 @@
 (() => {
 function createEnemySystem({
   canvas,
+  balance,
+  enemyBehaviors,
+  enemySpawning,
   enemyTypes,
   bossConfig = {},
   bossAbilities = {},
@@ -29,8 +32,8 @@ function createEnemySystem({
   const boltConfig = bossConfig.enemyBolt || {};
   const projectileScaling = bossConfig.projectileScaling || {};
   const fallbackAbility = bossKinds[0] || "warden";
-  const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
-  const behaviorSystem = globalThis.TapSurvivorEnemyBehaviors.createEnemyBehaviorSystem({
+  const floorDifficulty = balance.floorDifficulty;
+  const behaviorSystem = enemyBehaviors.createEnemyBehaviorSystem({
     canvas,
     bossAbilities,
     boltConfig,
@@ -39,7 +42,7 @@ function createEnemySystem({
     clamp,
     damagePlayer,
   });
-  const spawnSystem = globalThis.TapSurvivorEnemySpawning.createEnemySpawnSystem({
+  const spawnSystem = enemySpawning.createEnemySpawnSystem({
     canvas,
     enemyTypes,
     levelDefs,
