@@ -376,7 +376,16 @@ check("shared shop helper exists", shop.includes("TapSurvivorShop") && shopPrici
 check("shared relic helper exists", relics.includes("TapSurvivorRelics") && runtimeEntry.includes("TapSurvivorRelics"));
 check("shared run state helper exists", runState.includes("TapSurvivorRunState") && runtimeEntry.includes("TapSurvivorRunState"));
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && runtimeEntry.includes("TapSurvivorRunUpdate"));
-check("shared weapon helpers exist", weaponProjectiles.includes("TapSurvivorWeaponProjectiles") && weaponTargeting.includes("TapSurvivorWeaponTargeting") && weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
+check(
+  "shared weapon helpers exist",
+  weaponProjectiles.includes("TapSurvivorWeaponProjectiles") &&
+    weaponTargeting.includes("TapSurvivorWeaponTargeting") &&
+    weaponFire.includes("TapSurvivorWeaponFire") &&
+    gameDependencies.includes("TapSurvivorWeaponFire") &&
+    game.includes("weaponFire,") &&
+    combat.includes("weaponFire.createWeaponFireSystem") &&
+    !combat.includes("globalThis.TapSurvivorWeaponFire"),
+);
 check(
   "shared enemy helper exists",
   enemies.includes("TapSurvivorEnemies") &&

@@ -69,7 +69,7 @@
     "src/balance-runtime.js": 9,
     "src/balance.js": 1,
     "src/combat-damage.js": 1,
-    "src/combat.js": 2,
+    "src/combat.js": 1,
     "src/content-registry.js": 1,
     "src/content.generated.js": 3,
     "src/debug.js": 1,

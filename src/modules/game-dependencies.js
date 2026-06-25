@@ -51,6 +51,7 @@ export function createGameDependencyBag({ globalRef }) {
     uiProgression: requireGlobal(globalRef, "TapSurvivorUiProgression"),
     upgrades: globalRef.TapSurvivorUpgrades || {},
     weaponCooldowns: requireGlobal(globalRef, "TapSurvivorWeaponCooldowns"),
+    weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
     weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
     weaponTargeting: requireGlobal(globalRef, "TapSurvivorWeaponTargeting"),
   };

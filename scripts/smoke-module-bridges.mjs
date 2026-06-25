@@ -887,6 +887,7 @@ check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasI
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
+check("dependency bag exposes weapon fire", moduleGameDependenciesSnapshot.hasWeaponFire);
 check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
 check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
 check("dependency bag exposes save corruption", moduleGameDependenciesSnapshot.hasSaveCorruption);
@@ -1542,6 +1543,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorUi",
     "TapSurvivorUiProgression",
     "TapSurvivorWeaponCooldowns",
+    "TapSurvivorWeaponFire",
     "TapSurvivorWeaponProjectiles",
     "TapSurvivorWeaponTargeting",
   ];
@@ -1595,6 +1597,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasMath: bag.math.name === "TapSurvivorMath",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
     hasWeaponCooldowns: bag.weaponCooldowns.name === "TapSurvivorWeaponCooldowns",
+    hasWeaponFire: bag.weaponFire.name === "TapSurvivorWeaponFire",
     hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
     hasWeaponTargeting: bag.weaponTargeting.name === "TapSurvivorWeaponTargeting",
     hasSaveCorruption: bag.saveCorruption.name === "TapSurvivorSaveCorruption",

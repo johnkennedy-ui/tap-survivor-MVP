@@ -47,6 +47,7 @@ const {
   uiProgression,
   upgrades: upgradeContent,
   weaponCooldowns,
+  weaponFire,
   weaponProjectiles,
   weaponTargeting,
 } = dependencies;
@@ -309,6 +310,7 @@ const combat = combatDependencies.createCombatSystem({
   distance,
   clamp,
   weaponCooldowns,
+  weaponFire,
   weaponProjectiles,
   weaponTargeting,
 });

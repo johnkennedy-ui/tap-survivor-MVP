@@ -29,6 +29,7 @@ function createCombatSystem({
   distance,
   clamp,
   weaponCooldowns,
+  weaponFire,
   weaponProjectiles,
   weaponTargeting,
 }) {
@@ -59,7 +60,7 @@ function createCombatSystem({
     damagePlayer: damageSystem.damagePlayer,
     onBossSpawn,
   });
-  const weaponFire = globalThis.TapSurvivorWeaponFire.createWeaponFireSystem({
+  const weaponFireSystem = weaponFire.createWeaponFireSystem({
     canvas,
     content,
     weaponDefs,
@@ -92,11 +93,11 @@ function createCombatSystem({
     updateBossSpecials: enemySystem.updateBossSpecials,
     updateEnemies: enemySystem.updateEnemies,
     updateEnemyBolts: enemySystem.updateEnemyBolts,
-    updateWeapons: weaponFire.updateWeapons,
-    updateBolts: weaponFire.updateBolts,
-    updateAreas: weaponFire.updateAreas,
-    updateBeams: weaponFire.updateBeams,
-    updateWeaponBursts: weaponFire.updateWeaponBursts,
+    updateWeapons: weaponFireSystem.updateWeapons,
+    updateBolts: weaponFireSystem.updateBolts,
+    updateAreas: weaponFireSystem.updateAreas,
+    updateBeams: weaponFireSystem.updateBeams,
+    updateWeaponBursts: weaponFireSystem.updateWeaponBursts,
     getRunUpgradeTier,
   };
 }
