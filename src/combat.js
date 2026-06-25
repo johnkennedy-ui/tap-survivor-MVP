@@ -3,6 +3,7 @@ function createCombatSystem({
   canvas,
   combatDamage,
   content,
+  enemies,
   enemyTypes,
   bossConfig,
   bossAbilities,
@@ -45,7 +46,7 @@ function createCombatSystem({
     distance,
     clamp,
   });
-  const enemies = globalThis.TapSurvivorEnemies.createEnemySystem({
+  const enemySystem = enemies.createEnemySystem({
     canvas,
     enemyTypes,
     bossConfig,
@@ -86,11 +87,11 @@ function createCombatSystem({
   }
 
   return {
-    spawnEnemies: enemies.spawnEnemies,
-    spawnBoss: enemies.spawnBoss,
-    updateBossSpecials: enemies.updateBossSpecials,
-    updateEnemies: enemies.updateEnemies,
-    updateEnemyBolts: enemies.updateEnemyBolts,
+    spawnEnemies: enemySystem.spawnEnemies,
+    spawnBoss: enemySystem.spawnBoss,
+    updateBossSpecials: enemySystem.updateBossSpecials,
+    updateEnemies: enemySystem.updateEnemies,
+    updateEnemyBolts: enemySystem.updateEnemyBolts,
     updateWeapons: weaponFire.updateWeapons,
     updateBolts: weaponFire.updateBolts,
     updateAreas: weaponFire.updateAreas,

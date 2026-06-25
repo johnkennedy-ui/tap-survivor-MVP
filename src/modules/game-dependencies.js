@@ -11,6 +11,7 @@ export function createGameDependencyBag({ globalRef }) {
     debug: requireGlobal(globalRef, "TapSurvivorDebug"),
     debugBalance: globalRef.TapSurvivorDebugBalance,
     effects: requireGlobal(globalRef, "TapSurvivorEffects"),
+    enemies: requireGlobal(globalRef, "TapSurvivorEnemies"),
     gameBanners: requireGlobal(globalRef, "TapSurvivorGameBanners"),
     gameRuntime: requireGlobal(globalRef, "TapSurvivorGameRuntime"),
     input: {

@@ -377,7 +377,15 @@ check("shared relic helper exists", relics.includes("TapSurvivorRelics") && runt
 check("shared run state helper exists", runState.includes("TapSurvivorRunState") && runtimeEntry.includes("TapSurvivorRunState"));
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && runtimeEntry.includes("TapSurvivorRunUpdate"));
 check("shared weapon helpers exist", weaponProjectiles.includes("TapSurvivorWeaponProjectiles") && weaponTargeting.includes("TapSurvivorWeaponTargeting") && weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
-check("shared enemy helper exists", enemies.includes("TapSurvivorEnemies") && enemySpawning.includes("TapSurvivorEnemySpawning") && combat.includes("TapSurvivorEnemies"));
+check(
+  "shared enemy helper exists",
+  enemies.includes("TapSurvivorEnemies") &&
+    enemySpawning.includes("TapSurvivorEnemySpawning") &&
+    gameDependencies.includes("TapSurvivorEnemies") &&
+    game.includes("enemies,") &&
+    combat.includes("enemies.createEnemySystem") &&
+    !combat.includes("globalThis.TapSurvivorEnemies"),
+);
 check("shared enemy behavior helper exists", enemyBehaviors.includes("TapSurvivorEnemyBehaviors") && enemies.includes("TapSurvivorEnemyBehaviors"));
 check("shared balance helper exists", balance.includes("TapSurvivorBalance") && enemies.includes("TapSurvivorBalance") && gameDependencies.includes("TapSurvivorBalance") && game.includes("floorDifficulty: balance.floorDifficulty"));
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));

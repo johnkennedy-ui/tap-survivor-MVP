@@ -319,6 +319,9 @@ export function createGameHarness({
     context.TapSurvivorCombatDamage = {
       createCombatDamageSystem() {},
     };
+    context.TapSurvivorEnemies = {
+      createEnemySystem() {},
+    };
     context.TapSurvivorWeaponCooldowns = {
       createWeaponScaling() {},
     };
