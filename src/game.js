@@ -78,7 +78,7 @@ const {
   relicDefs,
 } = contentRegistry.createContentRegistry({
   content,
-  upgradeContent,
+  upgradeContent: upgradeContent.createUpgradeContent?.({ content, effects }) || upgradeContent,
 });
 const skillEffectSprites = spriteDefs.weapons || {};
 const spriteHelpers = sprites;
