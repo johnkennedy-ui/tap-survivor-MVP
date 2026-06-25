@@ -59,6 +59,9 @@ Generated content globals:
   `globalThis.TapSurvivorShopPricing` directly.
 - `src/level-up.js` now receives level-up choice helpers and the optional asset resolver provider through `src/game.js`
   factory wiring instead of reading `globalThis.TapSurvivorLevelUpChoices` and `globalThis.TapSurvivorAssets` directly.
+- `src/ui.js` now receives `TapSurvivorUiProgression` through `src/game.js` factory wiring instead of reading that global
+  directly; `src/debug.js` now receives balance floor scaling through the debug factory; and `src/level-up.js` receives
+  content for its exact fallback icon path instead of reading `globalThis.TapSurvivorContent` directly.
 - `src/upgrades.js` exposes `createUpgradeContent({ content, effects })` so `src/game.js` can build upgrade definitions from
   injected content/effects; the compatibility global still keeps a default script-order instance.
 - `src/shell-ui.js` now receives asset/content helpers and `TapSurvivorShellRelicUi` through `src/game.js` factory wiring

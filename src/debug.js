@@ -1,8 +1,7 @@
 (() => {
-  const floorDifficulty = globalThis.TapSurvivorBalance.floorDifficulty;
-
   function createDebugSystem({
     ui,
+    floorDifficulty,
     getGame,
     getSave,
     getRunUpgradeTier,
@@ -91,6 +90,5 @@
 
   globalThis.TapSurvivorDebug = {
     createDebugSystem,
-    floorDifficulty,
   };
 })();

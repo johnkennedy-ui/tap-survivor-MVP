@@ -4,6 +4,7 @@ const dependencies = globalThis.TapSurvivorGameDependencies.createGameDependency
 const {
   audio: audioDependencies,
   assets,
+  balance,
   combat: combatDependencies,
   content,
   contentRegistry,
@@ -41,6 +42,7 @@ const {
   sprites,
   storage,
   ui: uiDependencies,
+  uiProgression,
   upgrades: upgradeContent,
   weaponCooldowns,
   weaponProjectiles,
@@ -178,6 +180,7 @@ const {
 
 const uiRenderer = uiDependencies.createUiRenderer({
   ui,
+  uiProgression,
   weaponDefs,
   weaponUnlocks,
   upgradeDefs,
@@ -309,6 +312,7 @@ const combat = combatDependencies.createCombatSystem({
 const levelUpSystem = levelUp.createLevelUpSystem({
   ui,
   assets,
+  content,
   levelUpChoices,
   weaponDefs,
   runUpgradeDefs,
@@ -363,6 +367,7 @@ const shellUi = shellUiDependencies.createShellUiController({
 
 const debugSystem = debugDependencies.createDebugSystem({
   ui,
+  floorDifficulty: balance.floorDifficulty,
   getGame: () => game,
   getSave: () => save,
   getRunUpgradeTier,

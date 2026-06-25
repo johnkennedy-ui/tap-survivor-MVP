@@ -2,6 +2,7 @@
 function createLevelUpSystem({
   ui,
   assets,
+  content,
   levelUpChoices,
   weaponDefs,
   runUpgradeDefs,
@@ -14,10 +15,11 @@ function createLevelUpSystem({
   playChoiceSfx,
 }) {
   const { choiceId, shopFocusBonus, weightedChoices } = levelUpChoices;
-  const assetResolver = assets?.createAssetResolver?.() || {
-    fallbackSkillIcon: globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
-    choiceIconDefinition: () => globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
-    choiceIconPath: () => globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+  const fallbackIcon = content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+  const assetResolver = assets?.createAssetResolver?.(content) || {
+    fallbackSkillIcon: fallbackIcon,
+    choiceIconDefinition: () => fallbackIcon,
+    choiceIconPath: () => fallbackIcon,
     spriteSource: (definition) => typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
   };
   const fallbackSkillIcon = assetResolver.fallbackSkillIcon;

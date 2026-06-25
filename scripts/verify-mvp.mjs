@@ -309,7 +309,7 @@ check("boss variants include charger and turret", content.bossAbilities?.charger
 check("super bosses combine two boss abilities", enemies.includes("superBossAbilityCount") && enemies.includes("chooseBossAbilities") && enemies.includes("bossAbilities") && enemies.includes("hasBossAbility"));
 check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
-check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
+check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("TapSurvivorBalance") && game.includes("floorDifficulty: balance.floorDifficulty"));
 check("debug balance system exists", debug.includes("createDebugSystem") && runtimeEntry.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
 check("local save exists", game.includes("tap-survivor-mvp-save-v2") && storageAdapter.includes("localStorage") && storageAdapter.includes("getSaveRaw"));
@@ -331,8 +331,10 @@ check(
   assets.includes("TapSurvivorAssets") &&
     gameDependencies.includes("TapSurvivorAssets") &&
     game.includes("assets,") &&
-    levelUp.includes("assets?.createAssetResolver") &&
+    levelUp.includes("assets?.createAssetResolver?.(content)") &&
+    levelUp.includes("content?.assets?.sprites?.ui?.quest") &&
     !levelUp.includes("globalThis.TapSurvivorAssets") &&
+    !levelUp.includes("globalThis.TapSurvivorContent") &&
     shellUi.includes("assets?.createAssetResolver") &&
     !shellUi.includes("globalThis.TapSurvivorAssets"),
 );
@@ -377,7 +379,7 @@ check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdat
 check("shared weapon helpers exist", weaponProjectiles.includes("TapSurvivorWeaponProjectiles") && weaponTargeting.includes("TapSurvivorWeaponTargeting") && weaponFire.includes("TapSurvivorWeaponFire") && combat.includes("TapSurvivorWeaponFire"));
 check("shared enemy helper exists", enemies.includes("TapSurvivorEnemies") && enemySpawning.includes("TapSurvivorEnemySpawning") && combat.includes("TapSurvivorEnemies"));
 check("shared enemy behavior helper exists", enemyBehaviors.includes("TapSurvivorEnemyBehaviors") && enemies.includes("TapSurvivorEnemyBehaviors"));
-check("shared balance helper exists", balance.includes("TapSurvivorBalance") && enemies.includes("TapSurvivorBalance") && debug.includes("TapSurvivorBalance"));
+check("shared balance helper exists", balance.includes("TapSurvivorBalance") && enemies.includes("TapSurvivorBalance") && gameDependencies.includes("TapSurvivorBalance") && game.includes("floorDifficulty: balance.floorDifficulty"));
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));
 check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && shellRelicUi.includes("TapSurvivorShellRelicUi") && runtimeEntry.includes("TapSurvivorShellUi"));
 

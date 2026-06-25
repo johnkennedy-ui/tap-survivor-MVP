@@ -880,6 +880,7 @@ check(
 );
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
 check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
+check("dependency bag exposes balance", moduleGameDependenciesSnapshot.hasBalance);
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
@@ -892,6 +893,7 @@ check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.h
 check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
+check("dependency bag exposes UI progression", moduleGameDependenciesSnapshot.hasUiProgression);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
@@ -1499,6 +1501,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorAudio",
     "TapSurvivorAssets",
+    "TapSurvivorBalance",
     "TapSurvivorCombat",
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
@@ -1533,6 +1536,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorSprites",
     "TapSurvivorStorage",
     "TapSurvivorUi",
+    "TapSurvivorUiProgression",
     "TapSurvivorWeaponCooldowns",
     "TapSurvivorWeaponProjectiles",
     "TapSurvivorWeaponTargeting",
@@ -1580,6 +1584,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
     hasAssets: bag.assets.name === "TapSurvivorAssets",
+    hasBalance: bag.balance.name === "TapSurvivorBalance",
     hasLevelUpChoices: bag.levelUpChoices.name === "TapSurvivorLevelUpChoices",
     hasMath: bag.math.name === "TapSurvivorMath",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
@@ -1592,6 +1597,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasSaveNormalize: bag.saveNormalize.name === "TapSurvivorSaveNormalize",
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     hasShopPricing: bag.shopPricing.name === "TapSurvivorShopPricing",
+    hasUiProgression: bag.uiProgression.name === "TapSurvivorUiProgression",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,

@@ -55,6 +55,7 @@ function createUi() {
 
 function createUiRenderer({
   ui,
+  uiProgression,
   weaponDefs,
   weaponUnlocks,
   upgradeDefs,
@@ -68,7 +69,7 @@ function createUiRenderer({
   buyWeaponUnlock,
   buyUpgrade,
 }) {
-  return globalThis.TapSurvivorUiProgression.createUiProgressionRenderer({
+  return uiProgression.createUiProgressionRenderer({
     ui,
     weaponDefs,
     weaponUnlocks,

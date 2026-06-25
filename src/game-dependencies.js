@@ -8,6 +8,7 @@
     return {
       audio: requireGlobal(globalRef, "TapSurvivorAudio"),
       assets: globalRef.TapSurvivorAssets || {},
+      balance: requireGlobal(globalRef, "TapSurvivorBalance"),
       balanceRuntime: globalRef.TapSurvivorBalanceRuntime,
       combat: requireGlobal(globalRef, "TapSurvivorCombat"),
       content: globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent || {},
@@ -51,6 +52,7 @@
       sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
       storage: requireGlobal(globalRef, "TapSurvivorStorage"),
       ui: requireGlobal(globalRef, "TapSurvivorUi"),
+      uiProgression: requireGlobal(globalRef, "TapSurvivorUiProgression"),
       upgrades: globalRef.TapSurvivorUpgrades || {},
       weaponCooldowns: requireGlobal(globalRef, "TapSurvivorWeaponCooldowns"),
       weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
