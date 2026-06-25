@@ -32,6 +32,7 @@ const {
   saveMigrations,
   shellUi: shellUiDependencies,
   shop,
+  shopPricing,
   sprites,
   storage,
   ui: uiDependencies,
@@ -186,6 +187,7 @@ const uiRenderer = uiDependencies.createUiRenderer({
 const shopSystem = shop.createShopSystem({
   ui,
   effects,
+  shopPricing,
   shopItemDefs,
   pricingConfig: tuningDefs.shop,
   getSave: () => save,

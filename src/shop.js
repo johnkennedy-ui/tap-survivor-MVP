@@ -2,6 +2,7 @@
 function createShopSystem({
   ui,
   effects,
+  shopPricing,
   shopItemDefs,
   pricingConfig,
   getSave,
@@ -12,7 +13,7 @@ function createShopSystem({
   persist,
   renderMeta,
 }) {
-  const pricing = globalThis.TapSurvivorShopPricing.createShopPricing({
+  const pricing = shopPricing.createShopPricing({
     shopItemDefs,
     pricingConfig,
     getSave,

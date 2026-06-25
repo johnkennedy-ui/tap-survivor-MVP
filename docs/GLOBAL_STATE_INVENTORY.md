@@ -47,6 +47,8 @@ Generated content globals:
   of reading `globalThis.TapSurvivorSaveDefaults` and `globalThis.TapSurvivorSaveMigrations` directly.
 - `src/shop.js` now receives the effects helper object through `src/game.js` factory wiring instead of reading
   `globalThis.TapSurvivorEffects` directly when applying shop purchases and calculating shop bonuses.
+- `src/shop.js` now receives the shop pricing helper through `src/game.js` factory wiring instead of reading
+  `globalThis.TapSurvivorShopPricing` directly.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.

@@ -42,6 +42,7 @@
       saveMigrations: requireGlobal(globalRef, "TapSurvivorSaveMigrations"),
       shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
       shop: requireGlobal(globalRef, "TapSurvivorShop"),
+      shopPricing: requireGlobal(globalRef, "TapSurvivorShopPricing"),
       sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
       storage: requireGlobal(globalRef, "TapSurvivorStorage"),
       ui: requireGlobal(globalRef, "TapSurvivorUi"),
