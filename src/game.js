@@ -6,6 +6,7 @@ const {
   assets,
   balance,
   combat: combatDependencies,
+  combatDamage,
   content,
   contentRegistry,
   debug: debugDependencies,
@@ -273,6 +274,7 @@ const pickupSystem = pickups.createPickupSystem({
 
 const combat = combatDependencies.createCombatSystem({
   canvas,
+  combatDamage,
   content,
   enemyTypes,
   bossConfig,

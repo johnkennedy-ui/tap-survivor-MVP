@@ -316,6 +316,9 @@ export function createGameHarness({
   ].forEach((path) => vm.runInContext(readSource(path), context));
 
   if (fakeCombat) {
+    context.TapSurvivorCombatDamage = {
+      createCombatDamageSystem() {},
+    };
     context.TapSurvivorWeaponCooldowns = {
       createWeaponScaling() {},
     };

@@ -11,6 +11,7 @@
       balance: requireGlobal(globalRef, "TapSurvivorBalance"),
       balanceRuntime: globalRef.TapSurvivorBalanceRuntime,
       combat: requireGlobal(globalRef, "TapSurvivorCombat"),
+      combatDamage: requireGlobal(globalRef, "TapSurvivorCombatDamage"),
       content: globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent || {},
       contentRegistry: requireGlobal(globalRef, "TapSurvivorContentRegistry"),
       debug: requireGlobal(globalRef, "TapSurvivorDebug"),

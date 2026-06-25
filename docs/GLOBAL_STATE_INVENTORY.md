@@ -67,6 +67,9 @@ Generated content globals:
 - `src/shell-ui.js` now receives asset/content helpers and `TapSurvivorShellRelicUi` through `src/game.js` factory wiring
   instead of reading those globals directly. `src/shell-relic-ui.js` now receives content through that shell UI seam for
   relic detail and character sprite fallbacks while keeping its compatibility provider global.
+- `src/combat.js` now receives the combat damage dependency through `src/game.js` factory wiring instead of reading
+  `globalThis.TapSurvivorCombatDamage` directly. The combat composer still reads `globalThis.TapSurvivorEnemies` and
+  `globalThis.TapSurvivorWeaponFire`; those are intentionally left for split follow-up slices.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.

@@ -881,6 +881,7 @@ check(
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
 check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
 check("dependency bag exposes balance", moduleGameDependenciesSnapshot.hasBalance);
+check("dependency bag exposes combat damage", moduleGameDependenciesSnapshot.hasCombatDamage);
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
@@ -1503,6 +1504,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorAssets",
     "TapSurvivorBalance",
     "TapSurvivorCombat",
+    "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
     "TapSurvivorEffects",
@@ -1585,6 +1587,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     fallbackContentId: fallbackBag.content.id,
     hasAssets: bag.assets.name === "TapSurvivorAssets",
     hasBalance: bag.balance.name === "TapSurvivorBalance",
+    hasCombatDamage: bag.combatDamage.name === "TapSurvivorCombatDamage",
     hasLevelUpChoices: bag.levelUpChoices.name === "TapSurvivorLevelUpChoices",
     hasMath: bag.math.name === "TapSurvivorMath",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",

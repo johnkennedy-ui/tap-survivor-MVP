@@ -1,6 +1,7 @@
 (() => {
 function createCombatSystem({
   canvas,
+  combatDamage,
   content,
   enemyTypes,
   bossConfig,
@@ -30,7 +31,7 @@ function createCombatSystem({
   weaponProjectiles,
   weaponTargeting,
 }) {
-  const damageSystem = globalThis.TapSurvivorCombatDamage.createCombatDamageSystem({
+  const damageSystem = combatDamage.createCombatDamageSystem({
     canvas,
     getGame,
     getRelicSpecialEffects,
