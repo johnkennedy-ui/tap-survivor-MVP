@@ -884,6 +884,7 @@ check(
 );
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
+check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
@@ -1510,6 +1511,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRelics",
     "TapSurvivorRenderEnemies",
     "TapSurvivorRenderHud",
+    "TapSurvivorRenderSkillRail",
     "TapSurvivorRendering",
     "TapSurvivorRunLifecycle",
     "TapSurvivorRunState",
@@ -1565,6 +1567,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
     hasMath: bag.math.name === "TapSurvivorMath",
+    hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,

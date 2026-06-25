@@ -31,6 +31,7 @@
       relics: requireGlobal(globalRef, "TapSurvivorRelics"),
       renderEnemies: requireGlobal(globalRef, "TapSurvivorRenderEnemies"),
       renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
+      renderSkillRail: requireGlobal(globalRef, "TapSurvivorRenderSkillRail"),
       rendering: requireGlobal(globalRef, "TapSurvivorRendering"),
       runLifecycle: requireGlobal(globalRef, "TapSurvivorRunLifecycle"),
       runState: requireGlobal(globalRef, "TapSurvivorRunState"),

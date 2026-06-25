@@ -31,6 +31,8 @@ Generated content globals:
 - `src/render-hud.js` still owns the `TapSurvivorRenderHud` compatibility bridge. `src/rendering.js` now receives
   `createHudRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderHud`; `src/game.js` remains
   the script-order bootstrap reader until the rendering stack can safely become ESM.
+- `src/render-skill-rail.js` still owns the `TapSurvivorRenderSkillRail` compatibility bridge. `src/render-hud.js` now
+  receives `createSkillRailRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderSkillRail`.
 - `src/render-enemies.js` still owns the `TapSurvivorRenderEnemies` compatibility bridge. `src/rendering.js` now receives
   `createEnemyRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderEnemies`; `src/game.js`
   remains the script-order bootstrap reader until the rendering stack can safely become ESM.

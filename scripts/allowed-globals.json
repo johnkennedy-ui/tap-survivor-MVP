@@ -95,7 +95,7 @@
     "src/quests.js": 1,
     "src/relics.js": 1,
     "src/render-enemies.js": 1,
-    "src/render-hud.js": 2,
+    "src/render-hud.js": 1,
     "src/render-skill-rail.js": 1,
     "src/rendering.js": 1,
     "src/run-lifecycle.js": 1,

@@ -1,12 +1,13 @@
 (() => {
 const BEAM_SPRITE_RASTER_WIDTH = 256;
 
-function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
+function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, createSkillRailRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
   const hudRenderer = createHudRenderer({
     canvas,
     ctx,
     roundedRectPath,
     clamp,
+    createSkillRailRenderer,
     drawSprite,
     runUpgradeDefs,
     weaponDefs,
