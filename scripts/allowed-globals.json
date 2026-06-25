@@ -83,7 +83,7 @@
     "src/game.js": 1,
     "src/input.js": 1,
     "src/level-up-choices.js": 1,
-    "src/level-up.js": 6,
+    "src/level-up.js": 4,
     "src/map-system.js": 1,
     "src/math.js": 1,
     "src/modules/weapon-cooldowns.js": 1,

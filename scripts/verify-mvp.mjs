@@ -326,7 +326,15 @@ check(
 );
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && runtimeEntry.includes("TapSurvivorSprites"));
 check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && index.includes("src/sprite-sheet-renderer.js") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
-check("shared asset resolver exists", assets.includes("TapSurvivorAssets") && levelUp.includes("TapSurvivorAssets") && shellUi.includes("TapSurvivorAssets"));
+check(
+  "shared asset resolver exists",
+  assets.includes("TapSurvivorAssets") &&
+    gameDependencies.includes("TapSurvivorAssets") &&
+    game.includes("assets,") &&
+    levelUp.includes("assets?.createAssetResolver") &&
+    !levelUp.includes("globalThis.TapSurvivorAssets") &&
+    shellUi.includes("TapSurvivorAssets"),
+);
 check("shared audio helper exists", audio.includes("TapSurvivorAudio") && runtimeEntry.includes("TapSurvivorAudio") && audio.includes("setMuted"));
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
 check("sprite cache trims transparent padding", sprites.includes("trimmedSpriteBounds") && sprites.includes("getImageData") && sprites.includes("spriteBounds"));

@@ -3,6 +3,7 @@ const dependencies = globalThis.TapSurvivorGameDependencies.createGameDependency
 });
 const {
   audio: audioDependencies,
+  assets,
   combat: combatDependencies,
   content,
   contentRegistry,
@@ -13,6 +14,7 @@ const {
   gameRuntime: gameRuntimeDependencies,
   input,
   levelUp,
+  levelUpChoices,
   mapSystem: mapSystemDependencies,
   math,
   pickups,
@@ -299,6 +301,8 @@ const combat = combatDependencies.createCombatSystem({
 
 const levelUpSystem = levelUp.createLevelUpSystem({
   ui,
+  assets,
+  levelUpChoices,
   weaponDefs,
   runUpgradeDefs,
   relicDefs,

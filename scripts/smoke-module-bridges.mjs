@@ -883,7 +883,9 @@ check(
   JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
 );
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
+check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
+check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
 check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
@@ -1502,6 +1504,7 @@ function gameRuntimeSnapshot(createGameRuntimeController) {
 function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorAudio",
+    "TapSurvivorAssets",
     "TapSurvivorCombat",
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
@@ -1509,6 +1512,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorGameBanners",
     "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
+    "TapSurvivorLevelUpChoices",
     "TapSurvivorMapSystem",
     "TapSurvivorMath",
     "TapSurvivorPickups",
@@ -1578,6 +1582,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     debugProfile: bag.debugBalance.getActiveProfile(),
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
+    hasAssets: bag.assets.name === "TapSurvivorAssets",
+    hasLevelUpChoices: bag.levelUpChoices.name === "TapSurvivorLevelUpChoices",
     hasMath: bag.math.name === "TapSurvivorMath",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
     hasWeaponCooldowns: bag.weaponCooldowns.name === "TapSurvivorWeaponCooldowns",

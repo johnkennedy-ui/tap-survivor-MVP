@@ -7,6 +7,7 @@
   function createGameDependencyBag({ globalRef }) {
     return {
       audio: requireGlobal(globalRef, "TapSurvivorAudio"),
+      assets: globalRef.TapSurvivorAssets || {},
       balanceRuntime: globalRef.TapSurvivorBalanceRuntime,
       combat: requireGlobal(globalRef, "TapSurvivorCombat"),
       content: globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent || {},
@@ -23,6 +24,7 @@
         ),
       },
       levelUp: requireGlobal(globalRef, "TapSurvivorLevelUp"),
+      levelUpChoices: requireGlobal(globalRef, "TapSurvivorLevelUpChoices"),
       mapSystem: requireGlobal(globalRef, "TapSurvivorMapSystem"),
       math: requireGlobal(globalRef, "TapSurvivorMath"),
       pickups: requireGlobal(globalRef, "TapSurvivorPickups"),

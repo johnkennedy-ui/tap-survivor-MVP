@@ -1,6 +1,8 @@
 (() => {
 function createLevelUpSystem({
   ui,
+  assets,
+  levelUpChoices,
   weaponDefs,
   runUpgradeDefs,
   relicDefs,
@@ -11,8 +13,8 @@ function createLevelUpSystem({
   activeQuestWeaponIds,
   playChoiceSfx,
 }) {
-  const { choiceId, shopFocusBonus, weightedChoices } = globalThis.TapSurvivorLevelUpChoices;
-  const assetResolver = globalThis.TapSurvivorAssets?.createAssetResolver?.() || {
+  const { choiceId, shopFocusBonus, weightedChoices } = levelUpChoices;
+  const assetResolver = assets?.createAssetResolver?.() || {
     fallbackSkillIcon: globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
     choiceIconDefinition: () => globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
     choiceIconPath: () => globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
