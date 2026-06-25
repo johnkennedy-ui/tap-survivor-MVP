@@ -333,7 +333,8 @@ check(
     game.includes("assets,") &&
     levelUp.includes("assets?.createAssetResolver") &&
     !levelUp.includes("globalThis.TapSurvivorAssets") &&
-    shellUi.includes("TapSurvivorAssets"),
+    shellUi.includes("assets?.createAssetResolver") &&
+    !shellUi.includes("globalThis.TapSurvivorAssets"),
 );
 check("shared audio helper exists", audio.includes("TapSurvivorAudio") && runtimeEntry.includes("TapSurvivorAudio") && audio.includes("setMuted"));
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));

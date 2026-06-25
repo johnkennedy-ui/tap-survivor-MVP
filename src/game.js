@@ -32,6 +32,7 @@ const {
   save: saveDependencies,
   saveDefaults,
   saveMigrations,
+  shellRelicUi,
   shellUi: shellUiDependencies,
   shop,
   shopPricing,
@@ -332,6 +333,9 @@ runUpdater = runUpdate.createRunUpdater({
 
 const shellUi = shellUiDependencies.createShellUiController({
   ui,
+  assets,
+  content,
+  shellRelicUi,
   getGame: () => game,
   getSave: () => save,
   weaponDefs,

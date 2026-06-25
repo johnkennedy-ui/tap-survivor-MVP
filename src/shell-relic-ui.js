@@ -1,6 +1,7 @@
 (() => {
 function createShellRelicUi({
   ui,
+  content = {},
   documentRef = document,
   assetResolver,
   getSave,
@@ -94,7 +95,7 @@ function createShellRelicUi({
     const slots = relicSystem.maxEquippedRelics(save);
     const equippedRelics = relicSystem.equippedRelics(save);
     const canEquip = equippedRelics.length < slots;
-    const skill = (globalThis.TapSurvivorContent?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
+    const skill = (content?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
     ui.menuRelicSlots.textContent = relic.name;
     ui.menuRelicInventory.innerHTML = "";
 
@@ -196,7 +197,7 @@ function createShellRelicUi({
   function createCharacterPanel(save) {
     const panel = documentRef.createElement("div");
     panel.className = "relic-character-panel";
-    const playerSprite = globalThis.TapSurvivorContent?.assets?.sprites?.player || "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
+    const playerSprite = content?.assets?.sprites?.player || "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
     panel.innerHTML = `
       <img class="relic-character-sprite" src="${playerSprite}" alt="" />
       <span>

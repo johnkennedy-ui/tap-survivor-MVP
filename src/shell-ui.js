@@ -1,6 +1,9 @@
 (() => {
 function createShellUiController({
   ui,
+  assets,
+  content = {},
+  shellRelicUi,
   documentRef = document,
   getGame,
   getSave,
@@ -20,13 +23,14 @@ function createShellUiController({
   persist,
   renderMeta,
 }) {
-  const assetResolver = globalThis.TapSurvivorAssets?.createAssetResolver?.() || {
-    relicIcon: (relic) => relic?.iconPath || globalThis.TapSurvivorContent?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
-    runUpgradeSprite: (upgradeId) => globalThis.TapSurvivorContent?.assets?.sprites?.runUpgrades?.[upgradeId],
+  const assetResolver = assets?.createAssetResolver?.() || {
+    relicIcon: (relic) => relic?.iconPath || content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+    runUpgradeSprite: (upgradeId) => content?.assets?.sprites?.runUpgrades?.[upgradeId],
     spriteSource: (definition) => typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
   };
-  const relicUi = globalThis.TapSurvivorShellRelicUi.createShellRelicUi({
+  const relicUi = shellRelicUi.createShellRelicUi({
     ui,
+    content,
     documentRef,
     assetResolver,
     getSave,

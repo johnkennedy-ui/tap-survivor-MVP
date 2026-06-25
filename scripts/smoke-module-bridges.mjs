@@ -892,6 +892,7 @@ check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapsho
 check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
 check("dependency bag exposes save defaults", moduleGameDependenciesSnapshot.hasSaveDefaults);
 check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
+check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
@@ -1530,6 +1531,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorSave",
     "TapSurvivorSaveDefaults",
     "TapSurvivorSaveMigrations",
+    "TapSurvivorShellRelicUi",
     "TapSurvivorShellUi",
     "TapSurvivorShop",
     "TapSurvivorShopPricing",
@@ -1591,6 +1593,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasWeaponTargeting: bag.weaponTargeting.name === "TapSurvivorWeaponTargeting",
     hasSaveDefaults: bag.saveDefaults.name === "TapSurvivorSaveDefaults",
     hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
+    hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     hasShopPricing: bag.shopPricing.name === "TapSurvivorShopPricing",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,

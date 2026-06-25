@@ -53,6 +53,9 @@ Generated content globals:
   factory wiring instead of reading `globalThis.TapSurvivorLevelUpChoices` and `globalThis.TapSurvivorAssets` directly.
 - `src/upgrades.js` exposes `createUpgradeContent({ content, effects })` so `src/game.js` can build upgrade definitions from
   injected content/effects; the compatibility global still keeps a default script-order instance.
+- `src/shell-ui.js` now receives asset/content helpers and `TapSurvivorShellRelicUi` through `src/game.js` factory wiring
+  instead of reading those globals directly. `src/shell-relic-ui.js` now receives content through that shell UI seam for
+  relic detail and character sprite fallbacks while keeping its compatibility provider global.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.

@@ -36,6 +36,7 @@ export function createGameDependencyBag({ globalRef }) {
     save: requireGlobal(globalRef, "TapSurvivorSave"),
     saveDefaults: requireGlobal(globalRef, "TapSurvivorSaveDefaults"),
     saveMigrations: requireGlobal(globalRef, "TapSurvivorSaveMigrations"),
+    shellRelicUi: requireGlobal(globalRef, "TapSurvivorShellRelicUi"),
     shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
     shop: requireGlobal(globalRef, "TapSurvivorShop"),
     shopPricing: requireGlobal(globalRef, "TapSurvivorShopPricing"),
