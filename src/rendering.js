@@ -1,4 +1,6 @@
 (() => {
+const BEAM_SPRITE_RASTER_WIDTH = 256;
+
 function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
   const hudRenderer = createHudRenderer({
     canvas,
@@ -232,7 +234,13 @@ function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRend
     const midY = (beam.y + beam.endY) / 2;
     const rotation = Math.atan2(beam.endY - beam.y, beam.endX - beam.x);
     const spriteHeight = Math.max(1, beam.width * tuning.scale);
-    if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, { width: length, height: spriteHeight, alpha: tuning.alpha })) {
+    if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, {
+      width: length,
+      height: spriteHeight,
+      rasterWidth: BEAM_SPRITE_RASTER_WIDTH,
+      rasterHeight: spriteHeight,
+      alpha: tuning.alpha,
+    })) {
       return;
     }
     ctx.save();
