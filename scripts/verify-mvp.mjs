@@ -381,9 +381,14 @@ check(
   weaponProjectiles.includes("TapSurvivorWeaponProjectiles") &&
     weaponTargeting.includes("TapSurvivorWeaponTargeting") &&
     weaponFire.includes("TapSurvivorWeaponFire") &&
+    gameDependencies.includes("TapSurvivorWeaponBehaviors") &&
     gameDependencies.includes("TapSurvivorWeaponFire") &&
+    game.includes("weaponBehaviors,") &&
     game.includes("weaponFire,") &&
     combat.includes("weaponFire.createWeaponFireSystem") &&
+    combat.includes("weaponBehaviors,") &&
+    weaponFire.includes("weaponBehaviors.createWeaponBehaviorSystem") &&
+    !weaponFire.includes("globalThis.TapSurvivorWeaponBehaviors") &&
     !combat.includes("globalThis.TapSurvivorWeaponFire"),
 );
 check(

@@ -15,6 +15,7 @@
     reapEnemies,
     distance,
     clamp,
+    weaponBehaviors,
     weaponCooldowns,
     weaponProjectiles,
     weaponTargeting,
@@ -45,7 +46,7 @@
       distance,
       clamp,
     });
-    const behaviorSystem = globalThis.TapSurvivorWeaponBehaviors.createWeaponBehaviorSystem({
+    const behaviorSystem = weaponBehaviors.createWeaponBehaviorSystem({
       weaponDefs,
       getGame,
       nearestEnemy,

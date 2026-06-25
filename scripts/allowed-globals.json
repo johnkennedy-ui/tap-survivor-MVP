@@ -118,7 +118,7 @@
     "src/upgrades.js": 3,
     "src/weapon-behaviors.js": 1,
     "src/weapon-cooldowns.js": 1,
-    "src/weapon-fire.js": 2,
+    "src/weapon-fire.js": 1,
     "src/weapon-projectiles.js": 1,
     "src/weapon-targeting.js": 1
   }

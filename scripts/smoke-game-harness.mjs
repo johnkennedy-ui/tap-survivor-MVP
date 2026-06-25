@@ -331,6 +331,9 @@ export function createGameHarness({
     context.TapSurvivorWeaponCooldowns = {
       createWeaponScaling() {},
     };
+    context.TapSurvivorWeaponBehaviors = {
+      createWeaponBehaviorSystem() {},
+    };
     context.TapSurvivorWeaponFire = {
       createWeaponFireSystem() {},
     };

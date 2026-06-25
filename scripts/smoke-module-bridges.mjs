@@ -888,6 +888,7 @@ check("dependency bag exposes enemy spawning", moduleGameDependenciesSnapshot.ha
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
+check("dependency bag exposes weapon behaviors", moduleGameDependenciesSnapshot.hasWeaponBehaviors);
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
 check("dependency bag exposes weapon fire", moduleGameDependenciesSnapshot.hasWeaponFire);
 check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
@@ -1546,6 +1547,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorStorage",
     "TapSurvivorUi",
     "TapSurvivorUiProgression",
+    "TapSurvivorWeaponBehaviors",
     "TapSurvivorWeaponCooldowns",
     "TapSurvivorWeaponFire",
     "TapSurvivorWeaponProjectiles",
@@ -1613,6 +1615,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     hasShopPricing: bag.shopPricing.name === "TapSurvivorShopPricing",
     hasUiProgression: bag.uiProgression.name === "TapSurvivorUiProgression",
+    hasWeaponBehaviors: bag.weaponBehaviors.name === "TapSurvivorWeaponBehaviors",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,

@@ -43,6 +43,8 @@ Generated content globals:
 - `src/weapon-fire.js` now receives weapon targeting, cooldown scaling, and projectile helpers through combat factory
   wiring instead of reading `globalThis.TapSurvivorWeaponTargeting`, `globalThis.TapSurvivorWeaponCooldowns`, and
   `globalThis.TapSurvivorWeaponProjectiles` directly.
+- `src/weapon-fire.js` now receives weapon behavior helpers through `src/game.js` and `src/combat.js` factory wiring
+  instead of reading `globalThis.TapSurvivorWeaponBehaviors` directly.
 - `src/modules/weapon-cooldowns.js` and generated `src/weapon-cooldowns.js` now receive content through combat/weapon-fire
   factory wiring instead of reading `globalThis.TapSurvivorContent` for projectile run-upgrade scaling.
 - `src/modules/save.js` now receives save defaults and save migration helpers through `src/game.js` factory wiring instead
