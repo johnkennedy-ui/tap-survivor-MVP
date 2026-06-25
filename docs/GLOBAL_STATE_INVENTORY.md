@@ -45,6 +45,8 @@ Generated content globals:
   `globalThis.TapSurvivorWeaponProjectiles` directly.
 - `src/modules/save.js` now receives save defaults and save migration helpers through `src/game.js` factory wiring instead
   of reading `globalThis.TapSurvivorSaveDefaults` and `globalThis.TapSurvivorSaveMigrations` directly.
+- `src/shop.js` now receives the effects helper object through `src/game.js` factory wiring instead of reading
+  `globalThis.TapSurvivorEffects` directly when applying shop purchases and calculating shop bonuses.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.

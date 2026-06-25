@@ -1,6 +1,7 @@
 (() => {
 function createShopSystem({
   ui,
+  effects,
   shopItemDefs,
   pricingConfig,
   getSave,
@@ -42,7 +43,7 @@ function createShopSystem({
   }
 
   function applyItemEffectToRun(item) {
-    globalThis.TapSurvivorEffects.applyShopItemEffectToRun(getGame(), item);
+    effects.applyShopItemEffectToRun(getGame(), item);
   }
 
   function renderShop() {
@@ -116,10 +117,10 @@ function createShopSystem({
 
   function getShopBonuses() {
     const save = getSave();
-    const bonuses = globalThis.TapSurvivorEffects.emptyShopBonuses();
+    const bonuses = effects.emptyShopBonuses();
     shopItemDefs.forEach((item) => {
       const tier = save.shopPurchases?.[item.id] || 0;
-      globalThis.TapSurvivorEffects.addShopItemBonus(bonuses, item, tier);
+      effects.addShopItemBonus(bonuses, item, tier);
     });
     return bonuses;
   }

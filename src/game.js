@@ -185,6 +185,7 @@ const uiRenderer = uiDependencies.createUiRenderer({
 
 const shopSystem = shop.createShopSystem({
   ui,
+  effects,
   shopItemDefs,
   pricingConfig: tuningDefs.shop,
   getSave: () => save,
