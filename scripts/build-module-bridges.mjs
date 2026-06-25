@@ -49,6 +49,19 @@ const bridges = [
     target: "src/save.js",
     globalName: "TapSurvivorSave",
     exports: ["createSaveSystem"],
+    classicExportWrappers: {
+      createSaveSystem: {
+        name: "createClassicSaveSystem",
+        source: `function createClassicSaveSystem(options) {
+  return createSaveSystem({
+    saveNormalize: globalThis.${"TapSurvivorSaveNormalize"},
+    saveCorruption: globalThis.${"TapSurvivorSaveCorruption"},
+    storage: globalThis.${"TapSurvivorStorage"},
+    ...options,
+  });
+}`,
+      },
+    },
   },
   {
     source: "src/modules/shop-pricing.js",
@@ -139,10 +152,17 @@ for (const bridge of bridges) {
  *   source: string,
  *   target: string,
  *   globalName: string,
- *   exports: string[]
+ *   exports: string[],
+ *   classicExportWrappers?: Record<string, { name: string, source: string }>
  * }} bridge
  */
-async function buildClassicBridge({ source, target, globalName, exports }) {
+async function buildClassicBridge({
+  source,
+  target,
+  globalName,
+  exports,
+  classicExportWrappers = {},
+}) {
   const moduleSource = await readFile(source, "utf8");
   if (/\bimport\s+/m.test(moduleSource)) {
     throw new Error(`${source} uses import; this bridge builder supports standalone modules only`);
@@ -168,14 +188,26 @@ async function buildClassicBridge({ source, target, globalName, exports }) {
     throw new Error(`${source} contains unsupported export syntax`);
   }
 
-  const globalMembers = exports.map((exportName) => `    ${exportName},`).join("\n");
+  const classicWrapperSource = Object.values(classicExportWrappers)
+    .map((wrapper) => wrapper.source)
+    .join("\n\n");
+  const classicBoundary = classicWrapperSource;
+  const classicBody = classicBoundary
+    ? `${classicSource.trim()}\n\n${classicBoundary}`
+    : classicSource.trim();
+  const globalMembers = exports
+    .map((exportName) => {
+      const wrapper = classicExportWrappers[exportName];
+      return wrapper ? `    ${exportName}: ${wrapper.name},` : `    ${exportName},`;
+    })
+    .join("\n");
   const generatedSource = `// GENERATED FILE. Do not edit directly.
 // Source: ${source}
 // Run: npm run build:bridges
 (() => {
   "use strict";
 
-${indent(classicSource.trim(), 2)}
+${indent(classicBody, 2)}
 
   globalThis.${globalName} = {
 ${globalMembers}

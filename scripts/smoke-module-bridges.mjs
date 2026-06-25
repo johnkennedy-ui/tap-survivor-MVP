@@ -886,8 +886,10 @@ check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
 check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
 check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
+check("dependency bag exposes save corruption", moduleGameDependenciesSnapshot.hasSaveCorruption);
 check("dependency bag exposes save defaults", moduleGameDependenciesSnapshot.hasSaveDefaults);
 check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
+check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
@@ -1520,8 +1522,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRunUi",
     "TapSurvivorRunUpdate",
     "TapSurvivorSave",
+    "TapSurvivorSaveCorruption",
     "TapSurvivorSaveDefaults",
     "TapSurvivorSaveMigrations",
+    "TapSurvivorSaveNormalize",
     "TapSurvivorShellRelicUi",
     "TapSurvivorShellUi",
     "TapSurvivorShop",
@@ -1582,8 +1586,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasWeaponCooldowns: bag.weaponCooldowns.name === "TapSurvivorWeaponCooldowns",
     hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
     hasWeaponTargeting: bag.weaponTargeting.name === "TapSurvivorWeaponTargeting",
+    hasSaveCorruption: bag.saveCorruption.name === "TapSurvivorSaveCorruption",
     hasSaveDefaults: bag.saveDefaults.name === "TapSurvivorSaveDefaults",
     hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
+    hasSaveNormalize: bag.saveNormalize.name === "TapSurvivorSaveNormalize",
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     hasShopPricing: bag.shopPricing.name === "TapSurvivorShopPricing",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
@@ -2816,17 +2822,21 @@ function saveNormalizeSnapshot(createSaveNormalizer) {
 function saveSystemSnapshot(createSaveSystem, globalScope) {
   const fallbackCalls = [];
   const fallbackStorage = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 5 }));
-  const previousStorage = globalScope.TapSurvivorStorage;
-  globalScope.TapSurvivorStorage = {
+  const fallbackStorageDependency = {
     createStorageAdapter(options) {
       fallbackCalls.push(options);
       return fallbackStorage;
     },
   };
+  const previousStorage = globalScope.TapSurvivorStorage;
+  globalScope.TapSurvivorStorage = fallbackStorageDependency;
+  const saveSystemFixture = createSaveSystemFixture(
+    globalScope === globalThis ? { storage: fallbackStorageDependency } : {}
+  );
 
   const providedStorage = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 7 }));
   const system = createSaveSystem({
-    ...createSaveSystemFixture(),
+    ...saveSystemFixture,
     storageAdapter: providedStorage,
   });
   const defaultSave = system.defaultSave();
@@ -2840,7 +2850,7 @@ function saveSystemSnapshot(createSaveSystem, globalScope) {
 
   const corruptStorage = createStorageFixture("{bad");
   const corruptSystem = createSaveSystem({
-    ...createSaveSystemFixture(),
+    ...saveSystemFixture,
     storageAdapter: corruptStorage,
   });
   const corruptLoad = corruptSystem.loadSave();
@@ -2848,7 +2858,7 @@ function saveSystemSnapshot(createSaveSystem, globalScope) {
 
   const failedStorage = createStorageFixture(null, { failRead: true });
   const failedSystem = createSaveSystem({
-    ...createSaveSystemFixture(),
+    ...saveSystemFixture,
     storageAdapter: failedStorage,
   });
   const failedLoad = failedSystem.loadSave();
@@ -2863,7 +2873,7 @@ function saveSystemSnapshot(createSaveSystem, globalScope) {
   const removed = system.removeSave();
   const providedFallbackCalls = fallbackCalls.length;
 
-  const fallbackSystem = createSaveSystem(createSaveSystemFixture());
+  const fallbackSystem = createSaveSystem(saveSystemFixture);
   const fallbackDefault = fallbackSystem.defaultSave();
 
   if (previousStorage === undefined) {
@@ -2892,10 +2902,16 @@ function saveSystemSnapshot(createSaveSystem, globalScope) {
   };
 }
 
-function createSaveSystemFixture() {
+function createSaveSystemFixture(overrides = {}) {
   return {
     saveKey: "save-key",
     legacySaveKey: "legacy-key",
+    saveNormalize: {
+      createSaveNormalizer: createModuleSaveNormalizer,
+    },
+    saveCorruption: {
+      createSaveLoadHandler: createModuleSaveLoadHandler,
+    },
     saveDefaults: {
       CURRENT_SAVE_VERSION: moduleCurrentSaveVersion,
       createDefaultSave: createModuleDefaultSave,
@@ -2916,6 +2932,7 @@ function createSaveSystemFixture() {
     upgradeDefs: [{ id: "damage", opensQuest: "damage_quest" }],
     shopItemDefs: [{ id: "boots", maxTier: 2 }],
     questOpenIds: (quest) => quest?.opens || [],
+    ...overrides,
   };
 }
 

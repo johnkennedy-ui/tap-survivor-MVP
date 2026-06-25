@@ -89,7 +89,7 @@
     "src/modules/weapon-cooldowns.js": 0,
     "src/modules/save-migrations.js": 0,
     "src/modules/save-normalize.js": 0,
-    "src/modules/save.js": 3,
+    "src/modules/save.js": 0,
     "src/pickups.js": 1,
     "src/progression.js": 1,
     "src/quests.js": 1,

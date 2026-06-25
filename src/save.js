@@ -4,13 +4,11 @@
 (() => {
   "use strict";
 
-  const { createSaveNormalizer } = globalThis.TapSurvivorSaveNormalize;
-
-  const { createSaveLoadHandler } = globalThis.TapSurvivorSaveCorruption;
-
   function createSaveSystem({
     saveKey,
     legacySaveKey,
+    saveNormalize,
+    saveCorruption,
     saveDefaults,
     saveMigrations,
     starterQuestIds,
@@ -19,15 +17,18 @@
     upgradeDefs,
     shopItemDefs = [],
     questOpenIds,
+    storage,
     storageAdapter,
   }) {
+    const { createSaveNormalizer } = saveNormalize;
+    const { createSaveLoadHandler } = saveCorruption;
     const { createDefaultSave } = saveDefaults;
     const { migrateSave } = saveMigrations;
     const currentSaveVersion = saveDefaults.CURRENT_SAVE_VERSION;
     const shopItemById = new Map(shopItemDefs.map((item) => [item.id, item]));
-    const storage =
+    const activeStorage =
       storageAdapter ||
-      globalThis.TapSurvivorStorage?.createStorageAdapter({
+      storage?.createStorageAdapter({
         saveKey,
         legacySaveKey,
       });
@@ -50,12 +51,12 @@
     const saveLoadHandler = createSaveLoadHandler({
       defaultSave,
       normalizeAndMigrateSave,
-      storage,
+      storage: activeStorage,
     });
 
     function loadSave() {
       try {
-        const raw = storage?.getSaveRaw?.();
+        const raw = activeStorage?.getSaveRaw?.();
         if (raw && typeof raw.then === "function") {
           return raw.then(saveLoadHandler.fromRaw).catch(saveLoadHandler.storageReadFailed);
         }
@@ -79,11 +80,11 @@
         .map(([id]) => id);
 
       save.unlockedUpgrades = unlockedUpgrades;
-      return storage?.setSaveRaw?.(JSON.stringify(save)) ?? false;
+      return activeStorage?.setSaveRaw?.(JSON.stringify(save)) ?? false;
     }
 
     function removeSave() {
-      return storage?.removeSaveRaw?.() ?? false;
+      return activeStorage?.removeSaveRaw?.() ?? false;
     }
 
     function getLastLoadWarning() {
@@ -100,7 +101,16 @@
     };
   }
 
+  function createClassicSaveSystem(options) {
+    return createSaveSystem({
+      saveNormalize: globalThis.TapSurvivorSaveNormalize,
+      saveCorruption: globalThis.TapSurvivorSaveCorruption,
+      storage: globalThis.TapSurvivorStorage,
+      ...options,
+    });
+  }
+
   globalThis.TapSurvivorSave = {
-    createSaveSystem,
+    createSaveSystem: createClassicSaveSystem,
   };
 })();

@@ -50,6 +50,9 @@ Generated content globals:
 - `src/modules/save-migrations.js` and `src/modules/save-normalize.js` no longer read save defaults/migrations globals at
   module load; `src/modules/save.js` passes the current save version and plain-object helper through the save factory path,
   while generated compatibility providers remain published for classic script order.
+- `src/modules/save.js` now receives save normalize, save corruption, and storage helpers through its factory arguments
+  instead of reading those globals directly; generated `src/save.js` keeps a compatibility boundary wrapper so classic
+  `TapSurvivorSave.createSaveSystem(...)` callers still receive the script-order globals by default.
 - `src/shop.js` now receives the effects helper object through `src/game.js` factory wiring instead of reading
   `globalThis.TapSurvivorEffects` directly when applying shop purchases and calculating shop bonuses.
 - `src/shop.js` now receives the shop pricing helper through `src/game.js` factory wiring instead of reading

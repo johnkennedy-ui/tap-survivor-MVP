@@ -30,8 +30,10 @@ const {
   runUi: runUiDependencies,
   runUpdate,
   save: saveDependencies,
+  saveCorruption,
   saveDefaults,
   saveMigrations,
+  saveNormalize,
   shellRelicUi,
   shellUi: shellUiDependencies,
   shop,
@@ -102,6 +104,8 @@ const storageAdapter = storage.createStorageAdapter({
 const saveSystem = saveDependencies.createSaveSystem({
   saveKey,
   legacySaveKey,
+  saveNormalize,
+  saveCorruption,
   saveDefaults,
   saveMigrations,
   starterQuestIds,
@@ -110,6 +114,7 @@ const saveSystem = saveDependencies.createSaveSystem({
   upgradeDefs,
   shopItemDefs,
   questOpenIds,
+  storage,
   storageAdapter,
 });
 
