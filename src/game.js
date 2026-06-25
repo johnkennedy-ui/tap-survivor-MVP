@@ -28,6 +28,8 @@ const {
   runUi: runUiDependencies,
   runUpdate,
   save: saveDependencies,
+  saveDefaults,
+  saveMigrations,
   shellUi: shellUiDependencies,
   shop,
   sprites,
@@ -96,6 +98,8 @@ const storageAdapter = storage.createStorageAdapter({
 const saveSystem = saveDependencies.createSaveSystem({
   saveKey,
   legacySaveKey,
+  saveDefaults,
+  saveMigrations,
   starterQuestIds,
   questDefs,
   weaponUnlocks,

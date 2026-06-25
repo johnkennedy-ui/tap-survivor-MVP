@@ -32,6 +32,8 @@ export function createGameDependencyBag({ globalRef }) {
     runUi: requireGlobal(globalRef, "TapSurvivorRunUi"),
     runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
     save: requireGlobal(globalRef, "TapSurvivorSave"),
+    saveDefaults: requireGlobal(globalRef, "TapSurvivorSaveDefaults"),
+    saveMigrations: requireGlobal(globalRef, "TapSurvivorSaveMigrations"),
     shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
     shop: requireGlobal(globalRef, "TapSurvivorShop"),
     sprites: requireGlobal(globalRef, "TapSurvivorSprites"),

@@ -43,6 +43,8 @@ Generated content globals:
 - `src/weapon-fire.js` now receives weapon targeting, cooldown scaling, and projectile helpers through combat factory
   wiring instead of reading `globalThis.TapSurvivorWeaponTargeting`, `globalThis.TapSurvivorWeaponCooldowns`, and
   `globalThis.TapSurvivorWeaponProjectiles` directly.
+- `src/modules/save.js` now receives save defaults and save migration helpers through `src/game.js` factory wiring instead
+  of reading `globalThis.TapSurvivorSaveDefaults` and `globalThis.TapSurvivorSaveMigrations` directly.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.

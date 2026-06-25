@@ -888,6 +888,8 @@ check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
 check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
 check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
+check("dependency bag exposes save defaults", moduleGameDependenciesSnapshot.hasSaveDefaults);
+check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
@@ -1521,6 +1523,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRunUi",
     "TapSurvivorRunUpdate",
     "TapSurvivorSave",
+    "TapSurvivorSaveDefaults",
+    "TapSurvivorSaveMigrations",
     "TapSurvivorShellUi",
     "TapSurvivorShop",
     "TapSurvivorSprites",
@@ -1577,6 +1581,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasWeaponCooldowns: bag.weaponCooldowns.name === "TapSurvivorWeaponCooldowns",
     hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
     hasWeaponTargeting: bag.weaponTargeting.name === "TapSurvivorWeaponTargeting",
+    hasSaveDefaults: bag.saveDefaults.name === "TapSurvivorSaveDefaults",
+    hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,
@@ -2887,6 +2893,14 @@ function createSaveSystemFixture() {
   return {
     saveKey: "save-key",
     legacySaveKey: "legacy-key",
+    saveDefaults: {
+      CURRENT_SAVE_VERSION: moduleCurrentSaveVersion,
+      createDefaultSave: createModuleDefaultSave,
+    },
+    saveMigrations: {
+      isPlainObject: moduleIsPlainObject,
+      migrateSave: moduleMigrateSave,
+    },
     starterQuestIds: ["starter"],
     questDefs: {
       starter: {},

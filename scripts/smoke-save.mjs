@@ -47,6 +47,8 @@ const storageAdapter = context.TapSurvivorStorage.createStorageAdapter({
 const saveSystem = context.TapSurvivorSave.createSaveSystem({
   saveKey,
   legacySaveKey,
+  saveDefaults: context.TapSurvivorSaveDefaults,
+  saveMigrations: context.TapSurvivorSaveMigrations,
   starterQuestIds: content.questGroups.starter,
   questDefs: content.quests,
   weaponUnlocks: content.weaponUnlocks,
@@ -177,6 +179,8 @@ const throwingAdapter = throwingContext.TapSurvivorStorage.createStorageAdapter(
 const throwingSaveSystem = throwingContext.TapSurvivorSave.createSaveSystem({
   saveKey,
   legacySaveKey,
+  saveDefaults: throwingContext.TapSurvivorSaveDefaults,
+  saveMigrations: throwingContext.TapSurvivorSaveMigrations,
   starterQuestIds: content.questGroups.starter,
   questDefs: content.quests,
   weaponUnlocks: content.weaponUnlocks,

@@ -1,7 +1,3 @@
-const { createDefaultSave } = globalThis.TapSurvivorSaveDefaults;
-
-const { migrateSave } = globalThis.TapSurvivorSaveMigrations;
-
 const { createSaveNormalizer } = globalThis.TapSurvivorSaveNormalize;
 
 const { createSaveLoadHandler } = globalThis.TapSurvivorSaveCorruption;
@@ -9,6 +5,8 @@ const { createSaveLoadHandler } = globalThis.TapSurvivorSaveCorruption;
 export function createSaveSystem({
   saveKey,
   legacySaveKey,
+  saveDefaults,
+  saveMigrations,
   starterQuestIds,
   questDefs,
   weaponUnlocks,
@@ -17,6 +15,8 @@ export function createSaveSystem({
   questOpenIds,
   storageAdapter,
 }) {
+  const { createDefaultSave } = saveDefaults;
+  const { migrateSave } = saveMigrations;
   const shopItemById = new Map(shopItemDefs.map((item) => [item.id, item]));
   const storage =
     storageAdapter ||
