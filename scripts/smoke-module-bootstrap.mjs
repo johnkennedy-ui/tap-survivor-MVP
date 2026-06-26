@@ -1,8 +1,15 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import {
+  composeContentBalanceEffects,
   composeRuntime,
   composeSaveSubsystem,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
+
+const root = new URL("..", import.meta.url).pathname;
+const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 
 const calls = [];
 const listeners = new Map();
@@ -76,6 +83,33 @@ const globalRef = {
 };
 
 const platform = createBrowserPlatform({ globalRef, documentRef });
+const contentBalanceEffects = composeContentBalanceEffects({
+  content,
+  contentSchema: {
+    effectRegistries: {
+      shopItem: {
+        stats: [
+          "speed",
+          "pickupRadius",
+          "maxHp",
+          "flatDamage",
+          "attackRadius",
+          "fireRate",
+          "percentDamage",
+          "relicFocus",
+        ],
+      },
+    },
+  },
+  upgradeContent: {
+    createUpgradeDefs: (weaponDefs) =>
+      Object.entries(weaponDefs).map(([weaponId, weapon]) => ({
+        id: weapon.upgradeId || `${weaponId}_damage`,
+        weaponId,
+      })),
+    runUpgradeDefs: content.runUpgrades || [],
+  },
+});
 const saveStorage = createMemoryStorageAdapter({
   saveKey,
   legacySaveKey,
@@ -203,6 +237,63 @@ function createMemoryStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey }
 
 const runtime = composeRuntime({ platform, dependencies });
 runtime.initializeRuntime();
+
+check(
+  "module bootstrap composes content registry from injected content",
+  contentBalanceEffects.contentRegistry.weaponDefs.spark_bolt.damage === 12
+);
+check(
+  "module bootstrap exposes starter content group",
+  contentBalanceEffects.contentRegistry.starterQuestIds.includes("first_blood")
+);
+check(
+  "module bootstrap composes run upgrade content",
+  contentBalanceEffects.contentRegistry.runUpgradeDefs.length === content.runUpgrades.length
+);
+check(
+  "module bootstrap resolves balance floor one deterministically",
+  JSON.stringify(contentBalanceEffects.balance.floorDifficulty(1)) ===
+    JSON.stringify({ hp: 0.9, damage: 0.85, spawnRate: 0.9 })
+);
+check(
+  "module bootstrap resolves balance floor four scaling",
+  JSON.stringify(contentBalanceEffects.balance.floorDifficulty(4)) ===
+    JSON.stringify({ hp: 1.53, damage: 1.2799999999999998, spawnRate: 1.1300000000000001 })
+);
+const effectGame = {
+  running: true,
+  player: {
+    speed: 100,
+    pickupRadius: 50,
+    hp: 80,
+    maxHp: 100,
+  },
+};
+contentBalanceEffects.effects.applyRunUpgradeEffects(effectGame, [
+  { type: "playerStatAdd", stat: "speed", value: 10 },
+  { type: "playerHeal", value: 50 },
+]);
+check("module bootstrap applies run upgrade stat effects", effectGame.player.speed === 110);
+check("module bootstrap caps run upgrade healing", effectGame.player.hp === 100);
+const shopBonuses = contentBalanceEffects.effects.emptyShopBonuses();
+contentBalanceEffects.effects.addShopItemBonus(
+  shopBonuses,
+  { effect: { stat: "speed", value: 10 } },
+  2
+);
+check("module bootstrap creates shop bonus defaults", shopBonuses.pickupRadius === 0);
+check("module bootstrap adds shop item bonuses", shopBonuses.speed === 20);
+check(
+  "module bootstrap applies shop item effect to run",
+  contentBalanceEffects.effects.applyShopItemEffectToRun(effectGame, {
+    effect: { stat: "pickupRadius", value: 5 },
+  }) && effectGame.player.pickupRadius === 55
+);
+contentBalanceEffects.effects.applyRelicSpecialEffects(effectGame, {
+  maxHpBonus: 10,
+  speedBonus: 5,
+});
+check("module bootstrap applies relic special effects", effectGame.player.maxHp === 110 && effectGame.player.speed === 115);
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
 check("module bootstrap migrates save to current version", currentSave.saveVersion === 3);
