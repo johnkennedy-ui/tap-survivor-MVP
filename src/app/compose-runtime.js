@@ -1,4 +1,9 @@
 import { createGameRuntimeController } from "../modules/game-runtime.js";
+import { createSaveLoadHandler } from "../modules/save-corruption.js";
+import { createDefaultSave, CURRENT_SAVE_VERSION } from "../modules/save-defaults.js";
+import { isPlainObject, migrateSave } from "../modules/save-migrations.js";
+import { createSaveNormalizer } from "../modules/save-normalize.js";
+import { createSaveSystem } from "../modules/save.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -29,5 +34,50 @@ export function composeRuntime({ platform, dependencies }) {
     ...dependencies,
     documentRef: platform.documentRef,
     globalRef: platform.runtimeGlobal,
+  });
+}
+
+export function composeSaveSubsystem({
+  saveKey,
+  legacySaveKey,
+  storageAdapter,
+  starterQuestIds = [],
+  questDefs = {},
+  weaponUnlocks = [],
+  upgradeDefs = [],
+  shopItemDefs = [],
+  questOpenIds = () => [],
+}) {
+  if (!saveKey || !legacySaveKey) {
+    throw new Error("Missing Tap Survivor module save dependency: save keys");
+  }
+  if (!storageAdapter) {
+    throw new Error("Missing Tap Survivor module save dependency: storageAdapter");
+  }
+
+  return createSaveSystem({
+    saveKey,
+    legacySaveKey,
+    saveNormalize: {
+      createSaveNormalizer,
+    },
+    saveCorruption: {
+      createSaveLoadHandler,
+    },
+    saveDefaults: {
+      CURRENT_SAVE_VERSION,
+      createDefaultSave,
+    },
+    saveMigrations: {
+      isPlainObject,
+      migrateSave,
+    },
+    starterQuestIds,
+    questDefs,
+    weaponUnlocks,
+    upgradeDefs,
+    shopItemDefs,
+    questOpenIds,
+    storageAdapter,
   });
 }
