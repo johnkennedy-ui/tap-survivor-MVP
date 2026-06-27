@@ -14,6 +14,7 @@ import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import { createRelicSystem as createModuleRelicSystem } from "../src/modules/relics.js";
 import { createShellRelicUi as createModuleShellRelicUi } from "../src/modules/shell-relic-ui.js";
+import { createShellUiController as createModuleShellUiController } from "../src/modules/shell-ui-controller.js";
 import {
   choiceId as moduleChoiceId,
   shopFocusBonus as moduleShopFocusBonus,
@@ -120,6 +121,16 @@ const relicsBridge = loadBridge("../src/relics.js", "src/relics.js", {
   },
 });
 const shellRelicUiBridge = loadBridge("../src/shell-relic-ui.js", "src/shell-relic-ui.js");
+const shellUiClassicBridge = loadBridge("../src/shell-ui.js", "src/shell-ui.js", {
+  clearTimeout(timer) {
+    if (timer) timer.cleared = true;
+  },
+  setTimeout(callback, delay) {
+    const timer = { callback, delay };
+    callback();
+    return timer;
+  },
+});
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
@@ -174,6 +185,7 @@ const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
 const bridgePickups = pickupsBridge.context.TapSurvivorPickups;
 const bridgeCombatDamage = combatDamageBridge.context.TapSurvivorCombatDamage;
 const bridgeShellRelicUi = shellRelicUiBridge.context.TapSurvivorShellRelicUi;
+const bridgeShellUi = shellUiClassicBridge.context.TapSurvivorShellUi;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -943,6 +955,81 @@ check(
   shellRelicUiBridgeSnapshot.lockPopupText === "Locked, play more to unlock this skill." &&
     shellRelicUiBridgeSnapshot.lockPopupHidden === true &&
     shellRelicUiBridgeSnapshot.lockTimerDelay === 1800
+);
+
+check("classic shell UI assigns globalThis.TapSurvivorShellUi", Boolean(bridgeShellUi));
+check(
+  "classic shell UI exposes createShellUiController",
+  typeof bridgeShellUi?.createShellUiController === "function"
+);
+const shellUiClassicSnapshot = classicShellUiSnapshot(bridgeShellUi.createShellUiController, {
+  createShellRelicUi: bridgeShellRelicUi.createShellRelicUi,
+  relicSystem: createBridgeRelicSystem({
+    relicDefs: shellRelicUiFixtureDefs,
+    random: () => 0,
+    weaponDefs: {},
+  }),
+});
+const shellUiModuleSnapshot = moduleShellUiSnapshot(createModuleShellUiController);
+check(
+  "classic shell UI preserves exact public controller API shape",
+  JSON.stringify(shellUiClassicSnapshot.apiKeys) ===
+    JSON.stringify([
+      "bind",
+      "closeRunMenu",
+      "closeShopMenu",
+      "closeStartFlow",
+      "showTitleScreen",
+      "startGameFromTitle",
+    ])
+);
+check(
+  "classic shell UI creation path expected by production works",
+  shellUiClassicSnapshot.boundListeners.includes("titleStartGame:click") &&
+    shellUiClassicSnapshot.boundListeners.includes("openMenu:click") &&
+    shellUiClassicSnapshot.boundListeners.includes("menuInventoryTab:click") &&
+    shellUiClassicSnapshot.boundListeners.includes("speed5:click")
+);
+check(
+  "classic shell UI frame and panel render through relic bridge path",
+  shellUiClassicSnapshot.relicSlotsText.includes("Relic slots: 2/5") &&
+    shellUiClassicSnapshot.inventoryClasses.some((className) => className.includes("relic-loadout")) &&
+    shellUiClassicSnapshot.progressHidden === true &&
+    shellUiClassicSnapshot.inventoryHidden === false
+);
+check(
+  "classic shell UI active panel state updates through API",
+  shellUiClassicSnapshot.progressTabActive === false &&
+    shellUiClassicSnapshot.inventoryTabActive === true &&
+    shellUiClassicSnapshot.openMenuExpanded === "true"
+);
+check(
+  "classic shell UI callbacks fire through production API",
+  shellUiClassicSnapshot.calls.includes("start-run") &&
+    shellUiClassicSnapshot.calls.includes("shop:open") &&
+    shellUiClassicSnapshot.calls.includes("shop:close") &&
+    shellUiClassicSnapshot.calls.includes("reset-save") &&
+    shellUiClassicSnapshot.calls.includes("fullscreen:request") &&
+    shellUiClassicSnapshot.calls.includes("mute") &&
+    shellUiClassicSnapshot.calls.includes("speed:5")
+);
+check(
+  "classic shell UI relic select equip and unequip delegate through shell relic bridge",
+  shellUiClassicSnapshot.calls.includes("persist") &&
+    shellUiClassicSnapshot.calls.includes("render-meta") &&
+    shellUiClassicSnapshot.equippedAfterEquip.includes("pickup_radius_focus_relic") &&
+    !shellUiClassicSnapshot.equippedAfterUnequip.includes("move_speed_focus_relic")
+);
+check(
+  "classic shell UI start flow and menu state match module controller fixture",
+  shellUiClassicSnapshot.startedScreen === shellUiModuleSnapshot.startedScreen &&
+    shellUiClassicSnapshot.activePanel === shellUiModuleSnapshot.activePanel
+);
+check(
+  "module shell UI API remains broader than classic compatibility API",
+  shellUiModuleSnapshot.apiKeys.includes("dispose") &&
+    shellUiModuleSnapshot.apiKeys.includes("openPanel") &&
+    !shellUiClassicSnapshot.apiKeys.includes("dispose")
 );
 
 check("module exports clamp", typeof moduleClamp === "function");
@@ -3481,12 +3568,210 @@ function shellRelicUiSnapshot(createShellRelicUi, options) {
   };
 }
 
+function classicShellUiSnapshot(createShellUiController, options) {
+  const calls = [];
+  const game = { running: true, paused: false, pauseReason: "" };
+  const save = {
+    towerFloor: 20,
+    unlockedRelics: ["move_speed_focus_relic", "pickup_radius_focus_relic"],
+    equippedRelics: ["move_speed_focus_relic"],
+    unlockedWeapons: ["spark_bolt"],
+    selectedStartingWeapon: "spark_bolt",
+  };
+  const documentRef = {
+    fullscreenElement: null,
+    documentElement: createShellRelicFakeElement("html"),
+    addEventListener(type, handler) {
+      calls.push(`document:${type}`);
+      this.eventListeners = this.eventListeners || {};
+      this.eventListeners[type] = handler;
+    },
+    createElement: createShellRelicFakeElement,
+    exitFullscreen() {
+      calls.push("fullscreen:exit");
+    },
+  };
+  const ui = createClassicShellUiFixture(calls);
+  const controller = createShellUiController({
+    assets: {
+      createAssetResolver: () => shellRelicUiAssetResolver,
+    },
+    closeEndScreen: () => calls.push("end:close"),
+    closeLevelUpMenu: () => calls.push("level-up:close"),
+    content: shellRelicUiContentFixture,
+    documentRef,
+    exitRun: () => calls.push("exit-run"),
+    getGame: () => game,
+    getSave: () => save,
+    persist: () => calls.push("persist"),
+    playStartLaugh: () => calls.push("laugh"),
+    relicDefs: shellRelicUiFixtureDefs,
+    relicSystem: options.relicSystem,
+    renderMeta: () => calls.push("render-meta"),
+    resetSave: () => calls.push("reset-save"),
+    setGameSpeed: (speed) => calls.push(`speed:${speed}`),
+    shellRelicUi: {
+      createShellRelicUi: options.createShellRelicUi,
+    },
+    shopSystem: {
+      closeShop: () => calls.push("shop:close"),
+      openShop: () => calls.push("shop:open"),
+      renderShop: () => calls.push("shop:render"),
+    },
+    startRun: () => calls.push("start-run"),
+    toggleAudioMute: () => {
+      calls.push("mute");
+      return true;
+    },
+    isAudioMuted: () => false,
+    ui,
+    weaponDefs: {
+      spark_bolt: { id: "spark_bolt", name: "Spark Bolt" },
+    },
+  });
+
+  controller.bind();
+  const boundListeners = Object.entries(ui)
+    .filter(([, element]) => element?.eventListeners)
+    .flatMap(([name, element]) => Object.keys(element.eventListeners).map((type) => `${name}:${type}`));
+  boundListeners.push(
+    ...ui.speedButtons.flatMap((button) =>
+      Object.keys(button.eventListeners || {}).map((type) => `speed${button.dataset.speed}:${type}`)
+    )
+  );
+  clickFirst(ui.openMenu);
+  clickFirst(ui.menuInventoryTab);
+  const availablePickupButton = findShellRelicElement(ui.menuRelicInventory, (element) =>
+    String(element.innerHTML || "").includes("Pickup Radius Focus")
+  );
+  availablePickupButton?.eventListeners?.click?.[0]?.();
+  const equipButton = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) => element.tagName === "button" && element.textContent === "Equip relic"
+  );
+  equipButton?.eventListeners?.click?.[0]?.();
+  const equippedAfterEquip = [...save.equippedRelics];
+  const moveSpeedSlot = findShellRelicElement(ui.menuRelicInventory, (element) =>
+    String(element.innerHTML || "").includes("Move Speed Focus")
+  );
+  const unequipButton = findShellRelicElement(
+    moveSpeedSlot,
+    (element) => element.tagName === "button" && element.textContent === "Unequip"
+  );
+  unequipButton?.eventListeners?.click?.[0]?.();
+  const equippedAfterUnequip = [...save.equippedRelics];
+  clickFirst(ui.openShop);
+  clickFirst(ui.closeShop);
+  clickFirst(ui.resetSave);
+  clickFirst(ui.fullscreenButton);
+  clickFirst(ui.muteAudio);
+  clickFirst(ui.speedButtons[2]);
+  controller.showTitleScreen();
+  clickFirst(ui.titleStartGame);
+
+  return {
+    activePanel: ui.menuInventoryPanel.classList.contains("hidden") ? "progress" : "inventory",
+    apiKeys: Object.keys(controller).sort(),
+    boundListeners,
+    calls,
+    equippedAfterEquip,
+    equippedAfterUnequip,
+    inventoryClasses: collectShellRelicClasses(ui.menuRelicInventory),
+    inventoryHidden: ui.menuInventoryPanel.classList.contains("hidden"),
+    openMenuExpanded: ui.openMenu.attributes["aria-expanded"],
+    progressHidden: ui.menuProgressPanel.classList.contains("hidden"),
+    progressTabActive: ui.menuProgressTab.classList.contains("active"),
+    inventoryTabActive: ui.menuInventoryTab.classList.contains("active"),
+    relicInventoryText: collectShellRelicText(ui.menuRelicInventory),
+    relicSlotsText: collectShellRelicText(ui.menuRelicSlots),
+    startedScreen: calls.includes("start-run") ? "game" : "title",
+  };
+}
+
+function moduleShellUiSnapshot(createShellUiController) {
+  const controller = createShellUiController({
+    shellRelicController: {
+      dispose() {},
+      render() {},
+      selectRelic() {},
+      update() {},
+    },
+    shellView: {
+      dispose() {},
+      render() {},
+      setMenuOpen() {},
+      setScreen() {},
+      showPanel() {},
+      update() {},
+    },
+    getSave: () => ({ towerFloor: 20 }),
+  });
+  controller.init();
+  controller.openMenu("inventory");
+  const startState = controller.startRun();
+  return {
+    activePanel: startState.panel,
+    apiKeys: Object.keys(controller).sort(),
+    startedScreen: startState.screen,
+  };
+}
+
+function createClassicShellUiFixture(calls) {
+  const ui = {
+    canvas: createShellRelicFakeElement("canvas"),
+    closeEnd: createShellRelicFakeElement("button"),
+    closeEndX: createShellRelicFakeElement("button"),
+    closeLevelUp: createShellRelicFakeElement("button"),
+    closeMenu: createShellRelicFakeElement("button"),
+    closeShop: createShellRelicFakeElement("button"),
+    closeShopBottom: createShellRelicFakeElement("button"),
+    exitRun: createShellRelicFakeElement("button"),
+    fullscreenButton: createShellRelicFakeElement("button"),
+    menuInventoryPanel: createShellRelicFakeElement("section"),
+    menuInventoryTab: createShellRelicFakeElement("button"),
+    menuProgressPanel: createShellRelicFakeElement("section"),
+    menuProgressTab: createShellRelicFakeElement("button"),
+    menuRelicInventory: createShellRelicFakeElement("div"),
+    menuRelicSlots: createShellRelicFakeElement("div"),
+    menuShopPanel: createShellRelicFakeElement("section"),
+    menuShopTab: createShellRelicFakeElement("button"),
+    muteAudio: createShellRelicFakeElement("button"),
+    openMenu: createShellRelicFakeElement("button"),
+    openShop: createShellRelicFakeElement("button"),
+    resetSave: createShellRelicFakeElement("button"),
+    runMenu: createShellRelicFakeElement("section"),
+    startTransition: createShellRelicFakeElement("section"),
+    titleScreen: createShellRelicFakeElement("section"),
+    titleStartGame: createShellRelicFakeElement("button"),
+  };
+  ui.speedButtons = [1, 2, 5].map((speed) => {
+    const button = createShellRelicFakeElement("button");
+    button.dataset.speed = String(speed);
+    return button;
+  });
+  ui.runMenu.classList.add("hidden");
+  ui.startTransition.classList.add("hidden");
+  ui.menuInventoryPanel.classList.add("hidden");
+  ui.menuShopPanel.classList.add("hidden");
+  ui.canvas.parentElement = {
+    requestFullscreen() {
+      calls.push("fullscreen:request");
+    },
+  };
+  return ui;
+}
+
+function clickFirst(element) {
+  element?.eventListeners?.click?.[0]?.();
+}
+
 function createShellRelicFakeElement(tagName) {
   const element = {
     tagName,
     attributes: {},
     children: [],
     className: "",
+    dataset: {},
     eventListeners: {},
     innerHTML: "",
     isConnected: true,
@@ -3514,6 +3799,12 @@ function createShellRelicFakeElement(tagName) {
           .filter((item) => item && item !== className)
           .join(" ");
       },
+      toggle(className, force) {
+        const shouldAdd = force ?? !this.contains(className);
+        if (shouldAdd) this.add(className);
+        else this.remove(className);
+        return shouldAdd;
+      },
     },
     addEventListener(type, handler) {
       this.eventListeners[type] = this.eventListeners[type] || [];
@@ -3532,6 +3823,9 @@ function createShellRelicFakeElement(tagName) {
         imageSmoothingEnabled: true,
         putImageData() {},
       };
+    },
+    removeEventListener(type, handler) {
+      this.eventListeners[type] = (this.eventListeners[type] || []).filter((item) => item !== handler);
     },
     prepend(child) {
       this.children.unshift(child);
@@ -3583,6 +3877,13 @@ function createShellRelicFakeImage(images) {
 function collectShellRelicClasses(element) {
   if (!element) return [];
   return [element.className || "", ...element.children.flatMap(collectShellRelicClasses)].filter(Boolean);
+}
+
+function collectShellRelicText(element) {
+  if (!element) return "";
+  return [element.textContent || "", element.innerHTML || "", ...(element.children || []).map(collectShellRelicText)]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function findShellRelicElement(element, predicate) {
