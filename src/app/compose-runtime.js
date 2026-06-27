@@ -10,6 +10,7 @@ import { createSaveSystem } from "../modules/save.js";
 import { createShopPricing } from "../modules/shop-pricing.js";
 import { createRelicSystem } from "../modules/relics.js";
 import { createShellRelicPresenter } from "../modules/shell-relic-presenter.js";
+import { createShellRelicUiAdapter } from "../modules/shell-relic-ui.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -159,5 +160,23 @@ export function composeShellRelicPresentation({
     relicDefs,
     relicSystem,
     assetResolver,
+  });
+}
+
+export function composeShellRelicUiAdapter({
+  presenter,
+  documentRef,
+  root,
+  onEquip,
+  onUnequip,
+  onSelect,
+}) {
+  return createShellRelicUiAdapter({
+    presenter,
+    documentRef,
+    root,
+    onEquip,
+    onUnequip,
+    onSelect,
   });
 }

@@ -7,6 +7,7 @@ import {
   composeRuntime,
   composeSaveSubsystem,
   composeShellRelicPresentation,
+  composeShellRelicUiAdapter,
   composeShopEconomy,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
@@ -411,6 +412,35 @@ check(
   "module bootstrap shell relic model is serializable and stable",
   JSON.parse(JSON.stringify(shellRelicViewModel)).summaryRows[0].value === "3/5"
 );
+const fakeShellRelicRoot = createFakeElement("div");
+const shellRelicUiSelections = [];
+const shellRelicUiAdapter = composeShellRelicUiAdapter({
+  presenter: shellRelicPresentation,
+  documentRef: createFakeDocument(),
+  root: fakeShellRelicRoot,
+  onSelect: (relic) => shellRelicUiSelections.push(relic.id),
+  onUnequip: (relic) => shellRelicUiSelections.push(`unequip:${relic.id}`),
+});
+const shellRelicUiModel = shellRelicUiAdapter.renderShellRelics({
+  towerFloor: 30,
+  unlockedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "pickup_radius_focus_relic"],
+  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic"],
+});
+const shellRelicUiText = collectText(fakeShellRelicRoot);
+const availablePickupButton = findByDataset(fakeShellRelicRoot, "relicId", "pickup_radius_focus_relic");
+availablePickupButton?.eventListeners?.click?.[0]?.();
+check(
+  "module bootstrap renders shell relic UI adapter summary",
+  shellRelicUiModel.maxEquippedSlots === 3 &&
+    shellRelicUiText.includes("Relic slots: 3/5") &&
+    shellRelicUiText.includes("Move Speed Focus")
+);
+check(
+  "module bootstrap renders shell relic UI adapter available row",
+  shellRelicUiText.includes("Pickup Radius Focus") &&
+    availablePickupButton?.disabled === false &&
+    shellRelicUiSelections.includes("pickup_radius_focus_relic")
+);
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
 check("module bootstrap migrates save to current version", currentSave.saveVersion === 3);
@@ -490,6 +520,11 @@ check(
   composeRuntimeSource.includes('from "../modules/shell-relic-presenter.js"') &&
     !composeRuntimeSource.includes("globalThis.TapSurvivorRelics")
 );
+check(
+  "module bootstrap composes shell relic UI adapter without classic globals",
+  composeRuntimeSource.includes('from "../modules/shell-relic-ui.js"') &&
+    !composeRuntimeSource.includes("globalThis.TapSurvivorShellRelicUi")
+);
 
 frameCallback(1234);
 check("module bootstrap loop is called by injected animation frame", calls.includes("loop:1234"));
@@ -500,3 +535,47 @@ if (process.exitCode) {
 }
 
 console.log("\nModule bootstrap smoke passed.");
+
+function createFakeDocument() {
+  return {
+    createElement: createFakeElement,
+  };
+}
+
+function createFakeElement(tagName) {
+  return {
+    tagName,
+    children: [],
+    className: "",
+    dataset: {},
+    disabled: false,
+    eventListeners: {},
+    innerHTML: "",
+    textContent: "",
+    type: "",
+    appendChild(child) {
+      this.children.push(child);
+      return child;
+    },
+    addEventListener(type, handler) {
+      this.eventListeners[type] = this.eventListeners[type] || [];
+      this.eventListeners[type].push(handler);
+    },
+    replaceChildren(...children) {
+      this.children = children;
+    },
+  };
+}
+
+function collectText(element) {
+  return [element.textContent || "", ...element.children.map(collectText)].filter(Boolean).join(" ");
+}
+
+function findByDataset(element, key, value) {
+  if (element.dataset?.[key] === value) return element;
+  for (const child of element.children) {
+    const match = findByDataset(child, key, value);
+    if (match) return match;
+  }
+  return null;
+}
