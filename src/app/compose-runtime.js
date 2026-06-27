@@ -7,6 +7,7 @@ import { createDefaultSave, CURRENT_SAVE_VERSION } from "../modules/save-default
 import { isPlainObject, migrateSave } from "../modules/save-migrations.js";
 import { createSaveNormalizer } from "../modules/save-normalize.js";
 import { createSaveSystem } from "../modules/save.js";
+import { createShopPricing } from "../modules/shop-pricing.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -97,5 +98,29 @@ export function composeContentBalanceEffects({ content, contentSchema = {}, upgr
     content,
     contentRegistry: createContentRegistry({ content, upgradeContent }),
     effects: createEffects({ contentSchema }),
+  };
+}
+
+export function composeShopEconomy({
+  shopItemDefs = [],
+  pricingConfig = {},
+  getSave,
+  effects,
+}) {
+  if (typeof getSave !== "function") {
+    throw new Error("Missing Tap Survivor module shop dependency: getSave");
+  }
+  if (!effects) {
+    throw new Error("Missing Tap Survivor module shop dependency: effects");
+  }
+
+  return {
+    pricing: createShopPricing({
+      shopItemDefs,
+      pricingConfig,
+      getSave,
+    }),
+    effects,
+    shopItemDefs,
   };
 }

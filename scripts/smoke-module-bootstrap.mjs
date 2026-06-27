@@ -5,6 +5,7 @@ import {
   composeContentBalanceEffects,
   composeRuntime,
   composeSaveSubsystem,
+  composeShopEconomy,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
 
@@ -132,6 +133,20 @@ const saveSystem = composeSaveSubsystem({
   shopItemDefs: [{ id: "training_boots", maxTier: 3 }],
   questOpenIds: (quest) => quest?.opens || [],
 });
+const shopEconomySave = {
+  coins: 100,
+  towerFloor: 3,
+  shopPurchases: {
+    training_boots: 1,
+  },
+};
+const shopEconomy = composeShopEconomy({
+  shopItemDefs: contentBalanceEffects.contentRegistry.shopItemDefs,
+  getSave: () => shopEconomySave,
+  effects: contentBalanceEffects.effects,
+});
+const trainingBoots = shopEconomy.shopItemDefs.find((item) => item.id === "training_boots");
+const coinMagnet = shopEconomy.shopItemDefs.find((item) => item.id === "coin_magnet");
 
 saveStorage.store.set(
   legacySaveKey,
@@ -275,19 +290,34 @@ contentBalanceEffects.effects.applyRunUpgradeEffects(effectGame, [
 ]);
 check("module bootstrap applies run upgrade stat effects", effectGame.player.speed === 110);
 check("module bootstrap caps run upgrade healing", effectGame.player.hp === 100);
-const shopBonuses = contentBalanceEffects.effects.emptyShopBonuses();
-contentBalanceEffects.effects.addShopItemBonus(
-  shopBonuses,
-  { effect: { stat: "speed", value: 10 } },
-  2
+check(
+  "module bootstrap composes shop economy from content registry items",
+  trainingBoots?.cost?.[0] === 27 && coinMagnet?.cost?.[0] === 21
 );
+check(
+  "module bootstrap calculates shop pricing through module path",
+  shopEconomy.pricing.tierFor(trainingBoots) === 1 &&
+    shopEconomy.pricing.costFor(trainingBoots, 1) === 51 &&
+    shopEconomy.pricing.canBuy(trainingBoots)
+);
+check(
+  "module bootstrap keeps floor-scaled shop pricing deterministic",
+  shopEconomy.pricing.costFor(coinMagnet, 0) === 23
+);
+shopEconomySave.coins = 22;
+shopEconomySave.towerFloor = 1;
+check(
+  "module bootstrap keeps inflated shop pricing deterministic",
+  shopEconomy.pricing.costFor(coinMagnet, 0) === 22 && shopEconomy.pricing.canBuy(coinMagnet)
+);
+const shopBonuses = shopEconomy.effects.emptyShopBonuses();
+shopEconomy.effects.addShopItemBonus(shopBonuses, trainingBoots, 2);
 check("module bootstrap creates shop bonus defaults", shopBonuses.pickupRadius === 0);
 check("module bootstrap adds shop item bonuses", shopBonuses.speed === 20);
 check(
-  "module bootstrap applies shop item effect to run",
-  contentBalanceEffects.effects.applyShopItemEffectToRun(effectGame, {
-    effect: { stat: "pickupRadius", value: 5 },
-  }) && effectGame.player.pickupRadius === 55
+  "module bootstrap applies representative shop item effect to run",
+  shopEconomy.effects.applyShopItemEffectToRun(effectGame, coinMagnet) &&
+    effectGame.player.pickupRadius === 60
 );
 contentBalanceEffects.effects.applyRelicSpecialEffects(effectGame, {
   maxHpBonus: 10,
@@ -357,6 +387,12 @@ check(
 const resetPersisted = JSON.parse(saveStorage.store.get(saveKey));
 check("module bootstrap reset persists default save", resetPersisted.coins === 0);
 check("module bootstrap reset removes legacy save key", !saveStorage.store.has(legacySaveKey));
+
+const composeRuntimeSource = readFileSync(join(root, "src/app/compose-runtime.js"), "utf8");
+check(
+  "module bootstrap shop economy composition avoids project globals",
+  !composeRuntimeSource.includes("globalThis.TapSurvivor")
+);
 
 frameCallback(1234);
 check("module bootstrap loop is called by injected animation frame", calls.includes("loop:1234"));
