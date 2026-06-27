@@ -8,7 +8,7 @@ import { isPlainObject, migrateSave } from "../modules/save-migrations.js";
 import { createSaveNormalizer } from "../modules/save-normalize.js";
 import { createSaveSystem } from "../modules/save.js";
 import { createShopPricing } from "../modules/shop-pricing.js";
-import { createRelicProgression } from "../modules/relic-progression.js";
+import { createRelicSystem } from "../modules/relics.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -137,7 +137,7 @@ export function composeRelicProgression({
   }
 
   return {
-    progression: createRelicProgression({
+    progression: createRelicSystem({
       relicDefs,
       weaponDefs,
       random,

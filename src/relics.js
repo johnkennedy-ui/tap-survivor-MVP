@@ -1,5 +1,10 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/relics.js
+// Run: npm run build:bridges
 (() => {
-  function createRelicSystem({ relicDefs, weaponDefs = {} }) {
+  "use strict";
+
+  function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random }) {
     function equippedRelics(save) {
       const equipped = new Set(save.equippedRelics || []);
       return (relicDefs || []).filter((relic) => equipped.has(relic.id)).slice(0, maxEquippedRelics(save));
@@ -79,7 +84,7 @@
       const unlocked = new Set(save.unlockedRelics || []);
       const locked = (relicDefs || []).filter((relic) => !unlocked.has(relic.id));
       if (!locked.length) return null;
-      const relic = locked[Math.floor(Math.random() * locked.length)];
+      const relic = locked[Math.floor(random() * locked.length)];
       return grantRelic(save, relic);
     }
 
@@ -106,7 +111,7 @@
 
     function shuffleRelics(relics) {
       return relics
-        .map((relic) => ({ relic, sort: Math.random() }))
+        .map((relic) => ({ relic, sort: random() }))
         .sort((a, b) => a.sort - b.sort)
         .map(({ relic }) => relic);
     }

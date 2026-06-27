@@ -12,6 +12,7 @@ import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/r
 import { createRunStateSystem as createModuleRunStateSystem } from "../src/modules/run-state.js";
 import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
+import { createRelicSystem as createModuleRelicSystem } from "../src/modules/relics.js";
 import {
   choiceId as moduleChoiceId,
   shopFocusBonus as moduleShopFocusBonus,
@@ -109,6 +110,14 @@ const saveBridge = loadBridge("../src/save.js", "src/save.js", {
   TapSurvivorSaveCorruption: saveCorruptionBridge.context.TapSurvivorSaveCorruption,
 });
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
+const relicsBridge = loadBridge("../src/relics.js", "src/relics.js", {
+  Math: {
+    floor: Math.floor,
+    max: Math.max,
+    min: Math.min,
+    random: () => 0,
+  },
+});
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
@@ -149,6 +158,7 @@ const bridgeSaveMigrations = saveMigrationsBridge.context.TapSurvivorSaveMigrati
 const bridgeSaveNormalize = saveNormalizeBridge.context.TapSurvivorSaveNormalize;
 const bridgeSave = saveBridge.context.TapSurvivorSave;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
+const createBridgeRelicSystem = relicsBridge.context.TapSurvivorRelics?.createRelicSystem;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldowns?.createWeaponScaling;
@@ -301,12 +311,20 @@ check(
   composeRuntimeSource.includes('from "../modules/effects.js"')
 );
 check(
+  "module bootstrap imports canonical relic provider source",
+  composeRuntimeSource.includes('from "../modules/relics.js"')
+);
+check(
   "module bootstrap does not import classic content registry wrapper",
   !composeRuntimeSource.includes('from "../content-registry.js"')
 );
 check(
   "module bootstrap does not import classic effects wrapper",
   !composeRuntimeSource.includes('from "../effects.js"')
+);
+check(
+  "module bootstrap does not import classic relic wrapper",
+  !composeRuntimeSource.includes('from "../relics.js"')
 );
 
 check("module exports choiceId", typeof moduleChoiceId === "function");
@@ -738,6 +756,81 @@ const bridgeResults = pricingSnapshot(bridgePricing);
 check(
   "module and bridge pricing output match",
   JSON.stringify(moduleResults) === JSON.stringify(bridgeResults)
+);
+
+check("module exports createRelicSystem", typeof createModuleRelicSystem === "function");
+check("bridge assigns globalThis.TapSurvivorRelics", Boolean(relicsBridge.context.TapSurvivorRelics));
+check("bridge exposes createRelicSystem", typeof createBridgeRelicSystem === "function");
+check("relic bridge source has generated banner", hasGeneratedBanner(relicsBridge.source));
+
+const relicFixtureDefs = [
+  {
+    id: "move_speed_focus_relic",
+    targetUpgradeId: "run_move_speed",
+    maxTierBonus: 1,
+    startingTierBonus: 1,
+  },
+  {
+    id: "fire_rate_mastery_relic",
+    targetUpgradeId: "run_fire_rate",
+    maxTierBonus: 2,
+    startingTierBonus: 2,
+  },
+  {
+    id: "split_on_hit_mastery_relic",
+    targetUpgradeId: "run_split_on_hit",
+    specialAbility: {
+      modifiers: {
+        maxHpMultiplier: 0.6,
+        speedMultiplier: 0.35,
+        pickupRadiusMultiplier: 0.35,
+      },
+    },
+  },
+];
+const relicFixtureSave = {
+  towerFloor: 20,
+  unlockedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic"],
+  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic"],
+};
+const specialRelicFixtureSave = {
+  towerFloor: 10,
+  unlockedRelics: ["split_on_hit_mastery_relic"],
+  equippedRelics: ["split_on_hit_mastery_relic"],
+};
+const relicSystemOptions = {
+  relicDefs: relicFixtureDefs,
+  weaponDefs: {
+    spark_bolt: { kind: "projectile" },
+  },
+  random: () => 0,
+};
+const moduleRelicSnapshot = relicSystemSnapshot(
+  createModuleRelicSystem(relicSystemOptions),
+  relicFixtureSave,
+  specialRelicFixtureSave
+);
+const bridgeRelicSnapshot = relicSystemSnapshot(
+  createBridgeRelicSystem(relicSystemOptions),
+  relicFixtureSave,
+  specialRelicFixtureSave
+);
+check(
+  "module and bridge relic provider output match",
+  JSON.stringify(moduleRelicSnapshot) === JSON.stringify(bridgeRelicSnapshot)
+);
+check("relic bridge max equipped slots fixture is unchanged", moduleRelicSnapshot.maxEquippedRelics === 2);
+check(
+  "relic bridge run-start tiers fixture is unchanged",
+  moduleRelicSnapshot.startingRunUpgradeTiers.run_move_speed === 1 &&
+    moduleRelicSnapshot.startingRunUpgradeTiers.run_fire_rate === 2
+);
+check("relic bridge max-tier bonus fixture is unchanged", moduleRelicSnapshot.moveSpeedMaxTierBonus === 1);
+check(
+  "relic bridge special modifiers fixture is unchanged",
+  moduleRelicSnapshot.specialEffects.maxHpMultiplier === 0.6 &&
+    moduleRelicSnapshot.specialEffects.speedMultiplier === 0.35 &&
+    moduleRelicSnapshot.specialEffects.pickupRadiusMultiplier === 0.35
 );
 
 check("module exports clamp", typeof moduleClamp === "function");
@@ -3164,6 +3257,17 @@ function effectsSnapshot(effectsApi) {
     shopApplied,
     shopBonuses,
     shopPickupRadius: game.player.pickupRadius,
+  };
+}
+
+function relicSystemSnapshot(relicSystem, save, specialSave) {
+  return {
+    equippedRelicIds: relicSystem.equippedRelics(save).map((relic) => relic.id),
+    maxEquippedRelics: relicSystem.maxEquippedRelics(save),
+    maxEquippedWeapons: relicSystem.maxEquippedWeapons(save),
+    moveSpeedMaxTierBonus: relicSystem.relicBonusFor(save, "run_move_speed", "maxTierBonus"),
+    specialEffects: relicSystem.specialEffects(specialSave),
+    startingRunUpgradeTiers: relicSystem.startingRunUpgradeTiers(save),
   };
 }
 

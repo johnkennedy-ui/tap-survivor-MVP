@@ -447,6 +447,11 @@ check(
   "module bootstrap shop and relic composition avoids project globals",
   !composeRuntimeSource.includes("globalThis.TapSurvivor")
 );
+check(
+  "module bootstrap composes canonical relic provider",
+  composeRuntimeSource.includes('from "../modules/relics.js"') &&
+    !composeRuntimeSource.includes('from "../modules/relic-progression.js"')
+);
 
 frameCallback(1234);
 check("module bootstrap loop is called by injected animation frame", calls.includes("loop:1234"));

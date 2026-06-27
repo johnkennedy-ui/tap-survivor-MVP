@@ -107,6 +107,12 @@ const bridges = [
     exports: ["createShopPricing"],
   },
   {
+    source: "src/modules/relics.js",
+    target: "src/relics.js",
+    globalName: "TapSurvivorRelics",
+    exports: ["createRelicSystem"],
+  },
+  {
     source: "src/modules/math.js",
     target: "src/math.js",
     globalName: "TapSurvivorMath",
