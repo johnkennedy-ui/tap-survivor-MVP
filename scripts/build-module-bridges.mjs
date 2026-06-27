@@ -113,6 +113,34 @@ const bridges = [
     exports: ["createRelicSystem"],
   },
   {
+    source: "src/modules/shell-relic-ui.js",
+    target: "src/shell-relic-ui.js",
+    globalName: "TapSurvivorShellRelicUi",
+    exports: ["createShellRelicUiAdapter", "createShellRelicUi"],
+    classicExportWrappers: {
+      createShellRelicUi: {
+        name: "createClassicShellRelicUi",
+        source: `function createClassicShellRelicUi(options = {}) {
+  return createShellRelicUi({
+    ...options,
+    scheduler: options.scheduler || {
+      clearTimeout: (timer) => globalThis.clearTimeout?.(timer),
+      setTimeout: (callback, delay) => globalThis.setTimeout?.(callback, delay),
+      animationSetTimeout: (callback, delay) => globalThis.setTimeout?.(callback, delay),
+    },
+    imageFactory: options.imageFactory || (() => (typeof Image === "undefined" ? null : new Image())),
+  });
+}`,
+      },
+    },
+    globalMembers: [
+      {
+        name: "createShellRelicUi",
+        value: "createClassicShellRelicUi",
+      },
+    ],
+  },
+  {
     source: "src/modules/math.js",
     target: "src/math.js",
     globalName: "TapSurvivorMath",

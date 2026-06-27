@@ -13,6 +13,7 @@ import { createRunStateSystem as createModuleRunStateSystem } from "../src/modul
 import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import { createRelicSystem as createModuleRelicSystem } from "../src/modules/relics.js";
+import { createShellRelicUi as createModuleShellRelicUi } from "../src/modules/shell-relic-ui.js";
 import {
   choiceId as moduleChoiceId,
   shopFocusBonus as moduleShopFocusBonus,
@@ -118,6 +119,7 @@ const relicsBridge = loadBridge("../src/relics.js", "src/relics.js", {
     random: () => 0,
   },
 });
+const shellRelicUiBridge = loadBridge("../src/shell-relic-ui.js", "src/shell-relic-ui.js");
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
@@ -171,6 +173,7 @@ const bridgeRunUi = runUiBridge.context.TapSurvivorRunUi;
 const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
 const bridgePickups = pickupsBridge.context.TapSurvivorPickups;
 const bridgeCombatDamage = combatDamageBridge.context.TapSurvivorCombatDamage;
+const bridgeShellRelicUi = shellRelicUiBridge.context.TapSurvivorShellRelicUi;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
@@ -831,6 +834,115 @@ check(
   moduleRelicSnapshot.specialEffects.maxHpMultiplier === 0.6 &&
     moduleRelicSnapshot.specialEffects.speedMultiplier === 0.35 &&
     moduleRelicSnapshot.specialEffects.pickupRadiusMultiplier === 0.35
+);
+
+check("module exports createShellRelicUi", typeof createModuleShellRelicUi === "function");
+check("bridge assigns globalThis.TapSurvivorShellRelicUi", Boolean(bridgeShellRelicUi));
+check("bridge exposes createShellRelicUi", typeof bridgeShellRelicUi?.createShellRelicUi === "function");
+check("shell relic UI bridge source has generated banner", hasGeneratedBanner(shellRelicUiBridge.source));
+
+const shellRelicUiFixtureDefs = [
+  {
+    id: "move_speed_focus_relic",
+    name: "Move Speed Focus",
+    description: "Start faster.",
+    targetUpgradeId: "run_move_speed",
+    maxTierBonus: 1,
+    startingTierBonus: 1,
+    iconPath: "move-speed-focus.png",
+    backgroundColor: "#334455",
+  },
+  {
+    id: "pickup_radius_focus_relic",
+    name: "Pickup Radius Focus",
+    description: "Collect farther.",
+    targetUpgradeId: "run_pickup_radius",
+    maxTierBonus: 1,
+    startingTierBonus: 1,
+    iconPath: "pickup-radius-focus.png",
+    backgroundColor: "#445566",
+  },
+  {
+    id: "locked_focus_relic",
+    name: "Locked Focus",
+    description: "Locked fixture.",
+    targetUpgradeId: "run_fire_rate",
+    iconPath: "locked-focus.png",
+  },
+];
+const shellRelicUiContentFixture = {
+  assets: {
+    sprites: {
+      player: "player-fixture.png",
+    },
+  },
+  runUpgrades: [
+    { id: "run_move_speed", name: "Move Speed" },
+    { id: "run_pickup_radius", name: "Pickup Radius" },
+    { id: "run_fire_rate", name: "Fire Rate" },
+  ],
+};
+const shellRelicUiAssetResolver = {
+  relicIcon: (relic) => relic.iconPath,
+  runUpgradeSprite: (upgradeId) => ({
+    fps: 10,
+    frames: [{ height: 16, width: 16, x: 0, y: 0 }],
+    src: `${upgradeId}.png`,
+    transparentColor: [0, 0, 0],
+    transparentTolerance: 58,
+  }),
+  spriteSource: (sprite) => sprite.src,
+};
+const shellRelicUiBridgeSnapshot = shellRelicUiSnapshot(bridgeShellRelicUi.createShellRelicUi, {
+  assetResolver: shellRelicUiAssetResolver,
+  content: shellRelicUiContentFixture,
+  relicDefs: shellRelicUiFixtureDefs,
+  relicSystem: createBridgeRelicSystem({
+    relicDefs: shellRelicUiFixtureDefs,
+    random: () => 0,
+    weaponDefs: {},
+  }),
+});
+const shellRelicUiModuleSnapshot = shellRelicUiSnapshot(createModuleShellRelicUi, {
+  assetResolver: shellRelicUiAssetResolver,
+  content: shellRelicUiContentFixture,
+  relicDefs: shellRelicUiFixtureDefs,
+  relicSystem: createModuleRelicSystem({
+    relicDefs: shellRelicUiFixtureDefs,
+    random: () => 0,
+    weaponDefs: {},
+  }),
+});
+check(
+  "module and bridge shell relic UI output match",
+  JSON.stringify(shellRelicUiBridgeSnapshot) === JSON.stringify(shellRelicUiModuleSnapshot)
+);
+check(
+  "shell relic UI bridge preserves classic inventory API",
+  shellRelicUiBridgeSnapshot.initialSlotText ===
+    "Relic slots: 2/5 unlocked. Next slot at tower level 30." &&
+    shellRelicUiBridgeSnapshot.inventoryClasses.includes("relic-loadout") &&
+    shellRelicUiBridgeSnapshot.inventoryClasses.includes("relic-icon-grid")
+);
+check(
+  "shell relic UI bridge preserves classic detail and preview behavior",
+  shellRelicUiBridgeSnapshot.detailSlotText === "Pickup Radius Focus" &&
+    shellRelicUiBridgeSnapshot.detailClasses.some((className) => className.includes("relic-detail-screen")) &&
+    shellRelicUiBridgeSnapshot.previewDraws === 1 &&
+    shellRelicUiBridgeSnapshot.previewTimerDelay === 100
+);
+check(
+  "shell relic UI bridge preserves classic equip unequip and persistence behavior",
+  shellRelicUiBridgeSnapshot.equippedAfterEquip.includes("pickup_radius_focus_relic") &&
+    !shellRelicUiBridgeSnapshot.equippedAfterUnequip.includes("move_speed_focus_relic") &&
+    shellRelicUiBridgeSnapshot.persistCount === 2 &&
+    shellRelicUiBridgeSnapshot.renderMetaCount === 2
+);
+check(
+  "shell relic UI bridge preserves classic lock popup behavior",
+  shellRelicUiBridgeSnapshot.lockPopupText === "Locked, play more to unlock this skill." &&
+    shellRelicUiBridgeSnapshot.lockPopupHidden === true &&
+    shellRelicUiBridgeSnapshot.lockTimerDelay === 1800
 );
 
 check("module exports clamp", typeof moduleClamp === "function");
@@ -3269,6 +3381,218 @@ function relicSystemSnapshot(relicSystem, save, specialSave) {
     specialEffects: relicSystem.specialEffects(specialSave),
     startingRunUpgradeTiers: relicSystem.startingRunUpgradeTiers(save),
   };
+}
+
+function shellRelicUiSnapshot(createShellRelicUi, options) {
+  const ui = {
+    menuRelicInventory: createShellRelicFakeElement("div"),
+    menuRelicSlots: createShellRelicFakeElement("div"),
+  };
+  const save = {
+    towerFloor: 20,
+    unlockedRelics: ["move_speed_focus_relic", "pickup_radius_focus_relic"],
+    equippedRelics: ["move_speed_focus_relic"],
+  };
+  const timers = [];
+  const images = [];
+  let persistCount = 0;
+  let renderMetaCount = 0;
+  const controller = createShellRelicUi({
+    ...options,
+    documentRef: { createElement: createShellRelicFakeElement },
+    getSave: () => save,
+    imageFactory: () => createShellRelicFakeImage(images),
+    persist: () => {
+      persistCount += 1;
+    },
+    renderMeta: () => {
+      renderMetaCount += 1;
+    },
+    scheduler: {
+      animationSetTimeout(callback, delay) {
+        const timer = { callback, delay, kind: "animation" };
+        timers.push(timer);
+        return timer;
+      },
+      clearTimeout(timer) {
+        if (timer) timer.cleared = true;
+      },
+      setTimeout(callback, delay) {
+        const timer = { callback, delay, kind: "lock" };
+        timers.push(timer);
+        return timer;
+      },
+    },
+    ui,
+  });
+  controller.renderInventory();
+  const initialSlotText = ui.menuRelicSlots.textContent;
+  const inventoryClasses = collectShellRelicClasses(ui.menuRelicInventory);
+  const availablePickupButton = findShellRelicElement(ui.menuRelicInventory, (element) =>
+    String(element.innerHTML || "").includes("Pickup Radius Focus")
+  );
+  const lockedButton = findShellRelicElement(ui.menuRelicInventory, (element) =>
+    String(element.innerHTML || "").includes("Locked Focus")
+  );
+  availablePickupButton?.eventListeners?.click?.[0]?.();
+  const detailSlotText = ui.menuRelicSlots.textContent;
+  const detailClasses = collectShellRelicClasses(ui.menuRelicInventory);
+  const equipButton = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) => element.tagName === "button" && element.textContent === "Equip relic"
+  );
+  equipButton?.eventListeners?.click?.[0]?.();
+  const equippedAfterEquip = [...save.equippedRelics];
+  const moveSpeedSlot = findShellRelicElement(ui.menuRelicInventory, (element) =>
+    String(element.innerHTML || "").includes("Move Speed Focus")
+  );
+  const unequipButton = findShellRelicElement(
+    moveSpeedSlot,
+    (element) => element.tagName === "button" && element.textContent === "Unequip"
+  );
+  unequipButton?.eventListeners?.click?.[0]?.();
+  const equippedAfterUnequip = [...save.equippedRelics];
+  controller.renderInventory();
+  const lockedButtonAfterRender = findShellRelicElement(ui.menuRelicInventory, (element) =>
+    String(element.innerHTML || "").includes("Locked Focus")
+  );
+  lockedButtonAfterRender?.eventListeners?.click?.[0]?.();
+  const lockPopup = findShellRelicElement(ui.menuRelicInventory, (element) =>
+    String(element.className || "").includes("relic-lock-popup")
+  );
+  const lockTimer = timers.find((timer) => timer.kind === "lock");
+  lockTimer?.callback();
+  const animationTimer = timers.find((timer) => timer.kind === "animation");
+
+  return {
+    detailClasses,
+    detailSlotText,
+    equippedAfterEquip,
+    equippedAfterUnequip,
+    initialSlotText,
+    inventoryClasses,
+    lockPopupHidden: lockPopup?.classList?.contains("hidden") || String(lockPopup?.className || "").includes("hidden"),
+    lockPopupText: lockPopup?.textContent,
+    lockTimerDelay: lockTimer?.delay,
+    persistCount,
+    previewDraws: images[0]?.draws || 0,
+    previewTimerDelay: animationTimer?.delay,
+    renderMetaCount,
+  };
+}
+
+function createShellRelicFakeElement(tagName) {
+  const element = {
+    tagName,
+    attributes: {},
+    children: [],
+    className: "",
+    eventListeners: {},
+    innerHTML: "",
+    isConnected: true,
+    style: {
+      setProperty(key, value) {
+        this[key] = value;
+      },
+    },
+    textContent: "",
+    type: "",
+    appendChild(child) {
+      this.children.push(child);
+      return child;
+    },
+    classList: {
+      add(className) {
+        element.className = [...new Set([...String(element.className || "").split(/\s+/).filter(Boolean), className])].join(" ");
+      },
+      contains(className) {
+        return String(element.className || "").split(/\s+/).includes(className);
+      },
+      remove(className) {
+        element.className = String(element.className || "")
+          .split(/\s+/)
+          .filter((item) => item && item !== className)
+          .join(" ");
+      },
+    },
+    addEventListener(type, handler) {
+      this.eventListeners[type] = this.eventListeners[type] || [];
+      this.eventListeners[type].push(handler);
+    },
+    getContext() {
+      return {
+        clearRect() {},
+        drawImage() {
+          this.image.draws = (this.image.draws || 0) + 1;
+        },
+        getImageData() {
+          return { data: new Uint8ClampedArray(4) };
+        },
+        image: null,
+        imageSmoothingEnabled: true,
+        putImageData() {},
+      };
+    },
+    prepend(child) {
+      this.children.unshift(child);
+      return child;
+    },
+    querySelector(selector) {
+      if (selector !== ".relic-lock-popup") return null;
+      return findShellRelicElement(this, (item) => String(item.className || "").includes("relic-lock-popup"));
+    },
+    setAttribute(key, value) {
+      this.attributes[key] = value;
+    },
+  };
+  if (tagName === "canvas") {
+    element.getContext = () => ({
+      clearRect() {},
+      drawImage(image) {
+        image.draws = (image.draws || 0) + 1;
+      },
+      getImageData() {
+        return { data: new Uint8ClampedArray(4) };
+      },
+      imageSmoothingEnabled: true,
+      putImageData() {},
+    });
+  }
+  return element;
+}
+
+function createShellRelicFakeImage(images) {
+  const listeners = {};
+  const image = {
+    draws: 0,
+    addEventListener(type, callback) {
+      listeners[type] = callback;
+    },
+    get src() {
+      return this.source || "";
+    },
+    set src(value) {
+      this.source = value;
+      listeners.load?.();
+    },
+  };
+  images.push(image);
+  return image;
+}
+
+function collectShellRelicClasses(element) {
+  if (!element) return [];
+  return [element.className || "", ...element.children.flatMap(collectShellRelicClasses)].filter(Boolean);
+}
+
+function findShellRelicElement(element, predicate) {
+  if (!element) return null;
+  if (predicate(element)) return element;
+  for (const child of element.children || []) {
+    const match = findShellRelicElement(child, predicate);
+    if (match) return match;
+  }
+  return null;
 }
 
 /**
