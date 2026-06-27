@@ -6,6 +6,7 @@ import {
   composeRelicProgression,
   composeRuntime,
   composeSaveSubsystem,
+  composeShellRelicController,
   composeShellRelicPresentation,
   composeShellRelicUiAdapter,
   composeShopEconomy,
@@ -565,6 +566,114 @@ check(
     shellRelicUiPersists.length === 2 &&
     shellRelicUiMetaRenders.length === 2
 );
+const fakeShellRelicOwnerRoot = createFakeElement("div");
+const shellRelicOwnerScheduler = createFakeScheduler();
+const shellRelicOwnerSelections = [];
+const shellRelicOwnerEquips = [];
+const shellRelicOwnerUnequips = [];
+const shellRelicOwnerPersists = [];
+const shellRelicOwnerMetaRenders = [];
+const shellRelicOwnerPreviewCanvases = [];
+const shellRelicOwnerPreviewDraws = [];
+const shellRelicOwnerImages = [];
+const shellRelicOwnerSave = {
+  towerFloor: 40,
+  unlockedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "pickup_radius_focus_relic",
+    "split_on_hit_mastery_relic",
+  ],
+  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+};
+const shellRelicOwner = composeShellRelicController({
+  presenter: shellRelicPresentation,
+  documentRef: createFakeDocument(),
+  root: fakeShellRelicOwnerRoot,
+  getSave: () => shellRelicOwnerSave,
+  relicSystem: relicProgression.progression,
+  persist: (save) => shellRelicOwnerPersists.push([...save.equippedRelics]),
+  renderMeta: (save) => shellRelicOwnerMetaRenders.push([...save.equippedRelics]),
+  scheduler: shellRelicOwnerScheduler,
+  lockPopupDelayMs: 1800,
+  previewAdapter: {
+    runUpgradeSprite: (upgradeId) => content.assets.sprites.runUpgrades[upgradeId],
+    spriteSource: (sprite) => sprite?.src || "",
+    createCanvas({ className, height, width }) {
+      const canvas = createFakeElement("canvas");
+      canvas.className = className;
+      canvas.width = width;
+      canvas.height = height;
+      shellRelicOwnerPreviewCanvases.push(canvas);
+      return canvas;
+    },
+    getContext(canvas) {
+      return canvas.context;
+    },
+    createImage({ source }) {
+      const image = createFakeImage();
+      shellRelicOwnerImages.push(image);
+      image.expectedSource = source;
+      return image;
+    },
+    drawFrame({ canvas, frame, image }) {
+      shellRelicOwnerPreviewDraws.push({ frame, imageSource: image.src, width: canvas.width });
+    },
+  },
+  onEquip: (relic) => shellRelicOwnerEquips.push(relic.id),
+  onSelect: (relic) => shellRelicOwnerSelections.push(relic?.id || "none"),
+  onUnequip: (relic) => shellRelicOwnerUnequips.push(relic.id),
+});
+const shellRelicOwnerInitialModel = shellRelicOwner.render();
+const shellRelicOwnerInitialText = collectText(fakeShellRelicOwnerRoot);
+const ownerAvailablePickupButton = findByDataset(
+  fakeShellRelicOwnerRoot,
+  "relicId",
+  "pickup_radius_focus_relic"
+);
+ownerAvailablePickupButton?.eventListeners?.click?.[0]?.();
+const shellRelicOwnerSelectedText = collectText(fakeShellRelicOwnerRoot);
+const ownerEquipPickupButton = findByDataset(fakeShellRelicOwnerRoot, "action", "equip");
+const firstOwnerPreviewTimer = shellRelicOwnerScheduler.timers[0];
+ownerEquipPickupButton?.eventListeners?.click?.[0]?.();
+const ownerEquippedPickupSlot = findByDataset(fakeShellRelicOwnerRoot, "relicId", "pickup_radius_focus_relic");
+const ownerUnequipPickupButton = findByDataset(ownerEquippedPickupSlot, "action", "unequip");
+ownerUnequipPickupButton?.eventListeners?.click?.[0]?.();
+const shellRelicOwnerUpdatedModel = shellRelicOwner.update({ ...shellRelicOwnerSave, towerFloor: 50 });
+shellRelicOwner.selectRelic("pickup_radius_focus_relic");
+shellRelicOwner.dispose();
+check(
+  "module bootstrap composes shell relic owner through module path",
+  shellRelicOwnerInitialModel.maxEquippedSlots === 4 &&
+    shellRelicOwnerInitialText.includes("Relic slots: 4/5") &&
+    typeof shellRelicOwner.render === "function" &&
+    typeof shellRelicOwner.update === "function" &&
+    typeof shellRelicOwner.selectRelic === "function" &&
+    typeof shellRelicOwner.dispose === "function"
+);
+check(
+  "module bootstrap shell relic owner renders and updates deterministically",
+  shellRelicOwnerSelectedText.includes("Selected relic") &&
+    shellRelicOwnerSelectedText.includes("Pickup Radius Focus") &&
+    shellRelicOwnerUpdatedModel.maxEquippedSlots === 5
+);
+check(
+  "module bootstrap shell relic owner forwards adapter actions",
+  shellRelicOwnerSelections.includes("pickup_radius_focus_relic") &&
+    shellRelicOwnerEquips.includes("pickup_radius_focus_relic") &&
+    shellRelicOwnerUnequips.includes("pickup_radius_focus_relic") &&
+    shellRelicOwnerPersists.length === 2 &&
+    shellRelicOwnerMetaRenders.length === 2
+);
+check(
+  "module bootstrap shell relic owner owns preview and scheduler cleanup",
+  shellRelicOwnerPreviewCanvases[0]?.width === 112 &&
+    shellRelicOwnerImages[0]?.src === content.assets.sprites.runUpgrades.run_pickup_radius.src &&
+    shellRelicOwnerPreviewDraws[0]?.frame.x === 0 &&
+    firstOwnerPreviewTimer?.delay === 100 &&
+    firstOwnerPreviewTimer?.cleared === true &&
+    shellRelicOwnerScheduler.timers.at(-1)?.cleared === true
+);
 const fakeShellRelicFallbackRoot = createFakeElement("div");
 const shellRelicFallbackAdapter = composeShellRelicUiAdapter({
   presenter: shellRelicPresentation,
@@ -667,6 +776,11 @@ check(
   "module bootstrap composes shell relic UI adapter without classic globals",
   composeRuntimeSource.includes('from "../modules/shell-relic-ui.js"') &&
     !composeRuntimeSource.includes("globalThis.TapSurvivorShellRelicUi")
+);
+check(
+  "module bootstrap composes shell relic owner without classic globals",
+  composeRuntimeSource.includes('from "../modules/shell-relic-controller.js"') &&
+    !composeRuntimeSource.includes("globalThis.TapSurvivorShellUi")
 );
 
 frameCallback(1234);

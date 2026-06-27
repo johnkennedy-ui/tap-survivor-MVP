@@ -9,6 +9,7 @@ import { createSaveNormalizer } from "../modules/save-normalize.js";
 import { createSaveSystem } from "../modules/save.js";
 import { createShopPricing } from "../modules/shop-pricing.js";
 import { createRelicSystem } from "../modules/relics.js";
+import { createShellRelicController } from "../modules/shell-relic-controller.js";
 import { createShellRelicPresenter } from "../modules/shell-relic-presenter.js";
 import { createShellRelicUiAdapter } from "../modules/shell-relic-ui.js";
 
@@ -194,5 +195,39 @@ export function composeShellRelicUiAdapter({
     scheduler,
     lockPopupDelayMs,
     previewAdapter,
+  });
+}
+
+export function composeShellRelicController({
+  presenter,
+  documentRef,
+  root,
+  getSave,
+  relicSystem,
+  persist,
+  renderMeta,
+  scheduler,
+  lockPopupDelayMs,
+  previewAdapter,
+  onEquip,
+  onUnequip,
+  onSelect,
+  onLockedSelect,
+}) {
+  return createShellRelicController({
+    presenter,
+    documentRef,
+    root,
+    getSave,
+    relicSystem,
+    persist,
+    renderMeta,
+    scheduler,
+    lockPopupDelayMs,
+    previewAdapter,
+    onEquip,
+    onUnequip,
+    onSelect,
+    onLockedSelect,
   });
 }
