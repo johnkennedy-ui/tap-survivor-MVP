@@ -171,6 +171,12 @@ export function composeShellRelicUiAdapter({
   onUnequip,
   onSelect,
   onLockedSelect,
+  getSave,
+  relicSystem,
+  persist,
+  renderMeta,
+  scheduler,
+  lockPopupDelayMs,
 }) {
   return createShellRelicUiAdapter({
     presenter,
@@ -180,5 +186,11 @@ export function composeShellRelicUiAdapter({
     onUnequip,
     onSelect,
     onLockedSelect,
+    getSave,
+    relicSystem,
+    persist,
+    renderMeta,
+    scheduler,
+    lockPopupDelayMs,
   });
 }

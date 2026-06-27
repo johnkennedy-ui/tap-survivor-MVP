@@ -10,7 +10,15 @@ export function createShellRelicUiAdapter(options = {}) {
     onUnequip,
     onSelect,
     onLockedSelect,
+    getSave,
+    relicSystem,
+    persist,
+    renderMeta,
+    scheduler = {},
+    lockPopupDelayMs = 1800,
   } = options;
+  let lockPopup = null;
+  let lockPopupHideTimer = null;
 
   if (!presenter || typeof presenter.createInventoryViewModel !== "function") {
     throw new Error("Missing Tap Survivor module shell relic UI dependency: presenter");
@@ -96,7 +104,10 @@ export function createShellRelicUiAdapter(options = {}) {
         button.type = "button";
         button.textContent = "Unequip";
         button.dataset.action = "unequip";
-        button.addEventListener("click", () => onUnequip?.(relic, model));
+        button.addEventListener("click", () => {
+          const changed = commitRelicState(relic, false);
+          onUnequip?.(relic, model, { changed });
+        });
         item.appendChild(button);
       }
       list.appendChild(item);
@@ -134,7 +145,10 @@ export function createShellRelicUiAdapter(options = {}) {
       if (relic.linkedSkill) appendText(documentRef, button, "span", `Linked skill: ${relic.linkedSkill.name}`);
       button.addEventListener("click", () => {
         if (relic.unlocked) onSelect?.(relic, model);
-        else onLockedSelect?.(relic, model);
+        else {
+          showLockedMessage();
+          onLockedSelect?.(relic, model);
+        }
       });
       list.appendChild(button);
     });
@@ -165,7 +179,10 @@ export function createShellRelicUiAdapter(options = {}) {
     equipButton.dataset.action = "equip";
     equipButton.disabled = !relic.unlocked || relic.equipped || !model.canEquipMore;
     equipButton.addEventListener("click", () => {
-      if (!equipButton.disabled) onEquip?.(relic, model);
+      if (!equipButton.disabled) {
+        const changed = commitRelicState(relic, true);
+        onEquip?.(relic, model, { changed });
+      }
     });
     const cancelButton = documentRef.createElement("button");
     cancelButton.type = "button";
@@ -179,9 +196,43 @@ export function createShellRelicUiAdapter(options = {}) {
   }
 
   return {
+    dispose,
     renderShellRelics,
     renderViewModel,
+    showLockedMessage,
   };
+
+  function commitRelicState(relic, equipped) {
+    const save = getSave?.();
+    const changed = Boolean(save && relicSystem?.setRelicEquipped?.(save, relic.id, equipped));
+    if (!changed) return false;
+    persist?.(save);
+    renderShellRelics(save);
+    renderMeta?.(save);
+    return true;
+  }
+
+  function showLockedMessage() {
+    if (!lockPopup) {
+      lockPopup = documentRef.createElement("div");
+      lockPopup.className = "relic-lock-popup";
+      root.appendChild(lockPopup);
+    }
+    lockPopup.textContent = "Locked, play more to unlock this skill.";
+    removeClass(lockPopup, "hidden");
+    if (lockPopupHideTimer) scheduler.clearTimeout?.(lockPopupHideTimer);
+    lockPopupHideTimer =
+      scheduler.setTimeout?.(() => {
+        if (lockPopup?.isConnected !== false) addClass(lockPopup, "hidden");
+        lockPopupHideTimer = null;
+      }, lockPopupDelayMs) || null;
+    return lockPopup;
+  }
+
+  function dispose() {
+    if (lockPopupHideTimer) scheduler.clearTimeout?.(lockPopupHideTimer);
+    lockPopupHideTimer = null;
+  }
 }
 
 function appendBonusRows(documentRef, parent, label, values = {}) {
@@ -231,6 +282,18 @@ function setRelicBackground(element, relic) {
   if (!element?.style || !relic?.backgroundColor) return;
   if (typeof element.style.setProperty === "function") element.style.setProperty("--relic-bg", relic.backgroundColor);
   else element.style["--relic-bg"] = relic.backgroundColor;
+}
+
+function addClass(element, className) {
+  const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+  current.add(className);
+  element.className = [...current].join(" ");
+}
+
+function removeClass(element, className) {
+  const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+  current.delete(className);
+  element.className = [...current].join(" ");
 }
 
 function clearRoot(root) {

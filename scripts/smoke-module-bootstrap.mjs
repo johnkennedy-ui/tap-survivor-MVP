@@ -416,16 +416,9 @@ const fakeShellRelicRoot = createFakeElement("div");
 const shellRelicUiSelections = [];
 const shellRelicUiEquips = [];
 const shellRelicUiLockedSelections = [];
-const shellRelicUiAdapter = composeShellRelicUiAdapter({
-  presenter: shellRelicPresentation,
-  documentRef: createFakeDocument(),
-  root: fakeShellRelicRoot,
-  onEquip: (relic) => shellRelicUiEquips.push(relic.id),
-  onSelect: (relic) => shellRelicUiSelections.push(relic.id),
-  onUnequip: (relic) => shellRelicUiSelections.push(`unequip:${relic.id}`),
-  onLockedSelect: (relic) => shellRelicUiLockedSelections.push(relic.id),
-});
-const shellRelicUiModel = shellRelicUiAdapter.renderShellRelics({
+const shellRelicUiPersists = [];
+const shellRelicUiMetaRenders = [];
+const shellRelicUiSave = {
   towerFloor: 40,
   unlockedRelics: [
     "move_speed_focus_relic",
@@ -434,7 +427,26 @@ const shellRelicUiModel = shellRelicUiAdapter.renderShellRelics({
     "split_on_hit_mastery_relic",
   ],
   equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
-}, { selectedRelicId: "pickup_radius_focus_relic" });
+};
+const fakeLockScheduler = createFakeScheduler();
+const shellRelicUiAdapter = composeShellRelicUiAdapter({
+  presenter: shellRelicPresentation,
+  documentRef: createFakeDocument(),
+  root: fakeShellRelicRoot,
+  getSave: () => shellRelicUiSave,
+  relicSystem: relicProgression.progression,
+  persist: (save) => shellRelicUiPersists.push([...save.equippedRelics]),
+  renderMeta: (save) => shellRelicUiMetaRenders.push([...save.equippedRelics]),
+  scheduler: fakeLockScheduler,
+  lockPopupDelayMs: 1800,
+  onEquip: (relic) => shellRelicUiEquips.push(relic.id),
+  onSelect: (relic) => shellRelicUiSelections.push(relic.id),
+  onUnequip: (relic) => shellRelicUiSelections.push(`unequip:${relic.id}`),
+  onLockedSelect: (relic) => shellRelicUiLockedSelections.push(relic.id),
+});
+const shellRelicUiModel = shellRelicUiAdapter.renderShellRelics(shellRelicUiSave, {
+  selectedRelicId: "pickup_radius_focus_relic",
+});
 const shellRelicUiText = collectText(fakeShellRelicRoot);
 const availablePickupButton = findByDataset(fakeShellRelicRoot, "relicId", "pickup_radius_focus_relic");
 const equippedMoveSpeedSlot = findByDataset(fakeShellRelicRoot, "relicId", "move_speed_focus_relic");
@@ -443,8 +455,14 @@ const equipPickupButton = findByDataset(fakeShellRelicRoot, "action", "equip");
 const unequipMoveSpeedButton = findByDataset(equippedMoveSpeedSlot, "action", "unequip");
 availablePickupButton?.eventListeners?.click?.[0]?.();
 lockedRelicButton?.eventListeners?.click?.[0]?.();
+const lockPopup = findFirst(fakeShellRelicRoot, (element) => element.className.includes("relic-lock-popup"));
+lockedRelicButton?.eventListeners?.click?.[0]?.();
+fakeLockScheduler.runLatest();
+const lockPopupHiddenAfterTimer = lockPopup?.className.includes("hidden");
+lockedRelicButton?.eventListeners?.click?.[0]?.();
 equipPickupButton?.eventListeners?.click?.[0]?.();
 unequipMoveSpeedButton?.eventListeners?.click?.[0]?.();
+shellRelicUiAdapter.dispose();
 check(
   "module bootstrap renders shell relic UI adapter summary",
   shellRelicUiModel.maxEquippedSlots === 4 &&
@@ -464,7 +482,17 @@ check(
   lockedRelicButton?.className.includes("locked") &&
     collectText(lockedRelicButton).includes("Locked") &&
     availablePickupButton?.className.includes("selected") &&
-    shellRelicUiLockedSelections.length === 1
+    shellRelicUiLockedSelections.length === 3
+);
+check(
+  "module bootstrap renders shell relic UI lock popup with fake scheduler",
+  lockPopup?.textContent === "Locked, play more to unlock this skill." &&
+    lockPopupHiddenAfterTimer === true &&
+    fakeLockScheduler.timers.length === 3 &&
+    fakeLockScheduler.timers[0].cleared === true &&
+    fakeLockScheduler.timers[1].delay === 1800 &&
+    fakeLockScheduler.timers[2].cleared === true &&
+    fakeLockScheduler.clearedAfterDispose === true
 );
 check(
   "module bootstrap renders shell relic UI adapter bonuses and special modifiers",
@@ -479,6 +507,13 @@ check(
     equipPickupButton?.disabled === false &&
     shellRelicUiEquips.includes("pickup_radius_focus_relic") &&
     shellRelicUiSelections.includes("unequip:move_speed_focus_relic")
+);
+check(
+  "module bootstrap applies shell relic UI side effects through injected dependencies",
+  shellRelicUiSave.equippedRelics.includes("pickup_radius_focus_relic") &&
+    !shellRelicUiSave.equippedRelics.includes("move_speed_focus_relic") &&
+    shellRelicUiPersists.length === 2 &&
+    shellRelicUiMetaRenders.length === 2
 );
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
@@ -611,6 +646,26 @@ function createFakeElement(tagName) {
     },
     replaceChildren(...children) {
       this.children = children;
+    },
+  };
+}
+
+function createFakeScheduler() {
+  const timers = [];
+  return {
+    timers,
+    clearedAfterDispose: false,
+    setTimeout(callback, delay) {
+      const timer = { callback, cleared: false, delay, id: timers.length + 1 };
+      timers.push(timer);
+      return timer;
+    },
+    clearTimeout(timer) {
+      if (timer) timer.cleared = true;
+      if (timer && timers.indexOf(timer) === timers.length - 1) this.clearedAfterDispose = true;
+    },
+    runLatest() {
+      timers[timers.length - 1]?.callback();
     },
   };
 }
