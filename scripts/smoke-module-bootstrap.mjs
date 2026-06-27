@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import {
   composeContentBalanceEffects,
+  composeRelicProgression,
   composeRuntime,
   composeSaveSubsystem,
   composeShopEconomy,
@@ -145,8 +146,17 @@ const shopEconomy = composeShopEconomy({
   getSave: () => shopEconomySave,
   effects: contentBalanceEffects.effects,
 });
+const relicProgression = composeRelicProgression({
+  relicDefs: contentBalanceEffects.contentRegistry.relicDefs,
+  weaponDefs: contentBalanceEffects.contentRegistry.weaponDefs,
+  effects: contentBalanceEffects.effects,
+  random: () => 0,
+});
 const trainingBoots = shopEconomy.shopItemDefs.find((item) => item.id === "training_boots");
 const coinMagnet = shopEconomy.shopItemDefs.find((item) => item.id === "coin_magnet");
+const moveSpeedFocusRelic = relicProgression.relicDefs.find((relic) => relic.id === "move_speed_focus_relic");
+const fireRateMasteryRelic = relicProgression.relicDefs.find((relic) => relic.id === "fire_rate_mastery_relic");
+const splitOnHitMasteryRelic = relicProgression.relicDefs.find((relic) => relic.id === "split_on_hit_mastery_relic");
 
 saveStorage.store.set(
   legacySaveKey,
@@ -324,6 +334,50 @@ contentBalanceEffects.effects.applyRelicSpecialEffects(effectGame, {
   speedBonus: 5,
 });
 check("module bootstrap applies relic special effects", effectGame.player.maxHp === 110 && effectGame.player.speed === 115);
+check(
+  "module bootstrap reads relic content through module registry",
+  moveSpeedFocusRelic?.targetUpgradeId === "run_move_speed" &&
+    fireRateMasteryRelic?.targetUpgradeId === "run_fire_rate" &&
+    splitOnHitMasteryRelic?.specialAbility?.modifiers?.maxHpMultiplier === 0.6
+);
+const relicSave = {
+  towerFloor: 20,
+  unlockedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic"],
+  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic"],
+};
+const relicRunStartTiers = relicProgression.progression.startingRunUpgradeTiers(relicSave);
+check(
+  "module bootstrap matches relic run-start smoke tier expectations",
+  relicRunStartTiers.run_move_speed === 1 && relicRunStartTiers.run_fire_rate === 2
+);
+check(
+  "module bootstrap computes relic progression through module path",
+  relicProgression.progression.maxEquippedRelics(relicSave) === 2 &&
+    relicProgression.progression.relicBonusFor(relicSave, "run_move_speed", "maxTierBonus") === 1
+);
+const specialRelicSave = {
+  towerFloor: 10,
+  unlockedRelics: ["split_on_hit_mastery_relic"],
+  equippedRelics: ["split_on_hit_mastery_relic"],
+};
+const specialRelicEffects = relicProgression.progression.specialEffects(specialRelicSave);
+const specialRelicGame = {
+  running: true,
+  player: {
+    speed: 200,
+    pickupRadius: 50,
+    hp: 100,
+    maxHp: 100,
+  },
+};
+relicProgression.effects.applyRelicSpecialEffects(specialRelicGame, specialRelicEffects);
+check(
+  "module bootstrap applies module relic special effects",
+  specialRelicGame.player.maxHp === 160 &&
+    specialRelicGame.player.hp === 160 &&
+    specialRelicGame.player.speed === 270 &&
+    specialRelicGame.player.pickupRadius === 67.5
+);
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
 check("module bootstrap migrates save to current version", currentSave.saveVersion === 3);
@@ -390,7 +444,7 @@ check("module bootstrap reset removes legacy save key", !saveStorage.store.has(l
 
 const composeRuntimeSource = readFileSync(join(root, "src/app/compose-runtime.js"), "utf8");
 check(
-  "module bootstrap shop economy composition avoids project globals",
+  "module bootstrap shop and relic composition avoids project globals",
   !composeRuntimeSource.includes("globalThis.TapSurvivor")
 );
 

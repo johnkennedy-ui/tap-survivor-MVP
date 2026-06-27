@@ -8,6 +8,7 @@ import { isPlainObject, migrateSave } from "../modules/save-migrations.js";
 import { createSaveNormalizer } from "../modules/save-normalize.js";
 import { createSaveSystem } from "../modules/save.js";
 import { createShopPricing } from "../modules/shop-pricing.js";
+import { createRelicProgression } from "../modules/relic-progression.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -122,5 +123,26 @@ export function composeShopEconomy({
     }),
     effects,
     shopItemDefs,
+  };
+}
+
+export function composeRelicProgression({
+  relicDefs = [],
+  weaponDefs = {},
+  effects,
+  random,
+}) {
+  if (!effects) {
+    throw new Error("Missing Tap Survivor module relic dependency: effects");
+  }
+
+  return {
+    progression: createRelicProgression({
+      relicDefs,
+      weaponDefs,
+      random,
+    }),
+    effects,
+    relicDefs,
   };
 }
