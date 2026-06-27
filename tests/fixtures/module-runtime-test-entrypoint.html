@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tap Survivor Module Runtime Test Entrypoint</title>
+  </head>
+  <body>
+    <canvas
+      id="game"
+      width="960"
+      height="540"
+      aria-label="Tap Survivor module runtime test canvas"
+    ></canvas>
+    <script type="module">
+      import { createModuleRuntimeTestEntrypoint } from "../../src/app/module-runtime-test-entrypoint.js";
+
+      globalThis.__tapSurvivorModuleRuntimeTestEntrypoint = {
+        createModuleRuntimeTestEntrypoint,
+      };
+    </script>
+  </body>
+</html>

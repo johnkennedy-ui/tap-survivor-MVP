@@ -38,6 +38,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-add-content.mjs"]],
   ["node", ["--check", "scripts/smoke-balance-runtime.mjs"]],
   ["node", ["--check", "scripts/smoke-map-runtime.mjs"]],
+  ["node", ["--check", "scripts/smoke-module-runtime-entrypoint.mjs"]],
   ["node", ["--check", "scripts/smoke-module-runtime-readiness.mjs"]],
   ["node", ["--check", "scripts/smoke-module-bridges.mjs"]],
   ["node", ["--check", "scripts/smoke-game-runtime-module.mjs"]],
@@ -92,6 +93,7 @@ const fullChecks = [
   ["npm", ["run", "smoke:start-run"]],
   ["npm", ["run", "smoke:boss-run"]],
   ["npm", ["run", "smoke:shop"]],
+  ["npm", ["run", "smoke:module-runtime-entrypoint"]],
   ["npm", ["run", "smoke:module-runtime-readiness"]],
   ["npm", ["run", "smoke:module-bridges"]],
   ["npm", ["run", "smoke:relic-run-start"]],
@@ -224,8 +226,10 @@ function focusedChecks(files) {
         file === "src/modules/run-update.js" ||
         file === "src/run-ui.js" ||
         file === "src/modules/run-ui.js" ||
+        file === "src/app/module-runtime-test-entrypoint.js" ||
         file === "scripts/smoke-game-harness.mjs" ||
         file === "scripts/smoke-game-runtime-module.mjs" ||
+        file === "scripts/smoke-module-runtime-entrypoint.mjs" ||
         file === "scripts/smoke-module-runtime-readiness.mjs" ||
         file === "scripts/build-module-bridges.mjs" ||
         file === "scripts/smoke-module-bridges.mjs" ||
@@ -235,6 +239,7 @@ function focusedChecks(files) {
     checks.push(
       ["npm", ["run", "build:bridges"]],
       ["npm", ["run", "verify:script-order"]],
+      ["npm", ["run", "smoke:module-runtime-entrypoint"]],
       ["npm", ["run", "smoke:module-runtime-readiness"]],
       ["npm", ["run", "smoke:module-bridges"]],
       ["npm", ["run", "smoke:shop"]]
