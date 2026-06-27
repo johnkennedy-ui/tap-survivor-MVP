@@ -8,12 +8,17 @@ import {
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS,
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS,
 } from "../src/modules/module-game-dependencies.js";
+import {
+  INJECTED_STATE_PERSISTENCE_SLOTS,
+  MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
+} from "../src/modules/game-state-store.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const entrypointSource = readFileSync(join(root, "src/app/module-runtime-test-entrypoint.js"), "utf8");
 const fixtureHtml = readFileSync(join(root, "tests/fixtures/module-runtime-test-entrypoint.html"), "utf8");
 const moduleDependencySource = readFileSync(join(root, "src/modules/module-game-dependencies.js"), "utf8");
+const stateStoreSource = readFileSync(join(root, "src/modules/game-state-store.js"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
 
@@ -38,12 +43,23 @@ check(
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(moduleDependencySource)
 );
 check(
+  "module-native state store has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(stateStoreSource)
+);
+check(
   "module runtime test fixture has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(fixtureHtml)
 );
 
-let currentSave = { coins: 14 };
-let currentGame = {
+const initialSave = {
+  coins: 14.8,
+  towerFloor: 0,
+  unlockedWeapons: [],
+  shopPurchases: {
+    missing_item: 4,
+  },
+};
+const initialGame = {
   running: true,
   paused: false,
   awaitingFirstMoveInput: true,
@@ -102,6 +118,8 @@ const runtimeGlobal = {
     },
   },
 };
+const storageAdapter = createMemoryStorageAdapter();
+storageAdapter.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
 
 const entrypoint = createModuleRuntimeTestEntrypoint({
   autoInitialize: true,
@@ -135,24 +153,16 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
     saveConfig: {
       saveKey: "tap-survivor-mvp-save-v2",
       legacySaveKey: "tap-survivor-mvp-save-v1",
-      storageAdapter: createMemoryStorageAdapter(),
+      storageAdapter,
       questOpenIds: (quest) => quest?.opens || [],
     },
     adapters: {
       canvas,
+      initialGame,
+      initialSave,
       ui: {
         speedButtons,
         levelUp: { classList: { add: () => calls.push("level-up:hidden") } },
-      },
-      getGame: () => currentGame,
-      setGame: (game) => {
-        currentGame = game;
-        calls.push("set-game");
-      },
-      getSave: () => currentSave,
-      setSave: (save) => {
-        currentSave = save;
-        calls.push("set-save");
       },
       shellUiAdapter: {
         bind: () => calls.push("shell:bind"),
@@ -176,14 +186,16 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
         hideMovementGateBanner: () => calls.push("banner:hide-movement-gate"),
       },
       bindMovementInput: () => calls.push("input:bind"),
-      persist: () => calls.push("persist"),
-      renderMeta: () => calls.push("render-meta"),
+      renderMetaSink: ({ game, save }) => {
+        calls.push(`render-meta:${Boolean(game)}:${save.coins}`);
+      },
       loop: () => calls.push("loop"),
     },
   },
 });
 
 const dependencySlots = entrypoint.dependencies.moduleSystems;
+const stateStore = dependencySlots.gameStateStore;
 check(
   "module runtime test entrypoint uses module-native dependency bag path",
   Boolean(dependencySlots?.contentRegistry?.weaponDefs?.spark_bolt) &&
@@ -192,30 +204,79 @@ check(
 check(
   "module-native dependency bag exposes expected module-native slot inventory",
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
 check(
-  "module-native dependency bag exposes explicit injected adapter slot inventory",
-  INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput")
+  "module-native state store owns state persistence slot inventory",
+  MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("getGame") &&
+    MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("persist") &&
+    MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("renderMeta")
+);
+check(
+  "module-native state store keeps storage backend injected",
+  INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
+);
+check(
+  "module-native dependency bag reclassifies state adapters into module state store",
+  !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderMetaSink") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
 );
 check(
   "module-native dependency bag keeps classic-only slots explicit",
   CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
     CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering")
 );
+check(
+  "module-native state store normalizes initial save through canonical save modules",
+  stateStore.getSave().coins === 14 &&
+    stateStore.getSave().towerFloor === 1 &&
+    stateStore.getSave().unlockedWeapons.includes("spark_bolt") &&
+    Object.keys(stateStore.getSave().shopPurchases).length === 0
+);
 
 entrypoint.runtime.setGameSpeed(5);
 canvas.listeners.get("mousedown")({ clientX: 640, clientY: 270 });
 const afterTapGlobals = tapSurvivorGlobalNames();
+
+const replacedGame = {
+  running: true,
+  paused: false,
+  awaitingFirstMoveInput: false,
+  player: { targetX: 5, targetY: 6 },
+};
+entrypoint.dependencies.setGame(replacedGame);
+entrypoint.dependencies.setSave({ coins: 3.9, towerFloor: 0, unlockedWeapons: [] });
+entrypoint.dependencies.persist();
+entrypoint.dependencies.renderMeta();
 
 check("module runtime test entrypoint initializes runtime", calls.includes("shell:bind") && calls.includes("raf"));
 check("module runtime test entrypoint wires input without classic globals", calls.includes("input:bind"));
 check("module runtime test entrypoint updates speed through injected document", documentRef.body.dataset.gameSpeed === "5");
 check(
   "module runtime test entrypoint clears movement gate through injected canvas",
-  currentGame.awaitingFirstMoveInput === false && calls.includes("banner:hide-movement-gate")
+  initialGame.awaitingFirstMoveInput === false && calls.includes("banner:hide-movement-gate")
+);
+check(
+  "module runtime test entrypoint getGame setGame route through state store",
+  entrypoint.dependencies.getGame() === replacedGame && stateStore.getGame() === replacedGame
+);
+check(
+  "module runtime test entrypoint getSave setSave route through state store",
+  entrypoint.dependencies.getSave().coins === 3 &&
+    entrypoint.dependencies.getSave().towerFloor === 1 &&
+    stateStore.getSave() === entrypoint.dependencies.getSave()
+);
+check(
+  "module runtime test entrypoint persist writes through injected storage backend",
+  JSON.parse(storageAdapter.store.get("tap-survivor-mvp-save-v2")).coins === 3
+);
+check(
+  "module runtime test entrypoint renderMeta reads state through injected sink",
+  calls.includes("render-meta:true:3")
 );
 check(
   "module runtime test entrypoint does not publish TapSurvivor globals",
@@ -243,8 +304,12 @@ function tapSurvivorGlobalNames() {
 function createMemoryStorageAdapter() {
   const store = new Map();
   return {
-    getItem: (key) => store.get(key) || null,
-    removeItem: (key) => store.delete(key),
-    setItem: (key, value) => store.set(key, String(value)),
+    store,
+    getSaveRaw: () => store.get("tap-survivor-mvp-save-v2") || null,
+    removeSaveRaw: () => store.delete("tap-survivor-mvp-save-v2"),
+    setSaveRaw: (value) => {
+      store.set("tap-survivor-mvp-save-v2", String(value));
+      return true;
+    },
   };
 }

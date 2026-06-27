@@ -3,6 +3,7 @@ import { createCombatDamageSystem } from "./combat-damage.js";
 import { createContentRegistry } from "./content-registry.js";
 import { createEffects } from "./effects.js";
 import { createGameRuntimeController } from "./game-runtime.js";
+import { createGameStateStore } from "./game-state-store.js";
 import { createMapSystem } from "./map-system.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createPickupSystem } from "./pickups.js";
@@ -33,6 +34,7 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "contentRegistry",
   "effects",
   "gameRuntime",
+  "gameStateStore",
   "mapSystem",
   "math",
   "pickups",
@@ -63,17 +65,15 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "bindMovementInput",
   "canvas",
   "debugSystem",
-  "getGame",
-  "getSave",
+  "initialGame",
+  "initialSave",
   "loop",
-  "persist",
-  "renderMeta",
+  "renderMetaSink",
   "runUiAdapter",
-  "setGame",
-  "setSave",
   "shellUiAdapter",
   "shopSystemAdapter",
   "spriteSystem",
+  "storageAdapter",
   "ui",
 ]);
 
@@ -96,7 +96,6 @@ export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "rendering",
   "shop",
   "sprites",
-  "storageAdapter",
   "ui",
   "uiProgression",
   "upgrades",
@@ -108,7 +107,6 @@ export function createModuleGameDependencyBag({
   adapters,
   content = {},
   contentSchema = {},
-  getSave,
   random,
   saveConfig,
   shopPricingConfig = {},
@@ -121,10 +119,12 @@ export function createModuleGameDependencyBag({
     saveConfig: requireObject(saveConfig, "saveConfig"),
     contentRegistry,
   });
-  const resolvedGetSave = requireFunction(
-    getSave || resolvedAdapters.getSave,
-    "getSave"
-  );
+  const stateStore = createGameStateStore({
+    initialGame: resolvedAdapters.initialGame || null,
+    initialSave: resolvedAdapters.initialSave,
+    renderMetaSink: resolvedAdapters.renderMetaSink,
+    saveSystem,
+  });
   const relics = createRelicSystem({
     relicDefs: contentRegistry.relicDefs,
     weaponDefs: contentRegistry.weaponDefs,
@@ -138,6 +138,7 @@ export function createModuleGameDependencyBag({
     contentRegistry,
     effects,
     gameRuntime: { createGameRuntimeController },
+    gameStateStore: stateStore,
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
     pickups: { createPickupSystem },
@@ -160,7 +161,7 @@ export function createModuleGameDependencyBag({
     shopPricing: createShopPricing({
       shopItemDefs: contentRegistry.shopItemDefs,
       pricingConfig: shopPricingConfig,
-      getSave: resolvedGetSave,
+      getSave: stateStore.getSave,
     }),
     weaponCooldowns: { createWeaponScaling },
     weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
@@ -175,16 +176,16 @@ export function createModuleGameDependencyBag({
     ),
     canvas: requireAdapter(resolvedAdapters, "canvas"),
     debugSystem: requireAdapter(resolvedAdapters, "debugSystem"),
-    getGame: requireFunction(resolvedAdapters.getGame, "adapters.getGame"),
-    getSave: resolvedGetSave,
+    getGame: stateStore.getGame,
+    getSave: stateStore.getSave,
     loop: requireFunction(resolvedAdapters.loop, "adapters.loop"),
     moduleSystems,
-    persist: requireFunction(resolvedAdapters.persist, "adapters.persist"),
-    renderMeta: requireFunction(resolvedAdapters.renderMeta, "adapters.renderMeta"),
+    persist: stateStore.persist,
+    renderMeta: stateStore.renderMeta,
     runUi: requireAdapter(resolvedAdapters, "runUiAdapter"),
     saveSystem,
-    setGame: requireFunction(resolvedAdapters.setGame, "adapters.setGame"),
-    setSave: requireFunction(resolvedAdapters.setSave, "adapters.setSave"),
+    setGame: stateStore.setGame,
+    setSave: stateStore.setSave,
     shellUi: requireAdapter(resolvedAdapters, "shellUiAdapter"),
     shopSystem: requireAdapter(resolvedAdapters, "shopSystemAdapter"),
     spriteSystem: requireAdapter(resolvedAdapters, "spriteSystem"),

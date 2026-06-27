@@ -20,6 +20,10 @@ import {
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS,
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS,
 } from "../src/modules/module-game-dependencies.js";
+import {
+  INJECTED_STATE_PERSISTENCE_SLOTS,
+  MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
+} from "../src/modules/game-state-store.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -43,6 +47,9 @@ const directConsumerGlobalReads = compatibilityBoundaryReads.filter(
 const classicGameDependencyGlobalReads = collectTapSurvivorGlobalReads("src/modules/game-dependencies.js");
 const moduleNativeGameDependencyGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-game-dependencies.js"
+);
+const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/game-state-store.js"
 );
 
 const calls = [];
@@ -315,13 +322,26 @@ check("readiness adds no direct TapSurvivor global consumer reads", directConsum
 check(
   "readiness sees module-native dependency bag slot inventory",
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput")
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
+);
+check(
+  "readiness sees module-native state persistence slots",
+  MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("getGame") &&
+    MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("setSave") &&
+    MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("renderMeta")
+);
+check(
+  "readiness keeps storage backend injected for module state store",
+  INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
 );
 check(
   "readiness keeps remaining classic-only systems explicit",
@@ -331,6 +351,10 @@ check(
 check(
   "readiness sees module-native dependency bag without TapSurvivor global reads",
   moduleNativeGameDependencyGlobalReads.length === 0
+);
+check(
+  "readiness sees module-native state store without TapSurvivor global reads",
+  moduleNativeStateStoreGlobalReads.length === 0
 );
 
 const inventory = {
@@ -347,6 +371,16 @@ const inventory = {
     remainingClassicOnlySlots: CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeGameDependencyGlobalReads,
     classicBridgeSourceGlobalReads: classicGameDependencyGlobalReads,
+  },
+  moduleNativeStatePersistence: {
+    moduleOwnedSlots: MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
+    injectedSlots: INJECTED_STATE_PERSISTENCE_SLOTS,
+    moduleNativeSourceGlobalReads: moduleNativeStateStoreGlobalReads,
+    remainingStateRelatedBlockers: [
+      "production src/game.js still owns top-level save/game variables",
+      "production runtime still wires persistence through classic script order",
+      "browser storage backend remains injected rather than selected by production ESM runtime",
+    ],
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
