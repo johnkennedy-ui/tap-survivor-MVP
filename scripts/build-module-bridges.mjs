@@ -9,6 +9,43 @@ const bridges = [
     exports: ["floorDifficulty"],
   },
   {
+    source: "src/modules/content-registry.js",
+    target: "src/content-registry.js",
+    globalName: "TapSurvivorContentRegistry",
+    exports: ["createContentRegistry"],
+  },
+  {
+    source: "src/modules/effects.js",
+    target: "src/effects.js",
+    globalName: "TapSurvivorEffects",
+    exports: ["createEffects"],
+    classicBoundarySource: `const classicEffects = createEffects({
+  contentSchema: globalThis.${"TapSurvivorContentSchema"},
+});`,
+    globalMembers: [
+      {
+        name: "applyRunUpgradeEffects",
+        value: "classicEffects.applyRunUpgradeEffects",
+      },
+      {
+        name: "applyShopItemEffectToRun",
+        value: "classicEffects.applyShopItemEffectToRun",
+      },
+      {
+        name: "emptyShopBonuses",
+        value: "classicEffects.emptyShopBonuses",
+      },
+      {
+        name: "addShopItemBonus",
+        value: "classicEffects.addShopItemBonus",
+      },
+      {
+        name: "applyRelicSpecialEffects",
+        value: "classicEffects.applyRelicSpecialEffects",
+      },
+    ],
+  },
+  {
     source: "src/modules/level-up-choices.js",
     target: "src/level-up-choices.js",
     globalName: "TapSurvivorLevelUpChoices",
@@ -153,7 +190,9 @@ for (const bridge of bridges) {
  *   target: string,
  *   globalName: string,
  *   exports: string[],
- *   classicExportWrappers?: Record<string, { name: string, source: string }>
+ *   classicBoundarySource?: string,
+ *   classicExportWrappers?: Record<string, { name: string, source: string }>,
+ *   globalMembers?: { name: string, value: string }[],
  * }} bridge
  */
 async function buildClassicBridge({
@@ -161,7 +200,9 @@ async function buildClassicBridge({
   target,
   globalName,
   exports,
+  classicBoundarySource = "",
   classicExportWrappers = {},
+  globalMembers,
 }) {
   const moduleSource = await readFile(source, "utf8");
   if (/\bimport\s+/m.test(moduleSource)) {
@@ -191,14 +232,23 @@ async function buildClassicBridge({
   const classicWrapperSource = Object.values(classicExportWrappers)
     .map((wrapper) => wrapper.source)
     .join("\n\n");
-  const classicBoundary = classicWrapperSource;
+  const classicBoundary = [classicWrapperSource, classicBoundarySource].filter(Boolean).join("\n\n");
   const classicBody = classicBoundary
     ? `${classicSource.trim()}\n\n${classicBoundary}`
     : classicSource.trim();
-  const globalMembers = exports
+  const resolvedGlobalMembers = globalMembers || exports.map((exportName) => {
+    const wrapper = classicExportWrappers[exportName];
+    return {
+      name: exportName,
+      value: wrapper ? wrapper.name : exportName,
+    };
+  });
+  const globalMemberSource = resolvedGlobalMembers
     .map((exportName) => {
-      const wrapper = classicExportWrappers[exportName];
-      return wrapper ? `    ${exportName}: ${wrapper.name},` : `    ${exportName},`;
+      if (exportName.name === exportName.value) {
+        return `    ${exportName.name},`;
+      }
+      return `    ${exportName.name}: ${exportName.value},`;
     })
     .join("\n");
   const generatedSource = `// GENERATED FILE. Do not edit directly.
@@ -210,7 +260,7 @@ async function buildClassicBridge({
 ${indent(classicBody, 2)}
 
   globalThis.${globalName} = {
-${globalMembers}
+${globalMemberSource}
   };
 })();
 `;
@@ -218,9 +268,9 @@ ${globalMembers}
   if (!generatedSource.includes(`globalThis.${globalName}`)) {
     throw new Error(`${target} generation did not include ${globalName}`);
   }
-  for (const exportName of exports) {
-    if (!generatedSource.includes(exportName)) {
-      throw new Error(`${target} generation did not include ${exportName}`);
+  for (const { name } of resolvedGlobalMembers) {
+    if (!generatedSource.includes(name)) {
+      throw new Error(`${target} generation did not include ${name}`);
     }
   }
 

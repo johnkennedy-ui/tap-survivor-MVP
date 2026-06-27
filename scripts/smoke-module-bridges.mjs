@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
+import { createContentRegistry as createModuleContentRegistry } from "../src/modules/content-registry.js";
+import { createEffects as createModuleEffects } from "../src/modules/effects.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
@@ -61,7 +63,34 @@ import {
 } from "../src/modules/weapon-projectiles.js";
 import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-targeting.js";
 
+const contentSource = JSON.parse(
+  readFileSync(new URL("../content/tap-survivor-content.json", import.meta.url), "utf8")
+);
+const contentSchemaFixture = {
+  effectRegistries: {
+    shopItem: {
+      stats: [
+        "speed",
+        "pickupRadius",
+        "maxHp",
+        "flatDamage",
+        "attackRadius",
+        "fireRate",
+        "percentDamage",
+        "relicFocus",
+      ],
+    },
+  },
+};
+
 const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
+const contentRegistryBridge = loadBridge(
+  "../src/content-registry.js",
+  "src/content-registry.js"
+);
+const effectsBridge = loadBridge("../src/effects.js", "src/effects.js", {
+  TapSurvivorContentSchema: contentSchemaFixture,
+});
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
@@ -110,6 +139,8 @@ const combatDamageBridge = loadBridge("../src/combat-damage.js", "src/combat-dam
 });
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
+const bridgeContentRegistry = contentRegistryBridge.context.TapSurvivorContentRegistry;
+const bridgeEffects = effectsBridge.context.TapSurvivorEffects;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
 const bridgeMapSystem = mapBridge.context.TapSurvivorMapSystem;
 const bridgeSaveCorruption = saveCorruptionBridge.context.TapSurvivorSaveCorruption;
@@ -179,6 +210,104 @@ check(
 const mutableFloorOne = moduleFloorDifficulty(1);
 mutableFloorOne.hp = 99;
 check("floorDifficulty returns copies", moduleFloorDifficulty(1).hp === 0.9);
+
+check(
+  "module exports createContentRegistry",
+  typeof createModuleContentRegistry === "function"
+);
+check(
+  "bridge assigns globalThis.TapSurvivorContentRegistry",
+  Boolean(bridgeContentRegistry)
+);
+check(
+  "content registry bridge source has generated banner",
+  hasGeneratedBanner(contentRegistryBridge.source)
+);
+check(
+  "bridge exposes createContentRegistry",
+  typeof bridgeContentRegistry?.createContentRegistry === "function"
+);
+
+const upgradeContentFixture = {
+  createUpgradeDefs: (weaponDefs) =>
+    Object.entries(weaponDefs).map(([weaponId, weapon]) => ({
+      id: weapon.upgradeId || `${weaponId}_damage`,
+      weaponId,
+    })),
+  runUpgradeDefs: contentSource.runUpgrades || [],
+};
+const moduleContentRegistrySnapshot = contentRegistrySnapshot(
+  createModuleContentRegistry({ content: contentSource, upgradeContent: upgradeContentFixture })
+);
+const bridgeContentRegistrySnapshot = contentRegistrySnapshot(
+  bridgeContentRegistry.createContentRegistry({
+    content: contentSource,
+    upgradeContent: upgradeContentFixture,
+  })
+);
+check(
+  "module and bridge content registry output match",
+  JSON.stringify(moduleContentRegistrySnapshot) === JSON.stringify(bridgeContentRegistrySnapshot)
+);
+check(
+  "content registry exposes spark bolt",
+  moduleContentRegistrySnapshot.sparkBoltDamage === 12
+);
+check(
+  "content registry exposes starter quest group",
+  moduleContentRegistrySnapshot.starterQuestIds.includes("first_blood")
+);
+check(
+  "content registry exposes run upgrade list",
+  moduleContentRegistrySnapshot.runUpgradeCount === contentSource.runUpgrades.length
+);
+
+check("module exports createEffects", typeof createModuleEffects === "function");
+check("bridge assigns globalThis.TapSurvivorEffects", Boolean(bridgeEffects));
+check("effects bridge source has generated banner", hasGeneratedBanner(effectsBridge.source));
+for (const exportName of [
+  "applyRunUpgradeEffects",
+  "applyShopItemEffectToRun",
+  "emptyShopBonuses",
+  "addShopItemBonus",
+  "applyRelicSpecialEffects",
+]) {
+  check(`bridge exposes effects ${exportName}`, typeof bridgeEffects?.[exportName] === "function");
+}
+
+const moduleEffectsSnapshot = effectsSnapshot(createModuleEffects({ contentSchema: contentSchemaFixture }));
+const bridgeEffectsSnapshot = effectsSnapshot(bridgeEffects);
+check(
+  "module and bridge effects output match",
+  JSON.stringify(moduleEffectsSnapshot) === JSON.stringify(bridgeEffectsSnapshot)
+);
+check("effects apply run upgrade stat effects", moduleEffectsSnapshot.runUpgradeSpeed === 110);
+check("effects cap run upgrade healing", moduleEffectsSnapshot.runUpgradeHp === 100);
+check("effects create shop bonus defaults", moduleEffectsSnapshot.shopBonuses.pickupRadius === 0);
+check("effects add shop item bonuses", moduleEffectsSnapshot.shopBonuses.speed === 20);
+check("effects apply shop item run effect", moduleEffectsSnapshot.shopApplied === true);
+check("effects apply relic special effects", moduleEffectsSnapshot.relicSpeed === 115);
+
+const composeRuntimeSource = readFileSync(
+  new URL("../src/app/compose-runtime.js", import.meta.url),
+  "utf8"
+);
+check(
+  "module bootstrap imports canonical content registry source",
+  composeRuntimeSource.includes('from "../modules/content-registry.js"')
+);
+check(
+  "module bootstrap imports canonical effects source",
+  composeRuntimeSource.includes('from "../modules/effects.js"')
+);
+check(
+  "module bootstrap does not import classic content registry wrapper",
+  !composeRuntimeSource.includes('from "../content-registry.js"')
+);
+check(
+  "module bootstrap does not import classic effects wrapper",
+  !composeRuntimeSource.includes('from "../effects.js"')
+);
 
 check("module exports choiceId", typeof moduleChoiceId === "function");
 check("module exports shopFocusBonus", typeof moduleShopFocusBonus === "function");
@@ -2981,6 +3110,60 @@ function createStorageFixture(raw, options = {}) {
       this.removeCount += 1;
       return true;
     },
+  };
+}
+
+function contentRegistrySnapshot(registry) {
+  return {
+    bossAbilityCount: Object.keys(registry.bossAbilities).length,
+    bossQuestIds: registry.bossQuestIds,
+    enemyTypeCount: registry.enemyTypes.length,
+    killQuestIds: registry.killQuestIds,
+    mapCount: registry.mapDefs.length,
+    relicCount: registry.relicDefs.length,
+    runUpgradeCount: registry.runUpgradeDefs.length,
+    shopItemCount: registry.shopItemDefs.length,
+    sparkBoltDamage: registry.weaponDefs.spark_bolt?.damage,
+    starterQuestIds: registry.starterQuestIds,
+    upgradeCount: registry.upgradeDefs.length,
+    weaponUnlockCount: registry.weaponUnlocks.length,
+  };
+}
+
+function effectsSnapshot(effectsApi) {
+  const game = {
+    running: true,
+    player: {
+      speed: 100,
+      pickupRadius: 50,
+      hp: 80,
+      maxHp: 100,
+    },
+  };
+  effectsApi.applyRunUpgradeEffects(game, [
+    { type: "playerStatAdd", stat: "speed", value: 10 },
+    { type: "playerHeal", value: 50 },
+  ]);
+  const runUpgradeSpeed = game.player.speed;
+  const runUpgradeHp = game.player.hp;
+  const shopBonuses = effectsApi.emptyShopBonuses();
+  effectsApi.addShopItemBonus(shopBonuses, { effect: { stat: "speed", value: 10 } }, 2);
+  const shopApplied = effectsApi.applyShopItemEffectToRun(game, {
+    effect: { stat: "pickupRadius", value: 5 },
+  });
+  effectsApi.applyRelicSpecialEffects(game, {
+    maxHpBonus: 10,
+    speedBonus: 5,
+  });
+
+  return {
+    relicMaxHp: game.player.maxHp,
+    relicSpeed: game.player.speed,
+    runUpgradeHp,
+    runUpgradeSpeed,
+    shopApplied,
+    shopBonuses,
+    shopPickupRadius: game.player.pickupRadius,
   };
 }
 
