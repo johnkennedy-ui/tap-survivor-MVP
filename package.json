@@ -57,6 +57,7 @@
     "smoke:boss-run": "node scripts/smoke-boss-run.mjs",
     "smoke:shop": "node scripts/smoke-shop.mjs",
     "smoke:module-bootstrap": "node scripts/smoke-module-bootstrap.mjs",
+    "smoke:module-runtime-readiness": "node scripts/smoke-module-runtime-readiness.mjs",
     "smoke:module-bridges": "node scripts/smoke-module-bridges.mjs",
     "smoke:relic-run-start": "node scripts/smoke-relic-run-start.mjs",
     "smoke:debug": "node scripts/smoke-debug.mjs",
