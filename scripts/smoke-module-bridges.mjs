@@ -958,6 +958,11 @@ check(
 );
 
 check("classic shell UI assigns globalThis.TapSurvivorShellUi", Boolean(bridgeShellUi));
+check("shell UI bridge source has generated banner", hasGeneratedBanner(shellUiClassicBridge.source));
+check(
+  "shell UI bridge source is generated from module classic adapter",
+  shellUiClassicBridge.source.includes("Source: src/modules/shell-ui-classic-adapter.js")
+);
 check(
   "classic shell UI exposes createShellUiController",
   typeof bridgeShellUi?.createShellUiController === "function"
@@ -1014,6 +1019,14 @@ check(
     shellUiClassicSnapshot.calls.includes("speed:5")
 );
 check(
+  "classic shell UI public methods preserve close and title behavior",
+  shellUiClassicSnapshot.runMenuClosed === true &&
+    shellUiClassicSnapshot.openMenuCollapsed === "false" &&
+    shellUiClassicSnapshot.startFlowClosed === true &&
+    shellUiClassicSnapshot.titleVisible === true &&
+    shellUiClassicSnapshot.shopClosedByMethod === true
+);
+check(
   "classic shell UI relic select equip and unequip delegate through shell relic bridge",
   shellUiClassicSnapshot.calls.includes("persist") &&
     shellUiClassicSnapshot.calls.includes("render-meta") &&
@@ -1026,7 +1039,7 @@ check(
     shellUiClassicSnapshot.activePanel === shellUiModuleSnapshot.activePanel
 );
 check(
-  "module shell UI API remains broader than classic compatibility API",
+  "module shell UI API remains broader than generated classic compatibility API",
   shellUiModuleSnapshot.apiKeys.includes("dispose") &&
     shellUiModuleSnapshot.apiKeys.includes("openPanel") &&
     !shellUiClassicSnapshot.apiKeys.includes("dispose")
@@ -3666,7 +3679,19 @@ function classicShellUiSnapshot(createShellUiController, options) {
   clickFirst(ui.fullscreenButton);
   clickFirst(ui.muteAudio);
   clickFirst(ui.speedButtons[2]);
+  const openMenuExpanded = ui.openMenu.attributes["aria-expanded"];
+  controller.closeRunMenu(true);
+  const runMenuClosed = ui.runMenu.classList.contains("hidden");
+  const openMenuCollapsed = ui.openMenu.attributes["aria-expanded"];
+  const previousShopCloseCount = calls.filter((call) => call === "shop:close").length;
+  controller.closeShopMenu();
+  const shopClosedByMethod = calls.filter((call) => call === "shop:close").length === previousShopCloseCount + 1;
+  controller.closeStartFlow();
+  const startFlowClosed =
+    ui.titleScreen.classList.contains("hidden") && ui.startTransition.classList.contains("hidden");
   controller.showTitleScreen();
+  const titleVisible =
+    !ui.titleScreen.classList.contains("hidden") && ui.startTransition.classList.contains("hidden");
   clickFirst(ui.titleStartGame);
 
   return {
@@ -3678,13 +3703,18 @@ function classicShellUiSnapshot(createShellUiController, options) {
     equippedAfterUnequip,
     inventoryClasses: collectShellRelicClasses(ui.menuRelicInventory),
     inventoryHidden: ui.menuInventoryPanel.classList.contains("hidden"),
-    openMenuExpanded: ui.openMenu.attributes["aria-expanded"],
+    openMenuCollapsed,
+    openMenuExpanded,
     progressHidden: ui.menuProgressPanel.classList.contains("hidden"),
     progressTabActive: ui.menuProgressTab.classList.contains("active"),
     inventoryTabActive: ui.menuInventoryTab.classList.contains("active"),
     relicInventoryText: collectShellRelicText(ui.menuRelicInventory),
     relicSlotsText: collectShellRelicText(ui.menuRelicSlots),
+    runMenuClosed,
+    shopClosedByMethod,
+    startFlowClosed,
     startedScreen: calls.includes("start-run") ? "game" : "title",
+    titleVisible,
   };
 }
 

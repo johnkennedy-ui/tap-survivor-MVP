@@ -141,6 +141,26 @@ const bridges = [
     ],
   },
   {
+    source: "src/modules/shell-ui-classic-adapter.js",
+    target: "src/shell-ui.js",
+    globalName: "TapSurvivorShellUi",
+    exports: ["createShellUiController"],
+    bundledSources: [
+      {
+        source: "src/modules/shell-ui-presenter.js",
+        exports: ["createShellUiPresenter"],
+      },
+      {
+        source: "src/modules/shell-ui-dom-adapter.js",
+        exports: ["createShellUiDomAdapter"],
+      },
+      {
+        source: "src/modules/shell-ui-controller.js",
+        exports: [{ name: "createShellUiController", as: "createModuleShellUiController" }],
+      },
+    ],
+  },
+  {
     source: "src/modules/math.js",
     target: "src/math.js",
     globalName: "TapSurvivorMath",
@@ -226,6 +246,7 @@ for (const bridge of bridges) {
  *   exports: string[],
  *   classicBoundarySource?: string,
  *   classicExportWrappers?: Record<string, { name: string, source: string }>,
+ *   bundledSources?: { source: string, exports: (string | { name: string, as: string })[] }[],
  *   globalMembers?: { name: string, value: string }[],
  * }} bridge
  */
@@ -236,40 +257,30 @@ async function buildClassicBridge({
   exports,
   classicBoundarySource = "",
   classicExportWrappers = {},
+  bundledSources = [],
   globalMembers,
 }) {
-  const moduleSource = await readFile(source, "utf8");
-  if (/\bimport\s+/m.test(moduleSource)) {
-    throw new Error(`${source} uses import; this bridge builder supports standalone modules only`);
+  const bundledClassicSources = [];
+  for (const bundledSource of bundledSources) {
+    bundledClassicSources.push(
+      await readClassicModuleSource(bundledSource.source, bundledSource.exports, {
+        dropImports: true,
+      })
+    );
   }
 
-  let classicSource = moduleSource;
-  for (const exportName of exports) {
-    const previousSource = classicSource;
-    classicSource = classicSource.replace(
-      new RegExp(`\\bexport\\s+function\\s+${exportName}\\s*\\(`),
-      `function ${exportName}(`
-    );
-    classicSource = classicSource.replace(
-      new RegExp(`\\bexport\\s+const\\s+${exportName}\\s*=`),
-      `const ${exportName} =`
-    );
-    if (classicSource === previousSource) {
-      throw new Error(`${source} must export function or const ${exportName}`);
-    }
-  }
-
-  if (/^\s*export\s+/m.test(classicSource)) {
-    throw new Error(`${source} contains unsupported export syntax`);
-  }
+  const classicSource = await readClassicModuleSource(source, exports, {
+    dropImports: bundledSources.length > 0,
+  });
 
   const classicWrapperSource = Object.values(classicExportWrappers)
     .map((wrapper) => wrapper.source)
     .join("\n\n");
   const classicBoundary = [classicWrapperSource, classicBoundarySource].filter(Boolean).join("\n\n");
+  const bundledBody = bundledClassicSources.map((item) => item.trim()).join("\n\n");
   const classicBody = classicBoundary
-    ? `${classicSource.trim()}\n\n${classicBoundary}`
-    : classicSource.trim();
+    ? [bundledBody, classicSource.trim(), classicBoundary].filter(Boolean).join("\n\n")
+    : [bundledBody, classicSource.trim()].filter(Boolean).join("\n\n");
   const resolvedGlobalMembers = globalMembers || exports.map((exportName) => {
     const wrapper = classicExportWrappers[exportName];
     return {
@@ -311,6 +322,41 @@ ${globalMemberSource}
   await mkdir(path.dirname(target), { recursive: true });
   await writeFile(target, generatedSource);
   console.log(`PASS generated ${target} from ${source}`);
+}
+
+/**
+ * @param {string} source
+ * @param {(string | { name: string, as: string })[]} exports
+ * @param {{ dropImports?: boolean }} [options]
+ */
+async function readClassicModuleSource(source, exports, options = {}) {
+  const moduleSource = await readFile(source, "utf8");
+  if (/\bimport\s+/m.test(moduleSource) && !options.dropImports) {
+    throw new Error(`${source} uses import; this bridge builder supports standalone modules only`);
+  }
+
+  let classicSource = options.dropImports ? moduleSource.replace(/^\s*import\s+[^;]+;\s*$/gm, "") : moduleSource;
+  for (const exportSpec of exports) {
+    const exportName = typeof exportSpec === "string" ? exportSpec : exportSpec.name;
+    const localName = typeof exportSpec === "string" ? exportSpec : exportSpec.as;
+    const previousSource = classicSource;
+    classicSource = classicSource.replace(
+      new RegExp(`\\bexport\\s+function\\s+${exportName}\\s*\\(`),
+      `function ${localName}(`
+    );
+    classicSource = classicSource.replace(
+      new RegExp(`\\bexport\\s+const\\s+${exportName}\\s*=`),
+      `const ${localName} =`
+    );
+    if (classicSource === previousSource) {
+      throw new Error(`${source} must export function or const ${exportName}`);
+    }
+  }
+
+  if (/^\s*export\s+/m.test(classicSource)) {
+    throw new Error(`${source} contains unsupported export syntax`);
+  }
+  return classicSource;
 }
 
 /**
