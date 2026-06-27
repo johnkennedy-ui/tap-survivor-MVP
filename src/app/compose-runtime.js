@@ -9,6 +9,7 @@ import { createSaveNormalizer } from "../modules/save-normalize.js";
 import { createSaveSystem } from "../modules/save.js";
 import { createShopPricing } from "../modules/shop-pricing.js";
 import { createRelicSystem } from "../modules/relics.js";
+import { createShellRelicPresenter } from "../modules/shell-relic-presenter.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -145,4 +146,18 @@ export function composeRelicProgression({
     effects,
     relicDefs,
   };
+}
+
+export function composeShellRelicPresentation({
+  content = {},
+  relicDefs = [],
+  relicSystem,
+  assetResolver,
+}) {
+  return createShellRelicPresenter({
+    content,
+    relicDefs,
+    relicSystem,
+    assetResolver,
+  });
 }

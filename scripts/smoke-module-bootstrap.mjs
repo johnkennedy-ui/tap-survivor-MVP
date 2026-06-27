@@ -6,6 +6,7 @@ import {
   composeRelicProgression,
   composeRuntime,
   composeSaveSubsystem,
+  composeShellRelicPresentation,
   composeShopEconomy,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
@@ -151,6 +152,11 @@ const relicProgression = composeRelicProgression({
   weaponDefs: contentBalanceEffects.contentRegistry.weaponDefs,
   effects: contentBalanceEffects.effects,
   random: () => 0,
+});
+const shellRelicPresentation = composeShellRelicPresentation({
+  content,
+  relicDefs: relicProgression.relicDefs,
+  relicSystem: relicProgression.progression,
 });
 const trainingBoots = shopEconomy.shopItemDefs.find((item) => item.id === "training_boots");
 const coinMagnet = shopEconomy.shopItemDefs.find((item) => item.id === "coin_magnet");
@@ -378,6 +384,33 @@ check(
     specialRelicGame.player.speed === 270 &&
     specialRelicGame.player.pickupRadius === 67.5
 );
+const shellRelicViewModel = shellRelicPresentation.createInventoryViewModel({
+  towerFloor: 30,
+  unlockedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+});
+check(
+  "module bootstrap builds shell relic presentation model",
+  shellRelicViewModel.maxEquippedSlots === 3 &&
+    shellRelicViewModel.equippedRelics.some((relic) => relic.id === "move_speed_focus_relic") &&
+    shellRelicViewModel.availableRelics.some((relic) => relic.id === "pickup_radius_focus_relic")
+);
+check(
+  "module bootstrap surfaces relic progression in shell model",
+  shellRelicViewModel.bonuses.startingRunUpgradeTiers.run_move_speed === 1 &&
+    shellRelicViewModel.bonuses.startingRunUpgradeTiers.run_fire_rate === 2 &&
+    shellRelicViewModel.bonuses.maxTierBonuses.run_move_speed === 1
+);
+check(
+  "module bootstrap surfaces relic special modifiers in shell model",
+  shellRelicViewModel.specialModifiers.some(
+    (modifier) => modifier.key === "maxHpMultiplier" && modifier.value === 0.6
+  )
+);
+check(
+  "module bootstrap shell relic model is serializable and stable",
+  JSON.parse(JSON.stringify(shellRelicViewModel)).summaryRows[0].value === "3/5"
+);
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
 check("module bootstrap migrates save to current version", currentSave.saveVersion === 3);
@@ -451,6 +484,11 @@ check(
   "module bootstrap composes canonical relic provider",
   composeRuntimeSource.includes('from "../modules/relics.js"') &&
     !composeRuntimeSource.includes('from "../modules/relic-progression.js"')
+);
+check(
+  "module bootstrap composes shell relic presenter without classic globals",
+  composeRuntimeSource.includes('from "../modules/shell-relic-presenter.js"') &&
+    !composeRuntimeSource.includes("globalThis.TapSurvivorRelics")
 );
 
 frameCallback(1234);
