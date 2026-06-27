@@ -15,6 +15,11 @@ import {
   composeShopEconomy,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
+import {
+  CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS,
+  INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS,
+  MODULE_NATIVE_GAME_DEPENDENCY_SLOTS,
+} from "../src/modules/module-game-dependencies.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -34,6 +39,10 @@ const compatibilityBoundaryReads = collectCompatibilityBoundaryReads(productionS
 const classicEntrypointDependencies = collectClassicEntrypointDependencies();
 const directConsumerGlobalReads = compatibilityBoundaryReads.filter(
   (read) => !isApprovedCompatibilityBoundary(read.file)
+);
+const classicGameDependencyGlobalReads = collectTapSurvivorGlobalReads("src/modules/game-dependencies.js");
+const moduleNativeGameDependencyGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-game-dependencies.js"
 );
 
 const calls = [];
@@ -303,6 +312,26 @@ check(
   generatedBridgeFiles.includes("src/shell-ui.js") && generatedBridgeFiles.includes("src/shell-relic-ui.js")
 );
 check("readiness adds no direct TapSurvivor global consumer reads", directConsumerGlobalReads.length === 0);
+check(
+  "readiness sees module-native dependency bag slot inventory",
+  MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
+);
+check(
+  "readiness sees explicit injected dependency adapter slots",
+  INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput")
+);
+check(
+  "readiness keeps remaining classic-only systems explicit",
+  CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
+    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering")
+);
+check(
+  "readiness sees module-native dependency bag without TapSurvivor global reads",
+  moduleNativeGameDependencyGlobalReads.length === 0
+);
 
 const inventory = {
   canonicalModuleFiles: moduleFiles,
@@ -312,10 +341,17 @@ const inventory = {
   compatibilityGlobalsPublished: compatibilityGlobals,
   approvedCompatibilityBoundaryReads: compatibilityBoundaryReads,
   classicRuntimeEntrypointDependencies: classicEntrypointDependencies,
+  moduleNativeGameDependencyBag: {
+    moduleNativeDependencySlots: MODULE_NATIVE_GAME_DEPENDENCY_SLOTS,
+    injectedAdapterSlots: INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS,
+    remainingClassicOnlySlots: CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS,
+    moduleNativeSourceGlobalReads: moduleNativeGameDependencyGlobalReads,
+    classicBridgeSourceGlobalReads: classicGameDependencyGlobalReads,
+  },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
     "src/game.js remains the production entrypoint and owns top-level run state",
-    "src/modules/game-dependencies.js still adapts classic TapSurvivor globals into the dependency bag",
+    "production still uses generated src/game-dependencies.js classic global adapter",
     "non-generated classic production files still need module ownership or explicit adapter boundaries",
     "a production ESM entrypoint has not been introduced or selected",
   ],
@@ -457,6 +493,16 @@ function collectClassicEntrypointDependencies() {
   const names = new Set();
   for (const match of source.matchAll(/requireGlobal\(globalRef,\s*"([^"]+)"/g)) names.add(match[1]);
   for (const match of source.matchAll(/globalRef\.(TapSurvivor[A-Za-z0-9_]+)/g)) names.add(match[1]);
+  return [...names].sort();
+}
+
+function collectTapSurvivorGlobalReads(file) {
+  const source = readFileSync(join(root, file), "utf8");
+  const names = new Set();
+  for (const match of source.matchAll(/requireGlobal\(globalRef,\s*"([^"]+)"/g)) names.add(match[1]);
+  for (const match of source.matchAll(/\b(?:globalThis|window|globalRef)\.(TapSurvivor[A-Za-z0-9_]+)/g)) {
+    names.add(match[1]);
+  }
   return [...names].sort();
 }
 
