@@ -16,9 +16,11 @@ export function createShellRelicUiAdapter(options = {}) {
     renderMeta,
     scheduler = {},
     lockPopupDelayMs = 1800,
+    previewAdapter = {},
   } = options;
   let lockPopup = null;
   let lockPopupHideTimer = null;
+  const previewDisposers = [];
 
   if (!presenter || typeof presenter.createInventoryViewModel !== "function") {
     throw new Error("Missing Tap Survivor module shell relic UI dependency: presenter");
@@ -160,7 +162,7 @@ export function createShellRelicUiAdapter(options = {}) {
     detail.className = `relic-detail-screen ${relic.rarity === "green" ? "green-relic" : ""}`;
     detail.dataset.relicId = relic.id;
     setRelicBackground(detail, relic);
-    detail.appendChild(createRelicImage(documentRef, relic, "relic-detail-preview"));
+    detail.appendChild(createRelicPreview(relic));
     appendText(documentRef, detail, "span", "Selected relic", { className: "relic-slot-index" });
     appendText(documentRef, detail, "strong", relic.name);
     appendText(documentRef, detail, "p", relic.description);
@@ -232,6 +234,64 @@ export function createShellRelicUiAdapter(options = {}) {
   function dispose() {
     if (lockPopupHideTimer) scheduler.clearTimeout?.(lockPopupHideTimer);
     lockPopupHideTimer = null;
+    while (previewDisposers.length) previewDisposers.pop()?.();
+  }
+
+  function createRelicPreview(relic) {
+    const sprite = previewAdapter.runUpgradeSprite?.(relic.targetUpgradeId);
+    const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
+    const source = previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || "";
+    if (frames.length && source && previewAdapter.createCanvas && previewAdapter.createImage) {
+      const canvas =
+        previewAdapter.createCanvas({
+          className: "relic-detail-preview relic-detail-canvas",
+          height: 112,
+          relic,
+          sprite,
+          width: 112,
+        }) || documentRef.createElement("canvas");
+      canvas.className = "relic-detail-preview relic-detail-canvas";
+      canvas.width = 112;
+      canvas.height = 112;
+      if (startAnimatedPreview({ canvas, frames, relic, source, sprite })) return canvas;
+    }
+    return createRelicImage(documentRef, relic, "relic-detail-preview");
+  }
+
+  function startAnimatedPreview({ canvas, frames, relic, source, sprite }) {
+    const context = previewAdapter.getContext?.(canvas, { willReadFrequently: true }) || canvas.getContext?.("2d", { willReadFrequently: true });
+    const image = previewAdapter.createImage?.({ relic, source, sprite });
+    if (!context || !image) return false;
+    let frameIndex = 0;
+    let timer = null;
+    let stopped = false;
+
+    function drawFrame() {
+      if (stopped || canvas.isConnected === false) return;
+      const frame = frames[frameIndex % frames.length];
+      frameIndex += 1;
+      previewAdapter.clearFrame?.({ canvas, context, sprite });
+      if (!previewAdapter.clearFrame) context.clearRect?.(0, 0, canvas.width, canvas.height);
+      context.imageSmoothingEnabled = false;
+      previewAdapter.drawFrame?.({ canvas, context, frame, image, sprite });
+      if (!previewAdapter.drawFrame) {
+        context.drawImage?.(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+      }
+      previewAdapter.applyTransparency?.({ canvas, context, sprite });
+      timer = scheduler.setTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10)) || null;
+    }
+
+    const onLoad = () => drawFrame();
+    if (typeof image.addEventListener === "function") image.addEventListener("load", onLoad, { once: true });
+    else previewAdapter.onImageLoad?.(image, onLoad) ?? onLoad();
+    if ("src" in image) image.src = source;
+    else previewAdapter.setImageSource?.(image, source);
+    previewDisposers.push(() => {
+      stopped = true;
+      if (timer) scheduler.clearTimeout?.(timer);
+      previewAdapter.disposeImage?.(image);
+    });
+    return true;
   }
 }
 

@@ -418,6 +418,10 @@ const shellRelicUiEquips = [];
 const shellRelicUiLockedSelections = [];
 const shellRelicUiPersists = [];
 const shellRelicUiMetaRenders = [];
+const shellRelicPreviewCanvases = [];
+const shellRelicPreviewDraws = [];
+const shellRelicPreviewTransparency = [];
+const shellRelicPreviewImages = [];
 const shellRelicUiSave = {
   towerFloor: 40,
   unlockedRelics: [
@@ -439,6 +443,37 @@ const shellRelicUiAdapter = composeShellRelicUiAdapter({
   renderMeta: (save) => shellRelicUiMetaRenders.push([...save.equippedRelics]),
   scheduler: fakeLockScheduler,
   lockPopupDelayMs: 1800,
+  previewAdapter: {
+    runUpgradeSprite: (upgradeId) => content.assets.sprites.runUpgrades[upgradeId],
+    spriteSource: (sprite) => sprite?.src || "",
+    createCanvas({ className, height, width }) {
+      const canvas = createFakeElement("canvas");
+      canvas.className = className;
+      canvas.width = width;
+      canvas.height = height;
+      shellRelicPreviewCanvases.push(canvas);
+      return canvas;
+    },
+    getContext(canvas) {
+      return canvas.context;
+    },
+    createImage({ source }) {
+      const image = createFakeImage();
+      shellRelicPreviewImages.push(image);
+      image.expectedSource = source;
+      return image;
+    },
+    clearFrame({ canvas, context }) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    },
+    drawFrame({ canvas, context, frame, image }) {
+      shellRelicPreviewDraws.push({ frame, height: canvas.height, imageSource: image.src, width: canvas.width });
+      context.drawImage(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+    },
+    applyTransparency({ sprite }) {
+      shellRelicPreviewTransparency.push(sprite.transparentTolerance);
+    },
+  },
   onEquip: (relic) => shellRelicUiEquips.push(relic.id),
   onSelect: (relic) => shellRelicUiSelections.push(relic.id),
   onUnequip: (relic) => shellRelicUiSelections.push(`unequip:${relic.id}`),
@@ -448,6 +483,9 @@ const shellRelicUiModel = shellRelicUiAdapter.renderShellRelics(shellRelicUiSave
   selectedRelicId: "pickup_radius_focus_relic",
 });
 const shellRelicUiText = collectText(fakeShellRelicRoot);
+const animatedPreviewCanvas = findFirst(fakeShellRelicRoot, (element) =>
+  element.className.includes("relic-detail-canvas")
+);
 const availablePickupButton = findByDataset(fakeShellRelicRoot, "relicId", "pickup_radius_focus_relic");
 const equippedMoveSpeedSlot = findByDataset(fakeShellRelicRoot, "relicId", "move_speed_focus_relic");
 const lockedRelicButton = findFirst(fakeShellRelicRoot, (element) => element.dataset?.unlocked === "false");
@@ -485,13 +523,25 @@ check(
     shellRelicUiLockedSelections.length === 3
 );
 check(
+  "module bootstrap renders shell relic animated preview through injected adapter",
+  animatedPreviewCanvas?.tagName === "canvas" &&
+    animatedPreviewCanvas.width === 112 &&
+    animatedPreviewCanvas.height === 112 &&
+    shellRelicPreviewImages[0]?.src === content.assets.sprites.runUpgrades.run_pickup_radius.src &&
+    shellRelicPreviewDraws[0]?.frame.x === 0 &&
+    shellRelicPreviewDraws[0]?.width === 112 &&
+    shellRelicPreviewTransparency[0] === 58 &&
+    fakeLockScheduler.timers[0]?.delay === 100
+);
+check(
   "module bootstrap renders shell relic UI lock popup with fake scheduler",
   lockPopup?.textContent === "Locked, play more to unlock this skill." &&
     lockPopupHiddenAfterTimer === true &&
-    fakeLockScheduler.timers.length === 3 &&
+    fakeLockScheduler.timers.length === 4 &&
     fakeLockScheduler.timers[0].cleared === true &&
-    fakeLockScheduler.timers[1].delay === 1800 &&
-    fakeLockScheduler.timers[2].cleared === true &&
+    fakeLockScheduler.timers[1].cleared === true &&
+    fakeLockScheduler.timers[2].delay === 1800 &&
+    fakeLockScheduler.timers[3].cleared === true &&
     fakeLockScheduler.clearedAfterDispose === true
 );
 check(
@@ -514,6 +564,25 @@ check(
     !shellRelicUiSave.equippedRelics.includes("move_speed_focus_relic") &&
     shellRelicUiPersists.length === 2 &&
     shellRelicUiMetaRenders.length === 2
+);
+const fakeShellRelicFallbackRoot = createFakeElement("div");
+const shellRelicFallbackAdapter = composeShellRelicUiAdapter({
+  presenter: shellRelicPresentation,
+  documentRef: createFakeDocument(),
+  root: fakeShellRelicFallbackRoot,
+  previewAdapter: {
+    runUpgradeSprite: () => null,
+  },
+});
+shellRelicFallbackAdapter.renderShellRelics(shellRelicUiSave, {
+  selectedRelicId: "pickup_radius_focus_relic",
+});
+const fallbackPreview = findFirst(fakeShellRelicFallbackRoot, (element) =>
+  element.className.includes("relic-detail-preview")
+);
+check(
+  "module bootstrap falls back to static relic preview without animated assets",
+  fallbackPreview?.tagName === "img" && fallbackPreview.src.includes("pickup_radius_focus_relic")
 );
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
@@ -625,6 +694,16 @@ function createFakeElement(tagName) {
     dataset: {},
     disabled: false,
     eventListeners: {},
+    context: {
+      calls: [],
+      clearRect(...args) {
+        this.calls.push(["clearRect", ...args]);
+      },
+      drawImage(...args) {
+        this.calls.push(["drawImage", ...args]);
+      },
+      imageSmoothingEnabled: true,
+    },
     innerHTML: "",
     style: {
       setProperty(key, value) {
@@ -646,6 +725,22 @@ function createFakeElement(tagName) {
     },
     replaceChildren(...children) {
       this.children = children;
+    },
+  };
+}
+
+function createFakeImage() {
+  const listeners = {};
+  return {
+    addEventListener(type, callback) {
+      listeners[type] = callback;
+    },
+    get src() {
+      return this.source || "";
+    },
+    set src(value) {
+      this.source = value;
+      listeners.load?.();
     },
   };
 }

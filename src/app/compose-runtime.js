@@ -177,6 +177,7 @@ export function composeShellRelicUiAdapter({
   renderMeta,
   scheduler,
   lockPopupDelayMs,
+  previewAdapter,
 }) {
   return createShellRelicUiAdapter({
     presenter,
@@ -192,5 +193,6 @@ export function composeShellRelicUiAdapter({
     renderMeta,
     scheduler,
     lockPopupDelayMs,
+    previewAdapter,
   });
 }
