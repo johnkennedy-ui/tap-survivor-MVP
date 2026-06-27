@@ -20,9 +20,13 @@ export function createShellUiPresenter(options = {}) {
     const menuOpen = Boolean(state.menuOpen);
     const initialized = Boolean(state.initialized);
     const disposed = Boolean(state.disposed);
+    const startingTransition = screen === "startingTransition";
     const panels = normalizedPanels.map((panel) => ({
       ...panel,
       active: panel.id === activePanel,
+      ariaSelected: panel.id === activePanel ? "true" : "false",
+      className: panel.id === activePanel ? "active" : "",
+      hidden: panel.id !== activePanel,
     }));
 
     return {
@@ -31,6 +35,10 @@ export function createShellUiPresenter(options = {}) {
         canExitRun: Boolean(state.canExitRun ?? screen === "game"),
         canOpenMenu: !disposed,
         canStartRun: Boolean(state.canStartRun ?? screen === "title"),
+        fullscreenLabel: state.fullscreen ? "Exit Full Screen" : "Full Screen",
+        muteLabel: state.muted ? "Muted" : "Sound",
+        muted: Boolean(state.muted),
+        openMenuExpanded: String(menuOpen),
       },
       disposed,
       initialized,
@@ -42,18 +50,33 @@ export function createShellUiPresenter(options = {}) {
           panel.id,
           {
             active: panel.active,
+            className: ["module-shell-panel", panel.active ? "active" : "hidden"].filter(Boolean).join(" "),
+            hidden: panel.hidden,
             label: panel.label,
+            text: sectionCopy(panel),
             type: panel.type,
           },
         ])
       ),
+      startTransitionVisible: startingTransition,
       titleVisible: screen === "title",
+      visible: {
+        runMenu: menuOpen,
+        startTransition: startingTransition,
+        title: screen === "title",
+      },
     };
   }
 
   return {
     createShellViewModel,
   };
+}
+
+function sectionCopy(panel) {
+  if (panel.type === "relics") return "Relic inventory";
+  if (panel.type === "shop") return "Shop panel";
+  return "Progress panel";
 }
 
 function normalizePanelDefs(panelDefs) {

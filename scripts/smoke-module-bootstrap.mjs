@@ -749,7 +749,10 @@ check(
   shellUiPresentationModel.activePanel === "inventory" &&
     shellUiPresentationModel.panels.some((panel) => panel.id === "inventory" && panel.active) &&
     shellUiPresentationModel.sections.inventory.type === "relics" &&
-    shellUiPresentationModel.actions.canStartRun === true
+    shellUiPresentationModel.sections.progress.hidden === true &&
+    shellUiPresentationModel.actions.canStartRun === true &&
+    shellUiPresentationModel.actions.canExitRun === false &&
+    shellUiPresentationModel.actions.openMenuExpanded === "true"
 );
 check(
   "module bootstrap shell UI model is serializable and stable",
@@ -767,8 +770,15 @@ const shellUiAdapter = composeShellUiDomAdapter({
     render: (save) => shellUiAdapterRelicCalls.push(`render:${save.towerFloor}`),
   },
   getSave: () => shellUiOwnerSave,
+  onCloseMenu: () => shellUiAdapterCallbacks.push("close-menu"),
+  onExitRun: () => shellUiAdapterCallbacks.push("exit-run"),
+  onMuteToggle: () => shellUiAdapterCallbacks.push("mute"),
   onOpenPanel: (panelId) => shellUiAdapterCallbacks.push(`open:${panelId}`),
+  onOpenShop: () => shellUiAdapterCallbacks.push("open-shop"),
+  onResetSave: () => shellUiAdapterCallbacks.push("reset"),
+  onSetGameSpeed: (speed) => shellUiAdapterCallbacks.push(`speed:${speed}`),
   onStartRun: (model) => shellUiAdapterCallbacks.push(`start:${model.activePanel}`),
+  onToggleFullscreen: () => shellUiAdapterCallbacks.push("fullscreen"),
 });
 const shellUiAdapterInitialModel = shellUiAdapter.render({
   initialized: true,
@@ -777,9 +787,25 @@ const shellUiAdapterInitialModel = shellUiAdapter.render({
 });
 const shellUiAdapterStartButton = findByDataset(shellUiAdapterRoot, "action", "start-run");
 shellUiAdapterStartButton?.eventListeners?.click?.[0]?.();
+const shellUiAdapterExitRunButton = findByDataset(shellUiAdapterRoot, "action", "exit-run");
 const shellUiAdapterInventoryTab = findByDataset(shellUiAdapterRoot, "panelId", "inventory");
 shellUiAdapterInventoryTab?.eventListeners?.click?.[0]?.();
+const shellUiAdapterInventorySection = findFirst(
+  shellUiAdapterRoot,
+  (element) => element.dataset?.panelId === "inventory" && element.dataset?.sectionType === "relics"
+);
+const shellUiAdapterProgressSection = findFirst(
+  shellUiAdapterRoot,
+  (element) => element.dataset?.panelId === "progress" && element.dataset?.sectionType === "progress"
+);
+findByDataset(shellUiAdapterRoot, "action", "open-shop")?.eventListeners?.click?.[0]?.();
+findByDataset(shellUiAdapterRoot, "action", "reset-save")?.eventListeners?.click?.[0]?.();
+findByDataset(shellUiAdapterRoot, "action", "fullscreen")?.eventListeners?.click?.[0]?.();
+findByDataset(shellUiAdapterRoot, "action", "mute")?.eventListeners?.click?.[0]?.();
+findByDataset(shellUiAdapterRoot, "action", "speed-5")?.eventListeners?.click?.[0]?.();
+const shellUiAdapterCurrentStartButton = findByDataset(shellUiAdapterRoot, "action", "start-run");
 const shellUiAdapterText = collectText(shellUiAdapterRoot);
+shellUiAdapter.dispose();
 check(
   "module bootstrap renders shell UI DOM adapter frame",
   shellUiAdapterInitialModel.activePanel === "progress" &&
@@ -791,7 +817,26 @@ check(
   "module bootstrap shell UI DOM adapter drives callbacks and relic delegation",
   shellUiAdapterCallbacks.includes("start:progress") &&
     shellUiAdapterCallbacks.includes("open:inventory") &&
+    shellUiAdapterCallbacks.includes("open-shop") &&
+    shellUiAdapterCallbacks.includes("reset") &&
+    shellUiAdapterCallbacks.includes("fullscreen") &&
+    shellUiAdapterCallbacks.includes("mute") &&
+    shellUiAdapterCallbacks.includes("speed:5") &&
     shellUiAdapterRelicCalls.includes("render:50")
+);
+check(
+  "module bootstrap shell UI DOM adapter updates active and hidden panel state",
+  shellUiAdapterInventorySection?.className.includes("active") &&
+    shellUiAdapterInventorySection?.hidden === false &&
+    shellUiAdapterProgressSection?.className.includes("hidden") &&
+    shellUiAdapterProgressSection?.hidden === true &&
+    shellUiAdapterExitRunButton?.disabled === true
+);
+check(
+  "module bootstrap shell UI DOM adapter cleans event listeners on rerender and dispose",
+  shellUiAdapterInventoryTab?.eventListeners?.click?.length === 0 &&
+    shellUiAdapterCurrentStartButton?.eventListeners?.click?.length === 0 &&
+    collectText(shellUiAdapterRoot) === ""
 );
 const shellUiComposedRoot = createFakeElement("div");
 const shellUiComposedCalls = [];
@@ -807,11 +852,17 @@ const shellUiComposedController = composeShellUiController({
     selectRelic: (relicId) => shellUiComposedRelicCalls.push(`select:${relicId}`),
   },
   onStartRun: () => shellUiComposedCalls.push("start"),
+  onSetGameSpeed: (speed) => shellUiComposedCalls.push(`speed:${speed}`),
+  onToggleFullscreen: () => shellUiComposedCalls.push("fullscreen"),
+  onMuteToggle: () => shellUiComposedCalls.push("mute"),
 });
 shellUiComposedController.init();
 shellUiComposedController.openPanel("inventory");
 shellUiComposedController.selectRelic("pickup_radius_focus_relic");
 shellUiComposedController.startRun();
+shellUiComposedController.setGameSpeed(5);
+shellUiComposedController.toggleFullscreen();
+shellUiComposedController.toggleMute();
 const shellUiComposedText = collectText(shellUiComposedRoot);
 const shellUiComposedDisposed = shellUiComposedController.dispose();
 check(
@@ -820,6 +871,9 @@ check(
     shellUiComposedRelicCalls.includes("render:50") &&
     shellUiComposedRelicCalls.includes("select:pickup_radius_focus_relic") &&
     shellUiComposedCalls.includes("start") &&
+    shellUiComposedCalls.includes("speed:5") &&
+    shellUiComposedCalls.includes("fullscreen") &&
+    shellUiComposedCalls.includes("mute") &&
     shellUiComposedDisposed.disposed === true
 );
 check(
@@ -1045,6 +1099,7 @@ function createFakeElement(tagName) {
     dataset: {},
     disabled: false,
     eventListeners: {},
+    hidden: false,
     context: {
       calls: [],
       clearRect(...args) {
@@ -1073,6 +1128,9 @@ function createFakeElement(tagName) {
     addEventListener(type, handler) {
       this.eventListeners[type] = this.eventListeners[type] || [];
       this.eventListeners[type].push(handler);
+    },
+    removeEventListener(type, handler) {
+      this.eventListeners[type] = (this.eventListeners[type] || []).filter((listener) => listener !== handler);
     },
     replaceChildren(...children) {
       this.children = children;

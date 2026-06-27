@@ -12,8 +12,16 @@ export function createShellUiDomAdapter(options = {}) {
     root,
     shellRelicController,
     getSave = () => ({}),
+    onCloseMenu,
+    onExitRun,
+    onMuteToggle,
     onOpenPanel,
+    onOpenShop,
+    onResetSave,
+    onSetGameSpeed,
+    onToggleFullscreen,
     onStartRun,
+    speedOptions = [1, 2, 5],
   } = options;
 
   if (!presenter || typeof presenter.createShellViewModel !== "function") {
@@ -27,8 +35,10 @@ export function createShellUiDomAdapter(options = {}) {
   }
 
   let currentModel = null;
+  const eventCleanups = [];
 
   function render(state = {}) {
+    cleanupEvents();
     currentModel = presenter.createShellViewModel(state);
     clearRoot(root);
     root.appendChild(createShellFrame(currentModel));
@@ -46,7 +56,20 @@ export function createShellUiDomAdapter(options = {}) {
   }
 
   function dispose() {
+    cleanupEvents();
     clearRoot(root);
+  }
+
+  function setMenuOpen(open, state = {}) {
+    return render({ ...state, menuOpen: Boolean(open) });
+  }
+
+  function setScreen(screen, state = {}) {
+    return render({ ...state, screen });
+  }
+
+  function showPanel(panelId, state = {}) {
+    return openPanel(panelId, state);
   }
 
   function createShellFrame(model) {
@@ -66,10 +89,27 @@ export function createShellUiDomAdapter(options = {}) {
     startButton.textContent = "Start Run";
     startButton.dataset.action = "start-run";
     startButton.disabled = !model.actions.canStartRun;
-    startButton.addEventListener("click", () => {
+    addListener(startButton, "click", () => {
       if (!startButton.disabled) onStartRun?.(model);
     });
     actions.appendChild(startButton);
+
+    const openMenuButton = createActionButton("open-menu", "Menu", () => onOpenPanel?.(model.activePanel, model));
+    openMenuButton.setAttribute("aria-expanded", model.actions.openMenuExpanded);
+    actions.appendChild(openMenuButton);
+    actions.appendChild(createActionButton("close-menu", "Close", () => onCloseMenu?.(model)));
+    actions.appendChild(createActionButton("open-shop", "Shop", () => onOpenShop?.(model)));
+    actions.appendChild(createActionButton("exit-run", "Exit Run", () => onExitRun?.(model), !model.actions.canExitRun));
+    actions.appendChild(createActionButton("reset-save", "Reset Save", () => onResetSave?.(model)));
+    actions.appendChild(createActionButton("fullscreen", model.actions.fullscreenLabel, () => onToggleFullscreen?.(model)));
+    const muteButton = createActionButton("mute", model.actions.muteLabel, () => onMuteToggle?.(model));
+    muteButton.setAttribute("aria-pressed", String(model.actions.muted));
+    actions.appendChild(muteButton);
+    speedOptions.forEach((speed) => {
+      const speedButton = createActionButton(`speed-${speed}`, `x${speed}`, () => onSetGameSpeed?.(speed, model));
+      speedButton.dataset.speed = String(speed);
+      actions.appendChild(speedButton);
+    });
     frame.appendChild(actions);
 
     const tabs = documentRef.createElement("nav");
@@ -80,8 +120,8 @@ export function createShellUiDomAdapter(options = {}) {
       tab.textContent = panel.label;
       tab.className = panel.active ? "active" : "";
       tab.dataset.panelId = panel.id;
-      tab.setAttribute("aria-selected", String(panel.active));
-      tab.addEventListener("click", () => openPanel(panel.id, model));
+      tab.setAttribute("aria-selected", panel.ariaSelected);
+      addListener(tab, "click", () => openPanel(panel.id, model));
       tabs.appendChild(tab);
     });
     frame.appendChild(tabs);
@@ -90,11 +130,13 @@ export function createShellUiDomAdapter(options = {}) {
     panels.className = "module-shell-panels";
     model.panels.forEach((panel) => {
       const section = documentRef.createElement("section");
-      section.className = ["module-shell-panel", panel.active ? "active" : "hidden"].filter(Boolean).join(" ");
+      const sectionModel = model.sections[panel.id];
+      section.className = sectionModel.className;
       section.dataset.panelId = panel.id;
       section.dataset.sectionType = panel.type;
+      section.hidden = sectionModel.hidden;
       appendText(section, "h2", panel.label);
-      appendText(section, "span", sectionCopy(panel));
+      appendText(section, "span", sectionModel.text);
       if (panel.type === "relics") {
         const mount = documentRef.createElement("div");
         mount.className = "module-shell-relic-mount";
@@ -115,18 +157,36 @@ export function createShellUiDomAdapter(options = {}) {
     return element;
   }
 
+  function createActionButton(action, label, callback, disabled = false) {
+    const button = documentRef.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.dataset.action = action;
+    button.disabled = Boolean(disabled);
+    addListener(button, "click", () => {
+      if (!button.disabled) callback?.();
+    });
+    return button;
+  }
+
+  function addListener(element, type, handler) {
+    element.addEventListener(type, handler);
+    eventCleanups.push(() => element.removeEventListener?.(type, handler));
+  }
+
+  function cleanupEvents() {
+    while (eventCleanups.length) eventCleanups.pop()?.();
+  }
+
   return {
     dispose,
     openPanel,
     render,
+    setMenuOpen,
+    setScreen,
+    showPanel,
     update,
   };
-}
-
-function sectionCopy(panel) {
-  if (panel.type === "relics") return "Relic inventory";
-  if (panel.type === "shop") return "Shop panel";
-  return "Progress panel";
 }
 
 function clearRoot(root) {

@@ -42,7 +42,22 @@ export function createShellUiController(options = {}) {
       ? createShellView({
           documentRef,
           getSave,
+          onCloseMenu: () => closeMenu(),
+          onExitRun: () => exitRun(),
+          onMuteToggle: () => toggleMute(),
+          onOpenPanel: (panel) => {
+            state = {
+              ...state,
+              menuOpen: true,
+              panel,
+            };
+            options.onOpenPanel?.(panel, snapshot());
+          },
+          onOpenShop: () => openShop(),
+          onResetSave: () => resetSave(),
+          onSetGameSpeed: (speed) => setGameSpeed(speed),
           onStartRun: () => startRun(),
+          onToggleFullscreen: () => toggleFullscreen(),
           presenter,
           root,
           shellRelicController,
@@ -154,6 +169,16 @@ export function createShellUiController(options = {}) {
     return snapshot();
   }
 
+  function toggleFullscreen() {
+    options.onToggleFullscreen?.(snapshot());
+    return snapshot();
+  }
+
+  function toggleMute() {
+    options.onMuteToggle?.(snapshot());
+    return snapshot();
+  }
+
   function dispose() {
     state = {
       ...state,
@@ -182,6 +207,8 @@ export function createShellUiController(options = {}) {
     selectRelic,
     setGameSpeed,
     startRun,
+    toggleFullscreen,
+    toggleMute,
     update,
   };
 }

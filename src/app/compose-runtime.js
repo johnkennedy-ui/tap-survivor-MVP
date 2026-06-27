@@ -249,7 +249,10 @@ export function composeShellUiController({
   onResetSave,
   onOpenShop,
   onCloseShop,
+  onOpenPanel,
   onSetGameSpeed,
+  onToggleFullscreen,
+  onMuteToggle,
 }) {
   return createShellUiController({
     shellRelicController,
@@ -265,7 +268,10 @@ export function composeShellUiController({
     onResetSave,
     onOpenShop,
     onCloseShop,
+    onOpenPanel,
     onSetGameSpeed,
+    onToggleFullscreen,
+    onMuteToggle,
   });
 }
 
@@ -279,8 +285,16 @@ export function composeShellUiDomAdapter({
   root,
   shellRelicController,
   getSave,
+  onCloseMenu,
+  onExitRun,
+  onMuteToggle,
   onOpenPanel,
+  onOpenShop,
+  onResetSave,
+  onSetGameSpeed,
   onStartRun,
+  onToggleFullscreen,
+  speedOptions,
 }) {
   return createShellUiDomAdapter({
     presenter,
@@ -288,7 +302,15 @@ export function composeShellUiDomAdapter({
     root,
     shellRelicController,
     getSave,
+    onCloseMenu,
+    onExitRun,
+    onMuteToggle,
     onOpenPanel,
+    onOpenShop,
+    onResetSave,
+    onSetGameSpeed,
     onStartRun,
+    onToggleFullscreen,
+    speedOptions,
   });
 }
