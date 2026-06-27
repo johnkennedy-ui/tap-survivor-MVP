@@ -9,6 +9,7 @@ import {
   composeShellRelicController,
   composeShellRelicPresentation,
   composeShellRelicUiAdapter,
+  composeShellUiController,
   composeShopEconomy,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
@@ -674,6 +675,140 @@ check(
     firstOwnerPreviewTimer?.cleared === true &&
     shellRelicOwnerScheduler.timers.at(-1)?.cleared === true
 );
+const shellUiOwnerCalls = [];
+const shellUiRelicOwnerCalls = [];
+const shellUiOwnerSave = { ...shellRelicOwnerSave, towerFloor: 50 };
+const shellUiOwner = composeShellUiController({
+  shellRelicController: {
+    dispose: () => shellUiRelicOwnerCalls.push("relic:dispose"),
+    render: (save) => shellUiRelicOwnerCalls.push(`relic:render:${save.towerFloor}`),
+    selectRelic: (relicId) => shellUiRelicOwnerCalls.push(`relic:select:${relicId}`),
+    update: (save) => shellUiRelicOwnerCalls.push(`relic:update:${save.towerFloor}`),
+  },
+  getSave: () => shellUiOwnerSave,
+  shellView: {
+    dispose: (state) => shellUiOwnerCalls.push(`view:dispose:${state.disposed}`),
+    render: (state) => shellUiOwnerCalls.push(`view:render:${state.screen}:${state.panel}`),
+    setMenuOpen: (open) => shellUiOwnerCalls.push(`view:menu:${open}`),
+    setScreen: (screen) => shellUiOwnerCalls.push(`view:screen:${screen}`),
+    showPanel: (panel) => shellUiOwnerCalls.push(`view:panel:${panel}`),
+    update: (state) => shellUiOwnerCalls.push(`view:update:${state.panel}`),
+  },
+  onCloseShop: () => shellUiOwnerCalls.push("callback:close-shop"),
+  onOpenShop: () => shellUiOwnerCalls.push("callback:open-shop"),
+  onSetGameSpeed: (speed) => shellUiOwnerCalls.push(`callback:speed:${speed}`),
+  onStartRun: () => shellUiOwnerCalls.push("callback:start-run"),
+});
+const shellUiInitialState = shellUiOwner.init();
+shellUiOwner.openMenu("inventory");
+shellUiOwner.update({ screen: "menu" });
+shellUiOwner.selectRelic("pickup_radius_focus_relic");
+shellUiOwner.openShop();
+shellUiOwner.closeShop();
+shellUiOwner.setGameSpeed(5);
+const shellUiRunState = shellUiOwner.startRun();
+const shellUiDisposedState = shellUiOwner.dispose();
+check(
+  "module bootstrap composes shell UI owner through module path",
+  shellUiInitialState.initialized === true &&
+    shellUiInitialState.screen === "title" &&
+    typeof shellUiOwner.render === "function" &&
+    typeof shellUiOwner.update === "function" &&
+    typeof shellUiOwner.openPanel === "function" &&
+    typeof shellUiOwner.dispose === "function"
+);
+check(
+  "module bootstrap shell UI owner delegates relic panel ownership",
+  shellUiRelicOwnerCalls.includes("relic:render:50") &&
+    shellUiRelicOwnerCalls.includes("relic:update:50") &&
+    shellUiRelicOwnerCalls.includes("relic:select:pickup_radius_focus_relic") &&
+    shellUiRelicOwnerCalls.includes("relic:dispose")
+);
+check(
+  "module bootstrap shell UI owner drives lifecycle callbacks",
+  shellUiOwnerCalls.includes("view:menu:true") &&
+    shellUiOwnerCalls.includes("view:panel:inventory") &&
+    shellUiOwnerCalls.includes("callback:open-shop") &&
+    shellUiOwnerCalls.includes("callback:close-shop") &&
+    shellUiOwnerCalls.includes("callback:speed:5") &&
+    shellUiOwnerCalls.includes("callback:start-run") &&
+    shellUiRunState.screen === "game" &&
+    shellUiDisposedState.disposed === true
+);
+const shellUiDelegatedRelicRoot = createFakeElement("div");
+const shellUiDelegatedScheduler = createFakeScheduler();
+const shellUiDelegatedCallbacks = [];
+const shellUiDelegatedPersists = [];
+const shellUiDelegatedMetaRenders = [];
+const shellUiDelegatedPreviewCanvases = [];
+const shellUiDelegatedSave = {
+  towerFloor: 40,
+  unlockedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "pickup_radius_focus_relic",
+    "split_on_hit_mastery_relic",
+  ],
+  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+};
+const shellUiDelegatedRelicOwner = composeShellRelicController({
+  presenter: shellRelicPresentation,
+  documentRef: createFakeDocument(),
+  root: shellUiDelegatedRelicRoot,
+  getSave: () => shellUiDelegatedSave,
+  relicSystem: relicProgression.progression,
+  persist: (save) => shellUiDelegatedPersists.push([...save.equippedRelics]),
+  renderMeta: (save) => shellUiDelegatedMetaRenders.push([...save.equippedRelics]),
+  scheduler: shellUiDelegatedScheduler,
+  previewAdapter: {
+    runUpgradeSprite: (upgradeId) => content.assets.sprites.runUpgrades[upgradeId],
+    spriteSource: (sprite) => sprite?.src || "",
+    createCanvas({ className, height, width }) {
+      const canvas = createFakeElement("canvas");
+      canvas.className = className;
+      canvas.width = width;
+      canvas.height = height;
+      shellUiDelegatedPreviewCanvases.push(canvas);
+      return canvas;
+    },
+    getContext(canvas) {
+      return canvas.context;
+    },
+    createImage() {
+      return createFakeImage();
+    },
+  },
+  onEquip: (relic) => shellUiDelegatedCallbacks.push(`equip:${relic.id}`),
+  onSelect: (relic) => shellUiDelegatedCallbacks.push(`select:${relic?.id || "none"}`),
+  onUnequip: (relic) => shellUiDelegatedCallbacks.push(`unequip:${relic.id}`),
+});
+const shellUiDelegatedOwner = composeShellUiController({
+  shellRelicController: shellUiDelegatedRelicOwner,
+  getSave: () => shellUiDelegatedSave,
+  onStartRun: () => shellUiDelegatedCallbacks.push("start"),
+});
+shellUiDelegatedOwner.init();
+shellUiDelegatedOwner.openPanel("inventory");
+shellUiDelegatedOwner.selectRelic("pickup_radius_focus_relic");
+const shellUiDelegatedEquipButton = findByDataset(shellUiDelegatedRelicRoot, "action", "equip");
+shellUiDelegatedEquipButton?.eventListeners?.click?.[0]?.();
+const shellUiDelegatedEquippedSlot = findByDataset(shellUiDelegatedRelicRoot, "relicId", "pickup_radius_focus_relic");
+const shellUiDelegatedUnequipButton = findByDataset(shellUiDelegatedEquippedSlot, "action", "unequip");
+shellUiDelegatedUnequipButton?.eventListeners?.click?.[0]?.();
+shellUiDelegatedOwner.startRun();
+shellUiDelegatedOwner.dispose();
+check(
+  "module bootstrap shell UI owner drives real relic controller path",
+  collectText(shellUiDelegatedRelicRoot).includes("Relic slots: 4/5") &&
+    shellUiDelegatedPreviewCanvases[0]?.width === 112 &&
+    shellUiDelegatedCallbacks.includes("select:pickup_radius_focus_relic") &&
+    shellUiDelegatedCallbacks.includes("equip:pickup_radius_focus_relic") &&
+    shellUiDelegatedCallbacks.includes("unequip:pickup_radius_focus_relic") &&
+    shellUiDelegatedCallbacks.includes("start") &&
+    shellUiDelegatedPersists.length === 2 &&
+    shellUiDelegatedMetaRenders.length === 2 &&
+    shellUiDelegatedScheduler.timers.at(-1)?.cleared === true
+);
 const fakeShellRelicFallbackRoot = createFakeElement("div");
 const shellRelicFallbackAdapter = composeShellRelicUiAdapter({
   presenter: shellRelicPresentation,
@@ -780,6 +915,11 @@ check(
 check(
   "module bootstrap composes shell relic owner without classic globals",
   composeRuntimeSource.includes('from "../modules/shell-relic-controller.js"') &&
+    !composeRuntimeSource.includes("globalThis.TapSurvivorShellUi")
+);
+check(
+  "module bootstrap composes shell UI owner without classic globals",
+  composeRuntimeSource.includes('from "../modules/shell-ui-controller.js"') &&
     !composeRuntimeSource.includes("globalThis.TapSurvivorShellUi")
 );
 

@@ -12,6 +12,7 @@ import { createRelicSystem } from "../modules/relics.js";
 import { createShellRelicController } from "../modules/shell-relic-controller.js";
 import { createShellRelicPresenter } from "../modules/shell-relic-presenter.js";
 import { createShellRelicUiAdapter } from "../modules/shell-relic-ui.js";
+import { createShellUiController } from "../modules/shell-ui-controller.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -229,5 +230,33 @@ export function composeShellRelicController({
     onUnequip,
     onSelect,
     onLockedSelect,
+  });
+}
+
+export function composeShellUiController({
+  shellRelicController,
+  getSave,
+  shellView,
+  initialScreen,
+  initialPanel,
+  onStartRun,
+  onExitRun,
+  onResetSave,
+  onOpenShop,
+  onCloseShop,
+  onSetGameSpeed,
+}) {
+  return createShellUiController({
+    shellRelicController,
+    getSave,
+    shellView,
+    initialScreen,
+    initialPanel,
+    onStartRun,
+    onExitRun,
+    onResetSave,
+    onOpenShop,
+    onCloseShop,
+    onSetGameSpeed,
   });
 }
