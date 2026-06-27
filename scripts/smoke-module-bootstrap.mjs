@@ -10,6 +10,8 @@ import {
   composeShellRelicPresentation,
   composeShellRelicUiAdapter,
   composeShellUiController,
+  composeShellUiDomAdapter,
+  composeShellUiPresentation,
   composeShopEconomy,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
@@ -735,6 +737,95 @@ check(
     shellUiRunState.screen === "game" &&
     shellUiDisposedState.disposed === true
 );
+const shellUiPresentation = composeShellUiPresentation();
+const shellUiPresentationModel = shellUiPresentation.createShellViewModel({
+  initialized: true,
+  menuOpen: true,
+  panel: "inventory",
+  screen: "title",
+});
+check(
+  "module bootstrap builds shell UI presentation model",
+  shellUiPresentationModel.activePanel === "inventory" &&
+    shellUiPresentationModel.panels.some((panel) => panel.id === "inventory" && panel.active) &&
+    shellUiPresentationModel.sections.inventory.type === "relics" &&
+    shellUiPresentationModel.actions.canStartRun === true
+);
+check(
+  "module bootstrap shell UI model is serializable and stable",
+  JSON.parse(JSON.stringify(shellUiPresentationModel)).panels.map((panel) => panel.id).join(",") ===
+    "progress,shop,inventory"
+);
+const shellUiAdapterRoot = createFakeElement("div");
+const shellUiAdapterCallbacks = [];
+const shellUiAdapterRelicCalls = [];
+const shellUiAdapter = composeShellUiDomAdapter({
+  presenter: shellUiPresentation,
+  documentRef: createFakeDocument(),
+  root: shellUiAdapterRoot,
+  shellRelicController: {
+    render: (save) => shellUiAdapterRelicCalls.push(`render:${save.towerFloor}`),
+  },
+  getSave: () => shellUiOwnerSave,
+  onOpenPanel: (panelId) => shellUiAdapterCallbacks.push(`open:${panelId}`),
+  onStartRun: (model) => shellUiAdapterCallbacks.push(`start:${model.activePanel}`),
+});
+const shellUiAdapterInitialModel = shellUiAdapter.render({
+  initialized: true,
+  panel: "progress",
+  screen: "title",
+});
+const shellUiAdapterStartButton = findByDataset(shellUiAdapterRoot, "action", "start-run");
+shellUiAdapterStartButton?.eventListeners?.click?.[0]?.();
+const shellUiAdapterInventoryTab = findByDataset(shellUiAdapterRoot, "panelId", "inventory");
+shellUiAdapterInventoryTab?.eventListeners?.click?.[0]?.();
+const shellUiAdapterText = collectText(shellUiAdapterRoot);
+check(
+  "module bootstrap renders shell UI DOM adapter frame",
+  shellUiAdapterInitialModel.activePanel === "progress" &&
+    shellUiAdapterText.includes("Tap Survivor") &&
+    shellUiAdapterText.includes("Inventory") &&
+    shellUiAdapterText.includes("Relic inventory")
+);
+check(
+  "module bootstrap shell UI DOM adapter drives callbacks and relic delegation",
+  shellUiAdapterCallbacks.includes("start:progress") &&
+    shellUiAdapterCallbacks.includes("open:inventory") &&
+    shellUiAdapterRelicCalls.includes("render:50")
+);
+const shellUiComposedRoot = createFakeElement("div");
+const shellUiComposedCalls = [];
+const shellUiComposedRelicCalls = [];
+const shellUiComposedController = composeShellUiController({
+  documentRef: createFakeDocument(),
+  getSave: () => shellUiOwnerSave,
+  presenter: shellUiPresentation,
+  root: shellUiComposedRoot,
+  shellRelicController: {
+    dispose: () => shellUiComposedRelicCalls.push("dispose"),
+    render: (save) => shellUiComposedRelicCalls.push(`render:${save.towerFloor}`),
+    selectRelic: (relicId) => shellUiComposedRelicCalls.push(`select:${relicId}`),
+  },
+  onStartRun: () => shellUiComposedCalls.push("start"),
+});
+shellUiComposedController.init();
+shellUiComposedController.openPanel("inventory");
+shellUiComposedController.selectRelic("pickup_radius_focus_relic");
+shellUiComposedController.startRun();
+const shellUiComposedText = collectText(shellUiComposedRoot);
+const shellUiComposedDisposed = shellUiComposedController.dispose();
+check(
+  "module bootstrap shell UI controller composes presenter and DOM adapter",
+  shellUiComposedText.includes("Relic inventory") &&
+    shellUiComposedRelicCalls.includes("render:50") &&
+    shellUiComposedRelicCalls.includes("select:pickup_radius_focus_relic") &&
+    shellUiComposedCalls.includes("start") &&
+    shellUiComposedDisposed.disposed === true
+);
+check(
+  "module bootstrap shell UI composed controller disposes delegated state",
+  shellUiComposedRelicCalls.includes("dispose") && collectText(shellUiComposedRoot) === ""
+);
 const shellUiDelegatedRelicRoot = createFakeElement("div");
 const shellUiDelegatedScheduler = createFakeScheduler();
 const shellUiDelegatedCallbacks = [];
@@ -920,6 +1011,12 @@ check(
 check(
   "module bootstrap composes shell UI owner without classic globals",
   composeRuntimeSource.includes('from "../modules/shell-ui-controller.js"') &&
+    !composeRuntimeSource.includes("globalThis.TapSurvivorShellUi")
+);
+check(
+  "module bootstrap composes shell UI presenter and DOM adapter without classic globals",
+  composeRuntimeSource.includes('from "../modules/shell-ui-presenter.js"') &&
+    composeRuntimeSource.includes('from "../modules/shell-ui-dom-adapter.js"') &&
     !composeRuntimeSource.includes("globalThis.TapSurvivorShellUi")
 );
 

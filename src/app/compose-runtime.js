@@ -13,6 +13,8 @@ import { createShellRelicController } from "../modules/shell-relic-controller.js
 import { createShellRelicPresenter } from "../modules/shell-relic-presenter.js";
 import { createShellRelicUiAdapter } from "../modules/shell-relic-ui.js";
 import { createShellUiController } from "../modules/shell-ui-controller.js";
+import { createShellUiDomAdapter } from "../modules/shell-ui-dom-adapter.js";
+import { createShellUiPresenter } from "../modules/shell-ui-presenter.js";
 
 export function createBrowserPlatform({
   globalRef = globalThis,
@@ -237,6 +239,9 @@ export function composeShellUiController({
   shellRelicController,
   getSave,
   shellView,
+  presenter,
+  documentRef,
+  root,
   initialScreen,
   initialPanel,
   onStartRun,
@@ -250,6 +255,9 @@ export function composeShellUiController({
     shellRelicController,
     getSave,
     shellView,
+    presenter,
+    documentRef,
+    root,
     initialScreen,
     initialPanel,
     onStartRun,
@@ -258,5 +266,29 @@ export function composeShellUiController({
     onOpenShop,
     onCloseShop,
     onSetGameSpeed,
+  });
+}
+
+export function composeShellUiPresentation(options = {}) {
+  return createShellUiPresenter(options);
+}
+
+export function composeShellUiDomAdapter({
+  presenter,
+  documentRef,
+  root,
+  shellRelicController,
+  getSave,
+  onOpenPanel,
+  onStartRun,
+}) {
+  return createShellUiDomAdapter({
+    presenter,
+    documentRef,
+    root,
+    shellRelicController,
+    getSave,
+    onOpenPanel,
+    onStartRun,
   });
 }

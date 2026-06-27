@@ -1,3 +1,6 @@
+import { createShellUiDomAdapter } from "./shell-ui-dom-adapter.js";
+import { createShellUiPresenter } from "./shell-ui-presenter.js";
+
 /**
  * Owns only the module-native shell UI lifecycle contract.
  *
@@ -10,7 +13,11 @@ export function createShellUiController(options = {}) {
   const {
     shellRelicController,
     getSave = () => ({}),
-    shellView = {},
+    shellView,
+    presenter = createShellUiPresenter(),
+    createShellView = createShellUiDomAdapter,
+    documentRef,
+    root,
     initialScreen = "title",
     initialPanel = "progress",
     onStartRun,
@@ -24,6 +31,23 @@ export function createShellUiController(options = {}) {
   if (!shellRelicController || typeof shellRelicController.render !== "function") {
     throw new Error("Missing Tap Survivor module shell UI dependency: shellRelicController");
   }
+  if (!presenter || typeof presenter.createShellViewModel !== "function") {
+    throw new Error("Missing Tap Survivor module shell UI dependency: presenter");
+  }
+
+  const viewOwnsRelicPanel = Boolean(!shellView && documentRef && root);
+  const view =
+    shellView ||
+    (documentRef && root
+      ? createShellView({
+          documentRef,
+          getSave,
+          onStartRun: () => startRun(),
+          presenter,
+          root,
+          shellRelicController,
+        })
+      : {});
 
   let state = {
     disposed: false,
@@ -47,8 +71,8 @@ export function createShellUiController(options = {}) {
       ...state,
       ...nextState,
     };
-    shellView.render?.(snapshot());
-    if (state.panel === "inventory") shellRelicController.render(getSave());
+    view.render?.(snapshot());
+    if (state.panel === "inventory" && !viewOwnsRelicPanel) shellRelicController.render(getSave());
     return snapshot();
   }
 
@@ -57,8 +81,8 @@ export function createShellUiController(options = {}) {
       ...state,
       ...nextState,
     };
-    shellView.update?.(snapshot());
-    if (state.panel === "inventory") shellRelicController.update?.(getSave());
+    view.update?.(snapshot());
+    if (state.panel === "inventory" && !viewOwnsRelicPanel) shellRelicController.update?.(getSave());
     return snapshot();
   }
 
@@ -67,7 +91,7 @@ export function createShellUiController(options = {}) {
       ...state,
       menuOpen: true,
     };
-    shellView.setMenuOpen?.(true, snapshot());
+    view.setMenuOpen?.(true, snapshot());
     return openPanel(panel);
   }
 
@@ -76,7 +100,7 @@ export function createShellUiController(options = {}) {
       ...state,
       menuOpen: false,
     };
-    shellView.setMenuOpen?.(false, snapshot());
+    view.setMenuOpen?.(false, snapshot());
     return snapshot();
   }
 
@@ -85,8 +109,9 @@ export function createShellUiController(options = {}) {
       ...state,
       panel,
     };
-    shellView.showPanel?.(panel, snapshot());
-    if (panel === "inventory") shellRelicController.render(getSave());
+    if (typeof view.openPanel === "function") view.openPanel(panel, snapshot());
+    else view.showPanel?.(panel, snapshot());
+    if (panel === "inventory" && !viewOwnsRelicPanel) shellRelicController.render(getSave());
     return snapshot();
   }
 
@@ -100,7 +125,7 @@ export function createShellUiController(options = {}) {
       ...state,
       screen: "game",
     };
-    shellView.setScreen?.("game", snapshot());
+    view.setScreen?.("game", snapshot());
     return snapshot();
   }
 
@@ -135,7 +160,7 @@ export function createShellUiController(options = {}) {
       disposed: true,
     };
     shellRelicController.dispose?.();
-    shellView.dispose?.(snapshot());
+    view.dispose?.(snapshot());
     return snapshot();
   }
 
