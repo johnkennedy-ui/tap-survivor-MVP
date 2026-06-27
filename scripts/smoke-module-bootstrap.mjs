@@ -414,32 +414,71 @@ check(
 );
 const fakeShellRelicRoot = createFakeElement("div");
 const shellRelicUiSelections = [];
+const shellRelicUiEquips = [];
+const shellRelicUiLockedSelections = [];
 const shellRelicUiAdapter = composeShellRelicUiAdapter({
   presenter: shellRelicPresentation,
   documentRef: createFakeDocument(),
   root: fakeShellRelicRoot,
+  onEquip: (relic) => shellRelicUiEquips.push(relic.id),
   onSelect: (relic) => shellRelicUiSelections.push(relic.id),
   onUnequip: (relic) => shellRelicUiSelections.push(`unequip:${relic.id}`),
+  onLockedSelect: (relic) => shellRelicUiLockedSelections.push(relic.id),
 });
 const shellRelicUiModel = shellRelicUiAdapter.renderShellRelics({
-  towerFloor: 30,
-  unlockedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "pickup_radius_focus_relic"],
-  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic"],
-});
+  towerFloor: 40,
+  unlockedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "pickup_radius_focus_relic",
+    "split_on_hit_mastery_relic",
+  ],
+  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+}, { selectedRelicId: "pickup_radius_focus_relic" });
 const shellRelicUiText = collectText(fakeShellRelicRoot);
 const availablePickupButton = findByDataset(fakeShellRelicRoot, "relicId", "pickup_radius_focus_relic");
+const equippedMoveSpeedSlot = findByDataset(fakeShellRelicRoot, "relicId", "move_speed_focus_relic");
+const lockedRelicButton = findFirst(fakeShellRelicRoot, (element) => element.dataset?.unlocked === "false");
+const equipPickupButton = findByDataset(fakeShellRelicRoot, "action", "equip");
+const unequipMoveSpeedButton = findByDataset(equippedMoveSpeedSlot, "action", "unequip");
 availablePickupButton?.eventListeners?.click?.[0]?.();
+lockedRelicButton?.eventListeners?.click?.[0]?.();
+equipPickupButton?.eventListeners?.click?.[0]?.();
+unequipMoveSpeedButton?.eventListeners?.click?.[0]?.();
 check(
   "module bootstrap renders shell relic UI adapter summary",
-  shellRelicUiModel.maxEquippedSlots === 3 &&
-    shellRelicUiText.includes("Relic slots: 3/5") &&
-    shellRelicUiText.includes("Move Speed Focus")
+  shellRelicUiModel.maxEquippedSlots === 4 &&
+    shellRelicUiText.includes("Relic slots: 4/5") &&
+    shellRelicUiText.includes("Next slot: Tower level 50") &&
+    shellRelicUiText.includes("Can equip more: Yes")
 );
 check(
-  "module bootstrap renders shell relic UI adapter available row",
+  "module bootstrap renders shell relic UI adapter equipped and available rows",
+  equippedMoveSpeedSlot?.className.includes("equipped") &&
   shellRelicUiText.includes("Pickup Radius Focus") &&
-    availablePickupButton?.disabled === false &&
+    availablePickupButton?.className.includes("available") &&
     shellRelicUiSelections.includes("pickup_radius_focus_relic")
+);
+check(
+  "module bootstrap renders shell relic UI adapter locked and selected states",
+  lockedRelicButton?.className.includes("locked") &&
+    collectText(lockedRelicButton).includes("Locked") &&
+    availablePickupButton?.className.includes("selected") &&
+    shellRelicUiLockedSelections.length === 1
+);
+check(
+  "module bootstrap renders shell relic UI adapter bonuses and special modifiers",
+  shellRelicUiText.includes("Run-start bonuses: run_fire_rate +2") &&
+    shellRelicUiText.includes("Max-tier bonuses: run_move_speed +1") &&
+    shellRelicUiText.includes("Special modifier: maxHpMultiplier +0.6")
+);
+check(
+  "module bootstrap renders shell relic UI adapter detail actions",
+  shellRelicUiText.includes("Selected relic") &&
+    shellRelicUiText.includes("Linked skill: Pickup Radius") &&
+    equipPickupButton?.disabled === false &&
+    shellRelicUiEquips.includes("pickup_radius_focus_relic") &&
+    shellRelicUiSelections.includes("unequip:move_speed_focus_relic")
 );
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
@@ -545,17 +584,26 @@ function createFakeDocument() {
 function createFakeElement(tagName) {
   return {
     tagName,
+    attributes: {},
     children: [],
     className: "",
     dataset: {},
     disabled: false,
     eventListeners: {},
     innerHTML: "",
+    style: {
+      setProperty(key, value) {
+        this[key] = value;
+      },
+    },
     textContent: "",
     type: "",
     appendChild(child) {
       this.children.push(child);
       return child;
+    },
+    setAttribute(key, value) {
+      this.attributes[key] = value;
     },
     addEventListener(type, handler) {
       this.eventListeners[type] = this.eventListeners[type] || [];
@@ -572,9 +620,20 @@ function collectText(element) {
 }
 
 function findByDataset(element, key, value) {
+  if (!element) return null;
   if (element.dataset?.[key] === value) return element;
   for (const child of element.children) {
     const match = findByDataset(child, key, value);
+    if (match) return match;
+  }
+  return null;
+}
+
+function findFirst(element, predicate) {
+  if (!element) return null;
+  if (predicate(element)) return element;
+  for (const child of element.children) {
+    const match = findFirst(child, predicate);
     if (match) return match;
   }
   return null;

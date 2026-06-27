@@ -9,6 +9,7 @@ export function createShellRelicUiAdapter(options = {}) {
     onEquip,
     onUnequip,
     onSelect,
+    onLockedSelect,
   } = options;
 
   if (!presenter || typeof presenter.createInventoryViewModel !== "function") {
@@ -21,16 +22,28 @@ export function createShellRelicUiAdapter(options = {}) {
     throw new Error("Missing Tap Survivor module shell relic UI dependency: root");
   }
 
-  function renderShellRelics(save = {}) {
-    return renderViewModel(presenter.createInventoryViewModel(save));
+  function renderShellRelics(save = {}, renderOptions = {}) {
+    return renderViewModel(presenter.createInventoryViewModel(save), renderOptions);
   }
 
-  function renderViewModel(model) {
+  function renderViewModel(model, renderOptions = {}) {
+    const selectedRelicId = renderOptions.selectedRelicId || model.selectedRelicId || "";
+    const selectedRelic = findRelic(model, selectedRelicId);
     clearRoot(root);
+    root.appendChild(createCharacterPanel(model));
     root.appendChild(createSummary(model));
     root.appendChild(createSlotList(model));
-    root.appendChild(createAvailableList(model));
+    root.appendChild(createAvailableList(model, selectedRelicId));
+    if (selectedRelic) root.appendChild(createDetail(model, selectedRelic));
     return model;
+  }
+
+  function createCharacterPanel(model) {
+    const panel = documentRef.createElement("section");
+    panel.className = "relic-character-panel";
+    appendText(documentRef, panel, "strong", "Character");
+    appendText(documentRef, panel, "span", `Tower level ${model.towerFloor}`);
+    return panel;
   }
 
   function createSummary(model) {
@@ -42,6 +55,12 @@ export function createShellRelicUiAdapter(options = {}) {
       item.textContent = `${row.label}: ${row.value}`;
       summary.appendChild(item);
     });
+    appendText(documentRef, summary, "div", `Can equip more: ${model.canEquipMore ? "Yes" : "No"}`, {
+      className: "shell-relic-summary-row",
+    });
+    appendBonusRows(documentRef, summary, "Run-start bonuses", model.bonuses?.startingRunUpgradeTiers);
+    appendBonusRows(documentRef, summary, "Max-tier bonuses", model.bonuses?.maxTierBonuses);
+    appendModifierRows(documentRef, summary, model.specialModifiers);
     return summary;
   }
 
@@ -50,18 +69,34 @@ export function createShellRelicUiAdapter(options = {}) {
     list.className = "shell-relic-slots";
     model.slots.forEach((slot) => {
       const item = documentRef.createElement("article");
-      item.className = `shell-relic-slot ${slot.unlocked ? "unlocked" : "locked"} ${slot.relic ? "equipped" : "empty"}`;
+      const relic = slot.relic;
+      item.className = [
+        "relic-slot",
+        slot.unlocked ? "unlocked" : "locked",
+        relic ? "equipped" : "empty",
+        relic?.rarity === "green" ? "green-relic" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
       item.dataset.slotIndex = String(slot.index);
-      item.textContent = slot.relic
-        ? `${slot.label}: ${slot.relic.name}`
-        : slot.unlocked
-          ? `${slot.label}: Empty relic slot`
-          : `${slot.label}: Locked until tower level ${slot.unlockLevel}`;
-      if (slot.relic) {
+      if (relic) item.dataset.relicId = relic.id;
+      setRelicBackground(item, relic);
+      appendText(documentRef, item, "span", slot.label, { className: "relic-slot-index" });
+      if (!slot.unlocked) {
+        appendText(documentRef, item, "strong", "Locked");
+        appendText(documentRef, item, "span", `Unlocked at tower level ${slot.unlockLevel}.`);
+      } else if (!relic) {
+        appendText(documentRef, item, "strong", "Empty relic slot");
+        appendText(documentRef, item, "span", "Equip an unlocked relic below.");
+      } else {
+        item.appendChild(createRelicImage(documentRef, relic));
+        appendText(documentRef, item, "strong", relic.name);
+        appendText(documentRef, item, "span", relic.description);
         const button = documentRef.createElement("button");
         button.type = "button";
         button.textContent = "Unequip";
-        button.addEventListener("click", () => onUnequip?.(slot.relic, model));
+        button.dataset.action = "unequip";
+        button.addEventListener("click", () => onUnequip?.(relic, model));
         item.appendChild(button);
       }
       list.appendChild(item);
@@ -69,28 +104,133 @@ export function createShellRelicUiAdapter(options = {}) {
     return list;
   }
 
-  function createAvailableList(model) {
+  function createAvailableList(model, selectedRelicId) {
     const list = documentRef.createElement("section");
-    list.className = "shell-relic-available";
+    list.className = "relic-icon-grid shell-relic-available";
+    if (!model.availableRelics.length) {
+      appendText(documentRef, list, "div", "All relics are equipped.", { className: "relic-item locked" });
+      return list;
+    }
     model.availableRelics.forEach((relic) => {
       const button = documentRef.createElement("button");
       button.type = "button";
-      button.className = `shell-relic-row ${relic.unlocked ? "available" : "locked"}`;
-      button.disabled = !relic.unlocked;
+      button.className = [
+        "relic-icon-button",
+        "shell-relic-row",
+        relic.unlocked ? "available" : "locked",
+        relic.id === selectedRelicId ? "selected" : "",
+        relic.rarity === "green" ? "green-relic" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      button.disabled = false;
       button.dataset.relicId = relic.id;
-      button.textContent = `${relic.name}${relic.linkedSkill ? ` (${relic.linkedSkill.name})` : ""}`;
+      button.dataset.unlocked = String(relic.unlocked);
+      setAriaLabel(button, relic.unlocked ? `View ${relic.name}` : `${relic.name} locked`);
+      setRelicBackground(button, relic);
+      button.appendChild(createRelicImage(documentRef, relic));
+      appendText(documentRef, button, "span", relic.name);
+      if (!relic.unlocked) appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
+      if (relic.linkedSkill) appendText(documentRef, button, "span", `Linked skill: ${relic.linkedSkill.name}`);
       button.addEventListener("click", () => {
         if (relic.unlocked) onSelect?.(relic, model);
+        else onLockedSelect?.(relic, model);
       });
       list.appendChild(button);
     });
     return list;
   }
 
+  function createDetail(model, relic) {
+    const detail = documentRef.createElement("section");
+    detail.className = `relic-detail-screen ${relic.rarity === "green" ? "green-relic" : ""}`;
+    detail.dataset.relicId = relic.id;
+    setRelicBackground(detail, relic);
+    detail.appendChild(createRelicImage(documentRef, relic, "relic-detail-preview"));
+    appendText(documentRef, detail, "span", "Selected relic", { className: "relic-slot-index" });
+    appendText(documentRef, detail, "strong", relic.name);
+    appendText(documentRef, detail, "p", relic.description);
+    if (relic.specialAbility) {
+      appendText(documentRef, detail, "p", `${relic.specialAbility.label}: ${relic.specialAbility.description}`, {
+        className: "relic-special-ability",
+      });
+    }
+    if (relic.linkedSkill) appendText(documentRef, detail, "p", `Linked skill: ${relic.linkedSkill.name}`);
+
+    const actions = documentRef.createElement("div");
+    actions.className = "relic-detail-actions";
+    const equipButton = documentRef.createElement("button");
+    equipButton.type = "button";
+    equipButton.textContent = "Equip relic";
+    equipButton.dataset.action = "equip";
+    equipButton.disabled = !relic.unlocked || relic.equipped || !model.canEquipMore;
+    equipButton.addEventListener("click", () => {
+      if (!equipButton.disabled) onEquip?.(relic, model);
+    });
+    const cancelButton = documentRef.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.textContent = "Cancel";
+    cancelButton.dataset.action = "cancel";
+    cancelButton.addEventListener("click", () => onSelect?.(null, model));
+    actions.appendChild(equipButton);
+    actions.appendChild(cancelButton);
+    detail.appendChild(actions);
+    return detail;
+  }
+
   return {
     renderShellRelics,
     renderViewModel,
   };
+}
+
+function appendBonusRows(documentRef, parent, label, values = {}) {
+  Object.entries(values)
+    .filter(([, value]) => value)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .forEach(([key, value]) => {
+      appendText(documentRef, parent, "div", `${label}: ${key} +${value}`, { className: "shell-relic-bonus-row" });
+    });
+}
+
+function appendModifierRows(documentRef, parent, modifiers = []) {
+  modifiers.forEach((modifier) => {
+    appendText(documentRef, parent, "div", `Special modifier: ${modifier.key} +${modifier.value}`, {
+      className: "shell-relic-special-row",
+    });
+  });
+}
+
+function findRelic(model, relicId) {
+  if (!relicId) return null;
+  return [...(model.equippedRelics || []), ...(model.availableRelics || [])].find((relic) => relic.id === relicId) || null;
+}
+
+function createRelicImage(documentRef, relic, className = "relic-icon") {
+  const image = documentRef.createElement("img");
+  image.className = className;
+  image.src = relic?.iconSrc || "";
+  image.alt = "";
+  return image;
+}
+
+function appendText(documentRef, parent, tagName, text, attributes = {}) {
+  const item = documentRef.createElement(tagName);
+  item.textContent = text;
+  Object.assign(item, attributes);
+  parent.appendChild(item);
+  return item;
+}
+
+function setAriaLabel(element, label) {
+  if (typeof element.setAttribute === "function") element.setAttribute("aria-label", label);
+  else element.ariaLabel = label;
+}
+
+function setRelicBackground(element, relic) {
+  if (!element?.style || !relic?.backgroundColor) return;
+  if (typeof element.style.setProperty === "function") element.style.setProperty("--relic-bg", relic.backgroundColor);
+  else element.style["--relic-bg"] = relic.backgroundColor;
 }
 
 function clearRoot(root) {

@@ -170,6 +170,7 @@ export function composeShellRelicUiAdapter({
   onEquip,
   onUnequip,
   onSelect,
+  onLockedSelect,
 }) {
   return createShellRelicUiAdapter({
     presenter,
@@ -178,5 +179,6 @@ export function composeShellRelicUiAdapter({
     onEquip,
     onUnequip,
     onSelect,
+    onLockedSelect,
   });
 }
