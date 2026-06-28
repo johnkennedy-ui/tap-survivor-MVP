@@ -4,6 +4,8 @@ import { createContentRegistry } from "./content-registry.js";
 import { createEffects } from "./effects.js";
 import { createGameRuntimeController } from "./game-runtime.js";
 import { createGameStateStore } from "./game-state-store.js";
+import { createModuleRuntimeAssetsAdapter } from "./module-runtime-assets-adapter.js";
+import { createModuleRuntimeAudioAdapter } from "./module-runtime-audio-adapter.js";
 import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
 import { createModuleRuntimeSpriteAdapter } from "./module-runtime-sprite-adapter.js";
 import { createModuleRuntimeStorageAdapter } from "./module-runtime-storage-adapter.js";
@@ -41,6 +43,8 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "gameStateStore",
   "mapSystem",
   "math",
+  "moduleRuntimeAssetsAdapter",
+  "moduleRuntimeAudioAdapter",
   "moduleRuntimeSpriteAdapter",
   "moduleRuntimeStorageAdapter",
   "moduleRuntimeUiAdapters",
@@ -68,6 +72,8 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
 ]);
 
 export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
+  "assetAdapters",
+  "audioAdapters",
   "initialGame",
   "initialSave",
   "platformAdapters",
@@ -78,8 +84,6 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
 ]);
 
 export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
-  "assets",
-  "audio",
   "combat",
   "debug",
   "enemyBehaviors",
@@ -117,6 +121,14 @@ export function createModuleGameDependencyBag({
   );
   const contentRegistry = createContentRegistry({ content, upgradeContent });
   const effects = createEffects({ contentSchema });
+  const assetAdapters = createModuleRuntimeAssetsAdapter({
+    ...requireObject(resolvedAdapters.assetAdapters, "adapters.assetAdapters"),
+    assetDefs: /** @type {any} */ (content).assets || {},
+  });
+  const audioAdapters = createModuleRuntimeAudioAdapter({
+    ...requireObject(resolvedAdapters.audioAdapters, "adapters.audioAdapters"),
+    sfxDefs: contentRegistry.sfxDefs,
+  });
   const storageAdapters = createModuleRuntimeStorageAdapter(
     createModuleRuntimeStorageAdapterOptions({
       saveConfig: requireObject(saveConfig, "saveConfig"),
@@ -157,6 +169,8 @@ export function createModuleGameDependencyBag({
     gameStateStore: stateStore,
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
+    moduleRuntimeAssetsAdapter: assetAdapters,
+    moduleRuntimeAudioAdapter: audioAdapters,
     moduleRuntimeSpriteAdapter: spriteAdapters,
     moduleRuntimeStorageAdapter: storageAdapters,
     moduleRuntimeUiAdapters: uiAdapters,
@@ -188,6 +202,8 @@ export function createModuleGameDependencyBag({
   };
 
   return {
+    assets: assetAdapters.assets,
+    audio: audioAdapters.audio,
     bannerSystem: platformAdapters.bannerSystem,
     bindMovementInput: platformAdapters.bindMovementInput,
     canvas: platformAdapters.canvas,

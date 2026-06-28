@@ -13,6 +13,16 @@ import {
   MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
 } from "../src/modules/game-state-store.js";
 import {
+  MODULE_RUNTIME_ASSETS_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-assets-adapter.js";
+import {
+  MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-audio-adapter.js";
+import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
@@ -37,6 +47,14 @@ const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content
 const entrypointSource = readFileSync(join(root, "src/app/module-runtime-test-entrypoint.js"), "utf8");
 const fixtureHtml = readFileSync(join(root, "tests/fixtures/module-runtime-test-entrypoint.html"), "utf8");
 const moduleDependencySource = readFileSync(join(root, "src/modules/module-game-dependencies.js"), "utf8");
+const assetsAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-assets-adapter.js"),
+  "utf8"
+);
+const audioAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-audio-adapter.js"),
+  "utf8"
+);
 const platformAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-platform-adapter.js"),
   "utf8"
@@ -77,6 +95,14 @@ check(
 check(
   "module-native state store has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(stateStoreSource)
+);
+check(
+  "module runtime assets adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(assetsAdapterSource)
+);
+check(
+  "module runtime audio adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(audioAdapterSource)
 );
 check(
   "module runtime platform adapter has no classic TapSurvivor global reads",
@@ -227,6 +253,21 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
       questOpenIds: (quest) => quest?.opens || [],
     },
     adapters: {
+      assetAdapters: {
+        fallbackSkillIcon: "fallback.png",
+      },
+      audioAdapters: {
+        audioContextFactory: (cueId) => ({
+          cueId,
+          resume: () => calls.push(`audio-context:${cueId}`),
+        }),
+        audioFactory: (src) => ({
+          cloneNode: () => ({
+            play: () => calls.push(`audio:play:${src}`),
+          }),
+        }),
+        clock: () => 1000,
+      },
       initialGame,
       initialSave,
       uiAdapters: {
@@ -291,6 +332,8 @@ check(
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
@@ -304,6 +347,27 @@ check(
   "module-native state store routes storage through storage adapter bundle",
   INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapters") &&
     !INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
+);
+check(
+  "module runtime assets adapter owns asset proof slots",
+  ["createAssetResolver", "weaponIcon", "runUpgradeIcon", "relicIcon", "choiceIconPath"].every(
+    (slot) => MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) && MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS.includes("assets")
+);
+check(
+  "module runtime assets adapter keeps low-level asset manifest explicit",
+  MODULE_RUNTIME_ASSETS_ADAPTER_LOW_LEVEL_SLOTS.includes("assetDefs")
+);
+check(
+  "module runtime audio adapter owns audio proof slots",
+  ["createAudioSystem", "play", "playWeapon", "playRunUpgrade", "playStartLaugh"].every(
+    (slot) => MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) && MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS.includes("audio")
+);
+check(
+  "module runtime audio adapter keeps low-level audio dependencies explicit",
+  MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS.includes("audioFactory") &&
+    MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS.includes("audioContextFactory")
 );
 check(
   "module runtime platform adapter owns completed platform proof slots",
@@ -355,6 +419,8 @@ check(
 check(
   "module-native dependency bag reclassifies platform services into platform adapter",
   !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
@@ -375,7 +441,8 @@ check(
 );
 check(
   "module-native dependency bag keeps classic-only slots explicit",
-  CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
+  !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("assets") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
     CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering")
 );
 check(
@@ -417,6 +484,10 @@ entrypoint.dependencies.shellUi.showTitleScreen();
 entrypoint.dependencies.shopSystem.closeShop();
 entrypoint.dependencies.spriteSystem.drawImage("player");
 entrypoint.dependencies.spriteSystem.drawSprite("player");
+const assetResolver = entrypoint.dependencies.assets.createAssetResolver();
+const audioSystem = entrypoint.dependencies.audio.createAudioSystem();
+audioSystem.playWeapon("spark_bolt", { minGapMs: 0 });
+audioSystem.playStartLaugh();
 
 check(
   "module runtime test entrypoint initializes runtime through UI adapter bundle",
@@ -441,6 +512,18 @@ check(
   calls.includes("sprites:load") &&
     calls.includes("sprites:draw-image:player") &&
     calls.includes("sprites:draw-sprite:player")
+);
+check(
+  "module runtime test entrypoint routes asset services through assets adapter",
+  assetResolver.weaponIcon("spark_bolt") === content.assets.sprites.weapons.spark_bolt.iconSrc &&
+    assetResolver.choiceIconPath({ runUpgradeId: "run_move_speed" }) ===
+      content.assets.sprites.runUpgrades.run_move_speed.iconSrc &&
+    assetResolver.weaponIcon("missing_weapon") === "fallback.png"
+);
+check(
+  "module runtime test entrypoint routes audio services through audio adapter",
+  calls.includes(`audio:play:${content.assets.sfx.weapons.spark_bolt}`) &&
+    calls.includes("audio-context:start-laugh")
 );
 check(
   "module runtime test entrypoint routes generic UI surface through UI adapter bundle",

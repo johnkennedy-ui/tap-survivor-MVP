@@ -25,6 +25,18 @@ import {
   MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
 } from "../src/modules/game-state-store.js";
 import {
+  createModuleRuntimeAssetsAdapter,
+  MODULE_RUNTIME_ASSETS_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-assets-adapter.js";
+import {
+  createModuleRuntimeAudioAdapter,
+  MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-audio-adapter.js";
+import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
@@ -72,6 +84,12 @@ const moduleNativeGameDependencyGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/game-state-store.js"
+);
+const moduleRuntimeAssetsAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-assets-adapter.js"
+);
+const moduleRuntimeAudioAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-audio-adapter.js"
 );
 const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-platform-adapter.js"
@@ -338,6 +356,26 @@ const runtimeStorageAdapter = createModuleRuntimeStorageAdapter({
 runtimeStorageAdapter.storageAdapter.getSaveRaw();
 runtimeStorageAdapter.storageAdapter.setSaveRaw(JSON.stringify(save));
 runtimeStorageAdapter.storageAdapter.removeSaveRaw();
+const runtimeAssetsAdapter = createModuleRuntimeAssetsAdapter({
+  assetDefs: content.assets || {},
+  fallbackSkillIcon: "fallback.png",
+});
+const runtimeAssetResolver = runtimeAssetsAdapter.assets.createAssetResolver();
+const runtimeAudioAdapter = createModuleRuntimeAudioAdapter({
+  audioContextFactory: (cueId) => ({
+    resume: () => calls.push(`runtime:audio-context:${cueId}`),
+  }),
+  audioFactory: (src) => ({
+    cloneNode: () => ({
+      play: () => calls.push(`runtime:audio-play:${src}`),
+    }),
+  }),
+  clock: () => 1000,
+  sfxDefs: content.assets?.sfx || {},
+});
+const runtimeAudioSystem = runtimeAudioAdapter.audio.createAudioSystem();
+runtimeAudioSystem.playWeapon("spark_bolt", { minGapMs: 0 });
+runtimeAudioSystem.playStartLaugh();
 const runtime = composeRuntime({
   platform: createBrowserPlatform({ globalRef: runtimeGlobal, documentRef: runtimeDocument }),
   dependencies: {
@@ -393,9 +431,11 @@ check(
 check("readiness adds no direct TapSurvivor global consumer reads", directConsumerGlobalReads.length === 0);
 check(
   "readiness sees module-native dependency bag slot inventory",
-  MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeSpriteAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeUiAdapters") &&
@@ -403,7 +443,9 @@ check(
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
-  INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
+  INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("uiAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
@@ -417,9 +459,48 @@ check(
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("ui") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapters") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assets") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audio") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
+);
+check(
+  "readiness sees module runtime assets adapter covers asset lookup services",
+  MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS.includes("assets") &&
+    ["createAssetResolver", "weaponIcon", "runUpgradeIcon", "relicIcon", "choiceIconPath"].every(
+      (slot) => MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees module runtime assets adapter low-level dependencies explicit",
+  MODULE_RUNTIME_ASSETS_ADAPTER_LOW_LEVEL_SLOTS.includes("assetDefs") &&
+    MODULE_RUNTIME_ASSETS_ADAPTER_LOW_LEVEL_SLOTS.includes("fallbackSkillIcon")
+);
+check(
+  "readiness composes assets adapter through fake injected asset manifest",
+  runtimeAssetResolver.weaponIcon("spark_bolt") === content.assets.sprites.weapons.spark_bolt.iconSrc &&
+    runtimeAssetResolver.choiceIconPath({ runUpgradeId: "run_move_speed" }) ===
+      content.assets.sprites.runUpgrades.run_move_speed.iconSrc &&
+    runtimeAssetResolver.weaponIcon("missing_weapon") === "fallback.png"
+);
+check(
+  "readiness sees module runtime audio adapter covers audio playback services",
+  MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS.includes("audio") &&
+    ["createAudioSystem", "play", "playWeapon", "playRunUpgrade", "playStartLaugh"].every((slot) =>
+      MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees module runtime audio adapter low-level dependencies explicit",
+  MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS.includes("sfxDefs") &&
+    MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS.includes("audioFactory") &&
+    MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS.includes("audioContextFactory")
+);
+check(
+  "readiness composes audio adapter through fake injected audio dependencies",
+  calls.includes(`runtime:audio-play:${content.assets.sfx.weapons.spark_bolt}`) &&
+    calls.includes("runtime:audio-context:start-laugh")
 );
 check(
   "readiness sees completed module runtime platform adapter proof slots",
@@ -489,7 +570,8 @@ check(
 );
 check(
   "readiness keeps remaining classic-only systems explicit",
-  CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
+  !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("assets") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
     CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering")
 );
 check(
@@ -503,6 +585,14 @@ check(
 check(
   "readiness sees module runtime platform adapter without TapSurvivor global reads",
   moduleRuntimePlatformAdapterGlobalReads.length === 0
+);
+check(
+  "readiness sees module runtime assets adapter without TapSurvivor global reads",
+  moduleRuntimeAssetsAdapterGlobalReads.length === 0
+);
+check(
+  "readiness sees module runtime audio adapter without TapSurvivor global reads",
+  moduleRuntimeAudioAdapterGlobalReads.length === 0
 );
 check(
   "readiness sees module runtime sprite adapter without TapSurvivor global reads",
@@ -536,6 +626,18 @@ const inventory = {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
     adapterSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimePlatformAdapterGlobalReads,
+  },
+  moduleRuntimeAssetsAdapter: {
+    proofSlots: MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_ASSETS_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeAssetsAdapterGlobalReads,
+  },
+  moduleRuntimeAudioAdapter: {
+    proofSlots: MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeAudioAdapterGlobalReads,
   },
   moduleRuntimeSpriteAdapter: {
     proofSlots: MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS,
