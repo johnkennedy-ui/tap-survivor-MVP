@@ -1,3 +1,4 @@
+import { createBrowserDependencyBagOptions } from "./browser-dependency-bag.js";
 import { createBrowserPlatform } from "./compose-runtime.js";
 import { createModuleGameDependencyBag } from "../modules/module-game-dependencies.js";
 import { createModuleGameLifecycleOwner } from "../modules/module-game-lifecycle.js";
@@ -27,19 +28,26 @@ export function createProductionModuleEntrypoint(options = {}) {
   const {
     autoInitialize = false,
     autoStart = false,
+    browserDependencyBagOptions,
     dependencyBagOptions,
     dependencies,
     globalRef,
     lifecycleHooks,
     platform,
   } = options;
+  const resolvedGlobalRef = globalRef || globalThis;
   const resolvedPlatform =
-    platform || createBrowserPlatform({ globalRef: requireObject(globalRef, "globalRef") });
+    platform || createBrowserPlatform({ globalRef: resolvedGlobalRef });
+  const resolvedDependencyBagOptions =
+    dependencyBagOptions ||
+    createBrowserDependencyBagOptions({
+      ...(browserDependencyBagOptions || {}),
+      documentRef: resolvedPlatform.documentRef,
+      globalRef: resolvedGlobalRef,
+    });
   const resolvedDependencies =
     dependencies ||
-    createModuleGameDependencyBag(
-      requireObject(dependencyBagOptions, "dependencyBagOptions")
-    );
+    createModuleGameDependencyBag(resolvedDependencyBagOptions);
   const lifecycle = createModuleGameLifecycleOwner({
     dependencies: resolvedDependencies,
     lifecycleHooks,

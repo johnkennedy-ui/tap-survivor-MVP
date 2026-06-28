@@ -6,6 +6,7 @@ import {
   createProductionModuleEntrypoint,
   PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS,
 } from "../src/app/production-module-entrypoint.js";
+import { BROWSER_DEPENDENCY_BAG_PROOF_SLOTS } from "../src/app/browser-dependency-bag.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -18,6 +19,10 @@ check("production module entrypoint candidate imports successfully", typeof crea
 check(
   "production module entrypoint candidate imports compose runtime helper",
   candidateSource.includes("./compose-runtime.js")
+);
+check(
+  "production module entrypoint candidate imports browser dependency bag factory",
+  candidateSource.includes("./browser-dependency-bag.js")
 );
 check(
   "production module entrypoint candidate imports module dependency bag",
@@ -74,20 +79,19 @@ const runtimeGlobal = {
     return 1;
   },
 };
-let browserDefaultBootError = "";
-try {
-  createProductionModuleEntrypoint({
-    globalRef: {
-      document: documentRef,
-      requestAnimationFrame: runtimeGlobal.requestAnimationFrame.bind(runtimeGlobal),
-    },
-  });
-} catch (error) {
-  browserDefaultBootError = error?.message || String(error);
-}
 check(
-  "production module entrypoint candidate still requires explicit browser dependency bag options",
-  browserDefaultBootError.includes("dependencyBagOptions")
+  "production browser dependency bag factory exposes expected adapter slots",
+  [
+    "assetAdapters",
+    "audioAdapters",
+    "gameplayAdapters",
+    "platformAdapters",
+    "progressionAdapters",
+    "renderingAdapters",
+    "spriteAdapters",
+    "storageAdapters",
+    "uiAdapters",
+  ].every((slot) => BROWSER_DEPENDENCY_BAG_PROOF_SLOTS.includes(slot))
 );
 const speedButtons = [1, 2, 5].map((speed) => ({
   dataset: { speed: String(speed) },
@@ -260,6 +264,59 @@ check(
 check("production-style dispose reaches lifecycle owner", calls.includes("lifecycle:dispose"));
 check(
   "production module entrypoint publishes no TapSurvivor globals",
+  sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
+);
+
+const browserCalls = [];
+const browserStorage = createMemoryStorage();
+const browserEntrypoint = bootProductionModuleEntrypoint({
+  browserDependencyBagOptions: {
+    canvas,
+    content,
+    contentSchema: {
+      effectRegistries: {
+        shopItem: {
+          stats: ["speed"],
+        },
+      },
+    },
+    initialSave,
+    storage: browserStorage,
+    ui: uiSurface,
+  },
+  lifecycleHooks: {
+    dispose: () => browserCalls.push("browser:dispose"),
+    update: ({ dt }) => {
+      browserCalls.push(`browser:update:${dt}`);
+      return true;
+    },
+  },
+  platform: {
+    documentRef,
+    runtimeGlobal,
+  },
+});
+browserEntrypoint.startRun();
+browserEntrypoint.tick(0.032);
+browserEntrypoint.render({ frameId: "browser-default" });
+browserEntrypoint.persist();
+browserEntrypoint.dispose();
+
+check(
+  "production module entrypoint boots without explicit dependencyBagOptions",
+  Boolean(browserEntrypoint.dependencies.moduleSystems?.moduleRuntimeStorageAdapter?.storageAdapter) &&
+    Boolean(browserEntrypoint.dependencies.moduleSystems?.moduleRuntimeRenderingAdapter?.rendering)
+);
+check(
+  "production module entrypoint default browser dependency bag reaches lifecycle",
+  browserCalls.includes("browser:update:0.032") && browserCalls.includes("browser:dispose")
+);
+check(
+  "production module entrypoint default browser dependency bag persists",
+  Boolean(browserStorage.getItem("tap-survivor-mvp-save-v2"))
+);
+check(
+  "production module entrypoint default browser boot publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
 );
 check(

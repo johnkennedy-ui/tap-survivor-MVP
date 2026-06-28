@@ -2,6 +2,10 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { extname, join } from "node:path";
 
 import {
+  BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+  createBrowserDependencyBagOptions,
+} from "../src/app/browser-dependency-bag.js";
+import {
   composeContentBalanceEffects,
   composeRelicProgression,
   composeRuntime,
@@ -88,6 +92,10 @@ const productionModuleEntrypointSource = readFileSync(
   join(root, "src/app/production-module-entrypoint.js"),
   "utf8"
 );
+const browserDependencyBagSource = readFileSync(
+  join(root, "src/app/browser-dependency-bag.js"),
+  "utf8"
+);
 const productionScripts = extractLocalScriptSources(indexHtml);
 const generatedBridgeFiles = productionScripts.filter((file) => isGeneratedBridge(file));
 const generatedContentFiles = productionScripts.filter((file) => file === "src/content.generated.js");
@@ -113,6 +121,9 @@ const moduleGameLifecycleOwnerGlobalReads = collectTapSurvivorGlobalReads(
 );
 const productionModuleEntrypointGlobalReads = collectTapSurvivorGlobalReads(
   "src/app/production-module-entrypoint.js"
+);
+const browserDependencyBagGlobalReads = collectTapSurvivorGlobalReads(
+  "src/app/browser-dependency-bag.js"
 );
 const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/game-state-store.js"
@@ -397,6 +408,22 @@ const runtimeStorageAdapter = createModuleRuntimeStorageAdapter({
 runtimeStorageAdapter.storageAdapter.getSaveRaw();
 runtimeStorageAdapter.storageAdapter.setSaveRaw(JSON.stringify(save));
 runtimeStorageAdapter.storageAdapter.removeSaveRaw();
+const browserDependencyBagOptions = createBrowserDependencyBagOptions({
+  content,
+  documentRef: {
+    getElementById: (id) => ({
+      id,
+      classList: { add() {}, remove() {}, toggle() {} },
+      dataset: {},
+      setAttribute() {},
+    }),
+    querySelectorAll: () => speedButtons,
+  },
+  globalRef: {
+    localStorage: createMemoryStorageAdapter(),
+    performance: { now: () => 0 },
+  },
+});
 const runtimeAssetsAdapter = createModuleRuntimeAssetsAdapter({
   assetDefs: content.assets || {},
   fallbackSkillIcon: "fallback.png",
@@ -550,6 +577,8 @@ check(
 check(
   "readiness sees production ESM entrypoint candidate exists",
   existsSync(join(root, "src/app/production-module-entrypoint.js")) &&
+    existsSync(join(root, "src/app/browser-dependency-bag.js")) &&
+    productionModuleEntrypointSource.includes("./browser-dependency-bag.js") &&
     productionModuleEntrypointSource.includes("../modules/module-game-lifecycle.js") &&
     productionModuleEntrypointSource.includes("../modules/module-game-dependencies.js") &&
     productionModuleEntrypointSource.includes("./compose-runtime.js") &&
@@ -563,9 +592,21 @@ check(
     !indexHtml.includes("production-module-entrypoint.js")
 );
 check(
-  "readiness sees production ESM entrypoint candidate still needs browser dependency bag options",
-  productionModuleEntrypointSource.includes("requireObject(dependencyBagOptions") &&
-    !productionModuleEntrypointSource.includes("createProductionBrowserDependencyBag")
+  "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
+  [
+    "assetAdapters",
+    "audioAdapters",
+    "gameplayAdapters",
+    "platformAdapters",
+    "progressionAdapters",
+    "renderingAdapters",
+    "spriteAdapters",
+    "storageAdapters",
+    "uiAdapters",
+  ].every((slot) => BROWSER_DEPENDENCY_BAG_PROOF_SLOTS.includes(slot)) &&
+    Boolean(browserDependencyBagOptions.adapters?.platformAdapters?.canvas) &&
+    typeof browserDependencyBagOptions.adapters?.platformAdapters?.bindMovementInput === "function" &&
+    typeof browserDependencyBagOptions.adapters?.storageAdapters?.storage?.getItem === "function"
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
@@ -818,6 +859,10 @@ check(
   productionModuleEntrypointGlobalReads.length === 0
 );
 check(
+  "readiness sees browser dependency bag factory without TapSurvivor global reads",
+  browserDependencyBagGlobalReads.length === 0
+);
+check(
   "readiness sees module-native state store without TapSurvivor global reads",
   moduleNativeStateStoreGlobalReads.length === 0
 );
@@ -901,8 +946,16 @@ const inventory = {
     importsModuleDependencyBag: productionModuleEntrypointSource.includes(
       "../modules/module-game-dependencies.js"
     ),
+    importsBrowserDependencyBag: productionModuleEntrypointSource.includes(
+      "./browser-dependency-bag.js"
+    ),
     importsComposeRuntime: productionModuleEntrypointSource.includes("./compose-runtime.js"),
     moduleNativeSourceGlobalReads: productionModuleEntrypointGlobalReads,
+  },
+  browserDependencyBagFactory: {
+    exists: true,
+    proofSlots: BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+    moduleNativeSourceGlobalReads: browserDependencyBagGlobalReads,
   },
   moduleRuntimePlatformAdapter: {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
@@ -993,7 +1046,6 @@ const inventory = {
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
     "production ESM entrypoint candidate exists but is not selected by index.html",
-    "production ESM entrypoint candidate still requires an explicit browser dependency bag before index.html can select it",
   ],
   remainingGlobalRetirementBlockers: [
     "classic production script order still publishes TapSurvivor compatibility globals",
