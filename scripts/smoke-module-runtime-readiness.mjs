@@ -41,6 +41,12 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
 import {
+  createModuleRuntimeRenderingAdapter,
+  MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-rendering-adapter.js";
+import {
   createModuleRuntimeSpriteAdapter,
   MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS,
@@ -93,6 +99,9 @@ const moduleRuntimeAudioAdapterGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-platform-adapter.js"
+);
+const moduleRuntimeRenderingAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-rendering-adapter.js"
 );
 const moduleRuntimeSpriteAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-sprite-adapter.js"
@@ -376,6 +385,51 @@ const runtimeAudioAdapter = createModuleRuntimeAudioAdapter({
 const runtimeAudioSystem = runtimeAudioAdapter.audio.createAudioSystem();
 runtimeAudioSystem.playWeapon("spark_bolt", { minGapMs: 0 });
 runtimeAudioSystem.playStartLaugh();
+const runtimeRenderingAdapter = createModuleRuntimeRenderingAdapter({
+  assetAdapters: runtimeAssetsAdapter,
+  onMissingRenderer: ({ name }) => calls.push(`runtime:render-missing:${name}`),
+  platformAdapters: { canvas },
+  renderers: {
+    clearFrame: ({ platformAdapters }) => {
+      calls.push(`runtime:render-clear:${platformAdapters.canvas.width}`);
+      return true;
+    },
+    renderEnemies: ({ enemies, spriteAdapters }) => {
+      calls.push(`runtime:render-enemies:${enemies.length}`);
+      spriteAdapters.spriteSystem.drawSprite("enemy:readiness");
+      return true;
+    },
+    renderFrame: ({ assetAdapters, game, spriteAdapters }) => {
+      const resolver = assetAdapters.assets.createAssetResolver();
+      calls.push(`runtime:render-frame:${Boolean(game)}:${resolver.weaponIcon("spark_bolt")}`);
+      spriteAdapters.spriteSystem.drawImage("background:tower_floor");
+      return true;
+    },
+    renderHud: ({ game }) => {
+      calls.push(`runtime:render-hud:${game?.towerFloor || 0}`);
+      return true;
+    },
+    renderSkillRail: ({ game, spriteAdapters }) => {
+      calls.push(`runtime:render-skill-rail:${game?.player?.equippedWeapons?.length || 0}`);
+      spriteAdapters.spriteSystem.drawSprite("weaponIcon:spark_bolt");
+      return true;
+    },
+  },
+  spriteAdapters: runtimeSpriteAdapter,
+  uiAdapters: runtimeUiAdapters,
+});
+runtimeRenderingAdapter.rendering.clearFrame();
+runtimeRenderingAdapter.rendering.renderFrame({
+  running: true,
+  towerFloor: 7,
+  player: { equippedWeapons: ["spark_bolt"] },
+});
+runtimeRenderingAdapter.renderHud.renderHud({ towerFloor: 7 });
+runtimeRenderingAdapter.renderEnemies.renderEnemies([{ id: "enemy" }]);
+runtimeRenderingAdapter.renderSkillRail.renderSkillRail({
+  player: { equippedWeapons: ["spark_bolt"] },
+});
+runtimeRenderingAdapter.rendering.missingRendererFallback("manual-missing");
 const runtime = composeRuntime({
   platform: createBrowserPlatform({ globalRef: runtimeGlobal, documentRef: runtimeDocument }),
   dependencies: {
@@ -436,6 +490,7 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeRenderingAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeSpriteAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeUiAdapters") &&
@@ -446,6 +501,7 @@ check(
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderingAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("uiAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
@@ -461,6 +517,10 @@ check(
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assets") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audio") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("rendering") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderHud") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderEnemies") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderSkillRail") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
@@ -518,6 +578,32 @@ check(
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("ui")
 );
 check(
+  "readiness sees module runtime rendering adapter covers render facades",
+  ["rendering", "renderHud", "renderEnemies", "renderSkillRail"].every((slot) =>
+    MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS.includes(slot)
+  ) &&
+    ["clearFrame", "renderFrame", "renderHud", "renderEnemies", "renderSkillRail"].every((slot) =>
+      MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees module runtime rendering adapter low-level dependencies explicit",
+  MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("renderers") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("platformAdapters") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("spriteAdapters") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("assetAdapters") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("uiAdapters")
+);
+check(
+  "readiness composes rendering adapter through fake injected render dependencies",
+  calls.includes("runtime:render-clear:960") &&
+    calls.some((call) => call.startsWith("runtime:render-frame:true:")) &&
+    calls.includes("runtime:render-hud:7") &&
+    calls.includes("runtime:render-enemies:1") &&
+    calls.includes("runtime:render-skill-rail:1") &&
+    calls.includes("runtime:render-missing:manual-missing")
+);
+check(
   "readiness sees module runtime UI adapter bundle covers targeted UI slots",
   ["runUiAdapter", "shellUiAdapter", "shopSystemAdapter", "ui"].every(
     (slot) =>
@@ -572,7 +658,11 @@ check(
   "readiness keeps remaining classic-only systems explicit",
   !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("assets") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
-    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering")
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderHud") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderEnemies") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderSkillRail") &&
+    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("combat")
 );
 check(
   "readiness sees module-native dependency bag without TapSurvivor global reads",
@@ -593,6 +683,10 @@ check(
 check(
   "readiness sees module runtime audio adapter without TapSurvivor global reads",
   moduleRuntimeAudioAdapterGlobalReads.length === 0
+);
+check(
+  "readiness sees module runtime rendering adapter without TapSurvivor global reads",
+  moduleRuntimeRenderingAdapterGlobalReads.length === 0
 );
 check(
   "readiness sees module runtime sprite adapter without TapSurvivor global reads",
@@ -638,6 +732,12 @@ const inventory = {
     adapterSlots: MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS,
     lowLevelInjectedSlots: MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimeAudioAdapterGlobalReads,
+  },
+  moduleRuntimeRenderingAdapter: {
+    proofSlots: MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeRenderingAdapterGlobalReads,
   },
   moduleRuntimeSpriteAdapter: {
     proofSlots: MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS,

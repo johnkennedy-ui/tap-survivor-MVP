@@ -27,6 +27,11 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
 import {
+  MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-rendering-adapter.js";
+import {
   MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS,
@@ -57,6 +62,10 @@ const audioAdapterSource = readFileSync(
 );
 const platformAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-platform-adapter.js"),
+  "utf8"
+);
+const renderingAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-rendering-adapter.js"),
   "utf8"
 );
 const spriteAdapterSource = readFileSync(
@@ -107,6 +116,10 @@ check(
 check(
   "module runtime platform adapter has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(platformAdapterSource)
+);
+check(
+  "module runtime rendering adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(renderingAdapterSource)
 );
 check(
   "module runtime sprite adapter has no classic TapSurvivor global reads",
@@ -313,6 +326,35 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
       storageAdapters: {
         storage,
       },
+      renderingAdapters: {
+        onMissingRenderer: ({ name }) => calls.push(`render:missing:${name}`),
+        renderers: {
+          clearFrame: ({ platformAdapters }) => {
+            calls.push(`render:clear:${platformAdapters.canvas.width}`);
+            return true;
+          },
+          renderEnemies: ({ enemies, spriteAdapters }) => {
+            calls.push(`render:enemies:${enemies.length}`);
+            spriteAdapters.spriteSystem.drawSprite("enemy:render-fixture");
+            return true;
+          },
+          renderFrame: ({ assetAdapters, game, spriteAdapters }) => {
+            const resolver = assetAdapters.assets.createAssetResolver();
+            calls.push(`render:frame:${Boolean(game)}:${resolver.weaponIcon("spark_bolt")}`);
+            spriteAdapters.spriteSystem.drawImage("background:tower_floor");
+            return true;
+          },
+          renderHud: ({ game, uiAdapters }) => {
+            calls.push(`render:hud:${game?.towerFloor}:${uiAdapters.ui === uiSurface}`);
+            return true;
+          },
+          renderSkillRail: ({ game, spriteAdapters }) => {
+            calls.push(`render:skill-rail:${game?.player?.equippedWeapons?.length || 0}`);
+            spriteAdapters.spriteSystem.drawSprite("weaponIcon:spark_bolt");
+            return true;
+          },
+        },
+      },
       renderMetaSink: ({ game, save }) => {
         calls.push(`render-meta:${Boolean(game)}:${save.coins}`);
       },
@@ -334,6 +376,7 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeRenderingAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
@@ -384,6 +427,23 @@ check(
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("ui")
 );
 check(
+  "module runtime rendering adapter owns rendering proof slots",
+  ["clearFrame", "renderFrame", "renderHud", "renderEnemies", "renderSkillRail"].every((slot) =>
+    MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) &&
+    ["rendering", "renderHud", "renderEnemies", "renderSkillRail"].every((slot) =>
+      MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS.includes(slot)
+    )
+);
+check(
+  "module runtime rendering adapter keeps low-level render dependencies explicit",
+  MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("renderers") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("platformAdapters") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("spriteAdapters") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("assetAdapters") &&
+    MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("uiAdapters")
+);
+check(
   "module runtime sprite adapter owns sprite/render proof slots",
   ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
     MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
@@ -428,6 +488,7 @@ check(
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bannerSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("debugSystem") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderingAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("uiAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("runUiAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
@@ -437,13 +498,21 @@ check(
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderMetaSink") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapters") &&
-    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("rendering") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderHud") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderEnemies") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderSkillRail")
 );
 check(
   "module-native dependency bag keeps classic-only slots explicit",
-  !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("assets") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("assets") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
-    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering")
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderHud") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderEnemies") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderSkillRail") &&
+    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("combat")
 );
 check(
   "module-native state store normalizes initial save through canonical save modules",
@@ -484,6 +553,14 @@ entrypoint.dependencies.shellUi.showTitleScreen();
 entrypoint.dependencies.shopSystem.closeShop();
 entrypoint.dependencies.spriteSystem.drawImage("player");
 entrypoint.dependencies.spriteSystem.drawSprite("player");
+entrypoint.dependencies.rendering.clearFrame();
+entrypoint.dependencies.rendering.renderFrame(entrypoint.dependencies.getGame());
+entrypoint.dependencies.renderHud.renderHud(entrypoint.dependencies.getGame());
+entrypoint.dependencies.renderEnemies.renderEnemies([{ id: "enemy-fixture" }]);
+entrypoint.dependencies.renderSkillRail.renderSkillRail(entrypoint.dependencies.getGame());
+entrypoint.dependencies.moduleSystems.moduleRuntimeRenderingAdapter.rendering.missingRendererFallback(
+  "manual-missing"
+);
 const assetResolver = entrypoint.dependencies.assets.createAssetResolver();
 const audioSystem = entrypoint.dependencies.audio.createAudioSystem();
 audioSystem.playWeapon("spark_bolt", { minGapMs: 0 });
@@ -512,6 +589,28 @@ check(
   calls.includes("sprites:load") &&
     calls.includes("sprites:draw-image:player") &&
     calls.includes("sprites:draw-sprite:player")
+);
+check(
+  "module runtime test entrypoint routes frame render facade through rendering adapter",
+  calls.includes("render:clear:960") &&
+    calls.some((call) => call.startsWith("render:frame:true:")) &&
+    calls.includes("sprites:draw-image:background:tower_floor")
+);
+check(
+  "module runtime test entrypoint routes HUD render facade through rendering adapter",
+  calls.includes("render:hud:1:true")
+);
+check(
+  "module runtime test entrypoint routes enemy render facade through rendering adapter",
+  calls.includes("render:enemies:1") && calls.includes("sprites:draw-sprite:enemy:render-fixture")
+);
+check(
+  "module runtime test entrypoint routes skill rail render facade through rendering adapter",
+  calls.includes("render:skill-rail:1") && calls.includes("sprites:draw-sprite:weaponIcon:spark_bolt")
+);
+check(
+  "module runtime test entrypoint keeps missing renderers safe",
+  calls.includes("render:missing:manual-missing")
 );
 check(
   "module runtime test entrypoint routes asset services through assets adapter",

@@ -7,6 +7,7 @@ import { createGameStateStore } from "./game-state-store.js";
 import { createModuleRuntimeAssetsAdapter } from "./module-runtime-assets-adapter.js";
 import { createModuleRuntimeAudioAdapter } from "./module-runtime-audio-adapter.js";
 import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
+import { createModuleRuntimeRenderingAdapter } from "./module-runtime-rendering-adapter.js";
 import { createModuleRuntimeSpriteAdapter } from "./module-runtime-sprite-adapter.js";
 import { createModuleRuntimeStorageAdapter } from "./module-runtime-storage-adapter.js";
 import { createModuleRuntimeUiAdapters } from "./module-runtime-ui-adapters.js";
@@ -45,6 +46,7 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "math",
   "moduleRuntimeAssetsAdapter",
   "moduleRuntimeAudioAdapter",
+  "moduleRuntimeRenderingAdapter",
   "moduleRuntimeSpriteAdapter",
   "moduleRuntimeStorageAdapter",
   "moduleRuntimeUiAdapters",
@@ -77,6 +79,7 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "initialGame",
   "initialSave",
   "platformAdapters",
+  "renderingAdapters",
   "renderMetaSink",
   "spriteAdapters",
   "storageAdapters",
@@ -94,10 +97,6 @@ export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "levelUp",
   "progression",
   "quests",
-  "renderEnemies",
-  "renderHud",
-  "renderSkillRail",
-  "rendering",
   "shop",
   "sprites",
   "uiProgression",
@@ -158,6 +157,13 @@ export function createModuleGameDependencyBag({
   const spriteAdapters = createModuleRuntimeSpriteAdapter(
     requireObject(resolvedAdapters.spriteAdapters, "adapters.spriteAdapters")
   );
+  const renderingAdapters = createModuleRuntimeRenderingAdapter({
+    ...requireObject(resolvedAdapters.renderingAdapters, "adapters.renderingAdapters"),
+    assetAdapters,
+    platformAdapters,
+    spriteAdapters,
+    uiAdapters,
+  });
 
   const moduleSystems = {
     balance: { floorDifficulty },
@@ -171,6 +177,7 @@ export function createModuleGameDependencyBag({
     math: { clamp, distance, formatTime, randomRange },
     moduleRuntimeAssetsAdapter: assetAdapters,
     moduleRuntimeAudioAdapter: audioAdapters,
+    moduleRuntimeRenderingAdapter: renderingAdapters,
     moduleRuntimeSpriteAdapter: spriteAdapters,
     moduleRuntimeStorageAdapter: storageAdapters,
     moduleRuntimeUiAdapters: uiAdapters,
@@ -213,7 +220,11 @@ export function createModuleGameDependencyBag({
     loop: platformAdapters.loop,
     moduleSystems,
     persist: stateStore.persist,
+    renderEnemies: renderingAdapters.renderEnemies,
+    renderHud: renderingAdapters.renderHud,
     renderMeta: stateStore.renderMeta,
+    renderSkillRail: renderingAdapters.renderSkillRail,
+    rendering: renderingAdapters.rendering,
     runUi: uiAdapters.runUiAdapter,
     saveSystem,
     setGame: stateStore.setGame,
