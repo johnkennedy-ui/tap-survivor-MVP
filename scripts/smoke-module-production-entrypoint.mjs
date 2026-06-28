@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import {
   bootProductionModuleEntrypoint,
+  bootProductionModuleRuntime,
   createProductionModuleEntrypoint,
   PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS,
 } from "../src/app/production-module-entrypoint.js";
@@ -12,10 +13,12 @@ const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const indexHtmlBefore = readFileSync(join(root, "index.html"), "utf8");
 const candidateSource = readFileSync(join(root, "src/app/production-module-entrypoint.js"), "utf8");
+const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
 
 check("production module entrypoint candidate imports successfully", typeof createProductionModuleEntrypoint === "function");
+check("production module runtime autoboot export imports successfully", typeof bootProductionModuleRuntime === "function");
 check(
   "production module entrypoint candidate imports compose runtime helper",
   candidateSource.includes("./compose-runtime.js")
@@ -41,6 +44,15 @@ check(
 check(
   "production module entrypoint candidate has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(candidateSource)
+);
+check(
+  "production module autoboot wrapper calls explicit runtime boot",
+  autobootSource.includes('from "./production-module-entrypoint.js"') &&
+    autobootSource.includes("bootProductionModuleRuntime();")
+);
+check(
+  "production module autoboot wrapper has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(autobootSource)
 );
 
 const initialSave = {
@@ -319,6 +331,15 @@ check(
   "production module entrypoint default browser boot publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
 );
+const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
+await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
+const autobootRafCalls = autobootGlobalRestore.rafCalls();
+autobootGlobalRestore.restore();
+check("production module autoboot wrapper initializes browser runtime", autobootRafCalls === 1);
+check(
+  "production module autoboot wrapper publishes no TapSurvivor globals",
+  sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
+);
 check(
   "production index.html remains untouched by candidate smoke",
   readFileSync(join(root, "index.html"), "utf8") === indexHtmlBefore
@@ -484,6 +505,58 @@ function tapSurvivorGlobalNames() {
 
 function sameNames(left, right) {
   return left.length === right.length && left.every((name, index) => name === right[index]);
+}
+
+function installAutobootGlobals({ canvas, documentRef, storage }) {
+  let rafCount = 0;
+  const keys = ["document", "localStorage", "requestAnimationFrame", "addEventListener", "clearTimeout", "setTimeout"];
+  const previous = new Map(keys.map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  Object.defineProperties(globalThis, {
+    document: {
+      configurable: true,
+      value: {
+        ...documentRef,
+        getElementById(id) {
+          return id === "game" ? canvas : null;
+        },
+        querySelectorAll(selector) {
+          return selector === "[data-speed]" ? speedButtons : [];
+        },
+      },
+    },
+    localStorage: {
+      configurable: true,
+      value: storage,
+    },
+    requestAnimationFrame: {
+      configurable: true,
+      value(callback) {
+        rafCount += 1;
+        return runtimeGlobal.requestAnimationFrame(callback);
+      },
+    },
+    addEventListener: {
+      configurable: true,
+      value: runtimeGlobal.addEventListener.bind(runtimeGlobal),
+    },
+    clearTimeout: {
+      configurable: true,
+      value: () => {},
+    },
+    setTimeout: {
+      configurable: true,
+      value: () => 1,
+    },
+  });
+  return {
+    rafCalls: () => rafCount,
+    restore() {
+      for (const [key, descriptor] of previous) {
+        if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+        else delete globalThis[key];
+      }
+    },
+  };
 }
 
 function check(name, pass) {

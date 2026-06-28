@@ -86,6 +86,10 @@ export function bootProductionModuleEntrypoint(options = {}) {
   });
 }
 
+export function bootProductionModuleRuntime(options = {}) {
+  return bootProductionModuleEntrypoint(options);
+}
+
 function requireObject(value, name) {
   if (!value || typeof value !== "object") {
     throw new Error(`Missing Tap Survivor production module entrypoint option: ${name}`);

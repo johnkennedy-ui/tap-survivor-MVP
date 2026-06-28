@@ -92,10 +92,34 @@ const productionModuleEntrypointSource = readFileSync(
   join(root, "src/app/production-module-entrypoint.js"),
   "utf8"
 );
+const productionModuleAutobootSource = readFileSync(
+  join(root, "src/app/production-module-autoboot.js"),
+  "utf8"
+);
 const browserDependencyBagSource = readFileSync(
   join(root, "src/app/browser-dependency-bag.js"),
   "utf8"
 );
+const missingProductionBrowserAdapterModuleFiles = [
+  "src/modules/assets.js",
+  "src/modules/combat.js",
+  "src/modules/enemies.js",
+  "src/modules/enemy-behaviors.js",
+  "src/modules/enemy-spawning.js",
+  "src/modules/level-up.js",
+  "src/modules/progression.js",
+  "src/modules/quests.js",
+  "src/modules/render-enemies.js",
+  "src/modules/render-hud.js",
+  "src/modules/render-skill-rail.js",
+  "src/modules/rendering.js",
+  "src/modules/shop.js",
+  "src/modules/sprites.js",
+  "src/modules/ui-progression.js",
+  "src/modules/ui.js",
+  "src/modules/weapon-behaviors.js",
+  "src/modules/weapon-fire.js",
+].filter((file) => !existsSync(join(root, file)));
 const productionScripts = extractLocalScriptSources(indexHtml);
 const generatedBridgeFiles = productionScripts.filter((file) => isGeneratedBridge(file));
 const generatedContentFiles = productionScripts.filter((file) => file === "src/content.generated.js");
@@ -577,6 +601,7 @@ check(
 check(
   "readiness sees production ESM entrypoint candidate exists",
   existsSync(join(root, "src/app/production-module-entrypoint.js")) &&
+    existsSync(join(root, "src/app/production-module-autoboot.js")) &&
     existsSync(join(root, "src/app/browser-dependency-bag.js")) &&
     productionModuleEntrypointSource.includes("./browser-dependency-bag.js") &&
     productionModuleEntrypointSource.includes("../modules/module-game-lifecycle.js") &&
@@ -592,8 +617,10 @@ check(
     !indexHtml.includes("production-module-entrypoint.js")
 );
 check(
-  "readiness sees production ESM entrypoint candidate still needs browser auto-boot wiring before index switch",
-  !productionModuleEntrypointSource.includes("bootProductionModuleEntrypoint();")
+  "readiness sees production ESM entrypoint has explicit browser auto-boot wrapper",
+  productionModuleEntrypointSource.includes("bootProductionModuleRuntime") &&
+    productionModuleAutobootSource.includes("bootProductionModuleRuntime();") &&
+    !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(productionModuleAutobootSource)
 );
 check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
@@ -878,6 +905,10 @@ check(
   ].every((name) => browserDependencyBagSource.includes(name))
 );
 check(
+  "readiness reports missing module-native browser adapter subsystem files",
+  missingProductionBrowserAdapterModuleFiles.length > 0
+);
+check(
   "readiness sees module-native state store without TapSurvivor global reads",
   moduleNativeStateStoreGlobalReads.length === 0
 );
@@ -965,11 +996,13 @@ const inventory = {
       "./browser-dependency-bag.js"
     ),
     importsComposeRuntime: productionModuleEntrypointSource.includes("./compose-runtime.js"),
+    hasAutobootWrapper: productionModuleAutobootSource.includes("bootProductionModuleRuntime();"),
     moduleNativeSourceGlobalReads: productionModuleEntrypointGlobalReads,
   },
   browserDependencyBagFactory: {
     exists: true,
     proofSlots: BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+    missingProductionBrowserAdapterModuleFiles,
     moduleNativeSourceGlobalReads: browserDependencyBagGlobalReads,
   },
   moduleRuntimePlatformAdapter: {
@@ -1058,8 +1091,8 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
-    "production ESM entrypoint candidate is importable but is not wired for top-level browser auto-boot",
     "default browser dependency bag still uses proof/no-op gameplay, progression, render, UI, and sprite adapters",
+    "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
     "production ESM entrypoint candidate exists but is not selected by index.html",
