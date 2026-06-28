@@ -74,6 +74,21 @@ const runtimeGlobal = {
     return 1;
   },
 };
+let browserDefaultBootError = "";
+try {
+  createProductionModuleEntrypoint({
+    globalRef: {
+      document: documentRef,
+      requestAnimationFrame: runtimeGlobal.requestAnimationFrame.bind(runtimeGlobal),
+    },
+  });
+} catch (error) {
+  browserDefaultBootError = error?.message || String(error);
+}
+check(
+  "production module entrypoint candidate still requires explicit browser dependency bag options",
+  browserDefaultBootError.includes("dependencyBagOptions")
+);
 const speedButtons = [1, 2, 5].map((speed) => ({
   dataset: { speed: String(speed) },
   classList: {

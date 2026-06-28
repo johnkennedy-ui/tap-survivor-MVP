@@ -563,6 +563,11 @@ check(
     !indexHtml.includes("production-module-entrypoint.js")
 );
 check(
+  "readiness sees production ESM entrypoint candidate still needs browser dependency bag options",
+  productionModuleEntrypointSource.includes("requireObject(dependencyBagOptions") &&
+    !productionModuleEntrypointSource.includes("createProductionBrowserDependencyBag")
+);
+check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
@@ -988,6 +993,7 @@ const inventory = {
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
     "production ESM entrypoint candidate exists but is not selected by index.html",
+    "production ESM entrypoint candidate still requires an explicit browser dependency bag before index.html can select it",
   ],
   remainingGlobalRetirementBlockers: [
     "classic production script order still publishes TapSurvivor compatibility globals",
