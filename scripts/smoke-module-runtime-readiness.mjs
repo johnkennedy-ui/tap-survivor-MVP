@@ -25,6 +25,7 @@ import {
   MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS,
   MODULE_GAME_LIFECYCLE_OWNER_SLOTS,
 } from "../src/modules/module-game-lifecycle.js";
+import { PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS } from "../src/app/production-module-entrypoint.js";
 import {
   INJECTED_STATE_PERSISTENCE_SLOTS,
   MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
@@ -83,6 +84,10 @@ import {
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const indexHtml = readFileSync(join(root, "index.html"), "utf8");
+const productionModuleEntrypointSource = readFileSync(
+  join(root, "src/app/production-module-entrypoint.js"),
+  "utf8"
+);
 const productionScripts = extractLocalScriptSources(indexHtml);
 const generatedBridgeFiles = productionScripts.filter((file) => isGeneratedBridge(file));
 const generatedContentFiles = productionScripts.filter((file) => file === "src/content.generated.js");
@@ -105,6 +110,9 @@ const moduleNativeGameDependencyGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleGameLifecycleOwnerGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-game-lifecycle.js"
+);
+const productionModuleEntrypointGlobalReads = collectTapSurvivorGlobalReads(
+  "src/app/production-module-entrypoint.js"
 );
 const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/game-state-store.js"
@@ -540,6 +548,21 @@ check(
     MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("lifecycleHooks")
 );
 check(
+  "readiness sees production ESM entrypoint candidate exists",
+  existsSync(join(root, "src/app/production-module-entrypoint.js")) &&
+    productionModuleEntrypointSource.includes("../modules/module-game-lifecycle.js") &&
+    productionModuleEntrypointSource.includes("../modules/module-game-dependencies.js") &&
+    productionModuleEntrypointSource.includes("./compose-runtime.js") &&
+    PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes("boot") &&
+    PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes("createDependencyBag") &&
+    PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes("createLifecycleOwner")
+);
+check(
+  "readiness sees production ESM entrypoint candidate is not selected yet",
+  !productionScripts.includes("src/app/production-module-entrypoint.js") &&
+    !indexHtml.includes("production-module-entrypoint.js")
+);
+check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
@@ -786,6 +809,10 @@ check(
   moduleGameLifecycleOwnerGlobalReads.length === 0
 );
 check(
+  "readiness sees production ESM entrypoint candidate without TapSurvivor global reads",
+  productionModuleEntrypointGlobalReads.length === 0
+);
+check(
   "readiness sees module-native state store without TapSurvivor global reads",
   moduleNativeStateStoreGlobalReads.length === 0
 );
@@ -858,6 +885,19 @@ const inventory = {
       "persistence calls",
       "stop/dispose ownership",
     ],
+  },
+  productionModuleEntrypointCandidate: {
+    exists: true,
+    selectedByProduction: false,
+    proofSlots: PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS,
+    importsModuleLifecycleOwner: productionModuleEntrypointSource.includes(
+      "../modules/module-game-lifecycle.js"
+    ),
+    importsModuleDependencyBag: productionModuleEntrypointSource.includes(
+      "../modules/module-game-dependencies.js"
+    ),
+    importsComposeRuntime: productionModuleEntrypointSource.includes("./compose-runtime.js"),
+    moduleNativeSourceGlobalReads: productionModuleEntrypointGlobalReads,
   },
   moduleRuntimePlatformAdapter: {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
@@ -945,9 +985,14 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
-    "src/game.js remains the production entrypoint until a production ESM entrypoint is selected",
+    "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
-    "a production ESM entrypoint has not been introduced or selected",
+    "production ESM entrypoint candidate exists but is not selected by index.html",
+  ],
+  remainingGlobalRetirementBlockers: [
+    "classic production script order still publishes TapSurvivor compatibility globals",
+    "generated src/game-dependencies.js classic global adapter remains active for production",
+    "compatibility-boundary reads remain until production switches away from classic globals",
   ],
 };
 

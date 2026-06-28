@@ -39,6 +39,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-balance-runtime.mjs"]],
   ["node", ["--check", "scripts/smoke-map-runtime.mjs"]],
   ["node", ["--check", "scripts/smoke-module-runtime-entrypoint.mjs"]],
+  ["node", ["--check", "scripts/smoke-module-production-entrypoint.mjs"]],
   ["node", ["--check", "scripts/smoke-module-runtime-readiness.mjs"]],
   ["node", ["--check", "scripts/smoke-module-bridges.mjs"]],
   ["node", ["--check", "scripts/smoke-game-runtime-module.mjs"]],
@@ -98,6 +99,7 @@ const fullChecks = [
   ["npm", ["run", "smoke:shop"]],
   ["npm", ["run", "smoke:module-runtime-platform-adapter"]],
   ["npm", ["run", "smoke:module-runtime-entrypoint"]],
+  ["npm", ["run", "smoke:module-production-entrypoint"]],
   ["npm", ["run", "smoke:module-runtime-readiness"]],
   ["npm", ["run", "smoke:module-bridges"]],
   ["npm", ["run", "smoke:relic-run-start"]],
@@ -223,6 +225,7 @@ function focusedChecks(files) {
         file === "src/game-dependencies.js" ||
         file === "src/modules/game-dependencies.js" ||
         file === "src/modules/module-game-dependencies.js" ||
+        file === "src/app/production-module-entrypoint.js" ||
         file === "src/modules/module-runtime-platform-adapter.js" ||
         file === "src/combat-damage.js" ||
         file === "src/modules/combat-damage.js" ||
@@ -236,6 +239,7 @@ function focusedChecks(files) {
         file === "scripts/smoke-game-harness.mjs" ||
         file === "scripts/smoke-game-runtime-module.mjs" ||
         file === "scripts/smoke-module-runtime-entrypoint.mjs" ||
+        file === "scripts/smoke-module-production-entrypoint.mjs" ||
         file === "scripts/smoke-module-runtime-readiness.mjs" ||
         file === "scripts/build-module-bridges.mjs" ||
         file === "scripts/smoke-module-bridges.mjs" ||
@@ -247,6 +251,7 @@ function focusedChecks(files) {
       ["npm", ["run", "verify:script-order"]],
       ["npm", ["run", "smoke:module-runtime-platform-adapter"]],
       ["npm", ["run", "smoke:module-runtime-entrypoint"]],
+      ["npm", ["run", "smoke:module-production-entrypoint"]],
       ["npm", ["run", "smoke:module-runtime-readiness"]],
       ["npm", ["run", "smoke:module-bridges"]],
       ["npm", ["run", "smoke:shop"]]

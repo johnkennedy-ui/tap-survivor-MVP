@@ -59,6 +59,7 @@
     "smoke:module-bootstrap": "node scripts/smoke-module-bootstrap.mjs",
     "smoke:module-runtime-platform-adapter": "node scripts/smoke-module-runtime-entrypoint.mjs",
     "smoke:module-runtime-entrypoint": "node scripts/smoke-module-runtime-entrypoint.mjs",
+    "smoke:module-production-entrypoint": "node scripts/smoke-module-production-entrypoint.mjs",
     "smoke:module-runtime-readiness": "node scripts/smoke-module-runtime-readiness.mjs",
     "smoke:module-bridges": "node scripts/smoke-module-bridges.mjs",
     "smoke:relic-run-start": "node scripts/smoke-relic-run-start.mjs",
