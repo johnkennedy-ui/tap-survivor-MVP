@@ -592,6 +592,10 @@ check(
     !indexHtml.includes("production-module-entrypoint.js")
 );
 check(
+  "readiness sees production ESM entrypoint candidate still needs browser auto-boot wiring before index switch",
+  !productionModuleEntrypointSource.includes("bootProductionModuleEntrypoint();")
+);
+check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
   [
     "assetAdapters",
@@ -863,6 +867,17 @@ check(
   browserDependencyBagGlobalReads.length === 0
 );
 check(
+  "readiness sees browser dependency bag default path still uses proof adapters before production switch",
+  [
+    "createNoopGameplayAdapters",
+    "createNoopProgressionAdapters",
+    "createNoopRunUi",
+    "createNoopShellUi",
+    "createNoopShopSystem",
+    "createNoopSpriteSystem",
+  ].every((name) => browserDependencyBagSource.includes(name))
+);
+check(
   "readiness sees module-native state store without TapSurvivor global reads",
   moduleNativeStateStoreGlobalReads.length === 0
 );
@@ -1043,6 +1058,8 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
+    "production ESM entrypoint candidate is importable but is not wired for top-level browser auto-boot",
+    "default browser dependency bag still uses proof/no-op gameplay, progression, render, UI, and sprite adapters",
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
     "production ESM entrypoint candidate exists but is not selected by index.html",
