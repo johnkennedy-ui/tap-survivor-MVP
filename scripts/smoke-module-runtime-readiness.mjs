@@ -21,6 +21,11 @@ import {
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS,
 } from "../src/modules/module-game-dependencies.js";
 import {
+  MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS,
+  MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS,
+  MODULE_GAME_LIFECYCLE_OWNER_SLOTS,
+} from "../src/modules/module-game-lifecycle.js";
+import {
   INJECTED_STATE_PERSISTENCE_SLOTS,
   MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
 } from "../src/modules/game-state-store.js";
@@ -97,6 +102,9 @@ const directConsumerGlobalReads = compatibilityBoundaryReads.filter(
 const classicGameDependencyGlobalReads = collectTapSurvivorGlobalReads("src/modules/game-dependencies.js");
 const moduleNativeGameDependencyGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-game-dependencies.js"
+);
+const moduleGameLifecycleOwnerGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-game-lifecycle.js"
 );
 const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/game-state-store.js"
@@ -501,7 +509,7 @@ check(
 check("readiness adds no direct TapSurvivor global consumer reads", directConsumerGlobalReads.length === 0);
 check(
   "readiness sees module-native dependency bag slot inventory",
-    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
+  MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
@@ -514,6 +522,22 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeUiAdapters") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("levelUpChoices") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
+);
+check(
+  "readiness sees module game lifecycle owner module",
+  moduleFiles.includes("src/modules/module-game-lifecycle.js") &&
+    ["init", "bind", "showTitle", "startRun", "tick", "render", "persist", "stop", "dispose"].every(
+      (slot) =>
+        MODULE_GAME_LIFECYCLE_OWNER_SLOTS.includes(slot) &&
+        MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees src/game.js top-level ownership has module-native equivalent",
+  MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("dependencyBagOptions") &&
+    MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("dependencies") &&
+    MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("platform") &&
+    MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("lifecycleHooks")
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
@@ -758,6 +782,10 @@ check(
   moduleNativeGameDependencyGlobalReads.length === 0
 );
 check(
+  "readiness sees module game lifecycle owner without TapSurvivor global reads",
+  moduleGameLifecycleOwnerGlobalReads.length === 0
+);
+check(
   "readiness sees module-native state store without TapSurvivor global reads",
   moduleNativeStateStoreGlobalReads.length === 0
 );
@@ -812,6 +840,24 @@ const inventory = {
     remainingClassicOnlySlots: CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeGameDependencyGlobalReads,
     classicBridgeSourceGlobalReads: classicGameDependencyGlobalReads,
+  },
+  moduleGameLifecycleOwner: {
+    proofSlots: MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS,
+    ownerSlots: MODULE_GAME_LIFECYCLE_OWNER_SLOTS,
+    lowLevelInjectedSlots: MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleGameLifecycleOwnerGlobalReads,
+    moduleNativeEquivalentFor: [
+      "initial boot/init",
+      "dependency bag creation",
+      "title/shell startup",
+      "start-run flow",
+      "run state ownership",
+      "loop/tick ownership",
+      "render call ownership",
+      "input bind ownership",
+      "persistence calls",
+      "stop/dispose ownership",
+    ],
   },
   moduleRuntimePlatformAdapter: {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
@@ -899,7 +945,7 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
-    "src/game.js remains the production entrypoint and owns top-level run state",
+    "src/game.js remains the production entrypoint until a production ESM entrypoint is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
     "a production ESM entrypoint has not been introduced or selected",
   ],

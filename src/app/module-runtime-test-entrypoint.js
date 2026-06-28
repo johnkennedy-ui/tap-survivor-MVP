@@ -1,5 +1,5 @@
-import { composeRuntime, createBrowserPlatform } from "./compose-runtime.js";
-import { createModuleGameDependencyBag } from "../modules/module-game-dependencies.js";
+import { createBrowserPlatform } from "./compose-runtime.js";
+import { createModuleGameLifecycleOwner } from "../modules/module-game-lifecycle.js";
 
 /**
  * Test-only module runtime entrypoint.
@@ -15,25 +15,22 @@ export function createModuleRuntimeTestEntrypoint(options = {}) {
     autoInitialize = false,
     dependencyBagOptions,
     dependencies,
+    lifecycleHooks,
     platform = createBrowserPlatform({ globalRef: options.globalRef }),
   } = options;
 
-  const runtimeDependencies =
-    dependencies || (dependencyBagOptions ? createModuleGameDependencyBag(dependencyBagOptions) : null);
-
-  if (!runtimeDependencies) {
-    throw new Error("Missing Tap Survivor module runtime test dependency: dependencies");
-  }
-
-  const runtime = composeRuntime({
+  const lifecycle = createModuleGameLifecycleOwner({
+    dependencies,
+    dependencyBagOptions,
+    lifecycleHooks,
     platform,
-    dependencies: runtimeDependencies,
   });
-  if (autoInitialize) runtime.initializeRuntime();
+  if (autoInitialize) lifecycle.init();
 
   return {
-    dependencies: runtimeDependencies,
+    dependencies: lifecycle.dependencies,
+    lifecycle,
     platform,
-    runtime,
+    runtime: lifecycle.runtime,
   };
 }

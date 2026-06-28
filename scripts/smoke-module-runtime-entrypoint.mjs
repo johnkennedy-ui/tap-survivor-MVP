@@ -9,6 +9,11 @@ import {
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS,
 } from "../src/modules/module-game-dependencies.js";
 import {
+  MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS,
+  MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS,
+  MODULE_GAME_LIFECYCLE_OWNER_SLOTS,
+} from "../src/modules/module-game-lifecycle.js";
+import {
   INJECTED_STATE_PERSISTENCE_SLOTS,
   MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
 } from "../src/modules/game-state-store.js";
@@ -62,6 +67,7 @@ const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content
 const entrypointSource = readFileSync(join(root, "src/app/module-runtime-test-entrypoint.js"), "utf8");
 const fixtureHtml = readFileSync(join(root, "tests/fixtures/module-runtime-test-entrypoint.html"), "utf8");
 const moduleDependencySource = readFileSync(join(root, "src/modules/module-game-dependencies.js"), "utf8");
+const moduleLifecycleSource = readFileSync(join(root, "src/modules/module-game-lifecycle.js"), "utf8");
 const assetsAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-assets-adapter.js"),
   "utf8"
@@ -108,8 +114,12 @@ check(
   entrypointSource.includes("./compose-runtime.js")
 );
 check(
-  "module runtime test entrypoint imports module-native dependency bag",
-  entrypointSource.includes("../modules/module-game-dependencies.js")
+  "module runtime test entrypoint imports module game lifecycle owner",
+  entrypointSource.includes("../modules/module-game-lifecycle.js")
+);
+check(
+  "module game lifecycle owner imports module-native dependency bag",
+  moduleLifecycleSource.includes("./module-game-dependencies.js")
 );
 check(
   "module runtime test entrypoint has no classic TapSurvivor global reads",
@@ -118,6 +128,10 @@ check(
 check(
   "module-native dependency bag has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(moduleDependencySource)
+);
+check(
+  "module game lifecycle owner has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(moduleLifecycleSource)
 );
 check(
   "module-native state store has no classic TapSurvivor global reads",
@@ -259,6 +273,76 @@ storage.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
 
 const entrypoint = createModuleRuntimeTestEntrypoint({
   autoInitialize: true,
+  lifecycleHooks: {
+    dispose: () => calls.push("lifecycle:dispose"),
+    resetGameState: () => {
+      calls.push("lifecycle:reset");
+      return {
+        bossSpawned: false,
+        duration: 150,
+        elapsed: 0,
+        enemies: [],
+        kills: 0,
+        laserDamage: 0,
+        lastFloorClear: null,
+        running: true,
+        paused: false,
+        awaitingFirstMoveInput: true,
+        towerFloor: 1,
+        player: {
+          equippedWeapons: ["spark_bolt"],
+          hp: 100,
+          level: 1,
+          maxHp: 100,
+          speed: 200,
+          targetX: 480,
+          targetY: 270,
+          x: 480,
+          y: 270,
+        },
+      };
+    },
+    update: ({ dependencies, dt }) => {
+      calls.push(`lifecycle:update:${dt}`);
+      const game = dependencies.getGame();
+      game.awaitingFirstMoveInput = false;
+      const updater = dependencies.moduleSystems.runUpdate.createRunUpdater({
+        canvas: dependencies.canvas,
+        getGame: dependencies.getGame,
+        combat: {
+          spawnBoss: () => calls.push("lifecycle:combat:spawn-boss"),
+          spawnEnemies: () => calls.push("lifecycle:combat:spawn-enemies"),
+          updateAreas: () => calls.push("lifecycle:combat:update-areas"),
+          updateBeams: () => calls.push("lifecycle:combat:update-beams"),
+          updateBolts: () => calls.push("lifecycle:combat:update-bolts"),
+          updateBossSpecials: () => calls.push("lifecycle:combat:update-boss-specials"),
+          updateEnemies: () => calls.push("lifecycle:combat:update-enemies"),
+          updateEnemyBolts: () => calls.push("lifecycle:combat:update-enemy-bolts"),
+          updateWeaponBursts: () => calls.push("lifecycle:combat:update-weapon-bursts"),
+          updateWeapons: () => calls.push("lifecycle:combat:update-weapons"),
+        },
+        pickupSystem: {
+          updateLootDrops: () => calls.push("lifecycle:pickup:loot"),
+          updatePickupTexts: () => calls.push("lifecycle:pickup:texts"),
+          updateXpDrops: () => calls.push("lifecycle:pickup:xp"),
+        },
+        addQuestProgressGroup: (ids, amount) =>
+          calls.push(`lifecycle:quests:${ids.join(",")}:${amount}`),
+        survivalQuestIds: ["survive"],
+        xpQuestIds: [],
+        levelQuestIds: [],
+        showLevelUp: () => calls.push("lifecycle:level-up"),
+        endRun: (reason) => calls.push(`lifecycle:end:${reason}`),
+        getRelicSpecialEffects: () => ({}),
+        mapSystem: {
+          applyToGame: () => calls.push("lifecycle:map"),
+        },
+        clamp: dependencies.moduleSystems.math.clamp,
+      });
+      updater.update(dt);
+      return true;
+    },
+  },
   platform: createBrowserPlatform({ globalRef: runtimeGlobal, documentRef }),
   dependencyBagOptions: {
     content,
@@ -525,6 +609,21 @@ check(
     !INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
 );
 check(
+  "module game lifecycle owner exposes deterministic lifecycle API",
+  ["init", "bind", "showTitle", "startRun", "tick", "render", "persist", "stop", "dispose"].every(
+    (slot) =>
+      MODULE_GAME_LIFECYCLE_OWNER_SLOTS.includes(slot) &&
+      MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS.includes(slot)
+  )
+);
+check(
+  "module game lifecycle owner keeps low-level lifecycle dependencies explicit",
+  MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("dependencyBagOptions") &&
+    MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("dependencies") &&
+    MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("lifecycleHooks") &&
+    MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS.includes("platform")
+);
+check(
   "module runtime assets adapter owns asset proof slots",
   ["createAssetResolver", "weaponIcon", "runUpgradeIcon", "relicIcon", "choiceIconPath"].every(
     (slot) => MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS.includes(slot)
@@ -756,6 +855,18 @@ entrypoint.dependencies.setGame(replacedGame);
 entrypoint.dependencies.setSave({ coins: 3.9, towerFloor: 0, unlockedWeapons: [] });
 entrypoint.dependencies.persist();
 entrypoint.dependencies.renderMeta();
+entrypoint.lifecycle.showTitle();
+entrypoint.lifecycle.startRun();
+entrypoint.lifecycle.tick(0.016);
+entrypoint.lifecycle.render({ source: "lifecycle-smoke" });
+entrypoint.lifecycle.persist();
+entrypoint.lifecycle.stop("manual-stop");
+const stoppedRenderResult = entrypoint.lifecycle.render({ source: "stopped-smoke" });
+const lifecycleStoppedGame = entrypoint.dependencies.getGame();
+entrypoint.lifecycle.dispose();
+const disposedTickResult = entrypoint.lifecycle.tick(0.016);
+entrypoint.dependencies.setGame(replacedGame);
+entrypoint.dependencies.setSave({ coins: 3.9, towerFloor: 0, unlockedWeapons: [] });
 entrypoint.dependencies.runUi.hideEndScreen();
 entrypoint.dependencies.shellUi.closeRunMenu(false);
 entrypoint.dependencies.shellUi.showTitleScreen();
@@ -908,6 +1019,47 @@ check(
     calls.includes("sprites:load") &&
     calls.includes("sprites:draw-image:player") &&
     calls.includes("sprites:draw-sprite:player")
+);
+check(
+  "module runtime test entrypoint creates lifecycle owner",
+  typeof entrypoint.lifecycle?.init === "function" &&
+    entrypoint.lifecycle.dependencies === entrypoint.dependencies &&
+    entrypoint.lifecycle.runtime === entrypoint.runtime
+);
+check(
+  "module lifecycle init and shell title route through module dependency bag",
+  calls.includes("shell-module:render:title") && calls.includes("raf")
+);
+check(
+  "module lifecycle startRun reaches run-start-adjacent module path",
+  calls.includes("lifecycle:reset") &&
+    calls.includes("shop:close") &&
+    calls.includes("level-up:hidden")
+);
+check(
+  "module lifecycle tick routes through canonical run update path",
+  calls.includes("lifecycle:update:0.016") &&
+    calls.includes("lifecycle:map") &&
+    calls.includes("lifecycle:quests:survive:0.016") &&
+    calls.includes("lifecycle:combat:update-weapons") &&
+    calls.includes("lifecycle:pickup:xp")
+);
+check(
+  "module lifecycle render routes through rendering adapter",
+  calls.includes("render:clear:960") &&
+    calls.some((call) => call.startsWith("render:frame:true:")) &&
+    calls.includes("render:hud:1:true") &&
+    calls.includes("render:skill-rail:1")
+);
+check(
+  "module lifecycle persist routes through state store and storage adapter",
+  calls.includes("storage:setItem")
+);
+check(
+  "module lifecycle stop and dispose close lifecycle ownership",
+  stoppedRenderResult === false &&
+    disposedTickResult === false &&
+    calls.includes("lifecycle:dispose")
 );
 check(
   "module runtime test entrypoint getGame setGame route through state store",
