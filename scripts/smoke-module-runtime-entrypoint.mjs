@@ -12,12 +12,20 @@ import {
   INJECTED_STATE_PERSISTENCE_SLOTS,
   MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
 } from "../src/modules/game-state-store.js";
+import {
+  MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-platform-adapter.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const entrypointSource = readFileSync(join(root, "src/app/module-runtime-test-entrypoint.js"), "utf8");
 const fixtureHtml = readFileSync(join(root, "tests/fixtures/module-runtime-test-entrypoint.html"), "utf8");
 const moduleDependencySource = readFileSync(join(root, "src/modules/module-game-dependencies.js"), "utf8");
+const platformAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-platform-adapter.js"),
+  "utf8"
+);
 const stateStoreSource = readFileSync(join(root, "src/modules/game-state-store.js"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
@@ -45,6 +53,10 @@ check(
 check(
   "module-native state store has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(stateStoreSource)
+);
+check(
+  "module runtime platform adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(platformAdapterSource)
 );
 check(
   "module runtime test fixture has no classic TapSurvivor global reads",
@@ -157,39 +169,41 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
       questOpenIds: (quest) => quest?.opens || [],
     },
     adapters: {
-      canvas,
       initialGame,
       initialSave,
-      ui: {
-        speedButtons,
-        levelUp: { classList: { add: () => calls.push("level-up:hidden") } },
+      platformAdapters: {
+        canvas,
+        ui: {
+          speedButtons,
+          levelUp: { classList: { add: () => calls.push("level-up:hidden") } },
+        },
+        shellUiAdapter: {
+          bind: () => calls.push("shell:bind"),
+          closeRunMenu: () => calls.push("shell:close-run-menu"),
+          showTitleScreen: () => calls.push("shell:title"),
+        },
+        shopSystemAdapter: {
+          closeShop: () => calls.push("shop:close"),
+        },
+        runUiAdapter: {
+          hideEndScreen: () => calls.push("run-ui:hide-end"),
+          updateRunHud: () => calls.push("run-ui:update-hud"),
+        },
+        debugSystem: {
+          bind: () => calls.push("debug:bind"),
+        },
+        spriteSystem: {
+          loadSprites: () => calls.push("sprites:load"),
+        },
+        bannerSystem: {
+          hideMovementGateBanner: () => calls.push("banner:hide-movement-gate"),
+        },
+        bindMovementInput: () => calls.push("input:bind"),
+        loop: () => calls.push("loop"),
       },
-      shellUiAdapter: {
-        bind: () => calls.push("shell:bind"),
-        closeRunMenu: () => calls.push("shell:close-run-menu"),
-        showTitleScreen: () => calls.push("shell:title"),
-      },
-      shopSystemAdapter: {
-        closeShop: () => calls.push("shop:close"),
-      },
-      runUiAdapter: {
-        hideEndScreen: () => calls.push("run-ui:hide-end"),
-        updateRunHud: () => calls.push("run-ui:update-hud"),
-      },
-      debugSystem: {
-        bind: () => calls.push("debug:bind"),
-      },
-      spriteSystem: {
-        loadSprites: () => calls.push("sprites:load"),
-      },
-      bannerSystem: {
-        hideMovementGateBanner: () => calls.push("banner:hide-movement-gate"),
-      },
-      bindMovementInput: () => calls.push("input:bind"),
       renderMetaSink: ({ game, save }) => {
         calls.push(`render-meta:${Boolean(game)}:${save.coins}`);
       },
-      loop: () => calls.push("loop"),
     },
   },
 });
@@ -219,9 +233,23 @@ check(
   INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
 );
 check(
+  "module runtime platform adapter owns movement input proof slot",
+  MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes("bindMovementInput") &&
+    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("bindMovementInput")
+);
+check(
+  "module runtime platform adapter owns all current runtime adapter slots",
+  MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("canvas") &&
+    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("bannerSystem")
+);
+check(
   "module-native dependency bag reclassifies state adapters into module state store",
   !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderMetaSink") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
 );

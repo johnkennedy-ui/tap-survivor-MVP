@@ -61,6 +61,7 @@ const fullChecks = [
   ["node", ["--check", "src/modules/save.js"]],
   ["node", ["--check", "src/modules/game-dependencies.js"]],
   ["node", ["--check", "src/modules/game-state-store.js"]],
+  ["node", ["--check", "src/modules/module-runtime-platform-adapter.js"]],
   ["node", ["--check", "src/modules/module-game-dependencies.js"]],
   ["node", ["--check", "src/modules/game-runtime.js"]],
   ["node", ["--check", "src/modules/combat-damage.js"]],
@@ -95,6 +96,7 @@ const fullChecks = [
   ["npm", ["run", "smoke:start-run"]],
   ["npm", ["run", "smoke:boss-run"]],
   ["npm", ["run", "smoke:shop"]],
+  ["npm", ["run", "smoke:module-runtime-platform-adapter"]],
   ["npm", ["run", "smoke:module-runtime-entrypoint"]],
   ["npm", ["run", "smoke:module-runtime-readiness"]],
   ["npm", ["run", "smoke:module-bridges"]],
@@ -220,6 +222,8 @@ function focusedChecks(files) {
         file === "src/modules/game-runtime.js" ||
         file === "src/game-dependencies.js" ||
         file === "src/modules/game-dependencies.js" ||
+        file === "src/modules/module-game-dependencies.js" ||
+        file === "src/modules/module-runtime-platform-adapter.js" ||
         file === "src/combat-damage.js" ||
         file === "src/modules/combat-damage.js" ||
         file === "src/pickups.js" ||
@@ -241,6 +245,7 @@ function focusedChecks(files) {
     checks.push(
       ["npm", ["run", "build:bridges"]],
       ["npm", ["run", "verify:script-order"]],
+      ["npm", ["run", "smoke:module-runtime-platform-adapter"]],
       ["npm", ["run", "smoke:module-runtime-entrypoint"]],
       ["npm", ["run", "smoke:module-runtime-readiness"]],
       ["npm", ["run", "smoke:module-bridges"]],

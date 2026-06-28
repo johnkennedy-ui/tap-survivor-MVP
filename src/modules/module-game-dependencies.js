@@ -4,6 +4,7 @@ import { createContentRegistry } from "./content-registry.js";
 import { createEffects } from "./effects.js";
 import { createGameRuntimeController } from "./game-runtime.js";
 import { createGameStateStore } from "./game-state-store.js";
+import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
 import { createMapSystem } from "./map-system.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createPickupSystem } from "./pickups.js";
@@ -61,20 +62,11 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
 ]);
 
 export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
-  "bannerSystem",
-  "bindMovementInput",
-  "canvas",
-  "debugSystem",
   "initialGame",
   "initialSave",
-  "loop",
+  "platformAdapters",
   "renderMetaSink",
-  "runUiAdapter",
-  "shellUiAdapter",
-  "shopSystemAdapter",
-  "spriteSystem",
   "storageAdapter",
-  "ui",
 ]);
 
 export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
@@ -113,6 +105,9 @@ export function createModuleGameDependencyBag({
   upgradeContent = {},
 }) {
   const resolvedAdapters = requireObject(adapters, "adapters");
+  const platformAdapters = createModuleRuntimePlatformAdapter(
+    requireObject(resolvedAdapters.platformAdapters, "adapters.platformAdapters")
+  );
   const contentRegistry = createContentRegistry({ content, upgradeContent });
   const effects = createEffects({ contentSchema });
   const saveSystem = createModuleSaveSystem({
@@ -169,27 +164,24 @@ export function createModuleGameDependencyBag({
   };
 
   return {
-    bannerSystem: requireAdapter(resolvedAdapters, "bannerSystem"),
-    bindMovementInput: requireFunction(
-      resolvedAdapters.bindMovementInput,
-      "adapters.bindMovementInput"
-    ),
-    canvas: requireAdapter(resolvedAdapters, "canvas"),
-    debugSystem: requireAdapter(resolvedAdapters, "debugSystem"),
+    bannerSystem: platformAdapters.bannerSystem,
+    bindMovementInput: platformAdapters.bindMovementInput,
+    canvas: platformAdapters.canvas,
+    debugSystem: platformAdapters.debugSystem,
     getGame: stateStore.getGame,
     getSave: stateStore.getSave,
-    loop: requireFunction(resolvedAdapters.loop, "adapters.loop"),
+    loop: platformAdapters.loop,
     moduleSystems,
     persist: stateStore.persist,
     renderMeta: stateStore.renderMeta,
-    runUi: requireAdapter(resolvedAdapters, "runUiAdapter"),
+    runUi: platformAdapters.runUi,
     saveSystem,
     setGame: stateStore.setGame,
     setSave: stateStore.setSave,
-    shellUi: requireAdapter(resolvedAdapters, "shellUiAdapter"),
-    shopSystem: requireAdapter(resolvedAdapters, "shopSystemAdapter"),
-    spriteSystem: requireAdapter(resolvedAdapters, "spriteSystem"),
-    ui: requireAdapter(resolvedAdapters, "ui"),
+    shellUi: platformAdapters.shellUi,
+    shopSystem: platformAdapters.shopSystem,
+    spriteSystem: platformAdapters.spriteSystem,
+    ui: platformAdapters.ui,
   };
 }
 
@@ -217,13 +209,6 @@ function requireAdapter(source, name) {
     throw new Error(`Missing Tap Survivor module dependency adapter: ${name}`);
   }
   return source[name];
-}
-
-function requireFunction(value, name) {
-  if (typeof value !== "function") {
-    throw new Error(`Missing Tap Survivor module dependency adapter: ${name}`);
-  }
-  return value;
 }
 
 function requireObject(value, name) {

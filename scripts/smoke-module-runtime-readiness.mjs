@@ -24,6 +24,10 @@ import {
   INJECTED_STATE_PERSISTENCE_SLOTS,
   MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
 } from "../src/modules/game-state-store.js";
+import {
+  MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-platform-adapter.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -50,6 +54,9 @@ const moduleNativeGameDependencyGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/game-state-store.js"
+);
+const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-platform-adapter.js"
 );
 
 const calls = [];
@@ -328,10 +335,22 @@ check(
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
-  INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
+  INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
+);
+check(
+  "readiness sees module runtime platform adapter proof slot",
+  MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes("bindMovementInput") &&
+    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("bindMovementInput")
+);
+check(
+  "readiness sees module runtime platform adapter owns raw runtime adapters",
+  MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("canvas") &&
+    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("spriteSystem")
 );
 check(
   "readiness sees module-native state persistence slots",
@@ -356,6 +375,10 @@ check(
   "readiness sees module-native state store without TapSurvivor global reads",
   moduleNativeStateStoreGlobalReads.length === 0
 );
+check(
+  "readiness sees module runtime platform adapter without TapSurvivor global reads",
+  moduleRuntimePlatformAdapterGlobalReads.length === 0
+);
 
 const inventory = {
   canonicalModuleFiles: moduleFiles,
@@ -371,6 +394,11 @@ const inventory = {
     remainingClassicOnlySlots: CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeGameDependencyGlobalReads,
     classicBridgeSourceGlobalReads: classicGameDependencyGlobalReads,
+  },
+  moduleRuntimePlatformAdapter: {
+    proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimePlatformAdapterGlobalReads,
   },
   moduleNativeStatePersistence: {
     moduleOwnedSlots: MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,
