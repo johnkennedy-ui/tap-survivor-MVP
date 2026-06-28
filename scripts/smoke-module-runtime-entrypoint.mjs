@@ -17,6 +17,11 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
 import {
+  MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-sprite-adapter.js";
+import {
   MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_UI_ADAPTER_SLOTS,
@@ -29,6 +34,10 @@ const fixtureHtml = readFileSync(join(root, "tests/fixtures/module-runtime-test-
 const moduleDependencySource = readFileSync(join(root, "src/modules/module-game-dependencies.js"), "utf8");
 const platformAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-platform-adapter.js"),
+  "utf8"
+);
+const spriteAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-sprite-adapter.js"),
   "utf8"
 );
 const uiAdapterSource = readFileSync(join(root, "src/modules/module-runtime-ui-adapters.js"), "utf8");
@@ -63,6 +72,10 @@ check(
 check(
   "module runtime platform adapter has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(platformAdapterSource)
+);
+check(
+  "module runtime sprite adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(spriteAdapterSource)
 );
 check(
   "module runtime UI adapter bundle has no classic TapSurvivor global reads",
@@ -226,8 +239,12 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
           closeShop: () => calls.push("shop:close"),
         },
       },
-      spriteSystem: {
-        loadSprites: () => calls.push("sprites:load"),
+      spriteAdapters: {
+        spriteSystem: {
+          drawImage: (id) => calls.push(`sprites:draw-image:${id}`),
+          drawSprite: (id) => calls.push(`sprites:draw-sprite:${id}`),
+          loadSprites: () => calls.push("sprites:load"),
+        },
       },
       platformAdapters: {
         canvas,
@@ -286,6 +303,16 @@ check(
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("ui")
 );
 check(
+  "module runtime sprite adapter owns sprite/render proof slots",
+  ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
+    MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) && MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS.includes("spriteSystem")
+);
+check(
+  "module runtime sprite adapter keeps low-level sprite system explicit",
+  MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS.includes("spriteSystem")
+);
+check(
   "module runtime UI adapter bundle owns targeted UI proof slots",
   ["runUiAdapter", "shellUiAdapter", "shopSystemAdapter", "ui"].every(
     (slot) =>
@@ -312,8 +339,10 @@ check(
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("runUiAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shopSystemAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("ui") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderMetaSink") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
 );
 check(
@@ -354,6 +383,8 @@ entrypoint.dependencies.runUi.hideEndScreen();
 entrypoint.dependencies.shellUi.closeRunMenu(false);
 entrypoint.dependencies.shellUi.showTitleScreen();
 entrypoint.dependencies.shopSystem.closeShop();
+entrypoint.dependencies.spriteSystem.drawImage("player");
+entrypoint.dependencies.spriteSystem.drawSprite("player");
 
 check(
   "module runtime test entrypoint initializes runtime through UI adapter bundle",
@@ -372,6 +403,12 @@ check(
 check(
   "module runtime test entrypoint routes shop system adapter through UI adapter bundle",
   calls.includes("shop:close")
+);
+check(
+  "module runtime test entrypoint routes sprite/render services through sprite adapter bundle",
+  calls.includes("sprites:load") &&
+    calls.includes("sprites:draw-image:player") &&
+    calls.includes("sprites:draw-sprite:player")
 );
 check(
   "module runtime test entrypoint routes generic UI surface through UI adapter bundle",

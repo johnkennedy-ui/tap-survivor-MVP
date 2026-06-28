@@ -5,6 +5,7 @@ import { createEffects } from "./effects.js";
 import { createGameRuntimeController } from "./game-runtime.js";
 import { createGameStateStore } from "./game-state-store.js";
 import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
+import { createModuleRuntimeSpriteAdapter } from "./module-runtime-sprite-adapter.js";
 import { createModuleRuntimeUiAdapters } from "./module-runtime-ui-adapters.js";
 import { createMapSystem } from "./map-system.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
@@ -39,6 +40,7 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "gameStateStore",
   "mapSystem",
   "math",
+  "moduleRuntimeSpriteAdapter",
   "moduleRuntimeUiAdapters",
   "pickups",
   "relics",
@@ -68,7 +70,7 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "initialSave",
   "platformAdapters",
   "renderMetaSink",
-  "spriteSystem",
+  "spriteAdapters",
   "storageAdapter",
   "uiAdapters",
 ]);
@@ -132,6 +134,9 @@ export function createModuleGameDependencyBag({
     ...requireObject(resolvedAdapters.uiAdapters, "adapters.uiAdapters"),
     stateStore,
   });
+  const spriteAdapters = createModuleRuntimeSpriteAdapter(
+    requireObject(resolvedAdapters.spriteAdapters, "adapters.spriteAdapters")
+  );
 
   const moduleSystems = {
     balance: { floorDifficulty },
@@ -143,6 +148,7 @@ export function createModuleGameDependencyBag({
     gameStateStore: stateStore,
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
+    moduleRuntimeSpriteAdapter: spriteAdapters,
     moduleRuntimeUiAdapters: uiAdapters,
     pickups: { createPickupSystem },
     relics,
@@ -188,7 +194,7 @@ export function createModuleGameDependencyBag({
     setSave: stateStore.setSave,
     shellUi: uiAdapters.shellUiAdapter,
     shopSystem: uiAdapters.shopSystemAdapter,
-    spriteSystem: requireAdapter(resolvedAdapters, "spriteSystem"),
+    spriteSystem: spriteAdapters.spriteSystem,
     ui: uiAdapters.ui,
   };
 }

@@ -29,6 +29,12 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
 import {
+  createModuleRuntimeSpriteAdapter,
+  MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-sprite-adapter.js";
+import {
   createModuleRuntimeUiAdapters,
   MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
@@ -63,6 +69,9 @@ const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-platform-adapter.js"
+);
+const moduleRuntimeSpriteAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-sprite-adapter.js"
 );
 const moduleRuntimeUiAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-ui-adapters.js"
@@ -292,6 +301,13 @@ const runtimeUiAdapters = createModuleRuntimeUiAdapters({
     closeShop: () => calls.push("runtime:shop-close"),
   },
 });
+const runtimeSpriteAdapter = createModuleRuntimeSpriteAdapter({
+  spriteSystem: {
+    drawImage: (id) => calls.push(`runtime:sprite-draw-image:${id}`),
+    drawSprite: (id) => calls.push(`runtime:sprite-draw-sprite:${id}`),
+    loadSprites: () => calls.push("runtime:sprites"),
+  },
+});
 const runtime = composeRuntime({
   platform: createBrowserPlatform({ globalRef: runtimeGlobal, documentRef: runtimeDocument }),
   dependencies: {
@@ -314,9 +330,7 @@ const runtime = composeRuntime({
     debugSystem: {
       bind: () => calls.push("runtime:debug-bind"),
     },
-    spriteSystem: {
-      loadSprites: () => calls.push("runtime:sprites"),
-    },
+    spriteSystem: runtimeSpriteAdapter.spriteSystem,
     bannerSystem: {
       hideMovementGateBanner: () => calls.push("runtime:hide-movement-gate"),
     },
@@ -346,6 +360,7 @@ check(
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeSpriteAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeUiAdapters") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
@@ -361,8 +376,9 @@ check(
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("runUiAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shopSystemAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("ui") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
 );
@@ -392,7 +408,18 @@ check(
 check(
   "readiness sees module runtime UI adapter bundle keeps sprite system separate",
   !MODULE_RUNTIME_UI_ADAPTER_SLOTS.includes("spriteSystem") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem")
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters")
+);
+check(
+  "readiness sees module runtime sprite adapter bundle covers sprite/render services",
+  MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS.includes("spriteSystem") &&
+    ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
+      MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees module runtime sprite adapter low-level dependency explicit",
+  MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS.includes("spriteSystem")
 );
 check(
   "readiness sees module runtime UI adapter bundle low-level dependencies explicit",
@@ -427,6 +454,10 @@ check(
   moduleRuntimePlatformAdapterGlobalReads.length === 0
 );
 check(
+  "readiness sees module runtime sprite adapter without TapSurvivor global reads",
+  moduleRuntimeSpriteAdapterGlobalReads.length === 0
+);
+check(
   "readiness sees module runtime UI adapter bundle without TapSurvivor global reads",
   moduleRuntimeUiAdapterGlobalReads.length === 0
 );
@@ -450,6 +481,12 @@ const inventory = {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
     adapterSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimePlatformAdapterGlobalReads,
+  },
+  moduleRuntimeSpriteAdapter: {
+    proofSlots: MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeSpriteAdapterGlobalReads,
   },
   moduleRuntimeUiAdapterBundle: {
     proofSlots: MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
