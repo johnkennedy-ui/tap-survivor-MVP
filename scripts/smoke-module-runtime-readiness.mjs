@@ -336,21 +336,30 @@ check(
 check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
-    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("loop") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bannerSystem") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("debugSystem") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
 );
 check(
-  "readiness sees module runtime platform adapter proof slot",
-  MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes("bindMovementInput") &&
-    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("bindMovementInput")
+  "readiness sees completed module runtime platform adapter proof slots",
+  ["bindMovementInput", "canvas", "loop", "bannerSystem", "debugSystem"].every(
+    (slot) =>
+      MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes(slot)
+  )
 );
 check(
-  "readiness sees module runtime platform adapter owns raw runtime adapters",
+  "readiness sees module runtime platform adapter excludes non-platform adapters",
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("canvas") &&
-    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
-    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("spriteSystem")
+    !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("spriteSystem") &&
+    !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("ui")
 );
 check(
   "readiness sees module-native state persistence slots",

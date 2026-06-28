@@ -171,29 +171,29 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
     adapters: {
       initialGame,
       initialSave,
+      ui: {
+        speedButtons,
+        levelUp: { classList: { add: () => calls.push("level-up:hidden") } },
+      },
+      shellUiAdapter: {
+        bind: () => calls.push("shell:bind"),
+        closeRunMenu: () => calls.push("shell:close-run-menu"),
+        showTitleScreen: () => calls.push("shell:title"),
+      },
+      shopSystemAdapter: {
+        closeShop: () => calls.push("shop:close"),
+      },
+      runUiAdapter: {
+        hideEndScreen: () => calls.push("run-ui:hide-end"),
+        updateRunHud: () => calls.push("run-ui:update-hud"),
+      },
+      spriteSystem: {
+        loadSprites: () => calls.push("sprites:load"),
+      },
       platformAdapters: {
         canvas,
-        ui: {
-          speedButtons,
-          levelUp: { classList: { add: () => calls.push("level-up:hidden") } },
-        },
-        shellUiAdapter: {
-          bind: () => calls.push("shell:bind"),
-          closeRunMenu: () => calls.push("shell:close-run-menu"),
-          showTitleScreen: () => calls.push("shell:title"),
-        },
-        shopSystemAdapter: {
-          closeShop: () => calls.push("shop:close"),
-        },
-        runUiAdapter: {
-          hideEndScreen: () => calls.push("run-ui:hide-end"),
-          updateRunHud: () => calls.push("run-ui:update-hud"),
-        },
         debugSystem: {
           bind: () => calls.push("debug:bind"),
-        },
-        spriteSystem: {
-          loadSprites: () => calls.push("sprites:load"),
         },
         bannerSystem: {
           hideMovementGateBanner: () => calls.push("banner:hide-movement-gate"),
@@ -233,23 +233,30 @@ check(
   INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
 );
 check(
-  "module runtime platform adapter owns movement input proof slot",
-  MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes("bindMovementInput") &&
-    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("bindMovementInput")
+  "module runtime platform adapter owns completed platform proof slots",
+  ["bindMovementInput", "canvas", "loop", "bannerSystem", "debugSystem"].every(
+    (slot) =>
+      MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes(slot)
+  )
 );
 check(
-  "module runtime platform adapter owns all current runtime adapter slots",
-  MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("canvas") &&
-    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
-    MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("bannerSystem")
+  "module runtime platform adapter excludes non-platform runtime adapters",
+  !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("spriteSystem") &&
+    !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("ui")
 );
 check(
-  "module-native dependency bag reclassifies state adapters into module state store",
+  "module-native dependency bag reclassifies platform services into platform adapter",
   !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
-    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("loop") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bannerSystem") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("debugSystem") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderMetaSink") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
 );
@@ -282,10 +289,21 @@ entrypoint.dependencies.persist();
 entrypoint.dependencies.renderMeta();
 
 check("module runtime test entrypoint initializes runtime", calls.includes("shell:bind") && calls.includes("raf"));
-check("module runtime test entrypoint wires input without classic globals", calls.includes("input:bind"));
+check(
+  "module runtime test entrypoint routes movement input through platform adapter",
+  calls.includes("input:bind")
+);
+check(
+  "module runtime test entrypoint routes debug hooks through platform adapter",
+  calls.includes("debug:bind")
+);
+check(
+  "module runtime test entrypoint routes loop scheduling through platform adapter",
+  runtimeGlobal.frameCallback === entrypoint.dependencies.loop && calls.includes("raf")
+);
 check("module runtime test entrypoint updates speed through injected document", documentRef.body.dataset.gameSpeed === "5");
 check(
-  "module runtime test entrypoint clears movement gate through injected canvas",
+  "module runtime test entrypoint routes canvas and banner hooks through platform adapter",
   initialGame.awaitingFirstMoveInput === false && calls.includes("banner:hide-movement-gate")
 );
 check(

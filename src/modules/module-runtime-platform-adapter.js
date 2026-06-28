@@ -4,15 +4,14 @@ export const MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS = Object.freeze([
   "canvas",
   "debugSystem",
   "loop",
-  "runUiAdapter",
-  "shellUiAdapter",
-  "shopSystemAdapter",
-  "spriteSystem",
-  "ui",
 ]);
 
 export const MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS = Object.freeze([
+  "bannerSystem",
   "bindMovementInput",
+  "canvas",
+  "debugSystem",
+  "loop",
 ]);
 
 export function createModuleRuntimePlatformAdapter(adapters) {
@@ -28,11 +27,6 @@ export function createModuleRuntimePlatformAdapter(adapters) {
     canvas: requireAdapter(resolvedAdapters, "canvas"),
     debugSystem: requireAdapter(resolvedAdapters, "debugSystem"),
     loop: requireFunction(resolvedAdapters.loop, "adapters.loop"),
-    runUi: requireAdapter(resolvedAdapters, "runUiAdapter"),
-    shellUi: requireAdapter(resolvedAdapters, "shellUiAdapter"),
-    shopSystem: requireAdapter(resolvedAdapters, "shopSystemAdapter"),
-    spriteSystem: requireAdapter(resolvedAdapters, "spriteSystem"),
-    ui: requireAdapter(resolvedAdapters, "ui"),
   };
 }
 

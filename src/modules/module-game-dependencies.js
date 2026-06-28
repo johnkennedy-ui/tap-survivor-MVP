@@ -66,7 +66,12 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "initialSave",
   "platformAdapters",
   "renderMetaSink",
+  "runUiAdapter",
+  "shellUiAdapter",
+  "shopSystemAdapter",
+  "spriteSystem",
   "storageAdapter",
+  "ui",
 ]);
 
 export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
@@ -174,14 +179,14 @@ export function createModuleGameDependencyBag({
     moduleSystems,
     persist: stateStore.persist,
     renderMeta: stateStore.renderMeta,
-    runUi: platformAdapters.runUi,
+    runUi: requireAdapter(resolvedAdapters, "runUiAdapter"),
     saveSystem,
     setGame: stateStore.setGame,
     setSave: stateStore.setSave,
-    shellUi: platformAdapters.shellUi,
-    shopSystem: platformAdapters.shopSystem,
-    spriteSystem: platformAdapters.spriteSystem,
-    ui: platformAdapters.ui,
+    shellUi: requireAdapter(resolvedAdapters, "shellUiAdapter"),
+    shopSystem: requireAdapter(resolvedAdapters, "shopSystemAdapter"),
+    spriteSystem: requireAdapter(resolvedAdapters, "spriteSystem"),
+    ui: requireAdapter(resolvedAdapters, "ui"),
   };
 }
 
