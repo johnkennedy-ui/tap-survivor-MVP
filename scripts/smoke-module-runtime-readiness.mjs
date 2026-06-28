@@ -592,6 +592,17 @@ check(
   )
 );
 check(
+  "readiness sees debug gameBanners and input adapter-bound through platform adapter",
+  ["debugSystem", "bannerSystem", "bindMovementInput"].every(
+    (slot) =>
+      MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes(slot)
+  ) &&
+    !["debug", "gameBanners", "input"].some((slot) =>
+      CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes(slot)
+    )
+);
+check(
   "readiness sees module runtime platform adapter excludes non-platform adapters",
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("canvas") &&
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
@@ -679,6 +690,13 @@ check(
     )
 );
 check(
+  "readiness sees sprites adapter-bound through sprite and asset adapters",
+  MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS.includes("spriteSystem") &&
+    MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS.includes("assets") &&
+    MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS.includes("createAssetResolver") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("sprites")
+);
+check(
   "readiness sees module runtime sprite adapter low-level dependency explicit",
   MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS.includes("spriteSystem")
 );
@@ -710,7 +728,7 @@ check(
     !INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
 );
 check(
-  "readiness keeps remaining classic-only systems explicit",
+  "readiness sees no unresolved non-game classic subsystem blockers",
   !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("assets") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("audio") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("rendering") &&
@@ -728,7 +746,12 @@ check(
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("uiProgression") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("upgrades") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponBehaviors") &&
-    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponFire")
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponFire") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("debug") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("gameBanners") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("input") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("sprites") &&
+    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.length === 0
 );
 check(
   "readiness sees module-native dependency bag without TapSurvivor global reads",
@@ -794,12 +817,14 @@ const inventory = {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
     adapterSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimePlatformAdapterGlobalReads,
+    adapterBoundClassicSystems: ["debug", "gameBanners", "input"],
   },
   moduleRuntimeAssetsAdapter: {
     proofSlots: MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS,
     adapterSlots: MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS,
     lowLevelInjectedSlots: MODULE_RUNTIME_ASSETS_ADAPTER_LOW_LEVEL_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimeAssetsAdapterGlobalReads,
+    adapterBoundClassicSystems: ["sprites"],
   },
   moduleRuntimeAudioAdapter: {
     proofSlots: MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS,
@@ -838,6 +863,17 @@ const inventory = {
     adapterSlots: MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS,
     lowLevelInjectedSlots: MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimeSpriteAdapterGlobalReads,
+    adapterBoundClassicSystems: ["sprites"],
+  },
+  residualRuntimeAdapterClassification: {
+    newResidualAdapterModuleNeeded: false,
+    adapterBoundClassicSystems: {
+      debug: "moduleRuntimePlatformAdapter.debugSystem",
+      gameBanners: "moduleRuntimePlatformAdapter.bannerSystem",
+      input: "moduleRuntimePlatformAdapter.bindMovementInput",
+      sprites: "moduleRuntimeSpriteAdapter.spriteSystem and moduleRuntimeAssetsAdapter.assets",
+    },
+    unresolvedNonGameClassicSubsystemBlockers: [],
   },
   moduleRuntimeStorageAdapter: {
     proofSlots: MODULE_RUNTIME_STORAGE_ADAPTER_PROOF_SLOTS,
@@ -856,17 +892,15 @@ const inventory = {
     injectedSlots: INJECTED_STATE_PERSISTENCE_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeStateStoreGlobalReads,
     remainingStateRelatedBlockers: [
-    "production src/game.js still owns top-level save/game variables",
-    "production runtime still wires persistence through classic script order",
-    "production progression/shop systems still run through classic script order",
-    "browser storage backend remains explicitly injected behind module runtime storage adapter",
-  ],
+      "production src/game.js still owns top-level save/game variables",
+      "production runtime still wires persistence through classic script order",
+      "browser storage backend remains explicitly injected behind module runtime storage adapter",
+    ],
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
     "src/game.js remains the production entrypoint and owns top-level run state",
     "production still uses generated src/game-dependencies.js classic global adapter",
-    "non-generated classic production files still need module ownership or explicit adapter boundaries",
     "a production ESM entrypoint has not been introduced or selected",
   ],
 };

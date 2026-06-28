@@ -95,12 +95,7 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "uiAdapters",
 ]);
 
-export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
-  "debug",
-  "gameBanners",
-  "input",
-  "sprites",
-]);
+export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([]);
 
 export function createModuleGameDependencyBag({
   adapters,

@@ -554,6 +554,14 @@ check(
   )
 );
 check(
+  "module runtime platform adapter binds residual debug banner and input systems",
+  ["debugSystem", "bannerSystem", "bindMovementInput"].every(
+    (slot) =>
+      MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes(slot)
+  )
+);
+check(
   "module runtime platform adapter excludes non-platform runtime adapters",
   !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("spriteSystem") &&
@@ -620,6 +628,15 @@ check(
   ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
     MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
   ) && MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS.includes("spriteSystem")
+);
+check(
+  "module runtime sprite and asset adapters bind residual sprite system",
+  MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS.includes("spriteSystem") &&
+    MODULE_RUNTIME_ASSETS_ADAPTER_SLOTS.includes("assets") &&
+    ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
+      MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
+    ) &&
+    MODULE_RUNTIME_ASSETS_ADAPTER_PROOF_SLOTS.includes("createAssetResolver")
 );
 check(
   "module runtime sprite adapter keeps low-level sprite system explicit",
@@ -698,6 +715,13 @@ check(
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("upgrades") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponBehaviors") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponFire")
+);
+check(
+  "module-native dependency bag has no unresolved residual classic-only subsystem slots",
+  CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.length === 0 &&
+    !["debug", "gameBanners", "input", "sprites"].some((slot) =>
+      CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes(slot)
+    )
 );
 check(
   "module-native state store normalizes initial save through canonical save modules",
@@ -875,6 +899,15 @@ check("module runtime test entrypoint updates speed through injected document", 
 check(
   "module runtime test entrypoint routes canvas and banner hooks through platform adapter",
   initialGame.awaitingFirstMoveInput === false && calls.includes("banner:hide-movement-gate")
+);
+check(
+  "module runtime test entrypoint routes residual systems through existing adapters",
+  calls.includes("debug:bind") &&
+    calls.includes("input:bind") &&
+    calls.includes("banner:hide-movement-gate") &&
+    calls.includes("sprites:load") &&
+    calls.includes("sprites:draw-image:player") &&
+    calls.includes("sprites:draw-sprite:player")
 );
 check(
   "module runtime test entrypoint getGame setGame route through state store",
