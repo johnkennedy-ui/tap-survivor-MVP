@@ -46,6 +46,11 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
 import {
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-progression-adapter.js";
+import {
   createModuleRuntimeRenderingAdapter,
   MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS,
@@ -107,6 +112,9 @@ const moduleRuntimeGameplayAdapterGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-platform-adapter.js"
+);
+const moduleRuntimeProgressionAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-progression-adapter.js"
 );
 const moduleRuntimeRenderingAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-rendering-adapter.js"
@@ -499,10 +507,12 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeGameplayAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeProgressionAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeRenderingAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeSpriteAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeUiAdapters") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("levelUpChoices") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
 check(
@@ -511,6 +521,7 @@ check(
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("gameplayAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("progressionAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderingAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("uiAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
@@ -644,6 +655,23 @@ check(
     MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponTargeting")
 );
 check(
+  "readiness sees module runtime progression adapter covers progression shop facades",
+  ["progression", "quests", "upgrades", "levelUp", "shop", "uiProgression"].every((slot) =>
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_SLOTS.includes(slot)
+  ) &&
+    ["createProgressionSystem", "createQuestSystem", "createUpgradeContent", "createLevelUpSystem", "createShopSystem", "createUiProgressionRenderer"].every(
+      (slot) => MODULE_RUNTIME_PROGRESSION_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees module runtime progression adapter low-level dependencies explicit",
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("progressionSystems") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("contentRegistry") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("levelUpChoices") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("shopPricing") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("save")
+);
+check(
   "readiness sees module runtime sprite adapter bundle covers sprite/render services",
   MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS.includes("spriteSystem") &&
     ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
@@ -693,6 +721,12 @@ check(
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemyBehaviors") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemySpawning") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemies") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("levelUp") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("progression") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("quests") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("shop") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("uiProgression") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("upgrades") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponBehaviors") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponFire")
 );
@@ -707,6 +741,10 @@ check(
 check(
   "readiness sees module runtime platform adapter without TapSurvivor global reads",
   moduleRuntimePlatformAdapterGlobalReads.length === 0
+);
+check(
+  "readiness sees module runtime progression adapter without TapSurvivor global reads",
+  moduleRuntimeProgressionAdapterGlobalReads.length === 0
 );
 check(
   "readiness sees module runtime assets adapter without TapSurvivor global reads",
@@ -775,6 +813,20 @@ const inventory = {
     lowLevelInjectedSlots: MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimeGameplayAdapterGlobalReads,
   },
+  moduleRuntimeProgressionAdapter: {
+    proofSlots: MODULE_RUNTIME_PROGRESSION_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_PROGRESSION_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeProgressionAdapterGlobalReads,
+    adapterBoundClassicSystems: [
+      "levelUp",
+      "progression",
+      "quests",
+      "shop",
+      "uiProgression",
+      "upgrades",
+    ],
+  },
   moduleRuntimeRenderingAdapter: {
     proofSlots: MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS,
     adapterSlots: MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS,
@@ -804,10 +856,11 @@ const inventory = {
     injectedSlots: INJECTED_STATE_PERSISTENCE_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeStateStoreGlobalReads,
     remainingStateRelatedBlockers: [
-      "production src/game.js still owns top-level save/game variables",
-      "production runtime still wires persistence through classic script order",
-      "browser storage backend remains explicitly injected behind module runtime storage adapter",
-    ],
+    "production src/game.js still owns top-level save/game variables",
+    "production runtime still wires persistence through classic script order",
+    "production progression/shop systems still run through classic script order",
+    "browser storage backend remains explicitly injected behind module runtime storage adapter",
+  ],
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",

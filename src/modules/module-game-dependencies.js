@@ -8,13 +8,16 @@ import { createModuleRuntimeAssetsAdapter } from "./module-runtime-assets-adapte
 import { createModuleRuntimeAudioAdapter } from "./module-runtime-audio-adapter.js";
 import { createModuleRuntimeGameplayAdapter } from "./module-runtime-gameplay-adapter.js";
 import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
+import { createModuleRuntimeProgressionAdapter } from "./module-runtime-progression-adapter.js";
 import { createModuleRuntimeRenderingAdapter } from "./module-runtime-rendering-adapter.js";
 import { createModuleRuntimeSpriteAdapter } from "./module-runtime-sprite-adapter.js";
 import { createModuleRuntimeStorageAdapter } from "./module-runtime-storage-adapter.js";
 import { createModuleRuntimeUiAdapters } from "./module-runtime-ui-adapters.js";
+import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { createMapSystem } from "./map-system.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createPickupSystem } from "./pickups.js";
+import { createRelicProgression } from "./relic-progression.js";
 import { createRelicSystem } from "./relics.js";
 import { createRunLifecycle } from "./run-lifecycle.js";
 import { createRunStateSystem } from "./run-state.js";
@@ -45,9 +48,11 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "gameStateStore",
   "mapSystem",
   "math",
+  "levelUpChoices",
   "moduleRuntimeAssetsAdapter",
   "moduleRuntimeAudioAdapter",
   "moduleRuntimeGameplayAdapter",
+  "moduleRuntimeProgressionAdapter",
   "moduleRuntimeRenderingAdapter",
   "moduleRuntimeSpriteAdapter",
   "moduleRuntimeStorageAdapter",
@@ -82,6 +87,7 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "initialGame",
   "initialSave",
   "platformAdapters",
+  "progressionAdapters",
   "renderingAdapters",
   "renderMetaSink",
   "spriteAdapters",
@@ -93,13 +99,7 @@ export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "debug",
   "gameBanners",
   "input",
-  "levelUp",
-  "progression",
-  "quests",
-  "shop",
   "sprites",
-  "uiProgression",
-  "upgrades",
 ]);
 
 export function createModuleGameDependencyBag({
@@ -174,6 +174,19 @@ export function createModuleGameDependencyBag({
     weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
     weaponTargeting: { nearestEnemy },
   });
+  const levelUpChoices = { choiceId, shopFocusBonus, shuffleChoices, weightedChoices };
+  const progressionAdapters = createModuleRuntimeProgressionAdapter({
+    ...requireObject(resolvedAdapters.progressionAdapters, "adapters.progressionAdapters"),
+    balance: { floorDifficulty },
+    content,
+    contentRegistry,
+    effects,
+    levelUpChoices,
+    relicProgression: { createRelicProgression },
+    relics,
+    save: saveSystem,
+    shopPricing: { createShopPricing },
+  });
 
   const moduleSystems = {
     balance: { floorDifficulty },
@@ -183,16 +196,19 @@ export function createModuleGameDependencyBag({
     effects,
     gameRuntime: { createGameRuntimeController },
     gameStateStore: stateStore,
+    levelUpChoices,
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
     moduleRuntimeGameplayAdapter: gameplayAdapters,
     moduleRuntimeAssetsAdapter: assetAdapters,
     moduleRuntimeAudioAdapter: audioAdapters,
+    moduleRuntimeProgressionAdapter: progressionAdapters,
     moduleRuntimeRenderingAdapter: renderingAdapters,
     moduleRuntimeSpriteAdapter: spriteAdapters,
     moduleRuntimeStorageAdapter: storageAdapters,
     moduleRuntimeUiAdapters: uiAdapters,
     pickups: { createPickupSystem },
+    relicProgression: { createRelicProgression },
     relics,
     runLifecycle: { createRunLifecycle },
     runState: { createRunStateSystem },
@@ -233,8 +249,11 @@ export function createModuleGameDependencyBag({
     getGame: stateStore.getGame,
     getSave: stateStore.getSave,
     loop: platformAdapters.loop,
+    levelUp: progressionAdapters.levelUp,
     moduleSystems,
     persist: stateStore.persist,
+    progression: progressionAdapters.progression,
+    quests: progressionAdapters.quests,
     renderEnemies: renderingAdapters.renderEnemies,
     renderHud: renderingAdapters.renderHud,
     renderMeta: stateStore.renderMeta,
@@ -245,9 +264,12 @@ export function createModuleGameDependencyBag({
     setGame: stateStore.setGame,
     setSave: stateStore.setSave,
     shellUi: uiAdapters.shellUiAdapter,
+    shop: progressionAdapters.shop,
     shopSystem: uiAdapters.shopSystemAdapter,
     spriteSystem: spriteAdapters.spriteSystem,
     ui: uiAdapters.ui,
+    uiProgression: progressionAdapters.uiProgression,
+    upgrades: progressionAdapters.upgrades,
     weaponBehaviors: gameplayAdapters.weaponBehaviors,
     weaponFire: gameplayAdapters.weaponFire,
   };

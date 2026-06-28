@@ -32,6 +32,11 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
 import {
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-progression-adapter.js";
+import {
   MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS,
@@ -71,6 +76,10 @@ const gameplayAdapterSource = readFileSync(
 );
 const platformAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-platform-adapter.js"),
+  "utf8"
+);
+const progressionAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-progression-adapter.js"),
   "utf8"
 );
 const renderingAdapterSource = readFileSync(
@@ -129,6 +138,10 @@ check(
 check(
   "module runtime platform adapter has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(platformAdapterSource)
+);
+check(
+  "module runtime progression adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(progressionAdapterSource)
 );
 check(
   "module runtime rendering adapter has no classic TapSurvivor global reads",
@@ -343,6 +356,63 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
           },
         },
       },
+      progressionAdapters: {
+        onMissingAdapter: ({ name }) => calls.push(`progression:missing:${name}`),
+        progressionSystems: {
+          levelUp: {
+            createLevelUpSystem: (options) => {
+              calls.push(
+                `progression:level-up:${Boolean(options.levelUpChoices?.weightedChoices)}:${Boolean(options.contentRegistry?.weaponDefs)}`
+              );
+              return { showLevelUp: () => calls.push("progression:level-up:show") };
+            },
+          },
+          progression: {
+            createProgressionSystem: (options) => {
+              calls.push(
+                `progression:progression:${Boolean(options.contentRegistry?.questDefs)}:${Boolean(options.save?.persist)}`
+              );
+              return { getUpgradeTier: () => 2 };
+            },
+          },
+          quests: {
+            createQuestSystem: (options) => {
+              calls.push(
+                `progression:quests:${Boolean(options.contentRegistry?.questDefs)}:${Boolean(options.save?.persist)}`
+              );
+              return { openQuest: () => calls.push("progression:quests:open") };
+            },
+            questOpenIds: (quest) => {
+              calls.push("progression:quests:open-ids");
+              return [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean);
+            },
+          },
+          shop: {
+            createShopSystem: (options) => {
+              calls.push(
+                `progression:shop:${Boolean(options.shopPricing?.createShopPricing)}:${Boolean(options.effects?.emptyShopBonuses)}`
+              );
+              return { renderShop: () => calls.push("progression:shop:render") };
+            },
+          },
+          uiProgression: {
+            createUiProgressionRenderer: (options) => {
+              calls.push(
+                `progression:ui:${Boolean(options.contentRegistry?.weaponDefs)}:${Boolean(options.levelUpChoices?.choiceId)}`
+              );
+              return { renderMeta: () => calls.push("progression:ui:render") };
+            },
+          },
+          upgrades: {
+            createUpgradeContent: (options) => {
+              calls.push(
+                `progression:upgrades:${Boolean(options.content?.weapons)}:${Boolean(options.effects?.applyRunUpgradeEffects)}`
+              );
+              return { runUpgradeDefs: [] };
+            },
+          },
+        },
+      },
       uiAdapters: {
         ui: uiSurface,
         runUi: {
@@ -437,8 +507,10 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeGameplayAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeProgressionAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeRenderingAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("levelUpChoices") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
 check(
@@ -522,6 +594,28 @@ check(
     MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponTargeting")
 );
 check(
+  "module runtime progression adapter owns progression shop facade proof slots",
+  [
+    "createProgressionSystem",
+    "createQuestSystem",
+    "createUpgradeContent",
+    "createLevelUpSystem",
+    "createShopSystem",
+    "createUiProgressionRenderer",
+  ].every((slot) => MODULE_RUNTIME_PROGRESSION_ADAPTER_PROOF_SLOTS.includes(slot)) &&
+    ["progression", "quests", "upgrades", "levelUp", "shop", "uiProgression"].every((slot) =>
+      MODULE_RUNTIME_PROGRESSION_ADAPTER_SLOTS.includes(slot)
+    )
+);
+check(
+  "module runtime progression adapter keeps low-level progression dependencies explicit",
+  MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("progressionSystems") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("contentRegistry") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("levelUpChoices") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("shopPricing") &&
+    MODULE_RUNTIME_PROGRESSION_ADAPTER_LOW_LEVEL_SLOTS.includes("save")
+);
+check(
   "module runtime sprite adapter owns sprite/render proof slots",
   ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
     MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
@@ -560,6 +654,7 @@ check(
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("gameplayAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("progressionAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
@@ -595,6 +690,12 @@ check(
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemyBehaviors") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemySpawning") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemies") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("levelUp") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("progression") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("quests") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("shop") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("uiProgression") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("upgrades") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponBehaviors") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponFire")
 );
@@ -648,6 +749,16 @@ entrypoint.dependencies.enemyBehaviors.createEnemyBehaviorSystem({ marker: "enem
 entrypoint.dependencies.enemySpawning.createEnemySpawnSystem({ marker: "enemy-spawning" }).spawnEnemies();
 entrypoint.dependencies.weaponBehaviors.createWeaponBehaviorSystem({ marker: "weapon-behaviors" }).updateAreas();
 entrypoint.dependencies.weaponFire.createWeaponFireSystem({ marker: "weapon-fire" }).updateWeapons();
+entrypoint.dependencies.levelUp.createLevelUpSystem({ marker: "level-up" }).showLevelUp();
+entrypoint.dependencies.progression.createProgressionSystem({ marker: "progression" }).getUpgradeTier();
+entrypoint.dependencies.quests.createQuestSystem({ marker: "quests" }).openQuest();
+entrypoint.dependencies.quests.questOpenIds({ opensQuest: "a", opensQuests: ["b"] });
+entrypoint.dependencies.upgrades.createUpgradeContent({ marker: "upgrades" });
+entrypoint.dependencies.shop.createShopSystem({ marker: "shop" }).renderShop();
+entrypoint.dependencies.uiProgression.createUiProgressionRenderer({ marker: "ui" }).renderMeta();
+entrypoint.dependencies.moduleSystems.moduleRuntimeProgressionAdapter.missingProgressionAdapterFallback(
+  "manual-missing"
+);
 entrypoint.dependencies.moduleSystems.moduleRuntimeGameplayAdapter.missingGameplayAdapterFallback(
   "manual-missing"
 );
@@ -717,6 +828,20 @@ check(
 check(
   "module runtime test entrypoint keeps missing gameplay adapters safe",
   calls.includes("gameplay:missing:manual-missing")
+);
+check(
+  "module runtime test entrypoint routes progression shop facades through progression adapter",
+  calls.includes("progression:progression:true:true") &&
+    calls.includes("progression:quests:true:true") &&
+    calls.includes("progression:upgrades:true:true") &&
+    calls.includes("progression:level-up:true:true") &&
+    calls.includes("progression:shop:true:true") &&
+    calls.includes("progression:ui:true:true") &&
+    calls.includes("progression:quests:open-ids")
+);
+check(
+  "module runtime test entrypoint keeps missing progression adapters safe",
+  calls.includes("progression:missing:manual-missing")
 );
 check(
   "module runtime test entrypoint routes asset services through assets adapter",
