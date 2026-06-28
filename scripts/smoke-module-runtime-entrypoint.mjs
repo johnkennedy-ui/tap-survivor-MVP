@@ -23,6 +23,11 @@ import {
   MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-audio-adapter.js";
 import {
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-gameplay-adapter.js";
+import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
@@ -58,6 +63,10 @@ const assetsAdapterSource = readFileSync(
 );
 const audioAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-audio-adapter.js"),
+  "utf8"
+);
+const gameplayAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-gameplay-adapter.js"),
   "utf8"
 );
 const platformAdapterSource = readFileSync(
@@ -112,6 +121,10 @@ check(
 check(
   "module runtime audio adapter has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(audioAdapterSource)
+);
+check(
+  "module runtime gameplay adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(gameplayAdapterSource)
 );
 check(
   "module runtime platform adapter has no classic TapSurvivor global reads",
@@ -283,6 +296,53 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
       },
       initialGame,
       initialSave,
+      gameplayAdapters: {
+        onMissingAdapter: ({ name }) => calls.push(`gameplay:missing:${name}`),
+        gameplaySystems: {
+          combat: {
+            createCombatSystem: (options) => {
+              calls.push(
+                `gameplay:combat:${Boolean(options.combatDamage?.createCombatDamageSystem)}:${Boolean(options.weaponFire?.createWeaponFireSystem)}`
+              );
+              return { updateWeapons: () => calls.push("gameplay:combat:update-weapons") };
+            },
+          },
+          enemies: {
+            createEnemySystem: (options) => {
+              calls.push(
+                `gameplay:enemies:${Boolean(options.enemyBehaviors?.createEnemyBehaviorSystem)}:${Boolean(options.enemySpawning?.createEnemySpawnSystem)}`
+              );
+              return { spawnEnemies: () => calls.push("gameplay:enemies:spawn") };
+            },
+          },
+          enemyBehaviors: {
+            createEnemyBehaviorSystem: () => {
+              calls.push("gameplay:enemy-behaviors");
+              return { updateEnemies: () => calls.push("gameplay:enemy-behaviors:update") };
+            },
+          },
+          enemySpawning: {
+            createEnemySpawnSystem: () => {
+              calls.push("gameplay:enemy-spawning");
+              return { spawnEnemies: () => calls.push("gameplay:enemy-spawning:spawn") };
+            },
+          },
+          weaponBehaviors: {
+            createWeaponBehaviorSystem: () => {
+              calls.push("gameplay:weapon-behaviors");
+              return { updateAreas: () => calls.push("gameplay:weapon-behaviors:update") };
+            },
+          },
+          weaponFire: {
+            createWeaponFireSystem: (options) => {
+              calls.push(
+                `gameplay:weapon-fire:${Boolean(options.weaponCooldowns?.createWeaponScaling)}:${Boolean(options.weaponTargeting?.nearestEnemy)}`
+              );
+              return { updateWeapons: () => calls.push("gameplay:weapon-fire:update") };
+            },
+          },
+        },
+      },
       uiAdapters: {
         ui: uiSurface,
         runUi: {
@@ -376,6 +436,7 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeGameplayAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeRenderingAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
@@ -444,6 +505,23 @@ check(
     MODULE_RUNTIME_RENDERING_ADAPTER_LOW_LEVEL_SLOTS.includes("uiAdapters")
 );
 check(
+  "module runtime gameplay adapter owns gameplay facade proof slots",
+  ["createCombatSystem", "createEnemySystem", "createEnemyBehaviorSystem", "createEnemySpawnSystem", "createWeaponBehaviorSystem", "createWeaponFireSystem"].every(
+    (slot) => MODULE_RUNTIME_GAMEPLAY_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) &&
+    ["combat", "enemies", "enemyBehaviors", "enemySpawning", "weaponBehaviors", "weaponFire"].every(
+      (slot) => MODULE_RUNTIME_GAMEPLAY_ADAPTER_SLOTS.includes(slot)
+    )
+);
+check(
+  "module runtime gameplay adapter keeps low-level gameplay dependencies explicit",
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("gameplaySystems") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("combatDamage") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponCooldowns") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponProjectiles") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponTargeting")
+);
+check(
   "module runtime sprite adapter owns sprite/render proof slots",
   ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
     MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
@@ -481,6 +559,7 @@ check(
   !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("gameplayAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
@@ -512,7 +591,12 @@ check(
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderHud") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderEnemies") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderSkillRail") &&
-    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("combat")
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("combat") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemyBehaviors") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemySpawning") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemies") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponBehaviors") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponFire")
 );
 check(
   "module-native state store normalizes initial save through canonical save modules",
@@ -558,6 +642,15 @@ entrypoint.dependencies.rendering.renderFrame(entrypoint.dependencies.getGame())
 entrypoint.dependencies.renderHud.renderHud(entrypoint.dependencies.getGame());
 entrypoint.dependencies.renderEnemies.renderEnemies([{ id: "enemy-fixture" }]);
 entrypoint.dependencies.renderSkillRail.renderSkillRail(entrypoint.dependencies.getGame());
+entrypoint.dependencies.combat.createCombatSystem({ marker: "combat" }).updateWeapons();
+entrypoint.dependencies.enemies.createEnemySystem({ marker: "enemies" }).spawnEnemies();
+entrypoint.dependencies.enemyBehaviors.createEnemyBehaviorSystem({ marker: "enemy-behaviors" }).updateEnemies();
+entrypoint.dependencies.enemySpawning.createEnemySpawnSystem({ marker: "enemy-spawning" }).spawnEnemies();
+entrypoint.dependencies.weaponBehaviors.createWeaponBehaviorSystem({ marker: "weapon-behaviors" }).updateAreas();
+entrypoint.dependencies.weaponFire.createWeaponFireSystem({ marker: "weapon-fire" }).updateWeapons();
+entrypoint.dependencies.moduleSystems.moduleRuntimeGameplayAdapter.missingGameplayAdapterFallback(
+  "manual-missing"
+);
 entrypoint.dependencies.moduleSystems.moduleRuntimeRenderingAdapter.rendering.missingRendererFallback(
   "manual-missing"
 );
@@ -611,6 +704,19 @@ check(
 check(
   "module runtime test entrypoint keeps missing renderers safe",
   calls.includes("render:missing:manual-missing")
+);
+check(
+  "module runtime test entrypoint routes gameplay facades through gameplay adapter",
+  calls.includes("gameplay:combat:true:true") &&
+    calls.includes("gameplay:enemies:true:true") &&
+    calls.includes("gameplay:enemy-behaviors") &&
+    calls.includes("gameplay:enemy-spawning") &&
+    calls.includes("gameplay:weapon-behaviors") &&
+    calls.includes("gameplay:weapon-fire:true:true")
+);
+check(
+  "module runtime test entrypoint keeps missing gameplay adapters safe",
+  calls.includes("gameplay:missing:manual-missing")
 );
 check(
   "module runtime test entrypoint routes asset services through assets adapter",

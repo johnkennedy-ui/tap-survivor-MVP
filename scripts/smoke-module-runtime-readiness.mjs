@@ -37,6 +37,11 @@ import {
   MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-audio-adapter.js";
 import {
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-gameplay-adapter.js";
+import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
@@ -96,6 +101,9 @@ const moduleRuntimeAssetsAdapterGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleRuntimeAudioAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-audio-adapter.js"
+);
+const moduleRuntimeGameplayAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-gameplay-adapter.js"
 );
 const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-platform-adapter.js"
@@ -490,6 +498,7 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAssetsAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeAudioAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeGameplayAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeRenderingAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeSpriteAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
@@ -500,6 +509,7 @@ check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("gameplayAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderingAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("uiAdapters") &&
@@ -617,6 +627,23 @@ check(
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters")
 );
 check(
+  "readiness sees module runtime gameplay adapter covers gameplay facade services",
+  ["combat", "enemies", "enemyBehaviors", "enemySpawning", "weaponBehaviors", "weaponFire"].every(
+    (slot) => MODULE_RUNTIME_GAMEPLAY_ADAPTER_SLOTS.includes(slot)
+  ) &&
+    ["createCombatSystem", "createEnemySystem", "createWeaponFireSystem"].every((slot) =>
+      MODULE_RUNTIME_GAMEPLAY_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees module runtime gameplay adapter low-level dependencies explicit",
+  MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("gameplaySystems") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("combatDamage") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponCooldowns") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponProjectiles") &&
+    MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS.includes("weaponTargeting")
+);
+check(
   "readiness sees module runtime sprite adapter bundle covers sprite/render services",
   MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS.includes("spriteSystem") &&
     ["loadSprites", "drawImage", "drawSprite"].every((slot) =>
@@ -662,7 +689,12 @@ check(
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderHud") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderEnemies") &&
     !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("renderSkillRail") &&
-    CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("combat")
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("combat") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemyBehaviors") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemySpawning") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("enemies") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponBehaviors") &&
+    !CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS.includes("weaponFire")
 );
 check(
   "readiness sees module-native dependency bag without TapSurvivor global reads",
@@ -683,6 +715,10 @@ check(
 check(
   "readiness sees module runtime audio adapter without TapSurvivor global reads",
   moduleRuntimeAudioAdapterGlobalReads.length === 0
+);
+check(
+  "readiness sees module runtime gameplay adapter without TapSurvivor global reads",
+  moduleRuntimeGameplayAdapterGlobalReads.length === 0
 );
 check(
   "readiness sees module runtime rendering adapter without TapSurvivor global reads",
@@ -732,6 +768,12 @@ const inventory = {
     adapterSlots: MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS,
     lowLevelInjectedSlots: MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimeAudioAdapterGlobalReads,
+  },
+  moduleRuntimeGameplayAdapter: {
+    proofSlots: MODULE_RUNTIME_GAMEPLAY_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_GAMEPLAY_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_GAMEPLAY_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeGameplayAdapterGlobalReads,
   },
   moduleRuntimeRenderingAdapter: {
     proofSlots: MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS,

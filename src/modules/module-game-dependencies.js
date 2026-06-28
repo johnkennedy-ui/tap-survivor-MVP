@@ -6,6 +6,7 @@ import { createGameRuntimeController } from "./game-runtime.js";
 import { createGameStateStore } from "./game-state-store.js";
 import { createModuleRuntimeAssetsAdapter } from "./module-runtime-assets-adapter.js";
 import { createModuleRuntimeAudioAdapter } from "./module-runtime-audio-adapter.js";
+import { createModuleRuntimeGameplayAdapter } from "./module-runtime-gameplay-adapter.js";
 import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
 import { createModuleRuntimeRenderingAdapter } from "./module-runtime-rendering-adapter.js";
 import { createModuleRuntimeSpriteAdapter } from "./module-runtime-sprite-adapter.js";
@@ -46,6 +47,7 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "math",
   "moduleRuntimeAssetsAdapter",
   "moduleRuntimeAudioAdapter",
+  "moduleRuntimeGameplayAdapter",
   "moduleRuntimeRenderingAdapter",
   "moduleRuntimeSpriteAdapter",
   "moduleRuntimeStorageAdapter",
@@ -76,6 +78,7 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
 export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "assetAdapters",
   "audioAdapters",
+  "gameplayAdapters",
   "initialGame",
   "initialSave",
   "platformAdapters",
@@ -87,11 +90,7 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
 ]);
 
 export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
-  "combat",
   "debug",
-  "enemyBehaviors",
-  "enemySpawning",
-  "enemies",
   "gameBanners",
   "input",
   "levelUp",
@@ -101,8 +100,6 @@ export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "sprites",
   "uiProgression",
   "upgrades",
-  "weaponBehaviors",
-  "weaponFire",
 ]);
 
 export function createModuleGameDependencyBag({
@@ -164,6 +161,19 @@ export function createModuleGameDependencyBag({
     spriteAdapters,
     uiAdapters,
   });
+  const gameplayAdapters = createModuleRuntimeGameplayAdapter({
+    ...requireObject(resolvedAdapters.gameplayAdapters, "adapters.gameplayAdapters"),
+    balance: { floorDifficulty },
+    combatDamage: { createCombatDamageSystem },
+    effects,
+    math: { clamp, distance, formatTime, randomRange },
+    pickups: { createPickupSystem },
+    runState: { createRunStateSystem },
+    runUpdate: { createRunUpdater },
+    weaponCooldowns: { createWeaponScaling },
+    weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
+    weaponTargeting: { nearestEnemy },
+  });
 
   const moduleSystems = {
     balance: { floorDifficulty },
@@ -175,6 +185,7 @@ export function createModuleGameDependencyBag({
     gameStateStore: stateStore,
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
+    moduleRuntimeGameplayAdapter: gameplayAdapters,
     moduleRuntimeAssetsAdapter: assetAdapters,
     moduleRuntimeAudioAdapter: audioAdapters,
     moduleRuntimeRenderingAdapter: renderingAdapters,
@@ -214,7 +225,11 @@ export function createModuleGameDependencyBag({
     bannerSystem: platformAdapters.bannerSystem,
     bindMovementInput: platformAdapters.bindMovementInput,
     canvas: platformAdapters.canvas,
+    combat: gameplayAdapters.combat,
     debugSystem: platformAdapters.debugSystem,
+    enemies: gameplayAdapters.enemies,
+    enemyBehaviors: gameplayAdapters.enemyBehaviors,
+    enemySpawning: gameplayAdapters.enemySpawning,
     getGame: stateStore.getGame,
     getSave: stateStore.getSave,
     loop: platformAdapters.loop,
@@ -233,6 +248,8 @@ export function createModuleGameDependencyBag({
     shopSystem: uiAdapters.shopSystemAdapter,
     spriteSystem: spriteAdapters.spriteSystem,
     ui: uiAdapters.ui,
+    weaponBehaviors: gameplayAdapters.weaponBehaviors,
+    weaponFire: gameplayAdapters.weaponFire,
   };
 }
 
