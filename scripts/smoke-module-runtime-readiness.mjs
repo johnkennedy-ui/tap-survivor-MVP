@@ -28,6 +28,12 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
+import {
+  createModuleRuntimeUiAdapters,
+  MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_UI_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-ui-adapters.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -57,6 +63,9 @@ const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-platform-adapter.js"
+);
+const moduleRuntimeUiAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-ui-adapters.js"
 );
 
 const calls = [];
@@ -265,14 +274,29 @@ const runtimeGlobal = {
   },
   Capacitor: { Plugins: { App: { addListener: () => ({ catch() {} }) } } },
 };
+const runtimeUiAdapters = createModuleRuntimeUiAdapters({
+  ui: {
+    speedButtons,
+    levelUp: { classList: { add: () => calls.push("runtime:level-up-hidden") } },
+  },
+  runUiAdapter: {
+    hideEndScreen: () => calls.push("runtime:hide-end"),
+    updateRunHud: () => calls.push("runtime:update-hud"),
+  },
+  shellUiAdapter: {
+    bind: () => calls.push("runtime:shell-bind"),
+    closeRunMenu: () => calls.push("runtime:shell-close-run-menu"),
+    showTitleScreen: () => calls.push("runtime:shell-title"),
+  },
+  shopSystemAdapter: {
+    closeShop: () => calls.push("runtime:shop-close"),
+  },
+});
 const runtime = composeRuntime({
   platform: createBrowserPlatform({ globalRef: runtimeGlobal, documentRef: runtimeDocument }),
   dependencies: {
     canvas,
-    ui: {
-      speedButtons,
-      levelUp: { classList: { add: () => calls.push("runtime:level-up-hidden") } },
-    },
+    ui: runtimeUiAdapters.ui,
     getGame: () => currentGame,
     setGame: (game) => {
       currentGame = game;
@@ -284,18 +308,9 @@ const runtime = composeRuntime({
       loadSave: () => save,
       removeSave: () => {},
     },
-    shellUi: {
-      bind: () => calls.push("runtime:shell-bind"),
-      closeRunMenu: () => calls.push("runtime:shell-close-run-menu"),
-      showTitleScreen: () => calls.push("runtime:shell-title"),
-    },
-    shopSystem: {
-      closeShop: () => calls.push("runtime:shop-close"),
-    },
-    runUi: {
-      hideEndScreen: () => calls.push("runtime:hide-end"),
-      updateRunHud: () => calls.push("runtime:update-hud"),
-    },
+    shellUi: runtimeUiAdapters.shellUiAdapter,
+    shopSystem: runtimeUiAdapters.shopSystemAdapter,
+    runUi: runtimeUiAdapters.runUiAdapter,
     debugSystem: {
       bind: () => calls.push("runtime:debug-bind"),
     },
@@ -331,17 +346,22 @@ check(
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeUiAdapters") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("uiAdapters") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bindMovementInput") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("canvas") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("loop") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bannerSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("debugSystem") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("runUiAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shopSystemAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("ui") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
@@ -360,6 +380,24 @@ check(
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("shellUiAdapter") &&
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("spriteSystem") &&
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("ui")
+);
+check(
+  "readiness sees module runtime UI adapter bundle covers targeted UI slots",
+  ["runUiAdapter", "shellUiAdapter", "shopSystemAdapter", "ui"].every(
+    (slot) =>
+      MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_UI_ADAPTER_SLOTS.includes(slot)
+  )
+);
+check(
+  "readiness sees module runtime UI adapter bundle keeps sprite system separate",
+  !MODULE_RUNTIME_UI_ADAPTER_SLOTS.includes("spriteSystem") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem")
+);
+check(
+  "readiness sees module runtime UI adapter bundle low-level dependencies explicit",
+  MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("ui") &&
+    MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("shopSystemAdapter")
 );
 check(
   "readiness sees module-native state persistence slots",
@@ -388,6 +426,10 @@ check(
   "readiness sees module runtime platform adapter without TapSurvivor global reads",
   moduleRuntimePlatformAdapterGlobalReads.length === 0
 );
+check(
+  "readiness sees module runtime UI adapter bundle without TapSurvivor global reads",
+  moduleRuntimeUiAdapterGlobalReads.length === 0
+);
 
 const inventory = {
   canonicalModuleFiles: moduleFiles,
@@ -408,6 +450,12 @@ const inventory = {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
     adapterSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimePlatformAdapterGlobalReads,
+  },
+  moduleRuntimeUiAdapterBundle: {
+    proofSlots: MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_UI_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeUiAdapterGlobalReads,
   },
   moduleNativeStatePersistence: {
     moduleOwnedSlots: MODULE_NATIVE_STATE_PERSISTENCE_SLOTS,

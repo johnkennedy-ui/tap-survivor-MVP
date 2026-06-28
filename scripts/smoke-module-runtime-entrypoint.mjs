@@ -16,6 +16,11 @@ import {
   MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-platform-adapter.js";
+import {
+  MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_UI_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-ui-adapters.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -26,6 +31,7 @@ const platformAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-platform-adapter.js"),
   "utf8"
 );
+const uiAdapterSource = readFileSync(join(root, "src/modules/module-runtime-ui-adapters.js"), "utf8");
 const stateStoreSource = readFileSync(join(root, "src/modules/game-state-store.js"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
@@ -59,6 +65,10 @@ check(
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(platformAdapterSource)
 );
 check(
+  "module runtime UI adapter bundle has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(uiAdapterSource)
+);
+check(
   "module runtime test fixture has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(fixtureHtml)
 );
@@ -72,10 +82,21 @@ const initialSave = {
   },
 };
 const initialGame = {
+  bossSpawned: false,
+  elapsed: 0,
+  enemies: [],
+  kills: 0,
+  laserDamage: 0,
+  lastFloorClear: null,
   running: true,
   paused: false,
   awaitingFirstMoveInput: true,
+  towerFloor: 1,
   player: {
+    equippedWeapons: ["spark_bolt"],
+    hp: 100,
+    level: 1,
+    maxHp: 100,
     targetX: 0,
     targetY: 0,
   },
@@ -108,6 +129,18 @@ const documentRef = {
   visibilityState: "visible",
   addEventListener(type) {
     calls.push(`document:${type}`);
+  },
+};
+const uiSurface = {
+  speedButtons,
+  levelUp: { classList: { add: () => calls.push("level-up:hidden") } },
+  runHud: { textContent: "" },
+  runStats: { innerHTML: "" },
+  endScreen: {
+    classList: {
+      add: () => calls.push("run-ui:end-hidden"),
+      remove: () => calls.push("run-ui:end-open"),
+    },
   },
 };
 const runtimeGlobal = {
@@ -171,21 +204,27 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
     adapters: {
       initialGame,
       initialSave,
-      ui: {
-        speedButtons,
-        levelUp: { classList: { add: () => calls.push("level-up:hidden") } },
-      },
-      shellUiAdapter: {
-        bind: () => calls.push("shell:bind"),
-        closeRunMenu: () => calls.push("shell:close-run-menu"),
-        showTitleScreen: () => calls.push("shell:title"),
-      },
-      shopSystemAdapter: {
-        closeShop: () => calls.push("shop:close"),
-      },
-      runUiAdapter: {
-        hideEndScreen: () => calls.push("run-ui:hide-end"),
-        updateRunHud: () => calls.push("run-ui:update-hud"),
+      uiAdapters: {
+        ui: uiSurface,
+        runUi: {
+          formatTime: (seconds) => `t:${Math.round(seconds)}`,
+          getGameSpeed: () => Number(documentRef.body.dataset.gameSpeed || 1),
+          maxEquippedWeapons: () => 6,
+          renderDebug: () => calls.push("run-ui:render-debug"),
+        },
+        shellUi: {
+          shellRelicController: {
+            render: () => calls.push("shell-module:relic-render"),
+          },
+          shellView: {
+            render: (state) => calls.push(`shell-module:render:${state.screen}`),
+            setMenuOpen: (open) => calls.push(`shell-module:menu:${open}`),
+            setScreen: (screen) => calls.push(`shell-module:screen:${screen}`),
+          },
+        },
+        shopSystemAdapter: {
+          closeShop: () => calls.push("shop:close"),
+        },
       },
       spriteSystem: {
         loadSprites: () => calls.push("sprites:load"),
@@ -247,6 +286,19 @@ check(
     !MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes("ui")
 );
 check(
+  "module runtime UI adapter bundle owns targeted UI proof slots",
+  ["runUiAdapter", "shellUiAdapter", "shopSystemAdapter", "ui"].every(
+    (slot) =>
+      MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_UI_ADAPTER_SLOTS.includes(slot)
+  )
+);
+check(
+  "module runtime UI adapter bundle keeps low-level UI dependencies explicit",
+  MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("ui") &&
+    MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("shopSystemAdapter")
+);
+check(
   "module-native dependency bag reclassifies platform services into platform adapter",
   !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist") &&
@@ -256,7 +308,11 @@ check(
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("bannerSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("debugSystem") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("platformAdapters") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("uiAdapters") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("runUiAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shellUiAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("shopSystemAdapter") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("ui") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderMetaSink") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
 );
@@ -278,17 +334,49 @@ canvas.listeners.get("mousedown")({ clientX: 640, clientY: 270 });
 const afterTapGlobals = tapSurvivorGlobalNames();
 
 const replacedGame = {
+  bossSpawned: false,
+  elapsed: 12,
+  enemies: [],
+  kills: 1,
+  laserDamage: 2,
+  lastFloorClear: null,
   running: true,
   paused: false,
   awaitingFirstMoveInput: false,
-  player: { targetX: 5, targetY: 6 },
+  towerFloor: 1,
+  player: { equippedWeapons: ["spark_bolt"], hp: 80, level: 2, maxHp: 100, targetX: 5, targetY: 6 },
 };
 entrypoint.dependencies.setGame(replacedGame);
 entrypoint.dependencies.setSave({ coins: 3.9, towerFloor: 0, unlockedWeapons: [] });
 entrypoint.dependencies.persist();
 entrypoint.dependencies.renderMeta();
+entrypoint.dependencies.runUi.hideEndScreen();
+entrypoint.dependencies.shellUi.closeRunMenu(false);
+entrypoint.dependencies.shellUi.showTitleScreen();
+entrypoint.dependencies.shopSystem.closeShop();
 
-check("module runtime test entrypoint initializes runtime", calls.includes("shell:bind") && calls.includes("raf"));
+check(
+  "module runtime test entrypoint initializes runtime through UI adapter bundle",
+  calls.includes("shell-module:render:title") && calls.includes("raf")
+);
+check(
+  "module runtime test entrypoint routes run UI adapter through UI adapter bundle",
+  uiSurface.runHud.textContent.includes("Speed x5") &&
+    calls.includes("run-ui:render-debug") &&
+    calls.includes("run-ui:end-hidden")
+);
+check(
+  "module runtime test entrypoint routes shell UI adapter through UI adapter bundle",
+  calls.includes("shell-module:menu:false") && calls.includes("shell-module:render:title")
+);
+check(
+  "module runtime test entrypoint routes shop system adapter through UI adapter bundle",
+  calls.includes("shop:close")
+);
+check(
+  "module runtime test entrypoint routes generic UI surface through UI adapter bundle",
+  entrypoint.dependencies.ui === uiSurface
+);
 check(
   "module runtime test entrypoint routes movement input through platform adapter",
   calls.includes("input:bind")

@@ -5,6 +5,7 @@ import { createEffects } from "./effects.js";
 import { createGameRuntimeController } from "./game-runtime.js";
 import { createGameStateStore } from "./game-state-store.js";
 import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
+import { createModuleRuntimeUiAdapters } from "./module-runtime-ui-adapters.js";
 import { createMapSystem } from "./map-system.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createPickupSystem } from "./pickups.js";
@@ -38,6 +39,7 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "gameStateStore",
   "mapSystem",
   "math",
+  "moduleRuntimeUiAdapters",
   "pickups",
   "relics",
   "runLifecycle",
@@ -66,12 +68,9 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "initialSave",
   "platformAdapters",
   "renderMetaSink",
-  "runUiAdapter",
-  "shellUiAdapter",
-  "shopSystemAdapter",
   "spriteSystem",
   "storageAdapter",
-  "ui",
+  "uiAdapters",
 ]);
 
 export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
@@ -93,7 +92,6 @@ export const CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "rendering",
   "shop",
   "sprites",
-  "ui",
   "uiProgression",
   "upgrades",
   "weaponBehaviors",
@@ -130,6 +128,10 @@ export function createModuleGameDependencyBag({
     weaponDefs: contentRegistry.weaponDefs,
     random,
   });
+  const uiAdapters = createModuleRuntimeUiAdapters({
+    ...requireObject(resolvedAdapters.uiAdapters, "adapters.uiAdapters"),
+    stateStore,
+  });
 
   const moduleSystems = {
     balance: { floorDifficulty },
@@ -141,6 +143,7 @@ export function createModuleGameDependencyBag({
     gameStateStore: stateStore,
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
+    moduleRuntimeUiAdapters: uiAdapters,
     pickups: { createPickupSystem },
     relics,
     runLifecycle: { createRunLifecycle },
@@ -179,14 +182,14 @@ export function createModuleGameDependencyBag({
     moduleSystems,
     persist: stateStore.persist,
     renderMeta: stateStore.renderMeta,
-    runUi: requireAdapter(resolvedAdapters, "runUiAdapter"),
+    runUi: uiAdapters.runUiAdapter,
     saveSystem,
     setGame: stateStore.setGame,
     setSave: stateStore.setSave,
-    shellUi: requireAdapter(resolvedAdapters, "shellUiAdapter"),
-    shopSystem: requireAdapter(resolvedAdapters, "shopSystemAdapter"),
+    shellUi: uiAdapters.shellUiAdapter,
+    shopSystem: uiAdapters.shopSystemAdapter,
     spriteSystem: requireAdapter(resolvedAdapters, "spriteSystem"),
-    ui: requireAdapter(resolvedAdapters, "ui"),
+    ui: uiAdapters.ui,
   };
 }
 
