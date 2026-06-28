@@ -6,6 +6,7 @@ import { createGameRuntimeController } from "./game-runtime.js";
 import { createGameStateStore } from "./game-state-store.js";
 import { createModuleRuntimePlatformAdapter } from "./module-runtime-platform-adapter.js";
 import { createModuleRuntimeSpriteAdapter } from "./module-runtime-sprite-adapter.js";
+import { createModuleRuntimeStorageAdapter } from "./module-runtime-storage-adapter.js";
 import { createModuleRuntimeUiAdapters } from "./module-runtime-ui-adapters.js";
 import { createMapSystem } from "./map-system.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
@@ -41,6 +42,7 @@ export const MODULE_NATIVE_GAME_DEPENDENCY_SLOTS = Object.freeze([
   "mapSystem",
   "math",
   "moduleRuntimeSpriteAdapter",
+  "moduleRuntimeStorageAdapter",
   "moduleRuntimeUiAdapters",
   "pickups",
   "relics",
@@ -71,7 +73,7 @@ export const INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS = Object.freeze([
   "platformAdapters",
   "renderMetaSink",
   "spriteAdapters",
-  "storageAdapter",
+  "storageAdapters",
   "uiAdapters",
 ]);
 
@@ -115,9 +117,16 @@ export function createModuleGameDependencyBag({
   );
   const contentRegistry = createContentRegistry({ content, upgradeContent });
   const effects = createEffects({ contentSchema });
+  const storageAdapters = createModuleRuntimeStorageAdapter(
+    createModuleRuntimeStorageAdapterOptions({
+      saveConfig: requireObject(saveConfig, "saveConfig"),
+      storageAdapters: requireObject(resolvedAdapters.storageAdapters, "adapters.storageAdapters"),
+    })
+  );
   const saveSystem = createModuleSaveSystem({
     saveConfig: requireObject(saveConfig, "saveConfig"),
     contentRegistry,
+    storageAdapter: storageAdapters.storageAdapter,
   });
   const stateStore = createGameStateStore({
     initialGame: resolvedAdapters.initialGame || null,
@@ -149,6 +158,7 @@ export function createModuleGameDependencyBag({
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
     moduleRuntimeSpriteAdapter: spriteAdapters,
+    moduleRuntimeStorageAdapter: storageAdapters,
     moduleRuntimeUiAdapters: uiAdapters,
     pickups: { createPickupSystem },
     relics,
@@ -199,7 +209,7 @@ export function createModuleGameDependencyBag({
   };
 }
 
-function createModuleSaveSystem({ saveConfig, contentRegistry }) {
+function createModuleSaveSystem({ saveConfig, contentRegistry, storageAdapter }) {
   return createSaveSystem({
     saveCorruption: { createSaveLoadHandler },
     saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
@@ -211,11 +221,19 @@ function createModuleSaveSystem({ saveConfig, contentRegistry }) {
     saveKey: requireString(saveConfig.saveKey, "saveConfig.saveKey"),
     shopItemDefs: saveConfig.shopItemDefs || contentRegistry.shopItemDefs,
     starterQuestIds: saveConfig.starterQuestIds || contentRegistry.starterQuestIds,
-    storage: saveConfig.storage,
-    storageAdapter: requireAdapter(saveConfig, "storageAdapter"),
+    storage: null,
+    storageAdapter: requireAdapter({ storageAdapter }, "storageAdapter"),
     upgradeDefs: saveConfig.upgradeDefs || contentRegistry.upgradeDefs,
     weaponUnlocks: saveConfig.weaponUnlocks || contentRegistry.weaponUnlocks,
   });
+}
+
+function createModuleRuntimeStorageAdapterOptions({ saveConfig, storageAdapters }) {
+  return {
+    ...storageAdapters,
+    legacySaveKey: storageAdapters.legacySaveKey || saveConfig.legacySaveKey,
+    saveKey: storageAdapters.saveKey || saveConfig.saveKey,
+  };
 }
 
 function requireAdapter(source, name) {

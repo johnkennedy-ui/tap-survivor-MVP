@@ -11,7 +11,7 @@ export const INJECTED_STATE_PERSISTENCE_SLOTS = Object.freeze([
   "initialGame",
   "initialSave",
   "renderMetaSink",
-  "storageAdapter",
+  "storageAdapters",
 ]);
 
 /**

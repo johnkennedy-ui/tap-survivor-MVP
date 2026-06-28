@@ -22,6 +22,11 @@ import {
   MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-sprite-adapter.js";
 import {
+  MODULE_RUNTIME_STORAGE_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_STORAGE_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_STORAGE_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-storage-adapter.js";
+import {
   MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_UI_ADAPTER_SLOTS,
@@ -38,6 +43,10 @@ const platformAdapterSource = readFileSync(
 );
 const spriteAdapterSource = readFileSync(
   join(root, "src/modules/module-runtime-sprite-adapter.js"),
+  "utf8"
+);
+const storageAdapterSource = readFileSync(
+  join(root, "src/modules/module-runtime-storage-adapter.js"),
   "utf8"
 );
 const uiAdapterSource = readFileSync(join(root, "src/modules/module-runtime-ui-adapters.js"), "utf8");
@@ -76,6 +85,10 @@ check(
 check(
   "module runtime sprite adapter has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(spriteAdapterSource)
+);
+check(
+  "module runtime storage adapter has no classic TapSurvivor global reads",
+  !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(storageAdapterSource)
 );
 check(
   "module runtime UI adapter bundle has no classic TapSurvivor global reads",
@@ -176,8 +189,8 @@ const runtimeGlobal = {
     },
   },
 };
-const storageAdapter = createMemoryStorageAdapter();
-storageAdapter.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
+const storage = createMemoryStorage();
+storage.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
 
 const entrypoint = createModuleRuntimeTestEntrypoint({
   autoInitialize: true,
@@ -211,7 +224,6 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
     saveConfig: {
       saveKey: "tap-survivor-mvp-save-v2",
       legacySaveKey: "tap-survivor-mvp-save-v1",
-      storageAdapter,
       questOpenIds: (quest) => quest?.opens || [],
     },
     adapters: {
@@ -257,6 +269,9 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
         bindMovementInput: () => calls.push("input:bind"),
         loop: () => calls.push("loop"),
       },
+      storageAdapters: {
+        storage,
+      },
       renderMetaSink: ({ game, save }) => {
         calls.push(`render-meta:${Boolean(game)}:${save.coins}`);
       },
@@ -276,6 +291,7 @@ check(
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("contentRegistry") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
 check(
@@ -285,8 +301,9 @@ check(
     MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("renderMeta")
 );
 check(
-  "module-native state store keeps storage backend injected",
-  INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
+  "module-native state store routes storage through storage adapter bundle",
+  INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapters") &&
+    !INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
 );
 check(
   "module runtime platform adapter owns completed platform proof slots",
@@ -311,6 +328,16 @@ check(
 check(
   "module runtime sprite adapter keeps low-level sprite system explicit",
   MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS.includes("spriteSystem")
+);
+check(
+  "module runtime storage adapter owns storage proof slots",
+  ["getSaveRaw", "setSaveRaw", "removeSaveRaw", "setCorruptBackupRaw"].every((slot) =>
+    MODULE_RUNTIME_STORAGE_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) && MODULE_RUNTIME_STORAGE_ADAPTER_SLOTS.includes("storageAdapter")
+);
+check(
+  "module runtime storage adapter keeps low-level storage backend explicit",
+  MODULE_RUNTIME_STORAGE_ADAPTER_LOW_LEVEL_SLOTS.includes("storage")
 );
 check(
   "module runtime UI adapter bundle owns targeted UI proof slots",
@@ -343,7 +370,8 @@ check(
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("ui") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("renderMetaSink") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters") &&
-    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapters") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter")
 );
 check(
   "module-native dependency bag keeps classic-only slots explicit",
@@ -356,6 +384,10 @@ check(
     stateStore.getSave().towerFloor === 1 &&
     stateStore.getSave().unlockedWeapons.includes("spark_bolt") &&
     Object.keys(stateStore.getSave().shopPurchases).length === 0
+);
+check(
+  "module runtime test entrypoint loadSave routes through storage adapter bundle",
+  calls.includes("storage:getItem:tap-survivor-mvp-save-v2")
 );
 
 entrypoint.runtime.setGameSpeed(5);
@@ -443,7 +475,20 @@ check(
 );
 check(
   "module runtime test entrypoint persist writes through injected storage backend",
-  JSON.parse(storageAdapter.store.get("tap-survivor-mvp-save-v2")).coins === 3
+  JSON.parse(storage.store.get("tap-survivor-mvp-save-v2")).coins === 3 && calls.includes("storage:setItem")
+);
+entrypoint.dependencies.saveSystem.removeSave();
+check(
+  "module runtime test entrypoint removeSave routes through storage adapter bundle",
+  !storage.store.has("tap-survivor-mvp-save-v2") && calls.includes("storage:removeItem")
+);
+storage.store.set("tap-survivor-mvp-save-v2", "{not-json");
+const corruptLoadedSave = entrypoint.dependencies.saveSystem.loadSave();
+check(
+  "module runtime test entrypoint handles corrupt save safely through canonical save modules",
+  corruptLoadedSave.saveVersion >= 1 &&
+    entrypoint.dependencies.saveSystem.getLastLoadWarning() === "corrupt-save" &&
+    storage.store.get("tap-survivor-mvp-save-v2-corrupt-backup") === "{not-json"
 );
 check(
   "module runtime test entrypoint renderMeta reads state through injected sink",
@@ -472,15 +517,21 @@ function tapSurvivorGlobalNames() {
     .sort();
 }
 
-function createMemoryStorageAdapter() {
+function createMemoryStorage() {
   const store = new Map();
   return {
     store,
-    getSaveRaw: () => store.get("tap-survivor-mvp-save-v2") || null,
-    removeSaveRaw: () => store.delete("tap-survivor-mvp-save-v2"),
-    setSaveRaw: (value) => {
-      store.set("tap-survivor-mvp-save-v2", String(value));
-      return true;
+    getItem: (key) => {
+      calls.push(`storage:getItem:${key}`);
+      return store.get(key) || null;
+    },
+    removeItem: (key) => {
+      calls.push("storage:removeItem");
+      return store.delete(key);
+    },
+    setItem: (key, value) => {
+      calls.push("storage:setItem");
+      store.set(key, String(value));
     },
   };
 }

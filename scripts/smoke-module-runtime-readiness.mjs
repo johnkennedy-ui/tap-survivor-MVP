@@ -35,6 +35,12 @@ import {
   MODULE_RUNTIME_SPRITE_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-sprite-adapter.js";
 import {
+  createModuleRuntimeStorageAdapter,
+  MODULE_RUNTIME_STORAGE_ADAPTER_LOW_LEVEL_SLOTS,
+  MODULE_RUNTIME_STORAGE_ADAPTER_PROOF_SLOTS,
+  MODULE_RUNTIME_STORAGE_ADAPTER_SLOTS,
+} from "../src/modules/module-runtime-storage-adapter.js";
+import {
   createModuleRuntimeUiAdapters,
   MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS,
   MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
@@ -72,6 +78,9 @@ const moduleRuntimePlatformAdapterGlobalReads = collectTapSurvivorGlobalReads(
 );
 const moduleRuntimeSpriteAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-sprite-adapter.js"
+);
+const moduleRuntimeStorageAdapterGlobalReads = collectTapSurvivorGlobalReads(
+  "src/modules/module-runtime-storage-adapter.js"
 );
 const moduleRuntimeUiAdapterGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/module-runtime-ui-adapters.js"
@@ -308,6 +317,27 @@ const runtimeSpriteAdapter = createModuleRuntimeSpriteAdapter({
     loadSprites: () => calls.push("runtime:sprites"),
   },
 });
+const runtimeStorageAdapter = createModuleRuntimeStorageAdapter({
+  legacySaveKey,
+  saveKey,
+  storage: {
+    getItem: (key) => {
+      calls.push(`runtime:storage-get-item:${key}`);
+      return key === saveKey ? JSON.stringify(save) : null;
+    },
+    removeItem: (key) => {
+      calls.push(`runtime:storage-remove-item:${key}`);
+      return true;
+    },
+    setItem: (key) => {
+      calls.push(`runtime:storage-set-item:${key}`);
+      return true;
+    },
+  },
+});
+runtimeStorageAdapter.storageAdapter.getSaveRaw();
+runtimeStorageAdapter.storageAdapter.setSaveRaw(JSON.stringify(save));
+runtimeStorageAdapter.storageAdapter.removeSaveRaw();
 const runtime = composeRuntime({
   platform: createBrowserPlatform({ globalRef: runtimeGlobal, documentRef: runtimeDocument }),
   dependencies: {
@@ -349,6 +379,12 @@ check(
     currentGame.awaitingFirstMoveInput === false &&
     calls.includes("runtime:hide-movement-gate")
 );
+check(
+  "readiness composes storage adapter through fake injected storage backend",
+  calls.includes(`runtime:storage-get-item:${saveKey}`) &&
+    calls.includes(`runtime:storage-set-item:${saveKey}`) &&
+    calls.includes(`runtime:storage-remove-item:${saveKey}`)
+);
 
 check(
   "readiness sees deterministic generated bridge inventory",
@@ -361,6 +397,7 @@ check(
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameStateStore") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("gameRuntime") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeSpriteAdapter") &&
+    MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeStorageAdapter") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("moduleRuntimeUiAdapters") &&
     MODULE_NATIVE_GAME_DEPENDENCY_SLOTS.includes("runUpdate")
 );
@@ -379,6 +416,8 @@ check(
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteSystem") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("ui") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("spriteAdapters") &&
+    INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapters") &&
+    !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("storageAdapter") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("getGame") &&
     !INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("persist")
 );
@@ -422,6 +461,17 @@ check(
   MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS.includes("spriteSystem")
 );
 check(
+  "readiness sees module runtime storage adapter bundle covers storage services",
+  MODULE_RUNTIME_STORAGE_ADAPTER_SLOTS.includes("storageAdapter") &&
+    ["getSaveRaw", "setSaveRaw", "removeSaveRaw", "setCorruptBackupRaw"].every((slot) =>
+      MODULE_RUNTIME_STORAGE_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "readiness sees module runtime storage adapter low-level dependency explicit",
+  MODULE_RUNTIME_STORAGE_ADAPTER_LOW_LEVEL_SLOTS.includes("storage")
+);
+check(
   "readiness sees module runtime UI adapter bundle low-level dependencies explicit",
   MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("ui") &&
     MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("shopSystemAdapter")
@@ -433,8 +483,9 @@ check(
     MODULE_NATIVE_STATE_PERSISTENCE_SLOTS.includes("renderMeta")
 );
 check(
-  "readiness keeps storage backend injected for module state store",
-  INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
+  "readiness sees storage backend reclassified behind storage adapter bundle",
+  INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapters") &&
+    !INJECTED_STATE_PERSISTENCE_SLOTS.includes("storageAdapter")
 );
 check(
   "readiness keeps remaining classic-only systems explicit",
@@ -456,6 +507,10 @@ check(
 check(
   "readiness sees module runtime sprite adapter without TapSurvivor global reads",
   moduleRuntimeSpriteAdapterGlobalReads.length === 0
+);
+check(
+  "readiness sees module runtime storage adapter without TapSurvivor global reads",
+  moduleRuntimeStorageAdapterGlobalReads.length === 0
 );
 check(
   "readiness sees module runtime UI adapter bundle without TapSurvivor global reads",
@@ -488,6 +543,12 @@ const inventory = {
     lowLevelInjectedSlots: MODULE_RUNTIME_SPRITE_ADAPTER_LOW_LEVEL_SLOTS,
     moduleNativeSourceGlobalReads: moduleRuntimeSpriteAdapterGlobalReads,
   },
+  moduleRuntimeStorageAdapter: {
+    proofSlots: MODULE_RUNTIME_STORAGE_ADAPTER_PROOF_SLOTS,
+    adapterSlots: MODULE_RUNTIME_STORAGE_ADAPTER_SLOTS,
+    lowLevelInjectedSlots: MODULE_RUNTIME_STORAGE_ADAPTER_LOW_LEVEL_SLOTS,
+    moduleNativeSourceGlobalReads: moduleRuntimeStorageAdapterGlobalReads,
+  },
   moduleRuntimeUiAdapterBundle: {
     proofSlots: MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
     adapterSlots: MODULE_RUNTIME_UI_ADAPTER_SLOTS,
@@ -501,7 +562,7 @@ const inventory = {
     remainingStateRelatedBlockers: [
       "production src/game.js still owns top-level save/game variables",
       "production runtime still wires persistence through classic script order",
-      "browser storage backend remains injected rather than selected by production ESM runtime",
+      "browser storage backend remains explicitly injected behind module runtime storage adapter",
     ],
   },
   remainingRuntimeSwitchBlockers: [
