@@ -39,3 +39,4 @@
 2026-06-21 09:00 BST - Game runtime split validated. `npm test` and `npm run agent:check` passed after updating VM harnesses/verifiers to load `src/game-runtime.js`.
 2026-06-21 09:47 BST - Content workbench architecture task: split source content into `content/registry/*.json`, added `content/balance/*.json` profiles, balance report scripts, generator coverage, validation rules, and docs. Final validation pending.
 2026-06-21 09:59 BST - Content workbench architecture validated: required content, balance, smoke, npm test, and full `npm run agent:check` all passed. Patch remains local and uncommitted.
+2026-06-30 12:18 BST - Added initial agent task queue foundation with `.agent/tasks.json`, `scripts/task-queue.mjs`, package task scripts, and a short AGENTS.md usage note.
