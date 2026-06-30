@@ -66,6 +66,9 @@ Before editing this repo:
 - Default to mission-sized batches instead of micro-slices: one queue task, one evidence file, one final validation gate, one commit, and one push per mission.
 - Avoid repeated full context reloads after the mission is anchored; inspect only the files needed for the active change.
 - Do not run full preflight before every inspection or small edit. Use focused checks during the mission and full validation near the end.
+- Before the final validation gate in normal agent missions, run `npm run agent:check -- --fix-format-changed`.
+  Use it instead of waiting for `npm run format:check` or `npm run check:format-hygiene` to fail.
+  Plain `npm run agent:check` remains the CI check-only path.
 - Stop only on hard blockers such as wrong base, dirty pre-edit worktree, invalid queue state, forbidden file changes, failing required validation, or unclear scope.
 
 ## Frank Anti-Lockup Tools

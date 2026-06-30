@@ -3,6 +3,30 @@ import { spawnSync } from "node:child_process";
 const configuredTimeoutMs = Number(process.env.AGENT_CHECK_COMMAND_TIMEOUT_MS || 120000);
 const commandTimeoutMs =
   Number.isFinite(configuredTimeoutMs) && configuredTimeoutMs > 0 ? configuredTimeoutMs : 120000;
+const prettierExtensions = new Set([
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".json",
+  ".md",
+  ".html",
+  ".css",
+  ".yml",
+  ".yaml",
+]);
+const excludedFormatPrefixes = [
+  ".git/",
+  ".agent/runs/",
+  "node_modules/",
+  "dist/",
+  "build/",
+  "coverage/",
+  ".cache/",
+  "tmp/",
+  "temp/",
+  "out/",
+  "www/",
+];
 
 const fullChecks = [
   ["git", ["diff", "--check"]],
@@ -114,25 +138,114 @@ const fullChecks = [
 ];
 
 function changedFiles() {
-  const label = "git status --short --untracked-files=all";
-  const result = spawnSync("git", ["status", "--short", "--untracked-files=all"], {
+  return [...new Set([...trackedChangedFiles(), ...untrackedChangedFiles()])];
+}
+
+function trackedChangedFiles() {
+  const label = "git diff --name-only --diff-filter=ACMRT HEAD --";
+  const result = spawnSync("git", ["diff", "--name-only", "--diff-filter=ACMRT", "HEAD", "--"], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
     timeout: commandTimeoutMs,
   });
+  return parseGitFileListResult(label, result);
+}
+
+function untrackedChangedFiles() {
+  const label = "git ls-files --others --exclude-standard";
+  const result = spawnSync("git", ["ls-files", "--others", "--exclude-standard"], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: commandTimeoutMs,
+  });
+  return parseGitFileListResult(label, result);
+}
+
+function parseGitFileListResult(label, result) {
   if (result.error?.code === "ETIMEDOUT") {
     printCommandOutput(result);
     console.error(`FAIL ${label} timed out after ${commandTimeoutMs}ms`);
     console.error("Agent validation failed fast because a child command exceeded its timeout.");
     process.exit(1);
   }
-  if (result.status !== 0 || !result.stdout.trim()) return [];
+  if (result.status !== 0) {
+    printCommandOutput(result);
+    console.error(`FAIL ${label} exited ${result.status}`);
+    process.exit(1);
+  }
+  if (!result.stdout.trim()) return [];
   return result.stdout
     .trim()
     .split("\n")
-    .map((line) => line.replace(/^[ MARCUD?!]{1,2}\s+/, "").trim())
-    .map((file) => file.split(" -> ").pop())
+    .map((file) => file.trim())
     .filter(Boolean);
+}
+
+function extensionFor(file) {
+  const match = file.toLowerCase().match(/(\.[^.\/]+)$/);
+  return match ? match[1] : "";
+}
+
+function formatSkipReason(file) {
+  if (
+    excludedFormatPrefixes.some((prefix) => file === prefix.slice(0, -1) || file.startsWith(prefix))
+  ) {
+    return "excluded path";
+  }
+  if (!prettierExtensions.has(extensionFor(file))) {
+    return "unsupported extension";
+  }
+  return "";
+}
+
+function formatChangedFiles(files) {
+  console.log("\n## format changed files");
+  if (!files.length) {
+    console.log("Changed files found: none");
+    console.log("No eligible changed files to format.");
+    return;
+  }
+
+  const selected = [];
+  const skipped = [];
+  for (const file of files) {
+    const reason = formatSkipReason(file);
+    if (reason) {
+      skipped.push({ file, reason });
+    } else {
+      selected.push(file);
+    }
+  }
+
+  console.log("Changed files found:");
+  files.forEach((file) => console.log(`- ${file}`));
+  console.log("Files selected for formatting:");
+  if (selected.length) selected.forEach((file) => console.log(`- ${file}`));
+  else console.log("- none");
+  console.log("Files skipped:");
+  if (skipped.length) skipped.forEach(({ file, reason }) => console.log(`- ${file} (${reason})`));
+  else console.log("- none");
+
+  if (!selected.length) {
+    console.log("No eligible changed files to format.");
+    return;
+  }
+
+  const result = spawnSync("npx", ["prettier", "--write", ...selected], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: commandTimeoutMs,
+  });
+  printCommandOutput(result);
+  if (result.error?.code === "ETIMEDOUT") {
+    console.error(`FAIL npx prettier --write timed out after ${commandTimeoutMs}ms`);
+    process.exit(1);
+  }
+  if (result.status !== 0) {
+    console.error(`FAIL npx prettier --write exited ${result.status}`);
+    process.exit(1);
+  }
+  console.log("PASS formatted changed files");
 }
 
 function printCommandOutput(result) {
@@ -368,7 +481,12 @@ function dedupeChecks(checks) {
 console.log("# Tap Survivor Agent Check");
 
 let failed = false;
-const files = changedFiles();
+const fixFormatChanged = process.argv.includes("--fix-format-changed");
+let files = changedFiles();
+if (fixFormatChanged) {
+  formatChangedFiles(files);
+  files = changedFiles();
+}
 const full =
   process.argv.includes("--full") ||
   process.env.AGENT_CHECK_FULL === "1" ||

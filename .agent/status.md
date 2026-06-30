@@ -44,3 +44,4 @@
 2026-06-30 12:53 BST - Documented and proved the task queue lifecycle with a queued-to-active-to-complete docs-only task.
 2026-06-30 18:45 BST - Active mission token-burn-control: adding mission-mode token budget guidance, compact mission-start status, one evidence file, and one final validation/commit/push path.
 2026-06-30 19:09 BST - Active mission slice-36c-module-runtime-batch: proving browser platform adapter defaults for the module runtime candidate without selecting the production ESM entrypoint.
+2026-06-30 19:19 BST - Active mission agent-check-format-fix-flag: adding an opt-in agent:check flag to format only changed Prettier-supported files before validation.

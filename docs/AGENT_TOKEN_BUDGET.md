@@ -15,6 +15,10 @@ Avoid token churn:
 - Do not reread full context docs after the mission is already anchored.
 - Do not split tiny docs-only polish slices unless they unblock execution.
 - Do not run full preflight before every small edit.
+- Do not run broad formatting.
+- Do not run Prettier over the whole repo.
+- Use `npm run agent:check -- --fix-format-changed` before the final validation gate.
+- Plain `npm run agent:check` remains check-only for CI.
 - Do not create repeated stop/start commit approval loops inside one mission.
 - Do not check GitHub Actions after every tiny commit.
 
@@ -30,5 +34,5 @@ that can be resolved with focused inspection and a final validation gate.
 Recommended lifecycle:
 
 ```text
-start gate -> queue task -> focused inspection -> implementation batch -> focused checks -> final validation -> evidence -> task complete/blocked -> commit/push -> one Actions check
+start gate -> queue task -> focused inspection -> implementation batch -> focused checks -> npm run agent:check -- --fix-format-changed -> evidence -> task complete/blocked -> commit/push -> one Actions check
 ```

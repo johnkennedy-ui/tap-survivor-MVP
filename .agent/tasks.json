@@ -53,5 +53,16 @@
     "evidence": "Shane training/20260630T180716Z_slice-36c-module-runtime-batch/result.md",
     "opened": "2026-06-30T18:01:07.100Z",
     "closed": "2026-06-30T18:13:01.594Z"
+  },
+  {
+    "id": "agent-check-format-fix-flag",
+    "status": "complete",
+    "summary": "Add an agent:check flag that formats changed files before the final validation gate.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260630T182015Z_agent-check-format-fix-flag/result.md",
+    "opened": "2026-06-30T18:17:59.368Z",
+    "closed": "2026-06-30T18:25:33.331Z"
   }
 ]
