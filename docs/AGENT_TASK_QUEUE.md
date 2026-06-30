@@ -33,3 +33,7 @@ npm run task:blocked -- kebab-case-id --evidence "path/to/result.md"
 - Another task is already active: stop and ask whether to complete, block, or leave that task alone.
 
 The queue records the current bounded task. It does not justify broad scope expansion.
+
+Queue tasks should normally represent a whole controlled mission, not a tiny one-file change.
+Use one active task to cover the focused inspection, implementation batch, validation, evidence,
+completion, commit, push, and final Actions check for that mission.

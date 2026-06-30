@@ -60,6 +60,14 @@ Before editing this repo:
     `src/modules/weapon-projectiles.js` owns projectile weapon implementation; `src/weapon-projectiles.js` is a generated compatibility bridge.
     `src/modules/weapon-targeting.js` owns weapon-targeting implementation; `src/weapon-targeting.js` is a generated compatibility bridge.
 
+## Mission Mode and Token Budget
+
+- At the beginning of normal missions, run `npm run agent:mission-start` for compact branch, queue, status, and Frank-run context.
+- Default to mission-sized batches instead of micro-slices: one queue task, one evidence file, one final validation gate, one commit, and one push per mission.
+- Avoid repeated full context reloads after the mission is anchored; inspect only the files needed for the active change.
+- Do not run full preflight before every inspection or small edit. Use focused checks during the mission and full validation near the end.
+- Stop only on hard blockers such as wrong base, dirty pre-edit worktree, invalid queue state, forbidden file changes, failing required validation, or unclear scope.
+
 ## Frank Anti-Lockup Tools
 
 - Run `npm run frank:heartbeat -- --task "<task>" --phase "<phase>"` before and after each major phase.

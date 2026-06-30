@@ -31,5 +31,16 @@
     "evidence": "Shane training/20260630T141504Z_fix-b45539e-agent-check/result.md",
     "opened": "2026-06-30T14:13:28.371Z",
     "closed": "2026-06-30T14:16:07.879Z"
+  },
+  {
+    "id": "token-burn-control",
+    "status": "complete",
+    "summary": "Make mission-mode execution the default so Frank avoids repeated context reloads, micro-slices, and unnecessary full preflight runs.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260630T174535Z_token-burn-control/result.md",
+    "opened": "2026-06-30T17:42:22.846Z",
+    "closed": "2026-06-30T17:53:29.900Z"
   }
 ]

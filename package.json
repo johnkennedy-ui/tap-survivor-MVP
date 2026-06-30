@@ -1,6 +1,7 @@
 {
   "scripts": {
     "agent:start": "node scripts/agent-start.mjs",
+    "agent:mission-start": "node scripts/agent-mission-start.mjs",
     "agent:status": "node scripts/agent-status.mjs",
     "agent:handoff": "node scripts/agent-handoff.mjs",
     "task:list": "node scripts/task-queue.mjs list",
