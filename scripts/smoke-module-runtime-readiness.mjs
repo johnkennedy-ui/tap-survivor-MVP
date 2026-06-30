@@ -3,6 +3,7 @@ import { extname, join } from "node:path";
 
 import {
   BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+  BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
 } from "../src/app/browser-dependency-bag.js";
 import {
@@ -640,6 +641,14 @@ check(
     typeof browserDependencyBagOptions.adapters?.storageAdapters?.storage?.getItem === "function"
 );
 check(
+  "readiness sees browser platform defaults own explicit proof slots",
+  ["bannerSystem", "bindMovementInput", "canvas", "debugSystem", "loop"].every(
+    (slot) =>
+      BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_PLATFORM_ADAPTER_SLOTS.includes(slot)
+  )
+);
+check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
@@ -1002,6 +1011,7 @@ const inventory = {
   browserDependencyBagFactory: {
     exists: true,
     proofSlots: BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+    platformProofSlots: BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
     missingProductionBrowserAdapterModuleFiles,
     moduleNativeSourceGlobalReads: browserDependencyBagGlobalReads,
   },

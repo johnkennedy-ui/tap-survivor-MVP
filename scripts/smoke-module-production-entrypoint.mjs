@@ -7,7 +7,11 @@ import {
   createProductionModuleEntrypoint,
   PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS,
 } from "../src/app/production-module-entrypoint.js";
-import { BROWSER_DEPENDENCY_BAG_PROOF_SLOTS } from "../src/app/browser-dependency-bag.js";
+import {
+  BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+  BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
+  createBrowserDependencyBagOptions,
+} from "../src/app/browser-dependency-bag.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -105,6 +109,12 @@ check(
     "uiAdapters",
   ].every((slot) => BROWSER_DEPENDENCY_BAG_PROOF_SLOTS.includes(slot))
 );
+check(
+  "production browser platform adapter factory exposes expected default slots",
+  ["bannerSystem", "bindMovementInput", "canvas", "debugSystem", "loop"].every((slot) =>
+    BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS.includes(slot)
+  )
+);
 const speedButtons = [1, 2, 5].map((speed) => ({
   dataset: { speed: String(speed) },
   classList: {
@@ -122,6 +132,13 @@ const uiSurface = {
       add: () => calls.push("run-ui:end-hidden"),
       remove: () => calls.push("run-ui:end-open"),
     },
+  },
+  questBanner: {
+    classList: {
+      add: (name) => calls.push(`quest-banner:add:${name}`),
+      remove: (name) => calls.push(`quest-banner:remove:${name}`),
+    },
+    textContent: "",
   },
   levelUp: {
     classList: {
@@ -330,6 +347,44 @@ check(
 check(
   "production module entrypoint default browser boot publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
+);
+const defaultBrowserOptions = createBrowserDependencyBagOptions({
+  canvas,
+  content,
+  documentRef,
+  globalRef: runtimeGlobal,
+  storage: createMemoryStorage(),
+  ui: uiSurface,
+});
+const defaultPlatformAdapters = defaultBrowserOptions.adapters.platformAdapters;
+const movementGame = {
+  paused: false,
+  player: { targetX: 0, targetY: 0 },
+  running: true,
+};
+defaultPlatformAdapters.bindMovementInput({ getGame: () => movementGame });
+canvas.listeners.get("mousedown")({ clientX: 240, clientY: 270 });
+defaultPlatformAdapters.bannerSystem.showMovementGateBanner();
+defaultPlatformAdapters.bannerSystem.showQuestBanner({ name: "Proof Quest" }, 3);
+defaultPlatformAdapters.bannerSystem.hideMovementGateBanner();
+defaultPlatformAdapters.debugSystem.bind();
+defaultPlatformAdapters.debugSystem.render();
+defaultPlatformAdapters.loop();
+check(
+  "production browser platform defaults bind canvas movement input",
+  movementGame.player.targetX === 240 && movementGame.player.targetY === 270
+);
+check(
+  "production browser platform defaults route banner UI",
+  uiSurface.questBanner.textContent === "Proof Quest complete +3 QP" &&
+    calls.includes("quest-banner:remove:hidden") &&
+    calls.includes("quest-banner:add:hidden")
+);
+check(
+  "production browser platform defaults expose debug and loop callables",
+  typeof defaultPlatformAdapters.debugSystem.bind === "function" &&
+    typeof defaultPlatformAdapters.debugSystem.render === "function" &&
+    typeof defaultPlatformAdapters.loop === "function"
 );
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);

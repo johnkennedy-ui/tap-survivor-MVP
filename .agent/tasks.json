@@ -42,5 +42,16 @@
     "evidence": "Shane training/20260630T174535Z_token-burn-control/result.md",
     "opened": "2026-06-30T17:42:22.846Z",
     "closed": "2026-06-30T17:53:29.900Z"
+  },
+  {
+    "id": "slice-36c-module-runtime-batch",
+    "status": "complete",
+    "summary": "Complete the next bounded module-runtime migration batch with explicit evidence and final validation.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260630T180716Z_slice-36c-module-runtime-batch/result.md",
+    "opened": "2026-06-30T18:01:07.100Z",
+    "closed": "2026-06-30T18:13:01.594Z"
   }
 ]

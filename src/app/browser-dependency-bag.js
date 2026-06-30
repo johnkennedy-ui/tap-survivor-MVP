@@ -10,6 +10,14 @@ export const BROWSER_DEPENDENCY_BAG_PROOF_SLOTS = Object.freeze([
   "uiAdapters",
 ]);
 
+export const BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS = Object.freeze([
+  "bannerSystem",
+  "bindMovementInput",
+  "canvas",
+  "debugSystem",
+  "loop",
+]);
+
 export function createBrowserDependencyBagOptions(options = {}) {
   const globalRef = options.globalRef || globalThis;
   const documentRef = options.documentRef || globalRef.document;
