@@ -4,6 +4,8 @@ import { extname, join } from "node:path";
 import {
   BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
   BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
+  BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
+  BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
 } from "../src/app/browser-dependency-bag.js";
 import {
@@ -649,6 +651,19 @@ check(
   )
 );
 check(
+  "readiness sees browser render and sprite defaults own explicit proof slots",
+  ["clearFrame", "renderEnemies", "renderFrame", "renderHud", "renderSkillRail"].every(
+    (slot) =>
+      BROWSER_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) &&
+    ["drawImage", "drawSprite", "loadSprites"].every(
+      (slot) =>
+        BROWSER_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot) &&
+        MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
   "readiness sees explicit injected dependency adapter slots",
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("assetAdapters") &&
     INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS.includes("audioAdapters") &&
@@ -910,7 +925,6 @@ check(
     "createNoopRunUi",
     "createNoopShellUi",
     "createNoopShopSystem",
-    "createNoopSpriteSystem",
   ].every((name) => browserDependencyBagSource.includes(name))
 );
 check(
@@ -1012,6 +1026,8 @@ const inventory = {
     exists: true,
     proofSlots: BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
     platformProofSlots: BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
+    renderingProofSlots: BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
+    spriteProofSlots: BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
     missingProductionBrowserAdapterModuleFiles,
     moduleNativeSourceGlobalReads: browserDependencyBagGlobalReads,
   },
@@ -1101,7 +1117,7 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
-    "default browser dependency bag still uses proof/no-op gameplay, progression, render, UI, and sprite adapters",
+    "default browser dependency bag still uses proof/no-op gameplay, progression, and UI adapters",
     "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",

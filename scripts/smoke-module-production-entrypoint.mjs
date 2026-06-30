@@ -10,6 +10,8 @@ import {
 import {
   BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
   BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
+  BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
+  BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
 } from "../src/app/browser-dependency-bag.js";
 
@@ -77,6 +79,18 @@ const canvas = {
   getBoundingClientRect() {
     return { height: 540, left: 0, top: 0, width: 960 };
   },
+  getContext() {
+    return canvasContext;
+  },
+};
+const canvasContext = {
+  clearRect: (...args) => calls.push(`canvas:clear:${args.join(",")}`),
+  drawImage: (...args) => calls.push(`canvas:draw:${args.length}`),
+  restore: () => calls.push("canvas:restore"),
+  rotate: (angle) => calls.push(`canvas:rotate:${angle}`),
+  save: () => calls.push("canvas:save"),
+  scale: (x, y) => calls.push(`canvas:scale:${x}:${y}`),
+  translate: (x, y) => calls.push(`canvas:translate:${x}:${y}`),
 };
 const documentRef = {
   body: { dataset: {} },
@@ -93,6 +107,15 @@ const runtimeGlobal = {
     this.frameCallback = callback;
     calls.push("raf");
     return 1;
+  },
+  Image: class {
+    complete = true;
+    naturalHeight = 16;
+    naturalWidth = 16;
+    addEventListener() {}
+    set src(value) {
+      this.source = value;
+    }
   },
 };
 check(
@@ -114,6 +137,15 @@ check(
   ["bannerSystem", "bindMovementInput", "canvas", "debugSystem", "loop"].every((slot) =>
     BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS.includes(slot)
   )
+);
+check(
+  "production browser render and sprite defaults expose expected slots",
+  ["clearFrame", "renderEnemies", "renderFrame", "renderHud", "renderSkillRail"].every((slot) =>
+    BROWSER_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) &&
+    ["drawImage", "drawSprite", "loadSprites"].every((slot) =>
+      BROWSER_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
 );
 const speedButtons = [1, 2, 5].map((speed) => ({
   dataset: { speed: String(speed) },
@@ -370,6 +402,23 @@ defaultPlatformAdapters.bannerSystem.hideMovementGateBanner();
 defaultPlatformAdapters.debugSystem.bind();
 defaultPlatformAdapters.debugSystem.render();
 defaultPlatformAdapters.loop();
+const defaultSpriteSystem = defaultBrowserOptions.adapters.spriteAdapters.spriteSystem;
+const defaultRenderers = defaultBrowserOptions.adapters.renderingAdapters.renderers;
+defaultSpriteSystem.loadSprites();
+defaultSpriteSystem.drawImage("background:tower_floor", 0, 0, 960, 540);
+defaultSpriteSystem.drawSprite("weaponIcon:spark_bolt", 20, 20, 16);
+defaultRenderers.clearFrame();
+defaultRenderers.renderFrame({
+  spriteAdapters: defaultBrowserOptions.adapters.spriteAdapters,
+});
+defaultRenderers.renderEnemies({
+  enemies: [{ id: "slime", x: 12, y: 14, size: 18 }],
+  spriteAdapters: defaultBrowserOptions.adapters.spriteAdapters,
+});
+defaultRenderers.renderSkillRail({
+  game: { player: { equippedWeapons: ["spark_bolt"] } },
+  spriteAdapters: defaultBrowserOptions.adapters.spriteAdapters,
+});
 check(
   "production browser platform defaults bind canvas movement input",
   movementGame.player.targetX === 240 && movementGame.player.targetY === 270
@@ -385,6 +434,15 @@ check(
   typeof defaultPlatformAdapters.debugSystem.bind === "function" &&
     typeof defaultPlatformAdapters.debugSystem.render === "function" &&
     typeof defaultPlatformAdapters.loop === "function"
+);
+check(
+  "production browser sprite defaults draw through canvas context",
+  calls.includes("canvas:draw:5") && calls.includes("canvas:save") && calls.includes("canvas:restore")
+);
+check(
+  "production browser render defaults route frame enemy and skill sprites",
+  calls.includes("canvas:clear:0,0,960,540") &&
+    calls.filter((call) => call === "canvas:draw:5").length >= 4
 );
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);

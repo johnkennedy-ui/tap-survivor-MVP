@@ -18,6 +18,20 @@ export const BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS = Object.freeze([
   "loop",
 ]);
 
+export const BROWSER_RENDERING_ADAPTER_PROOF_SLOTS = Object.freeze([
+  "clearFrame",
+  "renderEnemies",
+  "renderFrame",
+  "renderHud",
+  "renderSkillRail",
+]);
+
+export const BROWSER_SPRITE_ADAPTER_PROOF_SLOTS = Object.freeze([
+  "drawImage",
+  "drawSprite",
+  "loadSprites",
+]);
+
 export function createBrowserDependencyBagOptions(options = {}) {
   const globalRef = options.globalRef || globalThis;
   const documentRef = options.documentRef || globalRef.document;
@@ -76,7 +90,11 @@ export function createBrowserDependencyBagOptions(options = {}) {
       spriteAdapters:
         options.spriteAdapters ||
         {
-          spriteSystem: createNoopSpriteSystem(),
+          spriteSystem: createBrowserSpriteSystem({
+            assetDefs: content.assets || {},
+            canvas,
+            globalRef,
+          }),
         },
       storageAdapters:
         options.storageAdapters ||
@@ -233,19 +251,113 @@ function createBrowserRenderingAdapters({ canvas }) {
         context?.clearRect?.(0, 0, canvas.width || 0, canvas.height || 0);
         return true;
       },
-      renderEnemies() {
+      renderEnemies({ enemies = [], spriteAdapters }) {
+        enemies.forEach((enemy) => {
+          const id = enemy.type || enemy.kind || enemy.id || "default";
+          const size = enemy.size || enemy.radius || 32;
+          spriteAdapters?.spriteSystem?.drawSprite?.(
+            `enemy:${id}`,
+            enemy.x || 0,
+            enemy.y || 0,
+            size
+          );
+        });
         return true;
       },
-      renderFrame() {
+      renderFrame({ spriteAdapters }) {
+        spriteAdapters?.spriteSystem?.drawImage?.(
+          "background:tower_floor",
+          0,
+          0,
+          canvas.width || 0,
+          canvas.height || 0
+        );
         return true;
       },
       renderHud() {
         return true;
       },
-      renderSkillRail() {
+      renderSkillRail({ game, spriteAdapters }) {
+        const weapons = game?.player?.equippedWeapons || [];
+        weapons.forEach((weaponId, index) => {
+          spriteAdapters?.spriteSystem?.drawSprite?.(
+            `weaponIcon:${weaponId}`,
+            28 + index * 34,
+            (canvas.height || 0) - 28,
+            28
+          );
+        });
         return true;
       },
     },
+  };
+}
+
+function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
+  const context = canvas.getContext?.("2d");
+  const ImageCtor = globalRef.Image;
+  const sprites = new Map();
+
+  function registerSprite(id, definition) {
+    const src = spriteSource(definition);
+    if (!id || !src || typeof ImageCtor !== "function") return false;
+    const image = new ImageCtor();
+    image.src = src;
+    sprites.set(id, image);
+    return true;
+  }
+
+  function registerGroup(prefix, definitions = {}) {
+    Object.entries(definitions || {}).forEach(([id, definition]) => {
+      registerSprite(`${prefix}:${id}`, definition);
+      if (definition && typeof definition === "object" && definition.iconSrc) {
+        registerSprite(`${prefix}Icon:${id}`, definition.iconSrc);
+      }
+    });
+  }
+
+  function loadSprites(spriteDefs = assetDefs.sprites || assetDefs || {}) {
+    registerSprite("player", spriteDefs.player);
+    registerGroup("background", spriteDefs.backgrounds);
+    registerGroup("enemy", spriteDefs.enemies);
+    registerGroup("weapon", spriteDefs.weapons);
+    registerGroup("runUpgrade", spriteDefs.runUpgrades);
+    registerGroup("runUpgradeIcon", spriteDefs.runUpgradeIcons);
+    registerGroup("ui", spriteDefs.ui);
+    return true;
+  }
+
+  function drawImage(id, x = 0, y = 0, width, height) {
+    const image = sprites.get(id);
+    if (!context || !isDrawableImage(image)) return false;
+    context.drawImage(
+      image,
+      x,
+      y,
+      width || image.naturalWidth || image.width,
+      height || image.naturalHeight || image.height
+    );
+    return true;
+  }
+
+  function drawSprite(id, x = 0, y = 0, size = 32, rotation = 0, options = {}) {
+    const image = sprites.get(id);
+    if (!context || !isDrawableImage(image)) return false;
+    const width = options.width || size;
+    const height = options.height || size;
+    context.save?.();
+    context.translate?.(x, y);
+    context.rotate?.(rotation);
+    context.scale?.(options.flipX ? -1 : 1, options.flipY ? -1 : 1);
+    context.drawImage(image, -width / 2, -height / 2, width, height);
+    context.restore?.();
+    return true;
+  }
+
+  return {
+    drawImage,
+    drawSprite,
+    loadSprites,
   };
 }
 
@@ -302,14 +414,6 @@ function createNoopShopSystem() {
   };
 }
 
-function createNoopSpriteSystem() {
-  return {
-    drawImage: () => false,
-    drawSprite: () => false,
-    loadSprites: () => true,
-  };
-}
-
 function createMemoryStorage() {
   const store = new Map();
   return {
@@ -317,6 +421,18 @@ function createMemoryStorage() {
     removeItem: (key) => store.delete(key),
     setItem: (key, value) => store.set(key, String(value)),
   };
+}
+
+function isDrawableImage(image) {
+  return Boolean(image?.complete && (image.naturalWidth || image.width));
+}
+
+function spriteSource(definition) {
+  if (typeof definition === "string") return definition;
+  if (definition && typeof definition === "object") {
+    return definition.src || definition.path || definition.iconSrc || "";
+  }
+  return "";
 }
 
 function createCanvasFallback() {
