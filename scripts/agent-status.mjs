@@ -25,6 +25,71 @@ function countList(value) {
   return Array.isArray(value) ? value.length : 0;
 }
 
+function parseDate(value) {
+  return typeof value === "string" && value.trim() !== "" && !Number.isNaN(Date.parse(value));
+}
+
+function validateTaskQueue(tasks) {
+  if (!Array.isArray(tasks)) return ["root value must be an array"];
+
+  const ids = new Set();
+  const statuses = new Set(["queued", "active", "complete", "blocked"]);
+  const errors = [];
+  tasks.forEach((task, index) => {
+    const label = `task[${index}]`;
+    if (!task || typeof task !== "object" || Array.isArray(task)) {
+      errors.push(`${label} must be an object`);
+      return;
+    }
+    if (typeof task.id !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(task.id)) {
+      errors.push(`${label}.id must be kebab-case`);
+    } else if (ids.has(task.id)) {
+      errors.push(`${label}.id duplicates ${task.id}`);
+    } else {
+      ids.add(task.id);
+    }
+    if (!statuses.has(task.status)) errors.push(`${label}.status is invalid`);
+    if (typeof task.summary !== "string" || task.summary.trim() === "") {
+      errors.push(`${label}.summary must be non-empty`);
+    }
+    if (!Array.isArray(task.scope_allowed)) errors.push(`${label}.scope_allowed must be an array`);
+    if (!Array.isArray(task.scope_forbidden)) {
+      errors.push(`${label}.scope_forbidden must be an array`);
+    }
+    if (typeof task.skill !== "string" && task.skill !== null) {
+      errors.push(`${label}.skill must be a string or null`);
+    }
+    if (typeof task.evidence !== "string" && task.evidence !== null) {
+      errors.push(`${label}.evidence must be a string or null`);
+    }
+    if (!parseDate(task.opened)) errors.push(`${label}.opened must be a parseable date string`);
+    if (task.closed !== null && !parseDate(task.closed)) {
+      errors.push(`${label}.closed must be null or a parseable date string`);
+    }
+    if (task.status === "complete" && task.evidence === null) {
+      errors.push(`${label}.evidence is required when complete`);
+    }
+    if ((task.status === "complete" || task.status === "blocked") && task.closed === null) {
+      errors.push(`${label}.closed is required when ${task.status}`);
+    }
+  });
+  return errors;
+}
+
+function readTaskQueue() {
+  const path = ".agent/tasks.json";
+  if (!existsSync(path)) {
+    return { missing: true };
+  }
+  try {
+    const tasks = JSON.parse(readFileSync(path, "utf8"));
+    const errors = validateTaskQueue(tasks);
+    return errors.length ? { warning: errors.join("; ") } : { tasks };
+  } catch (error) {
+    return { warning: error.message };
+  }
+}
+
 const pkg = readJson("package.json");
 const content = readJson("content/tap-survivor-content.json");
 const branch = run("git", ["branch", "--show-current"]) || "unknown";
@@ -58,6 +123,33 @@ console.log(`- characters: ${countList(content.characters)}`);
 console.log(`- shop items: ${countList(content.shopItems)}`);
 console.log(`- relics: ${countList(content.relics)}`);
 console.log(`- levels: ${countList(content.levels)}`);
+
+console.log("\n## Task Queue");
+const taskQueue = readTaskQueue();
+if (taskQueue.missing) {
+  console.log("- .agent/tasks.json not found; task queue not in use.");
+} else if (taskQueue.warning) {
+  console.log(`- Warning: .agent/tasks.json invalid: ${taskQueue.warning}`);
+} else {
+  const tasks = taskQueue.tasks;
+  const active = tasks.filter((task) => task.status === "active");
+  const queued = tasks.filter((task) => task.status === "queued");
+  const blocked = tasks.filter((task) => task.status === "blocked");
+  const complete = tasks.filter((task) => task.status === "complete");
+  console.log(`- total: ${tasks.length}`);
+  console.log(`- active: ${active.length}`);
+  console.log(`- queued: ${queued.length}`);
+  console.log(`- blocked: ${blocked.length}`);
+  console.log(`- complete: ${complete.length}`);
+  if (active.length) {
+    console.log("- active tasks:");
+    active.forEach((task) => console.log(`  - ${task.id}: ${task.summary}`));
+  }
+  if (blocked.length) {
+    console.log("- blocked tasks:");
+    blocked.forEach((task) => console.log(`  - ${task.id}: ${task.summary}`));
+  }
+}
 
 console.log("\n## Current Task Snapshot");
 console.log(currentTask);
