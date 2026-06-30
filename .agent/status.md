@@ -41,3 +41,4 @@
 2026-06-21 09:59 BST - Content workbench architecture validated: required content, balance, smoke, npm test, and full `npm run agent:check` all passed. Patch remains local and uncommitted.
 2026-06-30 12:18 BST - Added initial agent task queue foundation with `.agent/tasks.json`, `scripts/task-queue.mjs`, package task scripts, and a short AGENTS.md usage note.
 2026-06-30 12:41 BST - Surfaced task queue state in agent status and handoff output without adding validation or CI gates.
+2026-06-30 12:53 BST - Documented and proved the task queue lifecycle with a queued-to-active-to-complete docs-only task.

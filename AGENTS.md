@@ -16,6 +16,7 @@ Before editing this repo:
 12. Do not rewrite the game loop, renderer, or combat system unless the task specifically requires it.
 13. Use `npm run agent:handoff` when handing the repo to another agent or resuming later.
     Use `npm run task:list` at session start when `.agent/tasks.json` exists, and mark the active task complete or blocked before handoff when the task queue is being used.
+    For the task queue operating pattern, see `docs/AGENT_TASK_QUEUE.md`.
 14. Run `npm run agent:check` before reporting code or structure changes.
 15. Use `npm run agent:evidence -- --task "<short task name>"` to create a replayable evidence stub.
 16. For Android/GitHub.io runtime changes, read `docs/RUNTIME_PARITY.md`.

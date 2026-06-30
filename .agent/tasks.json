@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "id": "task-queue-operating-guide",
+    "status": "complete",
+    "summary": "Document the agent task queue lifecycle and prove the queue commands work in a bounded docs-only slice.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260630T115300Z_task-queue-operating-guide/result.md",
+    "opened": "2026-06-30T11:55:12.037Z",
+    "closed": "2026-06-30T11:56:33.370Z"
+  }
+]
