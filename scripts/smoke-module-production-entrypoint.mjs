@@ -9,7 +9,9 @@ import {
 } from "../src/app/production-module-entrypoint.js";
 import {
   BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+  BROWSER_GAMEPLAY_ADAPTER_PROOF_SLOTS,
   BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
+  BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS,
   BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
   BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
@@ -22,6 +24,30 @@ const candidateSource = readFileSync(join(root, "src/app/production-module-entry
 const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
+const browserGameplayGlobals = {
+  TapSurvivorCombat: { createCombatSystem: () => ({}) },
+  TapSurvivorEnemies: { createEnemySystem: () => ({}) },
+  TapSurvivorEnemyBehaviors: { createEnemyBehaviorSystem: () => ({}) },
+  TapSurvivorEnemySpawning: { createEnemySpawnSystem: () => ({}) },
+  TapSurvivorWeaponBehaviors: { createWeaponBehaviorSystem: () => ({}) },
+  TapSurvivorWeaponFire: { createWeaponFireSystem: () => ({}) },
+};
+const browserProgressionGlobals = {
+  TapSurvivorLevelUp: { createLevelUpSystem: () => ({}) },
+  TapSurvivorProgression: { createProgressionSystem: () => ({}) },
+  TapSurvivorQuests: {
+    createQuestSystem: () => ({}),
+    questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
+  },
+  TapSurvivorShop: { createShopSystem: () => ({}) },
+  TapSurvivorUiProgression: { createUiProgressionRenderer: () => ({}) },
+  TapSurvivorUpgrades: {
+    createUpgradeContent: () => ({
+      createUpgradeDefs: () => [],
+      runUpgradeDefs: [],
+    }),
+  },
+};
 
 check("production module entrypoint candidate imports successfully", typeof createProductionModuleEntrypoint === "function");
 check("production module runtime autoboot export imports successfully", typeof bootProductionModuleRuntime === "function");
@@ -100,6 +126,8 @@ const documentRef = {
   },
 };
 const runtimeGlobal = {
+  ...browserGameplayGlobals,
+  ...browserProgressionGlobals,
   addEventListener(type) {
     calls.push(`global:${type}`);
   },
@@ -145,6 +173,15 @@ check(
   ) &&
     ["drawImage", "drawSprite", "loadSprites"].every((slot) =>
       BROWSER_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
+    )
+);
+check(
+  "production browser gameplay and progression defaults expose expected slots",
+  ["combat", "enemies", "enemyBehaviors", "enemySpawning", "weaponBehaviors", "weaponFire"].every(
+    (slot) => BROWSER_GAMEPLAY_ADAPTER_PROOF_SLOTS.includes(slot)
+  ) &&
+    ["levelUp", "progression", "quests", "shop", "uiProgression", "upgrades"].every((slot) =>
+      BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS.includes(slot)
     )
 );
 const speedButtons = [1, 2, 5].map((speed) => ({
@@ -388,6 +425,9 @@ const defaultBrowserOptions = createBrowserDependencyBagOptions({
   storage: createMemoryStorage(),
   ui: uiSurface,
 });
+const defaultGameplaySystems = defaultBrowserOptions.adapters.gameplayAdapters.gameplaySystems;
+const defaultProgressionSystems =
+  defaultBrowserOptions.adapters.progressionAdapters.progressionSystems;
 const defaultPlatformAdapters = defaultBrowserOptions.adapters.platformAdapters;
 const movementGame = {
   paused: false,
@@ -419,6 +459,25 @@ defaultRenderers.renderSkillRail({
   game: { player: { equippedWeapons: ["spark_bolt"] } },
   spriteAdapters: defaultBrowserOptions.adapters.spriteAdapters,
 });
+check(
+  "production browser gameplay defaults bridge classic namespace factories",
+  typeof defaultGameplaySystems.combat?.createCombatSystem === "function" &&
+    typeof defaultGameplaySystems.enemies?.createEnemySystem === "function" &&
+    typeof defaultGameplaySystems.enemyBehaviors?.createEnemyBehaviorSystem === "function" &&
+    typeof defaultGameplaySystems.enemySpawning?.createEnemySpawnSystem === "function" &&
+    typeof defaultGameplaySystems.weaponBehaviors?.createWeaponBehaviorSystem === "function" &&
+    typeof defaultGameplaySystems.weaponFire?.createWeaponFireSystem === "function"
+);
+check(
+  "production browser progression defaults bridge classic namespace factories",
+  typeof defaultProgressionSystems.levelUp?.createLevelUpSystem === "function" &&
+    typeof defaultProgressionSystems.progression?.createProgressionSystem === "function" &&
+    typeof defaultProgressionSystems.quests?.createQuestSystem === "function" &&
+    typeof defaultProgressionSystems.quests?.questOpenIds === "function" &&
+    typeof defaultProgressionSystems.shop?.createShopSystem === "function" &&
+    typeof defaultProgressionSystems.uiProgression?.createUiProgressionRenderer === "function" &&
+    typeof defaultProgressionSystems.upgrades?.createUpgradeContent === "function"
+);
 check(
   "production browser platform defaults bind canvas movement input",
   movementGame.player.targetX === 240 && movementGame.player.targetY === 270

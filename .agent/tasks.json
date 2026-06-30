@@ -75,5 +75,16 @@
     "evidence": "Shane training/20260630T183903Z_slice-36d-browser-subsystem-defaults/result.md",
     "opened": "2026-06-30T18:32:49.904Z",
     "closed": "2026-06-30T18:42:06.521Z"
+  },
+  {
+    "id": "slice-36e-gameplay-progression-defaults",
+    "status": "active",
+    "summary": "Replace or prove gameplay and progression browser defaults needed before the production module runtime switch.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": null,
+    "opened": "2026-06-30T23:32:51.357Z",
+    "closed": null
   }
 ]

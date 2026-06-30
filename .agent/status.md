@@ -46,3 +46,5 @@
 2026-06-30 19:09 BST - Active mission slice-36c-module-runtime-batch: proving browser platform adapter defaults for the module runtime candidate without selecting the production ESM entrypoint.
 2026-06-30 19:19 BST - Active mission agent-check-format-fix-flag: adding an opt-in agent:check flag to format only changed Prettier-supported files before validation.
 2026-06-30 19:36 BST - Active mission slice-36d-browser-subsystem-defaults: replacing render/sprite no-op browser defaults with canvas-backed defaults for the module runtime candidate.
+2026-07-01 00:34 BST - Active mission slice-36e-gameplay-progression-defaults: replacing browser gameplay/progression no-op defaults with classic-global browser bridges; focused smoke validation next.
+2026-07-01 00:41 BST - Slice 36E browser gameplay/progression bridge validated locally with both module smoke paths and the final agent gate; preparing evidence, queue closeout, and commit.

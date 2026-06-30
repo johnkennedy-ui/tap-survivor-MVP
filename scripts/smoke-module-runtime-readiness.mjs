@@ -3,7 +3,9 @@ import { extname, join } from "node:path";
 
 import {
   BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
+  BROWSER_GAMEPLAY_ADAPTER_PROOF_SLOTS,
   BROWSER_PLATFORM_ADAPTER_PROOF_SLOTS,
+  BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS,
   BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
   BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
@@ -378,7 +380,33 @@ const runtimeDocument = {
     calls.push(`runtime-document:${type}`);
   },
 };
+const browserGameplayGlobals = {
+  TapSurvivorCombat: { createCombatSystem: () => ({}) },
+  TapSurvivorEnemies: { createEnemySystem: () => ({}) },
+  TapSurvivorEnemyBehaviors: { createEnemyBehaviorSystem: () => ({}) },
+  TapSurvivorEnemySpawning: { createEnemySpawnSystem: () => ({}) },
+  TapSurvivorWeaponBehaviors: { createWeaponBehaviorSystem: () => ({}) },
+  TapSurvivorWeaponFire: { createWeaponFireSystem: () => ({}) },
+};
+const browserProgressionGlobals = {
+  TapSurvivorLevelUp: { createLevelUpSystem: () => ({}) },
+  TapSurvivorProgression: { createProgressionSystem: () => ({}) },
+  TapSurvivorQuests: {
+    createQuestSystem: () => ({}),
+    questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
+  },
+  TapSurvivorShop: { createShopSystem: () => ({}) },
+  TapSurvivorUiProgression: { createUiProgressionRenderer: () => ({}) },
+  TapSurvivorUpgrades: {
+    createUpgradeContent: () => ({
+      createUpgradeDefs: () => [],
+      runUpgradeDefs: [],
+    }),
+  },
+};
 const runtimeGlobal = {
+  ...browserGameplayGlobals,
+  ...browserProgressionGlobals,
   requestAnimationFrame(callback) {
     calls.push("runtime:raf");
     this.frameCallback = callback;
@@ -447,10 +475,15 @@ const browserDependencyBagOptions = createBrowserDependencyBagOptions({
     querySelectorAll: () => speedButtons,
   },
   globalRef: {
+    ...browserGameplayGlobals,
+    ...browserProgressionGlobals,
     localStorage: createMemoryStorageAdapter(),
     performance: { now: () => 0 },
   },
 });
+const browserGameplaySystems = browserDependencyBagOptions.adapters.gameplayAdapters.gameplaySystems;
+const browserProgressionSystems =
+  browserDependencyBagOptions.adapters.progressionAdapters.progressionSystems;
 const runtimeAssetsAdapter = createModuleRuntimeAssetsAdapter({
   assetDefs: content.assets || {},
   fallbackSkillIcon: "fallback.png",
@@ -662,6 +695,36 @@ check(
         BROWSER_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot) &&
         MODULE_RUNTIME_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
     )
+);
+check(
+  "readiness sees browser gameplay defaults resolve classic namespace bridges",
+  [
+    ["combat", "createCombatSystem"],
+    ["enemies", "createEnemySystem"],
+    ["enemyBehaviors", "createEnemyBehaviorSystem"],
+    ["enemySpawning", "createEnemySpawnSystem"],
+    ["weaponBehaviors", "createWeaponBehaviorSystem"],
+    ["weaponFire", "createWeaponFireSystem"],
+  ].every(
+    ([slot, factoryName]) =>
+      BROWSER_GAMEPLAY_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      typeof browserGameplaySystems[slot]?.[factoryName] === "function"
+  )
+);
+check(
+  "readiness sees browser progression defaults resolve classic namespace bridges",
+  [
+    ["levelUp", "createLevelUpSystem"],
+    ["progression", "createProgressionSystem"],
+    ["quests", "createQuestSystem"],
+    ["shop", "createShopSystem"],
+    ["uiProgression", "createUiProgressionRenderer"],
+    ["upgrades", "createUpgradeContent"],
+  ].every(
+    ([slot, factoryName]) =>
+      BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS.includes(slot) &&
+      typeof browserProgressionSystems[slot]?.[factoryName] === "function"
+  )
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
@@ -918,14 +981,17 @@ check(
   browserDependencyBagGlobalReads.length === 0
 );
 check(
-  "readiness sees browser dependency bag default path still uses proof adapters before production switch",
+  "readiness sees browser dependency bag default path bridges gameplay and progression through classic globals before production switch",
   [
-    "createNoopGameplayAdapters",
-    "createNoopProgressionAdapters",
+    "createBrowserGameplaySystems",
+    "createBrowserProgressionSystems",
+    "createBrowserNamespaceBridge",
     "createNoopRunUi",
     "createNoopShellUi",
     "createNoopShopSystem",
-  ].every((name) => browserDependencyBagSource.includes(name))
+  ].every((name) => browserDependencyBagSource.includes(name)) &&
+    !browserDependencyBagSource.includes("createNoopGameplayAdapters") &&
+    !browserDependencyBagSource.includes("createNoopProgressionAdapters")
 );
 check(
   "readiness reports missing module-native browser adapter subsystem files",
@@ -1117,7 +1183,7 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
-    "default browser dependency bag still uses proof/no-op gameplay, progression, and UI adapters",
+    "default browser dependency bag still uses proof/no-op UI adapters",
     "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
