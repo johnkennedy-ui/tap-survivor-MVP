@@ -90,6 +90,16 @@ function readTaskQueue() {
   }
 }
 
+function readLatestFrankRun() {
+  const path = ".agent/frank-last-command.json";
+  if (!existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch (error) {
+    return { warning: error.message };
+  }
+}
+
 const pkg = readJson("package.json");
 const content = readJson("content/tap-survivor-content.json");
 const branch = run("git", ["branch", "--show-current"]) || "unknown";
@@ -149,6 +159,24 @@ if (taskQueue.missing) {
     console.log("- blocked tasks:");
     blocked.forEach((task) => console.log(`  - ${task.id}: ${task.summary}`));
   }
+}
+
+console.log("\n## Latest Frank Run");
+const frankRun = readLatestFrankRun();
+if (!frankRun) {
+  console.log("- none");
+} else if (frankRun.warning) {
+  console.log(`- Warning: .agent/frank-last-command.json invalid: ${frankRun.warning}`);
+} else {
+  console.log(`- run: ${frankRun.run_dir || "unknown"}`);
+  console.log(`- command: ${frankRun.command || "unknown"}`);
+  console.log(`- status: ${frankRun.status || "unknown"}`);
+  console.log(`- pid: ${frankRun.pid ?? "unknown"}`);
+  console.log(`- started_at: ${frankRun.started_at || "unknown"}`);
+  console.log(`- ended_at: ${frankRun.ended_at || "unknown"}`);
+  console.log(`- exit_code: ${frankRun.exit_code ?? "unknown"}`);
+  console.log(`- timed_out: ${frankRun.timed_out === true ? "yes" : "no"}`);
+  console.log(`- log: ${frankRun.log_path || "unknown"}`);
 }
 
 console.log("\n## Current Task Snapshot");

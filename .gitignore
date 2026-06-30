@@ -4,6 +4,7 @@ www/
 .agent/frank-last-command.json
 .agent/frank-evidence.md
 .agent/frank-capture/
+.agent/runs/
 
 .env
 .env.*

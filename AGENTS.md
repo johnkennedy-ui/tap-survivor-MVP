@@ -64,6 +64,7 @@ Before editing this repo:
 
 - Run `npm run frank:heartbeat -- --task "<task>" --phase "<phase>"` before and after each major phase.
 - Use `npm run frank:run -- "<command>" --timeout <seconds>` for validation commands expected to take more than a few seconds.
+- If a preflight wrapper loses child-process state, loses its live output path, mishandles an exit, or requires manual recovery, stop and report the task as blocked. Do not continue implementation from a recovered preflight unless the human explicitly approves it.
 - If the same command fails twice, stop, update Frank status with `--blocker`, and report instead of continuing.
 - If blocked, write the blocker into `.agent/frank-status.json` with `npm run frank:heartbeat -- --blocker "<reason>"` and stop.
 

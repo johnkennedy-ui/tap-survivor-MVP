@@ -9,5 +9,16 @@
     "evidence": "Shane training/20260630T115300Z_task-queue-operating-guide/result.md",
     "opened": "2026-06-30T11:55:12.037Z",
     "closed": "2026-06-30T11:56:33.370Z"
+  },
+  {
+    "id": "preflight-runner-reliability",
+    "status": "complete",
+    "summary": "Fix the preflight runner so long-running child processes, logs, exits, and recovery state are tracked reliably.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260630T134805Z_preflight-runner-reliability/result.md",
+    "opened": "2026-06-30T13:42:56.927Z",
+    "closed": "2026-06-30T13:52:01.231Z"
   }
 ]
