@@ -141,5 +141,16 @@
     "evidence": "Shane training/20260701T201029Z_batch-1-enemy-family-readiness/result.md",
     "opened": "2026-07-01T20:07:41.507Z",
     "closed": "2026-07-01T20:11:50.562Z"
+  },
+  {
+    "id": "batch-2-progression-family-readiness",
+    "status": "complete",
+    "summary": "Advance progression-family module runtime readiness for the production ESM candidate.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T202520Z_batch-2-progression-family-readiness/result.md",
+    "opened": "2026-07-01T20:22:45.842Z",
+    "closed": "2026-07-01T20:26:57.376Z"
   }
 ]
