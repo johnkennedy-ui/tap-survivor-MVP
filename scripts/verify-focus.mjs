@@ -23,7 +23,7 @@ function usage() {
 function verifyAssets() {
   const sprites = content.assets?.sprites || {};
   const spriteSheets = sprites.spriteSheets || {};
-  check("asset resolver module is loaded", read("index.html").includes("src/assets.js") && read("src/assets.js").includes("createAssetResolver"));
+  check("asset resolver module remains available", read("src/assets.js").includes("createAssetResolver"));
   check("weapons have effect sprites and clean icons", Object.keys(content.weapons || {}).every((id) => sprites.weapons?.[id]?.src && sprites.weapons?.[id]?.iconSrc));
   check("run upgrades have effect sprites and clean icons", (content.runUpgrades || []).every((upgrade) => sprites.runUpgrades?.[upgrade.id]?.src && sprites.runUpgradeIcons?.[upgrade.id]));
   check(

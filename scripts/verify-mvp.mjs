@@ -67,6 +67,8 @@ const runUpdate = readRequired("src/run-update.js");
 const debug = readRequired("src/debug.js");
 const shellRelicUi = readRequired("src/shell-relic-ui.js");
 const shellUi = readRequired("src/shell-ui.js");
+const productionModuleEntrypoint = readRequired("src/app/production-module-entrypoint.js");
+const productionModuleAutoboot = readRequired("src/app/production-module-autoboot.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
 const agentContext = readRequired("docs/AGENT_CODEBASE_CONTEXT.md");
@@ -95,50 +97,10 @@ const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upg
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
 check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index));
-check("index loads generated content", /src="src\/content\.generated\.js(\?[^"]+)?"/.test(index));
-check("index loads asset resolver", /src="src\/assets\.js(\?[^"]+)?"/.test(index) && assets.includes("createAssetResolver"));
-check("index loads shared math utilities", /src="src\/math\.js(\?[^"]+)?"/.test(index));
-check("index loads sprite utilities", /src="src\/sprites\.js(\?[^"]+)?"/.test(index));
-check("index loads audio utilities", /src="src\/audio\.js(\?[^"]+)?"/.test(index));
-check("index loads quest utilities", /src="src\/quests\.js(\?[^"]+)?"/.test(index));
-check("index loads save default helpers", /src="src\/save-defaults\.js(\?[^"]+)?"/.test(index));
-check("index loads save migration helpers", /src="src\/save-migrations\.js(\?[^"]+)?"/.test(index));
-check("index loads save normalize helpers", /src="src\/save-normalize\.js(\?[^"]+)?"/.test(index));
-check("index loads save utilities", /src="src\/save\.js(\?[^"]+)?"/.test(index));
-check("index loads upgrade definitions", /src="src\/upgrades\.js(\?[^"]+)?"/.test(index));
-check("index loads content registry", /src="src\/content-registry\.js(\?[^"]+)?"/.test(index));
-check("index loads progression module", /src="src\/progression\.js(\?[^"]+)?"/.test(index));
-check("index loads skill rail renderer module", /src="src\/render-skill-rail\.js(\?[^"]+)?"/.test(index));
-check("index loads HUD renderer module", /src="src\/render-hud\.js(\?[^"]+)?"/.test(index));
-check("index loads enemy renderer module", /src="src\/render-enemies\.js(\?[^"]+)?"/.test(index));
-check("index loads rendering module", /src="src\/rendering\.js(\?[^"]+)?"/.test(index));
-check("index loads balance module", /src="src\/balance\.js(\?[^"]+)?"/.test(index));
-check("index loads weapon projectile helpers", /src="src\/weapon-projectiles\.js(\?[^"]+)?"/.test(index));
-check("index loads weapon targeting helpers", /src="src\/weapon-targeting\.js(\?[^"]+)?"/.test(index));
-check("index loads weapon fire module", /src="src\/weapon-fire\.js(\?[^"]+)?"/.test(index));
-check("index loads enemy behavior helpers", /src="src\/enemy-behaviors\.js(\?[^"]+)?"/.test(index));
-check("index loads enemy spawning helper", /src="src\/enemy-spawning\.js(\?[^"]+)?"/.test(index));
-check("index loads enemies module", /src="src\/enemies\.js(\?[^"]+)?"/.test(index));
-check("index loads combat damage helper", /src="src\/combat-damage\.js(\?[^"]+)?"/.test(index));
-check("index loads combat module", /src="src\/combat\.js(\?[^"]+)?"/.test(index));
-check("index loads UI progression helper", /src="src\/ui-progression\.js(\?[^"]+)?"/.test(index));
-check("index loads UI module", /src="src\/ui\.js(\?[^"]+)?"/.test(index));
-check("index loads run UI module", /src="src\/run-ui\.js(\?[^"]+)?"/.test(index));
-check("index loads level-up choice helper", /src="src\/level-up-choices\.js(\?[^"]+)?"/.test(index));
-check("index loads level-up module", /src="src\/level-up\.js(\?[^"]+)?"/.test(index));
-check("index loads input module", /src="src\/input\.js(\?[^"]+)?"/.test(index));
-check("index loads shell UI module", /src="src\/shell-ui\.js(\?[^"]+)?"/.test(index));
-check("index loads pickup module", /src="src\/pickups\.js(\?[^"]+)?"/.test(index));
-check("index loads shop pricing helper", /src="src\/shop-pricing\.js(\?[^"]+)?"/.test(index));
-check("index loads shop module", /src="src\/shop\.js(\?[^"]+)?"/.test(index));
-check("index loads relic module", /src="src\/relics\.js(\?[^"]+)?"/.test(index));
-check("index loads run state module", /src="src\/run-state\.js(\?[^"]+)?"/.test(index));
-check("index loads run update module", /src="src\/run-update\.js(\?[^"]+)?"/.test(index));
-check("index loads debug module", /src="src\/debug\.js(\?[^"]+)?"/.test(index));
-check("index loads shell relic UI module", /src="src\/shell-relic-ui\.js(\?[^"]+)?"/.test(index));
-check("index loads game script", /src="src\/game\.js(\?[^"]+)?"/.test(index));
-check("index loads game runtime module", /src="src\/game-runtime\.js(\?[^"]+)?"/.test(index));
-check("index loads game dependencies module", /src="src\/game-dependencies\.js(\?[^"]+)?"/.test(index));
+check("index selects production module autoboot", /src="src\/app\/production-module-autoboot\.js(\?[^"]+)?"/.test(index) && !/src="src\/game\.js(\?[^"]+)?"/.test(index) && !/src="src\/game-dependencies\.js(\?[^"]+)?"/.test(index));
+check("index keeps generated shell bridge modules", /src="src\/shell-relic-ui\.js(\?[^"]+)?"/.test(index) && /src="src\/shell-ui\.js(\?[^"]+)?"/.test(index));
+check("production module entrypoint is wired for the browser dependency bag", productionModuleEntrypoint.includes("./browser-dependency-bag.js") && productionModuleEntrypoint.includes("../modules/module-game-lifecycle.js") && productionModuleEntrypoint.includes("../modules/module-game-dependencies.js"));
+check("production module autoboot remains a tiny wrapper", productionModuleAutoboot.includes("bootProductionModuleRuntime();"));
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
 check("speed controls exist", ["data-speed=\"1\"", "data-speed=\"2\"", "data-speed=\"5\""].every((id) => index.includes(id)) && styles.includes(".speed-controls"));
@@ -325,7 +287,7 @@ check(
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && runtimeEntry.includes("TapSurvivorSprites"));
-check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && index.includes("src/sprite-sheet-renderer.js") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
+check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
 check(
   "shared asset resolver exists",
   assets.includes("TapSurvivorAssets") &&
