@@ -174,5 +174,16 @@
     "evidence": "Shane training/20260701T213829Z_strong-brain-esm-crossover-review/result.md",
     "opened": "2026-07-01T21:30:50.943Z",
     "closed": "2026-07-01T21:39:57.064Z"
+  },
+  {
+    "id": "production-esm-switch-candidate",
+    "status": "complete",
+    "summary": "Switch production index.html to the ESM module autoboot entrypoint while preserving classic fallback files.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T220313Z_production-esm-switch-candidate/result.md",
+    "opened": "2026-07-01T21:54:24.760Z",
+    "closed": "2026-07-01T22:05:00.704Z"
   }
 ]
