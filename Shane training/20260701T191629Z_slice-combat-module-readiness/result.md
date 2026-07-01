@@ -1,0 +1,63 @@
+# Slice Combat Module Readiness
+
+- Status: complete
+- Starting HEAD: `547d963`
+- Ending HEAD: pending commit
+- Queue task ID: `slice-combat-module-readiness`
+- Exact blocker targeted: missing module-native browser combat facade, `src/modules/combat.js`
+- Subtasks completed:
+  - Added `src/modules/combat.js` as a small compatibility facade that bridges to the classic `TapSurvivorCombat` namespace
+  - Verified syntax for the new module file
+  - Ran the module production-entrypoint smoke
+  - Ran the module runtime-readiness smoke and confirmed `src/modules/combat.js` was removed from the missing-file inventory
+  - Ran diff hygiene checks
+  - Recorded best-effort usage snapshots at mission start/end
+- Files inspected:
+  - `src/modules/assets.js`
+  - `src/modules/ui.js`
+  - `src/modules/ui-progression.js`
+  - `src/combat.js`
+  - `src/modules/combat-damage.js`
+  - `src/modules/module-runtime-gameplay-adapter.js`
+  - `src/modules/module-game-dependencies.js`
+  - `src/modules/game-dependencies.js`
+  - `src/app/browser-dependency-bag.js`
+  - `scripts/smoke-module-runtime-readiness.mjs`
+  - `.agent/status.md`
+- Files changed:
+  - `src/modules/combat.js`
+  - `.agent/tasks.json`
+  - `Shane training/20260701T191629Z_slice-combat-module-readiness/result.md`
+- Production `index.html` changed: no
+- Production runtime behaviour changed: no
+- Android/web parity impact: none
+- Global boundary impact: none outside the approved compatibility/bootstrap boundary; the new module facade only bridges to the existing classic `TapSurvivorCombat` namespace
+- Validation commands/results:
+  - `git fetch origin main` -> pass
+  - `git checkout main` -> pass
+  - `git pull --ff-only origin main` -> pass
+  - `git rev-parse --abbrev-ref HEAD` -> `main`
+  - `git rev-parse --short HEAD` -> `547d963`
+  - `git rev-parse --short origin/main` -> `547d963`
+  - `git status --short` -> clean before edit
+  - `npm run task:validate` -> pass
+  - `npm run task:add -- --id "slice-combat-module-readiness" --summary "Advance src/modules/combat.js module runtime readiness for the production ESM candidate."` -> pass
+  - `npm run task:active -- slice-combat-module-readiness` -> pass
+  - `npm run agent:mission-start` -> pass; reported the active task and the clean branch baseline before the edit
+  - `frank-usage snapshot --phase start --mission "slice-combat-module-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "slice-combat-module-readiness"` -> soft-failed with `EROFS`; warning only, no stall
+  - `node --check src/modules/combat.js` -> pass
+  - `npm run frank:run -- "npm run smoke:module-production-entrypoint" --timeout 60` -> pass
+  - `npm run frank:run -- "npm run smoke:module-runtime-readiness" --timeout 60` -> pass
+  - `git diff --check` -> pass
+  - `frank-usage snapshot --phase end --mission "slice-combat-module-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "slice-combat-module-readiness"` -> soft-failed with `EROFS`; warning only, no stall
+  - `frank-usage report --mission "slice-combat-module-readiness"` -> `No snapshots found.`
+- Usage report:
+  - Ledger path: `/home/logix/.openclaw/frank-usage/usage.jsonl`
+  - Mission: `slice-combat-module-readiness`
+  - Start snapshot: failed soft with `EROFS`
+  - End snapshot: failed soft with `EROFS`
+  - `tokens_known`: `false`
+  - Token delta: unknown
+  - Usage snapshot status: failed with `EROFS`
+- Remaining blocker after this slice: the readiness inventory still lists `src/modules/enemies.js`, `src/modules/enemy-behaviors.js`, `src/modules/enemy-spawning.js`, `src/modules/level-up.js`, `src/modules/progression.js`, `src/modules/quests.js`, `src/modules/render-enemies.js`, `src/modules/render-hud.js`, `src/modules/render-skill-rail.js`, `src/modules/rendering.js`, `src/modules/shop.js`, `src/modules/sprites.js`, `src/modules/weapon-behaviors.js`, and `src/modules/weapon-fire.js`
+- Next recommended slice: `src/modules/enemies.js`

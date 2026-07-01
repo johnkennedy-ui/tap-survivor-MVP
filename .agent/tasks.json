@@ -119,5 +119,16 @@
     "evidence": "Shane training/20260701T171554Z_fix-f8321fa-ui-progression-ci/result.md",
     "opened": "2026-07-01T16:59:47.428Z",
     "closed": "2026-07-01T17:16:53.103Z"
+  },
+  {
+    "id": "slice-combat-module-readiness",
+    "status": "complete",
+    "summary": "Advance src/modules/combat.js module runtime readiness for the production ESM candidate.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T191629Z_slice-combat-module-readiness/result.md",
+    "opened": "2026-07-01T19:11:38.726Z",
+    "closed": "2026-07-01T19:17:23.111Z"
   }
 ]
