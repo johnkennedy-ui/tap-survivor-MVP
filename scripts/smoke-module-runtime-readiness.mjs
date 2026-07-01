@@ -8,6 +8,7 @@ import {
   BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS,
   BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
   BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
+  BROWSER_UI_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
 } from "../src/app/browser-dependency-bag.js";
 import {
@@ -466,11 +467,23 @@ runtimeStorageAdapter.storageAdapter.removeSaveRaw();
 const browserDependencyBagOptions = createBrowserDependencyBagOptions({
   content,
   documentRef: {
+    body: {
+      dataset: {
+        gameSpeed: "5",
+      },
+    },
     getElementById: (id) => ({
       id,
+      attributes: {},
       classList: { add() {}, remove() {}, toggle() {} },
       dataset: {},
-      setAttribute() {},
+      getAttribute(name) {
+        return this.attributes[name];
+      },
+      hidden: false,
+      setAttribute(name, value) {
+        this.attributes[name] = String(value);
+      },
     }),
     querySelectorAll: () => speedButtons,
   },
@@ -481,6 +494,16 @@ const browserDependencyBagOptions = createBrowserDependencyBagOptions({
     performance: { now: () => 0 },
   },
 });
+const browserUiAdapters = browserDependencyBagOptions.adapters.uiAdapters;
+browserUiAdapters.runUiAdapter.updateRunHud();
+browserUiAdapters.runUiAdapter.showEndScreen("Browser UI default ready");
+browserUiAdapters.runUiAdapter.hideEndScreen();
+browserUiAdapters.shellUiAdapter.bind();
+browserUiAdapters.shellUiAdapter.showTitleScreen();
+browserUiAdapters.shellUiAdapter.closeRunMenu(false);
+browserUiAdapters.shopSystemAdapter.openShop?.();
+browserUiAdapters.shopSystemAdapter.renderShop?.();
+browserUiAdapters.shopSystemAdapter.closeShop();
 const browserGameplaySystems = browserDependencyBagOptions.adapters.gameplayAdapters.gameplaySystems;
 const browserProgressionSystems =
   browserDependencyBagOptions.adapters.progressionAdapters.progressionSystems;
@@ -923,6 +946,24 @@ check(
   MODULE_RUNTIME_STORAGE_ADAPTER_LOW_LEVEL_SLOTS.includes("storage")
 );
 check(
+  "readiness sees browser UI defaults own explicit proof slots",
+  BROWSER_UI_ADAPTER_PROOF_SLOTS.every((slot) => slot in browserUiAdapters) &&
+    typeof browserUiAdapters.runUi?.formatTime === "function" &&
+    typeof browserUiAdapters.runUi?.getGameSpeed === "function" &&
+    typeof browserUiAdapters.runUi?.maxEquippedWeapons === "function" &&
+    browserUiAdapters.ui.runHud.textContent === "Speed x5 | Browser UI default ready." &&
+    browserUiAdapters.ui.runStats.textContent === "Result: Browser UI default ready" &&
+    browserUiAdapters.ui.endScreen.hidden === true &&
+    browserUiAdapters.ui.titleScreen.hidden === false &&
+    browserUiAdapters.ui.startTransition.hidden === true &&
+    browserUiAdapters.ui.runMenu.hidden === true &&
+    browserUiAdapters.ui.shopModal.hidden === true &&
+    browserUiAdapters.ui.menuShopPanel.hidden === true &&
+    browserUiAdapters.ui.menuShopNotice.textContent === "Browser shop ready." &&
+    browserUiAdapters.ui.openMenu.getAttribute("aria-expanded") === "false" &&
+    browserUiAdapters.ui.exitRun.disabled === true
+);
+check(
   "readiness sees module runtime UI adapter bundle low-level dependencies explicit",
   MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("ui") &&
     MODULE_RUNTIME_UI_ADAPTER_LOW_LEVEL_SLOTS.includes("shopSystemAdapter")
@@ -986,9 +1027,10 @@ check(
     "createBrowserGameplaySystems",
     "createBrowserProgressionSystems",
     "createBrowserNamespaceBridge",
-    "createNoopRunUi",
-    "createNoopShellUi",
-    "createNoopShopSystem",
+    "createBrowserUiAdapters",
+    "createBrowserRunUiAdapter",
+    "createBrowserShellUiAdapter",
+    "createBrowserShopSystemAdapter",
   ].every((name) => browserDependencyBagSource.includes(name)) &&
     !browserDependencyBagSource.includes("createNoopGameplayAdapters") &&
     !browserDependencyBagSource.includes("createNoopProgressionAdapters")
@@ -1183,7 +1225,6 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
-    "default browser dependency bag still uses proof/no-op UI adapters",
     "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",

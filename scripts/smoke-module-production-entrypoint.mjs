@@ -14,6 +14,7 @@ import {
   BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS,
   BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
   BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
+  BROWSER_UI_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
 } from "../src/app/browser-dependency-bag.js";
 
@@ -119,7 +120,7 @@ const canvasContext = {
   translate: (x, y) => calls.push(`canvas:translate:${x}:${y}`),
 };
 const documentRef = {
-  body: { dataset: {} },
+  body: { dataset: { gameSpeed: "5" } },
   visibilityState: "visible",
   addEventListener(type) {
     calls.push(`document:${type}`);
@@ -146,6 +147,43 @@ const runtimeGlobal = {
     }
   },
 };
+function createVisibilityNode(label) {
+  const node = {
+    attributes: {},
+    classList: {
+      add(name) {
+        calls.push(`${label}:add:${name}`);
+        if (name === "hidden") {
+          node.hidden = true;
+        }
+      },
+      remove(name) {
+        calls.push(`${label}:remove:${name}`);
+        if (name === "hidden") {
+          node.hidden = false;
+        }
+      },
+      toggle(name, value) {
+        calls.push(`${label}:toggle:${name}:${String(value)}`);
+        if (name === "hidden") {
+          node.hidden = value === undefined ? !node.hidden : Boolean(value);
+        }
+        return node.hidden;
+      },
+    },
+    disabled: false,
+    hidden: true,
+    setAttribute(name, value) {
+      this.attributes[name] = String(value);
+      calls.push(`${label}:attr:${name}:${value}`);
+    },
+    getAttribute(name) {
+      return this.attributes[name];
+    },
+    textContent: "",
+  };
+  return node;
+}
 check(
   "production browser dependency bag factory exposes expected adapter slots",
   [
@@ -196,12 +234,7 @@ const speedButtons = [1, 2, 5].map((speed) => ({
   },
 }));
 const uiSurface = {
-  endScreen: {
-    classList: {
-      add: () => calls.push("run-ui:end-hidden"),
-      remove: () => calls.push("run-ui:end-open"),
-    },
-  },
+  endScreen: createVisibilityNode("browser-ui:end-screen"),
   questBanner: {
     classList: {
       add: (name) => calls.push(`quest-banner:add:${name}`),
@@ -214,9 +247,22 @@ const uiSurface = {
       add: () => calls.push("level-up:hidden"),
     },
   },
+  menuInventoryPanel: createVisibilityNode("browser-ui:menu-inventory-panel"),
+  menuInventoryTab: createVisibilityNode("browser-ui:menu-inventory-tab"),
+  menuProgressPanel: createVisibilityNode("browser-ui:menu-progress-panel"),
+  menuProgressTab: createVisibilityNode("browser-ui:menu-progress-tab"),
+  menuShopNotice: createVisibilityNode("browser-ui:menu-shop-notice"),
+  menuShopPanel: createVisibilityNode("browser-ui:menu-shop-panel"),
+  menuShopTab: createVisibilityNode("browser-ui:menu-shop-tab"),
+  openMenu: createVisibilityNode("browser-ui:open-menu"),
+  exitRun: createVisibilityNode("browser-ui:exit-run"),
+  runMenu: createVisibilityNode("browser-ui:run-menu"),
   runHud: { textContent: "" },
   runStats: { innerHTML: "" },
   speedButtons,
+  shopModal: createVisibilityNode("browser-ui:shop-modal"),
+  startTransition: createVisibilityNode("browser-ui:start-transition"),
+  titleScreen: createVisibilityNode("browser-ui:title-screen"),
 };
 const storage = createMemoryStorage();
 storage.setItem("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
@@ -398,6 +444,17 @@ browserEntrypoint.startRun();
 browserEntrypoint.tick(0.032);
 browserEntrypoint.render({ frameId: "browser-default" });
 browserEntrypoint.persist();
+browserEntrypoint.runtime.setGameSpeed(5);
+const browserUiAdapters = browserEntrypoint.dependencies.moduleSystems.moduleRuntimeUiAdapters;
+browserUiAdapters.runUiAdapter.updateRunHud();
+browserUiAdapters.runUiAdapter.showEndScreen("browser-entrypoint");
+browserUiAdapters.runUiAdapter.hideEndScreen();
+browserUiAdapters.shellUiAdapter.bind();
+browserUiAdapters.shellUiAdapter.showTitleScreen();
+browserUiAdapters.shellUiAdapter.closeRunMenu(false);
+browserUiAdapters.shopSystemAdapter.openShop?.();
+browserUiAdapters.shopSystemAdapter.renderShop?.();
+browserUiAdapters.shopSystemAdapter.closeShop();
 browserEntrypoint.dispose();
 
 check(
@@ -416,6 +473,27 @@ check(
 check(
   "production module entrypoint default browser boot publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
+);
+check(
+  "production module entrypoint default browser dependency bag exposes browser UI defaults",
+  BROWSER_UI_ADAPTER_PROOF_SLOTS.every((slot) => slot in browserUiAdapters) &&
+    typeof browserUiAdapters.runUiAdapter?.updateRunHud === "function" &&
+    typeof browserUiAdapters.shellUiAdapter?.showTitleScreen === "function" &&
+    typeof browserUiAdapters.shopSystemAdapter?.closeShop === "function" &&
+    uiSurface.runHud.textContent.includes("Speed x5") &&
+    uiSurface.runStats.innerHTML.includes("browser-entrypoint") &&
+    uiSurface.endScreen.hidden === true &&
+    uiSurface.titleScreen.hidden === false &&
+    uiSurface.startTransition.hidden === true &&
+    uiSurface.runMenu.hidden === true &&
+    uiSurface.shopModal.hidden === true &&
+    uiSurface.menuShopPanel.hidden === true &&
+    uiSurface.menuShopNotice.textContent === "Browser shop ready." &&
+    uiSurface.openMenu.getAttribute("aria-expanded") === "false" &&
+    uiSurface.exitRun.disabled === true &&
+    calls.includes("browser-ui:title-screen:remove:hidden") &&
+    calls.includes("browser-ui:run-menu:add:hidden") &&
+    calls.includes("browser-ui:shop-modal:add:hidden")
 );
 const defaultBrowserOptions = createBrowserDependencyBagOptions({
   canvas,

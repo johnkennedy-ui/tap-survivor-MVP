@@ -50,6 +50,13 @@ export const BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS = Object.freeze([
   "upgrades",
 ]);
 
+export const BROWSER_UI_ADAPTER_PROOF_SLOTS = Object.freeze([
+  "runUiAdapter",
+  "shellUiAdapter",
+  "shopSystemAdapter",
+  "ui",
+]);
+
 export function createBrowserDependencyBagOptions(options = {}) {
   const globalRef = options.globalRef || globalThis;
   const documentRef = options.documentRef || globalRef.document;
@@ -101,6 +108,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
       progressionAdapters: options.progressionAdapters || {
         progressionSystems: createBrowserProgressionSystems({
           globalRef,
+          ui,
         }),
       },
       renderingAdapters:
@@ -125,12 +133,11 @@ export function createBrowserDependencyBagOptions(options = {}) {
         },
       uiAdapters:
         options.uiAdapters ||
-        {
-          runUiAdapter: createNoopRunUi(),
-          shellUiAdapter: createNoopShellUi(),
-          shopSystemAdapter: createNoopShopSystem(),
+        createBrowserUiAdapters({
+          documentRef,
+          globalRef,
           ui,
-        },
+        }),
     },
   };
 }
@@ -261,7 +268,7 @@ function createBrowserGameplaySystems({ globalRef }) {
   };
 }
 
-function createBrowserProgressionSystems({ globalRef }) {
+function createBrowserProgressionSystems({ globalRef, ui }) {
   return {
     levelUp: createBrowserNamespaceBridge(globalRef, "TapSurvivorLevelUp", "createLevelUpSystem", {
       createLevelUpSystem: () => ({}),
@@ -279,7 +286,7 @@ function createBrowserProgressionSystems({ globalRef }) {
       questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
     }),
     shop: createBrowserNamespaceBridge(globalRef, "TapSurvivorShop", "createShopSystem", {
-      createShopSystem: () => createNoopShopSystem(),
+      createShopSystem: () => createBrowserShopSystemAdapter({ ui }),
     }),
     uiProgression: createBrowserNamespaceBridge(
       globalRef,
@@ -463,26 +470,84 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   };
 }
 
-function createNoopRunUi() {
+function createBrowserUiAdapters({ documentRef, globalRef, ui }) {
   return {
-    hideEndScreen() {},
-    showEndScreen() {},
-    updateRunHud() {},
+    runUi: {
+      formatTime: formatBrowserTime,
+      getGameSpeed: () => readBrowserGameSpeed({ documentRef, globalRef }),
+      maxEquippedWeapons: () => 4,
+      renderDebug: () => {},
+    },
+    runUiAdapter: createBrowserRunUiAdapter({ documentRef, globalRef, ui }),
+    shellUiAdapter: createBrowserShellUiAdapter({ ui }),
+    shopSystemAdapter: createBrowserShopSystemAdapter({ ui }),
+    ui,
   };
 }
 
-function createNoopShellUi() {
+function createBrowserRunUiAdapter({ documentRef, globalRef, ui }) {
+  const getGameSpeed = () => readBrowserGameSpeed({ documentRef, globalRef });
   return {
-    bind() {},
-    closeRunMenu() {},
-    closeStartFlow() {},
-    showTitleScreen() {},
+    hideEndScreen() {
+      toggleHidden(ui.endScreen, true);
+    },
+    showEndScreen(reason = "Run ended") {
+      if (ui.runStats) ui.runStats.textContent = `Result: ${reason}`;
+      toggleHidden(ui.endScreen, false);
+    },
+    updateRunHud() {
+      if (ui.runHud) {
+        ui.runHud.textContent = `Speed x${getGameSpeed()} | Browser UI default ready.`;
+      }
+      return true;
+    },
   };
 }
 
-function createNoopShopSystem() {
+function createBrowserShellUiAdapter({ ui }) {
+  const setMenuOpen = (open) => {
+    toggleHidden(ui.runMenu, !open);
+    ui.openMenu?.setAttribute?.("aria-expanded", String(Boolean(open)));
+    if (ui.exitRun) ui.exitRun.disabled = !open;
+  };
+  const showTitle = () => {
+    toggleHidden(ui.titleScreen, false);
+    toggleHidden(ui.startTransition, true);
+    setMenuOpen(false);
+    return true;
+  };
   return {
-    closeShop() {},
+    bind() {
+      showTitle();
+      return true;
+    },
+    closeRunMenu() {
+      setMenuOpen(false);
+      return true;
+    },
+    closeStartFlow: showTitle,
+    showTitleScreen: showTitle,
+  };
+}
+
+function createBrowserShopSystemAdapter({ ui }) {
+  return {
+    closeShop() {
+      toggleHidden(ui.shopModal, true);
+      toggleHidden(ui.menuShopPanel, true);
+      return true;
+    },
+    openShop() {
+      toggleHidden(ui.shopModal, false);
+      toggleHidden(ui.menuShopPanel, false);
+      return true;
+    },
+    renderShop() {
+      if (ui.menuShopNotice && !ui.menuShopNotice.textContent) {
+        ui.menuShopNotice.textContent = "Browser shop ready.";
+      }
+      return true;
+    },
   };
 }
 
@@ -507,6 +572,33 @@ function spriteSource(definition) {
   return "";
 }
 
+function formatBrowserTime(seconds) {
+  const total = Math.max(0, Math.floor(Number(seconds) || 0));
+  const mins = Math.floor(total / 60);
+  const secs = String(total % 60).padStart(2, "0");
+  return `${mins}:${secs}`;
+}
+
+function readBrowserGameSpeed({ documentRef, globalRef }) {
+  const speedFromBody = Number(documentRef?.body?.dataset?.gameSpeed);
+  if (Number.isFinite(speedFromBody) && speedFromBody > 0) return speedFromBody;
+  const speedFromGlobalBody = Number(globalRef?.document?.body?.dataset?.gameSpeed);
+  if (Number.isFinite(speedFromGlobalBody) && speedFromGlobalBody > 0) return speedFromGlobalBody;
+  const speedButtons = [...(documentRef?.querySelectorAll?.("[data-speed]") || [])];
+  const activeButton = speedButtons.find((button) => button.classList?.contains?.("active"));
+  const speedFromButton = Number(activeButton?.dataset?.speed);
+  return Number.isFinite(speedFromButton) && speedFromButton > 0 ? speedFromButton : 1;
+}
+
+function toggleHidden(element, hidden) {
+  if (!element) return;
+  if (element.classList?.add && element.classList?.remove) {
+    if (hidden) element.classList.add("hidden");
+    else element.classList.remove("hidden");
+  }
+  element.hidden = Boolean(hidden);
+}
+
 function createCanvasFallback() {
   return {
     height: 540,
@@ -518,6 +610,7 @@ function createCanvasFallback() {
 }
 
 function createElementFallback(id = "") {
+  const attributes = {};
   return {
     id,
     classList: {
@@ -526,7 +619,13 @@ function createElementFallback(id = "") {
       toggle() {},
     },
     dataset: {},
-    setAttribute() {},
+    getAttribute(name) {
+      return attributes[name];
+    },
+    hidden: false,
+    setAttribute(name, value) {
+      attributes[name] = String(value);
+    },
     textContent: "",
   };
 }

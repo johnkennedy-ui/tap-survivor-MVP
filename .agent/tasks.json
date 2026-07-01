@@ -86,5 +86,16 @@
     "evidence": "Shane training/20260630T234216Z_slice-36e-gameplay-progression-defaults/result.md",
     "opened": "2026-06-30T23:32:51.357Z",
     "closed": "2026-06-30T23:45:49.597Z"
+  },
+  {
+    "id": "slice-36f-browser-ui-defaults",
+    "status": "complete",
+    "summary": "Replace or prove browser UI defaults needed before the production module runtime switch.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T004618Z_slice-36f-browser-ui-defaults/result.md",
+    "opened": "2026-07-01T00:19:38.799Z",
+    "closed": "2026-07-01T00:49:17.317Z"
   }
 ]
