@@ -53,8 +53,26 @@ export const MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS = Object.freeze([
   "createUiRenderer",
 ]);
 
+/**
+ * @typedef {object} UiRendererOptions
+ * @property {*} [ui]
+ * @property {*} [uiProgression]
+ * @property {*} [weaponDefs]
+ * @property {*} [weaponUnlocks]
+ * @property {*} [upgradeDefs]
+ * @property {*} [questDefs]
+ * @property {() => *} [getSave]
+ * @property {(upgradeId: string) => number} [getUpgradeTier]
+ * @property {(nodeId: string) => boolean} [hasNode]
+ * @property {(unlock: *) => boolean} [isNodeVisible]
+ * @property {(questId: string) => boolean} [isQuestComplete]
+ * @property {(unlock: *) => string | null | undefined} [nodeGateStatus]
+ * @property {(unlock: *) => *} [buyWeaponUnlock]
+ * @property {(upgrade: *) => *} [buyUpgrade]
+ */
+
 export function createUi(options = {}) {
-  const documentRef = options.documentRef || globalThis.document;
+  const documentRef = options.documentRef;
   const canvas = options.canvas || documentRef?.getElementById?.("game") || null;
   const get = (id) => documentRef?.getElementById?.(id) || null;
 
@@ -109,6 +127,9 @@ export function createUi(options = {}) {
   };
 }
 
+/**
+ * @param {UiRendererOptions} [options]
+ */
 export function createUiRenderer({
   ui,
   uiProgression,

@@ -4,6 +4,27 @@ export const MODULE_NATIVE_UI_PROGRESSION_RENDERER_PROOF_SLOTS = Object.freeze([
   "renderQuests",
 ]);
 
+/**
+ * @typedef {object} UiProgressionRendererOptions
+ * @property {*} [ui]
+ * @property {*} [weaponDefs]
+ * @property {*} [weaponUnlocks]
+ * @property {*} [upgradeDefs]
+ * @property {*} [questDefs]
+ * @property {() => *} [getSave]
+ * @property {(upgradeId: string) => number} [getUpgradeTier]
+ * @property {(nodeId: string) => boolean} [hasNode]
+ * @property {(unlock: *) => boolean} [isNodeVisible]
+ * @property {(questId: string) => boolean} [isQuestComplete]
+ * @property {(unlock: *) => string | null | undefined} [nodeGateStatus]
+ * @property {(unlock: *) => *} [buyWeaponUnlock]
+ * @property {(upgrade: *) => *} [buyUpgrade]
+ * @property {Document} [documentRef]
+ */
+
+/**
+ * @param {UiProgressionRendererOptions} [options]
+ */
 export function createUiProgressionRenderer({
   ui,
   weaponDefs,
@@ -18,7 +39,7 @@ export function createUiProgressionRenderer({
   nodeGateStatus,
   buyWeaponUnlock,
   buyUpgrade,
-  documentRef = globalThis.document,
+  documentRef,
 } = {}) {
   const resolvedUi = requireObject(ui, "ui");
 

@@ -1,0 +1,53 @@
+# Fix f8321fa UI Progression CI
+
+- Status: complete
+- Starting HEAD: `f8321fa`
+- Ending HEAD: pending commit
+- Queue task ID: `fix-f8321fa-ui-progression-ci`
+- Exact CI/local failure: `npm run typecheck` failed with `src/modules/ui-progression.js(42,17): error TS2552: Cannot find name 'options'. Did you mean 'Option'?`; the wrapped agent gate also surfaced `check:globals` on the same changed files during recovery
+- Root cause: the module UI wrappers relied on an implicit options shape and a direct `globalThis.document` fallback, which made the content typecheck and global-usage gate disagree with the module dependency shape
+- Files inspected:
+  - `src/modules/ui-progression.js`
+  - `src/modules/ui.js`
+  - `src/modules/module-runtime-progression-adapter.js`
+  - `src/modules/module-runtime-ui-adapters.js`
+  - `scripts/smoke-module-runtime-entrypoint.mjs`
+  - `scripts/check-globals.mjs`
+  - `tsconfig.content.json`
+- Files changed:
+  - `src/modules/ui-progression.js`
+  - `src/modules/ui.js`
+  - `.agent/tasks.json`
+- Production `index.html` changed: no
+- Production runtime behaviour changed: no
+- Android/web parity impact: none
+- Global boundary impact: removed direct `globalThis.document` reads from the touched module wrappers; no new consumer reads were added
+- Validation commands/results:
+  - `git fetch origin main` -> pass
+  - `git checkout main` -> pass
+  - `git pull --ff-only origin main` -> pass
+  - `git rev-parse --abbrev-ref HEAD` -> `main`
+  - `git rev-parse --short HEAD` -> `f8321fa`
+  - `git rev-parse --short origin/main` -> `f8321fa`
+  - `git status --short` -> clean at start gate
+  - `npm run task:validate` -> pass
+  - `npm run task:list` -> active task created and queued task set to `fix-f8321fa-ui-progression-ci`
+  - `npm run agent:mission-start` -> pass; repo dirty only because of the active task metadata and the two touched source files
+  - `frank-usage snapshot --phase start --mission "fix-f8321fa-ui-progression-ci" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "fix-f8321fa-ui-progression-ci"` -> warning only, `EROFS`, continued
+  - `npm run typecheck` -> pass after the fix
+  - `node --check src/modules/ui.js` -> pass
+  - `node --check src/modules/ui-progression.js` -> pass
+  - `npm run frank:run -- "npm run agent:check -- --fix-format-changed" --timeout 240` -> pass
+  - `git diff --check` -> pass
+  - `npm run task:validate` -> pass
+  - `npm run agent:status` -> pass
+  - `frank-usage snapshot --phase end --mission "fix-f8321fa-ui-progression-ci" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "fix-f8321fa-ui-progression-ci"` -> warning only, `EROFS`, continued
+  - `frank-usage report --mission "fix-f8321fa-ui-progression-ci"` -> `No snapshots found. Ledger path: /home/logix/.openclaw/frank-usage/usage.jsonl`
+- Usage ledger result:
+  - Ledger path: `/home/logix/.openclaw/frank-usage/usage.jsonl`
+  - Mission: `fix-f8321fa-ui-progression-ci`
+  - `tokens_known`: `false`
+  - Token delta: unknown
+  - Usage snapshot status: start/end snapshots soft-failed on `EROFS`; no persisted snapshots were recorded
+- Remaining blocker after this fix: none for the CI recovery issue; the next migration blocker remains the next unreadiness item in the module inventory, outside this mission
+- Next recommended slice: resume the production ESM/module runtime readiness queue from the next inventory blocker, likely `src/modules/combat.js` when that mission is explicitly started
