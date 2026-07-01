@@ -1,0 +1,40 @@
+# Slice Assets Module Readiness
+
+- Status: complete
+- Starting HEAD: `9532ab7`
+- Ending HEAD: pending commit
+- Exact blocker targeted: missing module-native browser assets facade, `src/modules/assets.js`
+- Files changed: `src/modules/assets.js`, `.agent/tasks.json`
+- Production `index.html` changed: no
+- Production runtime behaviour changed: no
+- Android/web parity impact: none
+- Global boundary impact: none; no new `TapSurvivor*` consumer reads outside approved compatibility/bootstrap boundaries
+- Validation commands and results:
+  - `git fetch origin main` -> pass
+  - `git checkout main` -> pass
+  - `git pull --ff-only origin main` -> pass
+  - `git rev-parse --abbrev-ref HEAD` -> `main`
+  - `git rev-parse --short HEAD` -> `9532ab7`
+  - `git rev-parse --short origin/main` -> `9532ab7`
+  - `git status --short` -> clean before queue activation
+  - `npm run task:add -- --id "slice-assets-module-readiness" --summary "Advance src/modules/assets.js module runtime readiness for the production ESM candidate."` -> pass
+  - `npm run task:active -- slice-assets-module-readiness` -> pass
+  - `npm run agent:mission-start` -> pass; reported the active task and the queue being dirty only because of `.agent/tasks.json`
+  - `frank-usage snapshot --phase start --mission "slice-assets-module-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "slice-assets-module-readiness"` -> soft-failed with `EROFS`; one warning, no stall
+  - `node --check src/modules/assets.js` -> pass
+  - `npm run smoke:module-runtime-readiness` -> pass; `src/modules/assets.js` dropped out of the missing browser adapter inventory
+  - `npm run smoke:module-production-entrypoint` -> pass
+  - `git diff --check` -> pass
+  - `frank-usage snapshot --phase end --mission "slice-assets-module-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "slice-assets-module-readiness"` -> soft-failed with `EROFS`; one warning, no stall
+  - `frank-usage report --mission "slice-assets-module-readiness"` -> `No snapshots found. Ledger path: /home/logix/.openclaw/frank-usage/usage.jsonl`
+  - `npm run task:validate` -> pass
+- Usage report:
+  - Ledger path: `/home/logix/.openclaw/frank-usage/usage.jsonl`
+  - Mission: `slice-assets-module-readiness`
+  - Start snapshot: soft-failed warning only, no persisted snapshot
+  - End snapshot: soft-failed warning only, no persisted snapshot
+  - `tokens_known`: `false`
+  - Token delta: unknown
+  - Provider/session usage snapshot captured: no
+- Remaining blocker before the production ESM switch: the next missing module-native browser adapter files still listed by the readiness smoke are the remaining `src/modules/*` browser facades such as `combat.js`, `enemies.js`, `rendering.js`, `sprites.js`, `weapon-fire.js`, and related companions
+- Next recommended mission: the next smallest missing module-native browser adapter file from the readiness inventory, likely `src/modules/combat.js`

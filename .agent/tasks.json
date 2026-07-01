@@ -97,5 +97,16 @@
     "evidence": "Shane training/20260701T004618Z_slice-36f-browser-ui-defaults/result.md",
     "opened": "2026-07-01T00:19:38.799Z",
     "closed": "2026-07-01T00:49:17.317Z"
+  },
+  {
+    "id": "slice-assets-module-readiness",
+    "status": "active",
+    "summary": "Advance src/modules/assets.js module runtime readiness for the production ESM candidate.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": null,
+    "opened": "2026-07-01T16:12:35.913Z",
+    "closed": null
   }
 ]
