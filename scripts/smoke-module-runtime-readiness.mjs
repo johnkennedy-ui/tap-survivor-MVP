@@ -1036,8 +1036,8 @@ check(
     !browserDependencyBagSource.includes("createNoopProgressionAdapters")
 );
 check(
-  "readiness reports missing module-native browser adapter subsystem files",
-  missingProductionBrowserAdapterModuleFiles.length > 0
+  "readiness reports module-native browser adapter subsystem files present",
+  missingProductionBrowserAdapterModuleFiles.length === 0
 );
 check(
   "readiness sees module-native state store without TapSurvivor global reads",
@@ -1225,7 +1225,11 @@ const inventory = {
   },
   remainingRuntimeSwitchBlockers: [
     "index.html still loads classic script order",
-    "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
+    ...(missingProductionBrowserAdapterModuleFiles.length > 0
+      ? [
+          "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
+        ]
+      : []),
     "src/game.js remains the production entrypoint until the production ESM candidate is selected",
     "production still uses generated src/game-dependencies.js classic global adapter",
     "production ESM entrypoint candidate exists but is not selected by index.html",

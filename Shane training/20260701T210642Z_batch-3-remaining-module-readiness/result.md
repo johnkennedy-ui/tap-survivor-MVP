@@ -1,0 +1,100 @@
+# Batch 3 Remaining Module Readiness
+
+- Status: complete
+- Starting HEAD: `7537041`
+- Ending HEAD: pending commit
+- Queue task ID: `batch-3-remaining-module-readiness`
+- Exact blockers targeted:
+  - missing module-native browser render enemy facade, `src/modules/render-enemies.js`
+  - missing module-native browser HUD facade, `src/modules/render-hud.js`
+  - missing module-native browser skill rail facade, `src/modules/render-skill-rail.js`
+  - missing module-native browser rendering facade, `src/modules/rendering.js`
+  - missing module-native browser shop facade, `src/modules/shop.js`
+  - missing module-native browser sprite facade, `src/modules/sprites.js`
+  - missing module-native browser weapon behavior facade, `src/modules/weapon-behaviors.js`
+  - missing module-native browser weapon fire facade, `src/modules/weapon-fire.js`
+- Blockers skipped: none
+- Subtasks completed:
+  - Added module-native compatibility facades for the eight remaining browser subsystem files
+  - Forwarded each facade to the existing classic `TapSurvivor*` namespace without changing runtime behaviour
+  - Updated `scripts/smoke-module-runtime-readiness.mjs` so the missing-module assertion now checks for zero missing module-native browser adapter files
+  - Kept the remaining runtime-switch blocker report honest by omitting the browser-subsystem missing-file blocker once the files were present
+  - Verified syntax for all touched module files and the touched smoke file
+  - Reran the production-entrypoint smoke and the runtime-readiness smoke
+  - Ran the final agent check with `--fix-format-changed`
+  - Captured best-effort usage snapshots for the mission
+  - Ran task validation and agent status/handoff checks
+- Files inspected:
+  - `.agent/status.md`
+  - `Shane training/20260701T202520Z_batch-2-progression-family-readiness/result.md`
+  - `scripts/smoke-module-runtime-readiness.mjs`
+  - `src/render-enemies.js`
+  - `src/render-hud.js`
+  - `src/render-skill-rail.js`
+  - `src/rendering.js`
+  - `src/shop.js`
+  - `src/sprites.js`
+  - `src/weapon-behaviors.js`
+  - `src/weapon-fire.js`
+- Files changed:
+  - `src/modules/render-enemies.js`
+  - `src/modules/render-hud.js`
+  - `src/modules/render-skill-rail.js`
+  - `src/modules/rendering.js`
+  - `src/modules/shop.js`
+  - `src/modules/sprites.js`
+  - `src/modules/weapon-behaviors.js`
+  - `src/modules/weapon-fire.js`
+  - `scripts/smoke-module-runtime-readiness.mjs`
+  - `.agent/tasks.json`
+  - `Shane training/20260701T210642Z_batch-3-remaining-module-readiness/result.md`
+- Production `index.html` changed: no
+- Production runtime behaviour changed: no
+- Android/web parity impact: none
+- Global boundary impact: none outside the approved compatibility/bootstrap boundary; the new module facades only bridge to the existing classic namespaces
+- Validation commands/results:
+  - `git fetch origin main` -> pass
+  - `git checkout main` -> pass
+  - `git pull --ff-only origin main` -> pass
+  - `git rev-parse --abbrev-ref HEAD` -> `main`
+  - `git rev-parse --short HEAD` -> `7537041`
+  - `git rev-parse --short origin/main` -> `7537041`
+  - `git status --short` -> dirty only because of `.agent/tasks.json` plus the new module facade files and smoke script edit
+  - `npm run task:validate` -> pass
+  - `npm run task:add -- --id "batch-3-remaining-module-readiness" --summary "Clear remaining module-native readiness blockers before the production ESM crossover review."` -> pass
+  - `npm run task:active -- batch-3-remaining-module-readiness` -> pass
+  - `npm run agent:mission-start` -> pass
+  - `frank-usage snapshot --phase start --mission "batch-3-remaining-module-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "batch-3-remaining-module-readiness"` -> soft-failed with `EROFS`; warning only
+  - `node --check src/modules/render-enemies.js` -> pass
+  - `node --check src/modules/render-hud.js` -> pass
+  - `node --check src/modules/render-skill-rail.js` -> pass
+  - `node --check src/modules/rendering.js` -> pass
+  - `node --check src/modules/shop.js` -> pass
+  - `node --check src/modules/sprites.js` -> pass
+  - `node --check src/modules/weapon-behaviors.js` -> pass
+  - `node --check src/modules/weapon-fire.js` -> pass
+  - `node --check scripts/smoke-module-runtime-readiness.mjs` -> pass
+  - `npm run frank:run -- "npm run smoke:module-production-entrypoint" --timeout 60` -> pass
+  - `npm run frank:run -- "npm run smoke:module-runtime-readiness" --timeout 60` -> pass
+  - `git diff --check` -> pass
+  - `npm run frank:run -- "npm run agent:check -- --fix-format-changed" --timeout 240` -> pass
+  - `npm run task:validate` -> pass after the final formatting pass
+  - `npm run agent:status` -> pass
+  - `npm run agent:handoff` -> pass
+  - `frank-usage snapshot --phase end --mission "batch-3-remaining-module-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "batch-3-remaining-module-readiness"` -> soft-failed with `EROFS`; warning only
+  - `frank-usage report --mission "batch-3-remaining-module-readiness"` -> `No snapshots found.`
+- Usage report:
+  - Ledger path: `/home/logix/.openclaw/frank-usage/usage.jsonl`
+  - Mission: `batch-3-remaining-module-readiness`
+  - Start snapshot: soft-failed with `EROFS`
+  - End snapshot: soft-failed with `EROFS`
+  - `"tokens_known"`: `false`
+  - Token delta: unknown
+  - Usage snapshot status: failed with `EROFS`; no snapshots were persisted
+- Remaining blockers after this batch:
+  - `index.html` still loads classic script order
+  - `src/game.js` remains the production entrypoint until the production ESM candidate is selected
+  - production still uses generated `src/game-dependencies.js` classic global adapter
+  - production ESM entrypoint candidate exists but is not selected by `index.html`
+- Crossover readiness assessment: yes, the module-native browser subsystem blocker group is now cleared; what remains is production-switch scope
+- Next recommended action: strong-brain crossover review of the production ESM switch blockers, starting with `index.html` selection and the `src/game.js` entrypoint plan

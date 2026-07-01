@@ -152,5 +152,16 @@
     "evidence": "Shane training/20260701T202520Z_batch-2-progression-family-readiness/result.md",
     "opened": "2026-07-01T20:22:45.842Z",
     "closed": "2026-07-01T20:26:57.376Z"
+  },
+  {
+    "id": "batch-3-remaining-module-readiness",
+    "status": "complete",
+    "summary": "Clear remaining module-native readiness blockers before the production ESM crossover review.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T210642Z_batch-3-remaining-module-readiness/result.md",
+    "opened": "2026-07-01T20:47:59.228Z",
+    "closed": "2026-07-01T21:07:29.718Z"
   }
 ]
