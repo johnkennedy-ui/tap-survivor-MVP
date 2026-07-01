@@ -1,0 +1,72 @@
+# Batch 1 Enemy Family Readiness
+
+- Status: complete
+- Starting HEAD: `65ffa94`
+- Ending HEAD: pending commit
+- Queue task ID: `batch-1-enemy-family-readiness`
+- Exact blockers targeted:
+  - missing module-native browser enemy facade, `src/modules/enemies.js`
+  - adjacent module-native browser enemy behavior facade, `src/modules/enemy-behaviors.js`
+  - adjacent module-native browser enemy spawning facade, `src/modules/enemy-spawning.js`
+- Subtasks completed:
+  - Added `src/modules/enemies.js` as a module-native compatibility bridge to the classic `TapSurvivorEnemies` namespace
+  - Added `src/modules/enemy-behaviors.js` as a module-native compatibility bridge to the classic `TapSurvivorEnemyBehaviors` namespace
+  - Added `src/modules/enemy-spawning.js` as a module-native compatibility bridge to the classic `TapSurvivorEnemySpawning` namespace
+  - Verified syntax for all three new module files
+  - Ran the module production-entrypoint smoke
+  - Ran the module runtime-readiness smoke and confirmed the enemy-family files were removed from the missing-module inventory
+  - Ran diff hygiene checks
+  - Recorded best-effort usage snapshots at mission start/end
+- Files inspected:
+  - `/home/logix/.openclaw/openclaw.json`
+  - `/home/logix/.openclaw/agents/main/agent/auth-profiles.json`
+  - `src/enemies.js`
+  - `src/enemy-behaviors.js`
+  - `src/enemy-spawning.js`
+  - `src/modules/module-runtime-gameplay-adapter.js`
+  - `scripts/smoke-module-runtime-readiness.mjs`
+  - `.agent/status.md`
+  - `npm run task:list` output
+  - `npm run agent:mission-start` output
+- Files changed:
+  - `src/modules/enemies.js`
+  - `src/modules/enemy-behaviors.js`
+  - `src/modules/enemy-spawning.js`
+  - `.agent/tasks.json`
+  - `Shane training/20260701T201029Z_batch-1-enemy-family-readiness/result.md`
+- Production `index.html` changed: no
+- Production runtime behaviour changed: no
+- Android/web parity impact: none
+- Global boundary impact: none outside the approved compatibility/bootstrap boundary; the new module facades only bridge to the existing classic enemy namespaces
+- Validation commands/results:
+  - `git fetch origin main` -> pass
+  - `git checkout main` -> pass
+  - `git pull --ff-only origin main` -> pass after one DNS retry with escalation
+  - `git rev-parse --abbrev-ref HEAD` -> `main`
+  - `git rev-parse --short HEAD` -> `65ffa94`
+  - `git rev-parse --short origin/main` -> `65ffa94`
+  - `git status --short` -> clean before edit
+  - `npm run task:validate` -> pass
+  - `npm run task:list` -> showed all prior tasks complete
+  - `npm run task:add -- --id "batch-1-enemy-family-readiness" --summary "Advance enemy-family module runtime readiness for the production ESM candidate."` -> pass
+  - `npm run task:active -- batch-1-enemy-family-readiness` -> pass
+  - `npm run agent:mission-start` -> pass; reported the new active task and the clean branch baseline before the edit
+  - `frank-usage snapshot --phase start --mission "batch-1-enemy-family-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "batch-1-enemy-family-readiness"` -> soft-failed with `EROFS`; warning only, no stall
+  - `node --check src/modules/enemies.js` -> pass
+  - `node --check src/modules/enemy-behaviors.js` -> pass
+  - `node --check src/modules/enemy-spawning.js` -> pass
+  - `npm run frank:run -- "npm run smoke:module-production-entrypoint" --timeout 60` -> pass
+  - `npm run frank:run -- "npm run smoke:module-runtime-readiness" --timeout 60` -> pass
+  - `git diff --check` -> pass
+  - `frank-usage snapshot --phase end --mission "batch-1-enemy-family-readiness" --repo "/home/logix/.openclaw/workspace/tap-survivor-mvp" --task "batch-1-enemy-family-readiness"` -> soft-failed with `EROFS`; warning only, no stall
+  - `frank-usage report --mission "batch-1-enemy-family-readiness"` -> `No snapshots found.`
+- Usage report:
+  - Ledger path: `/home/logix/.openclaw/frank-usage/usage.jsonl`
+  - Mission: `batch-1-enemy-family-readiness`
+  - Start snapshot: failed soft with `EROFS`
+  - End snapshot: failed soft with `EROFS`
+  - `tokens_known`: `false`
+  - Token delta: unknown
+  - Usage snapshot status: failed with `EROFS`
+- Remaining blocker after this batch: the readiness inventory still lists `src/modules/level-up.js`, `src/modules/progression.js`, `src/modules/quests.js`, `src/modules/render-enemies.js`, `src/modules/render-hud.js`, `src/modules/render-skill-rail.js`, `src/modules/rendering.js`, `src/modules/shop.js`, `src/modules/sprites.js`, `src/modules/weapon-behaviors.js`, and `src/modules/weapon-fire.js`
+- Next recommended batch: `src/modules/level-up.js`

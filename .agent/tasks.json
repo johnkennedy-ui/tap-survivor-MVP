@@ -130,5 +130,16 @@
     "evidence": "Shane training/20260701T191629Z_slice-combat-module-readiness/result.md",
     "opened": "2026-07-01T19:11:38.726Z",
     "closed": "2026-07-01T19:17:23.111Z"
+  },
+  {
+    "id": "batch-1-enemy-family-readiness",
+    "status": "complete",
+    "summary": "Advance enemy-family module runtime readiness for the production ESM candidate.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T201029Z_batch-1-enemy-family-readiness/result.md",
+    "opened": "2026-07-01T20:07:41.507Z",
+    "closed": "2026-07-01T20:11:50.562Z"
   }
 ]
