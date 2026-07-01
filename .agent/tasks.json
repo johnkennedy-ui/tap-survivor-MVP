@@ -163,5 +163,16 @@
     "evidence": "Shane training/20260701T210642Z_batch-3-remaining-module-readiness/result.md",
     "opened": "2026-07-01T20:47:59.228Z",
     "closed": "2026-07-01T21:07:29.718Z"
+  },
+  {
+    "id": "strong-brain-esm-crossover-review",
+    "status": "complete",
+    "summary": "Review production ESM/module runtime switch readiness and produce the go/no-go checklist.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T213829Z_strong-brain-esm-crossover-review/result.md",
+    "opened": "2026-07-01T21:30:50.943Z",
+    "closed": "2026-07-01T21:39:57.064Z"
   }
 ]
