@@ -100,13 +100,13 @@
   },
   {
     "id": "slice-assets-module-readiness",
-    "status": "active",
+    "status": "complete",
     "summary": "Advance src/modules/assets.js module runtime readiness for the production ESM candidate.",
     "scope_allowed": [],
     "scope_forbidden": [],
     "skill": null,
-    "evidence": null,
+    "evidence": "Shane training/20260701T161942Z_slice-assets-module-readiness/result.md",
     "opened": "2026-07-01T16:12:35.913Z",
-    "closed": null
+    "closed": "2026-07-01T16:23:28.589Z"
   }
 ]
