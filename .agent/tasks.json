@@ -185,5 +185,16 @@
     "evidence": "Shane training/20260701T220313Z_production-esm-switch-candidate/result.md",
     "opened": "2026-07-01T21:54:24.760Z",
     "closed": "2026-07-01T22:05:00.704Z"
+  },
+  {
+    "id": "production-esm-switch-candidate-2",
+    "status": "complete",
+    "summary": "Verify the production ESM switch and refresh readiness inventory after index.html selected module autoboot.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260701T222352Z_post-switch-esm-verification/result.md",
+    "opened": "2026-07-01T22:14:43.873Z",
+    "closed": "2026-07-01T22:24:44.392Z"
   }
 ]

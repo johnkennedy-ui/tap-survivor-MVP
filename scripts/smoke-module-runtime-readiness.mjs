@@ -671,9 +671,11 @@ check(
     PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes("createLifecycleOwner")
 );
 check(
-  "readiness sees production ESM entrypoint candidate is not selected yet",
-  !productionScripts.includes("src/app/production-module-entrypoint.js") &&
-    !indexHtml.includes("production-module-entrypoint.js")
+  "readiness sees production ESM entrypoint selected by index.html",
+  productionScripts.includes("src/app/production-module-autoboot.js") &&
+    indexHtml.includes("src/app/production-module-autoboot.js") &&
+    !indexHtml.includes("src/game.js") &&
+    !indexHtml.includes("src/game-dependencies.js")
 );
 check(
   "readiness sees production ESM entrypoint has explicit browser auto-boot wrapper",
@@ -1218,26 +1220,22 @@ const inventory = {
     injectedSlots: INJECTED_STATE_PERSISTENCE_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeStateStoreGlobalReads,
     remainingStateRelatedBlockers: [
-      "production src/game.js still owns top-level save/game variables",
-      "production runtime still wires persistence through classic script order",
+      "classic fallback src/game.js remains preserved for rollback but is no longer selected by index.html",
       "browser storage backend remains explicitly injected behind module runtime storage adapter",
     ],
   },
   remainingRuntimeSwitchBlockers: [
-    "index.html still loads classic script order",
     ...(missingProductionBrowserAdapterModuleFiles.length > 0
       ? [
           "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
         ]
       : []),
-    "src/game.js remains the production entrypoint until the production ESM candidate is selected",
-    "production still uses generated src/game-dependencies.js classic global adapter",
-    "production ESM entrypoint candidate exists but is not selected by index.html",
+    "production ESM autoboot is selected by index.html",
+    "classic fallback src/game.js and src/game-dependencies.js remain preserved for rollback",
   ],
   remainingGlobalRetirementBlockers: [
-    "classic production script order still publishes TapSurvivor compatibility globals",
-    "generated src/game-dependencies.js classic global adapter remains active for production",
-    "compatibility-boundary reads remain until production switches away from classic globals",
+    "classic fallback files remain intentionally preserved for rollback",
+    "TapSurvivor compatibility globals remain available only through preserved fallback sources",
   ],
 };
 
