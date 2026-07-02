@@ -79,7 +79,6 @@ export function createModuleGameLifecycleOwner(options = {}) {
 
   function init() {
     ensureActive("init");
-    if (initialized) return runtime;
     initialized = true;
     stopped = false;
     return runtime.initializeRuntime();
