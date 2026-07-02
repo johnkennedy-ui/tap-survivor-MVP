@@ -38,17 +38,25 @@ export function createProductionModuleEntrypoint(options = {}) {
   const resolvedGlobalRef = globalRef || globalThis;
   const resolvedPlatform =
     platform || createBrowserPlatform({ globalRef: resolvedGlobalRef });
+  let lifecycle;
+  const browserLoop = createProductionBrowserLoop({
+    getGameSpeed: () => lifecycle?.runtime?.getGameSpeed?.() || 1,
+    getLifecycle: () => lifecycle,
+    runtimeGlobal: resolvedPlatform.runtimeGlobal,
+  });
   const resolvedDependencyBagOptions =
     dependencyBagOptions ||
-    createBrowserDependencyBagOptions({
-      ...(browserDependencyBagOptions || {}),
+    createProductionBrowserDependencyBagOptions({
+      browserDependencyBagOptions,
+      browserLoop,
       documentRef: resolvedPlatform.documentRef,
       globalRef: resolvedGlobalRef,
+      getLifecycle: () => lifecycle,
     });
   const resolvedDependencies =
     dependencies ||
     createModuleGameDependencyBag(resolvedDependencyBagOptions);
-  const lifecycle = createModuleGameLifecycleOwner({
+  lifecycle = createModuleGameLifecycleOwner({
     dependencies: resolvedDependencies,
     lifecycleHooks,
     platform: resolvedPlatform,
@@ -88,6 +96,41 @@ export function bootProductionModuleEntrypoint(options = {}) {
 
 export function bootProductionModuleRuntime(options = {}) {
   return bootProductionModuleEntrypoint(options);
+}
+
+function createProductionBrowserLoop({ getGameSpeed, getLifecycle, runtimeGlobal }) {
+  let lastFrame = 0;
+
+  function loop(now = 0) {
+    const lifecycle = getLifecycle();
+    if (!lifecycle || lifecycle.snapshot?.().disposed) return;
+    const elapsed = lastFrame ? (Number(now) - lastFrame) / 1000 : 0;
+    const dt = Math.min(0.05, Math.max(0, elapsed)) * getGameSpeed();
+    lastFrame = Number(now) || lastFrame;
+    lifecycle.tick(dt);
+    lifecycle.render({ dt, now });
+    runtimeGlobal.requestAnimationFrame(loop);
+  }
+
+  return { loop };
+}
+
+function createProductionBrowserDependencyBagOptions({
+  browserDependencyBagOptions = {},
+  browserLoop,
+  documentRef,
+  getLifecycle,
+  globalRef,
+}) {
+  const resolvedOptions = createBrowserDependencyBagOptions({
+    ...browserDependencyBagOptions,
+    documentRef,
+    globalRef,
+    onStartRun: () => getLifecycle()?.startRun?.(),
+  });
+  resolvedOptions.adapters.platformAdapters.loop =
+    browserDependencyBagOptions.platformAdapters?.loop || browserLoop.loop;
+  return resolvedOptions;
 }
 
 function requireObject(value, name) {

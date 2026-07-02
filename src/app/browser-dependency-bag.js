@@ -136,6 +136,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
         createBrowserUiAdapters({
           documentRef,
           globalRef,
+          onStartRun: options.onStartRun,
           ui,
         }),
     },
@@ -470,7 +471,7 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   };
 }
 
-function createBrowserUiAdapters({ documentRef, globalRef, ui }) {
+function createBrowserUiAdapters({ documentRef, globalRef, onStartRun, ui }) {
   return {
     runUi: {
       formatTime: formatBrowserTime,
@@ -479,7 +480,7 @@ function createBrowserUiAdapters({ documentRef, globalRef, ui }) {
       renderDebug: () => {},
     },
     runUiAdapter: createBrowserRunUiAdapter({ documentRef, globalRef, ui }),
-    shellUiAdapter: createBrowserShellUiAdapter({ ui }),
+    shellUiAdapter: createBrowserShellUiAdapter({ onStartRun, ui }),
     shopSystemAdapter: createBrowserShopSystemAdapter({ ui }),
     ui,
   };
@@ -504,7 +505,8 @@ function createBrowserRunUiAdapter({ documentRef, globalRef, ui }) {
   };
 }
 
-function createBrowserShellUiAdapter({ ui }) {
+function createBrowserShellUiAdapter({ onStartRun, ui }) {
+  let bound = false;
   const setMenuOpen = (open) => {
     toggleHidden(ui.runMenu, !open);
     ui.openMenu?.setAttribute?.("aria-expanded", String(Boolean(open)));
@@ -516,8 +518,20 @@ function createBrowserShellUiAdapter({ ui }) {
     setMenuOpen(false);
     return true;
   };
+  const closeStartFlow = () => {
+    toggleHidden(ui.titleScreen, true);
+    toggleHidden(ui.startTransition, true);
+    setMenuOpen(false);
+    return true;
+  };
+  const startFromTitle = () => {
+    if (typeof onStartRun === "function") onStartRun();
+  };
   return {
     bind() {
+      if (bound) return true;
+      bound = true;
+      ui.titleStartGame?.addEventListener?.("click", startFromTitle);
       showTitle();
       return true;
     },
@@ -525,7 +539,7 @@ function createBrowserShellUiAdapter({ ui }) {
       setMenuOpen(false);
       return true;
     },
-    closeStartFlow: showTitle,
+    closeStartFlow,
     showTitleScreen: showTitle,
   };
 }
