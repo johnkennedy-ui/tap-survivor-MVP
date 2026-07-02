@@ -30,6 +30,19 @@ const report = {
   nonStartButtonProbeResults: [],
   pageErrors: [],
   productionModuleAutobootLoaded: false,
+  spriteDiagnostics: {
+    spriteDraws: [],
+    spriteLoads: [],
+    spriteRegistrations: [],
+    spriteLoadRequests: [],
+  },
+  spriteProof: {
+    backgroundDrawSuccess: false,
+    enemyDrawSuccess: false,
+    nonBackgroundDrawSuccess: false,
+    playerDrawSuccess: false,
+    weaponIconDrawSuccess: false,
+  },
   startGameFound: false,
   startGameClicked: false,
   startGameClickThrew: false,
@@ -116,6 +129,14 @@ async function main() {
   const consoleEvents = [];
   const requestEvents = [];
   const responseEvents = [];
+  await page.addInitScript(() => {
+    globalThis.__TapSurvivorBrowserDiagnostics = {
+      spriteDraws: [],
+      spriteLoadRequests: [],
+      spriteLoads: [],
+      spriteRegistrations: [],
+    };
+  });
 
   page.on("console", (message) => {
     const entry = {
@@ -200,12 +221,18 @@ async function main() {
 
     await sampleRuntime(page, report, origin);
     await probeButtons(page, report);
+    report.spriteDiagnostics = await page.evaluate(() => {
+      const diagnostics = globalThis.__TapSurvivorBrowserDiagnostics || {};
+      return {
+        spriteDraws: diagnostics.spriteDraws || [],
+        spriteLoadRequests: diagnostics.spriteLoadRequests || [],
+        spriteLoads: diagnostics.spriteLoads || [],
+        spriteRegistrations: diagnostics.spriteRegistrations || [],
+      };
+    });
 
-    const canvasBlankAfterStart =
-      report.runtimeSamples.length > 0 &&
-      report.runtimeSamples.every((sample) =>
-        sample.samplePixels.every((pixel) => !pixel || pixel.every((channel) => channel === 0))
-      );
+    const spriteProof = analyzeSpriteDiagnostics(report.spriteDiagnostics);
+    report.spriteProof = spriteProof;
 
     const criticalConsoleError = report.console.error.find((entry) =>
       isLocalUrl(entry.location?.url || "", origin) || /src\/|index\.html|Tap Survivor/i.test(entry.message)
@@ -231,7 +258,8 @@ async function main() {
       criticalConsoleError ? "console error from app code" : null,
       criticalFailedRequest ? "failed local module or script request" : null,
       criticalHttpFailure ? "local app HTTP failure for script or asset" : null,
-      canvasBlankAfterStart ? "canvas stayed blank after Start Game" : null,
+      !spriteProof.backgroundDrawSuccess ? "background floor draw never succeeded" : null,
+      !spriteProof.playerDrawSuccess ? "player sprite draw never succeeded" : null,
       report.startGameClickThrew ? "Start Game click threw" : null,
       !report.canvasFound ? "no canvas found" : null,
       !report.startGameFound && !report.titleVisible ? "no title or Start Game control found" : null,
@@ -239,7 +267,7 @@ async function main() {
 
     if (appFailures.length === 0) {
       report.appLevelResult = "pass";
-    } else if (report.indexLoaded && report.startGameFound && report.canvasFound) {
+    } else if (report.indexLoaded && report.startGameFound && report.canvasFound && spriteProof.backgroundDrawSuccess) {
       report.appLevelResult = "partial";
     } else {
       report.appLevelResult = "fail";
@@ -250,7 +278,7 @@ async function main() {
       criticalFailedRequest,
       criticalHttpFailure,
       findings,
-      canvasBlankAfterStart,
+      spriteProof,
       requestCount: requestEvents.length,
       responseCount: responseEvents.length,
       consoleCount: consoleEvents.length,
@@ -425,6 +453,7 @@ function emitReport(report, extras = {}) {
     nonStartButtonProbeResults: report.nonStartButtonProbeResults,
     pageErrors: report.pageErrors.length,
     productionModuleAutobootLoaded: report.productionModuleAutobootLoaded,
+    spriteProof: report.spriteProof,
     startGameClicked: report.startGameClicked,
     startGameClickThrew: report.startGameClickThrew,
     startGameFound: report.startGameFound,
@@ -450,6 +479,7 @@ function emitReport(report, extras = {}) {
   console.log(`page errors: ${report.pageErrors.length}`);
   console.log(`failed requests: ${report.failedRequests.length}`);
   console.log(`local HTTP failures: ${report.httpFailures.length}`);
+  console.log(`sprite draws: ${report.spriteDiagnostics.spriteDraws.length}`);
   console.log(`runtime samples: ${report.runtimeSamples.length}`);
   console.log("REPORT_JSON " + JSON.stringify({
     ...summary,
@@ -464,8 +494,49 @@ function emitReport(report, extras = {}) {
     httpFailures: truncate(report.httpFailures),
     pageErrors: truncate(report.pageErrors),
     runtimeSamples: report.runtimeSamples,
+    spriteDiagnostics: {
+      spriteDraws: truncate(report.spriteDiagnostics.spriteDraws),
+      spriteLoadRequests: truncate(report.spriteDiagnostics.spriteLoadRequests),
+      spriteLoads: truncate(report.spriteDiagnostics.spriteLoads),
+      spriteRegistrations: truncate(report.spriteDiagnostics.spriteRegistrations),
+    },
     ...extras,
   }, null, 2));
+}
+
+function analyzeSpriteDiagnostics(diagnostics = {}) {
+  const spriteDraws = diagnostics.spriteDraws || [];
+  const spriteLoads = diagnostics.spriteLoads || [];
+  const spriteRegistrations = diagnostics.spriteRegistrations || [];
+  const spriteLoadRequests = diagnostics.spriteLoadRequests || [];
+  const backgroundDrawSuccess = spriteDraws.some(
+    (entry) => entry.kind === "drawImage" && entry.id === "background:tower_floor" && entry.success
+  );
+  const playerDrawSuccess = spriteDraws.some(
+    (entry) =>
+      entry.kind === "drawSprite" &&
+      entry.success &&
+      (entry.id === "player" || entry.id.startsWith("player:"))
+  );
+  const enemyDrawSuccess = spriteDraws.some(
+    (entry) => entry.kind === "drawSprite" && entry.success && entry.id.startsWith("enemy:")
+  );
+  const weaponIconDrawSuccess = spriteDraws.some(
+    (entry) => entry.kind === "drawSprite" && entry.success && entry.id.startsWith("weaponIcon:")
+  );
+  const nonBackgroundDrawSuccess = spriteDraws.some(
+    (entry) => entry.success && !String(entry.id || "").startsWith("background:")
+  );
+  return {
+    backgroundDrawSuccess,
+    enemyDrawSuccess,
+    nonBackgroundDrawSuccess,
+    playerDrawSuccess,
+    spriteLoadRequests,
+    spriteLoads,
+    spriteRegistrations,
+    weaponIconDrawSuccess,
+  };
 }
 
 main().catch((error) => {

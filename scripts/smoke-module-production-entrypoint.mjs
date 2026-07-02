@@ -214,7 +214,7 @@ check(
 );
 check(
   "production browser render and sprite defaults expose expected slots",
-  ["clearFrame", "renderEnemies", "renderFrame", "renderHud", "renderSkillRail"].every((slot) =>
+  ["clearFrame", "renderEnemies", "renderFrame", "renderHud", "renderPlayer", "renderSkillRail"].every((slot) =>
     BROWSER_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
   ) &&
     ["drawImage", "drawSprite", "loadSprites"].every((slot) =>
@@ -549,6 +549,10 @@ defaultRenderers.renderEnemies({
   enemies: [{ id: "slime", x: 12, y: 14, size: 18 }],
   spriteAdapters: defaultBrowserOptions.adapters.spriteAdapters,
 });
+defaultRenderers.renderPlayer({
+  game: { player: { x: 480, y: 270, radius: 16, targetX: 480, targetY: 270 } },
+  spriteAdapters: defaultBrowserOptions.adapters.spriteAdapters,
+});
 defaultRenderers.renderSkillRail({
   game: { player: { equippedWeapons: ["spark_bolt"] } },
   spriteAdapters: defaultBrowserOptions.adapters.spriteAdapters,
@@ -674,6 +678,10 @@ function createFakeAdapters({ canvas, calls, initialSave, storage, uiSurface }) 
         },
         renderHud: ({ game }) => {
           calls.push(`render:hud:${game?.towerFloor}`);
+          return true;
+        },
+        renderPlayer: ({ game }) => {
+          calls.push(`render:player:${game?.player ? 1 : 0}`);
           return true;
         },
         renderSkillRail: ({ game }) => {

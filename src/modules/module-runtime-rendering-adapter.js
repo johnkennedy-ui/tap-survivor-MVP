@@ -1,6 +1,7 @@
 export const MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS = Object.freeze([
   "renderEnemies",
   "renderHud",
+  "renderPlayer",
   "renderSkillRail",
   "rendering",
 ]);
@@ -11,6 +12,7 @@ export const MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS = Object.freeze([
   "renderEnemies",
   "renderFrame",
   "renderHud",
+  "renderPlayer",
   "renderSkillRail",
 ]);
 
@@ -72,6 +74,13 @@ export function createModuleRuntimeRenderingAdapter(options = {}) {
     });
   }
 
+  function renderPlayer(game, frame = {}) {
+    return invokeRenderer("renderPlayer", {
+      ...frame,
+      game,
+    });
+  }
+
   function renderEnemies(enemies, frame = {}) {
     return invokeRenderer("renderEnemies", {
       ...frame,
@@ -92,6 +101,9 @@ export function createModuleRuntimeRenderingAdapter(options = {}) {
     },
     renderHud: {
       renderHud,
+    },
+    renderPlayer: {
+      renderPlayer,
     },
     renderSkillRail: {
       renderSkillRail,

@@ -251,6 +251,7 @@ export function createModuleGameDependencyBag({
     quests: progressionAdapters.quests,
     renderEnemies: renderingAdapters.renderEnemies,
     renderHud: renderingAdapters.renderHud,
+    renderPlayer: renderingAdapters.renderPlayer,
     renderMeta: stateStore.renderMeta,
     renderSkillRail: renderingAdapters.renderSkillRail,
     rendering: renderingAdapters.rendering,

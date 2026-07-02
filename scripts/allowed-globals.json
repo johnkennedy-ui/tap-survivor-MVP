@@ -2,6 +2,7 @@
   "allowedExpressions": [
     "globalThis.AudioContext",
     "globalThis.Capacitor",
+    "globalThis.__TapSurvivorBrowserDiagnostics",
     "globalThis.TapSurvivorAssets",
     "globalThis.TapSurvivorAudio",
     "globalThis.TapSurvivorBalance",
@@ -64,6 +65,7 @@
     "globalThis.webkitAudioContext"
   ],
   "allowedFileCounts": {
+    "scripts/smoke-production-browser-runtime.mjs": 2,
     "src/assets.js": 2,
     "src/audio.js": 5,
     "src/balance-runtime.js": 9,

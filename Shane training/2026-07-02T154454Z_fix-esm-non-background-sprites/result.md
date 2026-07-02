@@ -1,0 +1,31 @@
+# Mission Result: fix-esm-non-background-sprites
+
+- Mission ID: fix-esm-non-background-sprites
+- Active model/auth: session pinned to openai/gpt-5.5; OpenAI auth profiles include openai:quatrex@googlemail.com
+- Starting HEAD: c8ff0ac
+- Ending HEAD: pending commit
+- Manual symptom: game starts, banner loads, floor/background graphic loads, actual sprites did not show
+- Root cause: the production ESM lifecycle rendered frame/background, enemies, HUD, and skill rail, but had no player render step wired through the module runtime rendering adapter
+- Old Docker smoke false-positive confirmed: yes; previous proof could pass on nonzero canvas/background pixels
+- Why canvas nonzero was insufficient: the tower floor/background alone can make canvas pixels nonzero without proving actor sprite rendering
+- Sprite definitions received by ESM path: non-empty; background, player, player animations, enemy, weapon, run upgrade, and UI groups were reported by the diagnostic hook
+- Sprite IDs registered: player; player:walk; player:cast*orb; player:cast_beam; player:sweep; player:ready; background:tower_floor; enemy:*; weapon:\_; weaponIcon:\*
+- Image load status: player loaded successfully; background:tower_floor loaded successfully; enemy sample loaded successfully; weapon/weaponIcon definitions were registered when present
+- Draw evidence: background:tower_floor draw success true; player draw success true; enemy draw success false/not applicable for sampled start window; weaponIcon draw success false/not applicable for sampled start window
+- ESM lifecycle had player renderer before fix: no
+- Fix applied: added a narrow ESM/browser player render slot, wired it through module runtime dependencies and lifecycle, and made Docker browser smoke require diagnostic sprite proof
+- Files inspected: smoke runtime, Docker smoke wrapper, browser dependency bag, production module entrypoint, module lifecycle, runtime rendering adapter, module dependency bag, generated content/assets, classic sprite/rendering code for comparison
+- Files changed: scripts/allowed-globals.json; scripts/smoke-production-browser-runtime.mjs; scripts/smoke-module-production-entrypoint.mjs; scripts/smoke-module-runtime-readiness.mjs; src/app/browser-dependency-bag.js; src/modules/module-game-dependencies.js; src/modules/module-game-lifecycle.js; src/modules/module-runtime-rendering-adapter.js
+- Production ESM selection changed: no
+- Classic fallback preserved: yes
+- Globals retired: no
+- Fallback files deleted: no
+- Runtime behaviour changed: yes; the ESM browser path now renders the player sprite when game.player exists
+- Docker diagnostic result: passed; backgroundDrawSuccess=true, playerDrawSuccess=true, nonBackgroundDrawSuccess=true
+- Docker strict result: passed; backgroundDrawSuccess=true, playerDrawSuccess=true, nonBackgroundDrawSuccess=true
+- Validation results: node --check changed JS passed; smoke:module-production-entrypoint passed; smoke:module-runtime-readiness passed; smoke:production-browser:docker passed; smoke:production-browser:docker:strict passed; smoke:browser passed; npm test passed; build:web passed; check:runtime-parity passed; agent:check -- --fix-format-changed passed; git diff --check passed; task:validate passed
+- CI status if checked: not checked
+- Remaining blockers: none known
+- Manual retest instruction: open the production browser build, start the game, confirm the tower floor and player wizard sprite are both visible after Start Game
+- Recommended next slice: manually retest production ESM in the browser, then continue any enemy/weapon visual hardening only if manual play shows a remaining issue
+- Usage report: tokens_known=false; Token delta: unknown; Usage snapshot status: unavailable

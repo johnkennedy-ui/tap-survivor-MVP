@@ -145,8 +145,9 @@ export function createModuleGameLifecycleOwner(options = {}) {
     const game = runtimeDependencies.getGame();
     runtimeDependencies.rendering.clearFrame(frame);
     runtimeDependencies.rendering.renderFrame(game, frame);
-    runtimeDependencies.renderHud.renderHud(game, frame);
     runtimeDependencies.renderEnemies.renderEnemies(game?.enemies || [], frame);
+    runtimeDependencies.renderPlayer.renderPlayer(game, frame);
+    runtimeDependencies.renderHud.renderHud(game, frame);
     runtimeDependencies.renderSkillRail.renderSkillRail(game, frame);
     return true;
   }

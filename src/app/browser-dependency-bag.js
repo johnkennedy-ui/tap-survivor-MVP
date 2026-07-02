@@ -23,6 +23,7 @@ export const BROWSER_RENDERING_ADAPTER_PROOF_SLOTS = Object.freeze([
   "renderEnemies",
   "renderFrame",
   "renderHud",
+  "renderPlayer",
   "renderSkillRail",
 ]);
 
@@ -115,6 +116,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
         options.renderingAdapters ||
         createBrowserRenderingAdapters({
           canvas,
+          globalRef,
         }),
       renderMetaSink: options.renderMetaSink || (() => {}),
       spriteAdapters:
@@ -367,6 +369,7 @@ function createBrowserAudioAdapters({ globalRef }) {
 
 function createBrowserRenderingAdapters({ canvas }) {
   const context = canvas.getContext?.("2d");
+  const diagnostics = canvas?.ownerDocument?.defaultView?.__TapSurvivorBrowserDiagnostics;
   return {
     renderers: {
       clearFrame() {
@@ -399,6 +402,26 @@ function createBrowserRenderingAdapters({ canvas }) {
       renderHud() {
         return true;
       },
+      renderPlayer({ game, spriteAdapters }) {
+        const player = game?.player;
+        if (!player) return true;
+        const spriteId = playerSpriteId(player);
+        const size = Math.max(70, (player.radius || 16) * 3.8);
+        const drawn =
+          spriteAdapters?.spriteSystem?.drawSprite?.(spriteId, player.x || 0, player.y || 0, size, 0, {
+            flipX: playerFacesLeft(player),
+          }) ||
+          (spriteId !== "player" &&
+            spriteAdapters?.spriteSystem?.drawSprite?.("player", player.x || 0, player.y || 0, size, 0, {
+              flipX: playerFacesLeft(player),
+            }));
+        diagnostics?.spriteDraws?.push?.({
+          id: spriteId,
+          kind: "renderPlayer",
+          success: Boolean(drawn),
+        });
+        return Boolean(drawn);
+      },
       renderSkillRail({ game, spriteAdapters }) {
         const weapons = game?.player?.equippedWeapons || [];
         weapons.forEach((weaponId, index) => {
@@ -418,14 +441,37 @@ function createBrowserRenderingAdapters({ canvas }) {
 function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   const context = canvas.getContext?.("2d");
   const ImageCtor = globalRef.Image;
+  const diagnostics = globalRef.__TapSurvivorBrowserDiagnostics;
   const sprites = new Map();
 
   function registerSprite(id, definition) {
     const src = spriteSource(definition);
     if (!id || !src || typeof ImageCtor !== "function") return false;
     const image = new ImageCtor();
+    image.addEventListener?.("load", () => {
+      diagnostics?.spriteLoads?.push?.({
+        id,
+        naturalHeight: image.naturalHeight || image.height || 0,
+        naturalWidth: image.naturalWidth || image.width || 0,
+        src,
+        success: true,
+      });
+    });
+    image.addEventListener?.("error", () => {
+      diagnostics?.spriteLoads?.push?.({
+        id,
+        naturalHeight: image.naturalHeight || image.height || 0,
+        naturalWidth: image.naturalWidth || image.width || 0,
+        src,
+        success: false,
+      });
+    });
     image.src = src;
     sprites.set(id, image);
+    diagnostics?.spriteRegistrations?.push?.({
+      id,
+      src,
+    });
     return true;
   }
 
@@ -439,7 +485,18 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   }
 
   function loadSprites(spriteDefs = assetDefs.sprites || assetDefs || {}) {
+    diagnostics?.spriteLoadRequests?.push?.({
+      backgrounds: Object.keys(spriteDefs.backgrounds || {}),
+      enemies: Object.keys(spriteDefs.enemies || {}),
+      player: Boolean(spriteDefs.player),
+      playerAnimations: Object.keys(spriteDefs.playerAnimations || {}),
+      runUpgradeIcons: Object.keys(spriteDefs.runUpgradeIcons || {}),
+      runUpgrades: Object.keys(spriteDefs.runUpgrades || {}),
+      ui: Object.keys(spriteDefs.ui || {}),
+      weapons: Object.keys(spriteDefs.weapons || {}),
+    });
     registerSprite("player", spriteDefs.player);
+    registerGroup("player", spriteDefs.playerAnimations);
     registerGroup("background", spriteDefs.backgrounds);
     registerGroup("enemy", spriteDefs.enemies);
     registerGroup("weapon", spriteDefs.weapons);
@@ -451,7 +508,14 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
 
   function drawImage(id, x = 0, y = 0, width, height) {
     const image = sprites.get(id);
-    if (!context || !isDrawableImage(image)) return false;
+    if (!context || !isDrawableImage(image)) {
+      diagnostics?.spriteDraws?.push?.({
+        id,
+        kind: "drawImage",
+        success: false,
+      });
+      return false;
+    }
     context.drawImage(
       image,
       x,
@@ -459,12 +523,27 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
       width || image.naturalWidth || image.width,
       height || image.naturalHeight || image.height
     );
+    diagnostics?.spriteDraws?.push?.({
+      id,
+      kind: "drawImage",
+      naturalHeight: image.naturalHeight || image.height || 0,
+      naturalWidth: image.naturalWidth || image.width || 0,
+      src: image.src || "",
+      success: true,
+    });
     return true;
   }
 
   function drawSprite(id, x = 0, y = 0, size = 32, rotation = 0, options = {}) {
     const image = sprites.get(id);
-    if (!context || !isDrawableImage(image)) return false;
+    if (!context || !isDrawableImage(image)) {
+      diagnostics?.spriteDraws?.push?.({
+        id,
+        kind: "drawSprite",
+        success: false,
+      });
+      return false;
+    }
     const width = options.width || size;
     const height = options.height || size;
     context.save?.();
@@ -473,6 +552,14 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
     context.scale?.(options.flipX ? -1 : 1, options.flipY ? -1 : 1);
     context.drawImage(image, -width / 2, -height / 2, width, height);
     context.restore?.();
+    diagnostics?.spriteDraws?.push?.({
+      id,
+      kind: "drawSprite",
+      naturalHeight: image.naturalHeight || image.height || 0,
+      naturalWidth: image.naturalWidth || image.width || 0,
+      src: image.src || "",
+      success: true,
+    });
     return true;
   }
 
@@ -588,6 +675,16 @@ function createMemoryStorage() {
 
 function isDrawableImage(image) {
   return Boolean(image?.complete && (image.naturalWidth || image.width));
+}
+
+function playerFacesLeft(player) {
+  return Number.isFinite(player?.targetX) && Number.isFinite(player?.x) && player.targetX < player.x - 2;
+}
+
+function playerSpriteId(player) {
+  if (player?.actionTimer > 0 && player?.actionSprite) return `player:${player.actionSprite}`;
+  if (player?.moving) return "player:walk";
+  return "player";
 }
 
 function spriteSource(definition) {

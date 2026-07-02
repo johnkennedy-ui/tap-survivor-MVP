@@ -551,6 +551,11 @@ const runtimeRenderingAdapter = createModuleRuntimeRenderingAdapter({
       calls.push(`runtime:render-hud:${game?.towerFloor || 0}`);
       return true;
     },
+    renderPlayer: ({ game, spriteAdapters }) => {
+      calls.push(`runtime:render-player:${game?.player ? 1 : 0}`);
+      spriteAdapters.spriteSystem.drawSprite("player");
+      return true;
+    },
     renderSkillRail: ({ game, spriteAdapters }) => {
       calls.push(`runtime:render-skill-rail:${game?.player?.equippedWeapons?.length || 0}`);
       spriteAdapters.spriteSystem.drawSprite("weaponIcon:spark_bolt");
@@ -568,6 +573,9 @@ runtimeRenderingAdapter.rendering.renderFrame({
 });
 runtimeRenderingAdapter.renderHud.renderHud({ towerFloor: 7 });
 runtimeRenderingAdapter.renderEnemies.renderEnemies([{ id: "enemy" }]);
+runtimeRenderingAdapter.renderPlayer.renderPlayer({
+  player: { equippedWeapons: ["spark_bolt"], x: 480, y: 270 },
+});
 runtimeRenderingAdapter.renderSkillRail.renderSkillRail({
   player: { equippedWeapons: ["spark_bolt"] },
 });
@@ -710,7 +718,7 @@ check(
 );
 check(
   "readiness sees browser render and sprite defaults own explicit proof slots",
-  ["clearFrame", "renderEnemies", "renderFrame", "renderHud", "renderSkillRail"].every(
+  ["clearFrame", "renderEnemies", "renderFrame", "renderHud", "renderPlayer", "renderSkillRail"].every(
     (slot) =>
       BROWSER_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot) &&
       MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
@@ -847,10 +855,10 @@ check(
 );
 check(
   "readiness sees module runtime rendering adapter covers render facades",
-  ["rendering", "renderHud", "renderEnemies", "renderSkillRail"].every((slot) =>
+  ["rendering", "renderHud", "renderEnemies", "renderPlayer", "renderSkillRail"].every((slot) =>
     MODULE_RUNTIME_RENDERING_ADAPTER_SLOTS.includes(slot)
   ) &&
-    ["clearFrame", "renderFrame", "renderHud", "renderEnemies", "renderSkillRail"].every((slot) =>
+    ["clearFrame", "renderFrame", "renderHud", "renderEnemies", "renderPlayer", "renderSkillRail"].every((slot) =>
       MODULE_RUNTIME_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
     )
 );
@@ -864,8 +872,9 @@ check(
 );
 check(
   "readiness composes rendering adapter through fake injected render dependencies",
-  calls.includes("runtime:render-clear:960") &&
+    calls.includes("runtime:render-clear:960") &&
     calls.some((call) => call.startsWith("runtime:render-frame:true:")) &&
+    calls.includes("runtime:render-player:1") &&
     calls.includes("runtime:render-hud:7") &&
     calls.includes("runtime:render-enemies:1") &&
     calls.includes("runtime:render-skill-rail:1") &&
