@@ -67,9 +67,25 @@ export function createModuleGameLifecycleOwner(options = {}) {
     dependencies: runtimeDependencies,
     lifecycleHooks,
   });
+  let lastFrame = resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
   let initialized = false;
   let stopped = false;
   let disposed = false;
+
+  if (typeof runtimeDependencies.loop?.attachFrameHandler === "function") {
+    runtimeDependencies.loop.attachFrameHandler((now) => {
+      if (disposed || stopped) return;
+      const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
+      const dt = Math.min(0.05, (timestamp - lastFrame) / 1000);
+      lastFrame = timestamp;
+      const game = runtimeDependencies.getGame?.();
+      if (game?.running && !game.paused) {
+        tick(dt * (runtime.getGameSpeed?.() || 1));
+      }
+      render({ now: timestamp });
+      runtimeDependencies.runUi.updateRunHud?.();
+    });
+  }
 
   function ensureActive(name) {
     if (disposed) {
@@ -91,6 +107,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
   function showTitle() {
     ensureActive("showTitle");
     runtimeDependencies.shellUi.showTitleScreen?.();
+    runtimeDependencies.runUi.updateRunHud?.();
     return snapshot();
   }
 
@@ -98,6 +115,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
     ensureActive("startRun");
     stopped = false;
     runLifecycle.startRun();
+    runtimeDependencies.runUi.updateRunHud?.();
     return runtimeDependencies.getGame();
   }
 

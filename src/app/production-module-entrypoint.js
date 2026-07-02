@@ -1,3 +1,4 @@
+import "../content.generated.js";
 import { createBrowserDependencyBagOptions } from "./browser-dependency-bag.js";
 import { createBrowserPlatform } from "./compose-runtime.js";
 import { createModuleGameDependencyBag } from "../modules/module-game-dependencies.js";
@@ -38,11 +39,15 @@ export function createProductionModuleEntrypoint(options = {}) {
   const resolvedGlobalRef = globalRef || globalThis;
   const resolvedPlatform =
     platform || createBrowserPlatform({ globalRef: resolvedGlobalRef });
+  const injectedContent = resolvedGlobalRef.TapSurvivorContent || {};
+  const injectedContentSchema = resolvedGlobalRef.TapSurvivorContentSchema || {};
   let lifecycle;
   const resolvedDependencyBagOptions =
     dependencyBagOptions ||
     createBrowserDependencyBagOptions({
       ...(browserDependencyBagOptions || {}),
+      content: browserDependencyBagOptions?.content || injectedContent,
+      contentSchema: browserDependencyBagOptions?.contentSchema || injectedContentSchema,
       documentRef: resolvedPlatform.documentRef,
       globalRef: resolvedGlobalRef,
       onStartRun: () => lifecycle?.startRun?.(),

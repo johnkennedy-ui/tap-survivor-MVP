@@ -69,6 +69,8 @@
     "smoke:module-production-entrypoint": "node scripts/smoke-module-production-entrypoint.mjs",
     "smoke:module-runtime-readiness": "node scripts/smoke-module-runtime-readiness.mjs",
     "smoke:module-bridges": "node scripts/smoke-module-bridges.mjs",
+    "smoke:production-browser:docker": "node scripts/run-production-browser-smoke-docker.mjs",
+    "smoke:production-browser:docker:strict": "SMOKE_PRODUCTION_BROWSER_STRICT=1 node scripts/run-production-browser-smoke-docker.mjs",
     "smoke:relic-run-start": "node scripts/smoke-relic-run-start.mjs",
     "smoke:debug": "node scripts/smoke-debug.mjs",
     "smoke:browser": "node scripts/smoke-browser.mjs",
@@ -98,6 +100,7 @@
   "devDependencies": {
     "@capacitor/cli": "^8.4.0",
     "@types/node": "^26.0.0",
+    "playwright": "1.61.1",
     "prettier": "^3.8.4",
     "typescript": "^6.0.3"
   }

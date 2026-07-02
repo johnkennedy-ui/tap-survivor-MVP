@@ -197,6 +197,18 @@ function createBrowserUi({ documentRef, canvas }) {
 }
 
 function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
+  let frameHandler = null;
+
+  function loop(now) {
+    frameHandler?.(now);
+    globalRef.requestAnimationFrame?.(loop);
+  }
+
+  loop.attachFrameHandler = (handler) => {
+    frameHandler = handler;
+    return loop;
+  };
+
   return {
     bannerSystem: createBrowserBannerSystem({ globalRef, ui }),
     bindMovementInput({ canvas: targetCanvas = canvas, getGame }) {
@@ -227,7 +239,7 @@ function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
       bind() {},
       render() {},
     },
-    loop: () => {},
+    loop,
   };
 }
 
