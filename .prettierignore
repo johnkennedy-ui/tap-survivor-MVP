@@ -8,6 +8,9 @@ package-lock.json
 dist/
 build/
 coverage/
+assets/incoming-sprites/
+assets/opening-fmv/
+tmp/
 *.apk
 *.aab
 assets/generated/

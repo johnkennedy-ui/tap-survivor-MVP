@@ -97,7 +97,7 @@ const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upg
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
 
 check("index loads stylesheet", /href="src\/styles\.css(\?[^"]+)?"/.test(index));
-check("index selects production module autoboot", /src="src\/app\/production-module-autoboot\.js(\?[^"]+)?"/.test(index) && !/src="src\/game\.js(\?[^"]+)?"/.test(index) && !/src="src\/game-dependencies\.js(\?[^"]+)?"/.test(index));
+check("index selects classic global bootstrap", /src="src\/game\.js(\?[^"]+)?"/.test(index) && /src="src\/game-dependencies\.js(\?[^"]+)?"/.test(index) && !/src="src\/app\/production-module-autoboot\.js(\?[^"]+)?"/.test(index));
 check("index keeps generated shell bridge modules", /src="src\/shell-relic-ui\.js(\?[^"]+)?"/.test(index) && /src="src\/shell-ui\.js(\?[^"]+)?"/.test(index));
 check("production module entrypoint is wired for the browser dependency bag", productionModuleEntrypoint.includes("./browser-dependency-bag.js") && productionModuleEntrypoint.includes("../modules/module-game-lifecycle.js") && productionModuleEntrypoint.includes("../modules/module-game-dependencies.js"));
 check("production module autoboot remains a tiny wrapper", productionModuleAutoboot.includes("bootProductionModuleRuntime();"));
