@@ -1,0 +1,36 @@
+# Mission Result: fix-visible-esm-sprites-after-false-positive
+
+- Mission ID: fix-visible-esm-sprites-after-false-positive
+- Active model/auth: session pinned to openai/gpt-5.5; OpenAI auth profiles include openai:quatrex@googlemail.com
+- Starting HEAD: 62d2284
+- Ending HEAD: pending commit
+- Manual symptom: game starts, banner loads, floor/background loads, sprites still not visible after 62d2284
+- 62d2284 smoke false-positive confirmed: yes
+- Why old proof was insufficient: it accepted `drawSprite("player")` success without proving the draw occupied a visible canvas rect or survived draw order/overwrite checks
+- Strict smoke made to fail before fix: yes; red run `.agent/runs/2026-07-02T161049Z_npm-run-smoke-production-browser-docker-strict` exited 1
+- Root cause: ESM lifecycle reset used fallback run state with `player: { equippedWeapons: [] }`, so player `x/y/radius` were missing and the renderer drew at `(0,0)`
+- Player sprite ID used: `player`
+- Player image path/URL: `assets/generated/tower/sheet-20260614/wizard-idle-staff.png?v=sheet-20260614-player`
+- Player image natural size: `260x260`
+- Red player destination rect: local `x:-35,y:-35,w:70,h:70`, transformed `x:-35,y:-35,w:70,h:70`
+- Green player destination rect: local `x:-35,y:-35,w:70,h:70`, transformed `x:445,y:235,w:70,h:70`
+- Canvas size: `960x540`
+- Player rect intersects canvas: red yes but only `0.25` coverage; green yes with `1.0` coverage
+- Draw order: background/floor draw occurs before player draw in the sampled frame; green player draw is not later overwritten by background
+- Pixel/region visibility proof: implemented; green proof had `pixelDelta: 21715`
+- Fix applied: strict smoke now records real canvas draw geometry/state/pixel delta; ESM dependency bag now wires the existing run-state system; lifecycle uses the real reset when available
+- Files inspected: smoke runtime, Docker smoke wrapper, browser dependency bag, production module entrypoint, module lifecycle, runtime rendering adapter, module dependency bag, game runtime, run lifecycle/state/update, generated content registry, classic game/assets for comparison
+- Files changed: scripts/smoke-production-browser-runtime.mjs; src/modules/module-game-dependencies.js; src/modules/module-game-lifecycle.js; this evidence file
+- Production ESM selection changed: no
+- Classic fallback preserved: yes
+- Globals retired: no
+- Fallback files deleted: no
+- Runtime behaviour changed: yes; production ESM run start now initializes a real run-state player instead of fallback player state
+- Docker diagnostic result: passed
+- Docker strict result: passed after fix; red before fix
+- Validation results: node --check changed JS passed; Docker strict red before fix; Docker strict passed after fix; Docker diagnostic passed; smoke:browser passed; smoke:module-production-entrypoint passed; smoke:module-runtime-readiness passed; npm test passed; build:web passed; check:runtime-parity passed; agent:check -- --fix-format-changed passed
+- CI status if checked: not checked
+- Remaining blockers: none known for visible player sprite; enemies still depend on run update/spawn after first movement input
+- Manual retest instruction: open production browser build, press Start Game, confirm the player wizard sprite is visible near the center of the floor after the banner/floor load
+- Recommended next slice: manually retest browser, then harden enemy/weapon visibility only if manual play shows a remaining actor rendering issue
+- Usage report: tokens_known=false; Token delta: unknown; Usage snapshot status: captured end snapshot; start snapshot missing

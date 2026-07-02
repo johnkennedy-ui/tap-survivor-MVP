@@ -225,7 +225,7 @@ function createLifecycle({ dependencies, lifecycleHooks }) {
       const nextGame =
         typeof lifecycleHooks.resetGameState === "function"
           ? lifecycleHooks.resetGameState({ dependencies })
-          : dependencies.getGame() || createFallbackRun();
+          : dependencies.resetGameState?.() || dependencies.getGame() || createFallbackRun();
       dependencies.setGame(nextGame);
       return nextGame;
     },

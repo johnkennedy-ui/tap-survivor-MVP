@@ -182,6 +182,26 @@ export function createModuleGameDependencyBag({
     save: saveSystem,
     shopPricing: { createShopPricing },
   });
+  const mapSystemInstance = createMapSystem({
+    levelDefs: contentRegistry.levelDefs,
+    mapDefs: contentRegistry.mapDefs,
+    spriteDefs: contentRegistry.spriteDefs,
+  });
+  const getUpgradeTier = (id) => {
+    const tier = saveSystem.getSave?.().upgradeTiers?.[id] || stateStore.getSave().upgradeTiers?.[id] || 0;
+    const upgrade = contentRegistry.upgradeDefs.find((entry) => entry.id === id);
+    return Math.min(upgrade?.maxTier || tier, tier);
+  };
+  const maxEquippedWeapons = () => relics.maxEquippedWeapons(stateStore.getSave());
+  const runStateSystem = createRunStateSystem({
+    canvas: platformAdapters.canvas,
+    getSave: stateStore.getSave,
+    getShopBonuses: () => uiAdapters.shopSystemAdapter.getShopBonuses?.() || {},
+    getUpgradeTier,
+    mapSystem: mapSystemInstance,
+    maxEquippedWeapons,
+    weaponDefs: contentRegistry.weaponDefs,
+  });
 
   const moduleSystems = {
     balance: { floorDifficulty },
@@ -192,7 +212,7 @@ export function createModuleGameDependencyBag({
     gameRuntime: { createGameRuntimeController },
     gameStateStore: stateStore,
     levelUpChoices,
-    mapSystem: { createMapSystem },
+    mapSystem: { createMapSystem, instance: mapSystemInstance },
     math: { clamp, distance, formatTime, randomRange },
     moduleRuntimeGameplayAdapter: gameplayAdapters,
     moduleRuntimeAssetsAdapter: assetAdapters,
@@ -206,7 +226,7 @@ export function createModuleGameDependencyBag({
     relicProgression: { createRelicProgression },
     relics,
     runLifecycle: { createRunLifecycle },
-    runState: { createRunStateSystem },
+    runState: { createRunStateSystem, instance: runStateSystem },
     runUi: { createRunUi },
     runUpdate: { createRunUpdater },
     save: saveSystem,
@@ -255,6 +275,7 @@ export function createModuleGameDependencyBag({
     renderMeta: stateStore.renderMeta,
     renderSkillRail: renderingAdapters.renderSkillRail,
     rendering: renderingAdapters.rendering,
+    resetGameState: runStateSystem.resetGameState,
     runUi: uiAdapters.runUiAdapter,
     saveSystem,
     setGame: stateStore.setGame,

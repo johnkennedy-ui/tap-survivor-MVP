@@ -31,6 +31,7 @@ const report = {
   pageErrors: [],
   productionModuleAutobootLoaded: false,
   spriteDiagnostics: {
+    canvasDrawCalls: [],
     spriteDraws: [],
     spriteLoads: [],
     spriteRegistrations: [],
@@ -40,6 +41,7 @@ const report = {
     backgroundDrawSuccess: false,
     enemyDrawSuccess: false,
     nonBackgroundDrawSuccess: false,
+    playerCanvasVisible: false,
     playerDrawSuccess: false,
     weaponIconDrawSuccess: false,
   },
@@ -130,12 +132,203 @@ async function main() {
   const requestEvents = [];
   const responseEvents = [];
   await page.addInitScript(() => {
-    globalThis.__TapSurvivorBrowserDiagnostics = {
+    let drawSequence = 0;
+    const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
+    const diagnostics = {
+      canvasDrawCalls: [],
       spriteDraws: [],
       spriteLoadRequests: [],
       spriteLoads: [],
       spriteRegistrations: [],
     };
+    globalThis.__TapSurvivorBrowserDiagnostics = diagnostics;
+    CanvasRenderingContext2D.prototype.drawImage = function patchedDrawImage(image, ...args) {
+      const before = describeCanvasDraw(this, image, args);
+      const beforeStats = sampleCanvasRect(this, before.visibleRect);
+      let result;
+      let threw;
+      try {
+        result = originalDrawImage.call(this, image, ...args);
+        return result;
+      } catch (error) {
+        threw = error;
+        throw error;
+      } finally {
+        const afterStats = sampleCanvasRect(this, before.visibleRect);
+        diagnostics.canvasDrawCalls.push({
+          ...before,
+          afterStats,
+          beforeStats,
+          pixelDelta: pixelStatsDelta(beforeStats, afterStats),
+          sequence: ++drawSequence,
+          threw: Boolean(threw),
+        });
+      }
+    };
+
+    function describeCanvasDraw(context, image, args) {
+      const canvas = context.canvas;
+      const transform = context.getTransform?.();
+      const sourceWidth = image?.naturalWidth || image?.videoWidth || image?.width || 0;
+      const sourceHeight = image?.naturalHeight || image?.videoHeight || image?.height || 0;
+      const rect = destinationRect(args, sourceWidth, sourceHeight);
+      const transformedRect = transformRect(transform, rect);
+      const visibleRect = intersectRect(transformedRect, {
+        height: canvas?.height || 0,
+        width: canvas?.width || 0,
+        x: 0,
+        y: 0,
+      });
+      return {
+        canvas: {
+          height: canvas?.height || 0,
+          width: canvas?.width || 0,
+        },
+        dest: rect,
+        globalAlpha: context.globalAlpha,
+        globalCompositeOperation: context.globalCompositeOperation,
+        imageSrc: image?.currentSrc || image?.src || "",
+        intersectsCanvas: Boolean(visibleRect && visibleRect.width > 0 && visibleRect.height > 0),
+        source: {
+          naturalHeight: sourceHeight,
+          naturalWidth: sourceWidth,
+        },
+        transform: transform
+          ? {
+              a: transform.a,
+              b: transform.b,
+              c: transform.c,
+              d: transform.d,
+              e: transform.e,
+              f: transform.f,
+            }
+          : null,
+        transformedRect,
+        visibleRect,
+      };
+    }
+
+    function destinationRect(args, sourceWidth, sourceHeight) {
+      if (args.length >= 8) {
+        return normalizeRect({
+          height: Number(args[7]) || 0,
+          width: Number(args[6]) || 0,
+          x: Number(args[4]) || 0,
+          y: Number(args[5]) || 0,
+        });
+      }
+      if (args.length >= 4) {
+        return normalizeRect({
+          height: Number(args[3]) || 0,
+          width: Number(args[2]) || 0,
+          x: Number(args[0]) || 0,
+          y: Number(args[1]) || 0,
+        });
+      }
+      return normalizeRect({
+        height: sourceHeight,
+        width: sourceWidth,
+        x: Number(args[0]) || 0,
+        y: Number(args[1]) || 0,
+      });
+    }
+
+    function normalizeRect(rect) {
+      const x1 = Math.min(rect.x, rect.x + rect.width);
+      const x2 = Math.max(rect.x, rect.x + rect.width);
+      const y1 = Math.min(rect.y, rect.y + rect.height);
+      const y2 = Math.max(rect.y, rect.y + rect.height);
+      return {
+        height: y2 - y1,
+        width: x2 - x1,
+        x: x1,
+        y: y1,
+      };
+    }
+
+    function transformRect(transform, rect) {
+      if (!transform) return rect;
+      const points = [
+        transformPoint(transform, rect.x, rect.y),
+        transformPoint(transform, rect.x + rect.width, rect.y),
+        transformPoint(transform, rect.x, rect.y + rect.height),
+        transformPoint(transform, rect.x + rect.width, rect.y + rect.height),
+      ];
+      const xs = points.map((point) => point.x);
+      const ys = points.map((point) => point.y);
+      return {
+        height: Math.max(...ys) - Math.min(...ys),
+        width: Math.max(...xs) - Math.min(...xs),
+        x: Math.min(...xs),
+        y: Math.min(...ys),
+      };
+    }
+
+    function transformPoint(transform, x, y) {
+      return {
+        x: transform.a * x + transform.c * y + transform.e,
+        y: transform.b * x + transform.d * y + transform.f,
+      };
+    }
+
+    function intersectRect(rect, bounds) {
+      const x1 = Math.max(rect.x, bounds.x);
+      const x2 = Math.min(rect.x + rect.width, bounds.x + bounds.width);
+      const y1 = Math.max(rect.y, bounds.y);
+      const y2 = Math.min(rect.y + rect.height, bounds.y + bounds.height);
+      if (x2 <= x1 || y2 <= y1) return null;
+      return {
+        height: y2 - y1,
+        width: x2 - x1,
+        x: x1,
+        y: y1,
+      };
+    }
+
+    function sampleCanvasRect(context, rect) {
+      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+      const sampleWidth = Math.min(16, Math.max(1, Math.floor(rect.width)));
+      const sampleHeight = Math.min(16, Math.max(1, Math.floor(rect.height)));
+      const startX = Math.max(0, Math.floor(rect.x + (rect.width - sampleWidth) / 2));
+      const startY = Math.max(0, Math.floor(rect.y + (rect.height - sampleHeight) / 2));
+      try {
+        const imageData = context.getImageData(startX, startY, sampleWidth, sampleHeight).data;
+        let alphaSum = 0;
+        let colorSum = 0;
+        let opaquePixels = 0;
+        for (let index = 0; index < imageData.length; index += 4) {
+          const alpha = imageData[index + 3];
+          alphaSum += alpha;
+          colorSum += imageData[index] + imageData[index + 1] + imageData[index + 2];
+          if (alpha > 0) opaquePixels += 1;
+        }
+        return {
+          alphaSum,
+          colorSum,
+          height: sampleHeight,
+          opaquePixels,
+          width: sampleWidth,
+          x: startX,
+          y: startY,
+        };
+      } catch (error) {
+        return {
+          error: error.message,
+          height: sampleHeight,
+          width: sampleWidth,
+          x: startX,
+          y: startY,
+        };
+      }
+    }
+
+    function pixelStatsDelta(beforeStats, afterStats) {
+      if (!beforeStats || !afterStats || beforeStats.error || afterStats.error) return 0;
+      return (
+        Math.abs((afterStats.alphaSum || 0) - (beforeStats.alphaSum || 0)) +
+        Math.abs((afterStats.colorSum || 0) - (beforeStats.colorSum || 0))
+      );
+    }
   });
 
   page.on("console", (message) => {
@@ -224,6 +417,7 @@ async function main() {
     report.spriteDiagnostics = await page.evaluate(() => {
       const diagnostics = globalThis.__TapSurvivorBrowserDiagnostics || {};
       return {
+        canvasDrawCalls: diagnostics.canvasDrawCalls || [],
         spriteDraws: diagnostics.spriteDraws || [],
         spriteLoadRequests: diagnostics.spriteLoadRequests || [],
         spriteLoads: diagnostics.spriteLoads || [],
@@ -259,7 +453,8 @@ async function main() {
       criticalFailedRequest ? "failed local module or script request" : null,
       criticalHttpFailure ? "local app HTTP failure for script or asset" : null,
       !spriteProof.backgroundDrawSuccess ? "background floor draw never succeeded" : null,
-      !spriteProof.playerDrawSuccess ? "player sprite draw never succeeded" : null,
+      !spriteProof.playerDrawSuccess ? "player sprite draw was never attempted successfully" : null,
+      !spriteProof.playerCanvasVisible ? "player sprite draw did not produce visible canvas evidence" : null,
       report.startGameClickThrew ? "Start Game click threw" : null,
       !report.canvasFound ? "no canvas found" : null,
       !report.startGameFound && !report.titleVisible ? "no title or Start Game control found" : null,
@@ -480,6 +675,7 @@ function emitReport(report, extras = {}) {
   console.log(`failed requests: ${report.failedRequests.length}`);
   console.log(`local HTTP failures: ${report.httpFailures.length}`);
   console.log(`sprite draws: ${report.spriteDiagnostics.spriteDraws.length}`);
+  console.log(`canvas draw calls: ${report.spriteDiagnostics.canvasDrawCalls.length}`);
   console.log(`runtime samples: ${report.runtimeSamples.length}`);
   console.log("REPORT_JSON " + JSON.stringify({
     ...summary,
@@ -495,6 +691,7 @@ function emitReport(report, extras = {}) {
     pageErrors: truncate(report.pageErrors),
     runtimeSamples: report.runtimeSamples,
     spriteDiagnostics: {
+      canvasDrawCalls: truncate(report.spriteDiagnostics.canvasDrawCalls),
       spriteDraws: truncate(report.spriteDiagnostics.spriteDraws),
       spriteLoadRequests: truncate(report.spriteDiagnostics.spriteLoadRequests),
       spriteLoads: truncate(report.spriteDiagnostics.spriteLoads),
@@ -506,6 +703,7 @@ function emitReport(report, extras = {}) {
 
 function analyzeSpriteDiagnostics(diagnostics = {}) {
   const spriteDraws = diagnostics.spriteDraws || [];
+  const canvasDrawCalls = classifyCanvasDrawCalls(diagnostics);
   const spriteLoads = diagnostics.spriteLoads || [];
   const spriteRegistrations = diagnostics.spriteRegistrations || [];
   const spriteLoadRequests = diagnostics.spriteLoadRequests || [];
@@ -527,16 +725,97 @@ function analyzeSpriteDiagnostics(diagnostics = {}) {
   const nonBackgroundDrawSuccess = spriteDraws.some(
     (entry) => entry.success && !String(entry.id || "").startsWith("background:")
   );
+  const playerCanvasVisible = canvasDrawCalls.some((entry) => entry.kind === "player" && entry.visibleSpriteProof);
   return {
     backgroundDrawSuccess,
+    canvasDrawCalls,
     enemyDrawSuccess,
     nonBackgroundDrawSuccess,
+    playerCanvasVisible,
     playerDrawSuccess,
     spriteLoadRequests,
     spriteLoads,
     spriteRegistrations,
     weaponIconDrawSuccess,
   };
+}
+
+function classifyCanvasDrawCalls(diagnostics = {}) {
+  const registrations = diagnostics.spriteRegistrations || [];
+  const calls = (diagnostics.canvasDrawCalls || []).map((entry) => {
+    const id = idForImageSource(entry.imageSrc, registrations);
+    return {
+      ...entry,
+      id,
+      kind: kindForSpriteId(id),
+    };
+  });
+  const latestBackgroundSequence = Math.max(
+    0,
+    ...calls.filter((entry) => entry.kind === "background" && entry.intersectsCanvas).map((entry) => entry.sequence || 0)
+  );
+  return calls.map((entry) => {
+    const laterBackgroundOverwrite = calls.some(
+      (candidate) =>
+        candidate.sequence > entry.sequence &&
+        candidate.kind === "background" &&
+        candidate.intersectsCanvas &&
+        rectsOverlap(entry.visibleRect, candidate.visibleRect)
+    );
+    const positiveDestination = entry.dest?.width > 0 && entry.dest?.height > 0;
+    const visibleCoverage =
+      positiveDestination && entry.visibleRect
+        ? (entry.visibleRect.width * entry.visibleRect.height) / (entry.dest.width * entry.dest.height)
+        : 0;
+    const validSource = entry.source?.naturalWidth > 0 && entry.source?.naturalHeight > 0;
+    const visibleSpriteProof =
+      entry.kind === "player" &&
+      entry.sequence > latestBackgroundSequence &&
+      positiveDestination &&
+      visibleCoverage >= 0.9 &&
+      validSource &&
+      entry.intersectsCanvas &&
+      entry.globalAlpha > 0 &&
+      entry.globalCompositeOperation !== "destination-out" &&
+      !laterBackgroundOverwrite &&
+      (entry.pixelDelta || 0) > 0;
+    return {
+      ...entry,
+      laterBackgroundOverwrite,
+      positiveDestination,
+      validSource,
+      visibleCoverage,
+      visibleSpriteProof,
+    };
+  });
+}
+
+function idForImageSource(src, registrations = []) {
+  const normalizedSrc = normalizeImageSource(src);
+  const registration = registrations.find((entry) => normalizeImageSource(entry.src) === normalizedSrc);
+  return registration?.id || "";
+}
+
+function normalizeImageSource(src = "") {
+  try {
+    const url = new URL(src, "http://127.0.0.1");
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return String(src || "");
+  }
+}
+
+function kindForSpriteId(id = "") {
+  if (id === "background:tower_floor" || id.startsWith("background:")) return "background";
+  if (id === "player" || id.startsWith("player:")) return "player";
+  if (id.startsWith("enemy:")) return "enemy";
+  if (id.startsWith("weapon:") || id.startsWith("weaponIcon:")) return "weapon";
+  return "unknown";
+}
+
+function rectsOverlap(a, b) {
+  if (!a || !b) return false;
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 main().catch((error) => {
