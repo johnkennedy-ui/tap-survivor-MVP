@@ -65,6 +65,11 @@ export function createGameRuntimeController({
     shellUi.bind();
     debugSystem.bind();
     setGameSpeed(1);
+    ui.speedButtons.forEach((button) => {
+      button.addEventListener?.("click", () => {
+        setGameSpeed(Number(button.dataset.speed));
+      });
+    });
     bindLifecycleFlush();
 
     bindMovementInput({

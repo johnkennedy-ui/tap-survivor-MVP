@@ -137,7 +137,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
         runtime,
       });
     }
-    return false;
+    return tickDefaultRun(runtimeDependencies, dt);
   }
 
   function render(frame = {}) {
@@ -250,6 +250,28 @@ function createLifecycle({ dependencies, lifecycleHooks }) {
       lifecycleHooks.showMovementGateBanner ||
       (() => dependencies.bannerSystem.showMovementGateBanner?.()),
   });
+}
+
+function tickDefaultRun(dependencies, dt = 0) {
+  const game = dependencies.getGame?.();
+  if (!game?.running || game.paused || game.awaitingFirstMoveInput) return false;
+  const player = game.player;
+  if (!player) return false;
+  const delta = Math.max(0, Number(dt) || 0);
+  game.elapsed = (Number(game.elapsed) || 0) + delta;
+  const dx = (Number(player.targetX) || 0) - (Number(player.x) || 0);
+  const dy = (Number(player.targetY) || 0) - (Number(player.y) || 0);
+  const distance = Math.hypot(dx, dy);
+  player.moving = distance > 3;
+  if (distance > 3) {
+    player.facingX = dx / distance;
+    player.facingY = dy / distance;
+    const speed = Math.max(0, Number(player.speed) || 0);
+    const step = Math.min(distance, speed * delta);
+    player.x += player.facingX * step;
+    player.y += player.facingY * step;
+  }
+  return true;
 }
 
 function createFallbackRun() {

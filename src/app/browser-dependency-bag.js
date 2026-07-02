@@ -389,14 +389,44 @@ function createBrowserRenderingAdapters({ canvas }) {
         });
         return true;
       },
-      renderFrame({ spriteAdapters }) {
-        spriteAdapters?.spriteSystem?.drawImage?.(
-          "background:tower_floor",
+      renderFrame({ game, spriteAdapters }) {
+        const width = canvas.width || 0;
+        const height = canvas.height || 0;
+        const backgroundId = game?.background?.spriteId || "background:tower_floor";
+        const backgroundDrawn = spriteAdapters?.spriteSystem?.drawImage?.(
+          backgroundId,
           0,
           0,
-          canvas.width || 0,
-          canvas.height || 0
+          width,
+          height
         );
+        if (!backgroundDrawn && typeof context?.fillRect === "function") {
+          context.fillStyle = "#17202c";
+          context.fillRect(0, 0, width, height);
+          context.fillStyle = "rgba(10, 14, 20, 0.16)";
+          context.fillRect(0, 0, width, height);
+          context.strokeStyle = "#243244";
+          context.lineWidth = 1;
+          if (
+            typeof context.beginPath === "function" &&
+            typeof context.moveTo === "function" &&
+            typeof context.lineTo === "function" &&
+            typeof context.stroke === "function"
+          ) {
+            for (let x = 0; x < width; x += 48) {
+              context.beginPath();
+              context.moveTo(x, 0);
+              context.lineTo(x, height);
+              context.stroke();
+            }
+            for (let y = 0; y < height; y += 48) {
+              context.beginPath();
+              context.moveTo(0, y);
+              context.lineTo(width, y);
+              context.stroke();
+            }
+          }
+        }
         return true;
       },
       renderHud() {
@@ -611,6 +641,16 @@ function createBrowserShellUiAdapter({ onStartRun, ui }) {
     ui.openMenu?.setAttribute?.("aria-expanded", String(Boolean(open)));
     if (ui.exitRun) ui.exitRun.disabled = !open;
   };
+  const showMenuTab = (tab) => {
+    const shop = tab === "shop";
+    const inventory = tab === "inventory";
+    ui.menuProgressTab?.classList?.toggle("active", tab === "progress");
+    ui.menuShopTab?.classList?.toggle("active", shop);
+    ui.menuInventoryTab?.classList?.toggle("active", inventory);
+    toggleHidden(ui.menuProgressPanel, tab !== "progress");
+    toggleHidden(ui.menuShopPanel, !shop);
+    toggleHidden(ui.menuInventoryPanel, !inventory);
+  };
   const showTitle = () => {
     toggleHidden(ui.titleScreen, false);
     toggleHidden(ui.startTransition, true);
@@ -626,11 +666,44 @@ function createBrowserShellUiAdapter({ onStartRun, ui }) {
   const startFromTitle = () => {
     if (typeof onStartRun === "function") onStartRun();
   };
+  const toggleMenu = () => {
+    const nextOpen = ui.runMenu?.classList?.contains?.("hidden") ?? true;
+    setMenuOpen(nextOpen);
+    if (nextOpen) showMenuTab("progress");
+  };
+  const toggleFullscreen = () => {
+    const documentRef = ui.canvas?.ownerDocument;
+    if (!documentRef) return;
+    const target = ui.canvas?.parentElement || documentRef?.documentElement;
+    const fullscreenElement = documentRef?.fullscreenElement || documentRef?.webkitFullscreenElement;
+    if (fullscreenElement) {
+      const exitFullscreen = documentRef.exitFullscreen || documentRef.webkitExitFullscreen;
+      const result = exitFullscreen?.call(documentRef);
+      result?.catch?.(() => {});
+      return;
+    }
+    const requestFullscreen = target?.requestFullscreen || target?.webkitRequestFullscreen;
+    const result = requestFullscreen?.call(target);
+    result?.catch?.(() => {});
+  };
+  const toggleMute = () => {
+    const muted = ui.muteAudio?.getAttribute?.("aria-pressed") !== "true";
+    ui.muteAudio?.setAttribute?.("aria-pressed", String(muted));
+    ui.muteAudio?.classList?.toggle("active", muted);
+    if (ui.muteAudio) ui.muteAudio.textContent = muted ? "Muted" : "Sound";
+  };
   return {
     bind() {
       if (bound) return true;
       bound = true;
       ui.titleStartGame?.addEventListener?.("click", startFromTitle);
+      ui.openMenu?.addEventListener?.("click", toggleMenu);
+      ui.closeMenu?.addEventListener?.("click", () => setMenuOpen(false));
+      ui.menuProgressTab?.addEventListener?.("click", () => showMenuTab("progress"));
+      ui.menuShopTab?.addEventListener?.("click", () => showMenuTab("shop"));
+      ui.menuInventoryTab?.addEventListener?.("click", () => showMenuTab("inventory"));
+      ui.fullscreenButton?.addEventListener?.("click", toggleFullscreen);
+      ui.muteAudio?.addEventListener?.("click", toggleMute);
       showTitle();
       return true;
     },
