@@ -71,6 +71,8 @@
     "smoke:module-bridges": "node scripts/smoke-module-bridges.mjs",
     "smoke:production-browser:docker": "node scripts/run-production-browser-smoke-docker.mjs",
     "smoke:production-browser:docker:strict": "SMOKE_PRODUCTION_BROWSER_STRICT=1 node scripts/run-production-browser-smoke-docker.mjs",
+    "smoke:runtime-parity:browser": "node scripts/smoke-runtime-parity-browser.mjs",
+    "smoke:runtime-parity:browser:strict": "node scripts/smoke-runtime-parity-browser-strict.mjs",
     "smoke:relic-run-start": "node scripts/smoke-relic-run-start.mjs",
     "smoke:debug": "node scripts/smoke-debug.mjs",
     "smoke:browser": "node scripts/smoke-browser.mjs",

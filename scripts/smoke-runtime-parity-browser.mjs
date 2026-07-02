@@ -1,0 +1,1107 @@
+import { spawnSync } from "node:child_process";
+import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import { createServer } from "node:http";
+import { dirname, extname, join, normalize, resolve } from "node:path";
+import { chromium } from "playwright";
+
+const repoRoot = process.cwd();
+const cli = parseCli(process.argv.slice(2));
+const root = cli.root ? resolve(repoRoot, cli.root) : repoRoot;
+const viewport = resolveViewport(cli.viewport);
+const strict = cli.failOnDiff || Boolean(globalThis["__TapSurvivorParityFailOnDiff__"]);
+const framesToAdvance = cli.frames;
+const dtMs = cli.dtMs;
+const screenshotDir = cli.screenshotDir ? resolve(repoRoot, cli.screenshotDir) : "";
+const syntheticPagePrefix = "/__runtime-parity/";
+const syntheticPages = {
+  classic: `${syntheticPagePrefix}classic.html`,
+  esm: `${syntheticPagePrefix}esm.html`,
+};
+
+const contentTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+};
+
+const report = {
+  appLevelResult: "fail",
+  classic: null,
+  comparison: null,
+  diagnosticMode: !strict,
+  esm: null,
+  pageUrl: null,
+  rootDir: root,
+  strictMode: strict,
+  viewport,
+};
+
+const classicIndexSource = readClassicIndexSource();
+const classicScripts = parseScriptSources(classicIndexSource);
+const shellPage = injectBase(stripScripts(classicIndexSource));
+
+async function main() {
+  const server = createServer((req, res) => {
+    const requestUrl = req.url || "/";
+    if (requestUrl === syntheticPages.classic) {
+      return sendHtml(res, buildClassicPage());
+    }
+    if (requestUrl === syntheticPages.esm) {
+      return sendHtml(res, buildEsmPage());
+    }
+
+    const fullPath = resolveRequestPath(requestUrl);
+    if (!fullPath || !fullPath.startsWith(root) || !existsSync(fullPath)) {
+      res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+      res.end("Not found");
+      return;
+    }
+
+    const filePath = statSync(fullPath).isDirectory() ? join(fullPath, "index.html") : fullPath;
+    if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
+      res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+      res.end("Not found");
+      return;
+    }
+
+    res.writeHead(200, {
+      "cache-control": "no-store",
+      "content-type": contentTypeFor(filePath),
+    });
+    createReadStream(filePath).pipe(res);
+  });
+
+  await new Promise((resolveServer, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolveServer);
+  });
+
+  const address = server.address();
+  const port = typeof address === "object" && address ? address.port : 0;
+  const origin = `http://127.0.0.1:${port}`;
+
+  const browser = await chromium.launch({ headless: true });
+  let infraFailure = "";
+  try {
+    const classic = await runRuntime(browser, origin, "classic", syntheticPages.classic);
+    const esm = await runRuntime(browser, origin, "esm", syntheticPages.esm);
+    const comparison = compareSnapshots(classic, esm);
+    report.classic = classic;
+    report.esm = esm;
+    report.comparison = comparison;
+    report.appLevelResult = comparison.appLevelResult;
+    emitReport(report);
+
+    if (strict && comparison.strictFailures.length > 0) {
+      process.exitCode = 1;
+    }
+  } catch (error) {
+    infraFailure = error?.stack || error?.message || String(error);
+    report.appLevelResult = "fail";
+    report.comparison = {
+      appLevelResult: "fail",
+      comparisonNotes: [],
+      strictFailures: [`infra failure: ${shortMessage(infraFailure)}`],
+    };
+    emitReport(report);
+    process.exitCode = 1;
+  } finally {
+    await browser.close().catch(() => {});
+    await new Promise((resolveClose) => server.close(resolveClose));
+  }
+}
+
+async function runRuntime(browser, origin, mode, pagePath) {
+  const page = await browser.newPage({ viewport });
+  const result = createRuntimeResult(mode, pagePath);
+  const responseStatusByUrl = new Map();
+
+  await page.addInitScript(({ mode: initMode }) => {
+    const root = globalThis;
+    const parity = (root.__TapSurvivorParity = root.__TapSurvivorParity || {});
+    parity.mode = initMode;
+    parity.drawCalls = [];
+    parity.raf = parity.raf || { count: 0, dts: [], timestamps: [] };
+    parity.raf.count = 0;
+    parity.raf.dts = [];
+    parity.raf.timestamps = [];
+    parity.pageErrors = [];
+    parity.requestErrors = [];
+    parity.spriteRegistrations = parity.spriteRegistrations || [];
+    parity.spriteLoads = parity.spriteLoads || [];
+    parity.spriteLoadRequests = parity.spriteLoadRequests || [];
+    parity.scriptRequests = parity.scriptRequests || [];
+    parity.moduleRequests = parity.moduleRequests || [];
+    parity.started = false;
+
+    const nativeRAF = root.requestAnimationFrame?.bind(root);
+    let lastTimestamp = null;
+    if (typeof nativeRAF === "function") {
+      root.requestAnimationFrame = (callback) =>
+        nativeRAF((timestamp) => {
+          parity.raf.count += 1;
+          parity.raf.timestamps.push(timestamp);
+          parity.raf.dts.push(lastTimestamp === null ? 0 : timestamp - lastTimestamp);
+          lastTimestamp = timestamp;
+          return callback(timestamp);
+        });
+    }
+
+    const contextProto = root.CanvasRenderingContext2D?.prototype;
+    if (contextProto && !contextProto.__tapParityPatched) {
+      const originalDrawImage = contextProto.drawImage;
+      contextProto.drawImage = function patchedDrawImage(image, ...args) {
+        const before = describeDraw(this, image, args);
+        const beforeStats = sampleCanvasRect(this, before.visibleRect);
+        let threw = false;
+        try {
+          return originalDrawImage.call(this, image, ...args);
+        } catch (error) {
+          threw = true;
+          throw error;
+        } finally {
+          const afterStats = sampleCanvasRect(this, before.visibleRect);
+          parity.drawCalls.push({
+            ...before,
+            afterStats,
+            beforeStats,
+            pixelDelta: pixelStatsDelta(beforeStats, afterStats),
+            threw,
+          });
+        }
+      };
+      contextProto.__tapParityPatched = true;
+    }
+
+    root.addEventListener?.("error", (event) => {
+      parity.pageErrors.push({
+        message: event?.error?.message || event?.message || "window error",
+      });
+    });
+    root.addEventListener?.("unhandledrejection", (event) => {
+      parity.pageErrors.push({
+        message: event?.reason?.message || String(event?.reason || "unhandled rejection"),
+      });
+    });
+
+    function describeDraw(context, image, args) {
+      const canvas = context.canvas;
+      const transform = context.getTransform?.();
+      const sourceWidth = image?.naturalWidth || image?.videoWidth || image?.width || 0;
+      const sourceHeight = image?.naturalHeight || image?.videoHeight || image?.height || 0;
+      const dest = destinationRect(args, sourceWidth, sourceHeight);
+      const transformedRect = transformRect(transform, dest);
+      const visibleRect = intersectRect(transformedRect, {
+        height: canvas?.height || 0,
+        width: canvas?.width || 0,
+        x: 0,
+        y: 0,
+      });
+      return {
+        canvas: {
+          height: canvas?.height || 0,
+          width: canvas?.width || 0,
+        },
+        dest,
+        globalAlpha: context.globalAlpha,
+        globalCompositeOperation: context.globalCompositeOperation,
+        imageSrc: image?.currentSrc || image?.src || "",
+        intersectsCanvas: Boolean(visibleRect && visibleRect.width > 0 && visibleRect.height > 0),
+        source: {
+          naturalHeight: sourceHeight,
+          naturalWidth: sourceWidth,
+        },
+        transformedRect,
+        transform: transform
+          ? { a: transform.a, b: transform.b, c: transform.c, d: transform.d, e: transform.e, f: transform.f }
+          : null,
+        visibleRect,
+      };
+    }
+
+    function destinationRect(args, sourceWidth, sourceHeight) {
+      if (args.length >= 8) {
+        return normalizeRect({
+          height: Number(args[7]) || 0,
+          width: Number(args[6]) || 0,
+          x: Number(args[4]) || 0,
+          y: Number(args[5]) || 0,
+        });
+      }
+      if (args.length >= 4) {
+        return normalizeRect({
+          height: Number(args[3]) || 0,
+          width: Number(args[2]) || 0,
+          x: Number(args[0]) || 0,
+          y: Number(args[1]) || 0,
+        });
+      }
+      return normalizeRect({
+        height: sourceHeight,
+        width: sourceWidth,
+        x: Number(args[0]) || 0,
+        y: Number(args[1]) || 0,
+      });
+    }
+
+    function normalizeRect(rect) {
+      const x1 = Math.min(rect.x, rect.x + rect.width);
+      const x2 = Math.max(rect.x, rect.x + rect.width);
+      const y1 = Math.min(rect.y, rect.y + rect.height);
+      const y2 = Math.max(rect.y, rect.y + rect.height);
+      return { height: y2 - y1, width: x2 - x1, x: x1, y: y1 };
+    }
+
+    function transformRect(transform, rect) {
+      if (!transform) return rect;
+      const points = [
+        transformPoint(transform, rect.x, rect.y),
+        transformPoint(transform, rect.x + rect.width, rect.y),
+        transformPoint(transform, rect.x, rect.y + rect.height),
+        transformPoint(transform, rect.x + rect.width, rect.y + rect.height),
+      ];
+      const xs = points.map((point) => point.x);
+      const ys = points.map((point) => point.y);
+      return {
+        height: Math.max(...ys) - Math.min(...ys),
+        width: Math.max(...xs) - Math.min(...xs),
+        x: Math.min(...xs),
+        y: Math.min(...ys),
+      };
+    }
+
+    function transformPoint(transform, x, y) {
+      return { x: transform.a * x + transform.c * y + transform.e, y: transform.b * x + transform.d * y + transform.f };
+    }
+
+    function intersectRect(rect, bounds) {
+      const x1 = Math.max(rect.x, bounds.x);
+      const x2 = Math.min(rect.x + rect.width, bounds.x + bounds.width);
+      const y1 = Math.max(rect.y, bounds.y);
+      const y2 = Math.min(rect.y + rect.height, bounds.y + bounds.height);
+      if (x2 <= x1 || y2 <= y1) return null;
+      return { height: y2 - y1, width: x2 - x1, x: x1, y: y1 };
+    }
+
+    function sampleCanvasRect(context, rect) {
+      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+      const sampleWidth = Math.min(16, Math.max(1, Math.floor(rect.width)));
+      const sampleHeight = Math.min(16, Math.max(1, Math.floor(rect.height)));
+      const startX = Math.max(0, Math.floor(rect.x + (rect.width - sampleWidth) / 2));
+      const startY = Math.max(0, Math.floor(rect.y + (rect.height - sampleHeight) / 2));
+      try {
+        const imageData = context.getImageData(startX, startY, sampleWidth, sampleHeight).data;
+        let alphaSum = 0;
+        let colorSum = 0;
+        let opaquePixels = 0;
+        for (let index = 0; index < imageData.length; index += 4) {
+          const alpha = imageData[index + 3];
+          alphaSum += alpha;
+          colorSum += imageData[index] + imageData[index + 1] + imageData[index + 2];
+          if (alpha > 0) opaquePixels += 1;
+        }
+        return { alphaSum, colorSum, height: sampleHeight, opaquePixels, width: sampleWidth, x: startX, y: startY };
+      } catch (error) {
+        return { error: error.message, height: sampleHeight, width: sampleWidth, x: startX, y: startY };
+      }
+    }
+
+    function pixelStatsDelta(beforeStats, afterStats) {
+      if (!beforeStats || !afterStats || beforeStats.error || afterStats.error) return 0;
+      return (
+        Math.abs((afterStats.alphaSum || 0) - (beforeStats.alphaSum || 0)) +
+        Math.abs((afterStats.colorSum || 0) - (beforeStats.colorSum || 0))
+      );
+    }
+  }, { mode });
+
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      result.consoleErrors.push({
+        location: message.location(),
+        message: message.text(),
+        type: message.type(),
+      });
+    }
+  });
+  page.on("pageerror", (error) => {
+    result.pageErrors.push({ message: error.message, stack: error.stack });
+  });
+  page.on("request", (request) => {
+    const entry = { method: request.method(), resourceType: request.resourceType(), url: request.url() };
+    result.requests.push(entry);
+    if (entry.resourceType === "script" || entry.resourceType === "document") {
+      result.scriptUrls.push(entry.url);
+    }
+    if (entry.url.includes("/src/app/production-module-entrypoint.js") || entry.url.includes("/src/app/production-module-autoboot.js")) {
+      result.moduleUrls.push(entry.url);
+    }
+  });
+  page.on("requestfailed", (request) => {
+    const failure = request.failure();
+    result.failedRequests.push({
+      errorText: failure?.errorText || "request failed",
+      method: request.method(),
+      resourceType: request.resourceType(),
+      url: request.url(),
+    });
+  });
+  page.on("response", (response) => {
+    const entry = { status: response.status(), url: response.url() };
+    result.responses.push(entry);
+    responseStatusByUrl.set(normalizeImageSource(entry.url), entry.status);
+    if (isLocalUrl(entry.url, origin) && entry.status >= 400) {
+      result.httpFailures.push(entry);
+    }
+  });
+
+  const pageUrl = `${origin}${pagePath}`;
+  result.pageUrl = pageUrl;
+  let infraFailure = "";
+  try {
+    const response = await page.goto(pageUrl, { waitUntil: "load", timeout: 30000 });
+    result.indexLoaded = Boolean(response && response.ok());
+    await page.waitForTimeout(350);
+
+    result.canvasFound = (await page.locator("#game").count().catch(() => 0)) > 0;
+    result.titleControlDetected =
+      (await page.locator("#titleStartGame").count().catch(() => 0)) > 0 ||
+      (await page.getByRole("button", { name: /start game/i }).count().catch(() => 0)) > 0;
+    result.uiDetected = await detectUi(page);
+    result.startGameFound = result.titleControlDetected;
+
+    const startButton = await locateStartButton(page);
+    if (startButton) {
+      result.startGameClicked = true;
+      await startButton.click({ timeout: 5000 }).catch((error) => {
+        result.startGameClickThrew = true;
+        result.pageErrors.push({ message: `Start Game click failed: ${error.message}`, stack: error.stack });
+      });
+    }
+
+    const canvas = page.locator("#game");
+    if ((await canvas.count().catch(() => 0)) > 0) {
+      const box = await canvas.boundingBox().catch(() => null);
+      if (box) {
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2).catch(() => {});
+      }
+    }
+
+    await page.waitForTimeout(450);
+    await waitForFrameBudget(page, result, framesToAdvance, dtMs);
+
+    result.snapshot = await page.evaluate(() => {
+      const root = globalThis;
+      const parity = root.__TapSurvivorParity || {};
+      const canvas = document.getElementById("game");
+      const titleScreen = document.getElementById("titleScreen");
+      const startTransition = document.getElementById("startTransition");
+      const openMenu = document.getElementById("openMenu");
+      const fullscreenButton = document.getElementById("fullscreenButton");
+      const muteAudio = document.getElementById("muteAudio");
+      const speedButtons = [...document.querySelectorAll("[data-speed]")].map((button) => ({
+        active: button.classList.contains("active"),
+        speed: button.dataset.speed,
+      }));
+      const menuShopTab = document.getElementById("menuShopTab");
+      const menuProgressTab = document.getElementById("menuProgressTab");
+      const menuInventoryTab = document.getElementById("menuInventoryTab");
+      const content = root.TapSurvivorContent || {};
+      const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+      return {
+        assetsLoaded: Boolean(content.assets),
+        contentLoaded: Boolean(root.TapSurvivorContent),
+        canvas: canvas instanceof HTMLCanvasElement ? { backing: { height: canvas.height, width: canvas.width }, css: rectSize(canvas.getBoundingClientRect()) } : null,
+        controls: {
+          fullscreenButton: Boolean(fullscreenButton),
+          menuButton: Boolean(openMenu),
+          menuInventoryTab: Boolean(menuInventoryTab),
+          menuProgressTab: Boolean(menuProgressTab),
+          menuShopTab: Boolean(menuShopTab),
+          muteAudio: Boolean(muteAudio),
+          speedButtons,
+        },
+        game: snapshotGame(game),
+        registeredSpriteGroups: snapshotSpriteGroups(content.assets?.sprites || {}),
+        registeredSpriteGroupDefs: content.assets?.sprites || {},
+        title: {
+          startTransitionHidden: startTransition?.classList.contains("hidden") ?? null,
+          titleHidden: titleScreen?.classList.contains("hidden") ?? null,
+        },
+        diagnostics: {
+          drawCalls: parity.drawCalls || [],
+          pageErrors: parity.pageErrors || [],
+          raf: parity.raf || { count: 0, dts: [], timestamps: [] },
+          requestErrors: parity.requestErrors || [],
+          spriteLoadRequests: parity.spriteLoadRequests || [],
+          spriteLoads: parity.spriteLoads || [],
+          spriteRegistrations: parity.spriteRegistrations || [],
+        },
+      };
+
+      function rectSize(rect) {
+        return rect ? { height: Math.round(rect.height), width: Math.round(rect.width) } : null;
+      }
+
+      function snapshotGame(gameState) {
+        if (!gameState) return null;
+        const player = gameState.player || null;
+        return {
+          awaitingFirstMoveInput: Boolean(gameState.awaitingFirstMoveInput),
+          elapsed: Number(gameState.elapsed || 0),
+          enemies: Array.isArray(gameState.enemies) ? gameState.enemies.length : 0,
+          player: player
+            ? {
+                equippedWeapons: Array.isArray(player.equippedWeapons) ? [...player.equippedWeapons] : [],
+                hp: Number.isFinite(player.hp) ? player.hp : null,
+                maxHp: Number.isFinite(player.maxHp) ? player.maxHp : null,
+                radius: Number.isFinite(player.radius) ? player.radius : null,
+                spriteId: playerSpriteId(player),
+                x: Number.isFinite(player.x) ? player.x : null,
+                y: Number.isFinite(player.y) ? player.y : null,
+              }
+            : null,
+          running: Boolean(gameState.running),
+          towerFloor: Number.isFinite(gameState.towerFloor) ? gameState.towerFloor : null,
+        };
+      }
+
+      function snapshotSpriteGroups(spriteGroups) {
+        return {
+          backgrounds: Object.keys(spriteGroups.backgrounds || {}),
+          enemies: Object.keys(spriteGroups.enemies || {}),
+          player: spriteGroups.player ? [spriteSource(spriteGroups.player)] : [],
+          playerAnimations: Object.keys(spriteGroups.playerAnimations || {}),
+          runUpgradeIcons: Object.keys(spriteGroups.runUpgradeIcons || {}),
+          runUpgrades: Object.keys(spriteGroups.runUpgrades || {}),
+          ui: Object.keys(spriteGroups.ui || {}),
+          weapons: Object.keys(spriteGroups.weapons || {}),
+        };
+      }
+
+      function playerSpriteId(player) {
+        if (player?.actionTimer > 0 && player?.actionSprite) return `player:${player.actionSprite}`;
+        if (player?.moving) return "player:walk";
+        return "player";
+      }
+
+      function spriteSource(definition) {
+        if (typeof definition === "string") return definition;
+        if (definition && typeof definition === "object") return definition.src || definition.path || definition.iconSrc || "";
+        return "";
+      }
+    });
+
+    result.classified = classifyDraws(result.snapshot?.diagnostics?.drawCalls || [], result.snapshot?.registeredSpriteGroupDefs || {});
+    result.playerDraw = findPlayerDraw(result.classified.drawCalls);
+    result.backgroundDraw = result.classified.drawCalls.find((entry) => entry.kind === "background" && entry.intersectsCanvas) || null;
+    result.enemyDraw = result.classified.drawCalls.find((entry) => entry.kind === "enemy" && entry.intersectsCanvas) || null;
+    result.weaponDraw = result.classified.drawCalls.find((entry) => entry.kind === "weapon" && entry.intersectsCanvas) || null;
+    result.playerVisible = Boolean(result.classified.playerCanvasVisible);
+    result.loadedScriptUrls = result.scriptUrls.filter((url) => isLocalUrl(url, origin));
+    result.loadedModuleUrls = result.moduleUrls.filter((url) => isLocalUrl(url, origin));
+    result.canvasBackingSize = result.snapshot?.canvas?.backing || null;
+    result.canvasCssSize = result.snapshot?.canvas?.css || null;
+    result.startControlFound = Boolean(result.startGameFound);
+    result.contentLoaded = Boolean(result.snapshot?.contentLoaded);
+    result.assetsLoaded = Boolean(result.snapshot?.assetsLoaded);
+    result.spriteGroups = result.snapshot?.registeredSpriteGroups || null;
+    result.titleVisible = Boolean(result.snapshot?.title?.titleHidden === false);
+    result.raf = result.snapshot?.diagnostics?.raf || { count: 0, dts: [], timestamps: [] };
+    result.consoleErrors = result.consoleErrors || [];
+    result.pageErrors = (result.pageErrors || []).concat(result.snapshot?.diagnostics?.pageErrors || []);
+    result.browserErrors = {
+      consoleErrors: result.consoleErrors,
+      failedRequests: result.failedRequests,
+      httpFailures: result.httpFailures,
+      pageErrors: result.pageErrors,
+    };
+    result.summary = summarizeRuntime(result, origin);
+
+    if (cli.screenshotDir) {
+      await mkdir(cli.screenshotDir, { recursive: true });
+      await page.screenshot({ path: join(cli.screenshotDir, `${mode}.png`), fullPage: true }).catch(() => {});
+    }
+  } catch (error) {
+    infraFailure = error?.stack || error?.message || String(error);
+    result.infraFailure = infraFailure;
+  } finally {
+    await page.close().catch(() => {});
+  }
+
+  if (infraFailure) {
+    throw new Error(`${mode} runtime infra failure: ${infraFailure}`);
+  }
+
+  return result;
+}
+
+function createRuntimeResult(mode, pagePath) {
+  return {
+    assetsLoaded: false,
+    backgroundDraw: null,
+    browserErrors: null,
+    canvasBackingSize: null,
+    canvasCssSize: null,
+    canvasFound: false,
+    classified: null,
+    consoleErrors: [],
+    contentLoaded: false,
+    diagnostics: null,
+    drawCalls: [],
+    enemyDraw: null,
+    failedRequests: [],
+    httpFailures: [],
+    indexLoaded: false,
+    loadedModuleUrls: [],
+    loadedScriptUrls: [],
+    mode,
+    pageErrors: [],
+    pagePath,
+    pageUrl: null,
+    playerDraw: null,
+    playerVisible: false,
+    raf: { count: 0, dts: [], timestamps: [] },
+    requests: [],
+    responses: [],
+    moduleUrls: [],
+    scriptUrls: [],
+    snapshot: null,
+    spriteGroups: null,
+    startControlFound: false,
+    startGameClicked: false,
+    startGameClickThrew: false,
+    startGameFound: false,
+    summary: null,
+    titleVisible: false,
+    uiDetected: null,
+    weaponDraw: null,
+  };
+}
+
+function compareSnapshots(classic, esm) {
+  const notes = [];
+  const strictFailures = [];
+  const classicCanvas = classic.canvasBackingSize || classic.snapshot?.canvas?.backing || null;
+  const esmCanvas = esm.canvasBackingSize || esm.snapshot?.canvas?.backing || null;
+  const classicPlayer = classic.snapshot?.game?.player || null;
+  const esmPlayer = esm.snapshot?.game?.player || null;
+  const classicBackground = classic.backgroundDraw;
+  const esmBackground = esm.backgroundDraw;
+  const classicPlayerVisible = Boolean(classic.playerVisible);
+  const esmPlayerVisible = Boolean(esm.playerVisible);
+
+  if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
+  if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
+  if (classicCanvas && esmCanvas && (classicCanvas.width !== esmCanvas.width || classicCanvas.height !== esmCanvas.height)) {
+    strictFailures.push(`canvas backing mismatch: classic ${describeSize(classicCanvas)} vs esm ${describeSize(esmCanvas)}`);
+  }
+  if (classic.canvasCssSize && esm.canvasCssSize && (classic.canvasCssSize.width !== esm.canvasCssSize.width || classic.canvasCssSize.height !== esm.canvasCssSize.height)) {
+    strictFailures.push(`canvas CSS mismatch: classic ${describeSize(classic.canvasCssSize)} vs esm ${describeSize(esm.canvasCssSize)}`);
+  }
+
+  if (classic.startControlFound && !esm.startControlFound) strictFailures.push("classic found Start Game but ESM did not");
+  if (classic.startGameClicked && !esm.startGameClicked) strictFailures.push("classic clicked Start Game but ESM did not");
+  if (classic.canvasFound && !esm.canvasFound) strictFailures.push("classic has canvas but ESM does not");
+  if (classicBackground && !esmBackground) strictFailures.push("classic recorded background draw but ESM did not");
+  if (classicPlayerVisible && !esmPlayerVisible) strictFailures.push("classic recorded visible player draw but ESM did not");
+  if ((classic.consoleErrors?.length || 0) === 0 && (esm.consoleErrors?.length || 0) > 0) {
+    strictFailures.push("classic had no console errors but ESM did");
+  }
+  if ((classic.pageErrors?.length || 0) === 0 && (esm.pageErrors?.length || 0) > 0) {
+    strictFailures.push("classic had no page errors but ESM did");
+  }
+  if ((classic.failedRequests?.length || 0) === 0 && (esm.failedRequests?.length || 0) > 0) {
+    strictFailures.push("classic had no failed requests but ESM did");
+  }
+
+  if (!classicPlayer && !esmPlayer) {
+    notes.push("player state unavailable in both runtimes");
+  } else if (classicPlayer && esmPlayer) {
+    const delta = distance(classicPlayer.x, classicPlayer.y, esmPlayer.x, esmPlayer.y);
+    if (Number.isFinite(delta) && delta > 1) {
+      notes.push(`player position diverged by ${delta.toFixed(2)}px`);
+    }
+    if (classicPlayer.radius !== esmPlayer.radius) {
+      notes.push(`player radius differs: classic ${classicPlayer.radius} vs esm ${esmPlayer.radius}`);
+    }
+    if (classicPlayer.maxHp !== esmPlayer.maxHp) {
+      notes.push(`player maxHp differs: classic ${classicPlayer.maxHp} vs esm ${esmPlayer.maxHp}`);
+    }
+  }
+
+  const classicDeterministic = classic.raf?.count || 0;
+  const esmDeterministic = esm.raf?.count || 0;
+  if (classicDeterministic && esmDeterministic && classicDeterministic !== esmDeterministic) {
+    notes.push(`RAF frame count differs: classic ${classicDeterministic} vs esm ${esmDeterministic}`);
+  }
+
+  const appLevelResult = strictFailures.length === 0 ? "pass" : notes.length ? "partial" : "fail";
+  return {
+    appLevelResult,
+    comparisonNotes: notes,
+    classicHasPlayerDraw: classicPlayerVisible,
+    classicHasStartControl: classic.startControlFound,
+    classicPlayer,
+    classicSummary: classic.summary,
+    esmHasPlayerDraw: esmPlayerVisible,
+    esmHasStartControl: esm.startControlFound,
+    esmPlayer,
+    esmSummary: esm.summary,
+    strictFailures,
+  };
+}
+
+function summarizeRuntime(result, origin) {
+  const snapshot = result.snapshot || {};
+  const game = snapshot.game || null;
+  const canvas = snapshot.canvas || null;
+  const drawCalls = result.classified?.drawCalls || [];
+  return {
+    runtime: result.mode,
+    pageUrl: result.pageUrl,
+    canvasBackingSize: canvas?.backing || result.canvasBackingSize || null,
+    canvasCssSize: canvas?.css || result.canvasCssSize || null,
+    contentLoaded: Boolean(snapshot.contentLoaded),
+    assetsLoaded: Boolean(snapshot.assetsLoaded),
+    startControlFound: result.startControlFound,
+    startClicked: result.startGameClicked,
+    consoleErrors: result.consoleErrors.length,
+    pageErrors: result.pageErrors.length,
+    failedRequests: result.failedRequests.length,
+    httpFailures: result.httpFailures.length,
+    loadedScriptUrls: result.loadedScriptUrls.filter((url) => isLocalUrl(url, origin)),
+    loadedModuleUrls: result.loadedModuleUrls.filter((url) => isLocalUrl(url, origin)),
+    player: game?.player || null,
+    enemies: game?.enemies || [],
+    weaponIconsDrawn: drawCalls.filter((entry) => entry.kind === "weapon").length,
+    backgroundDraws: drawCalls.filter((entry) => entry.kind === "background").length,
+    playerDraws: drawCalls.filter((entry) => entry.kind === "player").length,
+    enemyDraws: drawCalls.filter((entry) => entry.kind === "enemy").length,
+    raf: result.raf,
+  };
+}
+
+function emitReport(finalReport) {
+  console.log("# Runtime Parity Harness");
+  console.log(`mode: ${finalReport.strictMode ? "strict" : "diagnostic"}`);
+  console.log(`root: ${finalReport.rootDir}`);
+  console.log(`viewport: ${finalReport.viewport.width}x${finalReport.viewport.height} @${finalReport.viewport.deviceScaleFactor}`);
+  console.log(`app result: ${finalReport.appLevelResult}`);
+  console.log("REPORT_JSON " + JSON.stringify(finalReport, null, 2));
+}
+
+async function waitForFrameBudget(page, result, frameCount, stepMs) {
+  const startCount = result.snapshot?.diagnostics?.raf?.count || 0;
+  const target = startCount + Math.max(0, frameCount);
+  if (target <= startCount) return;
+  const timeoutMs = Math.max(2500, frameCount * stepMs * 8);
+  await page.waitForFunction(
+    (expected) => {
+      const root = globalThis;
+      return (root.__TapSurvivorParity?.raf?.count || 0) >= expected;
+    },
+    target,
+    { polling: 16, timeout: timeoutMs }
+  ).catch(() => {});
+}
+
+async function detectUi(page) {
+  return {
+    fullscreenButton: (await page.locator("#fullscreenButton").count().catch(() => 0)) > 0,
+    menuButton: (await page.locator("#openMenu").count().catch(() => 0)) > 0,
+    menuInventoryTab: (await page.locator("#menuInventoryTab").count().catch(() => 0)) > 0,
+    menuProgressTab: (await page.locator("#menuProgressTab").count().catch(() => 0)) > 0,
+    menuShopTab: (await page.locator("#menuShopTab").count().catch(() => 0)) > 0,
+    muteAudio: (await page.locator("#muteAudio").count().catch(() => 0)) > 0,
+    speedButtons: await page.locator("[data-speed]").evaluateAll((buttons) =>
+      buttons.map((button) => ({
+        active: button.classList.contains("active"),
+        speed: button.getAttribute("data-speed"),
+      }))
+    ).catch(() => []),
+  };
+}
+
+async function locateStartButton(page) {
+  const selectors = [
+    page.locator("#titleStartGame"),
+    page.getByRole("button", { name: /^start game$/i }),
+    page.getByRole("button", { name: /start game/i }),
+    page.getByText(/^start game$/i, { exact: true }),
+  ];
+  for (const locator of selectors) {
+    if ((await locator.count().catch(() => 0)) > 0) return locator.first();
+  }
+  return null;
+}
+
+function buildClassicPage() {
+  const hookScript = renderClassicHookScript();
+  const scripts = [...classicScripts];
+  const gameIndex = scripts.findIndex((src) => /src\/game\.js(\?|$)/.test(src));
+  const renderedScripts = scripts
+    .flatMap((src, index) => {
+      const tags = [];
+      if (index === gameIndex) tags.push(hookScript);
+      tags.push(`<script src="${src}"></script>`);
+      return tags;
+    })
+    .join("\n    ");
+  return shellPage.replace(
+    "</body>",
+    `\n    <script>${renderParityPrelude("classic")}</script>\n    ${renderedScripts}\n  </body>`
+  );
+}
+
+function buildEsmPage() {
+  const bootScript = renderEsmBootScript();
+  return shellPage.replace(
+    "</body>",
+    `\n    <script>${renderParityPrelude("esm")}</script>\n    <script type="module">\n${bootScript}\n    </script>\n  </body>`
+  );
+}
+
+function renderClassicHookScript() {
+  return `<script>
+(() => {
+  const parity = globalThis.__TapSurvivorParity = globalThis.__TapSurvivorParity || {};
+  parity.classicHooks = parity.classicHooks || {};
+  wrapGlobal("TapSurvivorRunState", "createRunStateSystem", (original, args, context) => {
+    const result = original.apply(context, args);
+    if (result && typeof result.resetGameState === "function") {
+      const reset = result.resetGameState.bind(result);
+      result.resetGameState = (...resetArgs) => {
+        const game = reset(...resetArgs);
+        parity.classicGame = game;
+        return game;
+      };
+    }
+    return result;
+  });
+  wrapGlobal("TapSurvivorRunUpdate", "createRunUpdater", (original, args, context) => {
+    const updater = original.apply(context, args);
+    if (updater && typeof updater.update === "function") {
+      const update = updater.update.bind(updater);
+      updater.update = (dt) => {
+        parity.updateCalls = parity.updateCalls || [];
+        parity.updateCalls.push(Number(dt) || 0);
+        return update(dt);
+      };
+    }
+    return updater;
+  });
+  wrapGlobal("TapSurvivorGameRuntime", "createGameRuntimeController", (original, args, context) => {
+    const runtime = original.apply(context, args);
+    parity.classicRuntime = runtime;
+    return runtime;
+  });
+
+  function wrapGlobal(globalName, methodName, wrapper) {
+    const namespace = globalThis[globalName];
+    if (!namespace || typeof namespace[methodName] !== "function") return;
+    const original = namespace[methodName];
+    if (original.__tapParityWrapped) return;
+    const patched = function (...args) {
+      return wrapper(original, args, this);
+    };
+    patched.__tapParityWrapped = true;
+    namespace[methodName] = patched;
+  }
+})();
+</script>`;
+}
+
+function renderParityPrelude(mode) {
+  return `
+(() => {
+  const parity = globalThis.__TapSurvivorParity = globalThis.__TapSurvivorParity || {};
+  parity.mode = ${JSON.stringify(mode)};
+  parity.consoleErrors = parity.consoleErrors || [];
+  parity.pageErrors = parity.pageErrors || [];
+  parity.failedRequests = parity.failedRequests || [];
+  parity.httpFailures = parity.httpFailures || [];
+  parity.requests = parity.requests || [];
+  parity.responses = parity.responses || [];
+  parity.drawCalls = parity.drawCalls || [];
+  parity.spriteRegistrations = parity.spriteRegistrations || [];
+  parity.spriteLoadRequests = parity.spriteLoadRequests || [];
+  parity.spriteLoads = parity.spriteLoads || [];
+  parity.raf = parity.raf || { count: 0, dts: [], timestamps: [] };
+})();
+`;
+}
+
+function renderEsmBootScript() {
+  return `
+import { bootProductionModuleEntrypoint } from "/src/app/production-module-entrypoint.js";
+
+globalThis.__TapSurvivorParity = globalThis.__TapSurvivorParity || {};
+globalThis.__TapSurvivorParity.esmApi = bootProductionModuleEntrypoint({
+  autoInitialize: true,
+  globalRef: globalThis,
+});
+`;
+}
+
+function injectBase(html) {
+  return html.replace("<head>", '<head><base href="/" />');
+}
+
+function stripScripts(html) {
+  return html.replace(/\n\s*<script[\s\S]*?<\/script>/g, "");
+}
+
+function parseScriptSources(html) {
+  return [...html.matchAll(/<script[^>]+src="([^"]+)"[^>]*><\/script>/g)].map((match) => match[1]);
+}
+
+function readClassicIndexSource() {
+  const historical = spawnSync("git", ["show", "f06d154^:index.html"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (historical.status === 0 && historical.stdout) return historical.stdout;
+  return readFileSync(join(repoRoot, "index.html"), "utf8");
+}
+
+function classifyDraws(drawCalls, spriteGroups = {}) {
+  const spriteIndex = buildSpriteIndex(spriteGroups);
+  const classified = drawCalls.map((entry, sequence) => {
+    const id = inferSpriteId(entry.imageSrc, spriteIndex);
+    const kind = inferSpriteKind(id);
+    const visibleCoverage =
+      entry.dest?.width > 0 && entry.dest?.height > 0 && entry.visibleRect
+        ? (entry.visibleRect.width * entry.visibleRect.height) / (entry.dest.width * entry.dest.height)
+        : 0;
+    return {
+      ...entry,
+      id,
+      kind,
+      sequence,
+      visibleCoverage,
+      visibleSpriteProof:
+        kind === "player" && entry.intersectsCanvas && visibleCoverage >= 0.9 && (entry.pixelDelta || 0) > 0 && entry.globalAlpha > 0,
+    };
+  });
+  const latestBackgroundSequence = Math.max(
+    -1,
+    ...classified.filter((entry) => entry.kind === "background" && entry.intersectsCanvas).map((entry) => entry.sequence)
+  );
+  const playerCanvasVisible = classified.some(
+    (entry) => entry.kind === "player" && entry.visibleSpriteProof && entry.sequence > latestBackgroundSequence
+  );
+  return { drawCalls: classified, playerCanvasVisible };
+}
+
+function buildSpriteIndex(spriteGroups = {}) {
+  const entries = [];
+  const addEntry = (id, value) => {
+    const src = spriteSource(value);
+    if (id && src) entries.push({ id, src: normalizeImageSource(src) });
+  };
+  Object.entries(spriteGroups.backgrounds || {}).forEach(([id, value]) => addEntry(`background:${id}`, value));
+  Object.entries(spriteGroups.enemies || {}).forEach(([id, value]) => addEntry(`enemy:${id}`, value));
+  Object.entries(spriteGroups.playerAnimations || {}).forEach(([id, value]) => addEntry(`player:${id}`, value));
+  Object.entries(spriteGroups.runUpgradeIcons || {}).forEach(([id, value]) => addEntry(`runUpgradeIcon:${id}`, value));
+  Object.entries(spriteGroups.runUpgrades || {}).forEach(([id, value]) => addEntry(`runUpgrade:${id}`, value));
+  Object.entries(spriteGroups.ui || {}).forEach(([id, value]) => addEntry(`ui:${id}`, value));
+  Object.entries(spriteGroups.weapons || {}).forEach(([id, value]) => {
+    addEntry(`weapon:${id}`, value);
+    if (value && typeof value === "object" && value.iconSrc) {
+      addEntry(`weaponIcon:${id}`, value.iconSrc);
+    }
+  });
+  if (spriteGroups.player) addEntry("player", Array.isArray(spriteGroups.player) ? spriteGroups.player[0] : spriteGroups.player);
+  return entries;
+}
+
+function inferSpriteId(src, spriteIndex) {
+  const normalized = normalizeImageSource(src);
+  return spriteIndex.find((entry) => entry.src === normalized)?.id || "";
+}
+
+function inferSpriteKind(id) {
+  if (id === "player" || id.startsWith("player:")) return "player";
+  if (id.startsWith("background:")) return "background";
+  if (id.startsWith("enemy:")) return "enemy";
+  if (id.startsWith("weapon:") || id.startsWith("weaponIcon:") || id.startsWith("runUpgradeIcon:") || id.startsWith("runUpgrade:") || id.startsWith("ui:")) return "weapon";
+  return "unknown";
+}
+
+function findPlayerDraw(drawCalls) {
+  return drawCalls.find((entry) => entry.kind === "player" && entry.visibleSpriteProof) || null;
+}
+
+function spriteSource(definition) {
+  if (Array.isArray(definition)) return spriteSource(definition[0]);
+  if (typeof definition === "string") return definition;
+  if (definition && typeof definition === "object") return definition.src || definition.path || definition.iconSrc || "";
+  return "";
+}
+
+function normalizeImageSource(src = "") {
+  try {
+    const url = new URL(src, "http://127.0.0.1");
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return String(src || "");
+  }
+}
+
+function contentTypeFor(filePath) {
+  return contentTypes[extname(filePath)] || "application/octet-stream";
+}
+
+function resolveRequestPath(url) {
+  const requested = decodeURIComponent(new URL(url, "http://127.0.0.1").pathname);
+  const safePath = normalize(requested).replace(/^(\.\.[/\\])+/, "");
+  return join(root, safePath === "/" ? "index.html" : safePath);
+}
+
+function isLocalUrl(url, origin) {
+  try {
+    return new URL(url).origin === origin;
+  } catch {
+    return false;
+  }
+}
+
+function sendHtml(res, html) {
+  res.writeHead(200, {
+    "cache-control": "no-store",
+    "content-type": "text/html; charset=utf-8",
+  });
+  res.end(html);
+}
+
+function parseCli(args) {
+  const parsed = {
+    dtMs: 16.666,
+    frames: 8,
+    failOnDiff: false,
+    root: "",
+    screenshotDir: "",
+    viewport: "desktop",
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--fail-on-diff") {
+      parsed.failOnDiff = true;
+      continue;
+    }
+    if (arg === "--root") {
+      parsed.root = args[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--root=")) {
+      parsed.root = arg.slice("--root=".length);
+      continue;
+    }
+    if (arg === "--viewport") {
+      parsed.viewport = args[index + 1] || "desktop";
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--viewport=")) {
+      parsed.viewport = arg.slice("--viewport=".length);
+      continue;
+    }
+    if (arg === "--frames") {
+      parsed.frames = Number(args[index + 1] || 8);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--frames=")) {
+      parsed.frames = Number(arg.slice("--frames=".length) || 8);
+      continue;
+    }
+    if (arg === "--dt-ms") {
+      parsed.dtMs = Number(args[index + 1] || 16.666);
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--dt-ms=")) {
+      parsed.dtMs = Number(arg.slice("--dt-ms=".length) || 16.666);
+      continue;
+    }
+    if (arg === "--screenshot-dir") {
+      parsed.screenshotDir = args[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--screenshot-dir=")) {
+      parsed.screenshotDir = arg.slice("--screenshot-dir=".length);
+    }
+  }
+
+  if (!Number.isFinite(parsed.frames) || parsed.frames < 1) parsed.frames = 8;
+  if (!Number.isFinite(parsed.dtMs) || parsed.dtMs <= 0) parsed.dtMs = 16.666;
+  return parsed;
+}
+
+function resolveViewport(name) {
+  if (name === "desktop") {
+    return { deviceScaleFactor: 1, hasTouch: false, height: 720, isMobile: false, width: 1280 };
+  }
+  if (name === "mobile") {
+    return { deviceScaleFactor: 3, hasTouch: true, height: 844, isMobile: true, width: 390 };
+  }
+  const match = String(name || "").match(/^(\d+)x(\d+)(?:@(\d+(?:\.\d+)?))?$/);
+  if (match) {
+    return {
+      deviceScaleFactor: Number(match[3] || 1),
+      hasTouch: false,
+      height: Number(match[2]),
+      isMobile: false,
+      width: Number(match[1]),
+    };
+  }
+  throw new Error(`Unknown viewport preset: ${name}`);
+}
+
+function shortMessage(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function describeSize(size) {
+  return size ? `${size.width}x${size.height}` : "unknown";
+}
+
+function distance(x1, y1, x2, y2) {
+  return Math.hypot(Number(x2 || 0) - Number(x1 || 0), Number(y2 || 0) - Number(y1 || 0));
+}
+
+function compareAndListRuntime(result) {
+  return {
+    ...result,
+    browserErrors: {
+      consoleErrors: result.consoleErrors,
+      failedRequests: result.failedRequests,
+      httpFailures: result.httpFailures,
+      pageErrors: result.pageErrors,
+    },
+  };
+}
+
+function readJsonSafe(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+main().catch((error) => {
+  console.error(error.stack || error);
+  process.exitCode = 1;
+});
