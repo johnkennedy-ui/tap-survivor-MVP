@@ -38,17 +38,19 @@ export function createProductionModuleEntrypoint(options = {}) {
   const resolvedGlobalRef = globalRef || globalThis;
   const resolvedPlatform =
     platform || createBrowserPlatform({ globalRef: resolvedGlobalRef });
+  let lifecycle;
   const resolvedDependencyBagOptions =
     dependencyBagOptions ||
     createBrowserDependencyBagOptions({
       ...(browserDependencyBagOptions || {}),
       documentRef: resolvedPlatform.documentRef,
       globalRef: resolvedGlobalRef,
+      onStartRun: () => lifecycle?.startRun?.(),
     });
   const resolvedDependencies =
     dependencies ||
     createModuleGameDependencyBag(resolvedDependencyBagOptions);
-  const lifecycle = createModuleGameLifecycleOwner({
+  lifecycle = createModuleGameLifecycleOwner({
     dependencies: resolvedDependencies,
     lifecycleHooks,
     platform: resolvedPlatform,

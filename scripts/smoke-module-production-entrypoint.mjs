@@ -148,6 +148,7 @@ const runtimeGlobal = {
   },
 };
 function createVisibilityNode(label) {
+  const listeners = new Map();
   const node = {
     attributes: {},
     classList: {
@@ -173,6 +174,13 @@ function createVisibilityNode(label) {
     },
     disabled: false,
     hidden: true,
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+      calls.push(`${label}:listener:${type}`);
+    },
+    click() {
+      listeners.get("click")?.({ type: "click" });
+    },
     setAttribute(name, value) {
       this.attributes[name] = String(value);
       calls.push(`${label}:attr:${name}:${value}`);
@@ -263,6 +271,7 @@ const uiSurface = {
   shopModal: createVisibilityNode("browser-ui:shop-modal"),
   startTransition: createVisibilityNode("browser-ui:start-transition"),
   titleScreen: createVisibilityNode("browser-ui:title-screen"),
+  titleStartGame: createVisibilityNode("browser-ui:title-start-game"),
 };
 const storage = createMemoryStorage();
 storage.setItem("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
@@ -440,12 +449,13 @@ const browserEntrypoint = bootProductionModuleEntrypoint({
     runtimeGlobal,
   },
 });
-browserEntrypoint.startRun();
+const browserUiAdapters = browserEntrypoint.dependencies.moduleSystems.moduleRuntimeUiAdapters;
+browserUiAdapters.shellUiAdapter.bind();
+uiSurface.titleStartGame.click();
 browserEntrypoint.tick(0.032);
 browserEntrypoint.render({ frameId: "browser-default" });
 browserEntrypoint.persist();
 browserEntrypoint.runtime.setGameSpeed(5);
-const browserUiAdapters = browserEntrypoint.dependencies.moduleSystems.moduleRuntimeUiAdapters;
 browserUiAdapters.runUiAdapter.updateRunHud();
 browserUiAdapters.runUiAdapter.showEndScreen("browser-entrypoint");
 browserUiAdapters.runUiAdapter.hideEndScreen();
@@ -465,6 +475,12 @@ check(
 check(
   "production module entrypoint default browser dependency bag reaches lifecycle",
   browserCalls.includes("browser:update:0.032") && browserCalls.includes("browser:dispose")
+);
+check(
+  "production module entrypoint default browser title start path reaches lifecycle",
+  calls.includes("browser-ui:title-start-game:listener:click") &&
+    calls.includes("browser-ui:title-screen:add:hidden") &&
+    calls.includes("browser-ui:start-transition:add:hidden")
 );
 check(
   "production module entrypoint default browser dependency bag persists",
