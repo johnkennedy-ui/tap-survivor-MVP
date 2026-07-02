@@ -1,10 +1,14 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { createServer } from "node:http";
-import { extname, join, normalize } from "node:path";
+import { dirname, extname, join, normalize, resolve } from "node:path";
 import { chromium } from "playwright";
 
-const strict = process.env.SMOKE_PRODUCTION_BROWSER_STRICT === "1";
-const root = process.cwd();
+const cli = parseCli(process.argv.slice(2));
+const strict = cli.strict || process.env.SMOKE_PRODUCTION_BROWSER_STRICT === "1";
+const root = cli.root ? resolve(process.cwd(), cli.root) : process.cwd();
+const viewport = resolveViewport(cli.viewport);
+const screenshotPath = cli.screenshotPath ? resolve(process.cwd(), cli.screenshotPath) : "";
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -19,17 +23,24 @@ const report = {
   appLevelResult: "fail",
   browserImage: process.env.PLAYWRIGHT_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble",
   canvasFound: false,
+  canvasBackingSize: null,
+  canvasCssSize: null,
   console: { error: [], info: [], log: [], warning: [] },
   diagnosticMode: !strict,
   failedRequests: [],
   httpFailures: [],
   indexLoaded: false,
+  moduleScriptUrl: null,
   menuButtons: {},
   nonStartButtonsDetected: [],
   nonStartButtonsProbed: [],
   nonStartButtonProbeResults: [],
+  pageUrl: null,
   pageErrors: [],
   productionModuleAutobootLoaded: false,
+  playerSpriteAssetResponseStatus: null,
+  playerSpriteAssetUrl: null,
+  rootDir: root,
   spriteDiagnostics: {
     canvasDrawCalls: [],
     spriteDraws: [],
@@ -52,6 +63,8 @@ const report = {
   titleControlDetected: false,
   titleVisible: false,
   runtimeSamples: [],
+  screenshotPath: screenshotPath || null,
+  viewport,
 };
 
 function contentTypeFor(filePath) {
@@ -80,6 +93,78 @@ function isCriticalAsset(url, origin) {
 
 function shortMessage(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function parseCli(args) {
+  const parsed = {
+    root: "",
+    screenshotPath: "",
+    strict: false,
+    viewport: "desktop",
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--strict") {
+      parsed.strict = true;
+      continue;
+    }
+    if (arg === "--root") {
+      parsed.root = args[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--root=")) {
+      parsed.root = arg.slice("--root=".length);
+      continue;
+    }
+    if (arg === "--viewport") {
+      parsed.viewport = args[index + 1] || "desktop";
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--viewport=")) {
+      parsed.viewport = arg.slice("--viewport=".length);
+      continue;
+    }
+    if (arg === "--screenshot") {
+      const next = args[index + 1];
+      if (next && !next.startsWith("--")) {
+        parsed.screenshotPath = next;
+        index += 1;
+      } else {
+        parsed.screenshotPath = "tmp/browser-smoke/latest.png";
+      }
+      continue;
+    }
+    if (arg.startsWith("--screenshot=")) {
+      parsed.screenshotPath = arg.slice("--screenshot=".length) || "tmp/browser-smoke/latest.png";
+    }
+  }
+
+  return parsed;
+}
+
+function resolveViewport(name) {
+  if (name === "desktop") {
+    return { deviceScaleFactor: 1, hasTouch: false, height: 720, isMobile: false, width: 1280 };
+  }
+  if (name === "mobile") {
+    return { deviceScaleFactor: 3, hasTouch: true, height: 844, isMobile: true, width: 390 };
+  }
+
+  const match = String(name || "").match(/^(\d+)x(\d+)(?:@(\d+(?:\.\d+)?))?$/);
+  if (match) {
+    return {
+      deviceScaleFactor: Number(match[3] || 1),
+      hasTouch: false,
+      height: Number(match[2]),
+      isMobile: false,
+      width: Number(match[1]),
+    };
+  }
+
+  throw new Error(`Unknown viewport preset: ${name}`);
 }
 
 function snapshotFailure(entry) {
@@ -127,10 +212,11 @@ async function main() {
   const url = `${origin}/index.html`;
 
   const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  const page = await browser.newPage({ viewport });
   const consoleEvents = [];
   const requestEvents = [];
   const responseEvents = [];
+  const responseStatusByUrl = new Map();
   await page.addInitScript(() => {
     let drawSequence = 0;
     const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
@@ -360,6 +446,7 @@ async function main() {
     requestEvents.push(entry);
     if (url.includes("/src/app/production-module-autoboot.js")) {
       report.productionModuleAutobootLoaded = true;
+      report.moduleScriptUrl = url;
     }
   });
 
@@ -379,8 +466,10 @@ async function main() {
     const status = response.status();
     const entry = { status, url };
     responseEvents.push(entry);
+    responseStatusByUrl.set(normalizeImageSource(url), status);
     if (url.includes("/src/app/production-module-autoboot.js") && status < 400) {
       report.productionModuleAutobootLoaded = true;
+      report.moduleScriptUrl = url;
     }
     if (isLocalUrl(url, origin) && status >= 400) {
       report.httpFailures.push(entry);
@@ -391,6 +480,7 @@ async function main() {
   try {
     const response = await page.goto(url, { waitUntil: "load", timeout: 30000 });
     report.indexLoaded = Boolean(response && response.ok());
+    report.pageUrl = url;
     await page.waitForTimeout(250);
 
     report.titleVisible = await page.locator("#titleScreen").isVisible().catch(() => false);
@@ -413,6 +503,11 @@ async function main() {
     }
 
     await sampleRuntime(page, report, origin);
+    if (screenshotPath) {
+      await mkdir(dirname(screenshotPath), { recursive: true });
+      await page.screenshot({ fullPage: true, path: screenshotPath });
+      report.screenshotPath = screenshotPath;
+    }
     await probeButtons(page, report);
     report.spriteDiagnostics = await page.evaluate(() => {
       const diagnostics = globalThis.__TapSurvivorBrowserDiagnostics || {};
@@ -427,6 +522,13 @@ async function main() {
 
     const spriteProof = analyzeSpriteDiagnostics(report.spriteDiagnostics);
     report.spriteProof = spriteProof;
+    const playerSpriteLoad = report.spriteDiagnostics.spriteLoads.find((entry) => entry.id === "player");
+    if (playerSpriteLoad?.src) {
+      report.playerSpriteAssetUrl = new URL(playerSpriteLoad.src, report.pageUrl || url).href;
+      report.playerSpriteAssetResponseStatus = responseStatusByUrl.get(
+        normalizeImageSource(report.playerSpriteAssetUrl)
+      ) || null;
+    }
 
     const criticalConsoleError = report.console.error.find((entry) =>
       isLocalUrl(entry.location?.url || "", origin) || /src\/|index\.html|Tap Survivor/i.test(entry.message)
@@ -562,13 +664,23 @@ async function sampleRuntime(page, report, origin) {
           }
         }
       }
+      const canvasBackingSize = canvas instanceof HTMLCanvasElement
+        ? {
+            height: canvas.height,
+            width: canvas.width,
+          }
+        : null;
+      const canvasRect = canvas instanceof HTMLCanvasElement ? canvas.getBoundingClientRect() : null;
+      const canvasCssSize = canvasRect
+        ? {
+            height: Math.round(canvasRect.height),
+            width: Math.round(canvasRect.width),
+          }
+        : null;
       return {
-        canvas: canvas instanceof HTMLCanvasElement
-          ? {
-              height: canvas.height,
-              width: canvas.width,
-            }
-          : null,
+        canvas: canvasBackingSize,
+        canvasBackingSize,
+        canvasCssSize,
         fullscreenButton: Boolean(fullscreenButton),
         menuProgressTab: Boolean(menuProgressTab),
         menuInventoryTab: Boolean(menuInventoryTab),
@@ -588,6 +700,8 @@ async function sampleRuntime(page, report, origin) {
   await page.waitForTimeout(250);
   report.runtimeSamples.push(await canvasSnapshot());
   report.menuButtons = report.runtimeSamples[report.runtimeSamples.length - 1] || {};
+  report.canvasBackingSize = report.menuButtons.canvasBackingSize || null;
+  report.canvasCssSize = report.menuButtons.canvasCssSize || null;
 }
 
 async function probeButtons(page, report) {
@@ -636,6 +750,8 @@ function emitReport(report, extras = {}) {
   const summary = {
     appLevelResult: report.appLevelResult,
     canvasFound: report.canvasFound,
+    canvasBackingSize: report.canvasBackingSize,
+    canvasCssSize: report.canvasCssSize,
     criticalFailures: {
       consoleError: Boolean(extras.criticalConsoleError),
       failedRequest: Boolean(extras.criticalFailedRequest),
@@ -643,11 +759,16 @@ function emitReport(report, extras = {}) {
     },
     diagnosticMode: report.diagnosticMode,
     indexLoaded: report.indexLoaded,
+    moduleScriptUrl: report.moduleScriptUrl,
     nonStartButtonsDetected: report.nonStartButtonsDetected,
     nonStartButtonsProbed: report.nonStartButtonsProbed,
     nonStartButtonProbeResults: report.nonStartButtonProbeResults,
     pageErrors: report.pageErrors.length,
+    pageUrl: report.pageUrl,
     productionModuleAutobootLoaded: report.productionModuleAutobootLoaded,
+    playerSpriteAssetResponseStatus: report.playerSpriteAssetResponseStatus,
+    playerSpriteAssetUrl: report.playerSpriteAssetUrl,
+    rootDir: report.rootDir,
     spriteProof: report.spriteProof,
     startGameClicked: report.startGameClicked,
     startGameClickThrew: report.startGameClickThrew,
@@ -655,17 +776,27 @@ function emitReport(report, extras = {}) {
     strictMode: report.strictMode,
     titleControlDetected: report.titleControlDetected,
     titleVisible: report.titleVisible,
+    viewport: report.viewport,
   };
 
   console.log("# Production Browser Smoke");
   console.log(`mode: ${report.strictMode ? "strict" : "diagnostic"}`);
   console.log(`result: ${report.appLevelResult}`);
+  console.log(`page url: ${report.pageUrl || "unknown"}`);
+  console.log(`served root: ${report.rootDir}`);
+  console.log(`viewport: ${report.viewport.width}x${report.viewport.height} @${report.viewport.deviceScaleFactor}`);
   console.log(`index.html loaded: ${report.indexLoaded ? "yes" : "no"}`);
   console.log(`production-module-autoboot.js loaded: ${report.productionModuleAutobootLoaded ? "yes" : "no"}`);
+  console.log(`module script url: ${report.moduleScriptUrl || "unknown"}`);
   console.log(`Start Game found: ${report.startGameFound ? "yes" : "no"}`);
   console.log(`Start Game clicked: ${report.startGameClicked ? "yes" : "no"}`);
   console.log(`Start Game click threw: ${report.startGameClickThrew ? "yes" : "no"}`);
   console.log(`canvas found: ${report.canvasFound ? "yes" : "no"}`);
+  console.log(`canvas css size: ${report.canvasCssSize ? `${report.canvasCssSize.width}x${report.canvasCssSize.height}` : "unknown"}`);
+  console.log(`canvas backing size: ${report.canvasBackingSize ? `${report.canvasBackingSize.width}x${report.canvasBackingSize.height}` : "unknown"}`);
+  console.log(`player sprite asset url: ${report.playerSpriteAssetUrl || "unknown"}`);
+  console.log(`player sprite asset response: ${report.playerSpriteAssetResponseStatus ?? "unknown"}`);
+  console.log(`screenshot: ${report.screenshotPath || "none"}`);
   console.log(`title visible: ${report.titleVisible ? "yes" : "no"}`);
   console.log(`non-start buttons detected: ${report.nonStartButtonsDetected.join(", ") || "none"}`);
   console.log(`non-start buttons probed: ${report.nonStartButtonsProbed.join(", ") || "none"}`);

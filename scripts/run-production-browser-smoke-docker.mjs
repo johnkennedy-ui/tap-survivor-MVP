@@ -5,6 +5,7 @@ import { dirname, resolve } from "node:path";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptDir, "..");
 const image = process.env.PLAYWRIGHT_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble";
+const smokeArgs = process.argv.slice(2);
 
 const result = spawnSync(
   "docker",
@@ -32,7 +33,7 @@ const result = spawnSync(
       'cp -a /repo/. "$workdir/repo"/',
       'cd "$workdir/repo"',
       "npm ci --ignore-scripts --no-audit --no-fund",
-      "node scripts/smoke-production-browser-runtime.mjs",
+      ["node", "scripts/smoke-production-browser-runtime.mjs", ...smokeArgs].join(" "),
     ].join("; "),
   ],
   {

@@ -5,6 +5,7 @@ www/
 .agent/frank-evidence.md
 .agent/frank-capture/
 .agent/runs/
+tmp/browser-smoke/
 
 .env
 .env.*
