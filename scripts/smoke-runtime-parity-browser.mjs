@@ -36,8 +36,11 @@ const report = {
   comparison: null,
   diagnosticMode: !strict,
   esm: null,
+  firstDivergence: null,
   pageUrl: null,
   rootDir: root,
+  surfaces: [],
+  surfaceRoots: [],
   strictMode: strict,
   viewport,
 };
@@ -45,8 +48,64 @@ const report = {
 const classicIndexSource = readClassicIndexSource();
 const classicScripts = parseScriptSources(classicIndexSource);
 const shellPage = injectBase(stripScripts(classicIndexSource));
+const surfaceRoots = resolveSurfaceRoots(root);
+report.surfaceRoots = surfaceRoots.map((surface) => ({
+  exists: surface.exists,
+  name: surface.name,
+  rootDir: surface.rootDir,
+  surfaceUrl: surface.surfaceUrl,
+}));
 
 async function main() {
+  const browser = await chromium.launch({ headless: true });
+  let infraFailure = "";
+  try {
+    for (const surface of surfaceRoots) {
+      const surfaceResult = await runSurface(browser, surface);
+      report.surfaces.push(surfaceResult);
+    }
+    const comparisonSummary = summarizeSurfaceComparisons(report.surfaces);
+    report.classic = comparisonSummary.classic;
+    report.esm = comparisonSummary.esm;
+    report.comparison = comparisonSummary.comparison;
+    report.firstDivergence = comparisonSummary.firstDivergence;
+    report.appLevelResult = comparisonSummary.appLevelResult;
+    emitReport(report);
+
+    if (strict && comparisonSummary.strictFailures.length > 0) {
+      process.exitCode = 1;
+    }
+  } catch (error) {
+    infraFailure = error?.stack || error?.message || String(error);
+    report.appLevelResult = "fail";
+    report.comparison = {
+      appLevelResult: "fail",
+      comparisonNotes: [],
+      strictFailures: [`infra failure: ${shortMessage(infraFailure)}`],
+    };
+    emitReport(report);
+    process.exitCode = 1;
+  } finally {
+    await browser.close().catch(() => {});
+  }
+}
+
+async function runSurface(browser, surface) {
+  const result = {
+    appLevelResult: "fail",
+    builtOutputSurface: surface.name === "built",
+    comparison: null,
+    exists: surface.exists,
+    firstDivergence: null,
+    name: surface.name,
+    rootDir: surface.rootDir,
+    skipped: !surface.exists,
+    skipReason: surface.exists ? "" : "surface root missing",
+    viewports: [],
+  };
+
+  if (!surface.exists) return result;
+
   const server = createServer((req, res) => {
     const requestUrl = req.url || "/";
     if (requestUrl === syntheticPages.classic) {
@@ -56,8 +115,8 @@ async function main() {
       return sendHtml(res, buildEsmPage());
     }
 
-    const fullPath = resolveRequestPath(requestUrl);
-    if (!fullPath || !fullPath.startsWith(root) || !existsSync(fullPath)) {
+    const fullPath = resolveRequestPath(requestUrl, surface.rootDir);
+    if (!fullPath || !fullPath.startsWith(surface.rootDir) || !existsSync(fullPath)) {
       res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
       res.end("Not found");
       return;
@@ -86,39 +145,44 @@ async function main() {
   const port = typeof address === "object" && address ? address.port : 0;
   const origin = `http://127.0.0.1:${port}`;
 
-  const browser = await chromium.launch({ headless: true });
-  let infraFailure = "";
   try {
-    const classic = await runRuntime(browser, origin, "classic", syntheticPages.classic);
-    const esm = await runRuntime(browser, origin, "esm", syntheticPages.esm);
-    const comparison = compareSnapshots(classic, esm);
-    report.classic = classic;
-    report.esm = esm;
-    report.comparison = comparison;
-    report.appLevelResult = comparison.appLevelResult;
-    emitReport(report);
-
-    if (strict && comparison.strictFailures.length > 0) {
-      process.exitCode = 1;
+    for (const viewportName of ["desktop", "mobile"]) {
+      const runtimeViewport = resolveViewport(viewportName);
+      const classic = await runRuntime(browser, origin, "classic", syntheticPages.classic, runtimeViewport, surface);
+      const esm = await runRuntime(browser, origin, "esm", syntheticPages.esm, runtimeViewport, surface);
+      const comparison = compareSnapshots(classic, esm);
+      result.viewports.push({
+        appLevelResult: comparison.appLevelResult,
+        classic,
+        comparison,
+        esm,
+        firstDivergence: comparison.strictFailures[0] || comparison.comparisonNotes[0] || null,
+        runtimeViewport,
+        viewportName,
+      });
     }
+    const summary = summarizeSurfaceResult(result);
+    result.appLevelResult = summary.appLevelResult;
+    result.comparison = summary.comparison;
+    result.firstDivergence = summary.firstDivergence;
+    result.classic = summary.classic;
+    result.esm = summary.esm;
+    result.strictFailures = summary.strictFailures;
+    result.comparisonNotes = summary.comparisonNotes;
+    return result;
   } catch (error) {
-    infraFailure = error?.stack || error?.message || String(error);
-    report.appLevelResult = "fail";
-    report.comparison = {
-      appLevelResult: "fail",
-      comparisonNotes: [],
-      strictFailures: [`infra failure: ${shortMessage(infraFailure)}`],
-    };
-    emitReport(report);
-    process.exitCode = 1;
+    const infraFailure = error?.stack || error?.message || String(error);
+    result.appLevelResult = "fail";
+    result.infraFailure = infraFailure;
+    result.strictFailures = [`infra failure: ${shortMessage(infraFailure)}`];
+    return result;
   } finally {
-    await browser.close().catch(() => {});
     await new Promise((resolveClose) => server.close(resolveClose));
   }
 }
 
-async function runRuntime(browser, origin, mode, pagePath) {
-  const page = await browser.newPage({ viewport });
+async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surface) {
+  const page = await browser.newPage({ viewport: runtimeViewport || viewport });
   const result = createRuntimeResult(mode, pagePath);
   const responseStatusByUrl = new Map();
 
@@ -523,6 +587,8 @@ async function runRuntime(browser, origin, mode, pagePath) {
       pageErrors: result.pageErrors,
     };
     result.summary = summarizeRuntime(result, origin);
+    result.viewport = runtimeViewport || viewport;
+    result.surface = surface?.name || "root";
 
     if (cli.screenshotDir) {
       await mkdir(cli.screenshotDir, { recursive: true });
@@ -565,6 +631,7 @@ function createRuntimeResult(mode, pagePath) {
     pageErrors: [],
     pagePath,
     pageUrl: null,
+    surface: null,
     playerDraw: null,
     playerVisible: false,
     raf: { count: 0, dts: [], timestamps: [] },
@@ -580,6 +647,7 @@ function createRuntimeResult(mode, pagePath) {
     startGameFound: false,
     summary: null,
     titleVisible: false,
+    viewport: null,
     uiDetected: null,
     weaponDraw: null,
   };
@@ -633,6 +701,7 @@ function compareSnapshots(classic, esm) {
     }
     if (classicPlayer.maxHp !== esmPlayer.maxHp) {
       notes.push(`player maxHp differs: classic ${classicPlayer.maxHp} vs esm ${esmPlayer.maxHp}`);
+      strictFailures.push(`player maxHp mismatch: classic ${classicPlayer.maxHp} vs esm ${esmPlayer.maxHp}`);
     }
   }
 
@@ -685,6 +754,75 @@ function summarizeRuntime(result, origin) {
     playerDraws: drawCalls.filter((entry) => entry.kind === "player").length,
     enemyDraws: drawCalls.filter((entry) => entry.kind === "enemy").length,
     raf: result.raf,
+  };
+}
+
+function resolveSurfaceRoots(baseRoot) {
+  return [
+    { exists: existsSync(baseRoot), name: "root", rootDir: baseRoot, surfaceUrl: baseRoot },
+    {
+      exists: existsSync(join(baseRoot, "www")),
+      name: "built",
+      rootDir: join(baseRoot, "www"),
+      surfaceUrl: join(baseRoot, "www"),
+    },
+  ];
+}
+
+function summarizeSurfaceResult(surfaceResult) {
+  const viewports = surfaceResult.viewports || [];
+  const classic = viewports.map((entry) => entry.classic).find(Boolean) || null;
+  const esm = viewports.map((entry) => entry.esm).find(Boolean) || null;
+  const comparison = viewports.map((entry) => entry.comparison).find(Boolean) || null;
+  const strictFailures = viewports.flatMap((entry) => entry.comparison?.strictFailures || []);
+  const comparisonNotes = viewports.flatMap((entry) => entry.comparison?.comparisonNotes || []);
+  const firstDivergence =
+    viewports.map((entry) => entry.firstDivergence).find(Boolean) ||
+    strictFailures[0] ||
+    comparisonNotes[0] ||
+    null;
+  const appLevelResult = viewports.some((entry) => entry.appLevelResult === "fail")
+    ? "fail"
+    : viewports.some((entry) => entry.appLevelResult === "partial")
+      ? "partial"
+      : "pass";
+  return {
+    appLevelResult,
+    classic,
+    comparison,
+    comparisonNotes,
+    firstDivergence,
+    esm,
+    strictFailures,
+  };
+}
+
+function summarizeSurfaceComparisons(surfaceResults) {
+  const allViewports = surfaceResults.flatMap((surface) => surface.viewports || []);
+  const classic = allViewports.map((entry) => entry.classic).find(Boolean) || null;
+  const esm = allViewports.map((entry) => entry.esm).find(Boolean) || null;
+  const comparison = allViewports.map((entry) => entry.comparison).find(Boolean) || null;
+  const strictFailures = allViewports.flatMap((entry) => entry.comparison?.strictFailures || []);
+  const comparisonNotes = allViewports.flatMap((entry) => entry.comparison?.comparisonNotes || []);
+  const firstDivergence =
+    surfaceResults.map((surface) => surface.firstDivergence).find(Boolean) ||
+    allViewports.map((entry) => entry.firstDivergence).find(Boolean) ||
+    strictFailures[0] ||
+    comparisonNotes[0] ||
+    null;
+  const appLevelResult = surfaceResults.some((surface) => surface.appLevelResult === "fail")
+    ? "fail"
+    : surfaceResults.some((surface) => surface.appLevelResult === "partial")
+      ? "partial"
+      : "pass";
+  return {
+    appLevelResult,
+    classic,
+    comparison,
+    comparisonNotes,
+    firstDivergence,
+    esm,
+    strictFailures,
   };
 }
 
@@ -960,10 +1098,10 @@ function contentTypeFor(filePath) {
   return contentTypes[extname(filePath)] || "application/octet-stream";
 }
 
-function resolveRequestPath(url) {
+function resolveRequestPath(url, rootDir) {
   const requested = decodeURIComponent(new URL(url, "http://127.0.0.1").pathname);
   const safePath = normalize(requested).replace(/^(\.\.[/\\])+/, "");
-  return join(root, safePath === "/" ? "index.html" : safePath);
+  return join(rootDir, safePath === "/" ? "index.html" : safePath);
 }
 
 function isLocalUrl(url, origin) {
@@ -1101,7 +1239,61 @@ function readJsonSafe(value) {
   }
 }
 
+const dockerBinary = existsSync("/usr/bin/docker") ? "/usr/bin/docker" : "docker";
+
+if (process.env.PARITY_BROWSER_DOCKER_CHILD !== "1" && spawnSync(dockerBinary, ["version"], { encoding: "utf8", stdio: "ignore" }).status === 0) {
+  const image = process.env.PLAYWRIGHT_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble";
+  const smokeArgs = process.argv.slice(2);
+  const result = spawnSync(
+    dockerBinary,
+    [
+      "run",
+      "--rm",
+      "--init",
+      "--shm-size=1g",
+      "-e",
+      "CI=1",
+      "-e",
+      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1",
+      "-e",
+      "PARITY_BROWSER_DOCKER_CHILD=1",
+      "-e",
+      `SMOKE_PARITY_BROWSER_STRICT=${process.env.SMOKE_PARITY_BROWSER_STRICT || "0"}`,
+      "-v",
+      `${repoRoot}:/repo:ro`,
+      image,
+      "bash",
+      "-lc",
+      [
+        "set -euo pipefail",
+        'workdir="$(mktemp -d /tmp/tap-survivor-parity.XXXXXX)"',
+        'trap \'rm -rf "$workdir"\' EXIT',
+        'mkdir -p "$workdir/repo"',
+        'cp -a /repo/. "$workdir/repo"/',
+        'cd "$workdir/repo"',
+        "npm ci --ignore-scripts --no-audit --no-fund",
+        ["node", "scripts/smoke-runtime-parity-browser.mjs", ...smokeArgs.map(shellQuote)].join(" "),
+      ].join("; "),
+    ],
+    {
+      encoding: "utf8",
+      stdio: "inherit",
+    }
+  );
+
+  if (result.error) {
+    console.error(result.error.stack || result.error.message || String(result.error));
+    process.exitCode = 1;
+    process.exit(1);
+  }
+  process.exit(result.status ?? 1);
+}
+
 main().catch((error) => {
   console.error(error.stack || error);
   process.exitCode = 1;
 });
+
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, `'\"'\"'`)}'`;
+}
