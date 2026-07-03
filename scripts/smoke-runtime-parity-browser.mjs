@@ -46,7 +46,7 @@ const report = {
 };
 
 const classicIndexSource = readClassicIndexSource();
-const classicScripts = parseScriptSources(classicIndexSource);
+const classicScripts = resolveClassicScripts(classicIndexSource);
 const shellPage = injectBase(stripScripts(classicIndexSource));
 const surfaceRoots = resolveSurfaceRoots(root);
 report.surfaceRoots = surfaceRoots.map((surface) => ({
@@ -253,6 +253,73 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         message: event?.reason?.message || String(event?.reason || "unhandled rejection"),
       });
     });
+
+    const audio = (parity.audio = parity.audio || {
+      api: {
+        hasAudioContext: Boolean(root.AudioContext || root.webkitAudioContext),
+        hasAudioElement: Boolean(root.Audio),
+        hasMediaPlay: Boolean(root.HTMLMediaElement?.prototype?.play),
+      },
+      attempts: [],
+      errors: [],
+      patchErrors: [],
+    });
+    const mediaProto = root.HTMLMediaElement?.prototype;
+    if (mediaProto && !mediaProto.__tapParityAudioPatched) {
+      const originalPlay = mediaProto.play;
+      if (typeof originalPlay === "function") {
+        mediaProto.play = function patchedMediaPlay(...playArgs) {
+          audio.attempts.push({
+            operation: "play",
+            source: this?.currentSrc || this?.src || "",
+            tagName: this?.tagName || "",
+          });
+          try {
+            const result = originalPlay.apply(this, playArgs);
+            result?.catch?.((error) => {
+              audio.errors.push({
+                message: error?.message || String(error || "media play rejected"),
+                operation: "play",
+              });
+            });
+            return result;
+          } catch (error) {
+            audio.errors.push({
+              message: error?.message || String(error || "media play failed"),
+              operation: "play",
+            });
+            throw error;
+          }
+        };
+      }
+      const audioContextProto = (root.AudioContext || root.webkitAudioContext)?.prototype;
+      if (audioContextProto && typeof audioContextProto.resume === "function") {
+        const originalResume = audioContextProto.resume;
+        audioContextProto.resume = function patchedAudioResume(...resumeArgs) {
+          audio.attempts.push({
+            operation: "resume",
+            state: this?.state || "",
+          });
+          try {
+            const result = originalResume.apply(this, resumeArgs);
+            result?.catch?.((error) => {
+              audio.errors.push({
+                message: error?.message || String(error || "audio resume rejected"),
+                operation: "resume",
+              });
+            });
+            return result;
+          } catch (error) {
+            audio.errors.push({
+              message: error?.message || String(error || "audio resume failed"),
+              operation: "resume",
+            });
+            throw error;
+          }
+        };
+      }
+      mediaProto.__tapParityAudioPatched = true;
+    }
 
     function describeDraw(context, image, args) {
       const canvas = context.canvas;
@@ -462,6 +529,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     await page.waitForTimeout(450);
     await waitForFrameBudget(page, result, framesToAdvance, dtMs);
     await waitForPlayerState(page);
+    await waitForEnemyEvidence(page);
+    await waitForProjectileEvidence(page);
 
     result.snapshot = await page.evaluate(() => {
       const root = globalThis;
@@ -497,6 +566,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         game: snapshotGame(game),
         registeredSpriteGroups: snapshotSpriteGroups(content.assets?.sprites || {}),
         registeredSpriteGroupDefs: content.assets?.sprites || {},
+        audio: snapshotAudio(parity),
         title: {
           startTransitionHidden: startTransition?.classList.contains("hidden") ?? null,
           titleHidden: titleScreen?.classList.contains("hidden") ?? null,
@@ -519,10 +589,17 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       function snapshotGame(gameState) {
         if (!gameState) return null;
         const player = gameState.player || null;
+        const projectileCollections = sampleProjectileCollections(gameState);
+        const enemySample = sampleEntity(gameState.enemies?.[0] || null);
         return {
           awaitingFirstMoveInput: Boolean(gameState.awaitingFirstMoveInput),
           elapsed: Number(gameState.elapsed || 0),
           enemies: Array.isArray(gameState.enemies) ? gameState.enemies.length : 0,
+          enemySample,
+          projectileCollections: projectileCollections.collections,
+          projectileCount: projectileCollections.count,
+          projectileSample: projectileCollections.sample,
+          projectileSource: projectileCollections.source,
           player: player
             ? {
                 equippedWeapons: Array.isArray(player.equippedWeapons) ? [...player.equippedWeapons] : [],
@@ -536,6 +613,21 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
             : null,
           running: Boolean(gameState.running),
           towerFloor: Number.isFinite(gameState.towerFloor) ? gameState.towerFloor : null,
+        };
+      }
+
+      function snapshotAudio(parityState) {
+        const audioState = parityState.audio || {};
+        return {
+          adapterPresent: Boolean(parityState.esmApi?.dependencies?.audio?.createAudioSystem),
+          api: audioState.api || {
+            hasAudioContext: Boolean(root.AudioContext || root.webkitAudioContext),
+            hasAudioElement: Boolean(root.Audio),
+            hasMediaPlay: Boolean(root.HTMLMediaElement?.prototype?.play),
+          },
+          attempts: Array.isArray(audioState.attempts) ? [...audioState.attempts] : [],
+          errors: Array.isArray(audioState.errors) ? [...audioState.errors] : [],
+          observed: Boolean((audioState.attempts || []).length || (audioState.errors || []).length),
         };
       }
 
@@ -558,6 +650,47 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         return "player";
       }
 
+      function sampleProjectileCollections(gameState) {
+        const candidates = [
+          ["projectiles", gameState.projectiles],
+          ["bolts", gameState.bolts],
+          ["enemyBolts", gameState.enemyBolts],
+          ["weaponBolts", gameState.weaponBolts],
+          ["enemyProjectiles", gameState.enemyProjectiles],
+          ["weaponProjectiles", gameState.weaponProjectiles],
+        ].filter((entry) => Array.isArray(entry[1]));
+        const firstNonEmpty = candidates.find((entry) => entry[1].length > 0) || candidates[0] || null;
+        const collection = firstNonEmpty?.[1] || [];
+        return {
+          collections: Object.fromEntries(candidates.map(([name, items]) => [name, items.length])),
+          count: collection.length,
+          sample: sampleEntity(collection[0] || null),
+          source: firstNonEmpty?.[0] || null,
+        };
+      }
+
+      function sampleEntity(entity) {
+        if (!entity || typeof entity !== "object") return null;
+        return {
+          id: stringOrNull(entity.id ?? entity.name ?? entity.kind ?? ""),
+          kind: stringOrNull(entity.kind ?? entity.type ?? ""),
+          spriteId: stringOrNull(entity.spriteId ?? entity.sprite ?? entity.spriteName ?? entity.assetId ?? ""),
+          type: stringOrNull(entity.type ?? entity.kind ?? ""),
+          hp: numberOrNull(entity.hp),
+          radius: numberOrNull(entity.radius),
+          x: numberOrNull(entity.x),
+          y: numberOrNull(entity.y),
+        };
+      }
+
+      function stringOrNull(value) {
+        return typeof value === "string" && value ? value : null;
+      }
+
+      function numberOrNull(value) {
+        return Number.isFinite(value) ? value : null;
+      }
+
       function spriteSource(definition) {
         if (typeof definition === "string") return definition;
         if (definition && typeof definition === "object") return definition.src || definition.path || definition.iconSrc || "";
@@ -566,10 +699,23 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     });
 
     result.classified = classifyDraws(result.snapshot?.diagnostics?.drawCalls || [], result.snapshot?.registeredSpriteGroupDefs || {});
+    result.enemyEvidence = {
+      count: result.snapshot?.game?.enemies || 0,
+      sample: result.snapshot?.game?.enemySample || null,
+    };
+    result.projectileEvidence = {
+      collections: result.snapshot?.game?.projectileCollections || {},
+      count: result.snapshot?.game?.projectileCount || 0,
+      sample: result.snapshot?.game?.projectileSample || null,
+      source: result.snapshot?.game?.projectileSource || null,
+    };
     result.playerDraw = findPlayerDraw(result.classified.drawCalls);
     result.backgroundDraw = result.classified.drawCalls.find((entry) => entry.kind === "background" && entry.intersectsCanvas) || null;
     result.enemyDraw = result.classified.drawCalls.find((entry) => entry.kind === "enemy" && entry.intersectsCanvas) || null;
     result.weaponDraw = result.classified.drawCalls.find((entry) => entry.kind === "weapon" && entry.intersectsCanvas) || null;
+    result.menuEvidence = await collectMenuEvidence(page);
+    if (result.snapshot) result.snapshot.menu = result.menuEvidence;
+    result.audioEvidence = result.snapshot?.audio || null;
     result.playerVisible = Boolean(result.classified.playerCanvasVisible);
     result.loadedScriptUrls = result.scriptUrls.filter((url) => isLocalUrl(url, origin));
     result.loadedModuleUrls = result.moduleUrls.filter((url) => isLocalUrl(url, origin));
@@ -634,6 +780,9 @@ function createRuntimeResult(mode, pagePath) {
     pageErrors: [],
     pagePath,
     pageUrl: null,
+    enemyEvidence: null,
+    menuEvidence: null,
+    projectileEvidence: null,
     surface: null,
     playerDraw: null,
     playerVisible: false,
@@ -653,6 +802,7 @@ function createRuntimeResult(mode, pagePath) {
     viewport: null,
     uiDetected: null,
     weaponDraw: null,
+    audioEvidence: null,
   };
 }
 
@@ -667,6 +817,14 @@ function compareSnapshots(classic, esm) {
   const esmBackground = esm.backgroundDraw;
   const classicPlayerVisible = Boolean(classic.playerVisible);
   const esmPlayerVisible = Boolean(esm.playerVisible);
+  const classicEnemyCount = Number(classic.enemyEvidence?.count ?? classic.snapshot?.game?.enemies ?? 0);
+  const esmEnemyCount = Number(esm.enemyEvidence?.count ?? esm.snapshot?.game?.enemies ?? 0);
+  const classicProjectileCount = Number(classic.projectileEvidence?.count ?? classic.snapshot?.game?.projectileCount ?? 0);
+  const esmProjectileCount = Number(esm.projectileEvidence?.count ?? esm.snapshot?.game?.projectileCount ?? 0);
+  const classicMenu = classic.menuEvidence?.tabs || classic.snapshot?.menu?.tabs || {};
+  const esmMenu = esm.menuEvidence?.tabs || esm.snapshot?.menu?.tabs || {};
+  const classicAudio = classic.audioEvidence || classic.snapshot?.audio || null;
+  const esmAudio = esm.audioEvidence || esm.snapshot?.audio || null;
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
@@ -682,6 +840,42 @@ function compareSnapshots(classic, esm) {
   if (classic.canvasFound && !esm.canvasFound) strictFailures.push("classic has canvas but ESM does not");
   if (classicBackground && !esmBackground) strictFailures.push("classic recorded background draw but ESM did not");
   if (classicPlayerVisible && !esmPlayerVisible) strictFailures.push("classic recorded visible player draw but ESM did not");
+  if (classicEnemyCount > 0 && esmEnemyCount === 0) {
+    strictFailures.push(`classic sampled ${classicEnemyCount} enemies but ESM sampled none`);
+  } else if (classicEnemyCount > 0 && esmEnemyCount > 0 && classicEnemyCount !== esmEnemyCount) {
+    notes.push(`enemy count differs: classic ${classicEnemyCount} vs esm ${esmEnemyCount}`);
+  }
+  if (classicProjectileCount > 0 && esmProjectileCount === 0) {
+    strictFailures.push(`classic sampled ${classicProjectileCount} projectiles but ESM sampled none`);
+  } else if (classicProjectileCount > 0 && esmProjectileCount > 0 && classicProjectileCount !== esmProjectileCount) {
+    notes.push(`projectile count differs: classic ${classicProjectileCount} vs esm ${esmProjectileCount}`);
+  }
+  for (const tabName of ["progress", "shop", "inventory"]) {
+    const classicTab = classicMenu[tabName] || {};
+    const esmTab = esmMenu[tabName] || {};
+    if (classicTab.meaningful && (esmTab.blank || esmTab.placeholderOnly || !esmTab.meaningful)) {
+      strictFailures.push(
+        `classic menu ${tabName} tab has content but ESM tab is ${esmTab.placeholderOnly ? "placeholder-only" : "blank"}`
+      );
+    } else if (classicTab.meaningful && esmTab.meaningful && classicTab.textLength !== esmTab.textLength) {
+      notes.push(`menu ${tabName} text length differs: classic ${classicTab.textLength} vs esm ${esmTab.textLength}`);
+    }
+    if (classicTab.exists && !esmTab.exists) {
+      strictFailures.push(`classic menu ${tabName} tab exists but ESM tab is missing`);
+    }
+  }
+  const classicAudioAttempts = Array.isArray(classicAudio?.attempts) ? classicAudio.attempts.length : 0;
+  const esmAudioAttempts = Array.isArray(esmAudio?.attempts) ? esmAudio.attempts.length : 0;
+  const classicAudioErrors = Array.isArray(classicAudio?.errors) ? classicAudio.errors.length : 0;
+  const esmAudioErrors = Array.isArray(esmAudio?.errors) ? esmAudio.errors.length : 0;
+  if (classicAudioAttempts > 0 && esmAudioAttempts === 0) {
+    strictFailures.push("classic observed an audio attempt but ESM did not");
+  } else if (classicAudioAttempts > 0 && esmAudioErrors > 0) {
+    strictFailures.push("classic observed audio but ESM reported audio errors");
+  }
+  if (classicAudioAttempts === 0 && esmAudioAttempts === 0 && classicAudioErrors === 0 && esmAudioErrors === 0) {
+    notes.push("audio remained diagnostic-only; no safe audio attempt observed");
+  }
   if ((classic.consoleErrors?.length || 0) === 0 && (esm.consoleErrors?.length || 0) > 0) {
     strictFailures.push("classic had no console errors but ESM did");
   }
@@ -735,6 +929,8 @@ function summarizeRuntime(result, origin) {
   const game = snapshot.game || null;
   const canvas = snapshot.canvas || null;
   const drawCalls = result.classified?.drawCalls || [];
+  const menuTabs = result.menuEvidence?.tabs || snapshot.menu?.tabs || {};
+  const audio = result.audioEvidence || snapshot.audio || null;
   return {
     runtime: result.mode,
     pageUrl: result.pageUrl,
@@ -752,6 +948,15 @@ function summarizeRuntime(result, origin) {
     loadedModuleUrls: result.loadedModuleUrls.filter((url) => isLocalUrl(url, origin)),
     player: game?.player || null,
     enemies: game?.enemies || [],
+    enemyCount: Number(result.enemyEvidence?.count ?? game?.enemies?.length ?? 0),
+    enemySample: game?.enemySample || null,
+    projectileCount: Number(result.projectileEvidence?.count ?? game?.projectileCount ?? 0),
+    projectileSample: game?.projectileSample || null,
+    projectileSource: game?.projectileSource || null,
+    menuTabs,
+    menuOpen: Boolean(result.menuEvidence?.runMenuVisible ?? snapshot.menu?.runMenuVisible ?? false),
+    audioAttempts: Array.isArray(audio?.attempts) ? audio.attempts.length : 0,
+    audioErrors: Array.isArray(audio?.errors) ? audio.errors.length : 0,
     weaponIconsDrawn: drawCalls.filter((entry) => entry.kind === "weapon").length,
     backgroundDraws: drawCalls.filter((entry) => entry.kind === "background").length,
     playerDraws: drawCalls.filter((entry) => entry.kind === "player").length,
@@ -880,6 +1085,171 @@ async function waitForRuntimeReady(page) {
       { polling: 16, timeout: 10000 }
     )
     .catch(() => {});
+}
+
+async function waitForEnemyEvidence(page, timeoutMs = 5000) {
+  await page
+    .waitForFunction(
+      () => {
+        const root = globalThis;
+        const parity = root.__TapSurvivorParity || {};
+        const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+        return Array.isArray(game?.enemies) && game.enemies.length > 0;
+      },
+      null,
+      { polling: 16, timeout: timeoutMs }
+    )
+    .catch(() => {});
+}
+
+async function waitForProjectileEvidence(page, timeoutMs = 3000) {
+  await page
+    .waitForFunction(
+      () => {
+        const root = globalThis;
+        const parity = root.__TapSurvivorParity || {};
+        const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+        if (!game) return false;
+        const candidates = [
+          game.projectiles,
+          game.bolts,
+          game.enemyBolts,
+          game.weaponBolts,
+          game.enemyProjectiles,
+          game.weaponProjectiles,
+        ];
+        return candidates.some((collection) => Array.isArray(collection) && collection.length > 0);
+      },
+      null,
+      { polling: 16, timeout: timeoutMs }
+    )
+    .catch(() => {});
+}
+
+async function collectMenuEvidence(page) {
+  const result = {
+    openMenuClicked: false,
+    openMenuFound: false,
+    runMenuVisible: null,
+    tabs: {},
+  };
+
+  result.openMenuFound = (await page.locator("#openMenu").count().catch(() => 0)) > 0;
+  if (!result.openMenuFound) return result;
+
+  result.openMenuClicked = await openMenuIfNeeded(page);
+  result.runMenuVisible = await isRunMenuVisible(page);
+  await page.waitForTimeout(100);
+
+  for (const tab of ["progress", "shop", "inventory"]) {
+    const tabResult = await selectMenuTab(page, tab);
+    result.tabs[tab] = tabResult;
+  }
+
+  return result;
+}
+
+async function openMenuIfNeeded(page) {
+  if (await isRunMenuVisible(page)) return true;
+  const button = page.locator("#openMenu");
+  if ((await button.count().catch(() => 0)) === 0) return false;
+  await button.click({ timeout: 3000 }).catch(() => {});
+  await page.waitForTimeout(100);
+  return await isRunMenuVisible(page);
+}
+
+async function isRunMenuVisible(page) {
+  return page.evaluate(() => {
+    const runMenu = document.getElementById("runMenu");
+    if (!runMenu) return null;
+    return !runMenu.classList.contains("hidden");
+  }).catch(() => null);
+}
+
+async function selectMenuTab(page, tab) {
+  const tabId = `menu${capitalize(tab)}Tab`;
+  const panelId = `menu${capitalize(tab)}Panel`;
+  const selector = `#${tabId}`;
+  const tabLocator = page.locator(selector);
+  const tabExists = (await tabLocator.count().catch(() => 0)) > 0;
+  const tabClicked = tabExists ? await clickMenuTab(tabLocator) : false;
+  await page.waitForTimeout(100);
+  return page.evaluate(
+    ({ panelId, tabId, tabExists, tabClicked, tab }) => {
+      const panel = document.getElementById(panelId);
+      const button = document.getElementById(tabId);
+      const text = normalizeText(panel?.textContent || "");
+      const controlCount = panel
+        ? panel.querySelectorAll("button,input,select,textarea,a[href],[role='button']").length
+        : 0;
+      const itemCount = panel
+        ? panel.querySelectorAll(".shop-item,.relic-item,.quest-item,.module-shell-panel-item,li,article,details").length
+        : 0;
+      const visible = Boolean(panel && !panel.hidden && !panel.classList.contains("hidden"));
+      const placeholderText = placeholderFor(tab);
+      const placeholderOnly = Boolean(
+        text &&
+          placeholderText.some((entry) => text.includes(entry)) &&
+          controlCount === 0 &&
+          itemCount === 0
+      );
+      const blank = !text || ((text.length <= 40 || placeholderOnly) && controlCount === 0 && itemCount === 0);
+      return {
+        active: Boolean(button?.classList.contains("active")),
+        blank,
+        controlCount,
+        exists: tabExists,
+        hidden: Boolean(panel?.hidden || panel?.classList.contains("hidden")),
+        itemCount,
+        meaningful: !placeholderOnly && (controlCount > 0 || itemCount > 0 || text.length > 40),
+        placeholderOnly,
+        tab,
+        tabClicked,
+        text,
+        textLength: text.length,
+        visible,
+      };
+
+      function normalizeText(value) {
+        return String(value || "").replace(/\s+/g, " ").trim();
+      }
+
+      function placeholderFor(tabName) {
+        if (tabName === "shop") return ["Browser shop ready.", "Shop panel"];
+        if (tabName === "inventory") return ["Relic inventory"];
+        return ["Progress panel"];
+      }
+    },
+    { panelId, tab, tabId, tabClicked, tabExists }
+  ).catch(() => ({
+    active: false,
+    blank: true,
+    controlCount: 0,
+    exists: tabExists,
+    hidden: true,
+    itemCount: 0,
+    meaningful: false,
+    placeholderOnly: false,
+    tab,
+    tabClicked,
+    text: "",
+    textLength: 0,
+    visible: false,
+  }));
+}
+
+async function clickMenuTab(tabLocator) {
+  try {
+    await tabLocator.click({ timeout: 3000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function capitalize(value) {
+  const text = String(value || "");
+  return text ? text[0].toUpperCase() + text.slice(1) : "";
 }
 
 async function detectUi(page) {
@@ -1033,13 +1403,83 @@ function parseScriptSources(html) {
 }
 
 function readClassicIndexSource() {
-  const historical = spawnSync("git", ["show", "f06d154^:index.html"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  if (historical.status === 0 && historical.stdout) return historical.stdout;
-  return readFileSync(join(repoRoot, "index.html"), "utf8");
+  const historicalCandidates = [
+    ["HEAD^:index.html"],
+    ["f06d154^:index.html"],
+  ];
+  for (const [spec] of historicalCandidates) {
+    const historical = spawnSync("git", ["show", spec], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    if (historical.status === 0 && historical.stdout) return historical.stdout;
+  }
+  const current = readFileSync(join(repoRoot, "index.html"), "utf8");
+  return current;
+}
+
+function resolveClassicScripts(classicIndexSource) {
+  const parsed = parseScriptSources(classicIndexSource);
+  if (parsed.some((src) => /src\/game\.js(\?|$)/.test(src)) && !parsed.some((src) => /production-module-autoboot\.js/.test(src))) {
+    return parsed;
+  }
+  return [
+    "src/content.generated.js?v=auto-7f90557a",
+    "src/balance-runtime.js?v=auto-balance-runtime",
+    "src/assets.js?v=auto-73843940",
+    "src/math.js?v=maintenance-20260611",
+    "src/sprites.js?v=auto-92dd6d0b",
+    "src/audio.js?v=auto-bbfd1bc6",
+    "src/quests.js?v=maintenance-20260611",
+    "src/storage-adapter.js?v=auto-save-storage",
+    "src/save-defaults.js?v=auto-save-helpers",
+    "src/save-migrations.js?v=auto-save-helpers",
+    "src/save-normalize.js?v=auto-save-helpers",
+    "src/save-corruption.js?v=auto-save-helpers",
+    "src/save.js?v=auto-f7bb016d",
+    "src/effects.js?v=auto-fe2763a1",
+    "src/upgrades.js?v=auto-88b55a84",
+    "src/content-registry.js?v=auto-e9ef327f",
+    "src/map-system.js?v=auto-map-system",
+    "src/progression.js?v=auto-71c4c358",
+    "src/sprite-sheet-renderer.js?v=auto-spritesheets",
+    "src/render-skill-rail.js?v=auto-render-helpers",
+    "src/render-hud.js?v=auto-59cf5b58",
+    "src/render-enemies.js?v=auto-render-helpers",
+    "src/rendering.js?v=auto-03e052a7",
+    "src/balance.js?v=maintenance-20260612",
+    "src/weapon-projectiles.js?v=auto-weapon-helpers",
+    "src/weapon-targeting.js?v=auto-weapon-helpers",
+    "src/weapon-cooldowns.js?v=auto-weapon-helpers",
+    "src/weapon-behaviors.js?v=auto-weapon-helpers",
+    "src/weapon-fire.js?v=auto-b96ca3db",
+    "src/enemy-behaviors.js?v=auto-enemy-helpers",
+    "src/enemy-spawning.js?v=auto-enemy-helpers",
+    "src/enemies.js?v=auto-44e405a4",
+    "src/combat-damage.js?v=auto-combat-helpers",
+    "src/combat.js?v=auto-fb2beec8",
+    "src/ui-progression.js?v=auto-ui-helpers",
+    "src/ui.js?v=auto-6e982117",
+    "src/run-ui.js?v=auto-ca5121aa",
+    "src/level-up-choices.js?v=auto-level-up-helpers",
+    "src/level-up.js?v=auto-1f04c9e8",
+    "src/input.js?v=maintenance-20260611",
+    "src/pickups.js?v=auto-f0c71b70",
+    "src/shop-pricing.js?v=auto-shop-helpers",
+    "src/shop.js?v=auto-1c3b8c96",
+    "src/relics.js?v=auto-815236c5",
+    "src/run-state.js?v=auto-b88ef356",
+    "src/run-update.js?v=auto-4b0f4f98",
+    "src/debug.js?v=maintenance-20260611",
+    "src/shell-relic-ui.js?v=auto-shell-helpers",
+    "src/shell-ui.js?v=auto-b114267e",
+    "src/game-banners.js?v=auto-game-helpers",
+    "src/run-lifecycle.js?v=auto-game-helpers",
+    "src/game-runtime.js?v=auto-game-helpers",
+    "src/game-dependencies.js?v=auto-game-dependencies",
+    "src/game.js?v=auto-3c6b5b28",
+  ];
 }
 
 function classifyDraws(drawCalls, spriteGroups = {}) {
