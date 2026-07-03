@@ -50,3 +50,11 @@
 2026-07-01 00:41 BST - Slice 36E browser gameplay/progression bridge validated locally with both module smoke paths and the final agent gate; preparing evidence, queue closeout, and commit.
 2026-07-01 00:45 BST - Slice 36E queue task marked complete with evidence recorded; ready for final push and handoff.
 2026-07-01 01:46 BST - Slice 36F browser UI defaults validated locally with production-entrypoint and runtime-readiness smokes; evidence drafted and queue closeout next.
+Task: finalize parity shop-bonus fix
+Phase: validation in progress
+Current step: strict browser smoke approval path
+Last command: `npm run frank:run -- "npm run smoke:browser" --timeout 60 || true` passed with expected EPERM skip
+Next command: `npm run frank:run -- "npm run smoke:runtime-parity:browser:strict" --timeout 600`
+Git state: dirty; modified `.agent/status.md`, `scripts/smoke-runtime-parity-browser.mjs`, `src/app/browser-dependency-bag.js`; untracked `assets/incoming-sprites/`, `assets/opening-fmv/`, `tmp/`
+HEAD: `5fe6ca5` on `main`
+Blocker: none

@@ -440,6 +440,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     result.uiDetected = await detectUi(page);
     result.startGameFound = result.titleControlDetected;
 
+    await waitForRuntimeReady(page);
+
     const startButton = await locateStartButton(page);
     if (startButton) {
       result.startGameClicked = true;
@@ -459,6 +461,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
 
     await page.waitForTimeout(450);
     await waitForFrameBudget(page, result, framesToAdvance, dtMs);
+    await waitForPlayerState(page);
 
     result.snapshot = await page.evaluate(() => {
       const root = globalThis;
@@ -848,6 +851,35 @@ async function waitForFrameBudget(page, result, frameCount, stepMs) {
     target,
     { polling: 16, timeout: timeoutMs }
   ).catch(() => {});
+}
+
+async function waitForPlayerState(page) {
+  await page
+    .waitForFunction(
+      () => {
+        const root = globalThis;
+        const parity = root.__TapSurvivorParity || {};
+        const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+        const player = game?.player || null;
+        return Number.isFinite(player?.hp) && Number.isFinite(player?.maxHp) && Number.isFinite(player?.x) && Number.isFinite(player?.y);
+      },
+      null,
+      { polling: 16, timeout: 10000 }
+    )
+    .catch(() => {});
+}
+
+async function waitForRuntimeReady(page) {
+    await page
+      .waitForFunction(
+      () => {
+        const body = document?.body;
+        return body?.dataset?.gameSpeed === "1";
+      },
+      null,
+      { polling: 16, timeout: 10000 }
+    )
+    .catch(() => {});
 }
 
 async function detectUi(page) {

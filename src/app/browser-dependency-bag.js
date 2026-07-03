@@ -137,8 +137,14 @@ export function createBrowserDependencyBagOptions(options = {}) {
         options.uiAdapters ||
         createBrowserUiAdapters({
           documentRef,
+          content,
           globalRef,
           onStartRun: options.onStartRun,
+          saveConfig: {
+            legacySaveKey: "tap-survivor-mvp-save-v1",
+            saveKey: "tap-survivor-mvp-save-v2",
+            ...(options.saveConfig || {}),
+          },
           ui,
         }),
     },
@@ -600,7 +606,7 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   };
 }
 
-function createBrowserUiAdapters({ documentRef, globalRef, onStartRun, ui }) {
+function createBrowserUiAdapters({ content, documentRef, globalRef, onStartRun, saveConfig, ui }) {
   return {
     runUi: {
       formatTime: formatBrowserTime,
@@ -610,7 +616,7 @@ function createBrowserUiAdapters({ documentRef, globalRef, onStartRun, ui }) {
     },
     runUiAdapter: createBrowserRunUiAdapter({ documentRef, globalRef, ui }),
     shellUiAdapter: createBrowserShellUiAdapter({ onStartRun, ui }),
-    shopSystemAdapter: createBrowserShopSystemAdapter({ ui }),
+    shopSystemAdapter: createBrowserShopSystemAdapter({ content, globalRef, saveConfig, ui }),
     ui,
   };
 }
@@ -716,7 +722,8 @@ function createBrowserShellUiAdapter({ onStartRun, ui }) {
   };
 }
 
-function createBrowserShopSystemAdapter({ ui }) {
+function createBrowserShopSystemAdapter({ content = {}, globalRef, saveConfig = {}, ui }) {
+  const shopItemDefs = content.shopItems || [];
   return {
     closeShop() {
       toggleHidden(ui.shopModal, true);
@@ -734,7 +741,49 @@ function createBrowserShopSystemAdapter({ ui }) {
       }
       return true;
     },
+    getShopBonuses() {
+      const save = readBrowserSave({ globalRef, saveConfig });
+      const bonuses = createEmptyShopBonuses();
+      shopItemDefs.forEach((item) => {
+        const tier = save.shopPurchases?.[item.id] || 0;
+        addBrowserShopItemBonus(bonuses, item, tier);
+      });
+      return bonuses;
+    },
   };
+}
+
+function readBrowserSave({ globalRef, saveConfig = {} }) {
+  const storage = globalRef?.localStorage;
+  if (!storage) return {};
+  const saveKey = saveConfig.saveKey || "tap-survivor-mvp-save-v2";
+  const legacySaveKey = saveConfig.legacySaveKey || "tap-survivor-mvp-save-v1";
+  const raw = storage.getItem(saveKey) || storage.getItem(legacySaveKey);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function createEmptyShopBonuses() {
+  return {
+    speed: 0,
+    pickupRadius: 0,
+    maxHp: 0,
+    flatDamage: 0,
+    attackRadius: 0,
+    fireRate: 0,
+    percentDamage: 0,
+    relicFocus: 0,
+  };
+}
+
+function addBrowserShopItemBonus(bonuses, item, tier) {
+  if (!item?.effect || !Object.prototype.hasOwnProperty.call(bonuses, item.effect.stat)) return;
+  bonuses[item.effect.stat] += item.effect.value * tier;
 }
 
 function createMemoryStorage() {
