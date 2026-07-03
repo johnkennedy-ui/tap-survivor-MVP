@@ -679,12 +679,11 @@ check(
     PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes("createLifecycleOwner")
 );
 check(
-  "readiness sees classic production bootstrap selected by index.html during temporary restore",
-  productionScripts.includes("src/game.js") &&
-    productionScripts.includes("src/game-dependencies.js") &&
-    indexHtml.includes("src/game.js") &&
-    indexHtml.includes("src/game-dependencies.js") &&
-    !indexHtml.includes("src/app/production-module-autoboot.js")
+  "readiness sees production ESM bootstrap selected by index.html",
+  productionScripts.includes("src/app/production-module-autoboot.js") &&
+    indexHtml.includes("src/app/production-module-autoboot.js") &&
+    !indexHtml.includes("src/game.js") &&
+    !indexHtml.includes("src/game-dependencies.js")
 );
 check(
   "readiness sees production ESM entrypoint has explicit browser auto-boot wrapper",
@@ -1230,7 +1229,7 @@ const inventory = {
     injectedSlots: INJECTED_STATE_PERSISTENCE_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeStateStoreGlobalReads,
     remainingStateRelatedBlockers: [
-      "classic fallback src/game.js remains preserved for rollback and is selected by index.html during the temporary restore",
+      "classic fallback src/game.js remains preserved for rollback while production index.html selects the ESM autoboot path",
       "browser storage backend remains explicitly injected behind module runtime storage adapter",
     ],
   },
@@ -1240,7 +1239,7 @@ const inventory = {
           "module-native browser subsystem files for gameplay, progression, rendering, UI, sprite, and asset adapters are not all present yet",
         ]
       : []),
-    "production classic bootstrap is selected by index.html during the temporary restore",
+    "production index.html selects the ESM autoboot path",
     "classic fallback src/game.js and src/game-dependencies.js remain preserved for rollback",
   ],
   remainingGlobalRetirementBlockers: [
