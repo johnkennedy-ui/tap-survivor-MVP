@@ -203,6 +203,102 @@ export function createModuleGameDependencyBag({
     maxEquippedWeapons,
     weaponDefs: contentRegistry.weaponDefs,
   });
+  const getRelicSpecialEffects = () => relics.specialEffects(stateStore.getSave());
+  const getWeaponDamageMultiplier = () => relics.getWeaponDamageMultiplier(stateStore.getSave());
+  const questSystem = createQuestSystemFacade(
+    progressionAdapters.quests.createQuestSystem?.({
+      questDefs: contentRegistry.questDefs,
+      getSave: stateStore.getSave,
+      persist: stateStore.persist,
+      renderMeta: stateStore.renderMeta,
+      onQuestComplete: (quest, reward) => platformAdapters.bannerSystem.showQuestBanner?.(quest, reward),
+    })
+  );
+  let runUpdater = null;
+  const pickupSystem = createPickupSystem({
+    getGame: stateStore.getGame,
+    getSave: stateStore.getSave,
+    lootConfig: contentRegistry.tuningDefs.loot,
+    getRelicSpecialEffects,
+    persist: stateStore.persist,
+    renderMeta: stateStore.renderMeta,
+    collectXp: (value) => runUpdater?.collectXp?.(value),
+    distance,
+    randomRange,
+  });
+  const combatSystem = gameplayAdapters.combat.createCombatSystem({
+    canvas: platformAdapters.canvas,
+    balance: { floorDifficulty },
+    combatDamage: { createCombatDamageSystem },
+    content,
+    enemies: gameplayAdapters.enemies,
+    enemyBehaviors: gameplayAdapters.enemyBehaviors,
+    enemySpawning: gameplayAdapters.enemySpawning,
+    enemyTypes: contentRegistry.enemyTypes,
+    bossConfig: contentRegistry.bossConfig,
+    bossAbilities: contentRegistry.bossAbilities,
+    levelDefs: contentRegistry.levelDefs,
+    getActiveFloorDef: () => stateStore.getGame()?.activeFloor,
+    weaponDefs: contentRegistry.weaponDefs,
+    getGame: stateStore.getGame,
+    getUpgradeTier,
+    getShopBonuses: () => uiAdapters.shopSystemAdapter.getShopBonuses?.() || {},
+    getRelicSpecialEffects,
+    addQuestProgress: questSystem.addQuestProgress,
+    addQuestProgressForWeapon: questSystem.addQuestProgressForWeapon,
+    addQuestProgressGroup: questSystem.addQuestProgressGroup,
+    killQuestIds: contentRegistry.killQuestIds,
+    damageQuestIds: contentRegistry.damageQuestIds,
+    bossQuestIds: contentRegistry.bossQuestIds,
+    spawnLootDrops: pickupSystem.spawnLootDrops,
+    getWeaponDamageMultiplier,
+    playWeaponSfx: audioSystem.playWeapon,
+    advanceTowerFloor: () => advanceTowerFloor(stateStore),
+    endRun: (reason) => endRun({ reason, stateStore, uiAdapters }),
+    onBossSpawn: ({ superBoss }) =>
+      platformAdapters.bannerSystem.showOnceBanner?.(
+        superBoss ? "first_super_boss_fight" : "first_boss_fight",
+        superBoss
+          ? "Super bosses combine powers. Keep moving and expect two relic picks if you win."
+          : "Boss fight. Watch the top health bar and special meter."
+      ),
+    distance,
+    clamp,
+    weaponBehaviors: gameplayAdapters.weaponBehaviors,
+    weaponCooldowns: { createWeaponScaling },
+    weaponFire: gameplayAdapters.weaponFire,
+    weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
+    weaponTargeting: { nearestEnemy },
+  });
+  if (hasCombatRuntime(combatSystem)) {
+    runUpdater = createRunUpdater({
+      canvas: platformAdapters.canvas,
+      getGame: stateStore.getGame,
+      combat: combatSystem,
+      pickupSystem,
+      addQuestProgressGroup: questSystem.addQuestProgressGroup,
+      survivalQuestIds: contentRegistry.survivalQuestIds,
+      xpQuestIds: contentRegistry.xpQuestIds,
+      levelQuestIds: contentRegistry.levelQuestIds,
+      showLevelUp: () => showLevelUp(uiAdapters, stateStore),
+      endRun: (reason) => endRun({ reason, stateStore, uiAdapters }),
+      getRelicSpecialEffects,
+      mapSystem: mapSystemInstance,
+      clamp,
+    });
+  }
+  const resetGameState = () => {
+    const run = runStateSystem.resetGameState();
+    effects.applyRelicSpecialEffects(run, getRelicSpecialEffects());
+    applyRelicStartingRunUpgrades({
+      effects,
+      relics,
+      run,
+      runUpgradeDefs: contentRegistry.runUpgradeDefs,
+      save: stateStore.getSave(),
+    });
+    return run;
+  };
 
   const moduleSystems = {
     balance: { floorDifficulty },
@@ -223,13 +319,13 @@ export function createModuleGameDependencyBag({
     moduleRuntimeSpriteAdapter: spriteAdapters,
     moduleRuntimeStorageAdapter: storageAdapters,
     moduleRuntimeUiAdapters: uiAdapters,
-    pickups: { createPickupSystem },
+    pickups: { createPickupSystem, instance: pickupSystem },
     relicProgression: { createRelicProgression },
     relics,
     runLifecycle: { createRunLifecycle },
     runState: { createRunStateSystem, instance: runStateSystem },
     runUi: { createRunUi },
-    runUpdate: { createRunUpdater },
+    runUpdate: { createRunUpdater, instance: runUpdater },
     save: saveSystem,
     saveCorruption: { createSaveLoadHandler },
     saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
@@ -277,7 +373,8 @@ export function createModuleGameDependencyBag({
     renderMeta: stateStore.renderMeta,
     renderSkillRail: renderingAdapters.renderSkillRail,
     rendering: renderingAdapters.rendering,
-    resetGameState: runStateSystem.resetGameState,
+    resetGameState,
+    runUpdater,
     runUi: uiAdapters.runUiAdapter,
     saveSystem,
     setGame: stateStore.setGame,
@@ -319,6 +416,92 @@ function createModuleRuntimeStorageAdapterOptions({ saveConfig, storageAdapters 
     legacySaveKey: storageAdapters.legacySaveKey || saveConfig.legacySaveKey,
     saveKey: storageAdapters.saveKey || saveConfig.saveKey,
   };
+}
+
+function createQuestSystemFacade(questSystem = {}) {
+  const noop = () => {};
+  return {
+    activeQuestWeaponIds:
+      typeof questSystem.activeQuestWeaponIds === "function"
+        ? questSystem.activeQuestWeaponIds
+        : () => [],
+    addQuestProgress:
+      typeof questSystem.addQuestProgress === "function" ? questSystem.addQuestProgress : noop,
+    addQuestProgressForWeapon:
+      typeof questSystem.addQuestProgressForWeapon === "function"
+        ? questSystem.addQuestProgressForWeapon
+        : noop,
+    addQuestProgressGroup:
+      typeof questSystem.addQuestProgressGroup === "function"
+        ? questSystem.addQuestProgressGroup
+        : noop,
+  };
+}
+
+function hasCombatRuntime(combatSystem) {
+  return [
+    "spawnEnemies",
+    "spawnBoss",
+    "updateBossSpecials",
+    "updateEnemies",
+    "updateEnemyBolts",
+    "updateWeapons",
+    "updateBolts",
+    "updateAreas",
+    "updateBeams",
+    "updateWeaponBursts",
+  ].every((name) => typeof combatSystem?.[name] === "function");
+}
+
+function applyRelicStartingRunUpgrades({ effects, relics, run, runUpgradeDefs, save }) {
+  const startingTiers = relics.startingRunUpgradeTiers(save);
+  Object.entries(startingTiers).forEach(([upgradeId, tier]) => {
+    const upgrade = runUpgradeDefs.find((item) => item.id === upgradeId);
+    if (!upgrade) return;
+    const maxTier = upgrade.maxTier + relics.relicBonusFor(save, upgradeId, "maxTierBonus");
+    const appliedTier = Math.min(Math.max(0, Math.floor(tier)), maxTier);
+    if (appliedTier <= 0) return;
+    run.runUpgradeTiers[upgradeId] = Math.max(run.runUpgradeTiers[upgradeId] || 0, appliedTier);
+    for (let index = 0; index < appliedTier; index += 1) {
+      if (typeof upgrade.apply === "function") {
+        upgrade.apply(run);
+      } else {
+        effects.applyRunUpgradeEffects(run, upgrade.effects || []);
+      }
+    }
+  });
+}
+
+function showLevelUp(uiAdapters, stateStore) {
+  const game = stateStore.getGame();
+  if (game) {
+    game.paused = true;
+    game.pauseReason = "level";
+  }
+  uiAdapters.ui.levelUp?.classList?.remove?.("hidden");
+  return true;
+}
+
+function advanceTowerFloor(stateStore) {
+  const game = stateStore.getGame();
+  const save = stateStore.getSave();
+  if (!game || !save) return false;
+  const clearedFloor = game.towerFloor || 1;
+  save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
+  stateStore.persist();
+  stateStore.renderMeta();
+  return true;
+}
+
+function endRun({ reason, stateStore, uiAdapters }) {
+  const game = stateStore.getGame();
+  if (!game) return false;
+  game.running = false;
+  game.endReason = reason;
+  uiAdapters.runUiAdapter.showEndScreen?.(reason);
+  stateStore.persist();
+  stateStore.renderMeta();
+  return true;
 }
 
 function requireAdapter(source, name) {

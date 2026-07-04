@@ -196,5 +196,16 @@
     "evidence": "Shane training/20260701T222352Z_post-switch-esm-verification/result.md",
     "opened": "2026-07-01T22:14:43.873Z",
     "closed": "2026-07-01T22:24:44.392Z"
+  },
+  {
+    "id": "esm-enemy-projectile-parity",
+    "status": "complete",
+    "summary": "Make ESM enemy and projectile runtime parity meaningful after the production module switch.",
+    "scope_allowed": [],
+    "scope_forbidden": [],
+    "skill": null,
+    "evidence": "Shane training/20260704T180325Z_esm-enemy-projectile-parity/result.md",
+    "opened": "2026-07-04T16:40:06.992Z",
+    "closed": "2026-07-04T18:56:14.855Z"
   }
 ]

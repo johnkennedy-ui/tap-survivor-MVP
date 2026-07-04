@@ -258,6 +258,10 @@ function tickDefaultRun(dependencies, dt = 0) {
   const player = game.player;
   if (!player) return false;
   const delta = Math.max(0, Number(dt) || 0);
+  if (typeof dependencies.runUpdater?.update === "function") {
+    dependencies.runUpdater.update(delta);
+    return true;
+  }
   game.elapsed = (Number(game.elapsed) || 0) + delta;
   const dx = (Number(player.targetX) || 0) - (Number(player.x) || 0);
   const dy = (Number(player.targetY) || 0) - (Number(player.y) || 0);

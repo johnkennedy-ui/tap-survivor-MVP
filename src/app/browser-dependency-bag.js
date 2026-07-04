@@ -333,8 +333,43 @@ function createBrowserProgressionSystems({ globalRef, ui }) {
 }
 
 function createBrowserNamespaceBridge(globalRef, globalName, factoryName, fallbackAdapter) {
-  const namespace = globalRef?.[globalName];
-  return typeof namespace?.[factoryName] === "function" ? namespace : fallbackAdapter;
+  const resolveNamespace = () => globalRef?.[globalName] || null;
+  const resolveValue = (source, prop) => {
+    const value = source?.[prop];
+    if (typeof value === "function") {
+      return value.bind(source);
+    }
+    return value;
+  };
+  return new Proxy(fallbackAdapter, {
+    get(target, prop) {
+      const namespace = resolveNamespace();
+      const liveValue = resolveValue(namespace, prop);
+      if (liveValue !== undefined) {
+        return liveValue;
+      }
+      return resolveValue(target, prop);
+    },
+    has(target, prop) {
+      const namespace = resolveNamespace();
+      return Boolean((namespace && prop in namespace) || prop in target);
+    },
+    ownKeys(target) {
+      const namespace = resolveNamespace();
+      return Array.from(new Set([...Reflect.ownKeys(target), ...(namespace ? Reflect.ownKeys(namespace) : [])]));
+    },
+    getOwnPropertyDescriptor(target, prop) {
+      const namespace = resolveNamespace();
+      return (
+        Object.getOwnPropertyDescriptor(namespace || target, prop) || {
+          configurable: true,
+          enumerable: true,
+          value: undefined,
+          writable: true,
+        }
+      );
+    },
+  });
 }
 
 function createBrowserBannerSystem({ globalRef, ui }) {

@@ -526,6 +526,19 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       });
     }
 
+    await page.waitForTimeout(450);
+    await page
+      .waitForFunction(
+        () => {
+          const root = globalThis;
+          const parity = root.__TapSurvivorParity || {};
+          const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+          return Boolean(game?.running && game.awaitingFirstMoveInput);
+        },
+        null,
+        { polling: 16, timeout: 10000 }
+      )
+      .catch(() => {});
     const canvas = page.locator("#game");
     if ((await canvas.count().catch(() => 0)) > 0) {
       const box = await canvas.boundingBox().catch(() => null);
@@ -534,12 +547,11 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       }
     }
 
-    await page.waitForTimeout(450);
     await setAudioScope(page, "weapon");
     await waitForFrameBudget(page, result, framesToAdvance, dtMs);
     await waitForPlayerState(page);
-    await waitForEnemyEvidence(page);
-    await waitForProjectileEvidence(page);
+    await waitForEnemyEvidence(page, result);
+    await waitForProjectileEvidence(page, result);
 
     result.snapshot = await page.evaluate(() => {
       const root = globalThis;
@@ -856,8 +868,10 @@ function createRuntimeResult(mode, pagePath) {
     pageErrors: [],
     pagePath,
     pageUrl: null,
+    enemyEvidenceObserved: null,
     enemyEvidence: null,
     menuEvidence: null,
+    projectileEvidenceObserved: null,
     projectileEvidence: null,
     surface: null,
     playerDraw: null,
@@ -894,10 +908,22 @@ function compareSnapshots(classic, esm) {
   const esmBackground = esm.backgroundDraw;
   const classicPlayerVisible = Boolean(classic.playerVisible);
   const esmPlayerVisible = Boolean(esm.playerVisible);
-  const classicEnemyCount = Number(classic.enemyEvidence?.count ?? classic.snapshot?.game?.enemies ?? 0);
-  const esmEnemyCount = Number(esm.enemyEvidence?.count ?? esm.snapshot?.game?.enemies ?? 0);
-  const classicProjectileCount = Number(classic.projectileEvidence?.count ?? classic.snapshot?.game?.projectileCount ?? 0);
-  const esmProjectileCount = Number(esm.projectileEvidence?.count ?? esm.snapshot?.game?.projectileCount ?? 0);
+  const classicEnemyCount = Number(
+    classic.enemyEvidenceObserved?.count ?? classic.enemyEvidence?.count ?? classic.snapshot?.game?.enemies ?? 0
+  );
+  const esmEnemyCount = Number(esm.enemyEvidenceObserved?.count ?? esm.enemyEvidence?.count ?? esm.snapshot?.game?.enemies ?? 0);
+  const classicProjectileCount = Number(
+    classic.projectileEvidenceObserved?.count ??
+      classic.projectileEvidence?.count ??
+      classic.snapshot?.game?.projectileCount ??
+      0
+  );
+  const esmProjectileCount = Number(
+    esm.projectileEvidenceObserved?.count ??
+      esm.projectileEvidence?.count ??
+      esm.snapshot?.game?.projectileCount ??
+      0
+  );
   const classicMenu = classic.menuEvidence?.tabs || classic.snapshot?.menu?.tabs || {};
   const esmMenu = esm.menuEvidence?.tabs || esm.snapshot?.menu?.tabs || {};
   const classicAudio = classic.audioEvidence || classic.snapshot?.audio || null;
@@ -1062,12 +1088,14 @@ function summarizeRuntime(result, origin) {
     loadedModuleUrls: result.loadedModuleUrls.filter((url) => isLocalUrl(url, origin)),
     player: game?.player || null,
     enemies: game?.enemies || [],
-    enemyCount: Number(result.enemyEvidence?.count ?? game?.enemies?.length ?? 0),
+    enemyCount: Number(result.enemyEvidenceObserved?.count ?? result.enemyEvidence?.count ?? game?.enemies?.length ?? 0),
     enemySample: game?.enemySample || null,
     fireEvidence: game?.weaponFireEvidence || null,
-    projectileCount: Number(result.projectileEvidence?.count ?? game?.projectileCount ?? 0),
+    projectileCount: Number(
+      result.projectileEvidenceObserved?.count ?? result.projectileEvidence?.count ?? game?.projectileCount ?? 0
+    ),
     projectileSample: game?.projectileSample || null,
-    projectileSource: game?.projectileSource || null,
+    projectileSource: result.projectileEvidenceObserved?.source || game?.projectileSource || null,
     menuTabs,
     menuOpen: Boolean(result.menuEvidence?.runMenuVisible ?? snapshot.menu?.runMenuVisible ?? false),
     audioAttempts: Array.isArray(audio?.attempts) ? audio.attempts.length : 0,
@@ -1205,43 +1233,81 @@ async function waitForRuntimeReady(page) {
     .catch(() => {});
 }
 
-async function waitForEnemyEvidence(page, timeoutMs = 5000) {
-  await page
+async function waitForEnemyEvidence(page, result, timeoutMs = 5000) {
+  const handle = await page
     .waitForFunction(
       () => {
         const root = globalThis;
         const parity = root.__TapSurvivorParity || {};
         const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
-        return Array.isArray(game?.enemies) && game.enemies.length > 0;
+        if (!Array.isArray(game?.enemies) || game.enemies.length === 0) return null;
+        const enemy = game.enemies[0] || null;
+        return {
+          count: game.enemies.length,
+          sample: enemy
+            ? {
+                id: String(enemy.id || enemy.name || enemy.kind || ""),
+                kind: String(enemy.kind || enemy.type || ""),
+                spriteId: String(enemy.spriteId || enemy.sprite || enemy.spriteName || enemy.assetId || ""),
+                type: String(enemy.type || enemy.kind || ""),
+                hp: Number.isFinite(enemy.hp) ? enemy.hp : null,
+                radius: Number.isFinite(enemy.radius) ? enemy.radius : null,
+                x: Number.isFinite(enemy.x) ? enemy.x : null,
+                y: Number.isFinite(enemy.y) ? enemy.y : null,
+              }
+            : null,
+        };
       },
       null,
       { polling: 16, timeout: timeoutMs }
     )
-    .catch(() => {});
+    .catch(() => null);
+  if (handle) {
+    result.enemyEvidenceObserved = await handle.jsonValue().catch(() => null);
+  }
 }
 
-async function waitForProjectileEvidence(page, timeoutMs = 3000) {
-  await page
+async function waitForProjectileEvidence(page, result, timeoutMs = 3000) {
+  const handle = await page
     .waitForFunction(
       () => {
         const root = globalThis;
         const parity = root.__TapSurvivorParity || {};
         const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
-        if (!game) return false;
+        if (!game) return null;
         const candidates = [
-          game.projectiles,
-          game.bolts,
-          game.enemyBolts,
-          game.weaponBolts,
-          game.enemyProjectiles,
-          game.weaponProjectiles,
-        ];
-        return candidates.some((collection) => Array.isArray(collection) && collection.length > 0);
+          ["projectiles", game.projectiles],
+          ["bolts", game.bolts],
+          ["enemyBolts", game.enemyBolts],
+          ["weaponBolts", game.weaponBolts],
+          ["enemyProjectiles", game.enemyProjectiles],
+          ["weaponProjectiles", game.weaponProjectiles],
+        ].filter((entry) => Array.isArray(entry[1]) && entry[1].length > 0);
+        const firstNonEmpty = candidates[0] || null;
+        if (!firstNonEmpty) return null;
+        const [source, collection] = firstNonEmpty;
+        const projectile = collection[0] || null;
+        return {
+          count: collection.length,
+          sample: projectile
+            ? {
+                id: String(projectile.id || projectile.name || projectile.kind || ""),
+                kind: String(projectile.kind || projectile.type || ""),
+                radius: Number.isFinite(projectile.radius) ? projectile.radius : null,
+                x: Number.isFinite(projectile.x) ? projectile.x : null,
+                y: Number.isFinite(projectile.y) ? projectile.y : null,
+              }
+            : null,
+          source,
+        };
       },
       null,
       { polling: 16, timeout: timeoutMs }
     )
-    .catch(() => {});
+    .catch(() => null);
+  if (handle) {
+    result.projectileEvidenceObserved = await handle.jsonValue().catch(() => null);
+  }
 }
 
 async function collectMenuEvidence(page) {
