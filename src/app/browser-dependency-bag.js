@@ -1,3 +1,7 @@
+import { createRelicSystem } from "../modules/relics.js";
+import { createShopPricing } from "../modules/shop-pricing.js";
+import { createShellRelicUi } from "../modules/shell-relic-ui.js";
+
 export const BROWSER_DEPENDENCY_BAG_PROOF_SLOTS = Object.freeze([
   "assetAdapters",
   "audioAdapters",
@@ -145,6 +149,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
             saveKey: "tap-survivor-mvp-save-v2",
             ...(options.saveConfig || {}),
           },
+          shopPricingConfig: options.shopPricingConfig || content.tuning?.shop || {},
           ui,
         }),
     },
@@ -606,7 +611,22 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   };
 }
 
-function createBrowserUiAdapters({ content, documentRef, globalRef, onStartRun, saveConfig, ui }) {
+function createBrowserUiAdapters({ content, documentRef, globalRef, onStartRun, saveConfig, shopPricingConfig, ui }) {
+  const inventoryRenderer = createBrowserInventoryRenderer({
+    content,
+    documentRef,
+    globalRef,
+    saveConfig,
+    ui,
+  });
+  const shopSystemAdapter = createBrowserShopSystemAdapter({
+    content,
+    documentRef,
+    globalRef,
+    saveConfig,
+    shopPricingConfig,
+    ui,
+  });
   return {
     runUi: {
       formatTime: formatBrowserTime,
@@ -615,9 +635,58 @@ function createBrowserUiAdapters({ content, documentRef, globalRef, onStartRun, 
       renderDebug: () => {},
     },
     runUiAdapter: createBrowserRunUiAdapter({ documentRef, globalRef, ui }),
-    shellUiAdapter: createBrowserShellUiAdapter({ onStartRun, ui }),
-    shopSystemAdapter: createBrowserShopSystemAdapter({ content, globalRef, saveConfig, ui }),
+    shellUiAdapter: createBrowserShellUiAdapter({
+      onStartRun,
+      renderInventory: inventoryRenderer.renderInventory,
+      renderShop: shopSystemAdapter.renderShop,
+      ui,
+    }),
+    shopSystemAdapter,
     ui,
+  };
+}
+
+function createBrowserInventoryRenderer({ content = {}, documentRef, globalRef, saveConfig = {}, ui }) {
+  const relicDefs = Array.isArray(content.relics) ? content.relics : [];
+  const weaponDefs = content.weapons || content.weaponDefs || {};
+  const relicSystemFactory = createBrowserNamespaceBridge(globalRef, "TapSurvivorRelics", "createRelicSystem", {
+    createRelicSystem: ({ relicDefs: providedRelicDefs = relicDefs, weaponDefs: providedWeaponDefs = weaponDefs } = {}) =>
+      createRelicSystem({
+        relicDefs: providedRelicDefs,
+        weaponDefs: providedWeaponDefs,
+      }),
+  });
+  const relicSystem =
+    typeof relicSystemFactory?.createRelicSystem === "function"
+      ? relicSystemFactory.createRelicSystem({ relicDefs, weaponDefs })
+      : createRelicSystem({ relicDefs, weaponDefs });
+  const relicUi = createShellRelicUi({
+    ui,
+    content,
+    documentRef,
+    assetResolver: {
+      relicIcon: (relic) => relic?.iconPath || content?.assets?.sprites?.ui?.quest || "",
+      runUpgradeSprite: () => null,
+      spriteSource: () => "",
+    },
+    getSave: () => readBrowserSave({ globalRef, saveConfig }),
+    relicDefs,
+    relicSystem,
+    persist: (save) => writeBrowserSave({ globalRef, saveConfig, save }),
+    renderMeta: () => {},
+    scheduler: {
+      clearTimeout: (timer) => globalRef.clearTimeout?.(timer),
+      setTimeout: (callback, delay) => globalRef.setTimeout?.(callback, delay),
+      animationSetTimeout: (callback, delay) => globalRef.setTimeout?.(callback, delay),
+    },
+    imageFactory: () => (typeof globalRef?.Image === "function" ? new globalRef.Image() : null),
+  });
+
+  return {
+    renderInventory() {
+      relicUi.renderInventory();
+      return true;
+    },
   };
 }
 
@@ -640,8 +709,10 @@ function createBrowserRunUiAdapter({ documentRef, globalRef, ui }) {
   };
 }
 
-function createBrowserShellUiAdapter({ onStartRun, ui }) {
+function createBrowserShellUiAdapter({ onStartRun, renderInventory, renderShop, ui }) {
   let bound = false;
+  const renderInventoryPanel = renderInventory || (() => {});
+  const renderShopPanel = renderShop || (() => {});
   const setMenuOpen = (open) => {
     toggleHidden(ui.runMenu, !open);
     ui.openMenu?.setAttribute?.("aria-expanded", String(Boolean(open)));
@@ -656,6 +727,8 @@ function createBrowserShellUiAdapter({ onStartRun, ui }) {
     toggleHidden(ui.menuProgressPanel, tab !== "progress");
     toggleHidden(ui.menuShopPanel, !shop);
     toggleHidden(ui.menuInventoryPanel, !inventory);
+    if (shop) renderShopPanel();
+    if (inventory) renderInventoryPanel();
   };
   const showTitle = () => {
     toggleHidden(ui.titleScreen, false);
@@ -722,8 +795,88 @@ function createBrowserShellUiAdapter({ onStartRun, ui }) {
   };
 }
 
-function createBrowserShopSystemAdapter({ content = {}, globalRef, saveConfig = {}, ui }) {
-  const shopItemDefs = content.shopItems || [];
+function createBrowserShopSystemAdapter({ content = {}, documentRef, globalRef, saveConfig = {}, shopPricingConfig = {}, ui }) {
+  const shopItemDefs = Array.isArray(content.shopItems) ? content.shopItems : [];
+  const shopPricing = createShopPricing({
+    shopItemDefs,
+    pricingConfig: shopPricingConfig,
+    getSave: () => readBrowserSave({ globalRef, saveConfig }),
+  });
+  const createNode = (tagName) =>
+    typeof documentRef?.createElement === "function" ? documentRef.createElement(tagName) : createElementFallback(tagName);
+
+  function buyItem(item) {
+    const save = readBrowserSave({ globalRef, saveConfig });
+    const tier = shopPricing.tierFor(item);
+    const maxed = tier >= item.maxTier;
+    if (maxed) return false;
+    const cost = shopPricing.costFor(item, tier);
+    if ((save.coins || 0) < cost) return false;
+    save.coins = Math.max(0, (save.coins || 0) - cost);
+    save.shopPurchases = {
+      ...(save.shopPurchases || {}),
+      [item.id]: tier + 1,
+    };
+    writeBrowserSave({ globalRef, saveConfig, save });
+    renderShop();
+    return true;
+  }
+
+  function renderShop() {
+    const save = readBrowserSave({ globalRef, saveConfig });
+    renderShopList(ui.shopItems, ui.shopCoinHud, save);
+    renderShopList(ui.menuShopItems, ui.menuShopCoinHud, save);
+    const notice = "Browser shop ready.";
+    if (ui.shopNotice && !ui.shopNotice.textContent) ui.shopNotice.textContent = notice;
+    if (ui.menuShopNotice && !ui.menuShopNotice.textContent) ui.menuShopNotice.textContent = notice;
+    return true;
+  }
+
+  function renderShopList(container, coinHud, save) {
+    if (!container || !coinHud) return;
+    coinHud.textContent = `Coins: ${save.coins || 0} | Tower Floor ${Math.max(1, save.towerFloor || 1)}`;
+    if (typeof container.appendChild !== "function") {
+      container.textContent = shopItemDefs.length
+        ? `${shopItemDefs.length} shop items available.`
+        : "No shop items yet.";
+      return;
+    }
+    container.innerHTML = "";
+    if (!shopItemDefs.length) {
+      const empty = createNode("div");
+      empty.className = "shop-item";
+      empty.textContent = "No shop items yet.";
+      container.appendChild(empty);
+      return;
+    }
+
+    shopItemDefs.forEach((item) => {
+      const tier = shopPricing.tierFor(item);
+      const maxed = tier >= item.maxTier;
+      const cost = shopPricing.costFor(item, tier);
+      const affordable = !maxed && (save.coins || 0) >= cost;
+      const el = createNode("div");
+      el.className = `shop-item ${affordable ? "available" : "locked"}`;
+      el.innerHTML = `
+        <div class="shop-item-icon">
+          ${item.spritePath ? `<img class="shop-item-sprite" src="${item.spritePath}" alt="" />` : ""}
+        </div>
+        <div class="shop-item-copy">
+          <strong>${item.name}</strong>
+          <span>${item.description}</span><br />
+          <span>Tier: ${tier}/${item.maxTier}</span><br />
+          <span>${maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`}</span>
+        </div>
+      `;
+      const button = createNode("button");
+      button.textContent = maxed ? "Maxed" : `Buy Tier ${tier + 1}`;
+      button.disabled = maxed || !affordable;
+      button.addEventListener("click", () => buyItem(item));
+      el.appendChild(button);
+      container.appendChild(el);
+    });
+  }
+
   return {
     closeShop() {
       toggleHidden(ui.shopModal, true);
@@ -733,14 +886,10 @@ function createBrowserShopSystemAdapter({ content = {}, globalRef, saveConfig = 
     openShop() {
       toggleHidden(ui.shopModal, false);
       toggleHidden(ui.menuShopPanel, false);
+      renderShop();
       return true;
     },
-    renderShop() {
-      if (ui.menuShopNotice && !ui.menuShopNotice.textContent) {
-        ui.menuShopNotice.textContent = "Browser shop ready.";
-      }
-      return true;
-    },
+    renderShop,
     getShopBonuses() {
       const save = readBrowserSave({ globalRef, saveConfig });
       const bonuses = createEmptyShopBonuses();
@@ -765,6 +914,18 @@ function readBrowserSave({ globalRef, saveConfig = {} }) {
     return parsed && typeof parsed === "object" ? parsed : {};
   } catch {
     return {};
+  }
+}
+
+function writeBrowserSave({ globalRef, saveConfig = {}, save }) {
+  const storage = globalRef?.localStorage;
+  if (!storage) return false;
+  const saveKey = saveConfig.saveKey || "tap-survivor-mvp-save-v2";
+  try {
+    storage.setItem(saveKey, JSON.stringify(save || {}));
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -856,6 +1017,9 @@ function createCanvasFallback() {
 
 function createElementFallback(id = "") {
   const attributes = {};
+  const children = [];
+  let textValue = "";
+  let htmlValue = "";
   return {
     id,
     classList: {
@@ -864,13 +1028,51 @@ function createElementFallback(id = "") {
       toggle() {},
     },
     dataset: {},
+    children,
+    appendChild(child) {
+      children.push(child);
+      return child;
+    },
+    prepend(child) {
+      children.unshift(child);
+      return child;
+    },
+    replaceChildren(...nextChildren) {
+      children.splice(0, children.length, ...nextChildren);
+    },
+    addEventListener() {},
+    removeEventListener() {},
+    querySelector() {
+      return null;
+    },
+    querySelectorAll() {
+      return [];
+    },
     getAttribute(name) {
       return attributes[name];
+    },
+    removeAttribute(name) {
+      delete attributes[name];
     },
     hidden: false,
     setAttribute(name, value) {
       attributes[name] = String(value);
     },
-    textContent: "",
+    get innerHTML() {
+      return htmlValue;
+    },
+    set innerHTML(value) {
+      htmlValue = String(value);
+      textValue = String(value).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+      children.splice(0, children.length);
+    },
+    get textContent() {
+      return textValue;
+    },
+    set textContent(value) {
+      textValue = String(value);
+      htmlValue = String(value);
+      children.splice(0, children.length);
+    },
   };
 }
