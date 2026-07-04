@@ -42,6 +42,7 @@ export function createProductionModuleEntrypoint(options = {}) {
   const injectedContent = resolvedGlobalRef.TapSurvivorContent || {};
   const injectedContentSchema = resolvedGlobalRef.TapSurvivorContentSchema || {};
   let lifecycle;
+  let playStartAudio = () => {};
   const resolvedDependencyBagOptions =
     dependencyBagOptions ||
     createBrowserDependencyBagOptions({
@@ -50,11 +51,13 @@ export function createProductionModuleEntrypoint(options = {}) {
       contentSchema: browserDependencyBagOptions?.contentSchema || injectedContentSchema,
       documentRef: resolvedPlatform.documentRef,
       globalRef: resolvedGlobalRef,
+      onStartAudio: () => playStartAudio(),
       onStartRun: () => lifecycle?.startRun?.(),
     });
   const resolvedDependencies =
     dependencies ||
     createModuleGameDependencyBag(resolvedDependencyBagOptions);
+  playStartAudio = () => resolvedDependencies.audioSystem?.playStartLaugh?.();
   lifecycle = createModuleGameLifecycleOwner({
     dependencies: resolvedDependencies,
     lifecycleHooks,

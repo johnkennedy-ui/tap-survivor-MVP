@@ -264,6 +264,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       errors: [],
       patchErrors: [],
     });
+    parity.audioScope = parity.audioScope || null;
     const mediaProto = root.HTMLMediaElement?.prototype;
     if (mediaProto && !mediaProto.__tapParityAudioPatched) {
       const originalPlay = mediaProto.play;
@@ -271,6 +272,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         mediaProto.play = function patchedMediaPlay(...playArgs) {
           audio.attempts.push({
             operation: "play",
+            scope: parity.audioScope || null,
             source: this?.currentSrc || this?.src || "",
             tagName: this?.tagName || "",
           });
@@ -280,6 +282,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
               audio.errors.push({
                 message: error?.message || String(error || "media play rejected"),
                 operation: "play",
+                scope: parity.audioScope || null,
               });
             });
             return result;
@@ -287,6 +290,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
             audio.errors.push({
               message: error?.message || String(error || "media play failed"),
               operation: "play",
+              scope: parity.audioScope || null,
             });
             throw error;
           }
@@ -298,6 +302,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         audioContextProto.resume = function patchedAudioResume(...resumeArgs) {
           audio.attempts.push({
             operation: "resume",
+            scope: parity.audioScope || null,
             state: this?.state || "",
           });
           try {
@@ -306,6 +311,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
               audio.errors.push({
                 message: error?.message || String(error || "audio resume rejected"),
                 operation: "resume",
+                scope: parity.audioScope || null,
               });
             });
             return result;
@@ -313,6 +319,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
             audio.errors.push({
               message: error?.message || String(error || "audio resume failed"),
               operation: "resume",
+              scope: parity.audioScope || null,
             });
             throw error;
           }
@@ -512,6 +519,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     const startButton = await locateStartButton(page);
     if (startButton) {
       result.startGameClicked = true;
+      await setAudioScope(page, "start");
       await startButton.click({ timeout: 5000 }).catch((error) => {
         result.startGameClickThrew = true;
         result.pageErrors.push({ message: `Start Game click failed: ${error.message}`, stack: error.stack });
@@ -527,6 +535,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     }
 
     await page.waitForTimeout(450);
+    await setAudioScope(page, "weapon");
     await waitForFrameBudget(page, result, framesToAdvance, dtMs);
     await waitForPlayerState(page);
     await waitForEnemyEvidence(page);
@@ -620,6 +629,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
 
       function snapshotAudio(parityState) {
         const audioState = parityState.audio || {};
+        const attempts = Array.isArray(audioState.attempts) ? [...audioState.attempts] : [];
+        const errors = Array.isArray(audioState.errors) ? [...audioState.errors] : [];
         return {
           adapterPresent: Boolean(parityState.esmApi?.dependencies?.audio?.createAudioSystem),
           api: audioState.api || {
@@ -627,9 +638,28 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
             hasAudioElement: Boolean(root.Audio),
             hasMediaPlay: Boolean(root.HTMLMediaElement?.prototype?.play),
           },
-          attempts: Array.isArray(audioState.attempts) ? [...audioState.attempts] : [],
-          errors: Array.isArray(audioState.errors) ? [...audioState.errors] : [],
-          observed: Boolean((audioState.attempts || []).length || (audioState.errors || []).length),
+          attempts,
+          errors,
+          observed: Boolean(attempts.length || errors.length),
+          startGesture: summarizeAudioBucket(attempts, errors, "start"),
+          weaponFire: summarizeAudioBucket(attempts, errors, "weapon"),
+          menuShop: summarizeAudioBucket(attempts, errors, "menu"),
+          unscoped: summarizeAudioBucket(attempts, errors, null),
+        };
+      }
+
+      function summarizeAudioBucket(attempts, errors, scope) {
+        const bucketAttempts = attempts.filter((attempt) => (attempt?.scope ?? null) === scope);
+        const bucketErrors = errors.filter((error) => (error?.scope ?? null) === scope);
+        return {
+          attemptCount: bucketAttempts.length,
+          errorCount: bucketErrors.length,
+          firstAttempt: bucketAttempts[0] || null,
+          operations: bucketAttempts.reduce((acc, attempt) => {
+            const key = attempt?.operation || "unknown";
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+          }, {}),
         };
       }
 
@@ -740,6 +770,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         return "";
       }
     });
+    await setAudioScope(page, "menu");
 
     result.classified = classifyDraws(result.snapshot?.diagnostics?.drawCalls || [], result.snapshot?.registeredSpriteGroupDefs || {});
     result.enemyEvidence = {
@@ -758,6 +789,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     result.enemyDraw = result.classified.drawCalls.find((entry) => entry.kind === "enemy" && entry.intersectsCanvas) || null;
     result.weaponDraw = result.classified.drawCalls.find((entry) => entry.kind === "weapon" && entry.intersectsCanvas) || null;
     result.menuEvidence = await collectMenuEvidence(page);
+    await setAudioScope(page, null);
     if (result.snapshot) result.snapshot.menu = result.menuEvidence;
     result.audioEvidence = result.snapshot?.audio || null;
     result.playerVisible = Boolean(result.classified.playerCanvasVisible);
@@ -870,6 +902,12 @@ function compareSnapshots(classic, esm) {
   const esmMenu = esm.menuEvidence?.tabs || esm.snapshot?.menu?.tabs || {};
   const classicAudio = classic.audioEvidence || classic.snapshot?.audio || null;
   const esmAudio = esm.audioEvidence || esm.snapshot?.audio || null;
+  const classicStartAudio = classicAudio?.startGesture || { attemptCount: 0, errorCount: 0, operations: {} };
+  const esmStartAudio = esmAudio?.startGesture || { attemptCount: 0, errorCount: 0, operations: {} };
+  const classicWeaponAudio = classicAudio?.weaponFire || { attemptCount: 0, errorCount: 0, operations: {} };
+  const esmWeaponAudio = esmAudio?.weaponFire || { attemptCount: 0, errorCount: 0, operations: {} };
+  const classicMenuAudio = classicAudio?.menuShop || { attemptCount: 0, errorCount: 0, operations: {} };
+  const esmMenuAudio = esmAudio?.menuShop || { attemptCount: 0, errorCount: 0, operations: {} };
   const classicEnemyDraw = classic.enemyDraw || null;
   const esmEnemyDraw = esm.enemyDraw || null;
   const classicFireEvidence = classic.fireEvidence || classic.snapshot?.game?.weaponFireEvidence || null;
@@ -927,17 +965,30 @@ function compareSnapshots(classic, esm) {
       strictFailures.push(`classic menu ${tabName} tab exists but ESM tab is missing`);
     }
   }
-  const classicAudioAttempts = Array.isArray(classicAudio?.attempts) ? classicAudio.attempts.length : 0;
-  const esmAudioAttempts = Array.isArray(esmAudio?.attempts) ? esmAudio.attempts.length : 0;
-  const classicAudioErrors = Array.isArray(classicAudio?.errors) ? classicAudio.errors.length : 0;
-  const esmAudioErrors = Array.isArray(esmAudio?.errors) ? esmAudio.errors.length : 0;
-  if (classicAudioAttempts > 0 && esmAudioAttempts === 0) {
-    strictFailures.push("classic observed an audio attempt but ESM did not");
-  } else if (classicAudioAttempts > 0 && esmAudioErrors > 0) {
-    strictFailures.push("classic observed audio but ESM reported audio errors");
+  if (classicStartAudio.attemptCount > 0 && esmStartAudio.attemptCount === 0) {
+    strictFailures.push("classic observed Start Game audio but ESM did not");
+  } else if (classicStartAudio.attemptCount > 0 && esmStartAudio.errorCount > 0) {
+    strictFailures.push("classic observed Start Game audio but ESM reported audio errors");
   }
-  if (classicAudioAttempts === 0 && esmAudioAttempts === 0 && classicAudioErrors === 0 && esmAudioErrors === 0) {
-    notes.push("audio remained diagnostic-only; no safe audio attempt observed");
+  if (classicWeaponAudio.attemptCount > 0 || esmWeaponAudio.attemptCount > 0) {
+    notes.push(
+      `weapon-fire audio diagnostic bucket: classic ${classicWeaponAudio.attemptCount} vs esm ${esmWeaponAudio.attemptCount}`
+    );
+  }
+  if (classicMenuAudio.attemptCount > 0 || esmMenuAudio.attemptCount > 0) {
+    notes.push(
+      `menu/shop audio diagnostic bucket: classic ${classicMenuAudio.attemptCount} vs esm ${esmMenuAudio.attemptCount}`
+    );
+  }
+  if (
+    classicStartAudio.attemptCount === 0 &&
+    esmStartAudio.attemptCount === 0 &&
+    classicWeaponAudio.attemptCount === 0 &&
+    esmWeaponAudio.attemptCount === 0 &&
+    classicMenuAudio.attemptCount === 0 &&
+    esmMenuAudio.attemptCount === 0
+  ) {
+    notes.push("audio remained diagnostic-only; no safe start, weapon, or menu audio attempt observed");
   }
   if ((classic.consoleErrors?.length || 0) === 0 && (esm.consoleErrors?.length || 0) > 0) {
     strictFailures.push("classic had no console errors but ESM did");
@@ -1021,6 +1072,9 @@ function summarizeRuntime(result, origin) {
     menuOpen: Boolean(result.menuEvidence?.runMenuVisible ?? snapshot.menu?.runMenuVisible ?? false),
     audioAttempts: Array.isArray(audio?.attempts) ? audio.attempts.length : 0,
     audioErrors: Array.isArray(audio?.errors) ? audio.errors.length : 0,
+    audioStartAttempts: Number(audio?.startGesture?.attemptCount || 0),
+    audioWeaponAttempts: Number(audio?.weaponFire?.attemptCount || 0),
+    audioMenuAttempts: Number(audio?.menuShop?.attemptCount || 0),
     weaponIconsDrawn: drawCalls.filter((entry) => entry.kind === "weapon").length,
     backgroundDraws: drawCalls.filter((entry) => entry.kind === "background").length,
     playerDraws: drawCalls.filter((entry) => entry.kind === "player").length,
@@ -1211,6 +1265,16 @@ async function collectMenuEvidence(page) {
   }
 
   return result;
+}
+
+async function setAudioScope(page, scope) {
+  await page.evaluate(
+    (nextScope) => {
+      const parity = (window["__TapSurvivorParity"] = window["__TapSurvivorParity"] || {});
+      parity.audioScope = nextScope ?? null;
+    },
+    scope
+  ).catch(() => {});
 }
 
 async function openMenuIfNeeded(page) {

@@ -143,6 +143,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
           documentRef,
           content,
           globalRef,
+          onStartAudio: options.onStartAudio,
           onStartRun: options.onStartRun,
           saveConfig: {
             legacySaveKey: "tap-survivor-mvp-save-v1",
@@ -611,7 +612,16 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   };
 }
 
-function createBrowserUiAdapters({ content, documentRef, globalRef, onStartRun, saveConfig, shopPricingConfig, ui }) {
+function createBrowserUiAdapters({
+  content,
+  documentRef,
+  globalRef,
+  onStartAudio,
+  onStartRun,
+  saveConfig,
+  shopPricingConfig,
+  ui,
+}) {
   const inventoryRenderer = createBrowserInventoryRenderer({
     content,
     documentRef,
@@ -636,6 +646,7 @@ function createBrowserUiAdapters({ content, documentRef, globalRef, onStartRun, 
     },
     runUiAdapter: createBrowserRunUiAdapter({ documentRef, globalRef, ui }),
     shellUiAdapter: createBrowserShellUiAdapter({
+      onStartAudio,
       onStartRun,
       renderInventory: inventoryRenderer.renderInventory,
       renderShop: shopSystemAdapter.renderShop,
@@ -709,7 +720,7 @@ function createBrowserRunUiAdapter({ documentRef, globalRef, ui }) {
   };
 }
 
-function createBrowserShellUiAdapter({ onStartRun, renderInventory, renderShop, ui }) {
+function createBrowserShellUiAdapter({ onStartAudio, onStartRun, renderInventory, renderShop, ui }) {
   let bound = false;
   const renderInventoryPanel = renderInventory || (() => {});
   const renderShopPanel = renderShop || (() => {});
@@ -743,6 +754,7 @@ function createBrowserShellUiAdapter({ onStartRun, renderInventory, renderShop, 
     return true;
   };
   const startFromTitle = () => {
+    if (typeof onStartAudio === "function") onStartAudio();
     if (typeof onStartRun === "function") onStartRun();
   };
   const toggleMenu = () => {

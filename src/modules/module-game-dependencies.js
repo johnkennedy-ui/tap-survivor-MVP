@@ -120,6 +120,7 @@ export function createModuleGameDependencyBag({
     ...requireObject(resolvedAdapters.audioAdapters, "adapters.audioAdapters"),
     sfxDefs: contentRegistry.sfxDefs,
   });
+  const audioSystem = audioAdapters.audio.createAudioSystem();
   const storageAdapters = createModuleRuntimeStorageAdapter(
     createModuleRuntimeStorageAdapterOptions({
       saveConfig: requireObject(saveConfig, "saveConfig"),
@@ -253,6 +254,7 @@ export function createModuleGameDependencyBag({
   return {
     assets: assetAdapters.assets,
     audio: audioAdapters.audio,
+    audioSystem,
     bannerSystem: platformAdapters.bannerSystem,
     bindMovementInput: platformAdapters.bindMovementInput,
     canvas: platformAdapters.canvas,
