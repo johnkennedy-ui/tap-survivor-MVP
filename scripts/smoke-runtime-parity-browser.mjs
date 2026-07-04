@@ -591,11 +591,13 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         const player = gameState.player || null;
         const projectileCollections = sampleProjectileCollections(gameState);
         const enemySample = sampleEntity(gameState.enemies?.[0] || null);
+        const weaponFireEvidence = sampleWeaponFireEvidence(gameState);
         return {
           awaitingFirstMoveInput: Boolean(gameState.awaitingFirstMoveInput),
           elapsed: Number(gameState.elapsed || 0),
           enemies: Array.isArray(gameState.enemies) ? gameState.enemies.length : 0,
           enemySample,
+          weaponFireEvidence,
           projectileCollections: projectileCollections.collections,
           projectileCount: projectileCollections.count,
           projectileSample: projectileCollections.sample,
@@ -669,6 +671,47 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         };
       }
 
+      function sampleWeaponFireEvidence(gameState) {
+        const bursts = Array.isArray(gameState.weaponBursts) ? gameState.weaponBursts : [];
+        const flashes =
+          gameState.weaponIconFlashes && typeof gameState.weaponIconFlashes === "object"
+            ? gameState.weaponIconFlashes
+            : {};
+        const flashEntries = Object.entries(flashes).filter(([, value]) => Number(value) > 0);
+        const player = gameState.player || null;
+        return {
+          burstCount: bursts.length,
+          burstSample: sampleWeaponBurst(bursts[0] || null),
+          iconFlashCount: flashEntries.length,
+          iconFlashSample: flashEntries[0]
+            ? {
+                value: numberOrNull(flashEntries[0][1]),
+                weaponId: stringOrNull(flashEntries[0][0]),
+              }
+            : null,
+          playerAction: player
+            ? {
+                active: Boolean(player.actionTimer > 0 && player.actionSprite),
+                spriteId: stringOrNull(player.actionSprite || ""),
+                timer: numberOrNull(player.actionTimer),
+              }
+            : null,
+        };
+      }
+
+      function sampleWeaponBurst(burst) {
+        if (!burst || typeof burst !== "object") return null;
+        return {
+          color: stringOrNull(burst.color),
+          life: numberOrNull(burst.life),
+          maxLife: numberOrNull(burst.maxLife),
+          radius: numberOrNull(burst.radius),
+          weaponId: stringOrNull(burst.weaponId),
+          x: numberOrNull(burst.x),
+          y: numberOrNull(burst.y),
+        };
+      }
+
       function sampleEntity(entity) {
         if (!entity || typeof entity !== "object") return null;
         return {
@@ -703,6 +746,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       count: result.snapshot?.game?.enemies || 0,
       sample: result.snapshot?.game?.enemySample || null,
     };
+    result.fireEvidence = result.snapshot?.game?.weaponFireEvidence || null;
     result.projectileEvidence = {
       collections: result.snapshot?.game?.projectileCollections || {},
       count: result.snapshot?.game?.projectileCount || 0,
@@ -803,6 +847,7 @@ function createRuntimeResult(mode, pagePath) {
     uiDetected: null,
     weaponDraw: null,
     audioEvidence: null,
+    fireEvidence: null,
   };
 }
 
@@ -825,6 +870,12 @@ function compareSnapshots(classic, esm) {
   const esmMenu = esm.menuEvidence?.tabs || esm.snapshot?.menu?.tabs || {};
   const classicAudio = classic.audioEvidence || classic.snapshot?.audio || null;
   const esmAudio = esm.audioEvidence || esm.snapshot?.audio || null;
+  const classicEnemyDraw = classic.enemyDraw || null;
+  const esmEnemyDraw = esm.enemyDraw || null;
+  const classicFireEvidence = classic.fireEvidence || classic.snapshot?.game?.weaponFireEvidence || null;
+  const esmFireEvidence = esm.fireEvidence || esm.snapshot?.game?.weaponFireEvidence || null;
+  const classicFireObserved = hasWeaponFireEvidence(classicFireEvidence);
+  const esmFireObserved = hasWeaponFireEvidence(esmFireEvidence);
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
@@ -840,6 +891,9 @@ function compareSnapshots(classic, esm) {
   if (classic.canvasFound && !esm.canvasFound) strictFailures.push("classic has canvas but ESM does not");
   if (classicBackground && !esmBackground) strictFailures.push("classic recorded background draw but ESM did not");
   if (classicPlayerVisible && !esmPlayerVisible) strictFailures.push("classic recorded visible player draw but ESM did not");
+  if (classicEnemyDraw && !esmEnemyDraw) {
+    strictFailures.push("classic recorded enemy draw evidence but ESM did not");
+  }
   if (classicEnemyCount > 0 && esmEnemyCount === 0) {
     strictFailures.push(`classic sampled ${classicEnemyCount} enemies but ESM sampled none`);
   } else if (classicEnemyCount > 0 && esmEnemyCount > 0 && classicEnemyCount !== esmEnemyCount) {
@@ -849,6 +903,15 @@ function compareSnapshots(classic, esm) {
     strictFailures.push(`classic sampled ${classicProjectileCount} projectiles but ESM sampled none`);
   } else if (classicProjectileCount > 0 && esmProjectileCount > 0 && classicProjectileCount !== esmProjectileCount) {
     notes.push(`projectile count differs: classic ${classicProjectileCount} vs esm ${esmProjectileCount}`);
+  }
+  if (classicFireObserved && !esmFireObserved) {
+    strictFailures.push("classic observed a weapon fire attempt but ESM did not");
+  } else if (classicFireObserved && esmFireObserved) {
+    const classicFireCount = Number(classicFireEvidence?.burstCount || 0);
+    const esmFireCount = Number(esmFireEvidence?.burstCount || 0);
+    if (classicFireCount > 0 && esmFireCount > 0 && classicFireCount !== esmFireCount) {
+      notes.push(`weapon fire burst count differs: classic ${classicFireCount} vs esm ${esmFireCount}`);
+    }
   }
   for (const tabName of ["progress", "shop", "inventory"]) {
     const classicTab = classicMenu[tabName] || {};
@@ -950,6 +1013,7 @@ function summarizeRuntime(result, origin) {
     enemies: game?.enemies || [],
     enemyCount: Number(result.enemyEvidence?.count ?? game?.enemies?.length ?? 0),
     enemySample: game?.enemySample || null,
+    fireEvidence: game?.weaponFireEvidence || null,
     projectileCount: Number(result.projectileEvidence?.count ?? game?.projectileCount ?? 0),
     projectileSample: game?.projectileSample || null,
     projectileSource: game?.projectileSource || null,
@@ -1689,6 +1753,15 @@ function describeSize(size) {
 
 function distance(x1, y1, x2, y2) {
   return Math.hypot(Number(x2 || 0) - Number(x1 || 0), Number(y2 || 0) - Number(y1 || 0));
+}
+
+function hasWeaponFireEvidence(evidence) {
+  if (!evidence) return false;
+  return (
+    Number(evidence.burstCount || 0) > 0 ||
+    Number(evidence.iconFlashCount || 0) > 0 ||
+    Boolean(evidence.playerAction?.active)
+  );
 }
 
 function compareAndListRuntime(result) {
