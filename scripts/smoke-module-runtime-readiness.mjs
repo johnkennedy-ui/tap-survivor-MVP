@@ -106,6 +106,7 @@ const browserDependencyBagSource = readFileSync(
   join(root, "src/app/browser-dependency-bag.js"),
   "utf8"
 );
+const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const missingProductionBrowserAdapterModuleFiles = [
   "src/modules/assets.js",
   "src/modules/combat.js",
@@ -696,6 +697,16 @@ check(
   [productionModuleEntrypointSource, productionModuleAutobootSource, browserDependencyBagSource].every(
     (source) => !hasTapSurvivorContentGlobalRead(source)
   )
+);
+check(
+  "readiness rejects direct, string-key, and dynamic TapSurvivorRelics reads in the production ESM browser path",
+  !hasTapSurvivorRelicsGlobalRead(browserDependencyBagSource) &&
+    !browserDependencyBagSource.includes("TapSurvivorRelics")
+);
+check(
+  "readiness preserves the deliberate classic TapSurvivorRelics publisher",
+  classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
+    classicRelicsSource.includes("createRelicSystem")
 );
 check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
@@ -1407,6 +1418,13 @@ function hasTapSurvivorContentGlobalRead(source) {
   return (
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorContent\b/u.test(source) ||
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorContent["']\s*\]/u.test(source)
+  );
+}
+
+function hasTapSurvivorRelicsGlobalRead(source) {
+  return (
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorRelics\b/u.test(source) ||
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorRelics["']\s*\]/u.test(source)
   );
 }
 

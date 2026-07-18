@@ -695,17 +695,7 @@ function createBrowserUiAdapters({
 function createBrowserInventoryRenderer({ content = {}, documentRef, globalRef, saveConfig = {}, ui }) {
   const relicDefs = Array.isArray(content.relics) ? content.relics : [];
   const weaponDefs = content.weapons || content.weaponDefs || {};
-  const relicSystemFactory = createBrowserNamespaceBridge(globalRef, "TapSurvivorRelics", "createRelicSystem", {
-    createRelicSystem: ({ relicDefs: providedRelicDefs = relicDefs, weaponDefs: providedWeaponDefs = weaponDefs } = {}) =>
-      createRelicSystem({
-        relicDefs: providedRelicDefs,
-        weaponDefs: providedWeaponDefs,
-      }),
-  });
-  const relicSystem =
-    typeof relicSystemFactory?.createRelicSystem === "function"
-      ? relicSystemFactory.createRelicSystem({ relicDefs, weaponDefs })
-      : createRelicSystem({ relicDefs, weaponDefs });
+  const relicSystem = createRelicSystem({ relicDefs, weaponDefs });
   const relicUi = createShellRelicUi({
     ui,
     content,

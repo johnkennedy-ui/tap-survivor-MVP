@@ -43,6 +43,10 @@ Generated content globals:
 - `src/effects.js` is the generated classic bridge for run upgrade effects, shop item effects, shop bonus defaults, and
   relic special effects from `src/modules/effects.js`. Its classic boundary uses the module's built-in shop-bonus
   fallback list rather than a content-schema global.
+- Production ESM inventory rendering in `src/app/browser-dependency-bag.js` calls the statically imported
+  `createRelicSystem` from `src/modules/relics.js` directly and does not look up `TapSurvivorRelics`. The classic
+  `src/relics.js` publisher remains deliberate for the preserved fallback boundary; this cut does not retire that
+  publisher, change classic script order, or alter relic definitions.
 - `src/math.js` still owns the `TapSurvivorMath` compatibility bridge. `src/rendering.js` and `src/render-hud.js`
   now receive `clamp` through factory arguments instead of reading `globalThis.TapSurvivorMath`; `src/game.js` remains
   the script-order bootstrap reader until the runtime can safely become ESM.

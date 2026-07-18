@@ -23,8 +23,10 @@ const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content
 const indexHtmlBefore = readFileSync(join(root, "index.html"), "utf8");
 const candidateSource = readFileSync(join(root, "src/app/production-module-entrypoint.js"), "utf8");
 const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
+const browserDependencyBagSource = readFileSync(join(root, "src/app/browser-dependency-bag.js"), "utf8");
 const classicContentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
 const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
+const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
 const browserGameplayGlobals = {
@@ -93,6 +95,11 @@ check(
   classicContentSource.includes("globalThis.TapSurvivorContent =")
 );
 check(
+  "classic fallback preserves TapSurvivorRelics publisher pending separate publisher retirement",
+  classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
+    classicRelicsSource.includes("createRelicSystem")
+);
+check(
   "production module entrypoint candidate exposes expected proof slots",
   ["boot", "createDependencyBag", "createLifecycleOwner", "init", "startRun", "tick", "render", "persist", "dispose"].every(
     (slot) => PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes(slot)
@@ -114,6 +121,11 @@ check(
 check(
   "production ESM boot source has no direct or string-key TapSurvivorContent global read",
   !hasTapSurvivorContentGlobalRead(candidateSource) && !hasTapSurvivorContentGlobalRead(autobootSource)
+);
+check(
+  "production ESM browser dependency bag has no direct, string-key, or dynamic TapSurvivorRelics access",
+  !hasTapSurvivorRelicsGlobalRead(browserDependencyBagSource) &&
+    !browserDependencyBagSource.includes("TapSurvivorRelics")
 );
 
 const initialSave = {
@@ -176,6 +188,10 @@ const runtimeGlobal = {
   },
 };
 const runtimeContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(
+  runtimeGlobal,
+  "injected browser globalRef"
+);
+const runtimeRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(
   runtimeGlobal,
   "injected browser globalRef"
 );
@@ -664,16 +680,23 @@ malformedSchemaEntrypoint.dispose();
 delete runtimeGlobal.TapSurvivorContentSchema;
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
 const autobootContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(globalThis, "autoboot globalThis");
+const autobootRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(globalThis, "autoboot globalThis");
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
 const autobootRafCalls = autobootGlobalRestore.rafCalls();
 autobootGlobalRestore.restore();
 autobootContentGlobalGuard.restore();
+autobootRelicsGlobalGuard.restore();
 check("production module autoboot wrapper initializes browser runtime", autobootRafCalls === 1);
 check(
   "production module boot completes without reading guarded TapSurvivorContent globals",
   runtimeContentGlobalGuard.readAttempts() === 0 && autobootContentGlobalGuard.readAttempts() === 0
 );
+check(
+  "production module boot completes without reading guarded TapSurvivorRelics globals",
+  runtimeRelicsGlobalGuard.readAttempts() === 0 && autobootRelicsGlobalGuard.readAttempts() === 0
+);
 runtimeContentGlobalGuard.restore();
+runtimeRelicsGlobalGuard.restore();
 check(
   "production module autoboot wrapper publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
@@ -856,6 +879,13 @@ function hasTapSurvivorContentGlobalRead(source) {
   );
 }
 
+function hasTapSurvivorRelicsGlobalRead(source) {
+  return (
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorRelics\b/u.test(source) ||
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorRelics["']\s*\]/u.test(source)
+  );
+}
+
 function installTapSurvivorContentGlobalReadGuard(target, label) {
   const key = "TapSurvivorContent";
   const previous = Object.getOwnPropertyDescriptor(target, key);
@@ -865,6 +895,26 @@ function installTapSurvivorContentGlobalReadGuard(target, label) {
     get() {
       reads += 1;
       throw new Error(`Forbidden classic content global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
+}
+
+function installTapSurvivorRelicsGlobalReadGuard(target, label) {
+  const key = "TapSurvivorRelics";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic relic global read from ${label}`);
     },
   });
   return {
