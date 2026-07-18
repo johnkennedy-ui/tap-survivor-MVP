@@ -1,4 +1,5 @@
 import { createRelicSystem } from "../modules/relics.js";
+import { createProgressionSystem } from "../modules/progression.js";
 import { createQuestSystem, questOpenIds } from "../modules/quests.js";
 import { createShellRelicUi } from "../modules/shell-relic-ui.js";
 import { createShopSystem } from "../modules/shop.js";
@@ -303,14 +304,7 @@ function createBrowserProgressionSystems({ documentRef, globalRef, ui }) {
     levelUp: createBrowserNamespaceBridge(globalRef, "TapSurvivorLevelUp", "createLevelUpSystem", {
       createLevelUpSystem: () => ({}),
     }),
-    progression: createBrowserNamespaceBridge(
-      globalRef,
-      "TapSurvivorProgression",
-      "createProgressionSystem",
-      {
-        createProgressionSystem: () => ({}),
-      }
-    ),
+    progression: { createProgressionSystem },
     quests: { createQuestSystem, questOpenIds },
     shop: {
       createShopSystem: (options = {}) => createShopSystem({ documentRef, ...options }),

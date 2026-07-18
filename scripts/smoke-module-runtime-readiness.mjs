@@ -107,6 +107,7 @@ const browserDependencyBagSource = readFileSync(
   "utf8"
 );
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
+const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const missingProductionBrowserAdapterModuleFiles = [
   "src/modules/assets.js",
   "src/modules/combat.js",
@@ -419,6 +420,10 @@ const runtimeGlobal = {
   Capacitor: { Plugins: { App: { addListener: () => ({ catch() {} }) } } },
 };
 const runtimeQuestsGlobalGuard = installTapSurvivorQuestsGlobalReadGuard(
+  runtimeGlobal,
+  "runtime readiness injected browser globalRef"
+);
+const runtimeProgressionGlobalGuard = installTapSurvivorProgressionGlobalReadGuard(
   runtimeGlobal,
   "runtime readiness injected browser globalRef"
 );
@@ -764,9 +769,20 @@ check(
     !browserDependencyBagSource.includes("TapSurvivorUiProgression")
 );
 check(
+  "readiness rejects direct, string-key, and dynamic TapSurvivorProgression reads in the production ESM browser path",
+  browserDependencyBagSource.includes(
+    'import { createProgressionSystem } from "../modules/progression.js";'
+  ) && !browserDependencyBagSource.includes("TapSurvivorProgression")
+);
+check(
   "readiness preserves the deliberate classic TapSurvivorRelics publisher",
   classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
     classicRelicsSource.includes("createRelicSystem")
+);
+check(
+  "readiness preserves the deliberate classic TapSurvivorProgression publisher",
+  classicProgressionSource.includes("globalThis.TapSurvivorProgression =") &&
+    classicProgressionSource.includes("createProgressionSystem")
 );
 check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
@@ -822,7 +838,7 @@ check(
   )
 );
 check(
-  "readiness sees browser progression defaults retain other classic bridges and native Quests",
+  "readiness sees browser progression defaults retain other classic bridges and native Quests and Progression",
   [
     ["levelUp", "createLevelUpSystem"],
     ["progression", "createProgressionSystem"],
@@ -839,6 +855,10 @@ check(
 check(
   "readiness browser progression defaults do not read guarded TapSurvivorQuests global",
   runtimeQuestsGlobalGuard.readAttempts() === 0
+);
+check(
+  "readiness browser progression defaults do not read guarded TapSurvivorProgression global",
+  runtimeProgressionGlobalGuard.readAttempts() === 0
 );
 check(
   "readiness browser progression defaults do not read guarded TapSurvivorUiProgression global",
@@ -1512,6 +1532,26 @@ function installTapSurvivorQuestsGlobalReadGuard(target, label) {
     get() {
       reads += 1;
       throw new Error(`Forbidden classic quests global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
+}
+
+function installTapSurvivorProgressionGlobalReadGuard(target, label) {
+  const key = "TapSurvivorProgression";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic progression global read from ${label}`);
     },
   });
   return {

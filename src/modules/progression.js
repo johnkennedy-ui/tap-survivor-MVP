@@ -3,31 +3,105 @@ export const MODULE_NATIVE_PROGRESSION_SLOTS = Object.freeze(["progression"]);
 export const MODULE_NATIVE_PROGRESSION_PROOF_SLOTS = Object.freeze(["createProgressionSystem"]);
 
 /**
- * @param {any} [options]
+ * @param {{
+ *   weaponDefs: Record<string, any>,
+ *   weaponUnlocks: Array<any>,
+ *   upgradeDefs: Array<any>,
+ *   questDefs: Record<string, any>,
+ *   getSave: () => any,
+ *   openQuest: (id: string) => void,
+ *   persist: () => void,
+ *   renderMeta: () => void,
+ *   applyRunMetaUpgrades: () => void,
+ * }} options
  */
-export function createProgressionSystem(options = {}) {
-  const resolvedOptions = requireObject(options, "options");
-  const progression = requireGlobal(globalThis, "TapSurvivorProgression");
-  const factory = progression.createProgressionSystem;
+export function createProgressionSystem({
+  weaponDefs,
+  weaponUnlocks,
+  upgradeDefs,
+  questDefs,
+  getSave,
+  openQuest,
+  persist,
+  renderMeta,
+  applyRunMetaUpgrades,
+}) {
+  const maxTierByUpgradeId = new Map(upgradeDefs.map((upgrade) => [upgrade.id, upgrade.maxTier]));
 
-  if (typeof factory !== "function") {
-    throw new Error("Missing Tap Survivor module progression dependency: createProgressionSystem");
+  function hasNode(id) {
+    return getSave().unlockedNodes.includes(id);
   }
 
-  return factory(resolvedOptions);
-}
-
-function requireGlobal(globalRef, name) {
-  const value = globalRef?.[name];
-  if (!value || typeof value !== "object") {
-    throw new Error(`Missing Tap Survivor module progression dependency: ${name}`);
+  function getUpgradeTier(id) {
+    const tier = getSave().upgradeTiers[id] || 0;
+    const maxTier = maxTierByUpgradeId.get(id);
+    return Math.min(maxTier || tier, tier);
   }
-  return value;
-}
 
-function requireObject(value, name) {
-  if (!value || typeof value !== "object") {
-    throw new Error(`Missing Tap Survivor module progression dependency: ${name}`);
+  function isQuestComplete(id) {
+    return !id || getSave().completedQuests.includes(id);
   }
-  return value;
+
+  function labelUnlock(id) {
+    const unlock = weaponUnlocks.find((node) => node.id === id);
+    return unlock ? weaponDefs[unlock.weaponId].name : id;
+  }
+
+  function isNodeVisible(node) {
+    return !node.requiresNode || hasNode(node.requiresNode);
+  }
+
+  function nodeGateStatus(node) {
+    const save = getSave();
+    if (node.requiresNode && !hasNode(node.requiresNode)) {
+      return `Requires ${labelUnlock(node.requiresNode)}`;
+    }
+    if (node.requiresQuest && !isQuestComplete(node.requiresQuest)) {
+      return `Complete quest: ${questDefs[node.requiresQuest]?.name || node.requiresQuest}`;
+    }
+    if (save.questPoints < node.cost) {
+      return `Needs ${node.cost} QP`;
+    }
+    return "";
+  }
+
+  function buyWeaponUnlock(unlock) {
+    const save = getSave();
+    if (hasNode(unlock.id) || nodeGateStatus(unlock)) return;
+    save.questPoints -= unlock.cost;
+    save.unlockedNodes.push(unlock.id);
+    if (!save.unlockedWeapons.includes(unlock.weaponId)) {
+      save.unlockedWeapons.push(unlock.weaponId);
+    }
+    if (unlock.opensQuest) openQuest(unlock.opensQuest);
+    persist();
+    renderMeta();
+  }
+
+  function buyUpgrade(upgrade) {
+    const save = getSave();
+    const tier = getUpgradeTier(upgrade.id);
+    if (tier >= upgrade.maxTier) return;
+    if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return;
+    if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return;
+    if (upgrade.requiresQuest && !isQuestComplete(upgrade.requiresQuest)) return;
+    const cost = upgrade.cost[tier];
+    if (save.questPoints < cost) return;
+    save.questPoints -= cost;
+    save.upgradeTiers[upgrade.id] = tier + 1;
+    if (upgrade.opensQuest && tier === 0) openQuest(upgrade.opensQuest);
+    persist();
+    applyRunMetaUpgrades();
+    renderMeta();
+  }
+
+  return {
+    hasNode,
+    getUpgradeTier,
+    isQuestComplete,
+    isNodeVisible,
+    nodeGateStatus,
+    buyWeaponUnlock,
+    buyUpgrade,
+  };
 }
