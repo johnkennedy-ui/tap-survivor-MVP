@@ -692,6 +692,12 @@ check(
     !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(productionModuleAutobootSource)
 );
 check(
+  "readiness rejects direct or string-key TapSurvivorContent reads in the production ESM boot path",
+  [productionModuleEntrypointSource, productionModuleAutobootSource, browserDependencyBagSource].every(
+    (source) => !hasTapSurvivorContentGlobalRead(source)
+  )
+);
+check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
   [
     "assetAdapters",
@@ -1395,6 +1401,13 @@ function collectTapSurvivorGlobalReads(file) {
     names.add(match[1]);
   }
   return [...names].sort();
+}
+
+function hasTapSurvivorContentGlobalRead(source) {
+  return (
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorContent\b/u.test(source) ||
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorContent["']\s*\]/u.test(source)
+  );
 }
 
 function isApprovedCompatibilityBoundary(file) {

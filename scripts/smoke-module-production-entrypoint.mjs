@@ -89,6 +89,10 @@ check(
     !classicContentSource.includes("TapSurvivorContentSchema")
 );
 check(
+  "classic fallback preserves TapSurvivorContent publisher pending separate dependency retirement",
+  classicContentSource.includes("globalThis.TapSurvivorContent =")
+);
+check(
   "production module entrypoint candidate exposes expected proof slots",
   ["boot", "createDependencyBag", "createLifecycleOwner", "init", "startRun", "tick", "render", "persist", "dispose"].every(
     (slot) => PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes(slot)
@@ -106,6 +110,10 @@ check(
 check(
   "production module autoboot wrapper has no classic TapSurvivor global reads",
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(autobootSource)
+);
+check(
+  "production ESM boot source has no direct or string-key TapSurvivorContent global read",
+  !hasTapSurvivorContentGlobalRead(candidateSource) && !hasTapSurvivorContentGlobalRead(autobootSource)
 );
 
 const initialSave = {
@@ -167,6 +175,10 @@ const runtimeGlobal = {
     }
   },
 };
+const runtimeContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(
+  runtimeGlobal,
+  "injected browser globalRef"
+);
 function createVisibilityNode(label) {
   const listeners = new Map();
   const node = {
@@ -651,10 +663,17 @@ check(
 malformedSchemaEntrypoint.dispose();
 delete runtimeGlobal.TapSurvivorContentSchema;
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
+const autobootContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(globalThis, "autoboot globalThis");
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
 const autobootRafCalls = autobootGlobalRestore.rafCalls();
 autobootGlobalRestore.restore();
+autobootContentGlobalGuard.restore();
 check("production module autoboot wrapper initializes browser runtime", autobootRafCalls === 1);
+check(
+  "production module boot completes without reading guarded TapSurvivorContent globals",
+  runtimeContentGlobalGuard.readAttempts() === 0 && autobootContentGlobalGuard.readAttempts() === 0
+);
+runtimeContentGlobalGuard.restore();
 check(
   "production module autoboot wrapper publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
@@ -828,6 +847,33 @@ function tapSurvivorGlobalNames() {
 
 function sameNames(left, right) {
   return left.length === right.length && left.every((name, index) => name === right[index]);
+}
+
+function hasTapSurvivorContentGlobalRead(source) {
+  return (
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorContent\b/u.test(source) ||
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorContent["']\s*\]/u.test(source)
+  );
+}
+
+function installTapSurvivorContentGlobalReadGuard(target, label) {
+  const key = "TapSurvivorContent";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic content global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
 }
 
 function installAutobootGlobals({ canvas, documentRef, storage }) {

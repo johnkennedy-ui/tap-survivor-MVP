@@ -25,6 +25,18 @@ Primary bootstrap coupling:
 Generated content globals:
 - `src/content.generated.js` publishes `TapSurvivorContent` and `TapSurvivorBalanceProfiles`; the generated ESM
   `src/content.generated.mjs` exports `content`, `contentSchema`, and `balanceProfiles` without publishing globals.
+- Production ESM content proof: `src/app/production-module-entrypoint.js` imports the generated named `content` export.
+  `scripts/smoke-module-production-entrypoint.mjs` boots the production path with throwing
+  `TapSurvivorContent` accessors on both its injected browser `globalRef` and autoboot `globalThis`; any direct,
+  optional-chain, bracket, or other evaluated dynamic lookup of that publisher fails the smoke. The same smoke and
+  `scripts/smoke-module-runtime-readiness.mjs` reject direct and string-key `TapSurvivorContent` namespace syntax in
+  the production ESM boot sources.
+- Retirement gate: this proof covers only production ESM consumption. `src/content.generated.js` must continue to
+  publish `TapSurvivorContent` for the preserved classic fallback boundary; the production smoke explicitly fails if
+  that publisher disappears. A future publisher-retirement contract must first inventory and resolve the classic
+  fallback consumers (including `src/assets.js`, `src/balance-runtime.js`, and `src/upgrades.js`) and separately
+  prove rollback policy no longer requires the classic boundary. Do not remove the publisher, change the classic
+  fallback, generated content, script order, or the global allowlist in a coverage-only cut.
 - `src/balance-runtime.js` reads those generated globals, applies the active dev balance profile/overrides, then republishes `TapSurvivorContent` and exposes `TapSurvivorBalanceRuntime` plus `TapSurvivorDebugBalance`.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
