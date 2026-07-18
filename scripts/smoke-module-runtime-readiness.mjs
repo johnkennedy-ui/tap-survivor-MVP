@@ -418,6 +418,10 @@ const runtimeGlobal = {
   },
   Capacitor: { Plugins: { App: { addListener: () => ({ catch() {} }) } } },
 };
+const runtimeQuestsGlobalGuard = installTapSurvivorQuestsGlobalReadGuard(
+  runtimeGlobal,
+  "runtime readiness injected browser globalRef"
+);
 const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
   runtimeGlobal,
   "runtime readiness injected browser globalRef"
@@ -818,7 +822,7 @@ check(
   )
 );
 check(
-  "readiness sees browser progression defaults resolve classic namespace bridges and native UI progression",
+  "readiness sees browser progression defaults retain other classic bridges and native Quests",
   [
     ["levelUp", "createLevelUpSystem"],
     ["progression", "createProgressionSystem"],
@@ -831,6 +835,10 @@ check(
       BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS.includes(slot) &&
       typeof browserProgressionSystems[slot]?.[factoryName] === "function"
   )
+);
+check(
+  "readiness browser progression defaults do not read guarded TapSurvivorQuests global",
+  runtimeQuestsGlobalGuard.readAttempts() === 0
 );
 check(
   "readiness browser progression defaults do not read guarded TapSurvivorUiProgression global",
@@ -1493,6 +1501,26 @@ function hasTapSurvivorUiProgressionGlobalRead(source) {
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorUiProgression\b/u.test(source) ||
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorUiProgression["']\s*\]/u.test(source)
   );
+}
+
+function installTapSurvivorQuestsGlobalReadGuard(target, label) {
+  const key = "TapSurvivorQuests";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic quests global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
 }
 
 function installTapSurvivorUiProgressionGlobalReadGuard(target, label) {

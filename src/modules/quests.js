@@ -6,41 +6,84 @@ export const MODULE_NATIVE_QUEST_PROOF_SLOTS = Object.freeze([
 ]);
 
 /**
- * @param {any} [options]
- */
-export function createQuestSystem(options = {}) {
-  const resolvedOptions = requireObject(options, "options");
-  const quests = requireGlobal(globalThis, "TapSurvivorQuests");
-  const factory = quests.createQuestSystem;
-
-  if (typeof factory !== "function") {
-    throw new Error("Missing Tap Survivor module quests dependency: createQuestSystem");
-  }
-
-  return factory(resolvedOptions);
-}
-
-/**
  * @param {any} quest
  */
 export function questOpenIds(quest) {
-  const quests = requireGlobal(globalThis, "TapSurvivorQuests");
-  const helper = quests.questOpenIds;
-  if (typeof helper === "function") return helper(quest);
   return [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean);
 }
 
-function requireGlobal(globalRef, name) {
-  const value = globalRef?.[name];
-  if (!value || typeof value !== "object") {
-    throw new Error(`Missing Tap Survivor module quests dependency: ${name}`);
+/**
+ * @param {{
+ *   getSave: () => any,
+ *   onQuestComplete?: (quest: any, reward: number) => void,
+ *   persist: () => void,
+ *   questDefs: Record<string, any>,
+ *   renderMeta: () => void,
+ * }} options
+ */
+export function createQuestSystem({ questDefs, getSave, persist, renderMeta, onQuestComplete }) {
+  function hasQuest(id) {
+    const save = getSave();
+    return save.activeQuests.includes(id) || save.completedQuests.includes(id);
   }
-  return value;
-}
 
-function requireObject(value, name) {
-  if (!value || typeof value !== "object") {
-    throw new Error(`Missing Tap Survivor module quests dependency: ${name}`);
+  function openQuest(id) {
+    const save = getSave();
+    if (!questDefs[id] || hasQuest(id)) return;
+    save.activeQuests.push(id);
+    save.questProgress[id] = save.questProgress[id] || 0;
+    persist();
   }
-  return value;
+
+  function completeQuest(id) {
+    const save = getSave();
+    if (!save.activeQuests.includes(id) || save.completedQuests.includes(id)) return;
+    save.activeQuests = save.activeQuests.filter((questId) => questId !== id);
+    save.completedQuests.push(id);
+    const reward = questDefs[id].rewardQp || 0;
+    save.questPoints += reward;
+    save.totalQuestPoints += reward;
+    questOpenIds(questDefs[id]).forEach(openQuest);
+    persist();
+    renderMeta();
+    onQuestComplete?.(questDefs[id], reward);
+  }
+
+  function addQuestProgress(id, amount) {
+    const save = getSave();
+    if (!questDefs[id] || !save.activeQuests.includes(id)) return;
+    save.questProgress[id] = Math.min(
+      questDefs[id].target,
+      (save.questProgress[id] || 0) + amount,
+    );
+    if (save.questProgress[id] >= questDefs[id].target) completeQuest(id);
+  }
+
+  function addQuestProgressGroup(ids, amount) {
+    ids.forEach((questId) => addQuestProgress(questId, amount));
+  }
+
+  function addQuestProgressForWeapon(weaponId, amount) {
+    const save = getSave();
+    save.activeQuests
+      .filter((questId) => questDefs[questId]?.weaponId === weaponId)
+      .forEach((questId) => addQuestProgress(questId, amount));
+  }
+
+  function activeQuestWeaponIds() {
+    const save = getSave();
+    return save.activeQuests
+      .map((questId) => questDefs[questId]?.weaponId)
+      .filter(Boolean);
+  }
+
+  return {
+    activeQuestWeaponIds,
+    addQuestProgress,
+    addQuestProgressForWeapon,
+    addQuestProgressGroup,
+    completeQuest,
+    hasQuest,
+    openQuest,
+  };
 }

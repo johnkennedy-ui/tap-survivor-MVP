@@ -207,6 +207,10 @@ const runtimeRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(
   runtimeGlobal,
   "injected browser globalRef"
 );
+const runtimeQuestsGlobalGuard = installTapSurvivorQuestsGlobalReadGuard(
+  runtimeGlobal,
+  "injected browser globalRef"
+);
 const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
   runtimeGlobal,
   "injected browser globalRef"
@@ -668,7 +672,7 @@ check(
     typeof defaultGameplaySystems.weaponFire?.createWeaponFireSystem === "function"
 );
 check(
-  "production browser progression defaults bridge classic namespace factories and native UI progression",
+  "production browser progression defaults retain other classic bridges and use native Quests",
   typeof defaultProgressionSystems.levelUp?.createLevelUpSystem === "function" &&
     typeof defaultProgressionSystems.progression?.createProgressionSystem === "function" &&
     typeof defaultProgressionSystems.quests?.createQuestSystem === "function" &&
@@ -676,6 +680,46 @@ check(
     typeof defaultProgressionSystems.shop?.createShopSystem === "function" &&
     typeof defaultProgressionSystems.uiProgression?.createUiProgressionRenderer === "function" &&
     typeof defaultProgressionSystems.upgrades?.createUpgradeContent === "function"
+);
+const nativeQuestSave = {
+  activeQuests: [],
+  completedQuests: [],
+  questPoints: 0,
+  questProgress: {},
+  totalQuestPoints: 0,
+};
+const nativeQuestCalls = [];
+const nativeQuestSystem = defaultProgressionSystems.quests.createQuestSystem({
+  getSave: () => nativeQuestSave,
+  onQuestComplete: (quest, reward) => nativeQuestCalls.push(`${quest.id}:${reward}`),
+  persist: () => nativeQuestCalls.push("persist"),
+  questDefs: {
+    followup: { id: "followup", rewardQp: 0, target: 1 },
+    starter: { id: "starter", opensQuest: "followup", rewardQp: 3, target: 1 },
+  },
+  renderMeta: () => nativeQuestCalls.push("render-meta"),
+});
+nativeQuestSystem.openQuest("starter");
+nativeQuestSystem.addQuestProgress("starter", 1);
+check(
+  "production browser native Quests opens and completes equivalent chained quest flow",
+  nativeQuestSave.activeQuests.join(",") === "followup" &&
+    nativeQuestSave.completedQuests.join(",") === "starter" &&
+    nativeQuestSave.questPoints === 3 &&
+    nativeQuestSave.totalQuestPoints === 3 &&
+    nativeQuestSave.questProgress.followup === 0 &&
+    nativeQuestCalls.join(",") === "persist,persist,persist,render-meta,starter:3"
+);
+check(
+  "production browser dependency bag statically wires native Quests while retaining other progression bridges",
+  browserDependencyBagSource.includes('from "../modules/quests.js"') &&
+    browserDependencyBagSource.includes("quests: { createQuestSystem, questOpenIds }") &&
+    !browserDependencyBagSource.includes('createBrowserNamespaceBridge(globalRef, "TapSurvivorQuests"') &&
+    ["TapSurvivorLevelUp", "TapSurvivorProgression", "TapSurvivorUpgrades"].every((globalName) =>
+      new RegExp(`createBrowserNamespaceBridge\\s*\\(\\s*globalRef\\s*,\\s*"${globalName}"`, "u").test(
+        browserDependencyBagSource
+      )
+    )
 );
 const uiProgressionParityDocument = createUiProgressionParityDocument();
 const uiProgressionParityUi = {
@@ -776,6 +820,7 @@ delete runtimeGlobal.TapSurvivorContentSchema;
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
 const autobootContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(globalThis, "autoboot globalThis");
 const autobootRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(globalThis, "autoboot globalThis");
+const autobootQuestsGlobalGuard = installTapSurvivorQuestsGlobalReadGuard(globalThis, "autoboot globalThis");
 const autobootUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
   globalThis,
   "autoboot globalThis"
@@ -785,6 +830,7 @@ const autobootRafCalls = autobootGlobalRestore.rafCalls();
 autobootGlobalRestore.restore();
 autobootContentGlobalGuard.restore();
 autobootRelicsGlobalGuard.restore();
+autobootQuestsGlobalGuard.restore();
 autobootUiProgressionGlobalGuard.restore();
 check("production module autoboot wrapper initializes browser runtime", autobootRafCalls === 1);
 check(
@@ -796,11 +842,16 @@ check(
   runtimeRelicsGlobalGuard.readAttempts() === 0 && autobootRelicsGlobalGuard.readAttempts() === 0
 );
 check(
+  "production module boot completes without reading guarded TapSurvivorQuests globals",
+  runtimeQuestsGlobalGuard.readAttempts() === 0 && autobootQuestsGlobalGuard.readAttempts() === 0
+);
+check(
   "production module boot completes without reading guarded TapSurvivorUiProgression globals",
   runtimeUiProgressionGlobalGuard.readAttempts() === 0 && autobootUiProgressionGlobalGuard.readAttempts() === 0
 );
 runtimeContentGlobalGuard.restore();
 runtimeRelicsGlobalGuard.restore();
+runtimeQuestsGlobalGuard.restore();
 runtimeUiProgressionGlobalGuard.restore();
 check(
   "production module autoboot wrapper publishes no TapSurvivor globals",
@@ -1053,6 +1104,26 @@ function installTapSurvivorRelicsGlobalReadGuard(target, label) {
     get() {
       reads += 1;
       throw new Error(`Forbidden classic relic global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
+}
+
+function installTapSurvivorQuestsGlobalReadGuard(target, label) {
+  const key = "TapSurvivorQuests";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic quests global read from ${label}`);
     },
   });
   return {
