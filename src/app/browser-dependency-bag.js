@@ -1,6 +1,6 @@
 import { createRelicSystem } from "../modules/relics.js";
-import { createShopPricing } from "../modules/shop-pricing.js";
 import { createShellRelicUi } from "../modules/shell-relic-ui.js";
+import { createShopSystem } from "../modules/shop.js";
 import { createUiProgressionRenderer } from "../modules/ui-progression.js";
 
 export const BROWSER_DEPENDENCY_BAG_PROOF_SLOTS = Object.freeze([
@@ -314,9 +314,9 @@ function createBrowserProgressionSystems({ documentRef, globalRef, ui }) {
       createQuestSystem: () => ({}),
       questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
     }),
-    shop: createBrowserNamespaceBridge(globalRef, "TapSurvivorShop", "createShopSystem", {
-      createShopSystem: () => createBrowserShopSystemAdapter({ ui }),
-    }),
+    shop: {
+      createShopSystem: (options = {}) => createShopSystem({ documentRef, ...options }),
+    },
     uiProgression: {
       createUiProgressionRenderer: (options = {}) =>
         createUiProgressionRenderer({
@@ -665,15 +665,10 @@ function createBrowserUiAdapters({
     saveConfig,
     ui,
   });
-  const shopSystemAdapter = createBrowserShopSystemAdapter({
-    content,
-    documentRef,
-    globalRef,
-    saveConfig,
-    shopPricingConfig,
-    ui,
-  });
+  const shopBinding = createBrowserShopSystemAdapter();
+  const shopSystemAdapter = shopBinding.shopSystemAdapter;
   return {
+    bindShopSystem: shopBinding.bindShopSystem,
     runUi: {
       formatTime: formatBrowserTime,
       getGameSpeed: () => readBrowserGameSpeed({ documentRef, globalRef }),
@@ -688,6 +683,7 @@ function createBrowserUiAdapters({
       renderShop: shopSystemAdapter.renderShop,
       ui,
     }),
+    shopDocumentRef: documentRef,
     shopSystemAdapter,
     ui,
   };
@@ -833,110 +829,45 @@ function createBrowserShellUiAdapter({ onStartAudio, onStartRun, renderInventory
   };
 }
 
-function createBrowserShopSystemAdapter({ content = {}, documentRef, globalRef, saveConfig = {}, shopPricingConfig = {}, ui }) {
-  const shopItemDefs = Array.isArray(content.shopItems) ? content.shopItems : [];
-  const shopPricing = createShopPricing({
-    shopItemDefs,
-    pricingConfig: shopPricingConfig,
-    getSave: () => readBrowserSave({ globalRef, saveConfig }),
-  });
-  const createNode = (tagName) =>
-    typeof documentRef?.createElement === "function" ? documentRef.createElement(tagName) : createElementFallback(tagName);
+function createBrowserShopSystemAdapter() {
+  let nativeShopSystem = null;
 
-  function buyItem(item) {
-    const save = readBrowserSave({ globalRef, saveConfig });
-    const tier = shopPricing.tierFor(item);
-    const maxed = tier >= item.maxTier;
-    if (maxed) return false;
-    const cost = shopPricing.costFor(item, tier);
-    if ((save.coins || 0) < cost) return false;
-    save.coins = Math.max(0, (save.coins || 0) - cost);
-    save.shopPurchases = {
-      ...(save.shopPurchases || {}),
-      [item.id]: tier + 1,
-    };
-    writeBrowserSave({ globalRef, saveConfig, save });
-    renderShop();
-    return true;
-  }
-
-  function renderShop() {
-    const save = readBrowserSave({ globalRef, saveConfig });
-    renderShopList(ui.shopItems, ui.shopCoinHud, save);
-    renderShopList(ui.menuShopItems, ui.menuShopCoinHud, save);
-    const notice = "Browser shop ready.";
-    if (ui.shopNotice && !ui.shopNotice.textContent) ui.shopNotice.textContent = notice;
-    if (ui.menuShopNotice && !ui.menuShopNotice.textContent) ui.menuShopNotice.textContent = notice;
-    return true;
-  }
-
-  function renderShopList(container, coinHud, save) {
-    if (!container || !coinHud) return;
-    coinHud.textContent = `Coins: ${save.coins || 0} | Tower Floor ${Math.max(1, save.towerFloor || 1)}`;
-    if (typeof container.appendChild !== "function") {
-      container.textContent = shopItemDefs.length
-        ? `${shopItemDefs.length} shop items available.`
-        : "No shop items yet.";
-      return;
+  function requireNativeShopSystem() {
+    if (!nativeShopSystem) {
+      throw new Error("Missing Tap Survivor browser native shop binding");
     }
-    container.innerHTML = "";
-    if (!shopItemDefs.length) {
-      const empty = createNode("div");
-      empty.className = "shop-item";
-      empty.textContent = "No shop items yet.";
-      container.appendChild(empty);
-      return;
-    }
-
-    shopItemDefs.forEach((item) => {
-      const tier = shopPricing.tierFor(item);
-      const maxed = tier >= item.maxTier;
-      const cost = shopPricing.costFor(item, tier);
-      const affordable = !maxed && (save.coins || 0) >= cost;
-      const el = createNode("div");
-      el.className = `shop-item ${affordable ? "available" : "locked"}`;
-      el.innerHTML = `
-        <div class="shop-item-icon">
-          ${item.spritePath ? `<img class="shop-item-sprite" src="${item.spritePath}" alt="" />` : ""}
-        </div>
-        <div class="shop-item-copy">
-          <strong>${item.name}</strong>
-          <span>${item.description}</span><br />
-          <span>Tier: ${tier}/${item.maxTier}</span><br />
-          <span>${maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`}</span>
-        </div>
-      `;
-      const button = createNode("button");
-      button.textContent = maxed ? "Maxed" : `Buy Tier ${tier + 1}`;
-      button.disabled = maxed || !affordable;
-      button.addEventListener("click", () => buyItem(item));
-      el.appendChild(button);
-      container.appendChild(el);
-    });
+    return nativeShopSystem;
   }
+
+  const shopSystemAdapter = {
+    closeShop(...args) {
+      return requireNativeShopSystem().closeShop(...args);
+    },
+    getShopBonuses(...args) {
+      return requireNativeShopSystem().getShopBonuses(...args);
+    },
+    openShop(...args) {
+      return requireNativeShopSystem().openShop(...args);
+    },
+    renderShop(...args) {
+      return requireNativeShopSystem().renderShop(...args);
+    },
+  };
 
   return {
-    closeShop() {
-      toggleHidden(ui.shopModal, true);
-      toggleHidden(ui.menuShopPanel, true);
-      return true;
+    bindShopSystem(shopSystem) {
+      if (
+        !shopSystem ||
+        ["closeShop", "getShopBonuses", "openShop", "renderShop"].some(
+          (name) => typeof shopSystem[name] !== "function"
+        )
+      ) {
+        throw new Error("Missing Tap Survivor browser native shop binding");
+      }
+      nativeShopSystem = shopSystem;
+      return shopSystemAdapter;
     },
-    openShop() {
-      toggleHidden(ui.shopModal, false);
-      toggleHidden(ui.menuShopPanel, false);
-      renderShop();
-      return true;
-    },
-    renderShop,
-    getShopBonuses() {
-      const save = readBrowserSave({ globalRef, saveConfig });
-      const bonuses = createEmptyShopBonuses();
-      shopItemDefs.forEach((item) => {
-        const tier = save.shopPurchases?.[item.id] || 0;
-        addBrowserShopItemBonus(bonuses, item, tier);
-      });
-      return bonuses;
-    },
+    shopSystemAdapter,
   };
 }
 
@@ -965,24 +896,6 @@ function writeBrowserSave({ globalRef, saveConfig = {}, save }) {
   } catch {
     return false;
   }
-}
-
-function createEmptyShopBonuses() {
-  return {
-    speed: 0,
-    pickupRadius: 0,
-    maxHp: 0,
-    flatDamage: 0,
-    attackRadius: 0,
-    fireRate: 0,
-    percentDamage: 0,
-    relicFocus: 0,
-  };
-}
-
-function addBrowserShopItemBonus(bonuses, item, tier) {
-  if (!item?.effect || !Object.prototype.hasOwnProperty.call(bonuses, item.effect.stat)) return;
-  bonuses[item.effect.stat] += item.effect.value * tier;
 }
 
 function createMemoryStorage() {

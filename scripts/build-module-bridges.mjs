@@ -105,6 +105,33 @@ const bridges = [
     exports: ["createShopPricing"],
   },
   {
+    source: "src/modules/shop.js",
+    target: "src/shop.js",
+    globalName: "TapSurvivorShop",
+    exports: ["MODULE_NATIVE_SHOP_SLOTS", "MODULE_NATIVE_SHOP_PROOF_SLOTS", "createShopSystem"],
+    classicExportWrappers: {
+      createShopSystem: {
+        name: "createClassicShopSystem",
+        source: `function createClassicShopSystem(options = {}) {
+  const resolvedOptions = options && typeof options === "object" ? options : {};
+  const documentRef = Object.prototype.hasOwnProperty.call(resolvedOptions, "documentRef")
+    ? resolvedOptions.documentRef
+    : globalThis.document;
+  return createShopSystem({
+    ...resolvedOptions,
+    documentRef,
+  });
+}`,
+      },
+    },
+    globalMembers: [
+      {
+        name: "createShopSystem",
+        value: "createClassicShopSystem",
+      },
+    ],
+  },
+  {
     source: "src/modules/relics.js",
     target: "src/relics.js",
     globalName: "TapSurvivorRelics",

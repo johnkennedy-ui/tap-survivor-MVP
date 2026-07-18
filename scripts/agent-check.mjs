@@ -66,6 +66,7 @@ const fullChecks = [
   ["node", ["--check", "scripts/smoke-module-production-entrypoint.mjs"]],
   ["node", ["--check", "scripts/smoke-module-runtime-readiness.mjs"]],
   ["node", ["--check", "scripts/smoke-module-bridges.mjs"]],
+  ["node", ["--check", "scripts/smoke-shop-provider-parity.mjs"]],
   ["node", ["--check", "scripts/smoke-game-runtime-module.mjs"]],
   ["node", ["scripts/smoke-game-runtime-module.mjs"]],
   ["node", ["--check", "scripts/smoke-relic-run-start.mjs"]],
@@ -96,6 +97,7 @@ const fullChecks = [
   ["node", ["--check", "src/modules/run-ui.js"]],
   ["node", ["--check", "src/modules/run-update.js"]],
   ["node", ["--check", "src/modules/shop-pricing.js"]],
+  ["node", ["--check", "src/modules/shop.js"]],
   ["node", ["--check", "src/modules/weapon-cooldowns.js"]],
   ["node", ["--check", "src/modules/weapon-projectiles.js"]],
   ["node", ["--check", "src/modules/weapon-targeting.js"]],
@@ -121,6 +123,7 @@ const fullChecks = [
   ["npm", ["run", "smoke:start-run"]],
   ["npm", ["run", "smoke:boss-run"]],
   ["npm", ["run", "smoke:shop"]],
+  ["npm", ["run", "smoke:shop-provider-parity"]],
   ["npm", ["run", "smoke:module-runtime-platform-adapter"]],
   ["npm", ["run", "smoke:module-runtime-entrypoint"]],
   ["npm", ["run", "smoke:module-production-entrypoint"]],
@@ -338,6 +341,8 @@ function focusedChecks(files) {
         file === "src/game-dependencies.js" ||
         file === "src/modules/game-dependencies.js" ||
         file === "src/modules/module-game-dependencies.js" ||
+        file === "src/modules/shop.js" ||
+        file === "src/app/browser-dependency-bag.js" ||
         file === "src/app/production-module-entrypoint.js" ||
         file === "src/modules/module-runtime-platform-adapter.js" ||
         file === "src/combat-damage.js" ||
@@ -354,6 +359,7 @@ function focusedChecks(files) {
         file === "scripts/smoke-module-runtime-entrypoint.mjs" ||
         file === "scripts/smoke-module-production-entrypoint.mjs" ||
         file === "scripts/smoke-module-runtime-readiness.mjs" ||
+        file === "scripts/smoke-shop-provider-parity.mjs" ||
         file === "scripts/build-module-bridges.mjs" ||
         file === "scripts/smoke-module-bridges.mjs" ||
         file === "package.json"
@@ -367,7 +373,8 @@ function focusedChecks(files) {
       ["npm", ["run", "smoke:module-production-entrypoint"]],
       ["npm", ["run", "smoke:module-runtime-readiness"]],
       ["npm", ["run", "smoke:module-bridges"]],
-      ["npm", ["run", "smoke:shop"]]
+      ["npm", ["run", "smoke:shop"]],
+      ["npm", ["run", "smoke:shop-provider-parity"]]
     );
   }
   if (

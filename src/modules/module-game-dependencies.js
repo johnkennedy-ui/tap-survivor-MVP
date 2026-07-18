@@ -34,6 +34,7 @@ import { createShellRelicUiAdapter } from "./shell-relic-ui.js";
 import { createShellUiController } from "./shell-ui-controller.js";
 import { createShellUiDomAdapter } from "./shell-ui-dom-adapter.js";
 import { createShellUiPresenter } from "./shell-ui-presenter.js";
+import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
 import { createWeaponScaling } from "./weapon-cooldowns.js";
 import { createWeaponProjectileSystem, rotateVector } from "./weapon-projectiles.js";
@@ -138,13 +139,36 @@ export function createModuleGameDependencyBag({
     renderMetaSink: resolvedAdapters.renderMetaSink,
     saveSystem,
   });
+  const injectedUiAdapters = requireObject(resolvedAdapters.uiAdapters, "adapters.uiAdapters");
+  if (typeof injectedUiAdapters.bindShopSystem === "function") {
+    const nativeShopSystem = createShopSystem({
+      documentRef: injectedUiAdapters.shopDocumentRef,
+      effects,
+      getGame: stateStore.getGame,
+      getSave: stateStore.getSave,
+      onPurchaseNotice: (message) => platformAdapters.bannerSystem.showBanner?.(message),
+      onShopVisit: () =>
+        platformAdapters.bannerSystem.showOnceBanner?.(
+          "first_shop_visit",
+          "Coins buy permanent power upgrades."
+        ),
+      persist: stateStore.persist,
+      playPurchaseSfx: audioSystem.playShopPurchase,
+      pricingConfig: shopPricingConfig,
+      renderMeta: stateStore.renderMeta,
+      shopItemDefs: contentRegistry.shopItemDefs,
+      shopPricing: { createShopPricing },
+      ui: injectedUiAdapters.ui,
+    });
+    injectedUiAdapters.bindShopSystem(nativeShopSystem);
+  }
   const relics = createRelicSystem({
     relicDefs: contentRegistry.relicDefs,
     weaponDefs: contentRegistry.weaponDefs,
     random,
   });
   const uiAdapters = createModuleRuntimeUiAdapters({
-    ...requireObject(resolvedAdapters.uiAdapters, "adapters.uiAdapters"),
+    ...injectedUiAdapters,
     stateStore,
   });
   const spriteAdapters = createModuleRuntimeSpriteAdapter(

@@ -499,6 +499,46 @@ const browserDependencyBagOptions = createBrowserDependencyBagOptions({
   },
 });
 const browserUiAdapters = browserDependencyBagOptions.adapters.uiAdapters;
+const browserShopAdapterCalls = [];
+let browserShopPreBindError = null;
+try {
+  browserUiAdapters.shopSystemAdapter.openShop();
+} catch (error) {
+  browserShopPreBindError = error;
+}
+check(
+  "readiness sees browser Shop adapter fail closed before native binding",
+  browserShopPreBindError?.message === "Missing Tap Survivor browser native shop binding"
+);
+const browserShopAdapter = {
+  applyShopRunBonuses() {
+    browserShopAdapterCalls.push("apply-bonuses");
+    return true;
+  },
+  closeShop() {
+    browserShopAdapterCalls.push("close");
+    browserUiAdapters.ui.shopModal.hidden = true;
+    browserUiAdapters.ui.menuShopPanel.hidden = true;
+    return true;
+  },
+  getShopBonuses() {
+    return {};
+  },
+  openShop() {
+    browserShopAdapterCalls.push("open");
+    return true;
+  },
+  renderShop() {
+    browserShopAdapterCalls.push("render");
+    const notice = browserUiAdapters.ui.menuShopNotice;
+    if (notice && !notice.textContent) notice.textContent = "Browser shop ready.";
+    return true;
+  },
+};
+check(
+  "readiness binds deterministic browser Shop adapter after the pre-bind failure",
+  browserUiAdapters.bindShopSystem(browserShopAdapter) === browserUiAdapters.shopSystemAdapter
+);
 browserUiAdapters.runUiAdapter.updateRunHud();
 browserUiAdapters.runUiAdapter.showEndScreen("Browser UI default ready");
 browserUiAdapters.runUiAdapter.hideEndScreen();
@@ -508,6 +548,11 @@ browserUiAdapters.shellUiAdapter.closeRunMenu(false);
 browserUiAdapters.shopSystemAdapter.openShop?.();
 browserUiAdapters.shopSystemAdapter.renderShop?.();
 browserUiAdapters.shopSystemAdapter.closeShop();
+browserShopAdapter.applyShopRunBonuses();
+check(
+  "readiness invokes deterministic browser Shop adapter after binding",
+  browserShopAdapterCalls.join(",") === "open,render,close,apply-bonuses"
+);
 const browserGameplaySystems = browserDependencyBagOptions.adapters.gameplayAdapters.gameplaySystems;
 const browserProgressionSystems =
   browserDependencyBagOptions.adapters.progressionAdapters.progressionSystems;

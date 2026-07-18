@@ -81,6 +81,11 @@ Generated content globals:
   `globalThis.TapSurvivorEffects` directly when applying shop purchases and calculating shop bonuses.
 - `src/shop.js` now receives the shop pricing helper through `src/game.js` factory wiring instead of reading
   `globalThis.TapSurvivorShopPricing` directly.
+- Generated `src/shop.js` is a classic-only fallback boundary: its wrapper injects `globalThis.document` only when a
+  classic caller omits `documentRef`; native `src/modules/shop.js` requires an explicit injected `documentRef` and has
+  no global fallback.
+- `scripts/smoke-shop-provider-parity.mjs` has two temporary `globalThis.document` getter guard/restore reads. They
+  prove native Shop does not access the global while retaining the generated classic-boundary parity fixture.
 - `src/level-up.js` now receives level-up choice helpers and the optional asset resolver provider through `src/game.js`
   factory wiring instead of reading `globalThis.TapSurvivorLevelUpChoices` and `globalThis.TapSurvivorAssets` directly.
 - `src/ui.js` now receives `TapSurvivorUiProgression` through `src/game.js` factory wiring instead of reading that global

@@ -168,6 +168,11 @@ const canvasContext = {
 };
 const documentRef = {
   body: { dataset: { gameSpeed: "5" } },
+  createdTags: [],
+  createElement(tagName) {
+    this.createdTags.push(tagName);
+    return createFixtureElement(tagName);
+  },
   visibilityState: "visible",
   addEventListener(type) {
     calls.push(`document:${type}`);
@@ -208,16 +213,22 @@ const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalRea
 );
 function createVisibilityNode(label) {
   const listeners = new Map();
+  const classNames = new Set(["hidden"]);
   const node = {
     attributes: {},
     classList: {
       add(name) {
+        classNames.add(name);
         calls.push(`${label}:add:${name}`);
         if (name === "hidden") {
           node.hidden = true;
         }
       },
+      contains(name) {
+        return classNames.has(name);
+      },
       remove(name) {
+        classNames.delete(name);
         calls.push(`${label}:remove:${name}`);
         if (name === "hidden") {
           node.hidden = false;
@@ -225,10 +236,13 @@ function createVisibilityNode(label) {
       },
       toggle(name, value) {
         calls.push(`${label}:toggle:${name}:${String(value)}`);
+        const present = value === undefined ? !classNames.has(name) : Boolean(value);
+        if (present) classNames.add(name);
+        else classNames.delete(name);
         if (name === "hidden") {
-          node.hidden = value === undefined ? !node.hidden : Boolean(value);
+          node.hidden = present;
         }
-        return node.hidden;
+        return present;
       },
     },
     disabled: false,
@@ -250,6 +264,28 @@ function createVisibilityNode(label) {
     textContent: "",
   };
   return node;
+}
+
+function createFixtureElement(tagName) {
+  const listeners = new Map();
+  return {
+    children: [],
+    className: "",
+    disabled: false,
+    innerHTML: "",
+    tagName,
+    textContent: "",
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    appendChild(child) {
+      this.children.push(child);
+      return child;
+    },
+    click() {
+      listeners.get("click")?.({ type: "click" });
+    },
+  };
 }
 check(
   "production browser dependency bag factory exposes expected adapter slots",

@@ -63,6 +63,7 @@
     "smoke:start-run": "node scripts/smoke-start-run.mjs",
     "smoke:boss-run": "node scripts/smoke-boss-run.mjs",
     "smoke:shop": "node scripts/smoke-shop.mjs",
+    "smoke:shop-provider-parity": "node scripts/smoke-shop-provider-parity.mjs",
     "smoke:module-bootstrap": "node scripts/smoke-module-bootstrap.mjs",
     "smoke:module-runtime-platform-adapter": "node scripts/smoke-module-runtime-entrypoint.mjs",
     "smoke:module-runtime-entrypoint": "node scripts/smoke-module-runtime-entrypoint.mjs",
