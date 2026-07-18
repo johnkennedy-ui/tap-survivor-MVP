@@ -111,6 +111,7 @@
 
     function openShop() {
       ui.shopModal.classList.remove("hidden");
+      ui.menuShopPanel?.classList.remove("hidden");
       const game = getGame();
       if (game?.running && !game.paused) {
         game.paused = true;
@@ -121,6 +122,7 @@
 
     function closeShop() {
       ui.shopModal.classList.add("hidden");
+      ui.menuShopPanel?.classList.add("hidden");
       const game = getGame();
       if (game?.pauseReason === "shop") {
         game.paused = false;

@@ -49,6 +49,14 @@ check(
   snapshotsMatch
 );
 check(
+  "real native Shop provider opens both the modal and menu panel",
+  native.snapshot.afterOpen.shopModalVisible && native.snapshot.afterOpen.menuShopPanelVisible
+);
+check(
+  "real native Shop provider closes both the modal and menu panel",
+  !native.snapshot.afterClose.shopModalVisible && !native.snapshot.afterClose.menuShopPanelVisible
+);
+check(
   "native Shop requires an explicit documentRef without falling back to globalThis.document",
   missingDocumentRefFailsClosed()
 );
@@ -86,9 +94,10 @@ function runParityScenario(kind, initialSave = baseSave()) {
 
   provider.openShop();
   const afterOpen = {
+    menuShopPanelVisible: !fixture.ui.menuShopPanel.classList.contains("hidden"),
     paused: fixture.getGame().paused,
     pauseReason: fixture.getGame().pauseReason,
-    shopVisible: !fixture.ui.shopModal.classList.contains("hidden"),
+    shopModalVisible: !fixture.ui.shopModal.classList.contains("hidden"),
   };
 
   fixture.ui.shopItems.children[0].children.at(-1).click();
@@ -109,9 +118,10 @@ function runParityScenario(kind, initialSave = baseSave()) {
 
   provider.closeShop();
   const afterClose = {
+    menuShopPanelVisible: !fixture.ui.menuShopPanel.classList.contains("hidden"),
     paused: fixture.getGame().paused,
     pauseReason: fixture.getGame().pauseReason,
-    shopVisible: !fixture.ui.shopModal.classList.contains("hidden"),
+    shopModalVisible: !fixture.ui.shopModal.classList.contains("hidden"),
   };
   const deniedAndMaxedUnchanged = verifyDeniedAndMaxedPurchases(kind, fixture);
   const recovery = runRecoveryScenario(kind, fixture.persistedSave());
