@@ -19,9 +19,7 @@ const bridges = [
     target: "src/effects.js",
     globalName: "TapSurvivorEffects",
     exports: ["createEffects"],
-    classicBoundarySource: `const classicEffects = createEffects({
-  contentSchema: globalThis.${"TapSurvivorContentSchema"},
-});`,
+    classicBoundarySource: "const classicEffects = createEffects();",
     globalMembers: [
       {
         name: "applyRunUpgradeEffects",

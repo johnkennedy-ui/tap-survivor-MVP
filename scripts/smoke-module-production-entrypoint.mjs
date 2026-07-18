@@ -23,6 +23,8 @@ const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content
 const indexHtmlBefore = readFileSync(join(root, "index.html"), "utf8");
 const candidateSource = readFileSync(join(root, "src/app/production-module-entrypoint.js"), "utf8");
 const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
+const classicContentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
+const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
 const browserGameplayGlobals = {
@@ -67,6 +69,24 @@ check(
 check(
   "production module entrypoint candidate imports module lifecycle owner",
   candidateSource.includes("../modules/module-game-lifecycle.js")
+);
+check(
+  "production module entrypoint imports generated ESM content and schema",
+  candidateSource.includes('from "../content.generated.mjs"') &&
+    candidateSource.includes("content, contentSchema") &&
+    !candidateSource.includes("../content.generated.js")
+);
+check(
+  "generated ESM content module exports content, schema, and balance profiles",
+  ["content", "contentSchema", "balanceProfiles"].every((name) =>
+    moduleContentSource.includes(`export const ${name} =`)
+  )
+);
+check(
+  "classic generated content publishes no schema global",
+  classicContentSource.includes("globalThis.TapSurvivorContent =") &&
+    classicContentSource.includes("globalThis.TapSurvivorBalanceProfiles =") &&
+    !classicContentSource.includes("TapSurvivorContentSchema")
 );
 check(
   "production module entrypoint candidate exposes expected proof slots",
@@ -491,6 +511,12 @@ check(
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
 );
 check(
+  "production module entrypoint preserves explicit custom content schema injection",
+  JSON.stringify(
+    Object.keys(browserEntrypoint.dependencies.moduleSystems.effects.emptyShopBonuses())
+  ) === JSON.stringify(["speed"])
+);
+check(
   "production module entrypoint default browser dependency bag exposes browser UI defaults",
   BROWSER_UI_ADAPTER_PROOF_SLOTS.every((slot) => slot in browserUiAdapters) &&
     typeof browserUiAdapters.runUiAdapter?.updateRunHud === "function" &&
@@ -601,6 +627,29 @@ check(
   calls.includes("canvas:clear:0,0,960,540") &&
     calls.filter((call) => call === "canvas:draw:5").length >= 4
 );
+runtimeGlobal.TapSurvivorContentSchema = "malformed schema global";
+const malformedSchemaEntrypoint = createProductionModuleEntrypoint({
+  browserDependencyBagOptions: {
+    canvas,
+    initialSave,
+    storage: createMemoryStorage(),
+    ui: uiSurface,
+  },
+  platform: {
+    documentRef,
+    runtimeGlobal,
+  },
+});
+check(
+  "production module entrypoint ignores a malformed schema global",
+  Boolean(malformedSchemaEntrypoint.dependencies.moduleSystems.contentRegistry.weaponDefs.spark_bolt) &&
+    Object.prototype.hasOwnProperty.call(
+      malformedSchemaEntrypoint.dependencies.moduleSystems.effects.emptyShopBonuses(),
+      "speed"
+    )
+);
+malformedSchemaEntrypoint.dispose();
+delete runtimeGlobal.TapSurvivorContentSchema;
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
 const autobootRafCalls = autobootGlobalRestore.rafCalls();

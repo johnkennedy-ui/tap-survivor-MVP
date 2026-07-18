@@ -93,9 +93,7 @@
     },
   };
 
-  const classicEffects = createEffects({
-    contentSchema: globalThis.TapSurvivorContentSchema,
-  });
+  const classicEffects = createEffects();
 
   globalThis.TapSurvivorEffects = {
     applyRunUpgradeEffects: classicEffects.applyRunUpgradeEffects,

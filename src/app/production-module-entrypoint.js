@@ -1,4 +1,4 @@
-import "../content.generated.js";
+import { content, contentSchema } from "../content.generated.mjs";
 import "../combat-damage.js";
 import "../weapon-cooldowns.js";
 import "../weapon-projectiles.js";
@@ -49,16 +49,14 @@ export function createProductionModuleEntrypoint(options = {}) {
   const resolvedGlobalRef = globalRef || globalThis;
   const resolvedPlatform =
     platform || createBrowserPlatform({ globalRef: resolvedGlobalRef });
-  const injectedContent = resolvedGlobalRef.TapSurvivorContent || {};
-  const injectedContentSchema = resolvedGlobalRef.TapSurvivorContentSchema || {};
   let lifecycle;
   let playStartAudio = () => {};
   const resolvedDependencyBagOptions =
     dependencyBagOptions ||
     createBrowserDependencyBagOptions({
       ...(browserDependencyBagOptions || {}),
-      content: browserDependencyBagOptions?.content || injectedContent,
-      contentSchema: browserDependencyBagOptions?.contentSchema || injectedContentSchema,
+      content: browserDependencyBagOptions?.content || content,
+      contentSchema: browserDependencyBagOptions?.contentSchema || contentSchema,
       documentRef: resolvedPlatform.documentRef,
       globalRef: resolvedGlobalRef,
       onStartAudio: () => playStartAudio(),

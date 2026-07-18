@@ -23,13 +23,14 @@ Primary bootstrap coupling:
 - `scripts/check-script-order.mjs` verifies the current script-order contract.
 
 Generated content globals:
-- `src/content.generated.js` publishes `TapSurvivorContent`, `TapSurvivorContentSchema`, and `TapSurvivorBalanceProfiles`.
+- `src/content.generated.js` publishes `TapSurvivorContent` and `TapSurvivorBalanceProfiles`; the generated ESM
+  `src/content.generated.mjs` exports `content`, `contentSchema`, and `balanceProfiles` without publishing globals.
 - `src/balance-runtime.js` reads those generated globals, applies the active dev balance profile/overrides, then republishes `TapSurvivorContent` and exposes `TapSurvivorBalanceRuntime` plus `TapSurvivorDebugBalance`.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
 - `src/effects.js` is the generated classic bridge for run upgrade effects, shop item effects, shop bonus defaults, and
-  relic special effects from `src/modules/effects.js`. It intentionally keeps the `TapSurvivorContentSchema`
-  compatibility boundary read for classic script-order callers.
+  relic special effects from `src/modules/effects.js`. Its classic boundary uses the module's built-in shop-bonus
+  fallback list rather than a content-schema global.
 - `src/math.js` still owns the `TapSurvivorMath` compatibility bridge. `src/rendering.js` and `src/render-hud.js`
   now receive `clamp` through factory arguments instead of reading `globalThis.TapSurvivorMath`; `src/game.js` remains
   the script-order bootstrap reader until the runtime can safely become ESM.
