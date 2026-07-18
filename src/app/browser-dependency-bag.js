@@ -1,6 +1,7 @@
 import { createRelicSystem } from "../modules/relics.js";
 import { createShopPricing } from "../modules/shop-pricing.js";
 import { createShellRelicUi } from "../modules/shell-relic-ui.js";
+import { createUiProgressionRenderer } from "../modules/ui-progression.js";
 
 export const BROWSER_DEPENDENCY_BAG_PROOF_SLOTS = Object.freeze([
   "assetAdapters",
@@ -112,6 +113,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
         }),
       progressionAdapters: options.progressionAdapters || {
         progressionSystems: createBrowserProgressionSystems({
+          documentRef,
           globalRef,
           ui,
         }),
@@ -295,7 +297,7 @@ function createBrowserGameplaySystems({ globalRef }) {
   };
 }
 
-function createBrowserProgressionSystems({ globalRef, ui }) {
+function createBrowserProgressionSystems({ documentRef, globalRef, ui }) {
   return {
     levelUp: createBrowserNamespaceBridge(globalRef, "TapSurvivorLevelUp", "createLevelUpSystem", {
       createLevelUpSystem: () => ({}),
@@ -315,14 +317,13 @@ function createBrowserProgressionSystems({ globalRef, ui }) {
     shop: createBrowserNamespaceBridge(globalRef, "TapSurvivorShop", "createShopSystem", {
       createShopSystem: () => createBrowserShopSystemAdapter({ ui }),
     }),
-    uiProgression: createBrowserNamespaceBridge(
-      globalRef,
-      "TapSurvivorUiProgression",
-      "createUiProgressionRenderer",
-      {
-        createUiProgressionRenderer: () => ({}),
-      }
-    ),
+    uiProgression: {
+      createUiProgressionRenderer: (options = {}) =>
+        createUiProgressionRenderer({
+          ...options,
+          documentRef,
+        }),
+    },
     upgrades: createBrowserNamespaceBridge(globalRef, "TapSurvivorUpgrades", "createUpgradeContent", {
       createUpgradeContent: ({ content = {} } = {}) => ({
         createUpgradeDefs: () => [],

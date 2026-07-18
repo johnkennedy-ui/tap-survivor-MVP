@@ -45,7 +45,6 @@ const browserProgressionGlobals = {
     questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
   },
   TapSurvivorShop: { createShopSystem: () => ({}) },
-  TapSurvivorUiProgression: { createUiProgressionRenderer: () => ({}) },
   TapSurvivorUpgrades: {
     createUpgradeContent: () => ({
       createUpgradeDefs: () => [],
@@ -127,6 +126,14 @@ check(
   !hasTapSurvivorRelicsGlobalRead(browserDependencyBagSource) &&
     !browserDependencyBagSource.includes("TapSurvivorRelics")
 );
+check(
+  "production ESM browser dependency bag statically imports native UI progression without classic global access",
+  browserDependencyBagSource.includes(
+    'import { createUiProgressionRenderer } from "../modules/ui-progression.js";'
+  ) &&
+    !hasTapSurvivorUiProgressionGlobalRead(browserDependencyBagSource) &&
+    !browserDependencyBagSource.includes("TapSurvivorUiProgression")
+);
 
 const initialSave = {
   coins: 21,
@@ -192,6 +199,10 @@ const runtimeContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(
   "injected browser globalRef"
 );
 const runtimeRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(
+  runtimeGlobal,
+  "injected browser globalRef"
+);
+const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
   runtimeGlobal,
   "injected browser globalRef"
 );
@@ -621,7 +632,7 @@ check(
     typeof defaultGameplaySystems.weaponFire?.createWeaponFireSystem === "function"
 );
 check(
-  "production browser progression defaults bridge classic namespace factories",
+  "production browser progression defaults bridge classic namespace factories and native UI progression",
   typeof defaultProgressionSystems.levelUp?.createLevelUpSystem === "function" &&
     typeof defaultProgressionSystems.progression?.createProgressionSystem === "function" &&
     typeof defaultProgressionSystems.quests?.createQuestSystem === "function" &&
@@ -629,6 +640,54 @@ check(
     typeof defaultProgressionSystems.shop?.createShopSystem === "function" &&
     typeof defaultProgressionSystems.uiProgression?.createUiProgressionRenderer === "function" &&
     typeof defaultProgressionSystems.upgrades?.createUpgradeContent === "function"
+);
+const uiProgressionParityDocument = createUiProgressionParityDocument();
+const uiProgressionParityUi = {
+  menuQpHud: { textContent: "" },
+  menuQuests: createUiProgressionParityContainer(),
+  menuTree: createUiProgressionParityContainer(),
+};
+const uiProgressionParitySystems = createBrowserDependencyBagOptions({
+  canvas,
+  content,
+  documentRef: uiProgressionParityDocument,
+  globalRef: runtimeGlobal,
+  storage: createMemoryStorage(),
+  ui: uiProgressionParityUi,
+}).adapters.progressionAdapters.progressionSystems;
+const uiProgressionParityRenderer = uiProgressionParitySystems.uiProgression.createUiProgressionRenderer({
+  buyUpgrade: () => {},
+  buyWeaponUnlock: () => {},
+  getSave: () => ({
+    activeQuests: [],
+    coins: 21,
+    questPoints: 3,
+    questProgress: {},
+    totalQuestPoints: 8,
+    unlockedWeapons: [],
+  }),
+  getUpgradeTier: () => 0,
+  hasNode: () => false,
+  isNodeVisible: () => false,
+  isQuestComplete: () => false,
+  nodeGateStatus: () => null,
+  questDefs: {},
+  ui: uiProgressionParityUi,
+  upgradeDefs: [],
+  weaponDefs: {},
+  weaponUnlocks: [],
+});
+uiProgressionParityRenderer.renderTree(uiProgressionParityUi.menuTree);
+uiProgressionParityRenderer.renderQuests(uiProgressionParityUi.menuQuests);
+check(
+  "production browser native UI progression adapter injects documentRef with render tree and quest parity",
+  uiProgressionParityDocument.createdTags.join(",") === "div,div" &&
+    uiProgressionParityUi.menuTree.children[0]?.className === "node" &&
+    uiProgressionParityUi.menuTree.children[0]?.textContent ===
+      "No available skill nodes. Complete active quests to reveal the next branch." &&
+    uiProgressionParityUi.menuQuests.children[0]?.className === "quest" &&
+    uiProgressionParityUi.menuQuests.children[0]?.textContent ===
+      "No active quests. Unlock the next available skill node to reveal one."
 );
 check(
   "production browser platform defaults bind canvas movement input",
@@ -681,11 +740,16 @@ delete runtimeGlobal.TapSurvivorContentSchema;
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
 const autobootContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(globalThis, "autoboot globalThis");
 const autobootRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(globalThis, "autoboot globalThis");
+const autobootUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
+  globalThis,
+  "autoboot globalThis"
+);
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
 const autobootRafCalls = autobootGlobalRestore.rafCalls();
 autobootGlobalRestore.restore();
 autobootContentGlobalGuard.restore();
 autobootRelicsGlobalGuard.restore();
+autobootUiProgressionGlobalGuard.restore();
 check("production module autoboot wrapper initializes browser runtime", autobootRafCalls === 1);
 check(
   "production module boot completes without reading guarded TapSurvivorContent globals",
@@ -695,8 +759,13 @@ check(
   "production module boot completes without reading guarded TapSurvivorRelics globals",
   runtimeRelicsGlobalGuard.readAttempts() === 0 && autobootRelicsGlobalGuard.readAttempts() === 0
 );
+check(
+  "production module boot completes without reading guarded TapSurvivorUiProgression globals",
+  runtimeUiProgressionGlobalGuard.readAttempts() === 0 && autobootUiProgressionGlobalGuard.readAttempts() === 0
+);
 runtimeContentGlobalGuard.restore();
 runtimeRelicsGlobalGuard.restore();
+runtimeUiProgressionGlobalGuard.restore();
 check(
   "production module autoboot wrapper publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
@@ -862,6 +931,32 @@ function createMemoryStorage() {
   };
 }
 
+function createUiProgressionParityDocument() {
+  return {
+    createdTags: [],
+    createElement(tagName) {
+      this.createdTags.push(tagName);
+      return {
+        addEventListener() {},
+        className: "",
+        disabled: false,
+        innerHTML: "",
+        textContent: "",
+      };
+    },
+  };
+}
+
+function createUiProgressionParityContainer() {
+  return {
+    children: [],
+    innerHTML: "",
+    appendChild(child) {
+      this.children.push(child);
+    },
+  };
+}
+
 function tapSurvivorGlobalNames() {
   return Object.getOwnPropertyNames(globalThis)
     .filter((name) => name.startsWith("TapSurvivor"))
@@ -883,6 +978,13 @@ function hasTapSurvivorRelicsGlobalRead(source) {
   return (
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorRelics\b/u.test(source) ||
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorRelics["']\s*\]/u.test(source)
+  );
+}
+
+function hasTapSurvivorUiProgressionGlobalRead(source) {
+  return (
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorUiProgression\b/u.test(source) ||
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorUiProgression["']\s*\]/u.test(source)
   );
 }
 
@@ -915,6 +1017,26 @@ function installTapSurvivorRelicsGlobalReadGuard(target, label) {
     get() {
       reads += 1;
       throw new Error(`Forbidden classic relic global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
+}
+
+function installTapSurvivorUiProgressionGlobalReadGuard(target, label) {
+  const key = "TapSurvivorUiProgression";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic UI progression global read from ${label}`);
     },
   });
   return {

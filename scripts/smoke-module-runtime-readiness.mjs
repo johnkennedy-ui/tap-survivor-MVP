@@ -398,7 +398,6 @@ const browserProgressionGlobals = {
     questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
   },
   TapSurvivorShop: { createShopSystem: () => ({}) },
-  TapSurvivorUiProgression: { createUiProgressionRenderer: () => ({}) },
   TapSurvivorUpgrades: {
     createUpgradeContent: () => ({
       createUpgradeDefs: () => [],
@@ -419,6 +418,10 @@ const runtimeGlobal = {
   },
   Capacitor: { Plugins: { App: { addListener: () => ({ catch() {} }) } } },
 };
+const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
+  runtimeGlobal,
+  "runtime readiness injected browser globalRef"
+);
 const runtimeUiAdapters = createModuleRuntimeUiAdapters({
   ui: {
     speedButtons,
@@ -704,6 +707,14 @@ check(
     !browserDependencyBagSource.includes("TapSurvivorRelics")
 );
 check(
+  "readiness rejects direct, string-key, and dynamic TapSurvivorUiProgression reads in the production ESM browser path",
+  browserDependencyBagSource.includes(
+    'import { createUiProgressionRenderer } from "../modules/ui-progression.js";'
+  ) &&
+    !hasTapSurvivorUiProgressionGlobalRead(browserDependencyBagSource) &&
+    !browserDependencyBagSource.includes("TapSurvivorUiProgression")
+);
+check(
   "readiness preserves the deliberate classic TapSurvivorRelics publisher",
   classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
     classicRelicsSource.includes("createRelicSystem")
@@ -762,7 +773,7 @@ check(
   )
 );
 check(
-  "readiness sees browser progression defaults resolve classic namespace bridges",
+  "readiness sees browser progression defaults resolve classic namespace bridges and native UI progression",
   [
     ["levelUp", "createLevelUpSystem"],
     ["progression", "createProgressionSystem"],
@@ -775,6 +786,10 @@ check(
       BROWSER_PROGRESSION_ADAPTER_PROOF_SLOTS.includes(slot) &&
       typeof browserProgressionSystems[slot]?.[factoryName] === "function"
   )
+);
+check(
+  "readiness browser progression defaults do not read guarded TapSurvivorUiProgression global",
+  runtimeUiProgressionGlobalGuard.readAttempts() === 0
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
@@ -1426,6 +1441,33 @@ function hasTapSurvivorRelicsGlobalRead(source) {
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorRelics\b/u.test(source) ||
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorRelics["']\s*\]/u.test(source)
   );
+}
+
+function hasTapSurvivorUiProgressionGlobalRead(source) {
+  return (
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorUiProgression\b/u.test(source) ||
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorUiProgression["']\s*\]/u.test(source)
+  );
+}
+
+function installTapSurvivorUiProgressionGlobalReadGuard(target, label) {
+  const key = "TapSurvivorUiProgression";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic UI progression global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
 }
 
 function isApprovedCompatibilityBoundary(file) {
