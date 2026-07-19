@@ -77,10 +77,11 @@ Generated content globals:
 - `src/modules/save.js` now receives save normalize, save corruption, and storage helpers through its factory arguments
   instead of reading those globals directly; generated `src/save.js` keeps a compatibility boundary wrapper so classic
   `TapSurvivorSave.createSaveSystem(...)` callers still receive the script-order globals by default.
-- `src/modules/game-dependencies.js` now wires the native Shop factory explicitly into the classic dependency bag; the
-  factory receives the classic `documentRef` boundary without reading `globalThis.TapSurvivorShop`.
-- Generated `src/shop.js` remains a source-derived classic artifact without a global publisher; the classic dependency
-  bridge bundles the native Shop factory and preserves its explicit `documentRef` wiring.
+- `src/modules/game-dependencies.js` now wires the native Shop factory explicitly into the classic dependency bag and
+  injects the game banner factory; the factories receive the classic `documentRef` boundary without reading
+  `globalThis.TapSurvivorShop` or `globalThis.TapSurvivorGameBanners`.
+- Generated `src/shop.js` and `src/game-banners.js` remain source-derived classic artifacts without global publishers;
+  the classic dependency bridge bundles the native Shop and game banner factories and preserves their explicit wiring.
 - `scripts/smoke-shop-provider-parity.mjs` has two temporary `globalThis.document` getter guard/restore reads. They
   prove native Shop does not access the global while retaining the generated classic-boundary parity fixture.
 - `src/level-up.js` now receives level-up choice helpers and the optional asset resolver provider through `src/game.js`
@@ -116,7 +117,7 @@ Runtime module globals:
   `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`,
   `TapSurvivorLevelUpChoices`.
 - Utilities/debug: `TapSurvivorMath`, `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`,
-  `TapSurvivorGameBanners`, `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
+  `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
 
 Browser/platform globals:
 - `globalThis.localStorage` and `globalThis.location` are used by dev balance profile/override selection.

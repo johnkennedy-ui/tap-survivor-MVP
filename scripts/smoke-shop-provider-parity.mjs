@@ -77,6 +77,10 @@ check(
   selectedBrowser.poisonedGlobalReads === 0
 );
 check(
+  "classic dependency bag does not read a poisoned TapSurvivorGameBanners global",
+  classic.poisonedBannerGlobalReads === 0
+);
+check(
   "selected-browser native Shop handles malformed unused storage without invalid purchase tiers",
   malformedStorageRecoveryPasses()
 );
@@ -132,6 +136,7 @@ function runParityScenario(kind, initialSave = baseSave()) {
 
   return {
     boundAdapterIdentityPreserved: providerSetup.boundAdapterIdentityPreserved,
+    poisonedBannerGlobalReads: providerSetup.poisonedBannerGlobalReads,
     poisonedGlobalReads: providerSetup.poisonedGlobalReads,
     snapshot: {
       afterClose,
@@ -150,20 +155,27 @@ function createProvider(kind, fixture) {
   if (kind === "native") {
     return {
       boundAdapterIdentityPreserved: true,
+      poisonedBannerGlobalReads: 0,
       poisonedGlobalReads: 0,
       provider: createShopSystem(fixture.nativeOptions),
       unboundAdapterFailedClosed: true,
     };
   }
   if (kind === "classic") {
+    const classicProvider = createClassicProvider(fixture);
     return {
       boundAdapterIdentityPreserved: true,
+      poisonedBannerGlobalReads: classicProvider.poisonedBannerGlobalReads,
       poisonedGlobalReads: 0,
-      provider: createClassicProvider(fixture),
+      provider: classicProvider.provider,
       unboundAdapterFailedClosed: true,
     };
   }
-  return createSelectedBrowserProvider(fixture);
+  const browserProvider = createSelectedBrowserProvider(fixture);
+  return {
+    ...browserProvider,
+    poisonedBannerGlobalReads: browserProvider.poisonedBannerGlobalReads ?? 0,
+  };
 }
 
 function createClassicProvider(fixture) {
@@ -175,7 +187,10 @@ function createClassicProvider(fixture) {
     documentRef: fixture.documentRef,
     globalRef,
   });
-  return dependencies.shop.createShopSystem(withoutDocumentRef(fixture.nativeOptions));
+  return {
+    provider: dependencies.shop.createShopSystem(withoutDocumentRef(fixture.nativeOptions)),
+    poisonedBannerGlobalReads: globalRef.__bannerGlobalReads(),
+  };
 }
 
 
@@ -192,7 +207,6 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorEnemies",
     "TapSurvivorEnemyBehaviors",
     "TapSurvivorEnemySpawning",
-    "TapSurvivorGameBanners",
     "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
@@ -228,6 +242,18 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorWeaponTargeting",
   ];
   const globalRef = Object.fromEntries(names.map((name) => [name, { name }]));
+  let bannerGlobalReads = 0;
+  Object.defineProperty(globalRef, "TapSurvivorGameBanners", {
+    configurable: true,
+    get() {
+      bannerGlobalReads += 1;
+      throw new Error("Forbidden TapSurvivorGameBanners global read");
+    },
+  });
+  Object.defineProperty(globalRef, "__bannerGlobalReads", {
+    configurable: true,
+    value: () => bannerGlobalReads,
+  });
   globalRef.document = fixture.documentRef;
   globalRef.TapSurvivorBalanceRuntime = { content: () => ({}) };
   globalRef.TapSurvivorContent = {};
@@ -626,7 +652,7 @@ function missingDocumentRefFailsClosed() {
 
 function generatedClassicBoundaryUsesDocument() {
   const fixture = createFixture(baseSave());
-  const provider = createClassicProvider(fixture);
+  const provider = createClassicProvider(fixture).provider;
   provider.renderShop();
   return fixture.ui.shopItems.children.length === 2;
 }

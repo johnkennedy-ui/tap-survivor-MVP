@@ -190,6 +190,12 @@ const bridges = [
     exports: ["createWeaponProjectileSystem", "rotateVector"],
   },
   {
+    source: "src/modules/game-banners.js",
+    target: "src/game-banners.js",
+    globalName: null,
+    exports: ["createGameBannerSystem"],
+  },
+  {
     source: "src/modules/game-runtime.js",
     target: "src/game-runtime.js",
     globalName: "TapSurvivorGameRuntime",
@@ -201,6 +207,10 @@ const bridges = [
     globalName: "TapSurvivorGameDependencies",
     exports: ["createGameDependencyBag"],
     bundledSources: [
+      {
+        source: "src/modules/game-banners.js",
+        exports: ["createGameBannerSystem"],
+      },
       {
         source: "src/modules/shop.js",
         exports: ["MODULE_NATIVE_SHOP_SLOTS", "MODULE_NATIVE_SHOP_PROOF_SLOTS", "createShopSystem"],

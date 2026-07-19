@@ -1,3 +1,4 @@
+import { createGameBannerSystem } from "./game-banners.js";
 import { createShopSystem } from "./shop.js";
 
 export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
@@ -16,7 +17,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     enemies: requireGlobal(globalRef, "TapSurvivorEnemies"),
     enemyBehaviors: requireGlobal(globalRef, "TapSurvivorEnemyBehaviors"),
     enemySpawning: requireGlobal(globalRef, "TapSurvivorEnemySpawning"),
-    gameBanners: requireGlobal(globalRef, "TapSurvivorGameBanners"),
+    gameBanners: { createGameBannerSystem },
     gameRuntime: requireGlobal(globalRef, "TapSurvivorGameRuntime"),
     input: {
       bindMovementInput: requireFunction(

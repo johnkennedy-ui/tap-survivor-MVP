@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import { createContentRegistry as createModuleContentRegistry } from "../src/modules/content-registry.js";
 import { createEffects as createModuleEffects } from "../src/modules/effects.js";
+import { createGameBannerSystem as createModuleGameBannerSystem } from "../src/modules/game-banners.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
@@ -135,6 +136,7 @@ const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
+const gameBannersBridge = loadBridge("../src/game-banners.js", "src/game-banners.js");
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
 const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecycle.js");
@@ -1291,6 +1293,7 @@ check("game runtime passes getGame to injected input", moduleGameRuntimeSnapshot
 check("game runtime schedules loop", moduleGameRuntimeSnapshot.rafCount === 1);
 
 check("module exports createGameDependencyBag", typeof createModuleGameDependencyBag === "function");
+check("module exports createGameBannerSystem", typeof createModuleGameBannerSystem === "function");
 check(
   "bridge assigns globalThis.TapSurvivorGameDependencies",
   Boolean(bridgeGameDependencies)
@@ -1302,6 +1305,15 @@ check(
 check(
   "bridge exposes createGameDependencyBag",
   typeof bridgeGameDependencies?.createGameDependencyBag === "function"
+);
+check(
+  "game banners bridge source has generated banner",
+  hasGeneratedBanner(gameBannersBridge.source)
+);
+check(
+  "game banners bridge is global-free",
+  !gameBannersBridge.source.includes("globalThis.TapSurvivorGameBanners") &&
+    gameBannersBridge.context.TapSurvivorGameBanners === undefined
 );
 check(
   "game dependency bridge has no retired Shop global publisher or reader",
@@ -1337,6 +1349,8 @@ check("dependency bag exposes save defaults", moduleGameDependenciesSnapshot.has
 check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
 check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
+check("dependency bag exposes native game banner factory", moduleGameDependenciesSnapshot.hasGameBannerFactory);
+check("dependency bag ignores poisoned game banner global", moduleGameDependenciesSnapshot.bannerGlobalReads === 0);
 check("dependency bag exposes native Shop factory", moduleGameDependenciesSnapshot.hasNativeShopFactory);
 check("dependency bag creates native Shop with preserved documentRef", moduleGameDependenciesSnapshot.hasNativeShop);
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
@@ -1957,7 +1971,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
     "TapSurvivorEffects",
-    "TapSurvivorGameBanners",
     "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
@@ -2007,6 +2020,14 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.TapSurvivorInput = {
     bindMovementInput,
   };
+  let bannerGlobalReads = 0;
+  Object.defineProperty(globalRef, "TapSurvivorGameBanners", {
+    configurable: true,
+    get() {
+      bannerGlobalReads += 1;
+      throw new Error("Forbidden TapSurvivorGameBanners global read");
+    },
+  });
   const bag = createGameDependencyBag({ globalRef, documentRef });
   const shop = bag.shop.createShopSystem({
     effects: {
@@ -2069,6 +2090,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
     hasSaveNormalize: bag.saveNormalize.name === "TapSurvivorSaveNormalize",
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
+    bannerGlobalReads,
+    hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
     hasNativeShopFactory: typeof bag.shop.createShopSystem === "function",
     hasNativeShop: Boolean(shop),
     hasShopPricing: bag.shopPricing.name === "TapSurvivorShopPricing",
