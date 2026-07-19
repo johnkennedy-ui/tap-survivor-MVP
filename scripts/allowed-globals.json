@@ -52,7 +52,6 @@
     "globalThis.TapSurvivorUiProgression",
     "globalThis.TapSurvivorUpgrades",
     "globalThis.TapSurvivorWeaponBehaviors",
-    "globalThis.TapSurvivorWeaponCooldowns",
     "globalThis.TapSurvivorWeaponFire",
     "globalThis.TapSurvivorWeaponProjectiles",
     "globalThis.TapSurvivorWeaponTargeting",

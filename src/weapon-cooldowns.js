@@ -155,7 +155,4 @@
     };
   }
 
-  globalThis.TapSurvivorWeaponCooldowns = {
-    createWeaponScaling,
-  };
 })();

@@ -180,7 +180,7 @@ const bridges = [
   {
     source: "src/modules/weapon-cooldowns.js",
     target: "src/weapon-cooldowns.js",
-    globalName: "TapSurvivorWeaponCooldowns",
+    globalName: null,
     exports: ["createWeaponScaling"],
   },
   {
@@ -214,6 +214,10 @@ const bridges = [
       {
         source: "src/modules/shop.js",
         exports: ["MODULE_NATIVE_SHOP_SLOTS", "MODULE_NATIVE_SHOP_PROOF_SLOTS", "createShopSystem"],
+      },
+      {
+        source: "src/modules/weapon-cooldowns.js",
+        exports: ["createWeaponScaling"],
       },
     ],
   },

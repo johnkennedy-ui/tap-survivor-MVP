@@ -1,5 +1,6 @@
 import { createGameBannerSystem } from "./game-banners.js";
 import { createShopSystem } from "./shop.js";
+import { createWeaponScaling } from "./weapon-cooldowns.js";
 
 export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
   return {
@@ -62,7 +63,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     uiProgression: requireGlobal(globalRef, "TapSurvivorUiProgression"),
     upgrades: globalRef.TapSurvivorUpgrades || {},
     weaponBehaviors: requireGlobal(globalRef, "TapSurvivorWeaponBehaviors"),
-    weaponCooldowns: requireGlobal(globalRef, "TapSurvivorWeaponCooldowns"),
+    weaponCooldowns: { createWeaponScaling },
     weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
     weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
     weaponTargeting: requireGlobal(globalRef, "TapSurvivorWeaponTargeting"),

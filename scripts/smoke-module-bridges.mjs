@@ -176,7 +176,6 @@ const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.cr
 const createBridgeRelicSystem = relicsBridge.context.TapSurvivorRelics?.createRelicSystem;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
-const createBridgeWeaponScaling = cooldownBridge.context.TapSurvivorWeaponCooldowns?.createWeaponScaling;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
@@ -1108,14 +1107,17 @@ check(
 
 check("module exports createWeaponScaling", typeof createModuleWeaponScaling === "function");
 check(
-  "bridge assigns globalThis.TapSurvivorWeaponCooldowns",
-  Boolean(cooldownBridge.context.TapSurvivorWeaponCooldowns)
+  "bridge does not assign globalThis.TapSurvivorWeaponCooldowns",
+  !Reflect.has(cooldownBridge.context, "TapSurvivorWeaponCooldowns")
 );
 check(
   "weapon cooldown bridge source has generated banner",
   hasGeneratedBanner(cooldownBridge.source)
 );
-check("bridge exposes createWeaponScaling", typeof createBridgeWeaponScaling === "function");
+check(
+  "weapon cooldown bridge omits global fallback",
+  !cooldownBridge.source.includes("globalThis.TapSurvivorWeaponCooldowns")
+);
 
 const runUpgrades = [
   {
@@ -1131,13 +1133,7 @@ const runUpgrades = [
 
 const scalingFixture = createScalingFixture();
 const moduleScaling = createModuleWeaponScaling(scalingFixture);
-const bridgeScaling = createBridgeWeaponScaling(scalingFixture);
 const moduleScalingResults = scalingSnapshot(moduleScaling, scalingFixture.weaponDefs.bolt);
-const bridgeScalingResults = scalingSnapshot(bridgeScaling, scalingFixture.weaponDefs.bolt);
-check(
-  "module and bridge cooldown scaling output match",
-  JSON.stringify(moduleScalingResults) === JSON.stringify(bridgeScalingResults)
-);
 check("weaponCooldown fixture is finite", Number.isFinite(moduleScalingResults.weaponCooldown));
 check("weaponSfxOptions fixture has playbackRate", moduleScalingResults.weaponSfxOptions.playbackRate > 0);
 check("weaponReach fixture is finite", Number.isFinite(moduleScalingResults.weaponReach));
@@ -1150,14 +1146,8 @@ check(
 );
 
 const fallbackFixture = createFallbackScalingFixture();
-const fallbackScaling = createModuleWeaponScaling(fallbackFixture);
-const fallbackBridgeScaling = createBridgeWeaponScaling(fallbackFixture);
-const fallbackSnapshot = scalingSnapshot(fallbackScaling, fallbackFixture.weaponDefs.bolt);
-const fallbackBridgeSnapshot = scalingSnapshot(fallbackBridgeScaling, fallbackFixture.weaponDefs.bolt);
-check(
-  "module and bridge optional callback fallback output match",
-  JSON.stringify(fallbackSnapshot) === JSON.stringify(fallbackBridgeSnapshot)
-);
+const fallbackSnapshot = scalingSnapshot(createModuleWeaponScaling(fallbackFixture), fallbackFixture.weaponDefs.bolt);
+check("weapon cooldown fallback module handles optional callbacks", fallbackSnapshot.weaponCooldown > 0);
 
 check("module exports rotateVector", typeof moduleRotateVector === "function");
 check(
@@ -2001,7 +1991,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorUi",
     "TapSurvivorUiProgression",
     "TapSurvivorWeaponBehaviors",
-    "TapSurvivorWeaponCooldowns",
     "TapSurvivorWeaponFire",
     "TapSurvivorWeaponProjectiles",
     "TapSurvivorWeaponTargeting",
@@ -2081,7 +2070,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasLevelUpChoices: bag.levelUpChoices.name === "TapSurvivorLevelUpChoices",
     hasMath: bag.math.name === "TapSurvivorMath",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
-    hasWeaponCooldowns: bag.weaponCooldowns.name === "TapSurvivorWeaponCooldowns",
+    hasWeaponCooldowns: typeof bag.weaponCooldowns.createWeaponScaling === "function",
     hasWeaponFire: bag.weaponFire.name === "TapSurvivorWeaponFire",
     hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
     hasWeaponTargeting: bag.weaponTargeting.name === "TapSurvivorWeaponTargeting",
