@@ -1,17 +1,24 @@
+import { floorDifficulty } from "./balance.js";
+import { createCombatDamageSystem } from "./combat-damage.js";
+import { createContentRegistry } from "./content-registry.js";
 import { createGameBannerSystem } from "./game-banners.js";
+import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
+import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createShopSystem } from "./shop.js";
+import { createShopPricing } from "./shop-pricing.js";
 import { createWeaponScaling } from "./weapon-cooldowns.js";
+import { nearestEnemy } from "./weapon-targeting.js";
 
 export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
   return {
     audio: requireGlobal(globalRef, "TapSurvivorAudio"),
     assets: globalRef.TapSurvivorAssets || {},
-    balance: requireGlobal(globalRef, "TapSurvivorBalance"),
+    balance: { floorDifficulty },
     balanceRuntime: globalRef.TapSurvivorBalanceRuntime,
     combat: requireGlobal(globalRef, "TapSurvivorCombat"),
-    combatDamage: requireGlobal(globalRef, "TapSurvivorCombatDamage"),
+    combatDamage: { createCombatDamageSystem },
     content: globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent || {},
-    contentRegistry: requireGlobal(globalRef, "TapSurvivorContentRegistry"),
+    contentRegistry: { createContentRegistry },
     debug: requireGlobal(globalRef, "TapSurvivorDebug"),
     debugBalance: globalRef.TapSurvivorDebugBalance,
     effects: requireGlobal(globalRef, "TapSurvivorEffects"),
@@ -27,9 +34,9 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
       ),
     },
     levelUp: requireGlobal(globalRef, "TapSurvivorLevelUp"),
-    levelUpChoices: requireGlobal(globalRef, "TapSurvivorLevelUpChoices"),
+    levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
     mapSystem: requireGlobal(globalRef, "TapSurvivorMapSystem"),
-    math: requireGlobal(globalRef, "TapSurvivorMath"),
+    math: { clamp, distance, formatTime, randomRange },
     pickups: requireGlobal(globalRef, "TapSurvivorPickups"),
     progression: requireGlobal(globalRef, "TapSurvivorProgression"),
     quests: requireGlobal(globalRef, "TapSurvivorQuests"),
@@ -56,7 +63,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
           documentRef: options.documentRef || documentRef,
         }),
     },
-    shopPricing: requireGlobal(globalRef, "TapSurvivorShopPricing"),
+    shopPricing: { createShopPricing },
     sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
     storage: requireGlobal(globalRef, "TapSurvivorStorage"),
     ui: requireGlobal(globalRef, "TapSurvivorUi"),
@@ -66,7 +73,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     weaponCooldowns: { createWeaponScaling },
     weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
     weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
-    weaponTargeting: requireGlobal(globalRef, "TapSurvivorWeaponTargeting"),
+    weaponTargeting: { nearestEnemy },
   };
 }
 

@@ -24,7 +24,4 @@
     );
   }
 
-  globalThis.TapSurvivorWeaponTargeting = {
-    nearestEnemy,
-  };
 })();

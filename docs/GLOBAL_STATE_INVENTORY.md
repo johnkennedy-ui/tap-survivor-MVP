@@ -47,9 +47,8 @@ Generated content globals:
   `createRelicSystem` from `src/modules/relics.js` directly and does not look up `TapSurvivorRelics`. The classic
   `src/relics.js` publisher remains deliberate for the preserved fallback boundary; this cut does not retire that
   publisher, change classic script order, or alter relic definitions.
-- `src/math.js` still owns the `TapSurvivorMath` compatibility bridge. `src/rendering.js` and `src/render-hud.js`
-  now receive `clamp` through factory arguments instead of reading `globalThis.TapSurvivorMath`; `src/game.js` remains
-  the script-order bootstrap reader until the runtime can safely become ESM.
+- `src/math.js` is now a generated classic bridge for the retired math helper; the native dependency bag injects `clamp`,
+  `distance`, `formatTime`, and `randomRange` directly.
 - `src/render-hud.js` still owns the `TapSurvivorRenderHud` compatibility bridge. `src/rendering.js` now receives
   `createHudRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderHud`; `src/game.js` remains
   the script-order bootstrap reader until the rendering stack can safely become ESM.
@@ -62,9 +61,8 @@ Generated content globals:
   `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
 - `src/render-hud.js` now receives run-upgrade definitions through `src/rendering.js` factory wiring instead of reading
   `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
-- `src/weapon-fire.js` now receives weapon targeting, cooldown scaling, and projectile helpers through combat factory
-  wiring instead of reading `globalThis.TapSurvivorWeaponTargeting`, `globalThis.TapSurvivorWeaponCooldowns`, and
-  `globalThis.TapSurvivorWeaponProjectiles` directly.
+- `src/weapon-fire.js` now receives weapon targeting through combat factory wiring; cooldown scaling and projectile
+  helpers remain injected through the same factory path.
 - `src/weapon-fire.js` now receives weapon behavior helpers through `src/game.js` and `src/combat.js` factory wiring
   instead of reading `globalThis.TapSurvivorWeaponBehaviors` directly.
 - `src/modules/weapon-cooldowns.js` and generated `src/weapon-cooldowns.js` now receive content through combat/weapon-fire
@@ -84,8 +82,8 @@ Generated content globals:
   the classic dependency bridge bundles the native Shop and game banner factories and preserves their explicit wiring.
 - `scripts/smoke-shop-provider-parity.mjs` has two temporary `globalThis.document` getter guard/restore reads. They
   prove native Shop does not access the global while retaining the generated classic-boundary parity fixture.
-- `src/level-up.js` now receives level-up choice helpers and the optional asset resolver provider through `src/game.js`
-  factory wiring instead of reading `globalThis.TapSurvivorLevelUpChoices` and `globalThis.TapSurvivorAssets` directly.
+- `src/level-up.js` now receives level-up choice helpers from the dependency bag and the optional asset resolver provider
+  through `src/game.js` factory wiring.
 - `src/ui.js` now receives `TapSurvivorUiProgression` through `src/game.js` factory wiring instead of reading that global
   directly. The production ESM browser dependency bag statically imports the native `createUiProgressionRenderer` and
   injects its `documentRef`; the classic publisher and fallback remain preserved. `src/debug.js` now receives balance
@@ -97,26 +95,25 @@ Generated content globals:
   instead of reading those globals directly. `src/shell-relic-ui.js` now receives content through that shell UI seam for
   relic detail and character sprite fallbacks while keeping its compatibility provider global.
 - `src/combat.js` now receives combat damage, enemy system, and weapon fire dependencies through `src/game.js` factory
-  wiring instead of reading `globalThis.TapSurvivorCombatDamage`, `globalThis.TapSurvivorEnemies`, and
-  `globalThis.TapSurvivorWeaponFire` directly.
-- `src/enemies.js` now receives balance, enemy behavior, and enemy spawning dependencies through `src/game.js` and
-  `src/combat.js` factory wiring instead of reading `globalThis.TapSurvivorBalance`,
-  `globalThis.TapSurvivorEnemyBehaviors`, and `globalThis.TapSurvivorEnemySpawning` directly.
+  wiring; combat damage is dependency-bag injected instead of reading a runtime global.
+- `src/enemies.js` now receives enemy behavior and enemy spawning dependencies through `src/game.js` and
+  `src/combat.js` factory wiring; floor difficulty is dependency-bag injected instead of read from a runtime global.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.
-- Core data/systems: `TapSurvivorContentRegistry`, `TapSurvivorProgression`, `TapSurvivorMapSystem`, `TapSurvivorBalance`, `TapSurvivorEffects`.
+- Native dependency bag injection now imports balance, content registry, math, level-up choices, shop pricing, weapon
+  targeting, and combat damage directly; those helpers no longer appear as runtime globals.
+- Core data/systems: `TapSurvivorProgression`, `TapSurvivorMapSystem`, `TapSurvivorEffects`.
 - Save/storage: `TapSurvivorStorage`, `TapSurvivorSaveDefaults`, `TapSurvivorSaveMigrations`, `TapSurvivorSaveNormalize`, `TapSurvivorSaveCorruption`, `TapSurvivorSave`.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
   `TapSurvivorRunUi`, `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.
 - Gameplay systems: `TapSurvivorRunState`, `TapSurvivorRunUpdate`, `TapSurvivorRunLifecycle`, `TapSurvivorEnemies`,
-  `TapSurvivorEnemyBehaviors`, `TapSurvivorEnemySpawning`, `TapSurvivorCombat`, `TapSurvivorCombatDamage`,
-  `TapSurvivorPickups`, `TapSurvivorShopPricing`, `TapSurvivorRelics`.
-- Weapon systems: `TapSurvivorWeaponTargeting`, `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`,
-  `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`,
-  `TapSurvivorLevelUpChoices`.
-- Utilities/debug: `TapSurvivorMath`, `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`,
+  `TapSurvivorEnemyBehaviors`, `TapSurvivorEnemySpawning`, `TapSurvivorCombat`,
+  `TapSurvivorPickups`, `TapSurvivorRelics`.
+- Weapon systems: `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`,
+  `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`.
+- Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`,
   `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
 
 Browser/platform globals:

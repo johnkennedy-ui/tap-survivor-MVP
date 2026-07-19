@@ -5,13 +5,13 @@ const bridges = [
   {
     source: "src/modules/balance.js",
     target: "src/balance.js",
-    globalName: "TapSurvivorBalance",
+    globalName: null,
     exports: ["floorDifficulty"],
   },
   {
     source: "src/modules/content-registry.js",
     target: "src/content-registry.js",
-    globalName: "TapSurvivorContentRegistry",
+    globalName: null,
     exports: ["createContentRegistry"],
   },
   {
@@ -46,7 +46,7 @@ const bridges = [
   {
     source: "src/modules/level-up-choices.js",
     target: "src/level-up-choices.js",
-    globalName: "TapSurvivorLevelUpChoices",
+    globalName: null,
     exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
   },
   {
@@ -101,7 +101,7 @@ const bridges = [
   {
     source: "src/modules/shop-pricing.js",
     target: "src/shop-pricing.js",
-    globalName: "TapSurvivorShopPricing",
+    globalName: null,
     exports: ["createShopPricing"],
   },
   {
@@ -168,13 +168,13 @@ const bridges = [
   {
     source: "src/modules/math.js",
     target: "src/math.js",
-    globalName: "TapSurvivorMath",
+    globalName: null,
     exports: ["clamp", "distance", "formatTime", "randomRange"],
   },
   {
     source: "src/modules/weapon-targeting.js",
     target: "src/weapon-targeting.js",
-    globalName: "TapSurvivorWeaponTargeting",
+    globalName: null,
     exports: ["nearestEnemy"],
   },
   {
@@ -208,8 +208,32 @@ const bridges = [
     exports: ["createGameDependencyBag"],
     bundledSources: [
       {
+        source: "src/modules/balance.js",
+        exports: ["floorDifficulty"],
+      },
+      {
+        source: "src/modules/combat-damage.js",
+        exports: ["createCombatDamageSystem"],
+      },
+      {
+        source: "src/modules/content-registry.js",
+        exports: ["createContentRegistry"],
+      },
+      {
         source: "src/modules/game-banners.js",
         exports: ["createGameBannerSystem"],
+      },
+      {
+        source: "src/modules/level-up-choices.js",
+        exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
+      },
+      {
+        source: "src/modules/math.js",
+        exports: ["clamp", "distance", "formatTime", "randomRange"],
+      },
+      {
+        source: "src/modules/shop-pricing.js",
+        exports: ["createShopPricing"],
       },
       {
         source: "src/modules/shop.js",
@@ -218,6 +242,10 @@ const bridges = [
       {
         source: "src/modules/weapon-cooldowns.js",
         exports: ["createWeaponScaling"],
+      },
+      {
+        source: "src/modules/weapon-targeting.js",
+        exports: ["nearestEnemy"],
       },
     ],
   },
@@ -254,7 +282,7 @@ const bridges = [
   {
     source: "src/modules/combat-damage.js",
     target: "src/combat-damage.js",
-    globalName: "TapSurvivorCombatDamage",
+    globalName: null,
     exports: ["createCombatDamageSystem"],
   },
 ];

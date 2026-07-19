@@ -287,6 +287,27 @@ export function createGameHarness({
     context.localStorage.store.set(key, value);
   });
 
+  const retiredGlobalNames = [
+    "TapSurvivorBalance",
+    "TapSurvivorCombatDamage",
+    "TapSurvivorContentRegistry",
+    "TapSurvivorLevelUpChoices",
+    "TapSurvivorMath",
+    "TapSurvivorShopPricing",
+    "TapSurvivorWeaponTargeting",
+  ];
+  const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
+  retiredGlobalNames.forEach((name) => {
+    Object.defineProperty(context, name, {
+      configurable: true,
+      get() {
+        retiredGlobalReads[name] += 1;
+        throw new Error(`Forbidden ${name} global read`);
+      },
+    });
+  });
+  context.__tapSurvivorRetiredGlobalReads = retiredGlobalReads;
+
   vm.createContext(context);
   [
     "src/content.generated.js",
@@ -316,9 +337,6 @@ export function createGameHarness({
   ].forEach((path) => vm.runInContext(readSource(path), context));
 
   if (fakeCombat) {
-    context.TapSurvivorCombatDamage = {
-      createCombatDamageSystem() {},
-    };
     context.TapSurvivorEnemies = {
       createEnemySystem() {},
     };
@@ -336,9 +354,6 @@ export function createGameHarness({
     };
     context.TapSurvivorWeaponProjectiles = {
       createWeaponProjectileSystem() {},
-    };
-    context.TapSurvivorWeaponTargeting = {
-      nearestEnemy() {},
     };
     context.TapSurvivorCombat = {
       createCombatSystem({ getGame }) {

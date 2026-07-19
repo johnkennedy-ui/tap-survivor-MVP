@@ -40,7 +40,4 @@
     };
   }
 
-  globalThis.TapSurvivorContentRegistry = {
-    createContentRegistry,
-  };
 })();

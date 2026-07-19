@@ -47,10 +47,4 @@
     return `${mins}:${secs}`;
   }
 
-  globalThis.TapSurvivorMath = {
-    clamp,
-    distance,
-    formatTime,
-    randomRange,
-  };
 })();

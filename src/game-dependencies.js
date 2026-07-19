@@ -4,6 +4,172 @@
 (() => {
   "use strict";
 
+  /**
+   * @typedef {{ hp: number, damage: number, spawnRate: number }} FloorDifficulty
+   */
+
+  const floorTable = [
+    { hp: 0.9, damage: 0.85, spawnRate: 0.9 },
+    { hp: 1.1, damage: 1, spawnRate: 1 },
+    { hp: 1.33, damage: 1.15, spawnRate: 1.08 },
+  ];
+
+  /**
+   * @param {number | null | undefined} floor
+   * @returns {FloorDifficulty}
+   */
+  function floorDifficulty(floor) {
+    const floorNumber = Math.max(1, Math.floor(floor || 1));
+    const tableEntry = floorTable[floorNumber - 1];
+    if (tableEntry) return { ...tableEntry };
+
+    const extraFloors = floorNumber - floorTable.length;
+    const floorThree = floorTable[floorTable.length - 1];
+    return {
+      hp: floorThree.hp + extraFloors * 0.2,
+      damage: floorThree.damage + extraFloors * 0.13,
+      spawnRate: floorThree.spawnRate + extraFloors * 0.05,
+    };
+  }
+
+  function createCombatDamageSystem({
+    canvas,
+    getGame,
+    getRelicSpecialEffects,
+    addQuestProgressForWeapon,
+    addQuestProgressGroup,
+    killQuestIds,
+    damageQuestIds,
+    bossQuestIds,
+    spawnLootDrops,
+    advanceTowerFloor,
+    distance,
+    clamp,
+  }) {
+    function damageEnemy(enemy, amount, weaponId) {
+      const game = getGame();
+      const before = enemy.hp;
+      const effects = getRelicSpecialEffects?.() || {};
+      const finalAmount = enemy.boss ? amount * (1 + (effects.bossDamageBonus || 0)) : amount;
+      enemy.hp -= finalAmount;
+      const dealt = Math.max(0, Math.min(before, finalAmount));
+      game.weaponDamage[weaponId] = (game.weaponDamage[weaponId] || 0) + dealt;
+      addQuestProgressGroup(damageQuestIds, dealt);
+      addQuestProgressForWeapon(weaponId, dealt);
+      return dealt;
+    }
+
+    function damagePlayer(amount, source = {}) {
+      const game = getGame();
+      const p = game?.player;
+      if (!p || p.invincibleTimer > 0) return 0;
+      const effects = getRelicSpecialEffects?.() || {};
+      if (effects.dodgeChance && Math.random() < Math.min(0.95, effects.dodgeChance)) {
+        p.blinkTimer = Math.max(p.blinkTimer || 0, 0.35);
+        return 0;
+      }
+      let finalDamage = amount * Math.max(0, 1 - (effects.damageReduction || 0));
+      if (source.enemy && effects.thornDamage) {
+        damageEnemy(source.enemy, effects.thornDamage, "relic_thorns");
+      }
+      if (effects.teleportOnHitCooldown && !(p.teleportCooldown > 0)) {
+        p.x = clamp(
+          p.x + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
+          p.radius,
+          canvas.width - p.radius
+        );
+        p.y = clamp(
+          p.y + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
+          p.radius,
+          canvas.height - p.radius
+        );
+        p.targetX = p.x;
+        p.targetY = p.y;
+        p.teleportCooldown = effects.teleportOnHitCooldown;
+      }
+      p.hp -= finalDamage;
+      if (effects.blinkInvulnerabilitySeconds) {
+        p.invincibleTimer = Math.max(p.invincibleTimer || 0, effects.blinkInvulnerabilitySeconds);
+        p.blinkTimer = Math.max(p.blinkTimer || 0, effects.blinkInvulnerabilitySeconds);
+      }
+      return finalDamage;
+    }
+
+    function reapEnemies() {
+      const game = getGame();
+      const dead = game.enemies.filter((enemy) => enemy.hp <= 0);
+      dead.forEach((enemy) => {
+        const effects = getRelicSpecialEffects?.() || {};
+        if (effects.lifestealOnKill && game.player) {
+          game.player.hp = Math.min(
+            game.player.maxHp,
+            game.player.hp + Math.ceil(game.player.maxHp * effects.lifestealOnKill)
+          );
+        }
+        if (effects.killExplosionDamage && effects.killExplosionRadius) {
+          game.enemies.forEach((candidate) => {
+            if (candidate === enemy || candidate.hp <= 0) return;
+            if (distance(enemy, candidate) <= effects.killExplosionRadius + candidate.radius) {
+              damageEnemy(candidate, effects.killExplosionDamage, "relic_kill_explosion");
+            }
+          });
+        }
+        game.kills += 1;
+        addQuestProgressGroup(killQuestIds, 1);
+        game.xpDrops.push({ x: enemy.x, y: enemy.y, radius: enemy.boss ? 12 : 7, value: enemy.boss ? 8 : enemy.xp });
+        spawnLootDrops(enemy);
+        if (enemy.boss) {
+          game.bossDefeated = true;
+          addQuestProgressGroup(bossQuestIds, 1);
+          advanceTowerFloor?.();
+        }
+      });
+      game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
+    }
+
+    return {
+      damageEnemy,
+      damagePlayer,
+      reapEnemies,
+    };
+  }
+
+  function createContentRegistry({ content, upgradeContent }) {
+    const weaponDefs = content.weapons || {};
+    const weaponUnlocks = content.weaponUnlocks || [];
+    const questDefs = content.quests || {};
+    const questGroups = content.questGroups || {};
+    const bossConfig = content.bossConfig || {};
+    const bossAbilities = content.bossAbilities || {};
+    const assetDefs = content.assets || {};
+
+    return {
+      weaponDefs,
+      weaponUnlocks,
+      spriteDefs: assetDefs.sprites || {},
+      sfxDefs: assetDefs.sfx || {},
+      upgradeDefs: upgradeContent.createUpgradeDefs?.(weaponDefs) || [],
+      questDefs,
+      questGroups,
+      starterQuestIds: questGroups.starter || [],
+      killQuestIds: questGroups.kill || [],
+      damageQuestIds: questGroups.damage || [],
+      survivalQuestIds: questGroups.survival || [],
+      xpQuestIds: questGroups.xp || [],
+      levelQuestIds: questGroups.level || [],
+      bossQuestIds: questGroups.boss || [],
+      runUpgradeDefs: upgradeContent.runUpgradeDefs || [],
+      enemyTypes: content.enemyTypes || [],
+      bossConfig,
+      bossAbilities,
+      shopItemDefs: content.shopItems || [],
+      relicDefs: content.relics || [],
+      levelDefs: content.levels || [],
+      mapDefs: content.maps || [],
+      tuningDefs: content.tuning || {},
+    };
+  }
+
   function createGameBannerSystem({ ui, getSave, persist }) {
     let bannerTimer = 0;
 
@@ -63,6 +229,179 @@
       showMovementGateBanner,
       showOnceBanner,
       showQuestBanner,
+    };
+  }
+
+  /**
+   * @typedef {{
+   *   weaponId?: string,
+   *   runUpgradeId?: string,
+   *   name?: string,
+   *   [key: string]: unknown
+   * }} LevelUpChoice
+   * @typedef {{ shopPurchases?: Record<string, number> }} ChoiceSave
+   * @typedef {(choice: LevelUpChoice) => number} ChoiceWeightFn
+   */
+
+  /**
+   * @param {LevelUpChoice[]} choices
+   * @returns {LevelUpChoice[]}
+   */
+  function shuffleChoices(choices) {
+    return choices
+      .map((choice) => ({ choice, sort: Math.random() }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ choice }) => choice);
+  }
+
+  /**
+   * @param {LevelUpChoice[]} choices
+   * @param {ChoiceWeightFn} weightForChoice
+   * @returns {LevelUpChoice[]}
+   */
+  function weightedChoices(choices, weightForChoice) {
+    return choices
+      .map((choice) => ({
+        choice,
+        sort: Math.random() / Math.max(1, weightForChoice(choice)),
+      }))
+      .sort((a, b) => a.sort - b.sort)
+      .map(({ choice }) => choice);
+  }
+
+  /**
+   * @param {LevelUpChoice} choice
+   * @returns {string}
+   */
+  function choiceId(choice) {
+    return choice.weaponId ? `weapon:${choice.weaponId}` : `run:${choice.runUpgradeId || choice.name}`;
+  }
+
+  /**
+   * @param {ChoiceSave} save
+   * @returns {number}
+   */
+  function shopFocusBonus(save) {
+    return (save.shopPurchases?.relic_compass || 0) * 0.5;
+  }
+
+  /**
+   * @typedef {{ x: number, y: number }} Point
+   */
+
+  /**
+   * @param {Point} a
+   * @param {Point} b
+   * @returns {number}
+   */
+  function distance(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  /**
+   * @param {number} value
+   * @param {number} min
+   * @param {number} max
+   * @returns {number}
+   */
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  /**
+   * @param {number} min
+   * @param {number} max
+   * @returns {number}
+   */
+  function randomRange(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  /**
+   * @param {number} seconds
+   * @returns {string}
+   */
+  function formatTime(seconds) {
+    const total = Math.max(0, Math.floor(seconds));
+    const mins = Math.floor(total / 60);
+    const secs = String(total % 60).padStart(2, "0");
+    return `${mins}:${secs}`;
+  }
+
+  const SHOP_FLOOR_PRICE_RATE = 0.03;
+  const SHOP_INFLATION_RATE = 0.025;
+
+  /**
+   * @typedef {{ id: string, cost: number | number[], maxTier: number }} ShopPricingItem
+   * @typedef {{ floorPriceRate?: number, inflationRate?: number }} ShopPricingConfig
+   * @typedef {{
+   *   coins: number,
+   *   towerFloor?: number,
+   *   shopPurchases?: Record<string, number>
+   * }} ShopPricingSave
+   * @typedef {{
+   *   canBuy(item: ShopPricingItem): boolean,
+   *   costFor(item: ShopPricingItem, tier: number): number,
+   *   tierFor(item: ShopPricingItem): number
+   * }} ShopPricingApi
+   */
+
+  /**
+   * @param {{
+   *   shopItemDefs: ShopPricingItem[],
+   *   pricingConfig?: ShopPricingConfig,
+   *   getSave: () => ShopPricingSave
+   * }} options
+   * @returns {ShopPricingApi}
+   */
+  function createShopPricing({ shopItemDefs, pricingConfig = {}, getSave }) {
+    function floorPriceRate() {
+      return Number.isFinite(pricingConfig.floorPriceRate)
+        ? pricingConfig.floorPriceRate
+        : SHOP_FLOOR_PRICE_RATE;
+    }
+
+    function inflationRate() {
+      return Number.isFinite(pricingConfig.inflationRate)
+        ? pricingConfig.inflationRate
+        : SHOP_INFLATION_RATE;
+    }
+
+    function tierFor(item) {
+      return getSave().shopPurchases?.[item.id] || 0;
+    }
+
+    function costFor(item, tier) {
+      const baseCost = Array.isArray(item.cost) ? item.cost[tier] : item.cost;
+      const floor = Math.max(1, getSave().towerFloor || 1);
+      const floorMultiplier = floor <= 1 ? 1 : 1 + (floor - 1) * floorPriceRate();
+      const inflationMultiplier = taperedInflationMultiplier(purchasedTierCount(item.id));
+      return Math.ceil(baseCost * floorMultiplier * inflationMultiplier);
+    }
+
+    function taperedInflationMultiplier(purchasedTierCount) {
+      return 1 + Math.log1p(Math.max(0, purchasedTierCount)) * inflationRate();
+    }
+
+    function purchasedTierCount(excludedItemId = "") {
+      const purchases = getSave().shopPurchases || {};
+      return shopItemDefs.reduce((total, item) => {
+        if (item.id === excludedItemId) return total;
+        return total + (purchases[item.id] || 0);
+      }, 0);
+    }
+
+    function canBuy(item) {
+      const save = getSave();
+      const tier = tierFor(item);
+      const cost = costFor(item, tier);
+      return tier < item.maxTier && save.coins >= cost;
+    }
+
+    return {
+      canBuy,
+      costFor,
+      tierFor,
     };
   }
 
@@ -389,16 +728,36 @@
     };
   }
 
+  /**
+   * @typedef {{ x: number, y: number }} Point
+   * @typedef {{ player: Point, enemies: Point[] }} TargetingGame
+   * @typedef {(a: Point, b: Point) => number} DistanceFn
+   */
+
+  /**
+   * @param {TargetingGame} game
+   * @param {DistanceFn} distance
+   * @returns {Point | null}
+   */
+  function nearestEnemy(game, distance) {
+    if (!game.enemies.length) return null;
+
+    const p = game.player;
+    return game.enemies.reduce((best, enemy) =>
+      distance(p, enemy) < distance(p, best) ? enemy : best
+    );
+  }
+
   function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
     return {
       audio: requireGlobal(globalRef, "TapSurvivorAudio"),
       assets: globalRef.TapSurvivorAssets || {},
-      balance: requireGlobal(globalRef, "TapSurvivorBalance"),
+      balance: { floorDifficulty },
       balanceRuntime: globalRef.TapSurvivorBalanceRuntime,
       combat: requireGlobal(globalRef, "TapSurvivorCombat"),
-      combatDamage: requireGlobal(globalRef, "TapSurvivorCombatDamage"),
+      combatDamage: { createCombatDamageSystem },
       content: globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent || {},
-      contentRegistry: requireGlobal(globalRef, "TapSurvivorContentRegistry"),
+      contentRegistry: { createContentRegistry },
       debug: requireGlobal(globalRef, "TapSurvivorDebug"),
       debugBalance: globalRef.TapSurvivorDebugBalance,
       effects: requireGlobal(globalRef, "TapSurvivorEffects"),
@@ -414,9 +773,9 @@
         ),
       },
       levelUp: requireGlobal(globalRef, "TapSurvivorLevelUp"),
-      levelUpChoices: requireGlobal(globalRef, "TapSurvivorLevelUpChoices"),
+      levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
       mapSystem: requireGlobal(globalRef, "TapSurvivorMapSystem"),
-      math: requireGlobal(globalRef, "TapSurvivorMath"),
+      math: { clamp, distance, formatTime, randomRange },
       pickups: requireGlobal(globalRef, "TapSurvivorPickups"),
       progression: requireGlobal(globalRef, "TapSurvivorProgression"),
       quests: requireGlobal(globalRef, "TapSurvivorQuests"),
@@ -443,7 +802,7 @@
             documentRef: options.documentRef || documentRef,
           }),
       },
-      shopPricing: requireGlobal(globalRef, "TapSurvivorShopPricing"),
+      shopPricing: { createShopPricing },
       sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
       storage: requireGlobal(globalRef, "TapSurvivorStorage"),
       ui: requireGlobal(globalRef, "TapSurvivorUi"),
@@ -453,7 +812,7 @@
       weaponCooldowns: { createWeaponScaling },
       weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
       weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
-      weaponTargeting: requireGlobal(globalRef, "TapSurvivorWeaponTargeting"),
+      weaponTargeting: { nearestEnemy },
     };
   }
 

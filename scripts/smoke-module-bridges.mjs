@@ -189,17 +189,15 @@ const bridgeShellRelicUi = shellRelicUiBridge.context.TapSurvivorShellRelicUi;
 const bridgeShellUi = shellUiClassicBridge.context.TapSurvivorShellUi;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
-check("bridge assigns globalThis.TapSurvivorBalance", Boolean(bridgeBalance));
+check(
+  "bridge does not publish retired TapSurvivorBalance",
+  bridgeBalance === undefined && !balanceBridge.source.includes("globalThis.TapSurvivorBalance")
+);
 check("balance bridge source has generated banner", hasGeneratedBanner(balanceBridge.source));
-check("bridge exposes floorDifficulty", typeof bridgeBalance?.floorDifficulty === "function");
+check("balance bridge remains retired", bridgeBalance === undefined);
 
 const balanceFixtures = [1, 2, 3, 4, 0, null, undefined];
 const moduleBalanceResults = balanceFixtures.map((floor) => moduleFloorDifficulty(floor));
-const bridgeBalanceResults = balanceFixtures.map((floor) => bridgeBalance.floorDifficulty(floor));
-check(
-  "module and bridge balance output match",
-  JSON.stringify(moduleBalanceResults) === JSON.stringify(bridgeBalanceResults)
-);
 check(
   "floorDifficulty floor one value is unchanged",
   JSON.stringify(moduleFloorDifficulty(1)) ===
@@ -242,17 +240,14 @@ check(
   typeof createModuleContentRegistry === "function"
 );
 check(
-  "bridge assigns globalThis.TapSurvivorContentRegistry",
-  Boolean(bridgeContentRegistry)
+  "bridge does not publish retired TapSurvivorContentRegistry",
+  bridgeContentRegistry === undefined && !contentRegistryBridge.source.includes("globalThis.TapSurvivorContentRegistry")
 );
 check(
   "content registry bridge source has generated banner",
   hasGeneratedBanner(contentRegistryBridge.source)
 );
-check(
-  "bridge exposes createContentRegistry",
-  typeof bridgeContentRegistry?.createContentRegistry === "function"
-);
+check("content registry bridge remains retired", bridgeContentRegistry === undefined);
 
 const upgradeContentFixture = {
   createUpgradeDefs: (weaponDefs) =>
@@ -264,16 +259,6 @@ const upgradeContentFixture = {
 };
 const moduleContentRegistrySnapshot = contentRegistrySnapshot(
   createModuleContentRegistry({ content: contentSource, upgradeContent: upgradeContentFixture })
-);
-const bridgeContentRegistrySnapshot = contentRegistrySnapshot(
-  bridgeContentRegistry.createContentRegistry({
-    content: contentSource,
-    upgradeContent: upgradeContentFixture,
-  })
-);
-check(
-  "module and bridge content registry output match",
-  JSON.stringify(moduleContentRegistrySnapshot) === JSON.stringify(bridgeContentRegistrySnapshot)
 );
 check(
   "content registry exposes spark bolt",
@@ -347,14 +332,15 @@ check("module exports choiceId", typeof moduleChoiceId === "function");
 check("module exports shopFocusBonus", typeof moduleShopFocusBonus === "function");
 check("module exports shuffleChoices", typeof moduleShuffleChoices === "function");
 check("module exports weightedChoices", typeof moduleWeightedChoices === "function");
-check("bridge assigns globalThis.TapSurvivorLevelUpChoices", Boolean(bridgeChoices));
+check(
+  "bridge does not publish retired TapSurvivorLevelUpChoices",
+  bridgeChoices === undefined && !choicesBridge.source.includes("globalThis.TapSurvivorLevelUpChoices")
+);
 check(
   "level-up choices bridge source has generated banner",
   hasGeneratedBanner(choicesBridge.source)
 );
-for (const exportName of ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"]) {
-  check(`bridge exposes ${exportName}`, typeof bridgeChoices?.[exportName] === "function");
-}
+check("level-up choices bridge remains retired", bridgeChoices === undefined);
 
 const weaponChoice = { weaponId: "laser", name: "Laser" };
 const runChoice = { runUpgradeId: "run_damage", name: "Damage" };
@@ -362,21 +348,11 @@ const unknownChoice = { name: "Repair" };
 check("choiceId weapon fixture is unchanged", moduleChoiceId(weaponChoice) === "weapon:laser");
 check("choiceId run-upgrade fixture is unchanged", moduleChoiceId(runChoice) === "run:run_damage");
 check("choiceId unknown fixture is unchanged", moduleChoiceId(unknownChoice) === "run:Repair");
-check(
-  "module and bridge choiceId output match",
-  JSON.stringify([weaponChoice, runChoice, unknownChoice].map(moduleChoiceId)) ===
-    JSON.stringify([weaponChoice, runChoice, unknownChoice].map(bridgeChoices.choiceId))
-);
 
 check("shopFocusBonus empty fixture is unchanged", moduleShopFocusBonus({}) === 0);
 check(
   "shopFocusBonus relic compass fixture is unchanged",
   moduleShopFocusBonus({ shopPurchases: { relic_compass: 3 } }) === 1.5
-);
-check(
-  "module and bridge shopFocusBonus output match",
-  JSON.stringify([{}, { shopPurchases: { relic_compass: 3 } }].map(moduleShopFocusBonus)) ===
-    JSON.stringify([{}, { shopPurchases: { relic_compass: 3 } }].map(bridgeChoices.shopFocusBonus))
 );
 
 const choices = [
@@ -389,46 +365,20 @@ const moduleWeighted = withRandomSequence([0.9, 0.2, 0.4], () =>
     moduleChoiceId
   )
 );
-const bridgeWeighted = withBridgeRandomSequence(choicesBridge, [0.9, 0.2, 0.4], () =>
-  bridgeChoices.weightedChoices(choices, (choice) => (choice.runUpgradeId === "beta" ? 3 : 1)).map(
-    bridgeChoices.choiceId
-  )
-);
-check("weightedChoices deterministic fixture is unchanged", moduleWeighted[0] === "run:beta");
-check(
-  "module and bridge weightedChoices output match",
-  JSON.stringify(moduleWeighted) === JSON.stringify(bridgeWeighted)
-);
-
+check("level-up choices fixtures are unchanged", moduleWeighted[0] === "run:beta");
 const moduleWeightedFallback = withRandomSequence([0.3, 0.1, 0.2], () =>
   moduleWeightedChoices(choices, () => 0).map(moduleChoiceId)
-);
-const bridgeWeightedFallback = withBridgeRandomSequence(choicesBridge, [0.3, 0.1, 0.2], () =>
-  bridgeChoices.weightedChoices(choices, () => 0).map(bridgeChoices.choiceId)
 );
 check(
   "weightedChoices zero-weight fallback uses random order",
   JSON.stringify(moduleWeightedFallback) === JSON.stringify(["run:beta", "run:gamma", "run:alpha"])
 );
-check(
-  "module and bridge weightedChoices fallback output match",
-  JSON.stringify(moduleWeightedFallback) === JSON.stringify(bridgeWeightedFallback)
-);
-
 const moduleShuffled = withRandomSequence([0.3, 0.1, 0.2], () => moduleShuffleChoices(choices));
-const bridgeShuffled = withBridgeRandomSequence(choicesBridge, [0.3, 0.1, 0.2], () =>
-  bridgeChoices.shuffleChoices(choices)
-);
 check("shuffleChoices returns a separate array", moduleShuffled !== choices);
 check(
   "shuffleChoices preserves all input choices",
   JSON.stringify(moduleShuffled.map(moduleChoiceId).sort()) ===
     JSON.stringify(choices.map(moduleChoiceId).sort())
-);
-check(
-  "module and bridge shuffleChoices output match",
-  JSON.stringify(moduleShuffled.map(moduleChoiceId)) ===
-    JSON.stringify(bridgeShuffled.map(bridgeChoices.choiceId))
 );
 
 check("module exports createMapSystem", typeof createModuleMapSystem === "function");
@@ -734,14 +684,13 @@ check(
 
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(
-  "bridge assigns globalThis.TapSurvivorShopPricing",
-  Boolean(pricingBridge.context.TapSurvivorShopPricing)
+  "shop pricing bridge remains retired",
+  createBridgeShopPricing === undefined && !pricingBridge.source.includes("globalThis.TapSurvivorShopPricing")
 );
-check("bridge exposes createShopPricing", typeof createBridgeShopPricing === "function");
 check("shop pricing bridge source has generated banner", hasGeneratedBanner(pricingBridge.source));
 check(
-  "bridge source assigns only the pricing global",
-  pricingBridge.source.includes("globalThis.TapSurvivorShopPricing")
+  "shop pricing bridge source omits retired publisher",
+  !pricingBridge.source.includes("globalThis.TapSurvivorShopPricing")
 );
 
 const shopItemDefs = [
@@ -765,14 +714,9 @@ const options = {
 };
 
 const modulePricing = createModuleShopPricing(options);
-const bridgePricing = createBridgeShopPricing(options);
-
 const moduleResults = pricingSnapshot(modulePricing);
-const bridgeResults = pricingSnapshot(bridgePricing);
-check(
-  "module and bridge pricing output match",
-  JSON.stringify(moduleResults) === JSON.stringify(bridgeResults)
-);
+check("shop pricing module boots tier is stable", moduleResults.bootsTier === 1);
+check("shop pricing module orb tier is stable", moduleResults.orbTier === 0);
 
 check("module exports createRelicSystem", typeof createModuleRelicSystem === "function");
 check("bridge assigns globalThis.TapSurvivorRelics", Boolean(relicsBridge.context.TapSurvivorRelics));
@@ -1050,41 +994,33 @@ check("module exports clamp", typeof moduleClamp === "function");
 check("module exports distance", typeof moduleDistance === "function");
 check("module exports formatTime", typeof moduleFormatTime === "function");
 check("module exports randomRange", typeof moduleRandomRange === "function");
-check("bridge assigns globalThis.TapSurvivorMath", Boolean(bridgeMath));
+check(
+  "bridge does not publish retired TapSurvivorMath",
+  bridgeMath === undefined && !mathBridge.source.includes("globalThis.TapSurvivorMath")
+);
 check("math bridge source has generated banner", hasGeneratedBanner(mathBridge.source));
-for (const exportName of ["clamp", "distance", "formatTime", "randomRange"]) {
-  check(`bridge exposes math ${exportName}`, typeof bridgeMath?.[exportName] === "function");
-}
+check("math bridge remains retired", bridgeMath === undefined);
 
 const mathResults = {
   clamp: moduleClamp(12, 0, 10),
   distance: moduleDistance({ x: 0, y: 0 }, { x: 3, y: 4 }),
   formatTime: moduleFormatTime(65),
 };
-const bridgeMathResults = {
-  clamp: bridgeMath.clamp(12, 0, 10),
-  distance: bridgeMath.distance({ x: 0, y: 0 }, { x: 3, y: 4 }),
-  formatTime: bridgeMath.formatTime(65),
-};
 check("module clamp fixture is unchanged", mathResults.clamp === 10);
 check("module distance fixture is unchanged", mathResults.distance === 5);
 check("module formatTime fixture is unchanged", mathResults.formatTime === "1:05");
-check(
-  "module and bridge deterministic math output match",
-  JSON.stringify(mathResults) === JSON.stringify(bridgeMathResults)
-);
 const moduleRandom = moduleRandomRange(2, 4);
-const bridgeRandom = bridgeMath.randomRange(2, 4);
 check("module randomRange returns number in range", moduleRandom >= 2 && moduleRandom < 4);
-check("bridge randomRange returns number in range", bridgeRandom >= 2 && bridgeRandom < 4);
 
 check("module exports nearestEnemy", typeof moduleNearestEnemy === "function");
-check("bridge assigns globalThis.TapSurvivorWeaponTargeting", Boolean(bridgeTargeting));
+check(
+  "weapon targeting bridge remains retired",
+  bridgeTargeting === undefined && !targetingBridge.source.includes("globalThis.TapSurvivorWeaponTargeting")
+);
 check(
   "weapon targeting bridge source has generated banner",
   hasGeneratedBanner(targetingBridge.source)
 );
-check("bridge exposes nearestEnemy", typeof bridgeTargeting?.nearestEnemy === "function");
 
 const targetingGame = {
   player: { x: 0, y: 0 },
@@ -1096,13 +1032,10 @@ const targetingGame = {
 };
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const moduleTarget = moduleNearestEnemy(targetingGame, distance);
-const bridgeTarget = bridgeTargeting.nearestEnemy(targetingGame, distance);
 check("module nearestEnemy fixture selects nearest enemy", moduleTarget?.id === "near");
-check("module and bridge targeting output match", moduleTarget === bridgeTarget);
 check(
-  "module and bridge targeting empty-enemy fallback match",
-  moduleNearestEnemy({ player: { x: 0, y: 0 }, enemies: [] }, distance) === null &&
-    bridgeTargeting.nearestEnemy({ player: { x: 0, y: 0 }, enemies: [] }, distance) === null
+  "module nearestEnemy empty-enemy fallback remains null",
+  moduleNearestEnemy({ player: { x: 0, y: 0 }, enemies: [] }, distance) === null
 );
 
 check("module exports createWeaponScaling", typeof createModuleWeaponScaling === "function");
@@ -1319,9 +1252,13 @@ check(
   "module and bridge game dependency bag output match",
   JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
 );
+for (const [name, readCount] of Object.entries(moduleGameDependenciesSnapshot.retiredGlobalReads)) {
+  check(`dependency bag does not read retired ${name}`, readCount === 0);
+}
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
 check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
 check("dependency bag exposes balance", moduleGameDependenciesSnapshot.hasBalance);
+check("dependency bag exposes content registry", moduleGameDependenciesSnapshot.hasContentRegistry);
 check("dependency bag exposes combat damage", moduleGameDependenciesSnapshot.hasCombatDamage);
 check("dependency bag exposes enemies", moduleGameDependenciesSnapshot.hasEnemies);
 check("dependency bag exposes enemy behaviors", moduleGameDependenciesSnapshot.hasEnemyBehaviors);
@@ -1389,25 +1326,16 @@ check("pickup texts rise and expire", modulePickupSnapshot.texts.remaining === 1
 check("pickup texts update y position", modulePickupSnapshot.texts.firstY === 86);
 
 check("module exports createCombatDamageSystem", typeof createModuleCombatDamageSystem === "function");
-check("bridge assigns globalThis.TapSurvivorCombatDamage", Boolean(bridgeCombatDamage));
+check(
+  "combat damage bridge remains retired",
+  bridgeCombatDamage === undefined && !combatDamageBridge.source.includes("globalThis.TapSurvivorCombatDamage")
+);
 check(
   "combat damage bridge source has generated banner",
   hasGeneratedBanner(combatDamageBridge.source)
 );
-check(
-  "bridge exposes createCombatDamageSystem",
-  typeof bridgeCombatDamage?.createCombatDamageSystem === "function"
-);
 
 const moduleCombatDamageSnapshot = combatDamageSnapshot(createModuleCombatDamageSystem, Math);
-const bridgeCombatDamageSnapshot = combatDamageSnapshot(
-  bridgeCombatDamage.createCombatDamageSystem,
-  combatDamageBridge.context.Math
-);
-check(
-  "module and bridge combat damage output match",
-  JSON.stringify(moduleCombatDamageSnapshot) === JSON.stringify(bridgeCombatDamageSnapshot)
-);
 check("combat damage exposes damageEnemy", moduleCombatDamageSnapshot.exposesDamageEnemy);
 check("combat damage exposes damagePlayer", moduleCombatDamageSnapshot.exposesDamagePlayer);
 check("combat damage exposes reapEnemies", moduleCombatDamageSnapshot.exposesReapEnemies);
@@ -1995,7 +1923,18 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorWeaponProjectiles",
     "TapSurvivorWeaponTargeting",
   ];
-  const globalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
+  const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
+  const retiredGlobalNames = [
+    "TapSurvivorBalance",
+    "TapSurvivorCombatDamage",
+    "TapSurvivorContentRegistry",
+    "TapSurvivorLevelUpChoices",
+    "TapSurvivorMath",
+    "TapSurvivorShopPricing",
+    "TapSurvivorWeaponTargeting",
+  ];
+  const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
+  const globalRef = baseGlobalRef;
   const documentRef = { createElement() {} };
   globalRef.document = documentRef;
   globalRef.TapSurvivorBalanceRuntime = {
@@ -2017,7 +1956,17 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       throw new Error("Forbidden TapSurvivorGameBanners global read");
     },
   });
-  const bag = createGameDependencyBag({ globalRef, documentRef });
+  const poisonedGlobalRef = { ...globalRef };
+  for (const name of retiredGlobalNames) {
+    Object.defineProperty(poisonedGlobalRef, name, {
+      configurable: true,
+      get() {
+        retiredGlobalReads[name] += 1;
+        throw new Error(`Forbidden ${name} global read`);
+      },
+    });
+  }
+  const bag = createGameDependencyBag({ globalRef: poisonedGlobalRef, documentRef });
   const shop = bag.shop.createShopSystem({
     effects: {
       addShopItemBonus() {},
@@ -2033,12 +1982,12 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     ui: {},
   });
 
-  const fallbackGlobalRef = { ...globalRef };
+  const fallbackGlobalRef = { ...baseGlobalRef };
   delete fallbackGlobalRef.TapSurvivorBalanceRuntime;
   delete fallbackGlobalRef.TapSurvivorUpgrades;
   const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
 
-  const missingGlobalRef = { ...globalRef };
+  const missingGlobalRef = { ...baseGlobalRef };
   delete missingGlobalRef.TapSurvivorAudio;
   let missingError = "";
   try {
@@ -2047,7 +1996,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingError = error.message;
   }
 
-  const missingInputGlobalRef = { ...globalRef };
+  const missingInputGlobalRef = { ...baseGlobalRef };
   delete missingInputGlobalRef.TapSurvivorInput;
   let missingInputError = "";
   try {
@@ -2062,18 +2011,27 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
     hasAssets: bag.assets.name === "TapSurvivorAssets",
-    hasBalance: bag.balance.name === "TapSurvivorBalance",
-    hasCombatDamage: bag.combatDamage.name === "TapSurvivorCombatDamage",
+    hasContentRegistry: typeof bag.contentRegistry.createContentRegistry === "function",
+    hasBalance: typeof bag.balance.floorDifficulty === "function",
+    hasCombatDamage: typeof bag.combatDamage.createCombatDamageSystem === "function",
     hasEnemies: bag.enemies.name === "TapSurvivorEnemies",
     hasEnemyBehaviors: bag.enemyBehaviors.name === "TapSurvivorEnemyBehaviors",
     hasEnemySpawning: bag.enemySpawning.name === "TapSurvivorEnemySpawning",
-    hasLevelUpChoices: bag.levelUpChoices.name === "TapSurvivorLevelUpChoices",
-    hasMath: bag.math.name === "TapSurvivorMath",
+    hasLevelUpChoices:
+      typeof bag.levelUpChoices.choiceId === "function" &&
+      typeof bag.levelUpChoices.shopFocusBonus === "function" &&
+      typeof bag.levelUpChoices.shuffleChoices === "function" &&
+      typeof bag.levelUpChoices.weightedChoices === "function",
+    hasMath:
+      typeof bag.math.clamp === "function" &&
+      typeof bag.math.distance === "function" &&
+      typeof bag.math.formatTime === "function" &&
+      typeof bag.math.randomRange === "function",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
     hasWeaponCooldowns: typeof bag.weaponCooldowns.createWeaponScaling === "function",
     hasWeaponFire: bag.weaponFire.name === "TapSurvivorWeaponFire",
     hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
-    hasWeaponTargeting: bag.weaponTargeting.name === "TapSurvivorWeaponTargeting",
+    hasWeaponTargeting: typeof bag.weaponTargeting.nearestEnemy === "function",
     hasSaveCorruption: bag.saveCorruption.name === "TapSurvivorSaveCorruption",
     hasSaveDefaults: bag.saveDefaults.name === "TapSurvivorSaveDefaults",
     hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
@@ -2083,12 +2041,13 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
     hasNativeShopFactory: typeof bag.shop.createShopSystem === "function",
     hasNativeShop: Boolean(shop),
-    hasShopPricing: bag.shopPricing.name === "TapSurvivorShopPricing",
+    hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
     hasUiProgression: bag.uiProgression.name === "TapSurvivorUiProgression",
     hasWeaponBehaviors: bag.weaponBehaviors.name === "TapSurvivorWeaponBehaviors",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,
+    retiredGlobalReads,
   };
 }
 

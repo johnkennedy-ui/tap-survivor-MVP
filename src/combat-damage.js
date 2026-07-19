@@ -106,7 +106,4 @@
     };
   }
 
-  globalThis.TapSurvivorCombatDamage = {
-    createCombatDamageSystem,
-  };
 })();

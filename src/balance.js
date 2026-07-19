@@ -32,7 +32,4 @@
     };
   }
 
-  globalThis.TapSurvivorBalance = {
-    floorDifficulty,
-  };
 })();

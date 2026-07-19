@@ -81,7 +81,4 @@
     };
   }
 
-  globalThis.TapSurvivorShopPricing = {
-    createShopPricing,
-  };
 })();

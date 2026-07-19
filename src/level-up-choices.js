@@ -57,10 +57,4 @@
     return (save.shopPurchases?.relic_compass || 0) * 0.5;
   }
 
-  globalThis.TapSurvivorLevelUpChoices = {
-    choiceId,
-    shopFocusBonus,
-    shuffleChoices,
-    weightedChoices,
-  };
 })();
