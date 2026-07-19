@@ -176,18 +176,4 @@
     return value;
   }
 
-  function createClassicShopSystem(options = {}) {
-    const resolvedOptions = options && typeof options === "object" ? options : {};
-    const documentRef = Object.prototype.hasOwnProperty.call(resolvedOptions, "documentRef")
-      ? resolvedOptions.documentRef
-      : globalThis.document;
-    return createShopSystem({
-      ...resolvedOptions,
-      documentRef,
-    });
-  }
-
-  globalThis.TapSurvivorShop = {
-    createShopSystem: createClassicShopSystem,
-  };
 })();

@@ -339,7 +339,14 @@ check(
     !gameRuntime.includes("globalThis.TapSurvivorInput"),
 );
 check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && runtimeEntry.includes("TapSurvivorPickups"));
-check("shared shop helper exists", shop.includes("TapSurvivorShop") && shopPricing.includes("TapSurvivorShopPricing") && runtimeEntry.includes("TapSurvivorShop"));
+check(
+  "shared shop helper is explicitly wired without the retired global",
+  shop.includes("createShopSystem") &&
+    shopPricing.includes("TapSurvivorShopPricing") &&
+    gameDependencies.includes("createShopSystem") &&
+    !shop.includes("globalThis.TapSurvivorShop") &&
+    !gameDependencies.includes("globalThis.TapSurvivorShop"),
+);
 check("shared relic helper exists", relics.includes("TapSurvivorRelics") && runtimeEntry.includes("TapSurvivorRelics"));
 check("shared run state helper exists", runState.includes("TapSurvivorRunState") && runtimeEntry.includes("TapSurvivorRunState"));
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && runtimeEntry.includes("TapSurvivorRunUpdate"));

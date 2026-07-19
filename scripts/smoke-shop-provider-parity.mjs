@@ -7,7 +7,7 @@ import { createShopSystem } from "../src/modules/shop.js";
 import { createShopPricing } from "../src/modules/shop-pricing.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const generatedClassicShopSource = readFileSync(`${root}/src/shop.js`, "utf8");
+const generatedClassicGameDependenciesSource = readFileSync(`${root}/src/game-dependencies.js`, "utf8");
 const shopItems = [
   {
     cost: [10, 20],
@@ -61,8 +61,12 @@ check(
   missingDocumentRefFailsClosed()
 );
 check(
-  "generated classic Shop bridge supplies globalThis.document only at the classic boundary",
+  "generated classic dependency bridge supplies documentRef through native Shop factory wiring",
   generatedClassicBoundaryUsesDocument()
+);
+check(
+  "generated classic Shop artifact has no retired global publisher",
+  !generatedClassicGameDependenciesSource.includes("globalThis.TapSurvivorShop")
 );
 check(
   "selected-browser Shop adapter fails closed before native binding and recovers after binding",
@@ -165,8 +169,71 @@ function createProvider(kind, fixture) {
 function createClassicProvider(fixture) {
   const context = vm.createContext({ document: fixture.documentRef });
   context.globalThis = context;
-  vm.runInContext(generatedClassicShopSource, context, { filename: "src/shop.js" });
-  return context.TapSurvivorShop.createShopSystem(withoutDocumentRef(fixture.nativeOptions));
+  vm.runInContext(generatedClassicGameDependenciesSource, context, { filename: "src/game-dependencies.js" });
+  const globalRef = createClassicDependencyGlobal(fixture);
+  const dependencies = context.TapSurvivorGameDependencies.createGameDependencyBag({
+    documentRef: fixture.documentRef,
+    globalRef,
+  });
+  return dependencies.shop.createShopSystem(withoutDocumentRef(fixture.nativeOptions));
+}
+
+
+function createClassicDependencyGlobal(fixture) {
+  const names = [
+    "TapSurvivorAudio",
+    "TapSurvivorAssets",
+    "TapSurvivorBalance",
+    "TapSurvivorCombat",
+    "TapSurvivorCombatDamage",
+    "TapSurvivorContentRegistry",
+    "TapSurvivorDebug",
+    "TapSurvivorEffects",
+    "TapSurvivorEnemies",
+    "TapSurvivorEnemyBehaviors",
+    "TapSurvivorEnemySpawning",
+    "TapSurvivorGameBanners",
+    "TapSurvivorGameRuntime",
+    "TapSurvivorLevelUp",
+    "TapSurvivorLevelUpChoices",
+    "TapSurvivorMapSystem",
+    "TapSurvivorMath",
+    "TapSurvivorPickups",
+    "TapSurvivorProgression",
+    "TapSurvivorQuests",
+    "TapSurvivorRelics",
+    "TapSurvivorRenderEnemies",
+    "TapSurvivorRenderHud",
+    "TapSurvivorRenderSkillRail",
+    "TapSurvivorRendering",
+    "TapSurvivorRunLifecycle",
+    "TapSurvivorRunState",
+    "TapSurvivorRunUi",
+    "TapSurvivorRunUpdate",
+    "TapSurvivorSave",
+    "TapSurvivorSaveCorruption",
+    "TapSurvivorSaveDefaults",
+    "TapSurvivorSaveMigrations",
+    "TapSurvivorSaveNormalize",
+    "TapSurvivorShellRelicUi",
+    "TapSurvivorShellUi",
+    "TapSurvivorSprites",
+    "TapSurvivorStorage",
+    "TapSurvivorUi",
+    "TapSurvivorUiProgression",
+    "TapSurvivorWeaponBehaviors",
+    "TapSurvivorWeaponCooldowns",
+    "TapSurvivorWeaponFire",
+    "TapSurvivorWeaponProjectiles",
+    "TapSurvivorWeaponTargeting",
+  ];
+  const globalRef = Object.fromEntries(names.map((name) => [name, { name }]));
+  globalRef.document = fixture.documentRef;
+  globalRef.TapSurvivorBalanceRuntime = { content: () => ({}) };
+  globalRef.TapSurvivorContent = {};
+  globalRef.TapSurvivorInput = { bindMovementInput() {} };
+  globalRef.TapSurvivorShopPricing = { createShopPricing };
+  return globalRef;
 }
 
 function createSelectedBrowserProvider(fixture) {

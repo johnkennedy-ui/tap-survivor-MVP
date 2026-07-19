@@ -1303,6 +1303,11 @@ check(
   "bridge exposes createGameDependencyBag",
   typeof bridgeGameDependencies?.createGameDependencyBag === "function"
 );
+check(
+  "game dependency bridge has no retired Shop global publisher or reader",
+  !gameDependenciesBridge.source.includes("globalThis.TapSurvivorShop") &&
+    !gameDependenciesBridge.source.includes('"TapSurvivorShop"')
+);
 
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
@@ -1332,6 +1337,8 @@ check("dependency bag exposes save defaults", moduleGameDependenciesSnapshot.has
 check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
 check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
+check("dependency bag exposes native Shop factory", moduleGameDependenciesSnapshot.hasNativeShopFactory);
+check("dependency bag creates native Shop with preserved documentRef", moduleGameDependenciesSnapshot.hasNativeShop);
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
 check("dependency bag exposes UI progression", moduleGameDependenciesSnapshot.hasUiProgression);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
@@ -1975,7 +1982,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorSaveNormalize",
     "TapSurvivorShellRelicUi",
     "TapSurvivorShellUi",
-    "TapSurvivorShop",
     "TapSurvivorShopPricing",
     "TapSurvivorSprites",
     "TapSurvivorStorage",
@@ -1988,6 +1994,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorWeaponTargeting",
   ];
   const globalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
+  const documentRef = { createElement() {} };
+  globalRef.document = documentRef;
   globalRef.TapSurvivorBalanceRuntime = {
     content: () => ({ id: "override" }),
   };
@@ -1999,7 +2007,21 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.TapSurvivorInput = {
     bindMovementInput,
   };
-  const bag = createGameDependencyBag({ globalRef });
+  const bag = createGameDependencyBag({ globalRef, documentRef });
+  const shop = bag.shop.createShopSystem({
+    effects: {
+      addShopItemBonus() {},
+      applyShopItemEffectToRun() {},
+      emptyShopBonuses: () => ({}),
+    },
+    getGame: () => ({}),
+    getSave: () => ({ coins: 0, shopPurchases: {} }),
+    persist() {},
+    renderMeta() {},
+    shopItemDefs: [],
+    shopPricing: { createShopPricing: () => ({}) },
+    ui: {},
+  });
 
   const fallbackGlobalRef = { ...globalRef };
   delete fallbackGlobalRef.TapSurvivorBalanceRuntime;
@@ -2047,6 +2069,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
     hasSaveNormalize: bag.saveNormalize.name === "TapSurvivorSaveNormalize",
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
+    hasNativeShopFactory: typeof bag.shop.createShopSystem === "function",
+    hasNativeShop: Boolean(shop),
     hasShopPricing: bag.shopPricing.name === "TapSurvivorShopPricing",
     hasUiProgression: bag.uiProgression.name === "TapSurvivorUiProgression",
     hasWeaponBehaviors: bag.weaponBehaviors.name === "TapSurvivorWeaponBehaviors",

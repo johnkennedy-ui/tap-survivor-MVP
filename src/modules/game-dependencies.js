@@ -1,4 +1,6 @@
-export function createGameDependencyBag({ globalRef }) {
+import { createShopSystem } from "./shop.js";
+
+export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
   return {
     audio: requireGlobal(globalRef, "TapSurvivorAudio"),
     assets: globalRef.TapSurvivorAssets || {},
@@ -45,7 +47,13 @@ export function createGameDependencyBag({ globalRef }) {
     saveNormalize: requireGlobal(globalRef, "TapSurvivorSaveNormalize"),
     shellRelicUi: requireGlobal(globalRef, "TapSurvivorShellRelicUi"),
     shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
-    shop: requireGlobal(globalRef, "TapSurvivorShop"),
+    shop: {
+      createShopSystem: (options = {}) =>
+        createShopSystem({
+          ...options,
+          documentRef: options.documentRef || documentRef,
+        }),
+    },
     shopPricing: requireGlobal(globalRef, "TapSurvivorShopPricing"),
     sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
     storage: requireGlobal(globalRef, "TapSurvivorStorage"),

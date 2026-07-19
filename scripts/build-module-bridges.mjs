@@ -107,29 +107,9 @@ const bridges = [
   {
     source: "src/modules/shop.js",
     target: "src/shop.js",
-    globalName: "TapSurvivorShop",
+    globalName: null,
     exports: ["MODULE_NATIVE_SHOP_SLOTS", "MODULE_NATIVE_SHOP_PROOF_SLOTS", "createShopSystem"],
-    classicExportWrappers: {
-      createShopSystem: {
-        name: "createClassicShopSystem",
-        source: `function createClassicShopSystem(options = {}) {
-  const resolvedOptions = options && typeof options === "object" ? options : {};
-  const documentRef = Object.prototype.hasOwnProperty.call(resolvedOptions, "documentRef")
-    ? resolvedOptions.documentRef
-    : globalThis.document;
-  return createShopSystem({
-    ...resolvedOptions,
-    documentRef,
-  });
-}`,
-      },
-    },
-    globalMembers: [
-      {
-        name: "createShopSystem",
-        value: "createClassicShopSystem",
-      },
-    ],
+    globalMembers: [],
   },
   {
     source: "src/modules/relics.js",
@@ -220,6 +200,12 @@ const bridges = [
     target: "src/game-dependencies.js",
     globalName: "TapSurvivorGameDependencies",
     exports: ["createGameDependencyBag"],
+    bundledSources: [
+      {
+        source: "src/modules/shop.js",
+        exports: ["MODULE_NATIVE_SHOP_SLOTS", "MODULE_NATIVE_SHOP_PROOF_SLOTS", "createShopSystem"],
+      },
+    ],
   },
   {
     source: "src/modules/run-lifecycle.js",
@@ -267,7 +253,7 @@ for (const bridge of bridges) {
  * @param {{
  *   source: string,
  *   target: string,
- *   globalName: string,
+ *   globalName: string | null,
  *   exports: string[],
  *   classicBoundarySource?: string,
  *   classicExportWrappers?: Record<string, { name: string, source: string }>,
@@ -321,21 +307,23 @@ async function buildClassicBridge({
       return `    ${exportName.name}: ${exportName.value},`;
     })
     .join("\n");
+  const publisherSource = globalName
+    ? `
+  globalThis.${globalName} = {
+${globalMemberSource}
+  };`
+    : "";
   const generatedSource = `// GENERATED FILE. Do not edit directly.
 // Source: ${source}
 // Run: npm run build:bridges
 (() => {
   "use strict";
 
-${indent(classicBody, 2)}
-
-  globalThis.${globalName} = {
-${globalMemberSource}
-  };
+${indent(classicBody, 2)}\n${publisherSource}
 })();
 `;
 
-  if (!generatedSource.includes(`globalThis.${globalName}`)) {
+  if (globalName && !generatedSource.includes(`globalThis.${globalName}`)) {
     throw new Error(`${target} generation did not include ${globalName}`);
   }
   for (const { name } of resolvedGlobalMembers) {

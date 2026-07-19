@@ -77,13 +77,10 @@ Generated content globals:
 - `src/modules/save.js` now receives save normalize, save corruption, and storage helpers through its factory arguments
   instead of reading those globals directly; generated `src/save.js` keeps a compatibility boundary wrapper so classic
   `TapSurvivorSave.createSaveSystem(...)` callers still receive the script-order globals by default.
-- `src/shop.js` now receives the effects helper object through `src/game.js` factory wiring instead of reading
-  `globalThis.TapSurvivorEffects` directly when applying shop purchases and calculating shop bonuses.
-- `src/shop.js` now receives the shop pricing helper through `src/game.js` factory wiring instead of reading
-  `globalThis.TapSurvivorShopPricing` directly.
-- Generated `src/shop.js` is a classic-only fallback boundary: its wrapper injects `globalThis.document` only when a
-  classic caller omits `documentRef`; native `src/modules/shop.js` requires an explicit injected `documentRef` and has
-  no global fallback.
+- `src/modules/game-dependencies.js` now wires the native Shop factory explicitly into the classic dependency bag; the
+  factory receives the classic `documentRef` boundary without reading `globalThis.TapSurvivorShop`.
+- Generated `src/shop.js` remains a source-derived classic artifact without a global publisher; the classic dependency
+  bridge bundles the native Shop factory and preserves its explicit `documentRef` wiring.
 - `scripts/smoke-shop-provider-parity.mjs` has two temporary `globalThis.document` getter guard/restore reads. They
   prove native Shop does not access the global while retaining the generated classic-boundary parity fixture.
 - `src/level-up.js` now receives level-up choice helpers and the optional asset resolver provider through `src/game.js`
@@ -114,7 +111,7 @@ Runtime module globals:
   `TapSurvivorRunUi`, `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.
 - Gameplay systems: `TapSurvivorRunState`, `TapSurvivorRunUpdate`, `TapSurvivorRunLifecycle`, `TapSurvivorEnemies`,
   `TapSurvivorEnemyBehaviors`, `TapSurvivorEnemySpawning`, `TapSurvivorCombat`, `TapSurvivorCombatDamage`,
-  `TapSurvivorPickups`, `TapSurvivorShop`, `TapSurvivorShopPricing`, `TapSurvivorRelics`.
+  `TapSurvivorPickups`, `TapSurvivorShopPricing`, `TapSurvivorRelics`.
 - Weapon systems: `TapSurvivorWeaponTargeting`, `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`,
   `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`,
   `TapSurvivorLevelUpChoices`.
