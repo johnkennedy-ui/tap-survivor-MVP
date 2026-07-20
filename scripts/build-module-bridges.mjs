@@ -71,7 +71,8 @@ const bridges = [
   {
     source: "src/modules/save-migrations.js",
     target: "src/save-migrations.js",
-    globalName: "TapSurvivorSaveMigrations",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorSaveMigrations",
     exports: ["isPlainObject", "migrateSave"],
   },
   {
@@ -231,6 +232,10 @@ const bridges = [
       {
         source: "src/modules/save-defaults.js",
         exports: ["CURRENT_SAVE_VERSION", "createDefaultSave"],
+      },
+      {
+        source: "src/modules/save-migrations.js",
+        exports: ["isPlainObject", "migrateSave"],
       },
       {
         source: "src/modules/level-up-choices.js",

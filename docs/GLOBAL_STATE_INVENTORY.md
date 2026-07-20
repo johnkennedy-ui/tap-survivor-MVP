@@ -71,8 +71,9 @@ Generated content globals:
   of reading `globalThis.TapSurvivorSaveDefaults` and `globalThis.TapSurvivorSaveMigrations` directly.
 - `src/modules/save-migrations.js` and `src/modules/save-normalize.js` no longer read save defaults/migrations globals at
   module load; `src/modules/save.js` passes the current save version and plain-object helper through the save factory path.
-  The generated `src/save-defaults.js` bridge bundles its exports without publishing `TapSurvivorSaveDefaults`; the classic
-  `src/game-dependencies.js` bridge supplies those exports through `saveDefaults` in the dependency bag.
+  The generated `src/save-defaults.js` and `src/save-migrations.js` bridges bundle their exports without publishing
+  `TapSurvivorSaveDefaults` or `TapSurvivorSaveMigrations`; the classic `src/game-dependencies.js` bridge supplies those
+  exports through `saveDefaults` and `saveMigrations` in the dependency bag.
 - `src/modules/save.js` now receives save normalize, save corruption, and storage helpers through its factory arguments
   instead of reading those globals directly; generated `src/save.js` keeps a compatibility boundary wrapper so classic
   `TapSurvivorSave.createSaveSystem(...)` callers still receive the remaining script-order helpers by default.
@@ -108,9 +109,9 @@ Runtime module globals:
   targeting, and combat damage directly; those helpers no longer appear as runtime globals.
 - Core data/systems: `TapSurvivorProgression`, `TapSurvivorEffects`; map resolution is supplied as `createMapSystem`
   through the `TapSurvivorGameDependencies` dependency bag, with the former `TapSurvivorMapSystem` publisher retired.
-- Save/storage: `TapSurvivorStorage`, `TapSurvivorSaveMigrations`, `TapSurvivorSaveNormalize`, `TapSurvivorSaveCorruption`,
-  `TapSurvivorSave`; save defaults are supplied as `saveDefaults` by `TapSurvivorGameDependencies` and no longer have a
-  `TapSurvivorSaveDefaults` global publisher.
+- Save/storage: `TapSurvivorStorage`, `TapSurvivorSaveNormalize`, `TapSurvivorSaveCorruption`, `TapSurvivorSave`;
+  save defaults and migrations are supplied as `saveDefaults` and `saveMigrations` by `TapSurvivorGameDependencies` and
+  no longer have `TapSurvivorSaveDefaults` or `TapSurvivorSaveMigrations` global publishers.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
   `TapSurvivorRunUi`, `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.

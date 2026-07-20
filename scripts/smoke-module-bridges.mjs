@@ -37,10 +37,6 @@ import {
 const { isPlainObject: moduleIsPlainObject, migrateSave: moduleMigrateSave } = await import(
   "../src/modules/save-migrations.js"
 );
-globalThis["TapSurvivorSaveMigrations"] = {
-  isPlainObject: moduleIsPlainObject,
-  migrateSave: moduleMigrateSave,
-};
 const {
   arrayValue: moduleArrayValue,
   createSaveNormalizer: createModuleSaveNormalizer,
@@ -96,11 +92,8 @@ const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
 const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defaults.js");
 const saveMigrationsBridge = loadBridge("../src/save-migrations.js", "src/save-migrations.js");
-const saveNormalizeBridge = loadBridge("../src/save-normalize.js", "src/save-normalize.js", {
-  TapSurvivorSaveMigrations: saveMigrationsBridge.context.TapSurvivorSaveMigrations,
-});
+const saveNormalizeBridge = loadBridge("../src/save-normalize.js", "src/save-normalize.js");
 const saveBridge = loadBridge("../src/save.js", "src/save.js", {
-  TapSurvivorSaveMigrations: saveMigrationsBridge.context.TapSurvivorSaveMigrations,
   TapSurvivorSaveNormalize: saveNormalizeBridge.context.TapSurvivorSaveNormalize,
   TapSurvivorSaveCorruption: saveCorruptionBridge.context.TapSurvivorSaveCorruption,
 });
@@ -466,22 +459,17 @@ check("save defaults bridge source has generated banner", hasGeneratedBanner(sav
 
 check("module exports isPlainObject", typeof moduleIsPlainObject === "function");
 check("module exports migrateSave", typeof moduleMigrateSave === "function");
-check("bridge assigns globalThis.TapSurvivorSaveMigrations", Boolean(bridgeSaveMigrations));
+check(
+  "save migrations bridge retires global publisher",
+  bridgeSaveMigrations === undefined && !saveMigrationsBridge.source.includes("globalThis.TapSurvivorSaveMigrations")
+);
 check(
   "save migrations bridge source has generated banner",
   hasGeneratedBanner(saveMigrationsBridge.source)
 );
-check("bridge exposes isPlainObject", typeof bridgeSaveMigrations?.isPlainObject === "function");
-check("bridge exposes migrateSave", typeof bridgeSaveMigrations?.migrateSave === "function");
 check("isPlainObject object fixture is unchanged", moduleIsPlainObject({}) === true);
 check("isPlainObject null fixture is unchanged", moduleIsPlainObject(null) === false);
 check("isPlainObject array fixture is unchanged", moduleIsPlainObject([]) === false);
-check(
-  "module and bridge isPlainObject output match",
-  JSON.stringify([{}, null, []].map(moduleIsPlainObject)) ===
-    JSON.stringify([{}, null, []].map(bridgeSaveMigrations.isPlainObject))
-);
-
 const saveMigrationFixtures = [
   { saveVersion: 1 },
   { saveVersion: 2 },
@@ -492,7 +480,6 @@ const saveMigrationFixtures = [
   { saveVersion: 1, shopPurchases: { boots: 2 }, seenBanners: ["floor_2"] },
 ];
 const moduleMigrationResults = saveMigrationFixtures.map(moduleMigrateSave);
-const bridgeMigrationResults = saveMigrationFixtures.map(bridgeSaveMigrations.migrateSave);
 check("migrateSave version one fixture ends at current version", moduleMigrationResults[0].saveVersion === 3);
 check(
   "migrateSave version one fixture applies version two shop purchases",
@@ -518,10 +505,6 @@ check(
   "migrateSave preserves existing migration fields",
   JSON.stringify(moduleMigrationResults[6].shopPurchases) === JSON.stringify({ boots: 2 }) &&
     JSON.stringify(moduleMigrationResults[6].seenBanners) === JSON.stringify(["floor_2"])
-);
-check(
-  "module and bridge migration output match",
-  JSON.stringify(moduleMigrationResults) === JSON.stringify(bridgeMigrationResults)
 );
 
 check("module exports arrayValue", typeof moduleArrayValue === "function");
@@ -1255,6 +1238,15 @@ check(
     JSON.stringify(bridgeGameDependenciesSnapshot.defaultSave)
 );
 check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
+check(
+  "dependency bag migration helper output matches module fixture",
+  JSON.stringify(moduleGameDependenciesSnapshot.migrationResults) === JSON.stringify(moduleMigrationResults)
+);
+check(
+  "dependency bag isPlainObject output matches module fixture",
+  JSON.stringify(moduleGameDependenciesSnapshot.isPlainObjectResults) ===
+    JSON.stringify([{}, null, []].map(moduleIsPlainObject))
+);
 check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
 check("dependency bag exposes native game banner factory", moduleGameDependenciesSnapshot.hasGameBannerFactory);
@@ -1888,7 +1880,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRunUpdate",
     "TapSurvivorSave",
     "TapSurvivorSaveCorruption",
-    "TapSurvivorSaveMigrations",
     "TapSurvivorSaveNormalize",
     "TapSurvivorShellRelicUi",
     "TapSurvivorShellUi",
@@ -1911,6 +1902,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorMath",
     "TapSurvivorMapSystem",
     "TapSurvivorSaveDefaults",
+    "TapSurvivorSaveMigrations",
     "TapSurvivorShopPricing",
     "TapSurvivorWeaponTargeting",
   ];
@@ -2021,7 +2013,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.saveDefaults.createDefaultSave === "function",
     saveDefaultsVersion: bag.saveDefaults.CURRENT_SAVE_VERSION,
     defaultSave: bag.saveDefaults.createDefaultSave({ starterQuestIds: ["daily_one", "daily_two"] }),
-    hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
+    hasSaveMigrations:
+      typeof bag.saveMigrations.isPlainObject === "function" &&
+      typeof bag.saveMigrations.migrateSave === "function",
+    migrationResults: saveMigrationFixtures.map((fixture) => bag.saveMigrations.migrateSave(fixture)),
+    isPlainObjectResults: [{}, null, []].map((fixture) => bag.saveMigrations.isPlainObject(fixture)),
     hasSaveNormalize: bag.saveNormalize.name === "TapSurvivorSaveNormalize",
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     bannerGlobalReads,

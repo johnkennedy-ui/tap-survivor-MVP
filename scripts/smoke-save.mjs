@@ -15,6 +15,7 @@ const saveSource = readFileSync(join(root, "src/save.js"), "utf8");
 
 const storage = new Map();
 let retiredSaveDefaultsReads = 0;
+let retiredSaveMigrationsReads = 0;
 const context = {
   console,
   localStorage: {
@@ -34,6 +35,13 @@ Object.defineProperty(context, "TapSurvivorSaveDefaults", {
   get() {
     retiredSaveDefaultsReads += 1;
     throw new Error("Forbidden TapSurvivorSaveDefaults global read");
+  },
+});
+Object.defineProperty(context, "TapSurvivorSaveMigrations", {
+  configurable: true,
+  get() {
+    retiredSaveMigrationsReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveMigrations global read");
   },
 });
 vm.createContext(context);
@@ -61,6 +69,7 @@ const dependencyBag = context.TapSurvivorGameDependencies.createGameDependencyBa
   documentRef: {},
 });
 const saveDefaults = dependencyBag.saveDefaults;
+const saveMigrations = dependencyBag.saveMigrations;
 
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";
@@ -74,7 +83,7 @@ const saveSystem = context.TapSurvivorSave.createSaveSystem({
   saveKey,
   legacySaveKey,
   saveDefaults,
-  saveMigrations: context.TapSurvivorSaveMigrations,
+  saveMigrations,
   starterQuestIds: content.questGroups.starter,
   questDefs: content.quests,
   weaponUnlocks: content.weaponUnlocks,
@@ -176,6 +185,7 @@ check("future save version is normalized current", future.saveVersion === 3);
 check("future unknown fields are preserved", future.futureField?.keep === true);
 
 let throwingRetiredSaveDefaultsReads = 0;
+let throwingRetiredSaveMigrationsReads = 0;
 const throwingContext = {
   console,
   localStorage: {
@@ -195,6 +205,13 @@ Object.defineProperty(throwingContext, "TapSurvivorSaveDefaults", {
   get() {
     throwingRetiredSaveDefaultsReads += 1;
     throw new Error("Forbidden TapSurvivorSaveDefaults global read");
+  },
+});
+Object.defineProperty(throwingContext, "TapSurvivorSaveMigrations", {
+  configurable: true,
+  get() {
+    throwingRetiredSaveMigrationsReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveMigrations global read");
   },
 });
 vm.createContext(throwingContext);
@@ -229,7 +246,7 @@ const throwingSaveSystem = throwingContext.TapSurvivorSave.createSaveSystem({
   saveKey,
   legacySaveKey,
   saveDefaults: throwingDependencyBag.saveDefaults,
-  saveMigrations: throwingContext.TapSurvivorSaveMigrations,
+  saveMigrations: throwingDependencyBag.saveMigrations,
   starterQuestIds: content.questGroups.starter,
   questDefs: content.quests,
   weaponUnlocks: content.weaponUnlocks,
@@ -243,7 +260,18 @@ const unavailableSave = await throwingSaveSystem.loadSave();
 const unavailablePersisted = await throwingSaveSystem.persist(unavailableSave);
 check("save defaults bridge publishes no retired global", !saveDefaultsSource.includes("globalThis.TapSurvivorSaveDefaults"));
 check("save defaults are supplied by dependency bag", saveDefaults.CURRENT_SAVE_VERSION === 3);
-check("retired save defaults global is never read", retiredSaveDefaultsReads === 0 && throwingRetiredSaveDefaultsReads === 0);
+check("save migrations bridge publishes no retired global", !saveMigrationsSource.includes("globalThis.TapSurvivorSaveMigrations"));
+check(
+  "save migrations are supplied by dependency bag",
+  typeof saveMigrations.isPlainObject === "function" && typeof saveMigrations.migrateSave === "function"
+);
+check(
+  "retired save globals are never read",
+  retiredSaveDefaultsReads === 0 &&
+    throwingRetiredSaveDefaultsReads === 0 &&
+    retiredSaveMigrationsReads === 0 &&
+    throwingRetiredSaveMigrationsReads === 0
+);
 check("storage unavailable load returns default save", unavailableSave.unlockedWeapons.includes("spark_bolt"));
 check("storage unavailable persist reports false", unavailablePersisted === false);
 check("storage unavailable backend is controlled", throwingAdapter.getStorageBackendName() === "unavailable");

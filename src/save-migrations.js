@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/save-migrations.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorSaveMigrations. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -67,8 +68,4 @@
     return migrated;
   }
 
-  globalThis.TapSurvivorSaveMigrations = {
-    isPlainObject,
-    migrateSave,
-  };
 })();

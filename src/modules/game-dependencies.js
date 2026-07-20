@@ -6,6 +6,7 @@ import { createMapSystem } from "./map-system.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
+import { isPlainObject, migrateSave } from "./save-migrations.js";
 import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
 import { createWeaponScaling } from "./weapon-cooldowns.js";
@@ -54,7 +55,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     save: requireGlobal(globalRef, "TapSurvivorSave"),
     saveCorruption: requireGlobal(globalRef, "TapSurvivorSaveCorruption"),
     saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
-    saveMigrations: requireGlobal(globalRef, "TapSurvivorSaveMigrations"),
+    saveMigrations: { isPlainObject, migrateSave },
     saveNormalize: requireGlobal(globalRef, "TapSurvivorSaveNormalize"),
     shellRelicUi: requireGlobal(globalRef, "TapSurvivorShellRelicUi"),
     shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
