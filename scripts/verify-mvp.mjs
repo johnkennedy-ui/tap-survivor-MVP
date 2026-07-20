@@ -284,10 +284,12 @@ check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && runt
 check("shared save helpers exist", save.includes("TapSurvivorSave") && saveDefaults.includes("TapSurvivorSaveDefaults") && saveMigrations.includes("TapSurvivorSaveMigrations") && saveNormalize.includes("TapSurvivorSaveNormalize") && runtimeEntry.includes("TapSurvivorSave") && storageAdapter.includes("TapSurvivorStorage"));
 check(
   "shared math helpers exist",
-  math.includes("TapSurvivorMath") &&
-    runtimeEntry.includes("TapSurvivorMath") &&
+  math.includes("function clamp") &&
+    gameDependencies.includes("math: { clamp, distance, formatTime, randomRange }") &&
+    game.includes("const { clamp, distance, randomRange, formatTime } = math") &&
     rendering.includes("clamp") &&
     renderHud.includes("clamp") &&
+    !math.includes("globalThis.TapSurvivorMath") &&
     !rendering.includes("globalThis.TapSurvivorMath") &&
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
@@ -310,7 +312,14 @@ check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") 
 check("sprite cache trims transparent padding", sprites.includes("trimmedSpriteBounds") && sprites.includes("getImageData") && sprites.includes("spriteBounds"));
 check("sprite atlases support animated frames", sprites.includes("currentFrameIndex") && sprites.includes("transparentColor") && sprites.includes("spriteSourceBounds"));
 check("enemy sprites draw larger than hit radius", renderEnemies.includes("spriteSize") && renderEnemies.includes("Math.max(34") && renderEnemies.includes("Math.max(92"));
-check("shared content registry exists", contentRegistry.includes("TapSurvivorContentRegistry") && runtimeEntry.includes("TapSurvivorContentRegistry"));
+check(
+  "shared content registry exists",
+  contentRegistry.includes("function createContentRegistry") &&
+    gameDependencies.includes("contentRegistry: { createContentRegistry }") &&
+    game.includes("contentRegistry.createContentRegistry") &&
+    !contentRegistry.includes("globalThis.TapSurvivorContentRegistry") &&
+    !gameDependencies.includes("TapSurvivorContentRegistry"),
+);
 check("shared progression helper exists", progression.includes("TapSurvivorProgression") && runtimeEntry.includes("TapSurvivorProgression"));
 check(
   "shared HUD renderer helper exists",
@@ -329,7 +338,15 @@ check(
 );
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && runtimeEntry.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
 check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && runtimeEntry.includes("TapSurvivorRunUi"));
-check("shared level-up helper exists", levelUp.includes("TapSurvivorLevelUp") && levelUpChoices.includes("TapSurvivorLevelUpChoices") && runtimeEntry.includes("TapSurvivorLevelUp"));
+check(
+  "shared level-up helper exists",
+  levelUp.includes("levelUpChoices") &&
+    levelUpChoices.includes("function choiceId") &&
+    gameDependencies.includes("levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices }") &&
+    game.includes("levelUpChoices,") &&
+    !levelUpChoices.includes("globalThis.TapSurvivorLevelUpChoices") &&
+    !levelUp.includes("globalThis.TapSurvivorLevelUpChoices"),
+);
 check(
   "shared input helper exists",
   input.includes("TapSurvivorInput") &&
@@ -342,8 +359,12 @@ check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && r
 check(
   "shared shop helper is explicitly wired without the retired global",
   shop.includes("createShopSystem") &&
-    shopPricing.includes("TapSurvivorShopPricing") &&
-    gameDependencies.includes("createShopSystem") &&
+    shop.includes("shopPricing") &&
+    shopPricing.includes("function createShopPricing") &&
+    gameDependencies.includes("shopPricing: { createShopPricing }") &&
+    game.includes("shopPricing,") &&
+    !shopPricing.includes("globalThis.TapSurvivorShopPricing") &&
+    !gameDependencies.includes("TapSurvivorShopPricing") &&
     !shop.includes("globalThis.TapSurvivorShop") &&
     !gameDependencies.includes("globalThis.TapSurvivorShop"),
 );
@@ -353,15 +374,21 @@ check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdat
 check(
   "shared weapon helpers exist",
   weaponProjectiles.includes("TapSurvivorWeaponProjectiles") &&
-    weaponTargeting.includes("TapSurvivorWeaponTargeting") &&
+    weaponTargeting.includes("function nearestEnemy") &&
     weaponFire.includes("TapSurvivorWeaponFire") &&
     gameDependencies.includes("TapSurvivorWeaponBehaviors") &&
     gameDependencies.includes("TapSurvivorWeaponFire") &&
+    gameDependencies.includes("weaponCooldowns: { createWeaponScaling }") &&
+    gameDependencies.includes("weaponTargeting: { nearestEnemy }") &&
     game.includes("weaponBehaviors,") &&
     game.includes("weaponFire,") &&
+    game.includes("weaponCooldowns,") &&
+    game.includes("weaponTargeting,") &&
     combat.includes("weaponFire.createWeaponFireSystem") &&
     combat.includes("weaponBehaviors,") &&
     weaponFire.includes("weaponBehaviors.createWeaponBehaviorSystem") &&
+    !weaponTargeting.includes("globalThis.TapSurvivorWeaponTargeting") &&
+    !gameDependencies.includes("TapSurvivorWeaponTargeting") &&
     !weaponFire.includes("globalThis.TapSurvivorWeaponBehaviors") &&
     !combat.includes("globalThis.TapSurvivorWeaponFire"),
 );
@@ -389,10 +416,12 @@ check(
 );
 check(
   "shared balance helper exists",
-  balance.includes("TapSurvivorBalance") &&
-    enemies.includes("balance.floorDifficulty") &&
-    gameDependencies.includes("TapSurvivorBalance") &&
+  balance.includes("function floorDifficulty") &&
+    gameDependencies.includes("balance: { floorDifficulty }") &&
     game.includes("balance,") &&
+    enemies.includes("balance.floorDifficulty") &&
+    !balance.includes("globalThis.TapSurvivorBalance") &&
+    !gameDependencies.includes('requireGlobal(globalRef, "TapSurvivorBalance")') &&
     !enemies.includes("globalThis.TapSurvivorBalance"),
 );
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));
