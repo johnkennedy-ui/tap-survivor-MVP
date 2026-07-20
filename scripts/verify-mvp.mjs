@@ -290,6 +290,7 @@ check(
     rendering.includes("clamp") &&
     renderHud.includes("clamp") &&
     !math.includes("globalThis.TapSurvivorMath") &&
+    !gameDependencies.includes("TapSurvivorMath") &&
     !rendering.includes("globalThis.TapSurvivorMath") &&
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
@@ -344,8 +345,11 @@ check(
     levelUpChoices.includes("function choiceId") &&
     gameDependencies.includes("levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices }") &&
     game.includes("levelUpChoices,") &&
+    levelUp.includes("TapSurvivorLevelUp") &&
+    runtimeEntry.includes("TapSurvivorLevelUp") &&
     !levelUpChoices.includes("globalThis.TapSurvivorLevelUpChoices") &&
-    !levelUp.includes("globalThis.TapSurvivorLevelUpChoices"),
+    !levelUp.includes("globalThis.TapSurvivorLevelUpChoices") &&
+    !gameDependencies.includes("TapSurvivorLevelUpChoices"),
 );
 check(
   "shared input helper exists",
@@ -361,6 +365,7 @@ check(
   shop.includes("createShopSystem") &&
     shop.includes("shopPricing") &&
     shopPricing.includes("function createShopPricing") &&
+    gameDependencies.includes("createShopSystem") &&
     gameDependencies.includes("shopPricing: { createShopPricing }") &&
     game.includes("shopPricing,") &&
     !shopPricing.includes("globalThis.TapSurvivorShopPricing") &&
@@ -378,11 +383,9 @@ check(
     weaponFire.includes("TapSurvivorWeaponFire") &&
     gameDependencies.includes("TapSurvivorWeaponBehaviors") &&
     gameDependencies.includes("TapSurvivorWeaponFire") &&
-    gameDependencies.includes("weaponCooldowns: { createWeaponScaling }") &&
     gameDependencies.includes("weaponTargeting: { nearestEnemy }") &&
     game.includes("weaponBehaviors,") &&
     game.includes("weaponFire,") &&
-    game.includes("weaponCooldowns,") &&
     game.includes("weaponTargeting,") &&
     combat.includes("weaponFire.createWeaponFireSystem") &&
     combat.includes("weaponBehaviors,") &&
@@ -421,7 +424,7 @@ check(
     game.includes("balance,") &&
     enemies.includes("balance.floorDifficulty") &&
     !balance.includes("globalThis.TapSurvivorBalance") &&
-    !gameDependencies.includes('requireGlobal(globalRef, "TapSurvivorBalance")') &&
+    !/\bTapSurvivorBalance\b/.test(gameDependencies) &&
     !enemies.includes("globalThis.TapSurvivorBalance"),
 );
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));
