@@ -351,6 +351,30 @@
     };
   }
 
+  const CURRENT_SAVE_VERSION = 3;
+
+  function createDefaultSave({ starterQuestIds }) {
+    return {
+      saveVersion: CURRENT_SAVE_VERSION,
+      coins: 0,
+      towerFloor: 1,
+      questPoints: 0,
+      totalQuestPoints: 0,
+      unlockedNodes: [],
+      unlockedWeapons: ["spark_bolt"],
+      selectedStartingWeapon: "spark_bolt",
+      upgradeTiers: {},
+      unlockedUpgrades: [],
+      shopPurchases: {},
+      seenBanners: [],
+      unlockedRelics: [],
+      equippedRelics: [],
+      activeQuests: [...starterQuestIds],
+      completedQuests: [],
+      questProgress: {},
+    };
+  }
+
   /**
    * @typedef {{
    *   weaponId?: string,
@@ -909,7 +933,7 @@
       runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
       save: requireGlobal(globalRef, "TapSurvivorSave"),
       saveCorruption: requireGlobal(globalRef, "TapSurvivorSaveCorruption"),
-      saveDefaults: requireGlobal(globalRef, "TapSurvivorSaveDefaults"),
+      saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
       saveMigrations: requireGlobal(globalRef, "TapSurvivorSaveMigrations"),
       saveNormalize: requireGlobal(globalRef, "TapSurvivorSaveNormalize"),
       shellRelicUi: requireGlobal(globalRef, "TapSurvivorShellRelicUi"),

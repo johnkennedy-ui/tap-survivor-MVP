@@ -7,12 +7,14 @@ const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content
 const questsSource = readFileSync(join(root, "src/quests.js"), "utf8");
 const storageSource = readFileSync(join(root, "src/storage-adapter.js"), "utf8");
 const saveDefaultsSource = readFileSync(join(root, "src/save-defaults.js"), "utf8");
+const gameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 const saveMigrationsSource = readFileSync(join(root, "src/save-migrations.js"), "utf8");
 const saveNormalizeSource = readFileSync(join(root, "src/save-normalize.js"), "utf8");
 const saveCorruptionSource = readFileSync(join(root, "src/save-corruption.js"), "utf8");
 const saveSource = readFileSync(join(root, "src/save.js"), "utf8");
 
 const storage = new Map();
+let retiredSaveDefaultsReads = 0;
 const context = {
   console,
   localStorage: {
@@ -27,14 +29,38 @@ const context = {
     },
   },
 };
+Object.defineProperty(context, "TapSurvivorSaveDefaults", {
+  configurable: true,
+  get() {
+    retiredSaveDefaultsReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveDefaults global read");
+  },
+});
 vm.createContext(context);
 vm.runInContext(questsSource, context);
 vm.runInContext(storageSource, context);
 vm.runInContext(saveDefaultsSource, context);
+vm.runInContext(gameDependenciesSource, context);
 vm.runInContext(saveMigrationsSource, context);
 vm.runInContext(saveNormalizeSource, context);
 vm.runInContext(saveCorruptionSource, context);
 vm.runInContext(saveSource, context);
+
+const dependencyGlobalRef = new Proxy(
+  {
+    TapSurvivorInput: { bindMovementInput() {} },
+  },
+  {
+    get(target, name) {
+      return name in target ? target[name] : {};
+    },
+  }
+);
+const dependencyBag = context.TapSurvivorGameDependencies.createGameDependencyBag({
+  globalRef: dependencyGlobalRef,
+  documentRef: {},
+});
+const saveDefaults = dependencyBag.saveDefaults;
 
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";
@@ -47,7 +73,7 @@ const storageAdapter = context.TapSurvivorStorage.createStorageAdapter({
 const saveSystem = context.TapSurvivorSave.createSaveSystem({
   saveKey,
   legacySaveKey,
-  saveDefaults: context.TapSurvivorSaveDefaults,
+  saveDefaults,
   saveMigrations: context.TapSurvivorSaveMigrations,
   starterQuestIds: content.questGroups.starter,
   questDefs: content.quests,
@@ -149,6 +175,7 @@ const future = await saveSystem.loadSave();
 check("future save version is normalized current", future.saveVersion === 3);
 check("future unknown fields are preserved", future.futureField?.keep === true);
 
+let throwingRetiredSaveDefaultsReads = 0;
 const throwingContext = {
   console,
   localStorage: {
@@ -163,14 +190,36 @@ const throwingContext = {
     },
   },
 };
+Object.defineProperty(throwingContext, "TapSurvivorSaveDefaults", {
+  configurable: true,
+  get() {
+    throwingRetiredSaveDefaultsReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveDefaults global read");
+  },
+});
 vm.createContext(throwingContext);
 vm.runInContext(questsSource, throwingContext);
 vm.runInContext(storageSource, throwingContext);
 vm.runInContext(saveDefaultsSource, throwingContext);
+vm.runInContext(gameDependenciesSource, throwingContext);
 vm.runInContext(saveMigrationsSource, throwingContext);
 vm.runInContext(saveNormalizeSource, throwingContext);
 vm.runInContext(saveCorruptionSource, throwingContext);
 vm.runInContext(saveSource, throwingContext);
+const throwingDependencyGlobalRef = new Proxy(
+  {
+    TapSurvivorInput: { bindMovementInput() {} },
+  },
+  {
+    get(target, name) {
+      return name in target ? target[name] : {};
+    },
+  }
+);
+const throwingDependencyBag = throwingContext.TapSurvivorGameDependencies.createGameDependencyBag({
+  globalRef: throwingDependencyGlobalRef,
+  documentRef: {},
+});
 
 const throwingAdapter = throwingContext.TapSurvivorStorage.createStorageAdapter({
   saveKey,
@@ -179,7 +228,7 @@ const throwingAdapter = throwingContext.TapSurvivorStorage.createStorageAdapter(
 const throwingSaveSystem = throwingContext.TapSurvivorSave.createSaveSystem({
   saveKey,
   legacySaveKey,
-  saveDefaults: throwingContext.TapSurvivorSaveDefaults,
+  saveDefaults: throwingDependencyBag.saveDefaults,
   saveMigrations: throwingContext.TapSurvivorSaveMigrations,
   starterQuestIds: content.questGroups.starter,
   questDefs: content.quests,
@@ -192,6 +241,9 @@ const throwingSaveSystem = throwingContext.TapSurvivorSave.createSaveSystem({
 
 const unavailableSave = await throwingSaveSystem.loadSave();
 const unavailablePersisted = await throwingSaveSystem.persist(unavailableSave);
+check("save defaults bridge publishes no retired global", !saveDefaultsSource.includes("globalThis.TapSurvivorSaveDefaults"));
+check("save defaults are supplied by dependency bag", saveDefaults.CURRENT_SAVE_VERSION === 3);
+check("retired save defaults global is never read", retiredSaveDefaultsReads === 0 && throwingRetiredSaveDefaultsReads === 0);
 check("storage unavailable load returns default save", unavailableSave.unlockedWeapons.includes("spark_bolt"));
 check("storage unavailable persist reports false", unavailablePersisted === false);
 check("storage unavailable backend is controlled", throwingAdapter.getStorageBackendName() === "unavailable");

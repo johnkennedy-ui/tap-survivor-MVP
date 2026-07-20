@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/save-defaults.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorSaveDefaults. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -28,8 +29,4 @@
     };
   }
 
-  globalThis.TapSurvivorSaveDefaults = {
-    CURRENT_SAVE_VERSION,
-    createDefaultSave,
-  };
 })();

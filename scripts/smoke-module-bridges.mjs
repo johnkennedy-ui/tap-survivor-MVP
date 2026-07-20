@@ -34,10 +34,6 @@ import {
   CURRENT_SAVE_VERSION as moduleCurrentSaveVersion,
   createDefaultSave as createModuleDefaultSave,
 } from "../src/modules/save-defaults.js";
-globalThis["TapSurvivorSaveDefaults"] = {
-  CURRENT_SAVE_VERSION: moduleCurrentSaveVersion,
-  createDefaultSave: createModuleDefaultSave,
-};
 const { isPlainObject: moduleIsPlainObject, migrateSave: moduleMigrateSave } = await import(
   "../src/modules/save-migrations.js"
 );
@@ -99,15 +95,11 @@ const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-cho
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
 const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defaults.js");
-const saveMigrationsBridge = loadBridge("../src/save-migrations.js", "src/save-migrations.js", {
-  TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
-});
+const saveMigrationsBridge = loadBridge("../src/save-migrations.js", "src/save-migrations.js");
 const saveNormalizeBridge = loadBridge("../src/save-normalize.js", "src/save-normalize.js", {
-  TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
   TapSurvivorSaveMigrations: saveMigrationsBridge.context.TapSurvivorSaveMigrations,
 });
 const saveBridge = loadBridge("../src/save.js", "src/save.js", {
-  TapSurvivorSaveDefaults: saveDefaultsBridge.context.TapSurvivorSaveDefaults,
   TapSurvivorSaveMigrations: saveMigrationsBridge.context.TapSurvivorSaveMigrations,
   TapSurvivorSaveNormalize: saveNormalizeBridge.context.TapSurvivorSaveNormalize,
   TapSurvivorSaveCorruption: saveCorruptionBridge.context.TapSurvivorSaveCorruption,
@@ -466,32 +458,11 @@ check(
 
 check("module exports CURRENT_SAVE_VERSION", moduleCurrentSaveVersion === 3);
 check("module exports createDefaultSave", typeof createModuleDefaultSave === "function");
-check("bridge assigns globalThis.TapSurvivorSaveDefaults", Boolean(bridgeSaveDefaults));
 check(
-  "save defaults bridge source has generated banner",
-  hasGeneratedBanner(saveDefaultsBridge.source)
+  "save defaults bridge retires global publisher",
+  bridgeSaveDefaults === undefined && !saveDefaultsBridge.source.includes("globalThis.TapSurvivorSaveDefaults")
 );
-check(
-  "bridge exposes CURRENT_SAVE_VERSION",
-  bridgeSaveDefaults?.CURRENT_SAVE_VERSION === moduleCurrentSaveVersion
-);
-check(
-  "bridge exposes createDefaultSave",
-  typeof bridgeSaveDefaults?.createDefaultSave === "function"
-);
-const saveDefaultFixture = { starterQuestIds: ["daily_one", "daily_two"] };
-const moduleDefaultSave = createModuleDefaultSave(saveDefaultFixture);
-const bridgeDefaultSave = bridgeSaveDefaults.createDefaultSave(saveDefaultFixture);
-check("default save fixture keeps schema version", moduleDefaultSave.saveVersion === 3);
-check(
-  "default save fixture copies starter quests",
-  JSON.stringify(moduleDefaultSave.activeQuests) === JSON.stringify(["daily_one", "daily_two"])
-);
-check("default save fixture starts with spark bolt", moduleDefaultSave.unlockedWeapons[0] === "spark_bolt");
-check(
-  "module and bridge default save output match",
-  JSON.stringify(moduleDefaultSave) === JSON.stringify(bridgeDefaultSave)
-);
+check("save defaults bridge source has generated banner", hasGeneratedBanner(saveDefaultsBridge.source));
 
 check("module exports isPlainObject", typeof moduleIsPlainObject === "function");
 check("module exports migrateSave", typeof moduleMigrateSave === "function");
@@ -1268,7 +1239,21 @@ check("dependency bag exposes weapon fire", moduleGameDependenciesSnapshot.hasWe
 check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
 check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
 check("dependency bag exposes save corruption", moduleGameDependenciesSnapshot.hasSaveCorruption);
-check("dependency bag exposes save defaults", moduleGameDependenciesSnapshot.hasSaveDefaults);
+check("dependency bag exposes native save defaults", moduleGameDependenciesSnapshot.hasSaveDefaults);
+check(
+  "dependency bag supplies current save version",
+  moduleGameDependenciesSnapshot.saveDefaultsVersion === moduleCurrentSaveVersion
+);
+check(
+  "dependency bag default save preserves starter quests",
+  JSON.stringify(moduleGameDependenciesSnapshot.defaultSave.activeQuests) ===
+    JSON.stringify(["daily_one", "daily_two"])
+);
+check(
+  "module and bridge dependency-bag save defaults match",
+  JSON.stringify(moduleGameDependenciesSnapshot.defaultSave) ===
+    JSON.stringify(bridgeGameDependenciesSnapshot.defaultSave)
+);
 check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
 check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
@@ -1903,7 +1888,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRunUpdate",
     "TapSurvivorSave",
     "TapSurvivorSaveCorruption",
-    "TapSurvivorSaveDefaults",
     "TapSurvivorSaveMigrations",
     "TapSurvivorSaveNormalize",
     "TapSurvivorShellRelicUi",
@@ -1926,6 +1910,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
     "TapSurvivorMapSystem",
+    "TapSurvivorSaveDefaults",
     "TapSurvivorShopPricing",
     "TapSurvivorWeaponTargeting",
   ];
@@ -2031,7 +2016,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
     hasWeaponTargeting: typeof bag.weaponTargeting.nearestEnemy === "function",
     hasSaveCorruption: bag.saveCorruption.name === "TapSurvivorSaveCorruption",
-    hasSaveDefaults: bag.saveDefaults.name === "TapSurvivorSaveDefaults",
+    hasSaveDefaults:
+      bag.saveDefaults.CURRENT_SAVE_VERSION === moduleCurrentSaveVersion &&
+      typeof bag.saveDefaults.createDefaultSave === "function",
+    saveDefaultsVersion: bag.saveDefaults.CURRENT_SAVE_VERSION,
+    defaultSave: bag.saveDefaults.createDefaultSave({ starterQuestIds: ["daily_one", "daily_two"] }),
     hasSaveMigrations: bag.saveMigrations.name === "TapSurvivorSaveMigrations",
     hasSaveNormalize: bag.saveNormalize.name === "TapSurvivorSaveNormalize",
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",

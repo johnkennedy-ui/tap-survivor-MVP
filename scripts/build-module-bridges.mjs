@@ -64,7 +64,8 @@ const bridges = [
   {
     source: "src/modules/save-defaults.js",
     target: "src/save-defaults.js",
-    globalName: "TapSurvivorSaveDefaults",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorSaveDefaults",
     exports: ["CURRENT_SAVE_VERSION", "createDefaultSave"],
   },
   {
@@ -228,6 +229,10 @@ const bridges = [
         exports: ["createMapSystem"],
       },
       {
+        source: "src/modules/save-defaults.js",
+        exports: ["CURRENT_SAVE_VERSION", "createDefaultSave"],
+      },
+      {
         source: "src/modules/level-up-choices.js",
         exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
       },
@@ -300,6 +305,7 @@ for (const bridge of bridges) {
  *   source: string,
  *   target: string,
  *   globalName: string | null,
+ *   retiredGlobalName?: string,
  *   exports: string[],
  *   classicBoundarySource?: string,
  *   classicExportWrappers?: Record<string, { name: string, source: string }>,
@@ -311,6 +317,7 @@ async function buildClassicBridge({
   source,
   target,
   globalName,
+  retiredGlobalName = "",
   exports,
   classicBoundarySource = "",
   classicExportWrappers = {},
@@ -359,10 +366,13 @@ async function buildClassicBridge({
 ${globalMemberSource}
   };`
     : "";
+  const retirementComment = retiredGlobalName
+    ? `// Retired global: ${retiredGlobalName}. Exports are supplied through the game dependency bag.\n`
+    : "";
   const generatedSource = `// GENERATED FILE. Do not edit directly.
 // Source: ${source}
 // Run: npm run build:bridges
-(() => {
+${retirementComment}(() => {
   "use strict";
 
 ${indent(classicBody, 2)}\n${publisherSource}
