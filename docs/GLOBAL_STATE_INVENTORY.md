@@ -78,6 +78,8 @@ Generated content globals:
 - `src/modules/game-dependencies.js` now wires the native Shop factory explicitly into the classic dependency bag and
   injects the game banner factory; the factories receive the classic `documentRef` boundary without reading
   `globalThis.TapSurvivorShop` or `globalThis.TapSurvivorGameBanners`.
+- `src/modules/game-dependencies.js` supplies `createMapSystem` directly through the classic dependency bag; the generated
+  `src/map-system.js` bridge is retired/global-free and no longer publishes or reads `globalThis.TapSurvivorMapSystem`.
 - Generated `src/shop.js` and `src/game-banners.js` remain source-derived classic artifacts without global publishers;
   the classic dependency bridge bundles the native Shop and game banner factories and preserves their explicit wiring.
 - `scripts/smoke-shop-provider-parity.mjs` has two temporary `globalThis.document` getter guard/restore reads. They
@@ -103,7 +105,8 @@ Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.
 - Native dependency bag injection now imports balance, content registry, math, level-up choices, shop pricing, weapon
   targeting, and combat damage directly; those helpers no longer appear as runtime globals.
-- Core data/systems: `TapSurvivorProgression`, `TapSurvivorMapSystem`, `TapSurvivorEffects`.
+- Core data/systems: `TapSurvivorProgression`, `TapSurvivorEffects`; map resolution is supplied as `createMapSystem`
+  through the `TapSurvivorGameDependencies` dependency bag, with the former `TapSurvivorMapSystem` publisher retired.
 - Save/storage: `TapSurvivorStorage`, `TapSurvivorSaveDefaults`, `TapSurvivorSaveMigrations`, `TapSurvivorSaveNormalize`, `TapSurvivorSaveCorruption`, `TapSurvivorSave`.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,

@@ -52,7 +52,7 @@ const bridges = [
   {
     source: "src/modules/map-system.js",
     target: "src/map-system.js",
-    globalName: "TapSurvivorMapSystem",
+    globalName: null,
     exports: ["createMapSystem"],
   },
   {
@@ -222,6 +222,10 @@ const bridges = [
       {
         source: "src/modules/game-banners.js",
         exports: ["createGameBannerSystem"],
+      },
+      {
+        source: "src/modules/map-system.js",
+        exports: ["createMapSystem"],
       },
       {
         source: "src/modules/level-up-choices.js",

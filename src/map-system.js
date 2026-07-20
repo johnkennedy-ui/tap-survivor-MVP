@@ -123,7 +123,4 @@
     };
   }
 
-  globalThis.TapSurvivorMapSystem = {
-    createMapSystem,
-  };
 })();

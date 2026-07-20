@@ -382,29 +382,21 @@ check(
 );
 
 check("module exports createMapSystem", typeof createModuleMapSystem === "function");
-check("bridge assigns globalThis.TapSurvivorMapSystem", Boolean(bridgeMapSystem));
+check(
+  "map system bridge retires global publisher",
+  bridgeMapSystem === undefined && !mapBridge.source.includes("globalThis.TapSurvivorMapSystem")
+);
 check("map system bridge source has generated banner", hasGeneratedBanner(mapBridge.source));
-check("bridge exposes createMapSystem", typeof bridgeMapSystem?.createMapSystem === "function");
 
 const moduleFallbackMap = mapSystemSnapshot(createModuleMapSystem(createFallbackMapFixture()));
-const bridgeFallbackMap = mapSystemSnapshot(bridgeMapSystem.createMapSystem(createFallbackMapFixture()));
 check("fallback map fixture uses default tower", moduleFallbackMap.fallback.mapId === "default_tower");
 check("fallback map fixture uses tower background", moduleFallbackMap.fallback.backgroundId === "tower_floor");
-check(
-  "module and bridge fallback map output match",
-  JSON.stringify(moduleFallbackMap) === JSON.stringify(bridgeFallbackMap)
-);
 
 const mapFixture = createMapFixture();
 const moduleMapSystem = createModuleMapSystem(mapFixture);
-const bridgeMapSystemInstance = bridgeMapSystem.createMapSystem(mapFixture);
 const moduleMapSnapshot = mapSystemSnapshot(moduleMapSystem);
-const bridgeMapSnapshot = mapSystemSnapshot(bridgeMapSystemInstance);
 const moduleMapBackgroundFallback = mapSystemSnapshot(
   createModuleMapSystem(createMapBackgroundFallbackFixture())
-);
-const bridgeMapBackgroundFallback = mapSystemSnapshot(
-  bridgeMapSystem.createMapSystem(createMapBackgroundFallbackFixture())
 );
 check("map selection fixture uses modulo floor selection", moduleMapSnapshot.floorTwo.mapId === "ice");
 check("floor selection fixture uses elapsed startsAt", moduleMapSnapshot.floorTwo.floorId === "ice_late");
@@ -414,10 +406,7 @@ check(
   "map background fallback fixture resolves map asset",
   moduleMapBackgroundFallback.floorOne.backgroundId === "forest_bg"
 );
-check(
-  "module and bridge map background fallback output match",
-  JSON.stringify(moduleMapBackgroundFallback) === JSON.stringify(bridgeMapBackgroundFallback)
-);
+
 check(
   "fallback background fixture uses tower floor",
   moduleMapSnapshot.noConfiguredBackground.backgroundId === "tower_floor"
@@ -434,10 +423,7 @@ check(
   moduleMapSnapshot.applied.floorPool.join(",") === "ice_late,ice_early"
 );
 check("applyToGame null fixture returns null", moduleMapSnapshot.nullApply === null);
-check(
-  "module and bridge map system output match",
-  JSON.stringify(moduleMapSnapshot) === JSON.stringify(bridgeMapSnapshot)
-);
+
 
 check("module exports createSaveLoadHandler", typeof createModuleSaveLoadHandler === "function");
 check(
@@ -1264,6 +1250,16 @@ check("dependency bag exposes enemies", moduleGameDependenciesSnapshot.hasEnemie
 check("dependency bag exposes enemy behaviors", moduleGameDependenciesSnapshot.hasEnemyBehaviors);
 check("dependency bag exposes enemy spawning", moduleGameDependenciesSnapshot.hasEnemySpawning);
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
+check("dependency bag exposes map factory", moduleGameDependenciesSnapshot.hasMapSystem);
+check(
+  "dependency bag map behavior matches module fixture",
+  JSON.stringify(moduleGameDependenciesSnapshot.mapSnapshot) === JSON.stringify(moduleMapSnapshot)
+);
+check(
+  "module and bridge dependency-bag map behavior matches",
+  JSON.stringify(moduleGameDependenciesSnapshot.mapSnapshot) ===
+    JSON.stringify(bridgeGameDependenciesSnapshot.mapSnapshot)
+);
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
 check("dependency bag exposes weapon behaviors", moduleGameDependenciesSnapshot.hasWeaponBehaviors);
@@ -1892,7 +1888,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
-    "TapSurvivorMapSystem",
     "TapSurvivorMath",
     "TapSurvivorPickups",
     "TapSurvivorProgression",
@@ -1930,6 +1925,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorContentRegistry",
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
+    "TapSurvivorMapSystem",
     "TapSurvivorShopPricing",
     "TapSurvivorWeaponTargeting",
   ];
@@ -2017,6 +2013,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasEnemies: bag.enemies.name === "TapSurvivorEnemies",
     hasEnemyBehaviors: bag.enemyBehaviors.name === "TapSurvivorEnemyBehaviors",
     hasEnemySpawning: bag.enemySpawning.name === "TapSurvivorEnemySpawning",
+    hasMapSystem: typeof bag.mapSystem?.createMapSystem === "function",
+    mapSnapshot: mapSystemSnapshot(bag.mapSystem.createMapSystem(createMapFixture())),
     hasLevelUpChoices:
       typeof bag.levelUpChoices.choiceId === "function" &&
       typeof bag.levelUpChoices.shopFocusBonus === "function" &&

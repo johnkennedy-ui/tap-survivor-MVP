@@ -2,6 +2,7 @@ import { floorDifficulty } from "./balance.js";
 import { createCombatDamageSystem } from "./combat-damage.js";
 import { createContentRegistry } from "./content-registry.js";
 import { createGameBannerSystem } from "./game-banners.js";
+import { createMapSystem } from "./map-system.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createShopSystem } from "./shop.js";
@@ -35,7 +36,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     },
     levelUp: requireGlobal(globalRef, "TapSurvivorLevelUp"),
     levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
-    mapSystem: requireGlobal(globalRef, "TapSurvivorMapSystem"),
+    mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
     pickups: requireGlobal(globalRef, "TapSurvivorPickups"),
     progression: requireGlobal(globalRef, "TapSurvivorProgression"),

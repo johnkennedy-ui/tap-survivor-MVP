@@ -65,6 +65,11 @@ check(
   generatedClassicBoundaryUsesDocument()
 );
 check(
+  "generated classic dependency bridge has no retired MapSystem global publisher or reader",
+  !generatedClassicGameDependenciesSource.includes("globalThis.TapSurvivorMapSystem") &&
+    !generatedClassicGameDependenciesSource.includes('"TapSurvivorMapSystem"')
+);
+check(
   "generated classic Shop artifact has no retired global publisher",
   !generatedClassicGameDependenciesSource.includes("globalThis.TapSurvivorShop")
 );
@@ -210,7 +215,6 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
-    "TapSurvivorMapSystem",
     "TapSurvivorMath",
     "TapSurvivorPickups",
     "TapSurvivorProgression",
