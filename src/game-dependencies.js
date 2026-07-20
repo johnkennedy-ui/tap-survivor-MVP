@@ -1147,6 +1147,291 @@
     );
   }
 
+  function createRunLifecycle({
+    ui,
+    getGame,
+    getSave,
+    resetGameState,
+    shopSystem,
+    shellUi,
+    runUi,
+    relicSystem,
+    persist,
+    renderMeta,
+    updateRunHud,
+    showMovementGateBanner,
+  }) {
+    function startRun() {
+      shellUi.closeStartFlow();
+      shopSystem.closeShop();
+      runUi.hideEndScreen();
+      ui.levelUp.classList.add("hidden");
+      shellUi.closeRunMenu(false);
+      const game = resetGameState();
+      game.awaitingFirstMoveInput = true;
+      showMovementGateBanner();
+    }
+
+    function endRun(reason) {
+      const game = getGame();
+      if (!game) return;
+      game.running = false;
+      game.endReason = reason;
+      runUi.showEndScreen(reason);
+      persist();
+      renderMeta();
+    }
+
+    function advanceTowerFloor() {
+      const game = getGame();
+      if (!game) return;
+      const clearedFloor = game.towerFloor || 1;
+      const relicDropCount = clearedFloor % 5 === 0 ? 2 : 1;
+      showRelicChoice(clearedFloor, relicDropCount, []);
+    }
+
+    function showRelicChoice(clearedFloor, remainingPicks, awardedRelics) {
+      const save = getSave();
+      const game = getGame();
+      const choices = relicSystem.relicChoices(save, game.player.equippedWeapons, 3);
+      if (!choices.length) {
+        finishBossClear(clearedFloor, awardedRelics);
+        return;
+      }
+      game.paused = true;
+      game.pauseReason = "relic";
+      ui.relicChoiceTitle.textContent =
+        remainingPicks > 1 ? `Choose Relic ${awardedRelics.length + 1}` : "Choose Relic";
+      ui.relicChoiceText.textContent = "Pick one reward shaped by your current weapons.";
+      ui.relicChoices.innerHTML = "";
+      choices.forEach((relic) => {
+        const button = document.createElement("button");
+        button.className = relic.rarity === "green" ? "green-relic" : "";
+        if (relic.backgroundColor && typeof button.style?.setProperty === "function") {
+          button.style.setProperty("--relic-bg", relic.backgroundColor);
+        } else if (relic.backgroundColor && button.style) {
+          button.style["--relic-bg"] = relic.backgroundColor;
+        }
+        button.innerHTML = `
+          <img class="level-choice-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
+          <strong>${relic.name}</strong><br /><span>${relic.description}</span>
+          ${relic.specialAbility ? `<br /><span>${relic.specialAbility.label}: ${relic.specialAbility.description}</span>` : ""}
+        `;
+        button.addEventListener("click", () => {
+          const granted = relicSystem.grantRelic(save, relic);
+          const nextAwarded = granted ? [...awardedRelics, granted] : awardedRelics;
+          if (remainingPicks > 1) {
+            showRelicChoice(clearedFloor, remainingPicks - 1, nextAwarded);
+          } else {
+            finishBossClear(clearedFloor, nextAwarded);
+          }
+        });
+        ui.relicChoices.appendChild(button);
+      });
+      ui.relicChoice.classList.remove("hidden");
+    }
+
+    function finishBossClear(clearedFloor, awardedRelics) {
+      const save = getSave();
+      ui.relicChoice.classList.add("hidden");
+      save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
+      persist();
+      const game = resetGameState();
+      game.lastFloorClear = {
+        floor: clearedFloor,
+        relicName: awardedRelics.length
+          ? awardedRelics.map((relic) => relic.name).join(" + ")
+          : "No locked relics remaining",
+      };
+      updateRunHud();
+      renderMeta();
+    }
+
+    return {
+      advanceTowerFloor,
+      endRun,
+      startRun,
+    };
+  }
+
+  function createRunStateSystem({
+    canvas,
+    mapSystem,
+    getSave,
+    getShopBonuses,
+    getUpgradeTier,
+    maxEquippedWeapons,
+    weaponDefs = {},
+  }) {
+    function createPlayer() {
+      const moveTier = getUpgradeTier("move_speed");
+      const pickupTier = getUpgradeTier("pickup_radius");
+      const hpTier = getUpgradeTier("max_hp");
+      const shopBonuses = getShopBonuses();
+      const maxHp = 100 + hpTier * 20 + shopBonuses.maxHp;
+      return {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        targetX: canvas.width / 2,
+        targetY: canvas.height / 2,
+        radius: 16,
+        speed: 185 + moveTier * 24 + shopBonuses.speed,
+        hp: maxHp,
+        maxHp,
+        pickupRadius: 54 + pickupTier * 18 + shopBonuses.pickupRadius,
+        projectileBlockCharge: 0,
+        projectileBlockNeeded: 5,
+        projectileBlockReady: false,
+        xp: 0,
+        level: 1,
+        xpToLevel: 5,
+        maxWeapons: maxEquippedWeapons(),
+        equippedWeapons: [startingWeaponId()],
+      };
+    }
+
+    function startingWeaponId() {
+      const save = getSave();
+      const selected = save?.selectedStartingWeapon;
+      if (
+        typeof selected === "string" &&
+        weaponDefs[selected] &&
+        (save.unlockedWeapons || []).includes(selected)
+      ) {
+        return selected;
+      }
+      return "spark_bolt";
+    }
+
+    function resetGameState() {
+      const run = {
+        running: true,
+        paused: false,
+        pauseReason: "",
+        elapsed: 0,
+        duration: 150,
+        towerFloor: getSave().towerFloor || 1,
+        bossSpawned: false,
+        bossDefeated: false,
+        player: createPlayer(),
+        enemies: [],
+        xpDrops: [],
+        lootDrops: [],
+        pickupTexts: [],
+        bolts: [],
+        enemyBolts: [],
+        beams: [],
+        areas: [],
+        weaponBursts: [],
+        weaponIconFlashes: {},
+        bossAttacks: [],
+        bossSpawnNotice: null,
+        weaponTimers: {},
+        runUpgradeTiers: {},
+        spawnTimer: 0,
+        bossAttackTimer: 3.8,
+        bossAttackCooldownMax: 3.8,
+        kills: 0,
+        xpCollected: 0,
+        laserDamage: 0,
+        weaponDamage: {},
+        levelUps: 0,
+        endReason: "",
+      };
+      mapSystem?.applyToGame?.(run);
+      return run;
+    }
+
+    function applyRunMetaUpgrades(game) {
+      if (!game?.player) return;
+      const p = game.player;
+      p.speed = Math.max(p.speed, 185 + getUpgradeTier("move_speed") * 24);
+      p.pickupRadius = Math.max(p.pickupRadius, 54 + getUpgradeTier("pickup_radius") * 18);
+      const newMaxHp = 100 + getUpgradeTier("max_hp") * 20;
+      if (newMaxHp > p.maxHp) {
+        p.hp += newMaxHp - p.maxHp;
+        p.maxHp = newMaxHp;
+      }
+    }
+
+    return {
+      resetGameState,
+      applyRunMetaUpgrades,
+    };
+  }
+
+  function createRunUi({
+    ui,
+    formatTime,
+    getGame,
+    getSave,
+    getGameSpeed,
+    maxEquippedWeapons,
+    renderDebug,
+  }) {
+    function updateRunHud() {
+      const game = getGame();
+      if (!game) {
+        if (ui.runHud)
+          ui.runHud.textContent = `Speed x${getGameSpeed()} | Start a run to test movement, auto-attacks, XP, Laser, quests, and Quest Points.`;
+        renderDebug();
+        return;
+      }
+      const save = getSave();
+      const boss = game.enemies.find((enemy) => enemy.boss);
+      const bossText = boss
+        ? ` | Boss HP ${Math.max(0, Math.ceil(boss.hp))}/${boss.maxHp}`
+        : game.bossSpawned
+          ? " | Boss defeated"
+          : "";
+      const floorText = game.lastFloorClear
+        ? ` | Cleared Floor ${game.lastFloorClear.floor}: ${game.lastFloorClear.relicName}`
+        : "";
+      if (ui.runHud) {
+        ui.runHud.textContent = [
+          `Time ${formatTime(game.elapsed)}`,
+          `Floor ${game.towerFloor}`,
+          `Speed x${getGameSpeed()}`,
+          `HP ${Math.max(0, Math.ceil(game.player.hp))}/${game.player.maxHp}`,
+          `Coins ${save.coins}`,
+          `Level ${game.player.level}`,
+          `Kills ${game.kills}`,
+          `Laser damage ${Math.floor(game.laserDamage)}`,
+          `Weapons ${game.player.equippedWeapons.length}/${maxEquippedWeapons()}${bossText}${floorText}`,
+        ].join(" | ");
+      }
+      renderDebug();
+    }
+
+    function showEndScreen(reason) {
+      const game = getGame();
+      const save = getSave();
+      if (!game) return;
+      ui.runStats.innerHTML = `
+          <p>Result: ${reason}</p>
+          <p>Tower floor: ${game.towerFloor}</p>
+          <p>Time survived: ${formatTime(game.elapsed)}</p>
+          <p>Enemies defeated: ${game.kills}</p>
+          <p>Level reached: ${game.player.level}</p>
+          <p>XP collected: ${game.xpCollected}</p>
+          <p>Coins banked: ${save.coins}</p>
+          <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
+          <p>Quest Points: ${save.questPoints} available</p>
+        `;
+      ui.endScreen.classList.remove("hidden");
+    }
+
+    function hideEndScreen() {
+      ui.endScreen.classList.add("hidden");
+    }
+
+    return {
+      updateRunHud,
+      showEndScreen,
+      hideEndScreen,
+    };
+  }
+
   function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
     return {
       audio: requireGlobal(globalRef, "TapSurvivorAudio"),
@@ -1183,9 +1468,9 @@
       renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
       renderSkillRail: requireGlobal(globalRef, "TapSurvivorRenderSkillRail"),
       rendering: requireGlobal(globalRef, "TapSurvivorRendering"),
-      runLifecycle: requireGlobal(globalRef, "TapSurvivorRunLifecycle"),
-      runState: requireGlobal(globalRef, "TapSurvivorRunState"),
-      runUi: requireGlobal(globalRef, "TapSurvivorRunUi"),
+      runLifecycle: { createRunLifecycle },
+      runState: { createRunStateSystem },
+      runUi: { createRunUi },
       runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
       save: requireGlobal(globalRef, "TapSurvivorSave"),
       saveCorruption: { createSaveLoadHandler },

@@ -1178,6 +1178,9 @@ check("dependency bag exposes enemy behaviors", moduleGameDependenciesSnapshot.h
 check("dependency bag exposes enemy spawning", moduleGameDependenciesSnapshot.hasEnemySpawning);
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
 check("dependency bag exposes map factory", moduleGameDependenciesSnapshot.hasMapSystem);
+check("dependency bag exposes run lifecycle factory", moduleGameDependenciesSnapshot.hasRunLifecycle);
+check("dependency bag exposes run state factory", moduleGameDependenciesSnapshot.hasRunState);
+check("dependency bag exposes run UI factory", moduleGameDependenciesSnapshot.hasRunUi);
 check(
   "dependency bag map behavior matches module fixture",
   JSON.stringify(moduleGameDependenciesSnapshot.mapSnapshot) === JSON.stringify(moduleMapSnapshot)
@@ -1308,17 +1311,20 @@ check("combat damage advances tower after boss", moduleCombatDamageSnapshot.reap
 check("combat damage marks boss defeated", moduleCombatDamageSnapshot.reap.bossDefeated);
 
 check("module exports createRunLifecycle", typeof createModuleRunLifecycle === "function");
-check("bridge assigns globalThis.TapSurvivorRunLifecycle", Boolean(bridgeRunLifecycle));
+check(
+  "run lifecycle bridge does not publish retired global",
+  bridgeRunLifecycle === undefined && !runLifecycleBridge.source.includes("globalThis.TapSurvivorRunLifecycle")
+);
 check("run lifecycle bridge source has generated banner", hasGeneratedBanner(runLifecycleBridge.source));
 check(
-  "bridge exposes createRunLifecycle",
-  typeof bridgeRunLifecycle?.createRunLifecycle === "function"
+  "game dependency bag exposes createRunLifecycle",
+  typeof bridgeGameDependenciesSnapshot.__bag.runLifecycle.createRunLifecycle === "function"
 );
 
 const moduleRunLifecycleSnapshot = runLifecycleSnapshot(createModuleRunLifecycle, globalThis);
 const bridgeRunLifecycleSnapshot = runLifecycleSnapshot(
-  bridgeRunLifecycle.createRunLifecycle,
-  runLifecycleBridge.context
+  bridgeGameDependenciesSnapshot.__bag.runLifecycle.createRunLifecycle,
+  gameDependenciesBridge.context
 );
 check(
   "module and bridge run lifecycle output match",
@@ -1344,15 +1350,18 @@ check("run lifecycle relic click records floor clear", moduleRunLifecycleSnapsho
 check("run lifecycle relic click updates HUD", moduleRunLifecycleSnapshot.relic.updateRunHud === 1);
 
 check("module exports createRunStateSystem", typeof createModuleRunStateSystem === "function");
-check("bridge assigns globalThis.TapSurvivorRunState", Boolean(bridgeRunState));
+check(
+  "run state bridge does not publish retired global",
+  bridgeRunState === undefined && !runStateBridge.source.includes("globalThis.TapSurvivorRunState")
+);
 check("run state bridge source has generated banner", hasGeneratedBanner(runStateBridge.source));
 check(
-  "bridge exposes createRunStateSystem",
-  typeof bridgeRunState?.createRunStateSystem === "function"
+  "game dependency bag exposes createRunStateSystem",
+  typeof bridgeGameDependenciesSnapshot.__bag.runState.createRunStateSystem === "function"
 );
 
 const moduleRunStateSnapshot = runStateSnapshot(createModuleRunStateSystem);
-const bridgeRunStateSnapshot = runStateSnapshot(bridgeRunState.createRunStateSystem);
+const bridgeRunStateSnapshot = runStateSnapshot(bridgeGameDependenciesSnapshot.__bag.runState.createRunStateSystem);
 check(
   "module and bridge run state output match",
   JSON.stringify(moduleRunStateSnapshot) === JSON.stringify(bridgeRunStateSnapshot)
@@ -1380,12 +1389,18 @@ check("run state meta upgrades raise max hp", moduleRunStateSnapshot.meta.maxHp 
 check("run state meta upgrades heal hp delta", moduleRunStateSnapshot.meta.hp === 120);
 
 check("module exports createRunUi", typeof createModuleRunUi === "function");
-check("bridge assigns globalThis.TapSurvivorRunUi", Boolean(bridgeRunUi));
+check(
+  "run UI bridge does not publish retired global",
+  bridgeRunUi === undefined && !runUiBridge.source.includes("globalThis.TapSurvivorRunUi")
+);
 check("run ui bridge source has generated banner", hasGeneratedBanner(runUiBridge.source));
-check("bridge exposes createRunUi", typeof bridgeRunUi?.createRunUi === "function");
+check(
+  "game dependency bag exposes createRunUi",
+  typeof bridgeGameDependenciesSnapshot.__bag.runUi.createRunUi === "function"
+);
 
 const moduleRunUiSnapshot = runUiSnapshot(createModuleRunUi);
-const bridgeRunUiSnapshot = runUiSnapshot(bridgeRunUi.createRunUi);
+const bridgeRunUiSnapshot = runUiSnapshot(bridgeGameDependenciesSnapshot.__bag.runUi.createRunUi);
 check(
   "module and bridge run ui output match",
   JSON.stringify(moduleRunUiSnapshot) === JSON.stringify(bridgeRunUiSnapshot)
@@ -1876,6 +1891,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorSaveMigrations",
     "TapSurvivorSaveCorruption",
     "TapSurvivorSaveNormalize",
+    "TapSurvivorRunLifecycle",
+    "TapSurvivorRunState",
+    "TapSurvivorRunUi",
     "TapSurvivorShopPricing",
     "TapSurvivorWeaponTargeting",
   ];
@@ -1951,7 +1969,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingInputError = error.message;
   }
 
-  return {
+  const snapshot = {
     contentId: bag.content.id,
     debugProfile: bag.debugBalance.getActiveProfile(),
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
@@ -1964,6 +1982,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasEnemyBehaviors: bag.enemyBehaviors.name === "TapSurvivorEnemyBehaviors",
     hasEnemySpawning: bag.enemySpawning.name === "TapSurvivorEnemySpawning",
     hasMapSystem: typeof bag.mapSystem?.createMapSystem === "function",
+    hasRunLifecycle: typeof bag.runLifecycle?.createRunLifecycle === "function",
+    hasRunState: typeof bag.runState?.createRunStateSystem === "function",
+    hasRunUi: typeof bag.runUi?.createRunUi === "function",
     mapSnapshot: mapSystemSnapshot(bag.mapSystem.createMapSystem(createMapFixture())),
     hasLevelUpChoices:
       typeof bag.levelUpChoices.choiceId === "function" &&
@@ -2008,6 +2029,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingInputError,
     retiredGlobalReads,
   };
+  Object.defineProperty(snapshot, "__bag", { value: bag, enumerable: false });
+  return snapshot;
 }
 
 function pickupSnapshot(createPickupSystem, mathRef) {

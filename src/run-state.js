@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/run-state.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRunState. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -110,7 +111,4 @@
     };
   }
 
-  globalThis.TapSurvivorRunState = {
-    createRunStateSystem,
-  };
 })();

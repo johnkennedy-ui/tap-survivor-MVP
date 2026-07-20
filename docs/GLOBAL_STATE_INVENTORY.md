@@ -115,8 +115,8 @@ Runtime module globals:
   helpers, so `TapSurvivorSaveNormalize` and `TapSurvivorSaveCorruption` have no global publishers.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
-  `TapSurvivorRunUi`, `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.
-- Gameplay systems: `TapSurvivorRunState`, `TapSurvivorRunUpdate`, `TapSurvivorRunLifecycle`, `TapSurvivorEnemies`,
+  `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.
+- Gameplay systems: `TapSurvivorRunUpdate`, `TapSurvivorEnemies`,
   `TapSurvivorEnemyBehaviors`, `TapSurvivorEnemySpawning`, `TapSurvivorCombat`,
   `TapSurvivorPickups`, `TapSurvivorRelics`.
 - Weapon systems: `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`,

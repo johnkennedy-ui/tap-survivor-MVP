@@ -13,6 +13,9 @@ import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
 import { createWeaponScaling } from "./weapon-cooldowns.js";
 import { nearestEnemy } from "./weapon-targeting.js";
+import { createRunLifecycle } from "./run-lifecycle.js";
+import { createRunStateSystem } from "./run-state.js";
+import { createRunUi } from "./run-ui.js";
 
 export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
   return {
@@ -50,9 +53,9 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
     renderSkillRail: requireGlobal(globalRef, "TapSurvivorRenderSkillRail"),
     rendering: requireGlobal(globalRef, "TapSurvivorRendering"),
-    runLifecycle: requireGlobal(globalRef, "TapSurvivorRunLifecycle"),
-    runState: requireGlobal(globalRef, "TapSurvivorRunState"),
-    runUi: requireGlobal(globalRef, "TapSurvivorRunUi"),
+    runLifecycle: { createRunLifecycle },
+    runState: { createRunStateSystem },
+    runUi: { createRunUi },
     runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
     save: requireGlobal(globalRef, "TapSurvivorSave"),
     saveCorruption: { createSaveLoadHandler },

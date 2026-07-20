@@ -283,18 +283,32 @@ const bridges = [
         source: "src/modules/weapon-targeting.js",
         exports: ["nearestEnemy"],
       },
+      {
+        source: "src/modules/run-lifecycle.js",
+        exports: ["createRunLifecycle"],
+      },
+      {
+        source: "src/modules/run-state.js",
+        exports: ["createRunStateSystem"],
+      },
+      {
+        source: "src/modules/run-ui.js",
+        exports: ["createRunUi"],
+      },
     ],
   },
   {
     source: "src/modules/run-lifecycle.js",
     target: "src/run-lifecycle.js",
-    globalName: "TapSurvivorRunLifecycle",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRunLifecycle",
     exports: ["createRunLifecycle"],
   },
   {
     source: "src/modules/run-state.js",
     target: "src/run-state.js",
-    globalName: "TapSurvivorRunState",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRunState",
     exports: ["createRunStateSystem"],
   },
   {
@@ -306,7 +320,8 @@ const bridges = [
   {
     source: "src/modules/run-ui.js",
     target: "src/run-ui.js",
-    globalName: "TapSurvivorRunUi",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRunUi",
     exports: ["createRunUi"],
   },
   {

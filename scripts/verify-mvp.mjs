@@ -338,7 +338,10 @@ check(
     !rendering.includes("globalThis.TapSurvivorRenderEnemies"),
 );
 check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && runtimeEntry.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
-check("shared run UI helper exists", runUi.includes("TapSurvivorRunUi") && runtimeEntry.includes("TapSurvivorRunUi"));
+check(
+  "shared run UI helper exists",
+  runUi.includes("createRunUi") && gameDependencies.includes("createRunUi"),
+);
 check(
   "shared level-up helper exists",
   levelUp.includes("levelUpChoices") &&
@@ -374,7 +377,10 @@ check(
     !gameDependencies.includes("globalThis.TapSurvivorShop"),
 );
 check("shared relic helper exists", relics.includes("TapSurvivorRelics") && runtimeEntry.includes("TapSurvivorRelics"));
-check("shared run state helper exists", runState.includes("TapSurvivorRunState") && runtimeEntry.includes("TapSurvivorRunState"));
+check(
+  "shared run state helper exists",
+  runState.includes("createRunStateSystem") && gameDependencies.includes("createRunStateSystem"),
+);
 check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && runtimeEntry.includes("TapSurvivorRunUpdate"));
 check(
   "shared weapon helpers exist",

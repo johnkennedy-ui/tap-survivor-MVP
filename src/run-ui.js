@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/run-ui.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRunUi. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -76,7 +77,4 @@
     };
   }
 
-  globalThis.TapSurvivorRunUi = {
-    createRunUi,
-  };
 })();

@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/run-lifecycle.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRunLifecycle. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -111,7 +112,4 @@
     };
   }
 
-  globalThis.TapSurvivorRunLifecycle = {
-    createRunLifecycle,
-  };
 })();
