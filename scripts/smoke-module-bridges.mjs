@@ -42,14 +42,6 @@ const {
   createSaveNormalizer: createModuleSaveNormalizer,
   objectValue: moduleObjectValue,
 } = await import("../src/modules/save-normalize.js");
-globalThis["TapSurvivorSaveNormalize"] = {
-  arrayValue: moduleArrayValue,
-  createSaveNormalizer: createModuleSaveNormalizer,
-  objectValue: moduleObjectValue,
-};
-globalThis["TapSurvivorSaveCorruption"] = {
-  createSaveLoadHandler: createModuleSaveLoadHandler,
-};
 const { createSaveSystem: createModuleSaveSystem } = await import("../src/modules/save.js");
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
@@ -93,10 +85,12 @@ const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-c
 const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defaults.js");
 const saveMigrationsBridge = loadBridge("../src/save-migrations.js", "src/save-migrations.js");
 const saveNormalizeBridge = loadBridge("../src/save-normalize.js", "src/save-normalize.js");
-const saveBridge = loadBridge("../src/save.js", "src/save.js", {
-  TapSurvivorSaveNormalize: saveNormalizeBridge.context.TapSurvivorSaveNormalize,
-  TapSurvivorSaveCorruption: saveCorruptionBridge.context.TapSurvivorSaveCorruption,
-});
+const saveBridge = loadBridge(
+  "../src/save.js",
+  "src/save.js",
+  {},
+  ["TapSurvivorSaveNormalize", "TapSurvivorSaveCorruption"]
+);
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const relicsBridge = loadBridge("../src/relics.js", "src/relics.js", {
   Math: {
@@ -412,20 +406,16 @@ check("applyToGame null fixture returns null", moduleMapSnapshot.nullApply === n
 
 check("module exports createSaveLoadHandler", typeof createModuleSaveLoadHandler === "function");
 check(
-  "bridge assigns globalThis.TapSurvivorSaveCorruption",
-  Boolean(bridgeSaveCorruption)
+  "save corruption bridge retires global publisher",
+  bridgeSaveCorruption === undefined &&
+    !saveCorruptionBridge.source.includes("globalThis.TapSurvivorSaveCorruption")
 );
 check(
   "save corruption bridge source has generated banner",
   hasGeneratedBanner(saveCorruptionBridge.source)
 );
-check(
-  "bridge exposes createSaveLoadHandler",
-  typeof bridgeSaveCorruption?.createSaveLoadHandler === "function"
-);
 
 const moduleSaveLoadSnapshot = saveLoadSnapshot(createModuleSaveLoadHandler);
-const bridgeSaveLoadSnapshot = saveLoadSnapshot(bridgeSaveCorruption.createSaveLoadHandler);
 check("missing raw save normalizes empty object", moduleSaveLoadSnapshot.empty.normalized[0] === "{}");
 check("missing raw save has no warning", moduleSaveLoadSnapshot.empty.warning === null);
 check(
@@ -443,10 +433,6 @@ check(
 check(
   "storageReadFailed sets warning",
   moduleSaveLoadSnapshot.storageFailed.warning === "storage-read-failed"
-);
-check(
-  "module and bridge save load output match",
-  JSON.stringify(moduleSaveLoadSnapshot) === JSON.stringify(bridgeSaveLoadSnapshot)
 );
 
 check("module exports CURRENT_SAVE_VERSION", moduleCurrentSaveVersion === 3);
@@ -510,40 +496,20 @@ check(
 check("module exports arrayValue", typeof moduleArrayValue === "function");
 check("module exports objectValue", typeof moduleObjectValue === "function");
 check("module exports createSaveNormalizer", typeof createModuleSaveNormalizer === "function");
-check("bridge assigns globalThis.TapSurvivorSaveNormalize", Boolean(bridgeSaveNormalize));
+check(
+  "save normalize bridge retires global publisher",
+  bridgeSaveNormalize === undefined &&
+    !saveNormalizeBridge.source.includes("globalThis.TapSurvivorSaveNormalize")
+);
 check(
   "save normalize bridge source has generated banner",
   hasGeneratedBanner(saveNormalizeBridge.source)
 );
-for (const exportName of ["arrayValue", "createSaveNormalizer", "objectValue"]) {
-  check(`bridge exposes save normalize ${exportName}`, typeof bridgeSaveNormalize?.[exportName] === "function");
-}
 check("arrayValue returns arrays", moduleArrayValue(["alpha"])[0] === "alpha");
 check("arrayValue falls back to empty array", JSON.stringify(moduleArrayValue("alpha")) === JSON.stringify([]));
 check("objectValue returns plain objects", moduleObjectValue({ alpha: 1 }).alpha === 1);
 check("objectValue falls back to empty object", JSON.stringify(moduleObjectValue([])) === JSON.stringify({}));
-check(
-  "module and bridge save normalize helper output match",
-  JSON.stringify([
-    moduleArrayValue(["alpha"]),
-    moduleArrayValue("alpha"),
-    moduleObjectValue({ alpha: 1 }),
-    moduleObjectValue([]),
-  ]) ===
-    JSON.stringify([
-      bridgeSaveNormalize.arrayValue(["alpha"]),
-      bridgeSaveNormalize.arrayValue("alpha"),
-      bridgeSaveNormalize.objectValue({ alpha: 1 }),
-      bridgeSaveNormalize.objectValue([]),
-    ])
-);
-
 const moduleNormalizeSnapshot = saveNormalizeSnapshot(createModuleSaveNormalizer);
-const bridgeNormalizeSnapshot = saveNormalizeSnapshot(bridgeSaveNormalize.createSaveNormalizer);
-check(
-  "module and bridge normalizeSave output match",
-  JSON.stringify(moduleNormalizeSnapshot) === JSON.stringify(bridgeNormalizeSnapshot)
-);
 check("invalid input normalizes to current save version", moduleNormalizeSnapshot.invalid.saveVersion === 3);
 check("invalid input normalizes to default save coins", moduleNormalizeSnapshot.invalid.coins === 0);
 check("coins are floored and clamped", moduleNormalizeSnapshot.complex.coins === 0);
@@ -590,6 +556,13 @@ check(
 check("module exports createSaveSystem", typeof createModuleSaveSystem === "function");
 check("bridge assigns globalThis.TapSurvivorSave", Boolean(bridgeSave));
 check("save bridge source has generated banner", hasGeneratedBanner(saveBridge.source));
+check(
+  "save bridge bundles retired save helpers",
+  saveBridge.source.includes("function createSaveLoadHandler") &&
+    saveBridge.source.includes("function createSaveNormalizer") &&
+    !saveBridge.source.includes("globalThis.TapSurvivorSaveNormalize") &&
+    !saveBridge.source.includes("globalThis.TapSurvivorSaveCorruption")
+);
 check("bridge exposes createSaveSystem", typeof bridgeSave?.createSaveSystem === "function");
 const moduleSaveSystemSnapshot = saveSystemSnapshot(createModuleSaveSystem, globalThis);
 const bridgeSaveSystemSnapshot = saveSystemSnapshot(bridgeSave.createSaveSystem, saveBridge.context);
@@ -1879,8 +1852,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRunUi",
     "TapSurvivorRunUpdate",
     "TapSurvivorSave",
-    "TapSurvivorSaveCorruption",
-    "TapSurvivorSaveNormalize",
     "TapSurvivorShellRelicUi",
     "TapSurvivorShellUi",
     "TapSurvivorShopPricing",
@@ -1903,6 +1874,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorMapSystem",
     "TapSurvivorSaveDefaults",
     "TapSurvivorSaveMigrations",
+    "TapSurvivorSaveCorruption",
+    "TapSurvivorSaveNormalize",
     "TapSurvivorShopPricing",
     "TapSurvivorWeaponTargeting",
   ];
@@ -2007,7 +1980,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasWeaponFire: bag.weaponFire.name === "TapSurvivorWeaponFire",
     hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
     hasWeaponTargeting: typeof bag.weaponTargeting.nearestEnemy === "function",
-    hasSaveCorruption: bag.saveCorruption.name === "TapSurvivorSaveCorruption",
+    hasSaveCorruption: typeof bag.saveCorruption?.createSaveLoadHandler === "function",
     hasSaveDefaults:
       bag.saveDefaults.CURRENT_SAVE_VERSION === moduleCurrentSaveVersion &&
       typeof bag.saveDefaults.createDefaultSave === "function",
@@ -2018,7 +1991,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.saveMigrations.migrateSave === "function",
     migrationResults: saveMigrationFixtures.map((fixture) => bag.saveMigrations.migrateSave(fixture)),
     isPlainObjectResults: [{}, null, []].map((fixture) => bag.saveMigrations.isPlainObject(fixture)),
-    hasSaveNormalize: bag.saveNormalize.name === "TapSurvivorSaveNormalize",
+    hasSaveNormalize:
+      typeof bag.saveNormalize?.arrayValue === "function" &&
+      typeof bag.saveNormalize?.createSaveNormalizer === "function" &&
+      typeof bag.saveNormalize?.objectValue === "function",
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     bannerGlobalReads,
     hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
@@ -3910,10 +3886,18 @@ function findShellRelicElement(element, predicate) {
  * @param {Record<string, unknown>} [globals]
  * @returns {{ source: string, context: Record<string, unknown> }}
  */
-function loadBridge(path, filename, globals = {}) {
+function loadBridge(path, filename, globals = {}, poisonedGlobalNames = []) {
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   const context = { console, ...globals };
   context.globalThis = context;
+  poisonedGlobalNames.forEach((name) => {
+    Object.defineProperty(context, name, {
+      configurable: true,
+      get() {
+        throw new Error(`Forbidden ${name} global read`);
+      },
+    });
+  });
   vm.createContext(context);
   vm.runInContext(source, context, { filename });
   return { source, context };

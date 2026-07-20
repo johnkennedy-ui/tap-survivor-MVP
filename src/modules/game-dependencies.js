@@ -5,8 +5,10 @@ import { createGameBannerSystem } from "./game-banners.js";
 import { createMapSystem } from "./map-system.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
+import { createSaveLoadHandler } from "./save-corruption.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
 import { isPlainObject, migrateSave } from "./save-migrations.js";
+import { arrayValue, createSaveNormalizer, objectValue } from "./save-normalize.js";
 import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
 import { createWeaponScaling } from "./weapon-cooldowns.js";
@@ -53,10 +55,10 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     runUi: requireGlobal(globalRef, "TapSurvivorRunUi"),
     runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
     save: requireGlobal(globalRef, "TapSurvivorSave"),
-    saveCorruption: requireGlobal(globalRef, "TapSurvivorSaveCorruption"),
+    saveCorruption: { createSaveLoadHandler },
     saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
     saveMigrations: { isPlainObject, migrateSave },
-    saveNormalize: requireGlobal(globalRef, "TapSurvivorSaveNormalize"),
+    saveNormalize: { arrayValue, createSaveNormalizer, objectValue },
     shellRelicUi: requireGlobal(globalRef, "TapSurvivorShellRelicUi"),
     shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
     shop: {

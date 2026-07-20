@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/save-normalize.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorSaveNormalize. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -142,9 +143,4 @@
     };
   }
 
-  globalThis.TapSurvivorSaveNormalize = {
-    arrayValue,
-    createSaveNormalizer,
-    objectValue,
-  };
 })();

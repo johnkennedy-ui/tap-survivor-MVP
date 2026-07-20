@@ -16,6 +16,8 @@ const saveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const storage = new Map();
 let retiredSaveDefaultsReads = 0;
 let retiredSaveMigrationsReads = 0;
+let retiredSaveNormalizeReads = 0;
+let retiredSaveCorruptionReads = 0;
 const context = {
   console,
   localStorage: {
@@ -42,6 +44,20 @@ Object.defineProperty(context, "TapSurvivorSaveMigrations", {
   get() {
     retiredSaveMigrationsReads += 1;
     throw new Error("Forbidden TapSurvivorSaveMigrations global read");
+  },
+});
+Object.defineProperty(context, "TapSurvivorSaveNormalize", {
+  configurable: true,
+  get() {
+    retiredSaveNormalizeReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveNormalize global read");
+  },
+});
+Object.defineProperty(context, "TapSurvivorSaveCorruption", {
+  configurable: true,
+  get() {
+    retiredSaveCorruptionReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveCorruption global read");
   },
 });
 vm.createContext(context);
@@ -186,6 +202,8 @@ check("future unknown fields are preserved", future.futureField?.keep === true);
 
 let throwingRetiredSaveDefaultsReads = 0;
 let throwingRetiredSaveMigrationsReads = 0;
+let throwingRetiredSaveNormalizeReads = 0;
+let throwingRetiredSaveCorruptionReads = 0;
 const throwingContext = {
   console,
   localStorage: {
@@ -212,6 +230,20 @@ Object.defineProperty(throwingContext, "TapSurvivorSaveMigrations", {
   get() {
     throwingRetiredSaveMigrationsReads += 1;
     throw new Error("Forbidden TapSurvivorSaveMigrations global read");
+  },
+});
+Object.defineProperty(throwingContext, "TapSurvivorSaveNormalize", {
+  configurable: true,
+  get() {
+    throwingRetiredSaveNormalizeReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveNormalize global read");
+  },
+});
+Object.defineProperty(throwingContext, "TapSurvivorSaveCorruption", {
+  configurable: true,
+  get() {
+    throwingRetiredSaveCorruptionReads += 1;
+    throw new Error("Forbidden TapSurvivorSaveCorruption global read");
   },
 });
 vm.createContext(throwingContext);
@@ -262,6 +294,21 @@ check("save defaults bridge publishes no retired global", !saveDefaultsSource.in
 check("save defaults are supplied by dependency bag", saveDefaults.CURRENT_SAVE_VERSION === 3);
 check("save migrations bridge publishes no retired global", !saveMigrationsSource.includes("globalThis.TapSurvivorSaveMigrations"));
 check(
+  "save normalize bridge publishes no retired global",
+  !saveNormalizeSource.includes("globalThis.TapSurvivorSaveNormalize")
+);
+check(
+  "save corruption bridge publishes no retired global",
+  !saveCorruptionSource.includes("globalThis.TapSurvivorSaveCorruption")
+);
+check(
+  "classic save wrapper bundles retired helpers",
+  saveSource.includes("function createSaveNormalizer") &&
+    saveSource.includes("function createSaveLoadHandler") &&
+    !saveSource.includes("globalThis.TapSurvivorSaveNormalize") &&
+    !saveSource.includes("globalThis.TapSurvivorSaveCorruption")
+);
+check(
   "save migrations are supplied by dependency bag",
   typeof saveMigrations.isPlainObject === "function" && typeof saveMigrations.migrateSave === "function"
 );
@@ -270,7 +317,11 @@ check(
   retiredSaveDefaultsReads === 0 &&
     throwingRetiredSaveDefaultsReads === 0 &&
     retiredSaveMigrationsReads === 0 &&
-    throwingRetiredSaveMigrationsReads === 0
+    throwingRetiredSaveMigrationsReads === 0 &&
+    retiredSaveNormalizeReads === 0 &&
+    throwingRetiredSaveNormalizeReads === 0 &&
+    retiredSaveCorruptionReads === 0 &&
+    throwingRetiredSaveCorruptionReads === 0
 );
 check("storage unavailable load returns default save", unavailableSave.unlockedWeapons.includes("spark_bolt"));
 check("storage unavailable persist reports false", unavailablePersisted === false);

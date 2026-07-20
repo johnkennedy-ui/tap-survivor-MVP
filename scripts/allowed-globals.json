@@ -33,8 +33,6 @@
     "globalThis.TapSurvivorRunUi",
     "globalThis.TapSurvivorRunUpdate",
     "globalThis.TapSurvivorSave",
-    "globalThis.TapSurvivorSaveCorruption",
-    "globalThis.TapSurvivorSaveNormalize",
     "globalThis.TapSurvivorShellRelicUi",
     "globalThis.TapSurvivorShellUi",
     "globalThis.TapSurvivorSprites",

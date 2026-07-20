@@ -58,7 +58,8 @@ const bridges = [
   {
     source: "src/modules/save-corruption.js",
     target: "src/save-corruption.js",
-    globalName: "TapSurvivorSaveCorruption",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorSaveCorruption",
     exports: ["createSaveLoadHandler"],
   },
   {
@@ -78,7 +79,8 @@ const bridges = [
   {
     source: "src/modules/save-normalize.js",
     target: "src/save-normalize.js",
-    globalName: "TapSurvivorSaveNormalize",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorSaveNormalize",
     exports: ["arrayValue", "createSaveNormalizer", "objectValue"],
   },
   {
@@ -86,13 +88,24 @@ const bridges = [
     target: "src/save.js",
     globalName: "TapSurvivorSave",
     exports: ["createSaveSystem"],
+    bundledSources: [
+      {
+        source: "src/modules/save-corruption.js",
+        exports: ["createSaveLoadHandler"],
+      },
+      {
+        source: "src/modules/save-normalize.js",
+        exports: ["arrayValue", "createSaveNormalizer", "objectValue"],
+        renames: { DEFAULT_CURRENT_SAVE_VERSION: "DEFAULT_SAVE_NORMALIZE_VERSION" },
+      },
+    ],
     classicExportWrappers: {
       createSaveSystem: {
         name: "createClassicSaveSystem",
         source: `function createClassicSaveSystem(options) {
   return createSaveSystem({
-    saveNormalize: globalThis.${"TapSurvivorSaveNormalize"},
-    saveCorruption: globalThis.${"TapSurvivorSaveCorruption"},
+    saveNormalize: { arrayValue, createSaveNormalizer, objectValue },
+    saveCorruption: { createSaveLoadHandler },
     storage: globalThis.${"TapSurvivorStorage"},
     ...options,
   });
@@ -238,6 +251,15 @@ const bridges = [
         exports: ["isPlainObject", "migrateSave"],
       },
       {
+        source: "src/modules/save-corruption.js",
+        exports: ["createSaveLoadHandler"],
+      },
+      {
+        source: "src/modules/save-normalize.js",
+        exports: ["arrayValue", "createSaveNormalizer", "objectValue"],
+        renames: { DEFAULT_CURRENT_SAVE_VERSION: "DEFAULT_SAVE_NORMALIZE_VERSION" },
+      },
+      {
         source: "src/modules/level-up-choices.js",
         exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
       },
@@ -314,7 +336,11 @@ for (const bridge of bridges) {
  *   exports: string[],
  *   classicBoundarySource?: string,
  *   classicExportWrappers?: Record<string, { name: string, source: string }>,
- *   bundledSources?: { source: string, exports: (string | { name: string, as: string })[] }[],
+ *   bundledSources?: {
+ *     source: string,
+ *     exports: (string | { name: string, as: string })[],
+ *     renames?: Record<string, string>,
+ *   }[],
  *   globalMembers?: { name: string, value: string }[],
  * }} bridge
  */
@@ -334,6 +360,7 @@ async function buildClassicBridge({
     bundledClassicSources.push(
       await readClassicModuleSource(bundledSource.source, bundledSource.exports, {
         dropImports: true,
+        renames: bundledSource.renames,
       })
     );
   }
@@ -401,7 +428,7 @@ ${indent(classicBody, 2)}\n${publisherSource}
 /**
  * @param {string} source
  * @param {(string | { name: string, as: string })[]} exports
- * @param {{ dropImports?: boolean }} [options]
+ * @param {{ dropImports?: boolean, renames?: Record<string, string> }} [options]
  */
 async function readClassicModuleSource(source, exports, options = {}) {
   const moduleSource = await readFile(source, "utf8");
@@ -424,6 +451,12 @@ async function readClassicModuleSource(source, exports, options = {}) {
     );
     if (classicSource === previousSource) {
       throw new Error(`${source} must export function or const ${exportName}`);
+    }
+  }
+
+  if (options.renames) {
+    for (const [from, to] of Object.entries(options.renames)) {
+      classicSource = classicSource.replace(new RegExp(`\\b${from}\\b`, "g"), to);
     }
   }
 

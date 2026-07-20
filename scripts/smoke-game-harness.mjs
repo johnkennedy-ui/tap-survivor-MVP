@@ -295,6 +295,8 @@ export function createGameHarness({
     "TapSurvivorMapSystem",
     "TapSurvivorSaveDefaults",
     "TapSurvivorSaveMigrations",
+    "TapSurvivorSaveCorruption",
+    "TapSurvivorSaveNormalize",
     "TapSurvivorMath",
     "TapSurvivorShopPricing",
     "TapSurvivorWeaponTargeting",

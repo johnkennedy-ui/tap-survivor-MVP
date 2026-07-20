@@ -109,9 +109,10 @@ Runtime module globals:
   targeting, and combat damage directly; those helpers no longer appear as runtime globals.
 - Core data/systems: `TapSurvivorProgression`, `TapSurvivorEffects`; map resolution is supplied as `createMapSystem`
   through the `TapSurvivorGameDependencies` dependency bag, with the former `TapSurvivorMapSystem` publisher retired.
-- Save/storage: `TapSurvivorStorage`, `TapSurvivorSaveNormalize`, `TapSurvivorSaveCorruption`, `TapSurvivorSave`;
-  save defaults and migrations are supplied as `saveDefaults` and `saveMigrations` by `TapSurvivorGameDependencies` and
-  no longer have `TapSurvivorSaveDefaults` or `TapSurvivorSaveMigrations` global publishers.
+- Save/storage: `TapSurvivorStorage`, `TapSurvivorSave`; save defaults, migrations, normalization, and corruption
+  handling are supplied as `saveDefaults`, `saveMigrations`, `saveNormalize`, and `saveCorruption` by
+  `TapSurvivorGameDependencies`. The generated classic save wrapper bundles the native normalization and corruption
+  helpers, so `TapSurvivorSaveNormalize` and `TapSurvivorSaveCorruption` have no global publishers.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
   `TapSurvivorRunUi`, `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.

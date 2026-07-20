@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/save-corruption.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorSaveCorruption. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -59,7 +60,4 @@
     };
   }
 
-  globalThis.TapSurvivorSaveCorruption = {
-    createSaveLoadHandler,
-  };
 })();
