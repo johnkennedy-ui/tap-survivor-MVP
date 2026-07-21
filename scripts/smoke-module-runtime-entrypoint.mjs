@@ -2,16 +2,18 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { createModuleRuntimeTestEntrypoint } from "../src/app/module-runtime-test-entrypoint.js";
-import { createBrowserPlatform } from "../src/app/compose-runtime.js";
+import { composeRuntime, createBrowserPlatform } from "../src/app/compose-runtime.js";
 import {
   CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS,
   INJECTED_GAME_DEPENDENCY_ADAPTER_SLOTS,
   MODULE_NATIVE_GAME_DEPENDENCY_SLOTS,
+  createModuleGameDependencyBag,
 } from "../src/modules/module-game-dependencies.js";
 import {
   MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS,
   MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS,
   MODULE_GAME_LIFECYCLE_OWNER_SLOTS,
+  createModuleGameLifecycleOwner,
 } from "../src/modules/module-game-lifecycle.js";
 import {
   INJECTED_STATE_PERSISTENCE_SLOTS,
@@ -271,7 +273,7 @@ const runtimeGlobal = {
 const storage = createMemoryStorage();
 storage.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));
 
-const entrypoint = createModuleRuntimeTestEntrypoint({
+const entrypointOptions = {
   autoInitialize: true,
   lifecycleHooks: {
     dispose: () => calls.push("lifecycle:dispose"),
@@ -574,7 +576,31 @@ const entrypoint = createModuleRuntimeTestEntrypoint({
       },
     },
   },
+};
+
+checkThrows(
+  "module runtime test entrypoint rejects a missing explicit runtime",
+  () => createModuleRuntimeTestEntrypoint(entrypointOptions),
+  "Missing Tap Survivor module game lifecycle owner option: runtime"
+);
+const dependencies = createModuleGameDependencyBag(entrypointOptions.dependencyBagOptions);
+const runtime = composeRuntime({
+  dependencies,
+  platform: entrypointOptions.platform,
 });
+const lifecycle = createModuleGameLifecycleOwner({
+  dependencies,
+  lifecycleHooks: entrypointOptions.lifecycleHooks,
+  platform: entrypointOptions.platform,
+  runtime,
+});
+lifecycle.init();
+const entrypoint = {
+  dependencies,
+  lifecycle,
+  platform: entrypointOptions.platform,
+  runtime,
+};
 
 const dependencySlots = entrypoint.dependencies.moduleSystems;
 const stateStore = dependencySlots.gameStateStore;
@@ -1107,6 +1133,15 @@ console.log("\nModule runtime entrypoint smoke passed.");
 function check(name, pass) {
   console.log(`${pass ? "PASS" : "FAIL"} ${name}`);
   if (!pass) process.exitCode = 1;
+}
+
+function checkThrows(name, callback, expectedMessage) {
+  try {
+    callback();
+    check(name, false);
+  } catch (error) {
+    check(name, error?.message === expectedMessage);
+  }
 }
 
 function tapSurvivorGlobalNames() {
