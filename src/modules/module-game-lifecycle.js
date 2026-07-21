@@ -1,4 +1,3 @@
-import { createGameRuntimeController } from "./game-runtime.js";
 import { createModuleGameDependencyBag } from "./module-game-dependencies.js";
 import { createRunLifecycle } from "./run-lifecycle.js";
 
@@ -33,6 +32,7 @@ export const MODULE_GAME_LIFECYCLE_OWNER_LOW_LEVEL_SLOTS = Object.freeze([
   "dependencies",
   "lifecycleHooks",
   "platform",
+  "runtime",
 ]);
 
 /**
@@ -49,6 +49,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
     dependencies,
     lifecycleHooks = {},
     platform,
+    runtime,
   } = options;
   const resolvedPlatform = requireObject(platform, "platform");
   const documentRef = requireObject(resolvedPlatform.documentRef, "platform.documentRef");
@@ -58,11 +59,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
     createModuleGameDependencyBag(
       requireObject(dependencyBagOptions, "dependencyBagOptions")
     );
-  const runtime = createGameRuntimeController({
-    ...runtimeDependencies,
-    documentRef,
-    globalRef: runtimeGlobal,
-  });
+  const resolvedRuntime = requireObject(runtime, "runtime");
   const runLifecycle = createLifecycle({
     dependencies: runtimeDependencies,
     lifecycleHooks,
@@ -80,7 +77,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
       lastFrame = timestamp;
       const game = runtimeDependencies.getGame?.();
       if (game?.running && !game.paused) {
-        tick(dt * (runtime.getGameSpeed?.() || 1));
+        tick(dt * (resolvedRuntime.getGameSpeed?.() || 1));
       }
       render({ now: timestamp });
       runtimeDependencies.runUi.updateRunHud?.();
@@ -97,7 +94,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
     ensureActive("init");
     initialized = true;
     stopped = false;
-    return runtime.initializeRuntime();
+    return resolvedRuntime.initializeRuntime();
   }
 
   function bind() {
@@ -126,7 +123,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
         dependencies: runtimeDependencies,
         dt,
         owner: api,
-        runtime,
+        runtime: resolvedRuntime,
       });
     }
     if (typeof lifecycleHooks.update === "function") {
@@ -134,7 +131,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
         dependencies: runtimeDependencies,
         dt,
         owner: api,
-        runtime,
+        runtime: resolvedRuntime,
       });
     }
     return tickDefaultRun(runtimeDependencies, dt);
@@ -170,7 +167,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
         dependencies: runtimeDependencies,
         owner: api,
         reason,
-        runtime,
+        runtime: resolvedRuntime,
       });
     }
     return true;
@@ -205,7 +202,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
     init,
     persist,
     render,
-    runtime,
+    runtime: resolvedRuntime,
     showTitle,
     snapshot,
     startRun,

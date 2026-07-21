@@ -1,4 +1,7 @@
-const dependencies = globalThis.TapSurvivorGameDependencies.createGameDependencyBag({
+import { createGameDependencyBag } from "./modules/game-dependencies.js";
+import { createGameRuntimeController } from "./modules/game-runtime.js";
+
+const dependencies = createGameDependencyBag({
   globalRef: globalThis,
 });
 const {
@@ -16,7 +19,6 @@ const {
   enemyBehaviors,
   enemySpawning,
   gameBanners,
-  gameRuntime: gameRuntimeDependencies,
   input,
   levelUp,
   levelUpChoices,
@@ -521,7 +523,7 @@ function resetSave() {
   gameRuntime.resetSave();
 }
 
-gameRuntime = gameRuntimeDependencies.createGameRuntimeController({
+gameRuntime = createGameRuntimeController({
   canvas,
   ui,
   documentRef: document,

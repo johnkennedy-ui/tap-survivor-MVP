@@ -1449,7 +1449,6 @@
       enemyBehaviors: requireGlobal(globalRef, "TapSurvivorEnemyBehaviors"),
       enemySpawning: requireGlobal(globalRef, "TapSurvivorEnemySpawning"),
       gameBanners: { createGameBannerSystem },
-      gameRuntime: requireGlobal(globalRef, "TapSurvivorGameRuntime"),
       input: {
         bindMovementInput: requireFunction(
           globalRef?.TapSurvivorInput?.bindMovementInput,
@@ -1515,7 +1514,4 @@
     return value;
   }
 
-  globalThis.TapSurvivorGameDependencies = {
-    createGameDependencyBag,
-  };
 })();

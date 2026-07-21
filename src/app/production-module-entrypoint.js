@@ -10,7 +10,7 @@ import "../enemies.js";
 import "../weapon-fire.js";
 import "../combat.js";
 import { createBrowserDependencyBagOptions } from "./browser-dependency-bag.js";
-import { createBrowserPlatform } from "./compose-runtime.js";
+import { composeRuntime, createBrowserPlatform } from "./compose-runtime.js";
 import { createModuleGameDependencyBag } from "../modules/module-game-dependencies.js";
 import { createModuleGameLifecycleOwner } from "../modules/module-game-lifecycle.js";
 
@@ -65,11 +65,16 @@ export function createProductionModuleEntrypoint(options = {}) {
   const resolvedDependencies =
     dependencies ||
     createModuleGameDependencyBag(resolvedDependencyBagOptions);
+  const runtime = composeRuntime({
+    dependencies: resolvedDependencies,
+    platform: resolvedPlatform,
+  });
   playStartAudio = () => resolvedDependencies.audioSystem?.playStartLaugh?.();
   lifecycle = createModuleGameLifecycleOwner({
     dependencies: resolvedDependencies,
     lifecycleHooks,
     platform: resolvedPlatform,
+    runtime,
   });
 
   function boot({ start = autoStart } = {}) {
@@ -87,7 +92,7 @@ export function createProductionModuleEntrypoint(options = {}) {
     persist: lifecycle.persist,
     platform: resolvedPlatform,
     render: lifecycle.render,
-    runtime: lifecycle.runtime,
+    runtime,
     startRun: lifecycle.startRun,
     tick: lifecycle.tick,
   };
