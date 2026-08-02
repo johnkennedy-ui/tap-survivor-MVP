@@ -23,4 +23,5 @@
       distance(p, enemy) < distance(p, best) ? enemy : best
     );
   }
+
 })();

@@ -157,4 +157,7 @@
     };
   }
 
+  globalThis.TapSurvivorGameRuntime = {
+    createGameRuntimeController,
+  };
 })();
