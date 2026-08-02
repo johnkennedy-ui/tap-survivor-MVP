@@ -1,9 +1,20 @@
+/** @typedef {import("../../types/content.js").GeneratedContent} GeneratedContent */
+/** @typedef {import("../../types/content.js").ContentEntry} ContentEntry */
+/** @typedef {import("../../types/content.js").RunUpgradeDef} RunUpgradeDef */
+/** @typedef {import("../../types/content.js").WeaponDef} WeaponDef */
+/** @typedef {Record<string, WeaponDef>} WeaponDefs */
+/** @typedef {{ applyRunUpgradeEffects(game: object, effects: ContentEntry[]): void }} UpgradeEffects */
+/** @typedef {{ content?: GeneratedContent, effects?: UpgradeEffects }} CreateUpgradeContentOptions */
+
+/** @param {WeaponDefs} weaponDefs @param {WeaponDef} weapon @returns {string | undefined} */
 function weaponIdForDef(weaponDefs, weapon) {
   return Object.keys(weaponDefs).find((id) => weaponDefs[id] === weapon);
 }
 
-export function createUpgradeContent({ content = {}, effects = {} } = {}) {
+/** @param {CreateUpgradeContentOptions} [options] */
+export function createUpgradeContent({ content = {}, effects } = {}) {
   const metaUpgradeDefs = content.metaUpgrades || [];
+  /** @param {WeaponDefs} weaponDefs @returns {ContentEntry[]} */
   function createUpgradeDefs(weaponDefs) {
     return [
       ...Object.values(weaponDefs).map((weapon) => {
@@ -23,6 +34,7 @@ export function createUpgradeContent({ content = {}, effects = {} } = {}) {
     ];
   }
 
+  /** @type {RunUpgradeDef[]} */
   const runUpgradeDefs = (content.runUpgrades || []).map((upgrade) => ({
     ...upgrade,
     apply: upgrade.effects?.length ? (game) => effects.applyRunUpgradeEffects(game, upgrade.effects) : undefined,

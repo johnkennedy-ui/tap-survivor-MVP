@@ -5,6 +5,7 @@
   "use strict";
 
   function createGameBannerSystem({ ui, getSave, persist }) {
+    /** @type {ReturnType<typeof setTimeout> | number} */
     let bannerTimer = 0;
 
     function hasSeenBanner(id) {
