@@ -1,5 +1,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const bridges = [
   {
@@ -400,12 +403,14 @@ async function buildClassicBridge({
       await readClassicModuleSource(bundledSource.source, bundledSource.exports, {
         dropImports: true,
         renames: bundledSource.renames,
+        target,
       })
     );
   }
 
   const classicSource = await readClassicModuleSource(source, exports, {
     dropImports: bundledSources.length > 0,
+    target,
   });
 
   const classicWrapperSource = Object.values(classicExportWrappers)
@@ -468,15 +473,20 @@ ${indent(classicBody, 2)}${publisherSeparator}${publisherSource}
 /**
  * @param {string} source
  * @param {(string | { name: string, as: string })[]} exports
- * @param {{ dropImports?: boolean, renames?: Record<string, string> }} [options]
+ * @param {{ dropImports?: boolean, renames?: Record<string, string>, target?: string }} [options]
  */
 async function readClassicModuleSource(source, exports, options = {}) {
+  if (!options.target) {
+    throw new Error(`${source} generation requires a target context`);
+  }
+
   const moduleSource = await readFile(source, "utf8");
   if (/\bimport\s+/m.test(moduleSource) && !options.dropImports) {
     throw new Error(`${source} uses import; this bridge builder supports standalone modules only`);
   }
 
   let classicSource = options.dropImports ? moduleSource.replace(/^\s*import\s+[^;]+;\s*$/gm, "") : moduleSource;
+  classicSource = relocateJSDocRelativeImportTypes(classicSource, source, options.target);
   for (const exportSpec of exports) {
     const exportName = typeof exportSpec === "string" ? exportSpec : exportSpec.name;
     const localName = typeof exportSpec === "string" ? exportSpec : exportSpec.as;
@@ -504,6 +514,292 @@ async function readClassicModuleSource(source, exports, options = {}) {
     throw new Error(`${source} contains unsupported export syntax`);
   }
   return classicSource;
+}
+
+/**
+ * Rewrites only quoted relative import(...) type specifiers found in JSDoc comments.
+ * @param {string} sourceText
+ * @param {string} source
+ * @param {string} target
+ * @returns {string}
+ */
+function relocateJSDocRelativeImportTypes(sourceText, source, target) {
+  const sourcePath = resolveRepositoryPath(source, `${source} source`);
+  const targetPath = resolveRepositoryPath(target, `${target} target`);
+  const sourceDirectory = path.dirname(sourcePath);
+  const targetDirectory = path.dirname(targetPath);
+  const replacements = [];
+
+  for (const { start, end } of findJSDocCommentRanges(sourceText)) {
+    collectJSDocRelativeImportTypeReplacements(
+      sourceText,
+      start,
+      end,
+      sourceDirectory,
+      targetDirectory,
+      source,
+      target,
+      replacements
+    );
+  }
+
+  return applyRangeReplacements(sourceText, replacements);
+}
+
+/**
+ * @param {string} sourceText
+ * @returns {{ start: number, end: number }[]}
+ */
+function findJSDocCommentRanges(sourceText) {
+  const ranges = [];
+  let cursor = 0;
+
+  while (cursor < sourceText.length) {
+    const character = sourceText[cursor];
+    if (character === '"' || character === "'" || character === "`") {
+      cursor = skipStringLiteral(sourceText, cursor);
+      continue;
+    }
+    if (character !== "/") {
+      cursor += 1;
+      continue;
+    }
+
+    if (sourceText[cursor + 1] === "/") {
+      const lineEnd = sourceText.indexOf("\n", cursor + 2);
+      cursor = lineEnd === -1 ? sourceText.length : lineEnd + 1;
+      continue;
+    }
+    if (sourceText[cursor + 1] !== "*") {
+      cursor += 1;
+      continue;
+    }
+
+    const commentEnd = sourceText.indexOf("*/", cursor + 2);
+    if (commentEnd === -1) {
+      return ranges;
+    }
+    if (sourceText[cursor + 2] === "*") {
+      ranges.push({ start: cursor, end: commentEnd + 2 });
+    }
+    cursor = commentEnd + 2;
+  }
+
+  return ranges;
+}
+
+/**
+ * @param {string} sourceText
+ * @param {number} commentStart
+ * @param {number} commentEnd
+ * @param {string} sourceDirectory
+ * @param {string} targetDirectory
+ * @param {string} source
+ * @param {string} target
+ * @param {{ start: number, end: number, value: string }[]} replacements
+ */
+function collectJSDocRelativeImportTypeReplacements(
+  sourceText,
+  commentStart,
+  commentEnd,
+  sourceDirectory,
+  targetDirectory,
+  source,
+  target,
+  replacements
+) {
+  const contentEnd = commentEnd - 2;
+  let cursor = commentStart + 3;
+
+  while (cursor < contentEnd) {
+    const importStart = sourceText.indexOf("import", cursor);
+    if (importStart === -1 || importStart >= contentEnd) {
+      return;
+    }
+    cursor = importStart + "import".length;
+    if (
+      isIdentifierCharacter(sourceText[importStart - 1]) ||
+      isIdentifierCharacter(sourceText[cursor])
+    ) {
+      continue;
+    }
+
+    let tokenCursor = skipWhitespace(sourceText, cursor, contentEnd);
+    if (sourceText[tokenCursor] !== "(") {
+      continue;
+    }
+    tokenCursor = skipWhitespace(sourceText, tokenCursor + 1, contentEnd);
+    const quote = sourceText[tokenCursor];
+    if (quote !== '"' && quote !== "'") {
+      continue;
+    }
+
+    const specifierStart = tokenCursor + 1;
+    const specifierEnd = findQuotedSpecifierEnd(sourceText, specifierStart, quote, contentEnd);
+    if (specifierEnd === -1) {
+      continue;
+    }
+    tokenCursor = skipWhitespace(sourceText, specifierEnd + 1, contentEnd);
+    if (sourceText[tokenCursor] !== ")") {
+      cursor = specifierEnd + 1;
+      continue;
+    }
+    cursor = tokenCursor + 1;
+
+    const specifier = sourceText.slice(specifierStart, specifierEnd);
+    if (!isRelativeModuleSpecifier(specifier)) {
+      continue;
+    }
+
+    const resolvedSourceSpecifier = path.resolve(sourceDirectory, specifier);
+    assertPathWithinRepository(
+      resolvedSourceSpecifier,
+      `${source} JSDoc type import ${specifier}`
+    );
+    const targetSpecifier = toTargetRelativeSpecifier(targetDirectory, resolvedSourceSpecifier);
+    const resolvedTargetSpecifier = path.resolve(targetDirectory, targetSpecifier);
+    assertPathWithinRepository(
+      resolvedTargetSpecifier,
+      `${target} JSDoc type import ${targetSpecifier}`
+    );
+    if (path.normalize(resolvedTargetSpecifier) !== path.normalize(resolvedSourceSpecifier)) {
+      throw new Error(`${source} JSDoc type import ${specifier} did not round-trip for ${target}`);
+    }
+    if (targetSpecifier !== specifier) {
+      replacements.push({ start: specifierStart, end: specifierEnd, value: targetSpecifier });
+    }
+  }
+}
+
+/**
+ * @param {string} sourceText
+ * @param {number} start
+ * @param {string} quote
+ * @param {number} end
+ * @returns {number}
+ */
+function findQuotedSpecifierEnd(sourceText, start, quote, end) {
+  for (let cursor = start; cursor < end; cursor += 1) {
+    if (sourceText[cursor] === "\\") {
+      return -1;
+    }
+    if (sourceText[cursor] === quote) {
+      return cursor;
+    }
+  }
+  return -1;
+}
+
+/**
+ * @param {string} sourceText
+ * @param {number} start
+ * @returns {number}
+ */
+function skipStringLiteral(sourceText, start) {
+  const quote = sourceText[start];
+  for (let cursor = start + 1; cursor < sourceText.length; cursor += 1) {
+    if (sourceText[cursor] === "\\") {
+      cursor += 1;
+      continue;
+    }
+    if (sourceText[cursor] === quote) {
+      return cursor + 1;
+    }
+  }
+  return sourceText.length;
+}
+
+/**
+ * @param {string} sourceText
+ * @param {number} start
+ * @param {number} end
+ * @returns {number}
+ */
+function skipWhitespace(sourceText, start, end) {
+  let cursor = start;
+  while (cursor < end && /\s/.test(sourceText[cursor])) {
+    cursor += 1;
+  }
+  return cursor;
+}
+
+/**
+ * @param {string | undefined} character
+ * @returns {boolean}
+ */
+function isIdentifierCharacter(character) {
+  return Boolean(character && /[A-Za-z0-9_$]/.test(character));
+}
+
+/**
+ * @param {string} specifier
+ * @returns {boolean}
+ */
+function isRelativeModuleSpecifier(specifier) {
+  return specifier.startsWith("./") || specifier.startsWith("../");
+}
+
+/**
+ * @param {string} relativePath
+ * @param {string} label
+ * @returns {string}
+ */
+function resolveRepositoryPath(relativePath, label) {
+  const resolvedPath = path.resolve(repositoryRoot, relativePath);
+  assertPathWithinRepository(resolvedPath, label);
+  return resolvedPath;
+}
+
+/**
+ * @param {string} candidatePath
+ * @param {string} label
+ */
+function assertPathWithinRepository(candidatePath, label) {
+  const relativePath = path.relative(repositoryRoot, candidatePath);
+  if (
+    relativePath === "" ||
+    relativePath === ".." ||
+    relativePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativePath)
+  ) {
+    throw new Error(`${label} escapes repository root`);
+  }
+}
+
+/**
+ * @param {string} targetDirectory
+ * @param {string} resolvedSourceSpecifier
+ * @returns {string}
+ */
+function toTargetRelativeSpecifier(targetDirectory, resolvedSourceSpecifier) {
+  let targetSpecifier = path.relative(targetDirectory, resolvedSourceSpecifier);
+  if (!targetSpecifier.startsWith(".")) {
+    targetSpecifier = `.${path.sep}${targetSpecifier}`;
+  }
+  return targetSpecifier.split(path.sep).join("/");
+}
+
+/**
+ * @param {string} sourceText
+ * @param {{ start: number, end: number, value: string }[]} replacements
+ * @returns {string}
+ */
+function applyRangeReplacements(sourceText, replacements) {
+  const rightToLeft = [...replacements].sort((left, right) => right.start - left.start);
+  let replacedSource = sourceText;
+  let rightBoundary = sourceText.length;
+
+  for (const replacement of rightToLeft) {
+    if (replacement.start > replacement.end || replacement.end > rightBoundary) {
+      throw new Error("JSDoc type import replacement ranges overlap");
+    }
+    replacedSource = `${replacedSource.slice(0, replacement.start)}${replacement.value}${replacedSource.slice(
+      replacement.end
+    )}`;
+    rightBoundary = replacement.start;
+  }
+
+  return replacedSource;
 }
 
 /**

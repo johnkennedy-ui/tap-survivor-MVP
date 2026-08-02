@@ -4,10 +4,10 @@
 (() => {
   "use strict";
 
-  /** @typedef {import("../../types/content.js").GeneratedContent} GeneratedContent */
-  /** @typedef {import("../../types/content.js").ContentEntry} ContentEntry */
-  /** @typedef {import("../../types/content.js").RunUpgradeDef} RunUpgradeDef */
-  /** @typedef {import("../../types/content.js").WeaponDef} WeaponDef */
+  /** @typedef {import("../types/content.js").GeneratedContent} GeneratedContent */
+  /** @typedef {import("../types/content.js").ContentEntry} ContentEntry */
+  /** @typedef {import("../types/content.js").RunUpgradeDef} RunUpgradeDef */
+  /** @typedef {import("../types/content.js").WeaponDef} WeaponDef */
   /** @typedef {Record<string, WeaponDef>} WeaponDefs */
   /** @typedef {{ applyRunUpgradeEffects(game: object, effects: ContentEntry[]): void }} UpgradeEffects */
   /** @typedef {{ content?: GeneratedContent, effects?: UpgradeEffects }} CreateUpgradeContentOptions */

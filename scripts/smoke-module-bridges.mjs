@@ -316,6 +316,14 @@ check("module exports createUpgradeContent", typeof createModuleUpgradeContent =
 check("upgrade bridge assigns globalThis.TapSurvivorUpgrades", Boolean(bridgeUpgrades));
 check("upgrade bridge source has generated banner", hasGeneratedBanner(upgradesBridge.source));
 check(
+  "upgrade bridge relocates all JSDoc content type imports",
+  upgradesBridge.source.split('import("../types/content.js")').length - 1 === 4
+);
+check(
+  "upgrade bridge omits source-relative JSDoc content type imports",
+  upgradesBridge.source.split('import("../../types/content.js")').length - 1 === 0
+);
+check(
   "upgrade bridge exposes classic factory and default members",
   typeof bridgeUpgrades?.createUpgradeContent === "function" &&
     typeof bridgeUpgrades?.createUpgradeDefs === "function" &&
