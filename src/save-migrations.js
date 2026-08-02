@@ -67,5 +67,4 @@
     migrated.saveVersion = currentSaveVersion;
     return migrated;
   }
-
 })();

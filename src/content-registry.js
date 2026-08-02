@@ -39,5 +39,4 @@
       tuningDefs: content.tuning || {},
     };
   }
-
 })();

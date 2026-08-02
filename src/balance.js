@@ -31,5 +31,4 @@
       spawnRate: floorThree.spawnRate + extraFloors * 0.05,
     };
   }
-
 })();

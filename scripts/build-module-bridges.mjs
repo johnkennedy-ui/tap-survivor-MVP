@@ -437,6 +437,7 @@ async function buildClassicBridge({
 ${globalMemberSource}
   };`
     : "";
+  const publisherSeparator = publisherSource ? "\n" : "";
   const retirementComment = retiredGlobalName
     ? `// Retired global: ${retiredGlobalName}. Exports are supplied through the game dependency bag.\n`
     : "";
@@ -446,7 +447,7 @@ ${globalMemberSource}
 ${retirementComment}(() => {
   "use strict";
 
-${indent(classicBody, 2)}\n${publisherSource}
+${indent(classicBody, 2)}${publisherSeparator}${publisherSource}
 })();
 `;
 

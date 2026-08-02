@@ -46,5 +46,4 @@
     const secs = String(total % 60).padStart(2, "0");
     return `${mins}:${secs}`;
   }
-
 })();

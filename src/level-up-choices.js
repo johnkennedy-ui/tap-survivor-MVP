@@ -56,5 +56,4 @@
   function shopFocusBonus(save) {
     return (save.shopPurchases?.relic_compass || 0) * 0.5;
   }
-
 })();
