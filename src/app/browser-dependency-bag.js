@@ -4,6 +4,7 @@ import { createQuestSystem, questOpenIds } from "../modules/quests.js";
 import { createShellRelicUi } from "../modules/shell-relic-ui.js";
 import { createShopSystem } from "../modules/shop.js";
 import { createUiProgressionRenderer } from "../modules/ui-progression.js";
+import { createUpgradeContent } from "../modules/upgrades.js";
 
 export const BROWSER_DEPENDENCY_BAG_PROOF_SLOTS = Object.freeze([
   "assetAdapters",
@@ -316,12 +317,7 @@ function createBrowserProgressionSystems({ documentRef, globalRef, ui }) {
           documentRef,
         }),
     },
-    upgrades: createBrowserNamespaceBridge(globalRef, "TapSurvivorUpgrades", "createUpgradeContent", {
-      createUpgradeContent: ({ content = {} } = {}) => ({
-        createUpgradeDefs: () => [],
-        runUpgradeDefs: content.runUpgrades || [],
-      }),
-    }),
+    upgrades: { createUpgradeContent },
   };
 }
 

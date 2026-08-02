@@ -93,8 +93,11 @@ Generated content globals:
   injects its `documentRef`; the classic publisher and fallback remain preserved. `src/debug.js` now receives balance
   floor scaling through the debug factory; and `src/level-up.js` receives content for its exact fallback icon path instead
   of reading `globalThis.TapSurvivorContent` directly.
-- `src/upgrades.js` exposes `createUpgradeContent({ content, effects })` so `src/game.js` can build upgrade definitions from
-  injected content/effects; the compatibility global still keeps a default script-order instance.
+- `src/modules/upgrades.js` owns the pure `createUpgradeContent({ content, effects })` factory, and the production ESM
+  browser dependency bag statically imports it without looking up `TapSurvivorUpgrades`. The generated classic
+  `src/upgrades.js` bridge deliberately continues to publish `TapSurvivorUpgrades` with its default script-order
+  `createUpgradeDefs` and `runUpgradeDefs` members; `src/modules/game-dependencies.js` retains that publisher as
+  the legacy fallback until a separate retirement contract changes it.
 - `src/shell-ui.js` now receives asset/content helpers and `TapSurvivorShellRelicUi` through `src/game.js` factory wiring
   instead of reading those globals directly. `src/shell-relic-ui.js` now receives content through that shell UI seam for
   relic detail and character sprite fallbacks while keeping its compatibility provider global.

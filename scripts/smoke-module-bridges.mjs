@@ -7,6 +7,7 @@ import { createEffects as createModuleEffects } from "../src/modules/effects.js"
 import { createGameBannerSystem as createModuleGameBannerSystem } from "../src/modules/game-banners.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+import { createUpgradeContent as createModuleUpgradeContent } from "../src/modules/upgrades.js";
 import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
 import { createPickupSystem as createModulePickupSystem } from "../src/modules/pickups.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
@@ -70,6 +71,34 @@ const contentSchemaFixture = {
     },
   },
 };
+const upgradeBridgeContentFixture = {
+  metaUpgrades: [
+    {
+      cost: [3],
+      id: "meta_focus",
+      maxTier: 1,
+      name: "Meta Focus",
+    },
+  ],
+  runUpgrades: [
+    {
+      effects: [{ stat: "fireRate", value: 12 }],
+      id: "rapid_fire",
+      name: "Rapid Fire",
+    },
+    {
+      id: "steady_aim",
+      name: "Steady Aim",
+    },
+  ],
+};
+const upgradeWeaponDefs = {
+  arc_bolt: { name: "Arc Bolt", upgradeId: "arc_damage" },
+  laser: { name: "Laser", upgradeId: "laser_damage" },
+};
+const upgradeBridgeEffectsFixture = {
+  applyRunUpgradeEffects() {},
+};
 
 const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
 const contentRegistryBridge = loadBridge(
@@ -78,6 +107,10 @@ const contentRegistryBridge = loadBridge(
 );
 const effectsBridge = loadBridge("../src/effects.js", "src/effects.js", {
   TapSurvivorContentSchema: contentSchemaFixture,
+});
+const upgradesBridge = loadBridge("../src/upgrades.js", "src/upgrades.js", {
+  TapSurvivorContent: upgradeBridgeContentFixture,
+  TapSurvivorEffects: upgradeBridgeEffectsFixture,
 });
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
@@ -144,6 +177,7 @@ const combatDamageBridge = loadBridge("../src/combat-damage.js", "src/combat-dam
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
 const bridgeContentRegistry = contentRegistryBridge.context.TapSurvivorContentRegistry;
 const bridgeEffects = effectsBridge.context.TapSurvivorEffects;
+const bridgeUpgrades = upgradesBridge.context.TapSurvivorUpgrades;
 const bridgeChoices = choicesBridge.context.TapSurvivorLevelUpChoices;
 const bridgeMapSystem = mapBridge.context.TapSurvivorMapSystem;
 const bridgeSaveCorruption = saveCorruptionBridge.context.TapSurvivorSaveCorruption;
@@ -277,6 +311,39 @@ check("effects create shop bonus defaults", moduleEffectsSnapshot.shopBonuses.pi
 check("effects add shop item bonuses", moduleEffectsSnapshot.shopBonuses.speed === 20);
 check("effects apply shop item run effect", moduleEffectsSnapshot.shopApplied === true);
 check("effects apply relic special effects", moduleEffectsSnapshot.relicSpeed === 115);
+
+check("module exports createUpgradeContent", typeof createModuleUpgradeContent === "function");
+check("upgrade bridge assigns globalThis.TapSurvivorUpgrades", Boolean(bridgeUpgrades));
+check("upgrade bridge source has generated banner", hasGeneratedBanner(upgradesBridge.source));
+check(
+  "upgrade bridge exposes classic factory and default members",
+  typeof bridgeUpgrades?.createUpgradeContent === "function" &&
+    typeof bridgeUpgrades?.createUpgradeDefs === "function" &&
+    Array.isArray(bridgeUpgrades?.runUpgradeDefs)
+);
+const moduleUpgradeSnapshot = upgradeContentSnapshot(createModuleUpgradeContent);
+const bridgeUpgradeSnapshot = upgradeContentSnapshot(bridgeUpgrades.createUpgradeContent);
+check(
+  "native and classic upgrade factory output match",
+  JSON.stringify(moduleUpgradeSnapshot) === JSON.stringify(bridgeUpgradeSnapshot)
+);
+check(
+  "native upgrade factory preserves weapon and meta upgrade definitions",
+  moduleUpgradeSnapshot.upgradeIds.join(",") === "arc_damage,laser_damage,meta_focus" &&
+    moduleUpgradeSnapshot.laserQuest === "use_laser_run" &&
+    moduleUpgradeSnapshot.arcQuest === "arc_bolt_mastery"
+);
+check(
+  "native upgrade factory preserves run-upgrade effect application",
+  moduleUpgradeSnapshot.runUpgradeApplyFlags.join(",") === "true,false" &&
+    moduleUpgradeSnapshot.effectCalls.join(",") === "fireRate:12"
+);
+check(
+  "generated classic upgrades default members preserve source-derived content",
+  JSON.stringify(bridgeUpgrades.createUpgradeDefs(upgradeWeaponDefs)) ===
+    JSON.stringify(moduleUpgradeSnapshot.upgradeDefs) &&
+    bridgeUpgrades.runUpgradeDefs.map((upgrade) => upgrade.id).join(",") === "rapid_fire,steady_aim"
+);
 
 const composeRuntimeSource = readFileSync(
   new URL("../src/app/compose-runtime.js", import.meta.url),
@@ -1233,6 +1300,15 @@ check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasS
 check("dependency bag exposes UI progression", moduleGameDependenciesSnapshot.hasUiProgression);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
+check(
+  "dependency bag preserves generated classic upgrades fallback",
+  moduleGameDependenciesSnapshot.hasClassicUpgradeFactory
+);
+check(
+  "dependency bag recovers generated classic upgrades after a missing-provider fallback",
+  moduleGameDependenciesSnapshot.recoveredClassicUpgradeFactory &&
+    moduleGameDependenciesSnapshot.recoveredUpgradeIds.join(",") === "arc_damage,laser_damage,meta_focus"
+);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
 check(
   "dependency bag reports missing input binder",
@@ -1853,6 +1929,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
+    "TapSurvivorUpgrades",
     "TapSurvivorMath",
     "TapSurvivorPickups",
     "TapSurvivorProgression",
@@ -1880,6 +1957,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorWeaponTargeting",
   ];
   const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
+  baseGlobalRef.TapSurvivorUpgrades = bridgeUpgrades;
   const retiredGlobalNames = [
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
@@ -1950,6 +2028,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   delete fallbackGlobalRef.TapSurvivorBalanceRuntime;
   delete fallbackGlobalRef.TapSurvivorUpgrades;
   const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
+  fallbackGlobalRef.TapSurvivorUpgrades = bridgeUpgrades;
+  const recoveredLegacyBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
 
   const missingGlobalRef = { ...baseGlobalRef };
   delete missingGlobalRef.TapSurvivorAudio;
@@ -1974,6 +2054,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     debugProfile: bag.debugBalance.getActiveProfile(),
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
+    hasClassicUpgradeFactory: typeof bag.upgrades.createUpgradeContent === "function",
     hasAssets: bag.assets.name === "TapSurvivorAssets",
     hasContentRegistry: typeof bag.contentRegistry.createContentRegistry === "function",
     hasBalance: typeof bag.balance.floorDifficulty === "function",
@@ -2027,10 +2108,46 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,
+    recoveredClassicUpgradeFactory:
+      typeof recoveredLegacyBag.upgrades.createUpgradeContent === "function",
+    recoveredUpgradeIds: recoveredLegacyBag.upgrades
+      .createUpgradeContent({
+        content: upgradeBridgeContentFixture,
+        effects: { applyRunUpgradeEffects() {} },
+      })
+      .createUpgradeDefs(upgradeWeaponDefs)
+      .map((upgrade) => upgrade.id),
     retiredGlobalReads,
   };
   Object.defineProperty(snapshot, "__bag", { value: bag, enumerable: false });
   return snapshot;
+}
+
+function upgradeContentSnapshot(createUpgradeContent) {
+  const effectCalls = [];
+  const upgradeContent = createUpgradeContent({
+    content: upgradeBridgeContentFixture,
+    effects: {
+      applyRunUpgradeEffects(game, effects) {
+        const appliedEffects = effects.map((effect) => [effect.stat, effect.value].join(":"));
+        effectCalls.push(...appliedEffects);
+        game.appliedEffects = appliedEffects;
+      },
+    },
+  });
+  const upgradeDefs = upgradeContent.createUpgradeDefs(upgradeWeaponDefs);
+  const runUpgradeDefs = upgradeContent.runUpgradeDefs;
+  const game = {};
+  runUpgradeDefs[0]?.apply?.(game);
+  return {
+    arcQuest: upgradeDefs.find((upgrade) => upgrade.id === "arc_damage")?.requiresQuest,
+    effectCalls,
+    laserQuest: upgradeDefs.find((upgrade) => upgrade.id === "laser_damage")?.requiresQuest,
+    runUpgradeApplyFlags: runUpgradeDefs.map((upgrade) => typeof upgrade.apply === "function"),
+    runUpgradeIds: runUpgradeDefs.map((upgrade) => upgrade.id),
+    upgradeDefs,
+    upgradeIds: upgradeDefs.map((upgrade) => upgrade.id),
+  };
 }
 
 function pickupSnapshot(createPickupSystem, mathRef) {

@@ -44,6 +44,30 @@ const bridges = [
     ],
   },
   {
+    source: "src/modules/upgrades.js",
+    target: "src/upgrades.js",
+    globalName: "TapSurvivorUpgrades",
+    exports: ["createUpgradeContent"],
+    classicBoundarySource: `const defaultUpgradeContent = createUpgradeContent({
+  content: globalThis.TapSurvivorContent || {},
+  effects: globalThis.TapSurvivorEffects,
+});`,
+    globalMembers: [
+      {
+        name: "createUpgradeContent",
+        value: "createUpgradeContent",
+      },
+      {
+        name: "createUpgradeDefs",
+        value: "defaultUpgradeContent.createUpgradeDefs",
+      },
+      {
+        name: "runUpgradeDefs",
+        value: "defaultUpgradeContent.runUpgradeDefs",
+      },
+    ],
+  },
+  {
     source: "src/modules/level-up-choices.js",
     target: "src/level-up-choices.js",
     globalName: null,

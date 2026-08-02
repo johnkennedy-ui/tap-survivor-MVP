@@ -108,6 +108,7 @@ const browserDependencyBagSource = readFileSync(
 );
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
+const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const missingProductionBrowserAdapterModuleFiles = [
   "src/modules/assets.js",
   "src/modules/combat.js",
@@ -399,12 +400,6 @@ const browserProgressionGlobals = {
     questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
   },
   TapSurvivorShop: { createShopSystem: () => ({}) },
-  TapSurvivorUpgrades: {
-    createUpgradeContent: () => ({
-      createUpgradeDefs: () => [],
-      runUpgradeDefs: [],
-    }),
-  },
 };
 const runtimeGlobal = {
   ...browserGameplayGlobals,
@@ -428,6 +423,10 @@ const runtimeProgressionGlobalGuard = installTapSurvivorProgressionGlobalReadGua
   "runtime readiness injected browser globalRef"
 );
 const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
+  runtimeGlobal,
+  "runtime readiness injected browser globalRef"
+);
+const runtimeUpgradeGlobalGuard = installTapSurvivorUpgradesGlobalReadGuard(
   runtimeGlobal,
   "runtime readiness injected browser globalRef"
 );
@@ -775,6 +774,12 @@ check(
   ) && !browserDependencyBagSource.includes("TapSurvivorProgression")
 );
 check(
+  "readiness rejects direct, string-key, and dynamic TapSurvivorUpgrades reads in the production ESM browser path",
+  browserDependencyBagSource.includes('import { createUpgradeContent } from "../modules/upgrades.js";') &&
+    browserDependencyBagSource.includes("upgrades: { createUpgradeContent }") &&
+    !browserDependencyBagSource.includes("TapSurvivorUpgrades")
+);
+check(
   "readiness preserves the deliberate classic TapSurvivorRelics publisher",
   classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
     classicRelicsSource.includes("createRelicSystem")
@@ -783,6 +788,13 @@ check(
   "readiness preserves the deliberate classic TapSurvivorProgression publisher",
   classicProgressionSource.includes("globalThis.TapSurvivorProgression =") &&
     classicProgressionSource.includes("createProgressionSystem")
+);
+check(
+  "readiness preserves the deliberate classic TapSurvivorUpgrades publisher",
+  classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
+    classicUpgradesSource.includes("createUpgradeContent") &&
+    classicUpgradesSource.includes("createUpgradeDefs") &&
+    classicUpgradesSource.includes("runUpgradeDefs")
 );
 check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
@@ -838,7 +850,7 @@ check(
   )
 );
 check(
-  "readiness sees browser progression defaults retain other classic bridges and native Quests and Progression",
+  "readiness sees browser progression defaults retain remaining classic bridges and native Quests, Progression, and Upgrades",
   [
     ["levelUp", "createLevelUpSystem"],
     ["progression", "createProgressionSystem"],
@@ -863,6 +875,10 @@ check(
 check(
   "readiness browser progression defaults do not read guarded TapSurvivorUiProgression global",
   runtimeUiProgressionGlobalGuard.readAttempts() === 0
+);
+check(
+  "readiness browser progression defaults do not read guarded TapSurvivorUpgrades global",
+  runtimeUpgradeGlobalGuard.readAttempts() === 0
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
@@ -1138,7 +1154,7 @@ check(
   browserDependencyBagGlobalReads.length === 0
 );
 check(
-  "readiness sees browser dependency bag default path bridges gameplay and progression through classic globals before production switch",
+  "readiness sees browser dependency bag default path retains only remaining classic namespace bridges",
   [
     "createBrowserGameplaySystems",
     "createBrowserProgressionSystems",
@@ -1572,6 +1588,26 @@ function installTapSurvivorUiProgressionGlobalReadGuard(target, label) {
     get() {
       reads += 1;
       throw new Error(`Forbidden classic UI progression global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
+}
+
+function installTapSurvivorUpgradesGlobalReadGuard(target, label) {
+  const key = "TapSurvivorUpgrades";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic upgrades global read from ${label}`);
     },
   });
   return {

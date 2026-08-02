@@ -28,6 +28,7 @@ const classicContentSource = readFileSync(join(root, "src/content.generated.js")
 const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
+const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
 const browserGameplayGlobals = {
@@ -46,12 +47,6 @@ const browserProgressionGlobals = {
     questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
   },
   TapSurvivorShop: { createShopSystem: () => ({}) },
-  TapSurvivorUpgrades: {
-    createUpgradeContent: () => ({
-      createUpgradeDefs: () => [],
-      runUpgradeDefs: [],
-    }),
-  },
 };
 
 check("production module entrypoint candidate imports successfully", typeof createProductionModuleEntrypoint === "function");
@@ -145,6 +140,19 @@ check(
   browserDependencyBagSource.includes('import { createProgressionSystem } from "../modules/progression.js";') &&
     !browserDependencyBagSource.includes("TapSurvivorProgression")
 );
+check(
+  "production ESM browser dependency bag statically imports native Upgrades without classic global access",
+  browserDependencyBagSource.includes('import { createUpgradeContent } from "../modules/upgrades.js";') &&
+    browserDependencyBagSource.includes("upgrades: { createUpgradeContent }") &&
+    !browserDependencyBagSource.includes("TapSurvivorUpgrades")
+);
+check(
+  "classic fallback preserves TapSurvivorUpgrades publisher and default members",
+  classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
+    classicUpgradesSource.includes("createUpgradeContent") &&
+    classicUpgradesSource.includes("createUpgradeDefs") &&
+    classicUpgradesSource.includes("runUpgradeDefs")
+);
 
 const initialSave = {
   coins: 21,
@@ -227,6 +235,10 @@ const runtimeProgressionGlobalGuard = installTapSurvivorProgressionGlobalReadGua
   "injected browser globalRef"
 );
 const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalReadGuard(
+  runtimeGlobal,
+  "injected browser globalRef"
+);
+const runtimeUpgradeGlobalGuard = installTapSurvivorUpgradesGlobalReadGuard(
   runtimeGlobal,
   "injected browser globalRef"
 );
@@ -643,6 +655,36 @@ const defaultGameplaySystems = defaultBrowserOptions.adapters.gameplayAdapters.g
 const defaultProgressionSystems =
   defaultBrowserOptions.adapters.progressionAdapters.progressionSystems;
 const defaultPlatformAdapters = defaultBrowserOptions.adapters.platformAdapters;
+const missingUpgradeFixture = {
+  metaUpgrades: [{ id: "missing_global_meta" }],
+  runUpgrades: [{ effects: [{ stat: "speed", value: 4 }], id: "missing_global_run" }],
+};
+const missingUpgradeGame = {};
+const missingUpgradeSystems = createBrowserDependencyBagOptions({
+  canvas,
+  content: missingUpgradeFixture,
+  documentRef,
+  globalRef: {},
+  storage: createMemoryStorage(),
+  ui: uiSurface,
+}).adapters.progressionAdapters.progressionSystems;
+const missingUpgradeContent = missingUpgradeSystems.upgrades.createUpgradeContent({
+  content: missingUpgradeFixture,
+  effects: {
+    applyRunUpgradeEffects(game, effects) {
+      game.appliedEffects = effects.map((effect) => effect.stat);
+    },
+  },
+});
+missingUpgradeContent.runUpgradeDefs[0].apply(missingUpgradeGame);
+check(
+  "production browser native Upgrades works with TapSurvivorUpgrades absent",
+  missingUpgradeContent
+    .createUpgradeDefs({ bolt: { name: "Bolt", upgradeId: "bolt_damage" } })
+    .map((upgrade) => upgrade.id)
+    .join(",") === "bolt_damage,missing_global_meta" &&
+    missingUpgradeGame.appliedEffects.join(",") === "speed"
+);
 const movementGame = {
   paused: false,
   player: { targetX: 0, targetY: 0 },
@@ -687,7 +729,7 @@ check(
     typeof defaultGameplaySystems.weaponFire?.createWeaponFireSystem === "function"
 );
 check(
-  "production browser progression defaults retain other classic bridges and use native Quests and Progression",
+  "production browser progression defaults retain remaining classic bridges and use native Quests, Progression, and Upgrades",
   typeof defaultProgressionSystems.levelUp?.createLevelUpSystem === "function" &&
     typeof defaultProgressionSystems.progression?.createProgressionSystem === "function" &&
     typeof defaultProgressionSystems.quests?.createQuestSystem === "function" &&
@@ -781,22 +823,28 @@ check(
     nativeQuestCalls.join(",") === "persist,persist,persist,render-meta,starter:3"
 );
 check(
-  "production browser dependency bag statically wires native Quests while retaining LevelUp and Upgrades bridges",
+  "production browser dependency bag statically wires native Quests and Upgrades while retaining the LevelUp bridge",
   browserDependencyBagSource.includes('from "../modules/quests.js"') &&
     browserDependencyBagSource.includes("quests: { createQuestSystem, questOpenIds }") &&
+    browserDependencyBagSource.includes('from "../modules/upgrades.js"') &&
+    browserDependencyBagSource.includes("upgrades: { createUpgradeContent }") &&
     !browserDependencyBagSource.includes('createBrowserNamespaceBridge(globalRef, "TapSurvivorQuests"') &&
-    ["TapSurvivorLevelUp", "TapSurvivorUpgrades"].every((globalName) =>
+    !browserDependencyBagSource.includes("TapSurvivorUpgrades") &&
+    ["TapSurvivorLevelUp"].every((globalName) =>
       new RegExp(`createBrowserNamespaceBridge\\s*\\(\\s*globalRef\\s*,\\s*"${globalName}"`, "u").test(
         browserDependencyBagSource
       )
     )
 );
 check(
-  "production browser dependency bag statically wires native Progression while retaining LevelUp and Upgrades bridges",
+  "production browser dependency bag statically wires native Progression and Upgrades while retaining the LevelUp bridge",
   browserDependencyBagSource.includes('from "../modules/progression.js"') &&
     browserDependencyBagSource.includes("progression: { createProgressionSystem }") &&
+    browserDependencyBagSource.includes('from "../modules/upgrades.js"') &&
+    browserDependencyBagSource.includes("upgrades: { createUpgradeContent }") &&
     !browserDependencyBagSource.includes('createBrowserNamespaceBridge(globalRef, "TapSurvivorProgression"') &&
-    ["TapSurvivorLevelUp", "TapSurvivorUpgrades"].every((globalName) =>
+    !browserDependencyBagSource.includes("TapSurvivorUpgrades") &&
+    ["TapSurvivorLevelUp"].every((globalName) =>
       new RegExp(`createBrowserNamespaceBridge\\s*\\(\\s*globalRef\\s*,\\s*"${globalName}"`, "u").test(
         browserDependencyBagSource
       )
@@ -910,6 +958,10 @@ const autobootUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalRe
   globalThis,
   "autoboot globalThis"
 );
+const autobootUpgradeGlobalGuard = installTapSurvivorUpgradesGlobalReadGuard(
+  globalThis,
+  "autoboot globalThis"
+);
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
 const autobootRafCalls = autobootGlobalRestore.rafCalls();
 autobootGlobalRestore.restore();
@@ -918,6 +970,7 @@ autobootRelicsGlobalGuard.restore();
 autobootQuestsGlobalGuard.restore();
 autobootProgressionGlobalGuard.restore();
 autobootUiProgressionGlobalGuard.restore();
+autobootUpgradeGlobalGuard.restore();
 check("production module autoboot wrapper initializes browser runtime", autobootRafCalls === 1);
 check(
   "production module boot completes without reading guarded TapSurvivorContent globals",
@@ -939,11 +992,16 @@ check(
   "production module boot completes without reading guarded TapSurvivorUiProgression globals",
   runtimeUiProgressionGlobalGuard.readAttempts() === 0 && autobootUiProgressionGlobalGuard.readAttempts() === 0
 );
+check(
+  "production module boot completes without reading guarded TapSurvivorUpgrades globals",
+  runtimeUpgradeGlobalGuard.readAttempts() === 0 && autobootUpgradeGlobalGuard.readAttempts() === 0
+);
 runtimeContentGlobalGuard.restore();
 runtimeRelicsGlobalGuard.restore();
 runtimeQuestsGlobalGuard.restore();
 runtimeProgressionGlobalGuard.restore();
 runtimeUiProgressionGlobalGuard.restore();
+runtimeUpgradeGlobalGuard.restore();
 check(
   "production module autoboot wrapper publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
@@ -1255,6 +1313,26 @@ function installTapSurvivorUiProgressionGlobalReadGuard(target, label) {
     get() {
       reads += 1;
       throw new Error(`Forbidden classic UI progression global read from ${label}`);
+    },
+  });
+  return {
+    readAttempts: () => reads,
+    restore() {
+      if (previous) Object.defineProperty(target, key, previous);
+      else delete target[key];
+    },
+  };
+}
+
+function installTapSurvivorUpgradesGlobalReadGuard(target, label) {
+  const key = "TapSurvivorUpgrades";
+  const previous = Object.getOwnPropertyDescriptor(target, key);
+  let reads = 0;
+  Object.defineProperty(target, key, {
+    configurable: true,
+    get() {
+      reads += 1;
+      throw new Error(`Forbidden classic upgrades global read from ${label}`);
     },
   });
   return {
