@@ -9,6 +9,7 @@ function check(name, pass) {
 }
 
 const classicBridgeSource = readFileSync(new URL("../src/game-runtime.js", import.meta.url), "utf8");
+const sharedHarnessSource = readFileSync(new URL("./smoke-game-harness.mjs", import.meta.url), "utf8");
 check(
   "classic runtime bridge is a generated IIFE publisher",
   classicBridgeSource.startsWith("// GENERATED FILE. Do not edit directly.") &&
@@ -31,6 +32,14 @@ check(
 check(
   "native runtime controller is imported normally",
   typeof createModuleGameRuntimeController === "function"
+);
+check(
+  "shared harness never VM-bootstraps the classic game entrypoint",
+  !sharedHarnessSource.includes("src/game.js")
+);
+check(
+  "shared harness has no obsolete runtime mode or host-global workaround",
+  !sharedHarnessSource.includes("gameRuntimeMode") && !sharedHarnessSource.includes("globalThis")
 );
 
 if (

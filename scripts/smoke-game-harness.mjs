@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 
-import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+import { content, contentSchema } from "../src/content.generated.mjs";
+import { createBrowserDependencyBagOptions } from "../src/app/browser-dependency-bag.js";
+import { composeRuntime } from "../src/app/compose-runtime.js";
+import { createModuleGameDependencyBag } from "../src/modules/module-game-dependencies.js";
+import { createModuleGameLifecycleOwner } from "../src/modules/module-game-lifecycle.js";
 
 const root = new URL("..", import.meta.url).pathname;
 
@@ -103,7 +107,6 @@ function readSource(path) {
 
 export function createGameHarness({
   fakeCombat = false,
-  gameRuntimeMode = "classic",
   initialSave = null,
   search = "",
   storageEntries = {},
@@ -426,34 +429,136 @@ export function createGameHarness({
   vm.runInContext(readSource("src/shell-ui.js"), context);
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
-  if (gameRuntimeMode === "module") {
-    context.TapSurvivorGameRuntime = {
-      createGameRuntimeController: createModuleGameRuntimeController,
-    };
-  } else {
-    vm.runInContext(readSource("src/game-runtime.js"), context);
-  }
-  vm.runInContext(readSource("src/game-dependencies.js"), context);
-
-  const previousInput = Reflect.get(globalThis, "TapSurvivorInput");
-  const hadInput = Reflect.has(globalThis, "TapSurvivorInput");
-  if (gameRuntimeMode === "module") {
-    Reflect.set(globalThis, "TapSurvivorInput", context.TapSurvivorInput);
-  }
-  try {
-    vm.runInContext(
-      `${readSource("src/game.js")}\nglobalThis.__tapSurvivorHarness = { getGame: () => game, getSave: () => save };`,
-      context
-    );
-  } finally {
-    if (gameRuntimeMode === "module") {
-      if (hadInput) {
-        Reflect.set(globalThis, "TapSurvivorInput", previousInput);
-      } else {
-        Reflect.deleteProperty(globalThis, "TapSurvivorInput");
-      }
-    }
-  }
+  const platform = {
+    documentRef: context.document,
+    runtimeGlobal: context,
+  };
+  const storage = {
+    getItem: (key) => context.localStorage.getItem(key),
+    removeItem: (key) => context.localStorage.removeItem(key),
+    setItem: (key, value) => context.localStorage.setItem(key, value),
+  };
+  let dependencies;
+  let lifecycle;
+  let runtime;
+  let shellUi;
+  const classicAudioSystem = context.TapSurvivorAudio.createAudioSystem({});
+  let playStartAudio = () => {};
+  const startRun = () => lifecycle?.startRun?.();
+  const dependencyBagOptions = createBrowserDependencyBagOptions({
+    audioAdapters: {
+      audioContextFactory: (cueId) => {
+        if (cueId === "shop-purchase") classicAudioSystem.playShopPurchase();
+        const AudioContextCtor = context.AudioContext || context.webkitAudioContext;
+        return typeof AudioContextCtor === "function" ? new AudioContextCtor() : null;
+      },
+      audioFactory: (src) => (typeof context.Audio === "function" ? new context.Audio(src) : null),
+      clock: () => context.performance?.now?.() || 0,
+    },
+    content,
+    contentSchema,
+    documentRef: context.document,
+    globalRef: context,
+    onStartAudio: () => playStartAudio(),
+    onStartRun: startRun,
+    storage,
+  });
+  dependencyBagOptions.adapters.uiAdapters.ui.openShop = elements.get("openShop");
+  const browserPlatformAdapters = dependencyBagOptions.adapters.platformAdapters;
+  const browserBannerSystem = browserPlatformAdapters.bannerSystem;
+  const debugSystem = context.TapSurvivorDebug.createDebugSystem({
+    floorDifficulty: (floor) => dependencies?.moduleSystems?.balance?.floorDifficulty?.(floor),
+    getActiveProfile: () => context.TapSurvivorDebugBalance?.getActiveProfile?.() || "default",
+    getGame: () => dependencies?.getGame?.(),
+    getRelicSpecialEffects: () => dependencies?.moduleSystems?.relics?.specialEffects?.(dependencies?.getSave?.()),
+    getRunUpgradeTier: (id) => dependencies?.getGame?.()?.runUpgradeTiers?.[id] || 0,
+    getSave: () => dependencies?.getSave?.(),
+    getWeaponDamageMultiplier: () =>
+      dependencies?.moduleSystems?.relics?.getWeaponDamageMultiplier?.(dependencies?.getSave?.()) || 1,
+    maxEquippedWeapons: () => dependencies?.moduleSystems?.relics?.maxEquippedWeapons?.(dependencies?.getSave?.()) || 4,
+    relicDefs: content.relics || [],
+    runUpgradeDefs: content.runUpgrades || [],
+    ui: dependencyBagOptions.adapters.uiAdapters.ui,
+  });
+  dependencyBagOptions.adapters.uiAdapters.runUi.renderDebug = () => debugSystem.render();
+  dependencyBagOptions.adapters.platformAdapters = {
+    ...browserPlatformAdapters,
+    bannerSystem: {
+      ...browserBannerSystem,
+      showOnceBanner(id, message, duration) {
+        const save = dependencies?.getSave?.();
+        if (!save || save.seenBanners?.includes(id)) return false;
+        save.seenBanners = [...new Set([...(save.seenBanners || []), id])];
+        dependencies.persist();
+        browserBannerSystem.showBanner(message, duration);
+        return true;
+      },
+    },
+    debugSystem,
+  };
+  dependencies = createModuleGameDependencyBag(dependencyBagOptions);
+  const { contentRegistry, relics } = dependencies.moduleSystems;
+  playStartAudio = () => {
+    dependencies.audioSystem?.playStartLaugh?.();
+    return classicAudioSystem.playStartLaugh?.();
+  };
+  shellUi = context.TapSurvivorShellUi.createShellUiController({
+    assets: dependencies.assets,
+    closeEndScreen: () => {
+      dependencies.runUi.hideEndScreen();
+      shellUi.showTitleScreen();
+    },
+    closeLevelUpMenu: () => dependencies.ui.levelUp.classList.add("hidden"),
+    content,
+    documentRef: context.document,
+    exitRun: () => {
+      const game = dependencies.getGame();
+      if (!game?.running) return;
+      shellUi.closeRunMenu(false);
+      game.paused = false;
+      game.pauseReason = "";
+      game.running = false;
+      game.endReason = "Run exited";
+      dependencies.runUi.showEndScreen("Run exited");
+      dependencies.persist();
+      dependencies.renderMeta();
+    },
+    getGame: dependencies.getGame,
+    getSave: dependencies.getSave,
+    isAudioMuted: () => classicAudioSystem.isMuted?.(),
+    persist: dependencies.persist,
+    playStartLaugh: playStartAudio,
+    relicDefs: contentRegistry.relicDefs,
+    relicSystem: relics,
+    renderMeta: dependencies.renderMeta,
+    resetSave: () => runtime?.resetSave?.(),
+    setGameSpeed: (speed) => runtime?.setGameSpeed?.(speed),
+    shellRelicUi: context.TapSurvivorShellRelicUi,
+    shopSystem: dependencies.shopSystem,
+    startRun,
+    toggleAudioMute: () => {
+      const muted = classicAudioSystem.toggleMuted?.();
+      dependencies.audioSystem?.setMuted?.(muted);
+      return muted;
+    },
+    ui: dependencies.ui,
+    weaponDefs: contentRegistry.weaponDefs,
+  });
+  dependencies.shellUi = shellUi;
+  runtime = composeRuntime({
+    dependencies,
+    platform,
+  });
+  lifecycle = createModuleGameLifecycleOwner({
+    dependencies,
+    platform,
+    runtime,
+  });
+  lifecycle.init();
+  context.__tapSurvivorHarness = {
+    getGame: dependencies.getGame,
+    getSave: dependencies.getSave,
+  };
 
   return {
     context,
