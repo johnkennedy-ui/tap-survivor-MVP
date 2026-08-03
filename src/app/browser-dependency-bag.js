@@ -1,3 +1,8 @@
+import { createCombatSystem } from "../modules/combat.js";
+import { createEnemyBehaviorSystem } from "../modules/enemy-behaviors.js";
+import { createEnemySpawnSystem } from "../modules/enemy-spawning.js";
+import { createEnemySystem } from "../modules/enemies.js";
+import { createLevelUpSystem } from "../modules/level-up.js";
 import { createRelicSystem } from "../modules/relics.js";
 import { createProgressionSystem } from "../modules/progression.js";
 import { createQuestSystem, questOpenIds } from "../modules/quests.js";
@@ -5,6 +10,8 @@ import { createShellRelicUi } from "../modules/shell-relic-ui.js";
 import { createShopSystem } from "../modules/shop.js";
 import { createUiProgressionRenderer } from "../modules/ui-progression.js";
 import { createUpgradeContent } from "../modules/upgrades.js";
+import { createWeaponBehaviorSystem } from "../modules/weapon-behaviors.js";
+import { createWeaponFireSystem } from "../modules/weapon-fire.js";
 
 export const BROWSER_DEPENDENCY_BAG_PROOF_SLOTS = Object.freeze([
   "assetAdapters",
@@ -101,9 +108,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
           globalRef,
         }),
       gameplayAdapters: options.gameplayAdapters || {
-        gameplaySystems: createBrowserGameplaySystems({
-          globalRef,
-        }),
+        gameplaySystems: createBrowserGameplaySystems(),
       },
       initialGame: options.initialGame || null,
       initialSave: options.initialSave,
@@ -117,7 +122,6 @@ export function createBrowserDependencyBagOptions(options = {}) {
       progressionAdapters: options.progressionAdapters || {
         progressionSystems: createBrowserProgressionSystems({
           documentRef,
-          globalRef,
           ui,
         }),
       },
@@ -262,49 +266,27 @@ function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
   };
 }
 
-function createBrowserGameplaySystems({ globalRef }) {
+function createBrowserGameplaySystems() {
   return {
-    combat: createBrowserNamespaceBridge(globalRef, "TapSurvivorCombat", "createCombatSystem", {
-      createCombatSystem: () => ({}),
-    }),
-    enemies: createBrowserNamespaceBridge(globalRef, "TapSurvivorEnemies", "createEnemySystem", {
-      createEnemySystem: () => ({}),
-    }),
-    enemyBehaviors: createBrowserNamespaceBridge(
-      globalRef,
-      "TapSurvivorEnemyBehaviors",
-      "createEnemyBehaviorSystem",
-      {
-        createEnemyBehaviorSystem: () => ({}),
-      }
-    ),
-    enemySpawning: createBrowserNamespaceBridge(
-      globalRef,
-      "TapSurvivorEnemySpawning",
-      "createEnemySpawnSystem",
-      {
-        createEnemySpawnSystem: () => ({}),
-      }
-    ),
-    weaponBehaviors: createBrowserNamespaceBridge(
-      globalRef,
-      "TapSurvivorWeaponBehaviors",
-      "createWeaponBehaviorSystem",
-      {
-        createWeaponBehaviorSystem: () => ({}),
-      }
-    ),
-    weaponFire: createBrowserNamespaceBridge(globalRef, "TapSurvivorWeaponFire", "createWeaponFireSystem", {
-      createWeaponFireSystem: () => ({}),
-    }),
+    combat: { createCombatSystem },
+    enemies: { createEnemySystem },
+    enemyBehaviors: { createEnemyBehaviorSystem },
+    enemySpawning: { createEnemySpawnSystem },
+    weaponBehaviors: { createWeaponBehaviorSystem },
+    weaponFire: { createWeaponFireSystem },
   };
 }
 
-function createBrowserProgressionSystems({ documentRef, globalRef, ui }) {
+function createBrowserProgressionSystems({ documentRef, ui }) {
   return {
-    levelUp: createBrowserNamespaceBridge(globalRef, "TapSurvivorLevelUp", "createLevelUpSystem", {
-      createLevelUpSystem: () => ({}),
-    }),
+    levelUp: {
+      createLevelUpSystem: (options = {}) =>
+        createLevelUpSystem({
+          ...options,
+          documentRef: options.documentRef || documentRef,
+          ui: options.ui || ui,
+        }),
+    },
     progression: { createProgressionSystem },
     quests: { createQuestSystem, questOpenIds },
     shop: {
@@ -319,46 +301,6 @@ function createBrowserProgressionSystems({ documentRef, globalRef, ui }) {
     },
     upgrades: { createUpgradeContent },
   };
-}
-
-function createBrowserNamespaceBridge(globalRef, globalName, factoryName, fallbackAdapter) {
-  const resolveNamespace = () => globalRef?.[globalName] || null;
-  const resolveValue = (source, prop) => {
-    const value = source?.[prop];
-    if (typeof value === "function") {
-      return value.bind(source);
-    }
-    return value;
-  };
-  return new Proxy(fallbackAdapter, {
-    get(target, prop) {
-      const namespace = resolveNamespace();
-      const liveValue = resolveValue(namespace, prop);
-      if (liveValue !== undefined) {
-        return liveValue;
-      }
-      return resolveValue(target, prop);
-    },
-    has(target, prop) {
-      const namespace = resolveNamespace();
-      return Boolean((namespace && prop in namespace) || prop in target);
-    },
-    ownKeys(target) {
-      const namespace = resolveNamespace();
-      return Array.from(new Set([...Reflect.ownKeys(target), ...(namespace ? Reflect.ownKeys(namespace) : [])]));
-    },
-    getOwnPropertyDescriptor(target, prop) {
-      const namespace = resolveNamespace();
-      return (
-        Object.getOwnPropertyDescriptor(namespace || target, prop) || {
-          configurable: true,
-          enumerable: true,
-          value: undefined,
-          writable: true,
-        }
-      );
-    },
-  });
 }
 
 function createBrowserBannerSystem({ globalRef, ui }) {

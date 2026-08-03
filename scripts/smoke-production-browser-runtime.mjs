@@ -31,6 +31,7 @@ const report = {
   httpFailures: [],
   indexLoaded: false,
   moduleScriptUrl: null,
+  movementInputTriggered: false,
   menuButtons: {},
   nonStartButtonsDetected: [],
   nonStartButtonsProbed: [],
@@ -38,6 +39,8 @@ const report = {
   pageUrl: null,
   pageErrors: [],
   productionModuleAutobootLoaded: false,
+  retiredPublisherGlobalReadAttempts: {},
+  retiredPublisherGlobalReadCount: 0,
   playerSpriteAssetResponseStatus: null,
   playerSpriteAssetUrl: null,
   rootDir: root,
@@ -64,6 +67,7 @@ const report = {
   titleVisible: false,
   runtimeSamples: [],
   screenshotPath: screenshotPath || null,
+  speedControlProbeResults: [],
   viewport,
 };
 
@@ -218,6 +222,28 @@ async function main() {
   const responseEvents = [];
   const responseStatusByUrl = new Map();
   await page.addInitScript(() => {
+    const retiredPublisherNames = [
+      "TapSurvivorCombat",
+      "TapSurvivorEnemies",
+      "TapSurvivorEnemyBehaviors",
+      "TapSurvivorEnemySpawning",
+      "TapSurvivorWeaponBehaviors",
+      "TapSurvivorWeaponFire",
+      "TapSurvivorLevelUp",
+    ];
+    const retiredPublisherReads = Object.fromEntries(
+      retiredPublisherNames.map((name) => [name, 0])
+    );
+    globalThis.__TapSurvivorRetiredPublisherReads = retiredPublisherReads;
+    retiredPublisherNames.forEach((name) => {
+      Object.defineProperty(globalThis, name, {
+        configurable: true,
+        get() {
+          retiredPublisherReads[name] += 1;
+          throw new Error(`Forbidden retired Tap Survivor publisher read: ${name}`);
+        },
+      });
+    });
     let drawSequence = 0;
     const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
     const diagnostics = {
@@ -502,6 +528,16 @@ async function main() {
       }
     }
 
+    const canvas = page.locator("#game");
+    if ((await canvas.count().catch(() => 0)) > 0) {
+      try {
+        await canvas.click({ position: { x: 240, y: 270 }, timeout: 5000 });
+        report.movementInputTriggered = true;
+      } catch (error) {
+        report.pageErrors.push({ message: `Movement input failed: ${error.message}`, stack: error.stack });
+      }
+    }
+
     await sampleRuntime(page, report, origin);
     if (screenshotPath) {
       await mkdir(dirname(screenshotPath), { recursive: true });
@@ -519,6 +555,12 @@ async function main() {
         spriteRegistrations: diagnostics.spriteRegistrations || [],
       };
     });
+    report.retiredPublisherGlobalReadAttempts = await page.evaluate(
+      () => globalThis.__TapSurvivorRetiredPublisherReads || {}
+    );
+    report.retiredPublisherGlobalReadCount = Object.values(
+      report.retiredPublisherGlobalReadAttempts
+    ).reduce((total, reads) => total + Number(reads || 0), 0);
 
     const spriteProof = analyzeSpriteDiagnostics(report.spriteDiagnostics);
     report.spriteProof = spriteProof;
@@ -558,6 +600,15 @@ async function main() {
       !spriteProof.playerDrawSuccess ? "player sprite draw was never attempted successfully" : null,
       !spriteProof.playerCanvasVisible ? "player sprite draw did not produce visible canvas evidence" : null,
       report.startGameClickThrew ? "Start Game click threw" : null,
+      !report.movementInputTriggered ? "movement input click did not complete" : null,
+      report.retiredPublisherGlobalReadCount > 0
+        ? `retired publisher globals were read (${report.retiredPublisherGlobalReadCount})`
+        : null,
+      !["speed:x1", "speed:x2", "speed:x5"].every((id) =>
+        report.speedControlProbeResults.some((result) => result.id === id && result.clicked)
+      )
+        ? "one or more speed controls x1/x2/x5 did not click"
+        : null,
       !report.canvasFound ? "no canvas found" : null,
       !report.startGameFound && !report.titleVisible ? "no title or Start Game control found" : null,
     ].filter(Boolean);
@@ -706,11 +757,23 @@ async function sampleRuntime(page, report, origin) {
 
 async function probeButtons(page, report) {
   const probed = [];
-  const speedTwo = page.locator('button[data-speed="2"]');
-  if ((await speedTwo.count().catch(() => 0)) > 0) {
-    probed.push("speed:x2");
-    await speedTwo.click().catch(() => {});
-    await page.waitForTimeout(50);
+  const speedControlProbeResults = [];
+  for (const speed of [1, 2, 5]) {
+    const id = `speed:x${speed}`;
+    const control = page.locator(`button[data-speed="${speed}"]`);
+    if ((await control.count().catch(() => 0)) === 0) {
+      speedControlProbeResults.push({ clicked: false, id, present: false });
+      continue;
+    }
+    try {
+      await control.click({ timeout: 5000 });
+      probed.push(id);
+      speedControlProbeResults.push({ clicked: true, id, present: true });
+      await page.waitForTimeout(50);
+    } catch (error) {
+      speedControlProbeResults.push({ clicked: false, id, present: true });
+      report.pageErrors.push({ message: `${id} click failed: ${error.message}`, stack: error.stack });
+    }
   }
 
   const openMenu = page.locator("#openMenu");
@@ -744,6 +807,7 @@ async function probeButtons(page, report) {
 
   report.nonStartButtonsProbed = probed;
   report.nonStartButtonProbeResults = probed.map((item) => `${item}:attempted`);
+  report.speedControlProbeResults = speedControlProbeResults;
 }
 
 function emitReport(report, extras = {}) {
@@ -760,12 +824,15 @@ function emitReport(report, extras = {}) {
     diagnosticMode: report.diagnosticMode,
     indexLoaded: report.indexLoaded,
     moduleScriptUrl: report.moduleScriptUrl,
+    movementInputTriggered: report.movementInputTriggered,
     nonStartButtonsDetected: report.nonStartButtonsDetected,
     nonStartButtonsProbed: report.nonStartButtonsProbed,
     nonStartButtonProbeResults: report.nonStartButtonProbeResults,
     pageErrors: report.pageErrors.length,
     pageUrl: report.pageUrl,
     productionModuleAutobootLoaded: report.productionModuleAutobootLoaded,
+    retiredPublisherGlobalReadAttempts: report.retiredPublisherGlobalReadAttempts,
+    retiredPublisherGlobalReadCount: report.retiredPublisherGlobalReadCount,
     playerSpriteAssetResponseStatus: report.playerSpriteAssetResponseStatus,
     playerSpriteAssetUrl: report.playerSpriteAssetUrl,
     rootDir: report.rootDir,
@@ -773,6 +840,7 @@ function emitReport(report, extras = {}) {
     startGameClicked: report.startGameClicked,
     startGameClickThrew: report.startGameClickThrew,
     startGameFound: report.startGameFound,
+    speedControlProbeResults: report.speedControlProbeResults,
     strictMode: report.strictMode,
     titleControlDetected: report.titleControlDetected,
     titleVisible: report.titleVisible,
@@ -791,6 +859,7 @@ function emitReport(report, extras = {}) {
   console.log(`Start Game found: ${report.startGameFound ? "yes" : "no"}`);
   console.log(`Start Game clicked: ${report.startGameClicked ? "yes" : "no"}`);
   console.log(`Start Game click threw: ${report.startGameClickThrew ? "yes" : "no"}`);
+  console.log(`movement input clicked: ${report.movementInputTriggered ? "yes" : "no"}`);
   console.log(`canvas found: ${report.canvasFound ? "yes" : "no"}`);
   console.log(`canvas css size: ${report.canvasCssSize ? `${report.canvasCssSize.width}x${report.canvasCssSize.height}` : "unknown"}`);
   console.log(`canvas backing size: ${report.canvasBackingSize ? `${report.canvasBackingSize.width}x${report.canvasBackingSize.height}` : "unknown"}`);
@@ -801,6 +870,8 @@ function emitReport(report, extras = {}) {
   console.log(`non-start buttons detected: ${report.nonStartButtonsDetected.join(", ") || "none"}`);
   console.log(`non-start buttons probed: ${report.nonStartButtonsProbed.join(", ") || "none"}`);
   console.log(`non-start probe results: ${report.nonStartButtonProbeResults.join(", ") || "none"}`);
+  console.log(`speed probe results: ${JSON.stringify(report.speedControlProbeResults)}`);
+  console.log(`retired publisher global reads: ${report.retiredPublisherGlobalReadCount}`);
   console.log(`console errors: ${report.console.error.length}`);
   console.log(`page errors: ${report.pageErrors.length}`);
   console.log(`failed requests: ${report.failedRequests.length}`);

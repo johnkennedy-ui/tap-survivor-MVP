@@ -106,6 +106,30 @@ const browserDependencyBagSource = readFileSync(
   join(root, "src/app/browser-dependency-bag.js"),
   "utf8"
 );
+const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
+  "TapSurvivorCombat",
+  "TapSurvivorEnemies",
+  "TapSurvivorEnemyBehaviors",
+  "TapSurvivorEnemySpawning",
+  "TapSurvivorWeaponBehaviors",
+  "TapSurvivorWeaponFire",
+  "TapSurvivorLevelUp",
+]);
+const retiredBrowserNamespaceSourceFiles = Object.freeze([
+  "src/app/browser-dependency-bag.js",
+  "src/app/production-module-entrypoint.js",
+  "src/modules/combat.js",
+  "src/modules/enemies.js",
+  "src/modules/enemy-behaviors.js",
+  "src/modules/enemy-spawning.js",
+  "src/modules/level-up.js",
+  "src/modules/weapon-behaviors.js",
+  "src/modules/weapon-fire.js",
+]);
+const retiredBrowserNamespaceSources = retiredBrowserNamespaceSourceFiles.map((file) => ({
+  file,
+  source: readFileSync(join(root, file), "utf8"),
+}));
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
@@ -384,26 +408,7 @@ const runtimeDocument = {
     calls.push(`runtime-document:${type}`);
   },
 };
-const browserGameplayGlobals = {
-  TapSurvivorCombat: { createCombatSystem: () => ({}) },
-  TapSurvivorEnemies: { createEnemySystem: () => ({}) },
-  TapSurvivorEnemyBehaviors: { createEnemyBehaviorSystem: () => ({}) },
-  TapSurvivorEnemySpawning: { createEnemySpawnSystem: () => ({}) },
-  TapSurvivorWeaponBehaviors: { createWeaponBehaviorSystem: () => ({}) },
-  TapSurvivorWeaponFire: { createWeaponFireSystem: () => ({}) },
-};
-const browserProgressionGlobals = {
-  TapSurvivorLevelUp: { createLevelUpSystem: () => ({}) },
-  TapSurvivorProgression: { createProgressionSystem: () => ({}) },
-  TapSurvivorQuests: {
-    createQuestSystem: () => ({}),
-    questOpenIds: (quest) => [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean),
-  },
-  TapSurvivorShop: { createShopSystem: () => ({}) },
-};
 const runtimeGlobal = {
-  ...browserGameplayGlobals,
-  ...browserProgressionGlobals,
   requestAnimationFrame(callback) {
     calls.push("runtime:raf");
     this.frameCallback = callback;
@@ -428,6 +433,11 @@ const runtimeUiProgressionGlobalGuard = installTapSurvivorUiProgressionGlobalRea
 );
 const runtimeUpgradeGlobalGuard = installTapSurvivorUpgradesGlobalReadGuard(
   runtimeGlobal,
+  "runtime readiness injected browser globalRef"
+);
+const runtimeRetiredBrowserNamespaceGuard = installThrowingGlobalReadGuards(
+  runtimeGlobal,
+  RETIRED_BROWSER_NAMESPACE_NAMES,
   "runtime readiness injected browser globalRef"
 );
 const runtimeUiAdapters = createModuleRuntimeUiAdapters({
@@ -476,6 +486,15 @@ const runtimeStorageAdapter = createModuleRuntimeStorageAdapter({
 runtimeStorageAdapter.storageAdapter.getSaveRaw();
 runtimeStorageAdapter.storageAdapter.setSaveRaw(JSON.stringify(save));
 runtimeStorageAdapter.storageAdapter.removeSaveRaw();
+const browserDependencyGlobalRef = {
+  localStorage: createMemoryStorageAdapter(),
+  performance: { now: () => 0 },
+};
+const browserDependencyRetiredBrowserNamespaceGuard = installThrowingGlobalReadGuards(
+  browserDependencyGlobalRef,
+  RETIRED_BROWSER_NAMESPACE_NAMES,
+  "runtime readiness browser dependency globalRef"
+);
 const browserDependencyBagOptions = createBrowserDependencyBagOptions({
   content,
   documentRef: {
@@ -499,12 +518,7 @@ const browserDependencyBagOptions = createBrowserDependencyBagOptions({
     }),
     querySelectorAll: () => speedButtons,
   },
-  globalRef: {
-    ...browserGameplayGlobals,
-    ...browserProgressionGlobals,
-    localStorage: createMemoryStorageAdapter(),
-    performance: { now: () => 0 },
-  },
+  globalRef: browserDependencyGlobalRef,
 });
 const browserUiAdapters = browserDependencyBagOptions.adapters.uiAdapters;
 const browserShopAdapterCalls = [];
@@ -780,6 +794,27 @@ check(
     !browserDependencyBagSource.includes("TapSurvivorUpgrades")
 );
 check(
+  "readiness rejects every direct, optional, bracket, proxy, and string-key form of all seven retired publishers from the selected production ESM graph",
+  [
+    ['../modules/combat.js', "createCombatSystem"],
+    ['../modules/enemies.js', "createEnemySystem"],
+    ['../modules/enemy-behaviors.js', "createEnemyBehaviorSystem"],
+    ['../modules/enemy-spawning.js', "createEnemySpawnSystem"],
+    ['../modules/level-up.js', "createLevelUpSystem"],
+    ['../modules/weapon-behaviors.js', "createWeaponBehaviorSystem"],
+    ['../modules/weapon-fire.js', "createWeaponFireSystem"],
+  ].every(([modulePath, factoryName]) =>
+    browserDependencyBagSource.includes(`import { ${factoryName} } from "${modulePath}";`)
+  ) &&
+    !browserDependencyBagSource.includes("createBrowserNamespaceBridge") &&
+    !/import\s+["']\.\.\/(?:combat|enemies|enemy-behaviors|enemy-spawning|level-up|weapon-behaviors|weapon-fire)\.js["'];/u.test(
+      productionModuleEntrypointSource
+    ) &&
+    retiredBrowserNamespaceSources.every(({ source }) =>
+      RETIRED_BROWSER_NAMESPACE_NAMES.every((name) => !source.includes(name))
+    )
+);
+check(
   "readiness preserves the deliberate classic TapSurvivorRelics publisher",
   classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
     classicRelicsSource.includes("createRelicSystem")
@@ -835,7 +870,7 @@ check(
     )
 );
 check(
-  "readiness sees browser gameplay defaults resolve classic namespace bridges",
+  "readiness sees browser gameplay defaults expose direct native factories",
   [
     ["combat", "createCombatSystem"],
     ["enemies", "createEnemySystem"],
@@ -850,7 +885,7 @@ check(
   )
 );
 check(
-  "readiness sees browser progression defaults retain remaining classic bridges and native Quests, Progression, and Upgrades",
+  "readiness sees browser progression defaults expose native LevelUp, Quests, Progression, and Upgrades",
   [
     ["levelUp", "createLevelUpSystem"],
     ["progression", "createProgressionSystem"],
@@ -879,6 +914,11 @@ check(
 check(
   "readiness browser progression defaults do not read guarded TapSurvivorUpgrades global",
   runtimeUpgradeGlobalGuard.readAttempts() === 0
+);
+check(
+  "readiness browser default dependency bag records zero reads from throwing getters for all seven retired publishers",
+  runtimeRetiredBrowserNamespaceGuard.readAttempts() === 0 &&
+    browserDependencyRetiredBrowserNamespaceGuard.readAttempts() === 0
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
@@ -1154,16 +1194,16 @@ check(
   browserDependencyBagGlobalReads.length === 0
 );
 check(
-  "readiness sees browser dependency bag default path retains only remaining classic namespace bridges",
+  "readiness sees browser dependency bag default path contains no namespace bridge or empty gameplay fallback",
   [
     "createBrowserGameplaySystems",
     "createBrowserProgressionSystems",
-    "createBrowserNamespaceBridge",
     "createBrowserUiAdapters",
     "createBrowserRunUiAdapter",
     "createBrowserShellUiAdapter",
     "createBrowserShopSystemAdapter",
   ].every((name) => browserDependencyBagSource.includes(name)) &&
+    !browserDependencyBagSource.includes("createBrowserNamespaceBridge") &&
     !browserDependencyBagSource.includes("createNoopGameplayAdapters") &&
     !browserDependencyBagSource.includes("createNoopProgressionAdapters")
 );
@@ -1537,6 +1577,33 @@ function hasTapSurvivorUiProgressionGlobalRead(source) {
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorUiProgression\b/u.test(source) ||
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorUiProgression["']\s*\]/u.test(source)
   );
+}
+
+function installThrowingGlobalReadGuards(target, names, label) {
+  const guards = names.map((key) => {
+    const previous = Object.getOwnPropertyDescriptor(target, key);
+    let reads = 0;
+    Object.defineProperty(target, key, {
+      configurable: true,
+      get() {
+        reads += 1;
+        throw new Error(`Forbidden retired publisher global read: ${key} from ${label}`);
+      },
+    });
+    return {
+      reads: () => reads,
+      restore() {
+        if (previous) Object.defineProperty(target, key, previous);
+        else delete target[key];
+      },
+    };
+  });
+  return {
+    readAttempts: () => guards.reduce((total, guard) => total + guard.reads(), 0),
+    restore() {
+      guards.slice().reverse().forEach((guard) => guard.restore());
+    },
+  };
 }
 
 function installTapSurvivorQuestsGlobalReadGuard(target, label) {

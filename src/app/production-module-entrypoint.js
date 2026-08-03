@@ -1,14 +1,4 @@
 import { content, contentSchema } from "../content.generated.mjs";
-import "../combat-damage.js";
-import "../weapon-cooldowns.js";
-import "../weapon-projectiles.js";
-import "../weapon-targeting.js";
-import "../weapon-behaviors.js";
-import "../enemy-behaviors.js";
-import "../enemy-spawning.js";
-import "../enemies.js";
-import "../weapon-fire.js";
-import "../combat.js";
 import { createBrowserDependencyBagOptions } from "./browser-dependency-bag.js";
 import { composeRuntime, createBrowserPlatform } from "./compose-runtime.js";
 import { createModuleGameDependencyBag } from "../modules/module-game-dependencies.js";

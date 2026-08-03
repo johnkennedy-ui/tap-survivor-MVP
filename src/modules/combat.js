@@ -5,29 +5,113 @@ export const MODULE_NATIVE_COMBAT_PROOF_SLOTS = Object.freeze(["createCombatSyst
 /**
  * @param {any} [options]
  */
-export function createCombatSystem(options = {}) {
-  const resolvedOptions = requireObject(options, "options");
-  const combat = requireGlobal(globalThis, "TapSurvivorCombat");
-  const factory = combat.createCombatSystem;
+export function createCombatSystem({
+  canvas,
+  balance,
+  combatDamage,
+  content,
+  enemies,
+  enemyBehaviors,
+  enemySpawning,
+  enemyTypes,
+  bossConfig,
+  bossAbilities,
+  levelDefs,
+  getActiveFloorDef,
+  weaponDefs,
+  getGame,
+  getUpgradeTier,
+  getShopBonuses,
+  getRelicSpecialEffects,
+  addQuestProgress,
+  addQuestProgressForWeapon,
+  addQuestProgressGroup,
+  killQuestIds,
+  damageQuestIds,
+  bossQuestIds,
+  spawnLootDrops,
+  getWeaponDamageMultiplier,
+  playWeaponSfx,
+  advanceTowerFloor,
+  endRun,
+  onBossSpawn,
+  distance,
+  clamp,
+  weaponBehaviors,
+  weaponCooldowns,
+  weaponFire,
+  weaponProjectiles,
+  weaponTargeting,
+} = {}) {
+  const damageSystem = combatDamage.createCombatDamageSystem({
+    canvas,
+    getGame,
+    getRelicSpecialEffects,
+    addQuestProgressForWeapon,
+    addQuestProgressGroup,
+    killQuestIds,
+    damageQuestIds,
+    bossQuestIds,
+    spawnLootDrops,
+    advanceTowerFloor,
+    distance,
+    clamp,
+  });
+  const enemySystem = enemies.createEnemySystem({
+    canvas,
+    balance,
+    enemyBehaviors,
+    enemySpawning,
+    enemyTypes,
+    bossConfig,
+    bossAbilities,
+    levelDefs,
+    getActiveFloorDef,
+    getGame,
+    distance,
+    clamp,
+    damagePlayer: damageSystem.damagePlayer,
+    onBossSpawn,
+  });
+  const weaponFireSystem = weaponFire.createWeaponFireSystem({
+    canvas,
+    content,
+    weaponDefs,
+    getGame,
+    getUpgradeTier,
+    getRunUpgradeTier,
+    getShopBonuses,
+    getRelicSpecialEffects,
+    getWeaponDamageMultiplier,
+    playWeaponSfx,
+    addQuestProgress,
+    damageEnemy: damageSystem.damageEnemy,
+    reapEnemies: damageSystem.reapEnemies,
+    distance,
+    clamp,
+    weaponBehaviors,
+    weaponCooldowns,
+    weaponProjectiles,
+    weaponTargeting,
+    damagePlayer: damageSystem.damagePlayer,
+  });
 
-  if (typeof factory !== "function") {
-    throw new Error("Missing Tap Survivor module combat dependency: createCombatSystem");
+  function getRunUpgradeTier(id) {
+    const game = getGame();
+    return game?.runUpgradeTiers?.[id] || 0;
   }
 
-  return factory(resolvedOptions);
-}
-
-function requireGlobal(globalRef, name) {
-  const value = globalRef?.[name];
-  if (!value || typeof value !== "object") {
-    throw new Error(`Missing Tap Survivor module combat dependency: ${name}`);
-  }
-  return value;
-}
-
-function requireObject(value, name) {
-  if (!value || typeof value !== "object") {
-    throw new Error(`Missing Tap Survivor module combat dependency: ${name}`);
-  }
-  return value;
+  return {
+    spawnEnemies: enemySystem.spawnEnemies,
+    spawnBoss: enemySystem.spawnBoss,
+    updateBossSpecials: enemySystem.updateBossSpecials,
+    updateEnemies: enemySystem.updateEnemies,
+    updateEnemyBolts: enemySystem.updateEnemyBolts,
+    updateWeapons: weaponFireSystem.updateWeapons,
+    updateBolts: weaponFireSystem.updateBolts,
+    updateAreas: weaponFireSystem.updateAreas,
+    updateBeams: weaponFireSystem.updateBeams,
+    updateWeaponBursts: weaponFireSystem.updateWeaponBursts,
+    getRunUpgradeTier,
+  };
 }
