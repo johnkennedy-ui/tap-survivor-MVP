@@ -45,7 +45,11 @@ const report = {
   playerSpriteAssetUrl: null,
   rootDir: root,
   spriteDiagnostics: {
-    canvasDrawCalls: [],
+    canvasDrawCount: 0,
+    canvasWitnesses: {
+      background: null,
+      player: null,
+    },
     spriteDraws: [],
     spriteLoads: [],
     spriteRegistrations: [],
@@ -244,10 +248,14 @@ async function main() {
         },
       });
     });
-    let drawSequence = 0;
     const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
     const diagnostics = {
-      canvasDrawCalls: [],
+      canvasDrawCount: 0,
+      canvasWitnesses: {
+        background: null,
+        player: null,
+      },
+      playerCanvasVisible: false,
       spriteDraws: [],
       spriteLoadRequests: [],
       spriteLoads: [],
@@ -256,7 +264,9 @@ async function main() {
     globalThis.__TapSurvivorBrowserDiagnostics = diagnostics;
     CanvasRenderingContext2D.prototype.drawImage = function patchedDrawImage(image, ...args) {
       const before = describeCanvasDraw(this, image, args);
-      const beforeStats = sampleCanvasRect(this, before.visibleRect);
+      const id = spriteIdForImageSource(before.imageSrc, diagnostics.spriteRegistrations);
+      const kind = kindForSpriteId(id);
+      const beforeStats = kind === "player" ? sampleCanvasRect(this, before.visibleRect) : null;
       let result;
       let threw;
       try {
@@ -266,17 +276,92 @@ async function main() {
         threw = error;
         throw error;
       } finally {
-        const afterStats = sampleCanvasRect(this, before.visibleRect);
-        diagnostics.canvasDrawCalls.push({
+        const afterStats = kind === "player" ? sampleCanvasRect(this, before.visibleRect) : null;
+        retainCanvasWitness({
           ...before,
-          afterStats,
-          beforeStats,
+          id,
+          kind,
           pixelDelta: pixelStatsDelta(beforeStats, afterStats),
-          sequence: ++drawSequence,
+          sequence: ++diagnostics.canvasDrawCount,
           threw: Boolean(threw),
         });
       }
     };
+
+    function retainCanvasWitness(entry) {
+      if (entry.kind === "background" && entry.intersectsCanvas) {
+        diagnostics.canvasWitnesses.background = summarizeCanvasWitness(entry);
+        diagnostics.playerCanvasVisible = false;
+        return;
+      }
+      if (entry.kind !== "player") return;
+      const witness = summarizeCanvasWitness(entry);
+      if (witness.visibleSpriteProof) {
+        diagnostics.canvasWitnesses.player = witness;
+        diagnostics.playerCanvasVisible = true;
+      }
+    }
+
+    function summarizeCanvasWitness(entry) {
+      const positiveDestination = entry.dest?.width > 0 && entry.dest?.height > 0;
+      const visibleCoverage =
+        positiveDestination && entry.visibleRect
+          ? (entry.visibleRect.width * entry.visibleRect.height) / (entry.dest.width * entry.dest.height)
+          : 0;
+      const validSource = entry.source?.naturalWidth > 0 && entry.source?.naturalHeight > 0;
+      const visibleSpriteProof =
+        entry.kind === "player" &&
+        positiveDestination &&
+        visibleCoverage >= 0.9 &&
+        validSource &&
+        entry.intersectsCanvas &&
+        entry.globalAlpha > 0 &&
+        entry.globalCompositeOperation !== "destination-out" &&
+        (entry.pixelDelta || 0) > 0;
+      return {
+        dest: entry.dest,
+        globalAlpha: entry.globalAlpha,
+        globalCompositeOperation: entry.globalCompositeOperation,
+        id: entry.id,
+        imageSrc: entry.imageSrc,
+        intersectsCanvas: entry.intersectsCanvas,
+        kind: entry.kind,
+        pixelDelta: entry.pixelDelta,
+        positiveDestination,
+        sequence: entry.sequence,
+        source: entry.source,
+        threw: entry.threw,
+        validSource,
+        visibleCoverage,
+        visibleRect: entry.visibleRect,
+        visibleSpriteProof,
+      };
+    }
+
+    function spriteIdForImageSource(src, registrations = []) {
+      const normalizedSrc = normalizeSpriteSource(src);
+      const registration = registrations.find(
+        (entry) => normalizeSpriteSource(entry.src) === normalizedSrc
+      );
+      return registration?.id || "";
+    }
+
+    function normalizeSpriteSource(src = "") {
+      try {
+        const url = new URL(src, "http://127.0.0.1");
+        return `${url.pathname}${url.search}`;
+      } catch {
+        return String(src || "");
+      }
+    }
+
+    function kindForSpriteId(id = "") {
+      if (id === "background:tower_floor" || id.startsWith("background:")) return "background";
+      if (id === "player" || id.startsWith("player:")) return "player";
+      if (id.startsWith("enemy:")) return "enemy";
+      if (id.startsWith("weapon:") || id.startsWith("weaponIcon:")) return "weapon";
+      return "unknown";
+    }
 
     function describeCanvasDraw(context, image, args) {
       const canvas = context.canvas;
@@ -292,10 +377,6 @@ async function main() {
         y: 0,
       });
       return {
-        canvas: {
-          height: canvas?.height || 0,
-          width: canvas?.width || 0,
-        },
         dest: rect,
         globalAlpha: context.globalAlpha,
         globalCompositeOperation: context.globalCompositeOperation,
@@ -305,17 +386,6 @@ async function main() {
           naturalHeight: sourceHeight,
           naturalWidth: sourceWidth,
         },
-        transform: transform
-          ? {
-              a: transform.a,
-              b: transform.b,
-              c: transform.c,
-              d: transform.d,
-              e: transform.e,
-              f: transform.f,
-            }
-          : null,
-        transformedRect,
         visibleRect,
       };
     }
@@ -547,8 +617,20 @@ async function main() {
     await probeButtons(page, report);
     report.spriteDiagnostics = await page.evaluate(() => {
       const diagnostics = globalThis.__TapSurvivorBrowserDiagnostics || {};
+      const canvasWitnesses = diagnostics.canvasWitnesses || {};
+      const backgroundWitness = canvasWitnesses.background || null;
+      const playerWitness = canvasWitnesses.player || null;
       return {
-        canvasDrawCalls: diagnostics.canvasDrawCalls || [],
+        canvasDrawCount: Number(diagnostics.canvasDrawCount || 0),
+        canvasWitnesses: {
+          background: backgroundWitness,
+          player: playerWitness,
+        },
+        playerCanvasVisible: Boolean(
+          diagnostics.playerCanvasVisible &&
+            playerWitness?.visibleSpriteProof &&
+            Number(playerWitness.sequence || 0) > Number(backgroundWitness?.sequence || 0)
+        ),
         spriteDraws: diagnostics.spriteDraws || [],
         spriteLoadRequests: diagnostics.spriteLoadRequests || [],
         spriteLoads: diagnostics.spriteLoads || [],
@@ -877,7 +959,7 @@ function emitReport(report, extras = {}) {
   console.log(`failed requests: ${report.failedRequests.length}`);
   console.log(`local HTTP failures: ${report.httpFailures.length}`);
   console.log(`sprite draws: ${report.spriteDiagnostics.spriteDraws.length}`);
-  console.log(`canvas draw calls: ${report.spriteDiagnostics.canvasDrawCalls.length}`);
+  console.log(`canvas draw count: ${report.spriteDiagnostics.canvasDrawCount}`);
   console.log(`runtime samples: ${report.runtimeSamples.length}`);
   console.log("REPORT_JSON " + JSON.stringify({
     ...summary,
@@ -893,7 +975,9 @@ function emitReport(report, extras = {}) {
     pageErrors: truncate(report.pageErrors),
     runtimeSamples: report.runtimeSamples,
     spriteDiagnostics: {
-      canvasDrawCalls: truncate(report.spriteDiagnostics.canvasDrawCalls),
+      canvasDrawCount: report.spriteDiagnostics.canvasDrawCount,
+      canvasWitnesses: report.spriteDiagnostics.canvasWitnesses,
+      playerCanvasVisible: report.spriteDiagnostics.playerCanvasVisible,
       spriteDraws: truncate(report.spriteDiagnostics.spriteDraws),
       spriteLoadRequests: truncate(report.spriteDiagnostics.spriteLoadRequests),
       spriteLoads: truncate(report.spriteDiagnostics.spriteLoads),
@@ -905,7 +989,10 @@ function emitReport(report, extras = {}) {
 
 function analyzeSpriteDiagnostics(diagnostics = {}) {
   const spriteDraws = diagnostics.spriteDraws || [];
-  const canvasDrawCalls = classifyCanvasDrawCalls(diagnostics);
+  const canvasDrawCount = Number(diagnostics.canvasDrawCount || 0);
+  const canvasWitnesses = diagnostics.canvasWitnesses || {};
+  const backgroundWitness = canvasWitnesses.background || null;
+  const playerWitness = canvasWitnesses.player || null;
   const spriteLoads = diagnostics.spriteLoads || [];
   const spriteRegistrations = diagnostics.spriteRegistrations || [];
   const spriteLoadRequests = diagnostics.spriteLoadRequests || [];
@@ -927,10 +1014,18 @@ function analyzeSpriteDiagnostics(diagnostics = {}) {
   const nonBackgroundDrawSuccess = spriteDraws.some(
     (entry) => entry.success && !String(entry.id || "").startsWith("background:")
   );
-  const playerCanvasVisible = canvasDrawCalls.some((entry) => entry.kind === "player" && entry.visibleSpriteProof);
+  const playerCanvasVisible = Boolean(
+    diagnostics.playerCanvasVisible &&
+      playerWitness?.visibleSpriteProof &&
+      Number(playerWitness.sequence || 0) > Number(backgroundWitness?.sequence || 0)
+  );
   return {
     backgroundDrawSuccess,
-    canvasDrawCalls,
+    canvasDrawCount,
+    canvasWitnesses: {
+      background: backgroundWitness,
+      player: playerWitness,
+    },
     enemyDrawSuccess,
     nonBackgroundDrawSuccess,
     playerCanvasVisible,
@@ -942,62 +1037,6 @@ function analyzeSpriteDiagnostics(diagnostics = {}) {
   };
 }
 
-function classifyCanvasDrawCalls(diagnostics = {}) {
-  const registrations = diagnostics.spriteRegistrations || [];
-  const calls = (diagnostics.canvasDrawCalls || []).map((entry) => {
-    const id = idForImageSource(entry.imageSrc, registrations);
-    return {
-      ...entry,
-      id,
-      kind: kindForSpriteId(id),
-    };
-  });
-  const latestBackgroundSequence = Math.max(
-    0,
-    ...calls.filter((entry) => entry.kind === "background" && entry.intersectsCanvas).map((entry) => entry.sequence || 0)
-  );
-  return calls.map((entry) => {
-    const laterBackgroundOverwrite = calls.some(
-      (candidate) =>
-        candidate.sequence > entry.sequence &&
-        candidate.kind === "background" &&
-        candidate.intersectsCanvas &&
-        rectsOverlap(entry.visibleRect, candidate.visibleRect)
-    );
-    const positiveDestination = entry.dest?.width > 0 && entry.dest?.height > 0;
-    const visibleCoverage =
-      positiveDestination && entry.visibleRect
-        ? (entry.visibleRect.width * entry.visibleRect.height) / (entry.dest.width * entry.dest.height)
-        : 0;
-    const validSource = entry.source?.naturalWidth > 0 && entry.source?.naturalHeight > 0;
-    const visibleSpriteProof =
-      entry.kind === "player" &&
-      entry.sequence > latestBackgroundSequence &&
-      positiveDestination &&
-      visibleCoverage >= 0.9 &&
-      validSource &&
-      entry.intersectsCanvas &&
-      entry.globalAlpha > 0 &&
-      entry.globalCompositeOperation !== "destination-out" &&
-      !laterBackgroundOverwrite &&
-      (entry.pixelDelta || 0) > 0;
-    return {
-      ...entry,
-      laterBackgroundOverwrite,
-      positiveDestination,
-      validSource,
-      visibleCoverage,
-      visibleSpriteProof,
-    };
-  });
-}
-
-function idForImageSource(src, registrations = []) {
-  const normalizedSrc = normalizeImageSource(src);
-  const registration = registrations.find((entry) => normalizeImageSource(entry.src) === normalizedSrc);
-  return registration?.id || "";
-}
-
 function normalizeImageSource(src = "") {
   try {
     const url = new URL(src, "http://127.0.0.1");
@@ -1005,19 +1044,6 @@ function normalizeImageSource(src = "") {
   } catch {
     return String(src || "");
   }
-}
-
-function kindForSpriteId(id = "") {
-  if (id === "background:tower_floor" || id.startsWith("background:")) return "background";
-  if (id === "player" || id.startsWith("player:")) return "player";
-  if (id.startsWith("enemy:")) return "enemy";
-  if (id.startsWith("weapon:") || id.startsWith("weaponIcon:")) return "weapon";
-  return "unknown";
-}
-
-function rectsOverlap(a, b) {
-  if (!a || !b) return false;
-  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 main().catch((error) => {
