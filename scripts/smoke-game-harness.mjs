@@ -347,59 +347,60 @@ export function createGameHarness({
     "src/balance.js",
   ].forEach((path) => vm.runInContext(readSource(path), context));
 
-  if (fakeCombat) {
-    context.TapSurvivorEnemies = {
-      createEnemySystem() {},
-    };
-    context.TapSurvivorEnemyBehaviors = {
-      createEnemyBehaviorSystem() {},
-    };
-    context.TapSurvivorEnemySpawning = {
-      createEnemySpawnSystem() {},
-    };
-    context.TapSurvivorWeaponBehaviors = {
-      createWeaponBehaviorSystem() {},
-    };
-    context.TapSurvivorWeaponFire = {
-      createWeaponFireSystem() {},
-    };
-    context.TapSurvivorWeaponProjectiles = {
-      createWeaponProjectileSystem() {},
-    };
-    context.TapSurvivorCombat = {
-      createCombatSystem({ getGame }) {
-        return {
-          spawnEnemies() {},
-          spawnBoss() {
-            const game = getGame();
-            if (game.bossSpawned) return;
-            game.bossSpawned = true;
-            game.enemies.push({
-              boss: true,
-              x: 480,
-              y: 270,
-              radius: 34,
-              hp: 100,
-              maxHp: 100,
-              damage: 0,
-              speed: 0,
-            });
+  const gameplaySystems = fakeCombat
+    ? {
+        enemies: {
+          createEnemySystem() {},
+        },
+        enemyBehaviors: {
+          createEnemyBehaviorSystem() {},
+        },
+        enemySpawning: {
+          createEnemySpawnSystem() {},
+        },
+        weaponBehaviors: {
+          createWeaponBehaviorSystem() {},
+        },
+        weaponFire: {
+          createWeaponFireSystem() {},
+        },
+        combat: {
+          createCombatSystem({ getGame }) {
+            return {
+              spawnEnemies() {},
+              spawnBoss() {
+                const game = getGame();
+                if (game.bossSpawned) return;
+                game.bossSpawned = true;
+                game.enemies.push({
+                  boss: true,
+                  x: 480,
+                  y: 270,
+                  radius: 34,
+                  hp: 100,
+                  maxHp: 100,
+                  damage: 0,
+                  speed: 0,
+                });
+              },
+              updateBossSpecials() {},
+              updateEnemies() {},
+              updateEnemyBolts() {},
+              updateWeapons() {},
+              getRunUpgradeTier() {
+                return 0;
+              },
+              updateBolts() {},
+              updateAreas() {},
+              updateBeams() {},
+              updateWeaponBursts() {},
+            };
           },
-          updateBossSpecials() {},
-          updateEnemies() {},
-          updateEnemyBolts() {},
-          updateWeapons() {},
-          getRunUpgradeTier() {
-            return 0;
-          },
-          updateBolts() {},
-          updateAreas() {},
-          updateBeams() {},
-          updateWeaponBursts() {},
-        };
-      },
-    };
-  } else {
+        },
+      }
+    : null;
+
+  if (!fakeCombat) {
     vm.runInContext(readSource("src/weapon-projectiles.js"), context);
     vm.runInContext(readSource("src/weapon-targeting.js"), context);
     vm.runInContext(readSource("src/weapon-cooldowns.js"), context);
@@ -458,6 +459,11 @@ export function createGameHarness({
     content,
     contentSchema,
     documentRef: context.document,
+    ...(gameplaySystems
+      ? {
+          gameplayAdapters: { gameplaySystems },
+        }
+      : {}),
     globalRef: context,
     onStartAudio: () => playStartAudio(),
     onStartRun: startRun,
