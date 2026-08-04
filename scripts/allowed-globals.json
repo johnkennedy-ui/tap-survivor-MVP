@@ -3,6 +3,7 @@
     "globalThis.AudioContext",
     "globalThis.Capacitor",
     "globalThis.__TapSurvivorBrowserDiagnostics",
+    "globalThis.__TapSurvivorRetiredPublisherReads",
     "globalThis.TapSurvivorAssets",
     "globalThis.TapSurvivorAudio",
     "globalThis.TapSurvivorBalanceProfiles",
@@ -47,7 +48,7 @@
     "globalThis.webkitAudioContext"
   ],
   "allowedFileCounts": {
-    "scripts/smoke-production-browser-runtime.mjs": 2,
+    "scripts/smoke-production-browser-runtime.mjs": 4,
     "scripts/smoke-shop-provider-parity.mjs": 2,
     "src/assets.js": 2,
     "src/audio.js": 5,

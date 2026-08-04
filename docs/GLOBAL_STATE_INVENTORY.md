@@ -133,6 +133,9 @@ Browser/platform globals:
 - `globalThis.AudioContext` / `globalThis.webkitAudioContext` are used by audio setup.
 - `globalThis.setTimeout` / `globalThis.clearTimeout` are used by relic UI animation timing.
 
+Browser-smoke diagnostics:
+- `globalThis.__TapSurvivorBrowserDiagnostics` and `globalThis.__TapSurvivorRetiredPublisherReads` are test-only diagnostics in `scripts/smoke-production-browser-runtime.mjs`; the latter guards retired publisher reads, and neither is a production runtime dependency or a revival of a retired publisher.
+
 Node tooling generated-global strings:
 - `scripts/build-content.mjs` and `scripts/content-check.mjs` generate/check the content globals as strings. The globals
   guard ignores strings/comments, so those generated strings are documented here rather than counted as live script
