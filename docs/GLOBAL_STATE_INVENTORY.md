@@ -34,10 +34,15 @@ Generated content globals:
 - Retirement gate: this proof covers only production ESM consumption. `src/content.generated.js` must continue to
   publish `TapSurvivorContent` for the preserved classic fallback boundary; the production smoke explicitly fails if
   that publisher disappears. A future publisher-retirement contract must first inventory and resolve the remaining
-  classic fallback consumers (including `src/balance-runtime.js` and `src/upgrades.js`) and separately prove rollback
-  policy no longer requires the classic boundary. Do not remove the publisher, change the classic fallback, generated
-  content, script order, or the global allowlist in a coverage-only cut.
-- `src/balance-runtime.js` reads those generated globals, applies the active dev balance profile/overrides, then republishes `TapSurvivorContent` and exposes `TapSurvivorBalanceRuntime` plus `TapSurvivorDebugBalance`.
+  classic fallback consumers (including `src/upgrades.js`) and separately prove rollback policy no longer requires the
+  classic boundary. Do not remove the publisher, change the classic fallback, generated content, script order, or the
+  global allowlist in a coverage-only cut.
+- `src/content.generated.js` also carries its profile array in the producer-owned, non-enumerable
+  `TapSurvivorContent.balanceProfiles` property. `src/balance-runtime.js` does not read either generated global: it
+  publishes stable `TapSurvivorBalanceRuntime` and `TapSurvivorDebugBalance` objects that fail closed with
+  `TAP_SURVIVOR_BALANCE_PROVIDER_MISSING` until `src/modules/game-dependencies.js` injects the raw content and that
+  attached profiles value. Valid same-reference configuration preserves active profile and overrides while the runtime
+  republishes the configured `TapSurvivorContent`.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
 - `src/effects.js` is the generated classic bridge for run upgrade effects, shop item effects, shop bonus defaults, and

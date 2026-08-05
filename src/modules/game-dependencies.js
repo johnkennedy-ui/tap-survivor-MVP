@@ -19,8 +19,15 @@ import { createRunStateSystem } from "./run-state.js";
 import { createRunUi } from "./run-ui.js";
 
 export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
-  const configuredContent =
-    globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent;
+  const rawContent = globalRef.TapSurvivorContent;
+  const balanceRuntime = globalRef.TapSurvivorBalanceRuntime;
+  if (typeof balanceRuntime?.configureDefaultProviders === "function") {
+    balanceRuntime.configureDefaultProviders({
+      content: rawContent,
+      profiles: rawContent?.balanceProfiles,
+    });
+  }
+  const configuredContent = balanceRuntime?.content?.() || rawContent;
   const content = configuredContent || {};
   const effects = globalRef.TapSurvivorEffects;
   const upgrades = globalRef.TapSurvivorUpgrades || {};
@@ -37,7 +44,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     audio: requireGlobal(globalRef, "TapSurvivorAudio"),
     assets: globalRef.TapSurvivorAssets || {},
     balance: { floorDifficulty },
-    balanceRuntime: globalRef.TapSurvivorBalanceRuntime,
+    balanceRuntime,
     combat: requireGlobal(globalRef, "TapSurvivorCombat"),
     combatDamage: { createCombatDamageSystem },
     content,

@@ -1336,6 +1336,10 @@ check(
   "game dependency bridge has no TapSurvivorGameRuntime reader",
   !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
 );
+check(
+  "game dependency bridge does not read the balance profiles global",
+  !gameDependenciesBridge.source.includes("TapSurvivorBalanceProfiles")
+);
 
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
@@ -1411,6 +1415,12 @@ for (const [name, readCount] of Object.entries(moduleGameDependenciesSnapshot.re
   check(`dependency bag does not read retired ${name}`, readCount === 0);
 }
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
+check(
+  "dependency bag configures balance from the raw producer content and attached profiles",
+  moduleGameDependenciesSnapshot.balanceProviderCalls > 0 &&
+    moduleGameDependenciesSnapshot.balanceProviderUsesProducerValues &&
+    moduleGameDependenciesSnapshot.balanceProfilesAreNonEnumerable
+);
 check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
 check("dependency bag exposes balance", moduleGameDependenciesSnapshot.hasBalance);
 check("dependency bag exposes content registry", moduleGameDependenciesSnapshot.hasContentRegistry);
@@ -2176,11 +2186,23 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const globalRef = baseGlobalRef;
   const documentRef = { createElement() {} };
   globalRef.document = documentRef;
+  const rawContent = { ...upgradeBridgeContentFixture, id: "fallback" };
+  const rawProfiles = [{ overrides: {}, profileId: "default" }];
+  Object.defineProperty(rawContent, "balanceProfiles", {
+    enumerable: false,
+    value: rawProfiles,
+  });
+  let balanceProviderCalls = 0;
+  let balanceProviderUsesProducerValues = true;
   const configuredContent = { ...upgradeBridgeContentFixture, id: "override" };
   globalRef.TapSurvivorBalanceRuntime = {
+    configureDefaultProviders({ content, profiles }) {
+      balanceProviderCalls += 1;
+      balanceProviderUsesProducerValues &&= content === rawContent && profiles === rawProfiles;
+    },
     content: () => configuredContent,
   };
-  globalRef.TapSurvivorContent = { ...upgradeBridgeContentFixture, id: "fallback" };
+  globalRef.TapSurvivorContent = rawContent;
   globalRef.TapSurvivorDebugBalance = {
     getActiveProfile: () => "testing",
   };
@@ -2294,6 +2316,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   }
 
   const snapshot = {
+    balanceProfilesAreNonEnumerable:
+      Object.getOwnPropertyDescriptor(rawContent, "balanceProfiles")?.enumerable === false,
+    balanceProviderCalls,
+    balanceProviderUsesProducerValues,
     contentId: bag.content.id,
     defaultUpgradeIds: bag.upgrades.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
     defaultRunUpgradeIds: bag.upgrades.runUpgradeDefs.map((upgrade) => upgrade.id),

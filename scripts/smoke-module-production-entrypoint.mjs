@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import vm from "node:vm";
 
 import {
   bootProductionModuleEntrypoint,
@@ -26,6 +27,16 @@ const autobootSource = readFileSync(join(root, "src/app/production-module-autobo
 const browserDependencyBagSource = readFileSync(join(root, "src/app/browser-dependency-bag.js"), "utf8");
 const classicContentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
 const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
+const classicContentContext = {};
+classicContentContext.globalThis = classicContentContext;
+vm.createContext(classicContentContext);
+vm.runInContext(classicContentSource, classicContentContext, {
+  filename: "src/content.generated.js",
+});
+const classicProfilesDescriptor = Object.getOwnPropertyDescriptor(
+  classicContentContext.TapSurvivorContent,
+  "balanceProfiles"
+);
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
@@ -98,6 +109,11 @@ check(
   classicContentSource.includes("globalThis.TapSurvivorContent =") &&
     classicContentSource.includes("globalThis.TapSurvivorBalanceProfiles =") &&
     !classicContentSource.includes("TapSurvivorContentSchema")
+);
+check(
+  "classic generated content carries profiles on a non-enumerable producer property",
+  classicProfilesDescriptor?.enumerable === false &&
+    classicProfilesDescriptor.value === classicContentContext.TapSurvivorBalanceProfiles
 );
 check(
   "classic fallback preserves TapSurvivorContent publisher pending separate dependency retirement",

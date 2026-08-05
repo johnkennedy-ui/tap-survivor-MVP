@@ -430,6 +430,11 @@ export function createGameHarness({
   vm.runInContext(readSource("src/shell-ui.js"), context);
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
+  const classicContent = context.TapSurvivorContent;
+  context.TapSurvivorBalanceRuntime.configureDefaultProviders({
+    content: classicContent,
+    profiles: classicContent.balanceProfiles,
+  });
   const platform = {
     documentRef: context.document,
     runtimeGlobal: context,

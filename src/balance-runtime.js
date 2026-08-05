@@ -446,10 +446,55 @@ function createRuntimeBalance({ content, profiles }) {
   };
 }
 
-const runtimeBalance = createRuntimeBalance({
-  content: globalThis.TapSurvivorContent || {},
-  profiles: globalThis.TapSurvivorBalanceProfiles || [],
-});
+function balanceProviderError(missing) {
+  const error = new Error(`TAP_SURVIVOR_BALANCE_PROVIDER_MISSING: ${missing.join(", ")}`);
+  error.name = "TapSurvivorBalanceProviderError";
+  error.code = "TAP_SURVIVOR_BALANCE_PROVIDER_MISSING";
+  error.missing = missing;
+  error.missingProviders = missing;
+  return error;
+}
+
+function createRuntimeBalanceProvider() {
+  let configuredContent;
+  let configuredProfiles;
+  let configuredRuntime;
+
+  function requireConfiguredRuntime() {
+    if (configuredRuntime) return configuredRuntime;
+    throw balanceProviderError(["content", "profiles"]);
+  }
+
+  const runtimeBalance = {
+    applyOverrides: (...args) => requireConfiguredRuntime().applyOverrides(...args),
+    clearOverrides: (...args) => requireConfiguredRuntime().clearOverrides(...args),
+    configureDefaultProviders({ content, profiles } = {}) {
+      const missing = [];
+      if (!content || typeof content !== "object") missing.push("content");
+      if (!Array.isArray(profiles)) missing.push("profiles");
+      if (missing.length) throw balanceProviderError(missing);
+      if (content === configuredContent && profiles === configuredProfiles) return runtimeBalance;
+
+      configuredContent = content;
+      configuredProfiles = profiles;
+      configuredRuntime = createRuntimeBalance({ content, profiles });
+      return runtimeBalance;
+    },
+    content: (...args) => requireConfiguredRuntime().content(...args),
+    exportOverrides: (...args) => requireConfiguredRuntime().exportOverrides(...args),
+    getActiveProfile: (...args) => requireConfiguredRuntime().getActiveProfile(...args),
+    listProfiles: (...args) => requireConfiguredRuntime().listProfiles(...args),
+    printSummary: (...args) => requireConfiguredRuntime().printSummary(...args),
+    saveOverrides: (...args) => requireConfiguredRuntime().saveOverrides(...args),
+    setProfile: (...args) => requireConfiguredRuntime().setProfile(...args),
+    summary: (...args) => requireConfiguredRuntime().summary(...args),
+    validateOverrides: (...args) => requireConfiguredRuntime().validateOverrides(...args),
+  };
+
+  return runtimeBalance;
+}
+
+const runtimeBalance = createRuntimeBalanceProvider();
 
 globalThis.TapSurvivorBalanceRuntime = runtimeBalance;
 globalThis.TapSurvivorDebugBalance = {
