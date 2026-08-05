@@ -134,9 +134,10 @@ Browser/platform globals:
 - `globalThis.setTimeout` / `globalThis.clearTimeout` are used by relic UI animation timing.
 
 Browser-smoke diagnostics:
-- `globalThis.__TapSurvivorBrowserDiagnostics` and `globalThis.__TapSurvivorRetiredPublisherReads` are test-only
-  diagnostics in `scripts/smoke-production-browser-runtime.mjs`. The latter guards retired publisher reads; neither is
-  a production runtime dependency or a revival of a retired publisher.
+- `document.__TapSurvivorBrowserSmoke` is the test-only, document-scoped sink used by
+  `scripts/smoke-production-browser-runtime.mjs` for sprite/canvas evidence and retired publisher read counters.
+  It does not publish diagnostics on `globalThis`, and is not a production runtime dependency or a revival of a
+  retired publisher.
 
 Node tooling generated-global strings:
 - `scripts/build-content.mjs` and `scripts/content-check.mjs` generate/check the content globals as strings. The globals

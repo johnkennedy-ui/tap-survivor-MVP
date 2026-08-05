@@ -347,7 +347,7 @@ function createBrowserAudioAdapters({ globalRef }) {
 
 function createBrowserRenderingAdapters({ canvas }) {
   const context = canvas.getContext?.("2d");
-  const diagnostics = canvas?.ownerDocument?.defaultView?.__TapSurvivorBrowserDiagnostics;
+  const diagnostics = canvas?.ownerDocument?.__TapSurvivorBrowserSmoke?.diagnostics;
   return {
     renderers: {
       clearFrame() {
@@ -449,7 +449,7 @@ function createBrowserRenderingAdapters({ canvas }) {
 function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   const context = canvas.getContext?.("2d");
   const ImageCtor = globalRef.Image;
-  const diagnostics = globalRef.__TapSurvivorBrowserDiagnostics;
+  const diagnostics = canvas?.ownerDocument?.__TapSurvivorBrowserSmoke?.diagnostics;
   const sprites = new Map();
 
   function registerSprite(id, definition) {

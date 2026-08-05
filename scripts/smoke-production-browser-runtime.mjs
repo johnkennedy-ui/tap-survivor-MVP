@@ -39,6 +39,7 @@ const report = {
   pageUrl: null,
   pageErrors: [],
   productionModuleAutobootLoaded: false,
+  retiredDiagnosticGlobalsPresent: [],
   retiredPublisherGlobalReadAttempts: {},
   retiredPublisherGlobalReadCount: 0,
   playerSpriteAssetResponseStatus: null,
@@ -238,7 +239,6 @@ async function main() {
     const retiredPublisherReads = Object.fromEntries(
       retiredPublisherNames.map((name) => [name, 0])
     );
-    globalThis.__TapSurvivorRetiredPublisherReads = retiredPublisherReads;
     retiredPublisherNames.forEach((name) => {
       Object.defineProperty(globalThis, name, {
         configurable: true,
@@ -261,7 +261,10 @@ async function main() {
       spriteLoads: [],
       spriteRegistrations: [],
     };
-    globalThis.__TapSurvivorBrowserDiagnostics = diagnostics;
+    document.__TapSurvivorBrowserSmoke = {
+      diagnostics,
+      retiredPublisherReads,
+    };
     CanvasRenderingContext2D.prototype.drawImage = function patchedDrawImage(image, ...args) {
       const before = describeCanvasDraw(this, image, args);
       const id = spriteIdForImageSource(before.imageSrc, diagnostics.spriteRegistrations);
@@ -615,8 +618,13 @@ async function main() {
       report.screenshotPath = screenshotPath;
     }
     await probeButtons(page, report);
+    report.retiredDiagnosticGlobalsPresent = await page.evaluate(() =>
+      ["__TapSurvivorBrowserDiagnostics", "__TapSurvivorRetiredPublisherReads"].filter(
+        (name) => name in globalThis
+      )
+    );
     report.spriteDiagnostics = await page.evaluate(() => {
-      const diagnostics = globalThis.__TapSurvivorBrowserDiagnostics || {};
+      const diagnostics = document.__TapSurvivorBrowserSmoke?.diagnostics || {};
       const canvasWitnesses = diagnostics.canvasWitnesses || {};
       const backgroundWitness = canvasWitnesses.background || null;
       const playerWitness = canvasWitnesses.player || null;
@@ -638,7 +646,7 @@ async function main() {
       };
     });
     report.retiredPublisherGlobalReadAttempts = await page.evaluate(
-      () => globalThis.__TapSurvivorRetiredPublisherReads || {}
+      () => document.__TapSurvivorBrowserSmoke?.retiredPublisherReads || {}
     );
     report.retiredPublisherGlobalReadCount = Object.values(
       report.retiredPublisherGlobalReadAttempts
@@ -683,6 +691,9 @@ async function main() {
       !spriteProof.playerCanvasVisible ? "player sprite draw did not produce visible canvas evidence" : null,
       report.startGameClickThrew ? "Start Game click threw" : null,
       !report.movementInputTriggered ? "movement input click did not complete" : null,
+      report.retiredDiagnosticGlobalsPresent.length > 0
+        ? `retired diagnostic globals were present (${report.retiredDiagnosticGlobalsPresent.join(", ")})`
+        : null,
       report.retiredPublisherGlobalReadCount > 0
         ? `retired publisher globals were read (${report.retiredPublisherGlobalReadCount})`
         : null,
@@ -913,6 +924,7 @@ function emitReport(report, extras = {}) {
     pageErrors: report.pageErrors.length,
     pageUrl: report.pageUrl,
     productionModuleAutobootLoaded: report.productionModuleAutobootLoaded,
+    retiredDiagnosticGlobalsPresent: report.retiredDiagnosticGlobalsPresent,
     retiredPublisherGlobalReadAttempts: report.retiredPublisherGlobalReadAttempts,
     retiredPublisherGlobalReadCount: report.retiredPublisherGlobalReadCount,
     playerSpriteAssetResponseStatus: report.playerSpriteAssetResponseStatus,
@@ -953,6 +965,7 @@ function emitReport(report, extras = {}) {
   console.log(`non-start buttons probed: ${report.nonStartButtonsProbed.join(", ") || "none"}`);
   console.log(`non-start probe results: ${report.nonStartButtonProbeResults.join(", ") || "none"}`);
   console.log(`speed probe results: ${JSON.stringify(report.speedControlProbeResults)}`);
+  console.log(`retired diagnostic globals present: ${report.retiredDiagnosticGlobalsPresent.join(", ") || "none"}`);
   console.log(`retired publisher global reads: ${report.retiredPublisherGlobalReadCount}`);
   console.log(`console errors: ${report.console.error.length}`);
   console.log(`page errors: ${report.pageErrors.length}`);
