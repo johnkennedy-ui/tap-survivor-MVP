@@ -1332,6 +1332,10 @@ check(
   !gameDependenciesBridge.source.includes("globalThis.TapSurvivorShop") &&
     !gameDependenciesBridge.source.includes('"TapSurvivorShop"')
 );
+check(
+  "game dependency bridge has no TapSurvivorGameRuntime reader",
+  !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
+);
 
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
@@ -1340,6 +1344,68 @@ const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
 check(
   "module and bridge game dependency bag output match",
   JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
+);
+check(
+  "module dependency bag exposes statically imported game runtime controller",
+  moduleGameDependenciesSnapshot.__bag.gameRuntime.createGameRuntimeController ===
+    createModuleGameRuntimeController
+);
+check(
+  "dependency bag resolves native game runtime with retained target global",
+  moduleGameDependenciesSnapshot.normalGameRuntimeFactory &&
+    moduleGameDependenciesSnapshot.normalGameRuntimeError === ""
+);
+check(
+  "dependency bag resolves native game runtime without target global",
+  moduleGameDependenciesSnapshot.missingGameRuntimeFactory &&
+    moduleGameDependenciesSnapshot.missingGameRuntimeError === ""
+);
+check(
+  "dependency bag ignores poisoned game runtime target global",
+  moduleGameDependenciesSnapshot.poisonedGameRuntimeFactory &&
+    moduleGameDependenciesSnapshot.poisonedGameRuntimeError === "" &&
+    moduleGameDependenciesSnapshot.gameRuntimeTargetGlobalReads === 0
+);
+check(
+  "dependency bag recovers game runtime after target descriptor restoration",
+  moduleGameDependenciesSnapshot.recoveredGameRuntimeFactory &&
+    moduleGameDependenciesSnapshot.recoveredGameRuntimeError === ""
+);
+check(
+  "native and generated dependency bags preserve game runtime target lifecycle parity",
+  JSON.stringify({
+    gameRuntimeTargetGlobalReads: moduleGameDependenciesSnapshot.gameRuntimeTargetGlobalReads,
+    missingGameRuntimeError: moduleGameDependenciesSnapshot.missingGameRuntimeError,
+    missingGameRuntimeFactory: moduleGameDependenciesSnapshot.missingGameRuntimeFactory,
+    normalGameRuntimeError: moduleGameDependenciesSnapshot.normalGameRuntimeError,
+    normalGameRuntimeFactory: moduleGameDependenciesSnapshot.normalGameRuntimeFactory,
+    poisonedGameRuntimeError: moduleGameDependenciesSnapshot.poisonedGameRuntimeError,
+    poisonedGameRuntimeFactory: moduleGameDependenciesSnapshot.poisonedGameRuntimeFactory,
+    recoveredGameRuntimeError: moduleGameDependenciesSnapshot.recoveredGameRuntimeError,
+    recoveredGameRuntimeFactory: moduleGameDependenciesSnapshot.recoveredGameRuntimeFactory,
+  }) ===
+    JSON.stringify({
+      gameRuntimeTargetGlobalReads: bridgeGameDependenciesSnapshot.gameRuntimeTargetGlobalReads,
+      missingGameRuntimeError: bridgeGameDependenciesSnapshot.missingGameRuntimeError,
+      missingGameRuntimeFactory: bridgeGameDependenciesSnapshot.missingGameRuntimeFactory,
+      normalGameRuntimeError: bridgeGameDependenciesSnapshot.normalGameRuntimeError,
+      normalGameRuntimeFactory: bridgeGameDependenciesSnapshot.normalGameRuntimeFactory,
+      poisonedGameRuntimeError: bridgeGameDependenciesSnapshot.poisonedGameRuntimeError,
+      poisonedGameRuntimeFactory: bridgeGameDependenciesSnapshot.poisonedGameRuntimeFactory,
+      recoveredGameRuntimeError: bridgeGameDependenciesSnapshot.recoveredGameRuntimeError,
+      recoveredGameRuntimeFactory: bridgeGameDependenciesSnapshot.recoveredGameRuntimeFactory,
+    })
+);
+const moduleDependencyBagGameRuntimeSnapshot = gameRuntimeSnapshot(
+  moduleGameDependenciesSnapshot.__bag.gameRuntime.createGameRuntimeController
+);
+const bridgeDependencyBagGameRuntimeSnapshot = gameRuntimeSnapshot(
+  bridgeGameDependenciesSnapshot.__bag.gameRuntime.createGameRuntimeController
+);
+check(
+  "native and generated dependency-bag game runtime output match",
+  JSON.stringify(moduleDependencyBagGameRuntimeSnapshot) ===
+    JSON.stringify(bridgeDependencyBagGameRuntimeSnapshot)
 );
 for (const [name, readCount] of Object.entries(moduleGameDependenciesSnapshot.retiredGlobalReads)) {
   check(`dependency bag does not read retired ${name}`, readCount === 0);
@@ -2046,7 +2112,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
     "TapSurvivorEffects",
-    "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
     "TapSurvivorUpgrades",
@@ -2089,6 +2154,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   baseGlobalRef.TapSurvivorStorage = saveStorage;
   baseGlobalRef.TapSurvivorUpgrades = bridgeUpgrades;
   baseGlobalRef.TapSurvivorEffects = upgradeBridgeEffectsFixture;
+  baseGlobalRef.TapSurvivorGameRuntime = { name: "TapSurvivorGameRuntime" };
   const retiredGlobalNames = [
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
@@ -2122,6 +2188,50 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.TapSurvivorInput = {
     bindMovementInput,
   };
+  const normalGameRuntimeResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    globalRef,
+    documentRef
+  );
+  const missingGameRuntimeGlobalRef = { ...baseGlobalRef };
+  delete missingGameRuntimeGlobalRef.TapSurvivorGameRuntime;
+  const missingGameRuntimeResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    missingGameRuntimeGlobalRef,
+    documentRef
+  );
+  const poisonedGameRuntimeGlobalRef = { ...baseGlobalRef };
+  const gameRuntimeTargetDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedGameRuntimeGlobalRef,
+    "TapSurvivorGameRuntime"
+  );
+  let gameRuntimeTargetGlobalReads = 0;
+  Object.defineProperty(poisonedGameRuntimeGlobalRef, "TapSurvivorGameRuntime", {
+    configurable: true,
+    get() {
+      gameRuntimeTargetGlobalReads += 1;
+      throw new Error("Forbidden TapSurvivorGameRuntime global read");
+    },
+  });
+  const poisonedGameRuntimeResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedGameRuntimeGlobalRef,
+    documentRef
+  );
+  if (gameRuntimeTargetDescriptor) {
+    Object.defineProperty(
+      poisonedGameRuntimeGlobalRef,
+      "TapSurvivorGameRuntime",
+      gameRuntimeTargetDescriptor
+    );
+  } else {
+    delete poisonedGameRuntimeGlobalRef.TapSurvivorGameRuntime;
+  }
+  const recoveredGameRuntimeResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedGameRuntimeGlobalRef,
+    documentRef
+  );
   let bannerGlobalReads = 0;
   Object.defineProperty(globalRef, "TapSurvivorGameBanners", {
     configurable: true,
@@ -2243,6 +2353,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     bannerGlobalReads,
     hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
+    hasGameRuntime: typeof bag.gameRuntime?.createGameRuntimeController === "function",
     hasNativeShopFactory: typeof bag.shop.createShopSystem === "function",
     hasNativeShop: Boolean(shop),
     hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
@@ -2251,6 +2362,19 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,
+    normalGameRuntimeError: normalGameRuntimeResult.error,
+    normalGameRuntimeFactory:
+      typeof normalGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
+    missingGameRuntimeError: missingGameRuntimeResult.error,
+    missingGameRuntimeFactory:
+      typeof missingGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
+    poisonedGameRuntimeError: poisonedGameRuntimeResult.error,
+    poisonedGameRuntimeFactory:
+      typeof poisonedGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
+    recoveredGameRuntimeError: recoveredGameRuntimeResult.error,
+    recoveredGameRuntimeFactory:
+      typeof recoveredGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
+    gameRuntimeTargetGlobalReads,
     recoveredClassicUpgradeFactory:
       typeof recoveredLegacyBag.upgrades.createUpgradeContent === "function",
     recoveredClassicUpgradeDefaults:
@@ -2267,6 +2391,20 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   };
   Object.defineProperty(snapshot, "__bag", { value: bag, enumerable: false });
   return snapshot;
+}
+
+function createGameDependencyBagResult(createGameDependencyBag, globalRef, documentRef) {
+  try {
+    return {
+      bag: createGameDependencyBag({ globalRef, documentRef }),
+      error: "",
+    };
+  } catch (error) {
+    return {
+      bag: null,
+      error: error.message,
+    };
+  }
 }
 
 function upgradeContentSnapshot(createUpgradeContent) {

@@ -119,7 +119,11 @@ Generated content globals:
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.
 - Native dependency bag injection now imports balance, content registry, math, level-up choices, shop pricing, weapon
-  targeting, and combat damage directly; those helpers no longer appear as runtime globals.
+  targeting, combat damage, and `createGameRuntimeController` directly; those helpers no longer appear as runtime globals.
+- `src/game-runtime.js` deliberately retains the `TapSurvivorGameRuntime` classic publisher for the current
+  `src/game.js` script-order boundary. `src/modules/game-dependencies.js` no longer reads that publisher: it supplies
+  the statically imported native controller through its dependency bag. This reader-only retirement intentionally
+  leaves the global-audit count unchanged.
 - Core data/systems: `TapSurvivorProgression`, `TapSurvivorEffects`; map resolution is supplied as `createMapSystem`
   through the `TapSurvivorGameDependencies` dependency bag, with the former `TapSurvivorMapSystem` publisher retired.
 - Save/storage: `TapSurvivorStorage`, `TapSurvivorSave`; save defaults, migrations, normalization, and corruption

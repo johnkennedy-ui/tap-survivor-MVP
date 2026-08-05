@@ -362,6 +362,10 @@ function configureDefaultProviders({ storage } = {}) {
         exports: ["createGameBannerSystem"],
       },
       {
+        source: "src/modules/game-runtime.js",
+        exports: ["createGameRuntimeController"],
+      },
+      {
         source: "src/modules/map-system.js",
         exports: ["createMapSystem"],
       },
