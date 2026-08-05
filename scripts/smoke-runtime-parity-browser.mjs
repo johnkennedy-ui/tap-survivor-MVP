@@ -553,7 +553,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     await waitForEnemyEvidence(page, result);
     await waitForProjectileEvidence(page, result);
 
-    result.snapshot = await page.evaluate(() => {
+    result.snapshot = await page.evaluate((isClassic) => {
       const root = globalThis;
       const parity = root.__TapSurvivorParity || {};
       const canvas = document.getElementById("game");
@@ -571,6 +571,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       const menuInventoryTab = document.getElementById("menuInventoryTab");
       const content = root.TapSurvivorContent || {};
       const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+      const upgradeProvider = isClassic ? parity.classicUpgradeProviderLifecycle || null : null;
       return {
         assetsLoaded: Boolean(content.assets),
         contentLoaded: Boolean(root.TapSurvivorContent),
@@ -585,6 +586,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           speedButtons,
         },
         game: snapshotGame(game),
+        upgradeProvider,
         registeredSpriteGroups: snapshotSpriteGroups(content.assets?.sprites || {}),
         registeredSpriteGroupDefs: content.assets?.sprites || {},
         audio: snapshotAudio(parity),
@@ -781,7 +783,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         if (definition && typeof definition === "object") return definition.src || definition.path || definition.iconSrc || "";
         return "";
       }
-    });
+    }, mode === "classic");
     await setAudioScope(page, "menu");
 
     result.classified = classifyDraws(result.snapshot?.diagnostics?.drawCalls || [], result.snapshot?.registeredSpriteGroupDefs || {});
@@ -897,6 +899,31 @@ function createRuntimeResult(mode, pagePath) {
   };
 }
 
+function hasClassicUpgradeProviderLifecycle(lifecycle) {
+  return Boolean(
+    lifecycle?.configureDefaultProviders &&
+      lifecycle?.publisherPresent &&
+      lifecycle?.samePublisherAfterMissing &&
+      lifecycle?.samePublisherAfterRecovery &&
+      lifecycle?.configured?.createUpgradeDefs === "function" &&
+      lifecycle?.configured?.runUpgradeDefs &&
+      lifecycle?.poisonReads?.content === 0 &&
+      lifecycle?.poisonReads?.effects === 0 &&
+      hasMissingProviderError(lifecycle?.unconfiguredCreate, ["content", "effects"]) &&
+      hasMissingProviderError(lifecycle?.unconfiguredRun, ["content", "effects"]) &&
+      hasMissingProviderError(lifecycle?.missingContent, ["content"])
+  );
+}
+
+function hasMissingProviderError(error, expectedMissing) {
+  return Boolean(
+    error?.name === "TapSurvivorUpgradeProviderError" &&
+      error?.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
+      Array.isArray(error?.missing) &&
+      error.missing.join(",") === expectedMissing.join(",")
+  );
+}
+
 function compareSnapshots(classic, esm) {
   const notes = [];
   const strictFailures = [];
@@ -940,9 +967,15 @@ function compareSnapshots(classic, esm) {
   const esmFireEvidence = esm.fireEvidence || esm.snapshot?.game?.weaponFireEvidence || null;
   const classicFireObserved = hasWeaponFireEvidence(classicFireEvidence);
   const esmFireObserved = hasWeaponFireEvidence(esmFireEvidence);
+  const classicUpgradeProvider = classic.snapshot?.upgradeProvider || null;
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
+  if (!classicUpgradeProvider?.publisherPresent) {
+    strictFailures.push("classic TapSurvivorUpgrades publisher is missing");
+  } else if (!hasClassicUpgradeProviderLifecycle(classicUpgradeProvider)) {
+    strictFailures.push("classic TapSurvivorUpgrades provider fixture did not prove missing/configuration/recovery lifecycle");
+  }
   if (classicCanvas && esmCanvas && (classicCanvas.width !== esmCanvas.width || classicCanvas.height !== esmCanvas.height)) {
     strictFailures.push(`canvas backing mismatch: classic ${describeSize(classicCanvas)} vs esm ${describeSize(esmCanvas)}`);
   }
@@ -1507,6 +1540,7 @@ function renderClassicHookScript() {
 (() => {
   const parity = globalThis.__TapSurvivorParity = globalThis.__TapSurvivorParity || {};
   parity.classicHooks = parity.classicHooks || {};
+  exerciseClassicUpgradeProviderLifecycle(parity);
   wrapGlobal("TapSurvivorRunState", "createRunStateSystem", (original, args, context) => {
     const result = original.apply(context, args);
     if (result && typeof result.resetGameState === "function") {
@@ -1536,6 +1570,94 @@ function renderClassicHookScript() {
     parity.classicRuntime = runtime;
     return runtime;
   });
+
+  function exerciseClassicUpgradeProviderLifecycle(parity) {
+    const publisher = globalThis.TapSurvivorUpgrades;
+    if (!publisher || typeof publisher.configureDefaultProviders !== "function") {
+      throw new Error("Classic TapSurvivorUpgrades publisher is missing configureDefaultProviders");
+    }
+
+    const content = globalThis.TapSurvivorContent;
+    const effects = globalThis.TapSurvivorEffects;
+    if (!content || !effects) {
+      throw new Error("Classic upgrade fixture requires TapSurvivorContent and TapSurvivorEffects providers");
+    }
+
+    const lifecycle = {
+      configureDefaultProviders: true,
+      publisherPresent: true,
+      unconfiguredCreate: expectMissingProviderError(
+        () => publisher.createUpgradeDefs,
+        ["content", "effects"]
+      ),
+      unconfiguredRun: expectMissingProviderError(
+        () => publisher.runUpgradeDefs,
+        ["content", "effects"]
+      ),
+    };
+    const contentDescriptor = Object.getOwnPropertyDescriptor(globalThis, "TapSurvivorContent");
+    const effectsDescriptor = Object.getOwnPropertyDescriptor(globalThis, "TapSurvivorEffects");
+    if (!contentDescriptor?.configurable || !effectsDescriptor?.configurable) {
+      throw new Error("Classic upgrade fixture cannot safely poison provider globals");
+    }
+
+    let contentReads = 0;
+    let effectsReads = 0;
+    try {
+      Object.defineProperty(globalThis, "TapSurvivorContent", {
+        configurable: true,
+        get() {
+          contentReads += 1;
+          throw new Error("Forbidden late TapSurvivorContent global read");
+        },
+      });
+      Object.defineProperty(globalThis, "TapSurvivorEffects", {
+        configurable: true,
+        get() {
+          effectsReads += 1;
+          throw new Error("Forbidden late TapSurvivorEffects global read");
+        },
+      });
+
+      lifecycle.missingContent = expectMissingProviderError(
+        () => publisher.configureDefaultProviders({ effects }),
+        ["content"]
+      );
+      lifecycle.samePublisherAfterMissing = globalThis.TapSurvivorUpgrades === publisher;
+      publisher.configureDefaultProviders({ content, effects });
+      lifecycle.configured = {
+        createUpgradeDefs: typeof publisher.createUpgradeDefs,
+        runUpgradeDefs: Array.isArray(publisher.runUpgradeDefs),
+      };
+      lifecycle.samePublisherAfterRecovery = globalThis.TapSurvivorUpgrades === publisher;
+      lifecycle.poisonReads = { content: contentReads, effects: effectsReads };
+      if (contentReads !== 0 || effectsReads !== 0) {
+        throw new Error("Classic upgrade publisher read a poisoned provider global");
+      }
+    } finally {
+      Object.defineProperty(globalThis, "TapSurvivorContent", contentDescriptor);
+      Object.defineProperty(globalThis, "TapSurvivorEffects", effectsDescriptor);
+    }
+
+    parity.classicUpgradeProviderLifecycle = lifecycle;
+  }
+
+  function expectMissingProviderError(access, expectedMissing) {
+    try {
+      access();
+    } catch (error) {
+      const missing = Array.isArray(error?.missing) ? error.missing : [];
+      if (
+        error?.name !== "TapSurvivorUpgradeProviderError" ||
+        error?.code !== "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" ||
+        missing.join(",") !== expectedMissing.join(",")
+      ) {
+        throw error;
+      }
+      return { code: error.code, missing, name: error.name };
+    }
+    throw new Error("Expected missing upgrade providers: " + expectedMissing.join(", "));
+  }
 
   function wrapGlobal(globalName, methodName, wrapper) {
     const namespace = globalThis[globalName];

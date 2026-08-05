@@ -98,7 +98,7 @@
     "src/storage-adapter.js": 3,
     "src/ui-progression.js": 1,
     "src/ui.js": 1,
-    "src/upgrades.js": 3,
+    "src/upgrades.js": 1,
     "src/weapon-behaviors.js": 1,
     "src/weapon-cooldowns.js": 1,
     "src/weapon-fire.js": 1,

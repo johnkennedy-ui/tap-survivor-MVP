@@ -160,11 +160,14 @@ check(
     !browserDependencyBagSource.includes("TapSurvivorUpgrades")
 );
 check(
-  "classic fallback preserves TapSurvivorUpgrades publisher and default members",
+  "classic fallback preserves the explicit TapSurvivorUpgrades provider lifecycle",
   classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
     classicUpgradesSource.includes("createUpgradeContent") &&
+    classicUpgradesSource.includes("configureDefaultProviders") &&
     classicUpgradesSource.includes("createUpgradeDefs") &&
-    classicUpgradesSource.includes("runUpgradeDefs")
+    classicUpgradesSource.includes("runUpgradeDefs") &&
+    !classicUpgradesSource.includes("TapSurvivorContent") &&
+    !classicUpgradesSource.includes("TapSurvivorEffects")
 );
 check(
   "production ESM statically imports all seven retired native factories without a namespace bridge or classic side-effect imports",

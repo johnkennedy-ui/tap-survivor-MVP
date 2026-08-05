@@ -1434,6 +1434,15 @@
   }
 
   function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
+    const configuredContent =
+      globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent;
+    const content = configuredContent || {};
+    const effects = globalRef.TapSurvivorEffects;
+    const upgrades = globalRef.TapSurvivorUpgrades || {};
+    if (typeof upgrades.configureDefaultProviders === "function") {
+      upgrades.configureDefaultProviders({ content: configuredContent, effects });
+    }
+
     return {
       audio: requireGlobal(globalRef, "TapSurvivorAudio"),
       assets: globalRef.TapSurvivorAssets || {},
@@ -1441,11 +1450,11 @@
       balanceRuntime: globalRef.TapSurvivorBalanceRuntime,
       combat: requireGlobal(globalRef, "TapSurvivorCombat"),
       combatDamage: { createCombatDamageSystem },
-      content: globalRef.TapSurvivorBalanceRuntime?.content?.() || globalRef.TapSurvivorContent || {},
+      content,
       contentRegistry: { createContentRegistry },
       debug: requireGlobal(globalRef, "TapSurvivorDebug"),
       debugBalance: globalRef.TapSurvivorDebugBalance,
-      effects: requireGlobal(globalRef, "TapSurvivorEffects"),
+      effects: requireValue(effects, "TapSurvivorEffects"),
       enemies: requireGlobal(globalRef, "TapSurvivorEnemies"),
       enemyBehaviors: requireGlobal(globalRef, "TapSurvivorEnemyBehaviors"),
       enemySpawning: requireGlobal(globalRef, "TapSurvivorEnemySpawning"),
@@ -1492,7 +1501,7 @@
       storage: requireGlobal(globalRef, "TapSurvivorStorage"),
       ui: requireGlobal(globalRef, "TapSurvivorUi"),
       uiProgression: requireGlobal(globalRef, "TapSurvivorUiProgression"),
-      upgrades: globalRef.TapSurvivorUpgrades || {},
+      upgrades,
       weaponBehaviors: requireGlobal(globalRef, "TapSurvivorWeaponBehaviors"),
       weaponCooldowns: { createWeaponScaling },
       weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
@@ -1502,7 +1511,10 @@
   }
 
   function requireGlobal(globalRef, name) {
-    const value = globalRef?.[name];
+    return requireValue(globalRef?.[name], name);
+  }
+
+  function requireValue(value, name) {
     if (!value) {
       throw new Error(`Missing Tap Survivor runtime dependency: globalThis.${name}`);
     }

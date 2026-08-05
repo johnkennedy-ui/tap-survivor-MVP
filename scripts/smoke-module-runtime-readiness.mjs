@@ -825,11 +825,14 @@ check(
     classicProgressionSource.includes("createProgressionSystem")
 );
 check(
-  "readiness preserves the deliberate classic TapSurvivorUpgrades publisher",
+  "readiness preserves the explicit classic TapSurvivorUpgrades provider lifecycle",
   classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
     classicUpgradesSource.includes("createUpgradeContent") &&
+    classicUpgradesSource.includes("configureDefaultProviders") &&
     classicUpgradesSource.includes("createUpgradeDefs") &&
-    classicUpgradesSource.includes("runUpgradeDefs")
+    classicUpgradesSource.includes("runUpgradeDefs") &&
+    !classicUpgradesSource.includes("TapSurvivorContent") &&
+    !classicUpgradesSource.includes("TapSurvivorEffects")
 );
 check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",

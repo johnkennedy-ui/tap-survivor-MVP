@@ -51,22 +51,67 @@ const bridges = [
     target: "src/upgrades.js",
     globalName: "TapSurvivorUpgrades",
     exports: ["createUpgradeContent"],
-    classicBoundarySource: `const defaultUpgradeContent = createUpgradeContent({
-  content: globalThis.TapSurvivorContent || {},
-  effects: globalThis.TapSurvivorEffects,
-});`,
+    classicBoundarySource: `let defaultProviders = {};
+let defaultUpgradeContent;
+
+function missingDefaultProviderNames() {
+  const missingProviders = [];
+  if (defaultProviders.content == null) missingProviders.push("content");
+  if (defaultProviders.effects == null) missingProviders.push("effects");
+  return missingProviders;
+}
+
+function createMissingDefaultProviderError(missingProviders) {
+  const error = new Error(
+    \`Missing Tap Survivor upgrade default providers: \${missingProviders.join(", ")}\`
+  );
+  error.name = "TapSurvivorUpgradeProviderError";
+  error.code = "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING";
+  error.missing = missingProviders;
+  error.missingProviders = missingProviders;
+  return error;
+}
+
+function configuredDefaultUpgradeContent() {
+  const missingProviders = missingDefaultProviderNames();
+  if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
+  return defaultUpgradeContent;
+}
+
+function configureDefaultProviders({ content, effects } = {}) {
+  defaultProviders = { content, effects };
+  defaultUpgradeContent = undefined;
+  const missingProviders = missingDefaultProviderNames();
+  if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
+  defaultUpgradeContent = createUpgradeContent(defaultProviders);
+  return defaultUpgradeContent;
+}`,
+    classicPublisherSource: `globalThis.TapSurvivorUpgrades = {
+    createUpgradeContent,
+    configureDefaultProviders,
+    get createUpgradeDefs() {
+      return configuredDefaultUpgradeContent().createUpgradeDefs;
+    },
+    get runUpgradeDefs() {
+      return configuredDefaultUpgradeContent().runUpgradeDefs;
+    },
+  };`,
     globalMembers: [
       {
         name: "createUpgradeContent",
         value: "createUpgradeContent",
       },
       {
+        name: "configureDefaultProviders",
+        value: "configureDefaultProviders",
+      },
+      {
         name: "createUpgradeDefs",
-        value: "defaultUpgradeContent.createUpgradeDefs",
+        value: "configuredDefaultUpgradeContent().createUpgradeDefs",
       },
       {
         name: "runUpgradeDefs",
-        value: "defaultUpgradeContent.runUpgradeDefs",
+        value: "configuredDefaultUpgradeContent().runUpgradeDefs",
       },
     ],
   },
@@ -377,6 +422,7 @@ for (const bridge of bridges) {
  *   retiredGlobalName?: string,
  *   exports: string[],
  *   classicBoundarySource?: string,
+ *   classicPublisherSource?: string,
  *   classicExportWrappers?: Record<string, { name: string, source: string }>,
  *   bundledSources?: {
  *     source: string,
@@ -393,6 +439,7 @@ async function buildClassicBridge({
   retiredGlobalName = "",
   exports,
   classicBoundarySource = "",
+  classicPublisherSource = "",
   classicExportWrappers = {},
   bundledSources = [],
   globalMembers,
@@ -436,12 +483,11 @@ async function buildClassicBridge({
       return `    ${exportName.name}: ${exportName.value},`;
     })
     .join("\n");
-  const publisherSource = globalName
-    ? `
-  globalThis.${globalName} = {
+  const defaultPublisherSource = `globalThis.${globalName} = {
 ${globalMemberSource}
   };`
-    : "";
+  const publisherSource = globalName ? `
+  ${classicPublisherSource || defaultPublisherSource}` : "";
   const publisherSeparator = publisherSource ? "\n" : "";
   const retirementComment = retiredGlobalName
     ? `// Retired global: ${retiredGlobalName}. Exports are supplied through the game dependency bag.\n`

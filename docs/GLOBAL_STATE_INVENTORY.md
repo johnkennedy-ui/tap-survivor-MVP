@@ -96,9 +96,12 @@ Generated content globals:
   of reading `globalThis.TapSurvivorContent` directly.
 - `src/modules/upgrades.js` owns the pure `createUpgradeContent({ content, effects })` factory, and the production ESM
   browser dependency bag statically imports it without looking up `TapSurvivorUpgrades`. The generated classic
-  `src/upgrades.js` bridge deliberately continues to publish `TapSurvivorUpgrades` with its default script-order
-  `createUpgradeDefs` and `runUpgradeDefs` members; `src/modules/game-dependencies.js` retains that publisher as
-  the legacy fallback until a separate retirement contract changes it.
+  `src/upgrades.js` bridge deliberately continues to publish the single `TapSurvivorUpgrades` object, but it never
+  reads the content or effects globals. `src/modules/game-dependencies.js` configures its default providers from the
+  dependency values it already resolves before returning the legacy bag. Until configured, default
+  `createUpgradeDefs` and `runUpgradeDefs` access fails with `TapSurvivorUpgradeProviderError` and
+  `TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING`; valid configuration restores their original function/array shapes on the
+  same publisher object.
 - `src/shell-ui.js` now receives asset/content helpers and `TapSurvivorShellRelicUi` through `src/game.js` factory wiring
   instead of reading those globals directly. Its classic adapter forwards that injected content to
   `TapSurvivorAssets.createAssetResolver(content)`, so `src/assets.js` has no `TapSurvivorContent` reader. `src/shell-relic-ui.js`

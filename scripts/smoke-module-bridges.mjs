@@ -108,10 +108,7 @@ const contentRegistryBridge = loadBridge(
 const effectsBridge = loadBridge("../src/effects.js", "src/effects.js", {
   TapSurvivorContentSchema: contentSchemaFixture,
 });
-const upgradesBridge = loadBridge("../src/upgrades.js", "src/upgrades.js", {
-  TapSurvivorContent: upgradeBridgeContentFixture,
-  TapSurvivorEffects: upgradeBridgeEffectsFixture,
-});
+const upgradesBridge = loadBridge("../src/upgrades.js", "src/upgrades.js");
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
@@ -324,10 +321,63 @@ check(
   upgradesBridge.source.split('import("../../types/content.js")').length - 1 === 0
 );
 check(
-  "upgrade bridge exposes classic factory and default members",
+  "upgrade bridge does not read content or effects globals",
+  !upgradesBridge.source.includes("TapSurvivorContent") &&
+    !upgradesBridge.source.includes("TapSurvivorEffects")
+);
+const upgradeProviderLifecycle = upgradeProviderLifecycleSnapshot();
+check(
+  "upgrade bridge publishes an explicit default-provider lifecycle",
   typeof bridgeUpgrades?.createUpgradeContent === "function" &&
-    typeof bridgeUpgrades?.createUpgradeDefs === "function" &&
-    Array.isArray(bridgeUpgrades?.runUpgradeDefs)
+    typeof bridgeUpgrades?.configureDefaultProviders === "function"
+);
+check(
+  "upgrade bridge leaves poisoned content and effects globals unread",
+  upgradeProviderLifecycle.contentReads === 0 && upgradeProviderLifecycle.effectsReads === 0
+);
+check(
+  "upgrade bridge rejects unconfigured default members with the named provider error",
+  [upgradeProviderLifecycle.unconfiguredCreate, upgradeProviderLifecycle.unconfiguredRun].every(
+    (error) =>
+      error.name === "TapSurvivorUpgradeProviderError" &&
+      error.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
+      error.missing.join(",") === "content,effects"
+  )
+);
+check(
+  "upgrade bridge rejects a missing content provider with a named error",
+  upgradeProviderLifecycle.missingContent.name === "TapSurvivorUpgradeProviderError" &&
+    upgradeProviderLifecycle.missingContent.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
+    upgradeProviderLifecycle.missingContent.missing.join(",") === "content"
+);
+check(
+  "upgrade bridge recovers the same publisher after a missing content provider",
+  upgradeProviderLifecycle.samePublisherAfterContentRecovery &&
+    upgradeProviderLifecycle.contentRecovery.createUpgradeDefs === "function" &&
+    upgradeProviderLifecycle.contentRecovery.runUpgradeDefs
+);
+check(
+  "upgrade bridge rejects a missing effects provider with a named error",
+  upgradeProviderLifecycle.missingEffects.name === "TapSurvivorUpgradeProviderError" &&
+    upgradeProviderLifecycle.missingEffects.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
+    upgradeProviderLifecycle.missingEffects.missing.join(",") === "effects"
+);
+check(
+  "upgrade bridge recovers the same publisher after a missing effects provider",
+  upgradeProviderLifecycle.samePublisherAfterEffectsRecovery &&
+    upgradeProviderLifecycle.effectsRecovery.createUpgradeDefs === "function" &&
+    upgradeProviderLifecycle.effectsRecovery.runUpgradeDefs
+);
+const bridgeUpgradesIdentity = bridgeUpgrades;
+bridgeUpgrades.configureDefaultProviders({
+  content: upgradeBridgeContentFixture,
+  effects: upgradeBridgeEffectsFixture,
+});
+check(
+  "upgrade bridge exposes original default member shapes after configuration",
+  upgradesBridge.context.TapSurvivorUpgrades === bridgeUpgradesIdentity &&
+    typeof bridgeUpgrades.createUpgradeDefs === "function" &&
+    Array.isArray(bridgeUpgrades.runUpgradeDefs)
 );
 const moduleUpgradeSnapshot = upgradeContentSnapshot(createModuleUpgradeContent);
 const bridgeUpgradeSnapshot = upgradeContentSnapshot(bridgeUpgrades.createUpgradeContent);
@@ -1314,11 +1364,15 @@ check("dependency bag preserves optional debug balance", moduleGameDependenciesS
 check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
 check(
   "dependency bag preserves generated classic upgrades fallback",
-  moduleGameDependenciesSnapshot.hasClassicUpgradeFactory
+  moduleGameDependenciesSnapshot.hasClassicUpgradeFactory &&
+    moduleGameDependenciesSnapshot.hasConfiguredClassicUpgradeDefaults &&
+    moduleGameDependenciesSnapshot.defaultUpgradeIds.join(",") === "arc_damage,laser_damage,meta_focus" &&
+    moduleGameDependenciesSnapshot.defaultRunUpgradeIds.join(",") === "rapid_fire,steady_aim"
 );
 check(
   "dependency bag recovers generated classic upgrades after a missing-provider fallback",
   moduleGameDependenciesSnapshot.recoveredClassicUpgradeFactory &&
+    moduleGameDependenciesSnapshot.recoveredClassicUpgradeDefaults &&
     moduleGameDependenciesSnapshot.recoveredUpgradeIds.join(",") === "arc_damage,laser_damage,meta_focus"
 );
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
@@ -1970,6 +2024,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   ];
   const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
   baseGlobalRef.TapSurvivorUpgrades = bridgeUpgrades;
+  baseGlobalRef.TapSurvivorEffects = upgradeBridgeEffectsFixture;
   const retiredGlobalNames = [
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
@@ -1991,10 +2046,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const globalRef = baseGlobalRef;
   const documentRef = { createElement() {} };
   globalRef.document = documentRef;
+  const configuredContent = { ...upgradeBridgeContentFixture, id: "override" };
   globalRef.TapSurvivorBalanceRuntime = {
-    content: () => ({ id: "override" }),
+    content: () => configuredContent,
   };
-  globalRef.TapSurvivorContent = { id: "fallback" };
+  globalRef.TapSurvivorContent = { ...upgradeBridgeContentFixture, id: "fallback" };
   globalRef.TapSurvivorDebugBalance = {
     getActiveProfile: () => "testing",
   };
@@ -2063,10 +2119,14 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
 
   const snapshot = {
     contentId: bag.content.id,
+    defaultUpgradeIds: bag.upgrades.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
+    defaultRunUpgradeIds: bag.upgrades.runUpgradeDefs.map((upgrade) => upgrade.id),
     debugProfile: bag.debugBalance.getActiveProfile(),
     emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
     hasClassicUpgradeFactory: typeof bag.upgrades.createUpgradeContent === "function",
+    hasConfiguredClassicUpgradeDefaults:
+      typeof bag.upgrades.createUpgradeDefs === "function" && Array.isArray(bag.upgrades.runUpgradeDefs),
     hasAssets: bag.assets.name === "TapSurvivorAssets",
     hasContentRegistry: typeof bag.contentRegistry.createContentRegistry === "function",
     hasBalance: typeof bag.balance.floorDifficulty === "function",
@@ -2122,6 +2182,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingInputError,
     recoveredClassicUpgradeFactory:
       typeof recoveredLegacyBag.upgrades.createUpgradeContent === "function",
+    recoveredClassicUpgradeDefaults:
+      typeof recoveredLegacyBag.upgrades.createUpgradeDefs === "function" &&
+      Array.isArray(recoveredLegacyBag.upgrades.runUpgradeDefs),
     recoveredUpgradeIds: recoveredLegacyBag.upgrades
       .createUpgradeContent({
         content: upgradeBridgeContentFixture,
@@ -4058,6 +4121,90 @@ function loadBridge(path, filename, globals = {}, poisonedGlobalNames = []) {
   vm.createContext(context);
   vm.runInContext(source, context, { filename });
   return { source, context };
+}
+
+function upgradeProviderLifecycleSnapshot() {
+  const source = readFileSync(new URL("../src/upgrades.js", import.meta.url), "utf8");
+  let contentReads = 0;
+  let effectsReads = 0;
+  const context = { console };
+  Object.defineProperties(context, {
+    TapSurvivorContent: {
+      configurable: true,
+      get() {
+        contentReads += 1;
+        throw new Error("Forbidden TapSurvivorContent global read");
+      },
+    },
+    TapSurvivorEffects: {
+      configurable: true,
+      get() {
+        effectsReads += 1;
+        throw new Error("Forbidden TapSurvivorEffects global read");
+      },
+    },
+  });
+  context.globalThis = context;
+  vm.createContext(context);
+  vm.runInContext(source, context, { filename: "src/upgrades.js" });
+
+  const publisher = context.TapSurvivorUpgrades;
+  const unconfiguredCreate = upgradeProviderErrorSnapshot(() => publisher.createUpgradeDefs);
+  const unconfiguredRun = upgradeProviderErrorSnapshot(() => publisher.runUpgradeDefs);
+  const missingContent = upgradeProviderErrorSnapshot(() =>
+    publisher.configureDefaultProviders({ effects: upgradeBridgeEffectsFixture })
+  );
+  const missingContentDefault = upgradeProviderErrorSnapshot(() => publisher.createUpgradeDefs);
+  publisher.configureDefaultProviders({
+    content: upgradeBridgeContentFixture,
+    effects: upgradeBridgeEffectsFixture,
+  });
+  const contentRecovery = {
+    createUpgradeDefs: typeof publisher.createUpgradeDefs,
+    runUpgradeDefs: Array.isArray(publisher.runUpgradeDefs),
+  };
+  const samePublisherAfterContentRecovery = context.TapSurvivorUpgrades === publisher;
+  const missingEffects = upgradeProviderErrorSnapshot(() =>
+    publisher.configureDefaultProviders({ content: upgradeBridgeContentFixture })
+  );
+  const missingEffectsDefault = upgradeProviderErrorSnapshot(() => publisher.runUpgradeDefs);
+  publisher.configureDefaultProviders({
+    content: upgradeBridgeContentFixture,
+    effects: upgradeBridgeEffectsFixture,
+  });
+  const effectsRecovery = {
+    createUpgradeDefs: typeof publisher.createUpgradeDefs,
+    runUpgradeDefs: Array.isArray(publisher.runUpgradeDefs),
+  };
+
+  return {
+    contentReads,
+    contentRecovery,
+    effectsReads,
+    effectsRecovery,
+    missingContent,
+    missingContentDefault,
+    missingEffects,
+    missingEffectsDefault,
+    samePublisherAfterContentRecovery,
+    samePublisherAfterEffectsRecovery: context.TapSurvivorUpgrades === publisher,
+    unconfiguredCreate,
+    unconfiguredRun,
+  };
+}
+
+function upgradeProviderErrorSnapshot(callback) {
+  try {
+    callback();
+  } catch (error) {
+    return {
+      code: error?.code || "",
+      missing: Array.isArray(error?.missing) ? error.missing : [],
+      missingProviders: Array.isArray(error?.missingProviders) ? error.missingProviders : [],
+      name: error?.name || "",
+    };
+  }
+  return { code: "", missing: [], missingProviders: [], name: "" };
 }
 
 /**
