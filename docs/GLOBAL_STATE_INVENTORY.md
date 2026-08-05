@@ -75,8 +75,12 @@ Generated content globals:
   `TapSurvivorSaveDefaults` or `TapSurvivorSaveMigrations`; the classic `src/game-dependencies.js` bridge supplies those
   exports through `saveDefaults` and `saveMigrations` in the dependency bag.
 - `src/modules/save.js` now receives save normalize, save corruption, and storage helpers through its factory arguments
-  instead of reading those globals directly; generated `src/save.js` keeps a compatibility boundary wrapper so classic
-  `TapSurvivorSave.createSaveSystem(...)` callers still receive the remaining script-order helpers by default.
+  instead of reading those globals directly. The generated `src/save.js` keeps the single `TapSurvivorSave` publisher
+  and a compatibility wrapper, but it never reads `TapSurvivorStorage`: `src/modules/game-dependencies.js` configures
+  its storage provider from the dependency value it already resolves before returning the classic bag. Explicit caller
+  `storage` or truthy `storageAdapter` values retain precedence; an unconfigured default call fails closed with
+  `TapSurvivorSaveProviderError` / `TAP_SURVIVOR_SAVE_PROVIDER_MISSING` and can recover after later valid provider
+  configuration on the same publisher object.
 - `src/modules/game-dependencies.js` now wires the native Shop factory explicitly into the classic dependency bag and
   injects the game banner factory; the factories receive the classic `documentRef` boundary without reading
   `globalThis.TapSurvivorShop` or `globalThis.TapSurvivorGameBanners`.
@@ -120,8 +124,10 @@ Runtime module globals:
   through the `TapSurvivorGameDependencies` dependency bag, with the former `TapSurvivorMapSystem` publisher retired.
 - Save/storage: `TapSurvivorStorage`, `TapSurvivorSave`; save defaults, migrations, normalization, and corruption
   handling are supplied as `saveDefaults`, `saveMigrations`, `saveNormalize`, and `saveCorruption` by
-  `TapSurvivorGameDependencies`. The generated classic save wrapper bundles the native normalization and corruption
-  helpers, so `TapSurvivorSaveNormalize` and `TapSurvivorSaveCorruption` have no global publishers.
+  `TapSurvivorGameDependencies`. The dependency bag configures the retained save publisher with its resolved storage,
+  so the generated classic wrapper has no `TapSurvivorStorage` reader; explicit caller-owned storage/adapters still
+  bypass that default. The wrapper bundles the native normalization and corruption helpers, so
+  `TapSurvivorSaveNormalize` and `TapSurvivorSaveCorruption` have no global publishers.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
   `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.

@@ -1442,6 +1442,11 @@
     if (typeof upgrades.configureDefaultProviders === "function") {
       upgrades.configureDefaultProviders({ content: configuredContent, effects });
     }
+    const save = requireGlobal(globalRef, "TapSurvivorSave");
+    const storage = requireGlobal(globalRef, "TapSurvivorStorage");
+    if (typeof save.configureDefaultProviders === "function") {
+      save.configureDefaultProviders({ storage });
+    }
 
     return {
       audio: requireGlobal(globalRef, "TapSurvivorAudio"),
@@ -1482,7 +1487,7 @@
       runState: { createRunStateSystem },
       runUi: { createRunUi },
       runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
-      save: requireGlobal(globalRef, "TapSurvivorSave"),
+      save,
       saveCorruption: { createSaveLoadHandler },
       saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
       saveMigrations: { isPlainObject, migrateSave },
@@ -1498,7 +1503,7 @@
       },
       shopPricing: { createShopPricing },
       sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
-      storage: requireGlobal(globalRef, "TapSurvivorStorage"),
+      storage,
       ui: requireGlobal(globalRef, "TapSurvivorUi"),
       uiProgression: requireGlobal(globalRef, "TapSurvivorUiProgression"),
       upgrades,

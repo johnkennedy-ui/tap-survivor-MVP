@@ -132,6 +132,7 @@ const retiredBrowserNamespaceSources = retiredBrowserNamespaceSourceFiles.map((f
 }));
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
+const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const missingProductionBrowserAdapterModuleFiles = [
   "src/modules/assets.js",
@@ -833,6 +834,13 @@ check(
     classicUpgradesSource.includes("runUpgradeDefs") &&
     !classicUpgradesSource.includes("TapSurvivorContent") &&
     !classicUpgradesSource.includes("TapSurvivorEffects")
+);
+check(
+  "readiness preserves the explicit classic TapSurvivorSave storage provider lifecycle",
+  classicSaveSource.includes("globalThis.TapSurvivorSave =") &&
+    classicSaveSource.includes("createSaveSystem") &&
+    classicSaveSource.includes("configureDefaultProviders") &&
+    !classicSaveSource.includes("TapSurvivorStorage")
 );
 check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",

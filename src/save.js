@@ -294,16 +294,55 @@
     };
   }
 
-  function createClassicSaveSystem(options) {
+  function createClassicSaveSystem(options = {}) {
+    const callerOptions = options || {};
+    const hasCallerStorage = Object.prototype.hasOwnProperty.call(callerOptions, "storage");
+    const hasCallerStorageAdapter = Boolean(callerOptions.storageAdapter);
+    const defaultStorage =
+      hasCallerStorage || hasCallerStorageAdapter ? {} : { storage: configuredDefaultStorage() };
+
     return createSaveSystem({
       saveNormalize: { arrayValue, createSaveNormalizer, objectValue },
       saveCorruption: { createSaveLoadHandler },
-      storage: globalThis.TapSurvivorStorage,
+      ...defaultStorage,
       ...options,
     });
   }
 
+  let defaultProviders = {};
+
+  function missingDefaultProviderNames() {
+    const missingProviders = [];
+    if (defaultProviders.storage == null) missingProviders.push("storage");
+    return missingProviders;
+  }
+
+  function createMissingDefaultProviderError(missingProviders) {
+    const error = new Error(
+      `Missing Tap Survivor save default providers: ${missingProviders.join(", ")}`
+    );
+    error.name = "TapSurvivorSaveProviderError";
+    error.code = "TAP_SURVIVOR_SAVE_PROVIDER_MISSING";
+    error.missing = missingProviders;
+    error.missingProviders = missingProviders;
+    return error;
+  }
+
+  function configuredDefaultStorage() {
+    const missingProviders = missingDefaultProviderNames();
+    if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
+    return defaultProviders.storage;
+  }
+
+  function configureDefaultProviders({ storage } = {}) {
+    defaultProviders = { storage };
+    const missingProviders = missingDefaultProviderNames();
+    if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
+    return defaultProviders.storage;
+  }
+
   globalThis.TapSurvivorSave = {
     createSaveSystem: createClassicSaveSystem,
+    configureDefaultProviders,
   };
 })();

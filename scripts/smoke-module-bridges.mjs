@@ -688,9 +688,56 @@ check(
     !saveBridge.source.includes("globalThis.TapSurvivorSaveNormalize") &&
     !saveBridge.source.includes("globalThis.TapSurvivorSaveCorruption")
 );
-check("bridge exposes createSaveSystem", typeof bridgeSave?.createSaveSystem === "function");
+check(
+  "save bridge does not read the storage global",
+  !saveBridge.source.includes("TapSurvivorStorage")
+);
+const saveProviderLifecycle = saveProviderLifecycleSnapshot();
+check(
+  "save bridge publishes an explicit default-provider lifecycle",
+  typeof bridgeSave?.createSaveSystem === "function" &&
+    typeof bridgeSave?.configureDefaultProviders === "function"
+);
+check(
+  "save bridge leaves a poisoned storage global unread",
+  saveProviderLifecycle.storageReads === 0
+);
+check(
+  "save bridge rejects unconfigured default storage with the named provider error",
+  saveProviderLifecycle.unconfigured.name === "TapSurvivorSaveProviderError" &&
+    saveProviderLifecycle.unconfigured.code === "TAP_SURVIVOR_SAVE_PROVIDER_MISSING" &&
+    saveProviderLifecycle.unconfigured.missing.join(",") === "storage"
+);
+check(
+  "save bridge rejects a missing storage provider with the named error",
+  saveProviderLifecycle.missingConfiguration.name === "TapSurvivorSaveProviderError" &&
+    saveProviderLifecycle.missingConfiguration.code === "TAP_SURVIVOR_SAVE_PROVIDER_MISSING" &&
+    saveProviderLifecycle.missingConfiguration.missing.join(",") === "storage"
+);
+check(
+  "save bridge keeps explicit storage and adapter callers working before configuration",
+  saveProviderLifecycle.explicitStorageLoad === 7 &&
+    saveProviderLifecycle.explicitAdapterLoad === 9 &&
+    saveProviderLifecycle.explicitStorageCalls === 1
+);
+check(
+  "save bridge recovers the same publisher after valid storage configuration",
+  saveProviderLifecycle.samePublisherAfterMissing &&
+    saveProviderLifecycle.samePublisherAfterRecovery &&
+    saveProviderLifecycle.configuredLoad === 5 &&
+    saveProviderLifecycle.configuredStorageCalls === 1
+);
+check(
+  "save bridge lets an explicit undefined storage override the configured default",
+  saveProviderLifecycle.undefinedStorageLoad === 0 &&
+    saveProviderLifecycle.storageCallsAfterUndefinedOverride === 1
+);
 const moduleSaveSystemSnapshot = saveSystemSnapshot(createModuleSaveSystem, globalThis);
-const bridgeSaveSystemSnapshot = saveSystemSnapshot(bridgeSave.createSaveSystem, saveBridge.context);
+const bridgeSaveSystemSnapshot = saveSystemSnapshot(
+  bridgeSave.createSaveSystem,
+  saveBridge.context,
+  bridgeSave.configureDefaultProviders
+);
 check(
   "module and bridge save system output match",
   JSON.stringify(moduleSaveSystemSnapshot) === JSON.stringify(bridgeSaveSystemSnapshot)
@@ -1370,6 +1417,13 @@ check(
     moduleGameDependenciesSnapshot.defaultRunUpgradeIds.join(",") === "rapid_fire,steady_aim"
 );
 check(
+  "dependency bag configures the same classic save publisher with its resolved storage",
+  moduleGameDependenciesSnapshot.hasConfiguredClassicSaveDefault &&
+    moduleGameDependenciesSnapshot.saveProviderCalls.length === 1 &&
+    JSON.stringify(moduleGameDependenciesSnapshot.saveProviderCalls[0]) ===
+      JSON.stringify({ saveKey: "save-key", legacySaveKey: "legacy-key" })
+);
+check(
   "dependency bag recovers generated classic upgrades after a missing-provider fallback",
   moduleGameDependenciesSnapshot.recoveredClassicUpgradeFactory &&
     moduleGameDependenciesSnapshot.recoveredClassicUpgradeDefaults &&
@@ -2023,6 +2077,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorWeaponTargeting",
   ];
   const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
+  const saveProviderCalls = [];
+  const saveStorage = {
+    createStorageAdapter(options) {
+      saveProviderCalls.push(options);
+      return createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 11 }));
+    },
+    name: "TapSurvivorStorage",
+  };
+  baseGlobalRef.TapSurvivorSave = bridgeSave;
+  baseGlobalRef.TapSurvivorStorage = saveStorage;
   baseGlobalRef.TapSurvivorUpgrades = bridgeUpgrades;
   baseGlobalRef.TapSurvivorEffects = upgradeBridgeEffectsFixture;
   const retiredGlobalNames = [
@@ -2077,6 +2141,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     });
   }
   const bag = createGameDependencyBag({ globalRef: poisonedGlobalRef, documentRef });
+  const configuredSaveSystem = bag.save.createSaveSystem(createSaveSystemFixture());
+  const configuredSave = configuredSaveSystem.loadSave();
   const shop = bag.shop.createShopSystem({
     effects: {
       addShopItemBonus() {},
@@ -2169,6 +2235,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.saveNormalize?.arrayValue === "function" &&
       typeof bag.saveNormalize?.createSaveNormalizer === "function" &&
       typeof bag.saveNormalize?.objectValue === "function",
+    hasConfiguredClassicSaveDefault:
+      bag.save === baseGlobalRef.TapSurvivorSave &&
+      bag.storage === baseGlobalRef.TapSurvivorStorage &&
+      configuredSave.coins === 11,
+    saveProviderCalls,
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
     bannerGlobalReads,
     hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
@@ -3446,7 +3517,7 @@ function saveNormalizeSnapshot(createSaveNormalizer) {
   };
 }
 
-function saveSystemSnapshot(createSaveSystem, globalScope) {
+function saveSystemSnapshot(createSaveSystem, globalScope, configureDefaultProviders) {
   const fallbackCalls = [];
   const fallbackStorage = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 5 }));
   const fallbackStorageDependency = {
@@ -3500,6 +3571,9 @@ function saveSystemSnapshot(createSaveSystem, globalScope) {
   const removed = system.removeSave();
   const providedFallbackCalls = fallbackCalls.length;
 
+  if (typeof configureDefaultProviders === "function") {
+    configureDefaultProviders({ storage: fallbackStorageDependency });
+  }
   const fallbackSystem = createSaveSystem(saveSystemFixture);
   const fallbackDefault = fallbackSystem.defaultSave();
 
@@ -4121,6 +4195,84 @@ function loadBridge(path, filename, globals = {}, poisonedGlobalNames = []) {
   vm.createContext(context);
   vm.runInContext(source, context, { filename });
   return { source, context };
+}
+
+function saveProviderLifecycleSnapshot() {
+  const source = readFileSync(new URL("../src/save.js", import.meta.url), "utf8");
+  let storageReads = 0;
+  const context = { console };
+  Object.defineProperty(context, "TapSurvivorStorage", {
+    configurable: true,
+    get() {
+      storageReads += 1;
+      throw new Error("Forbidden TapSurvivorStorage global read");
+    },
+  });
+  context.globalThis = context;
+  vm.createContext(context);
+  vm.runInContext(source, context, { filename: "src/save.js" });
+
+  const publisher = context.TapSurvivorSave;
+  const explicitStorageCalls = [];
+  const explicitStorage = {
+    createStorageAdapter(options) {
+      explicitStorageCalls.push(options);
+      return createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 7 }));
+    },
+  };
+  const explicitAdapter = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 9 }));
+  const explicitStorageLoad = publisher
+    .createSaveSystem({ ...createSaveSystemFixture(), storage: explicitStorage })
+    .loadSave().coins;
+  const explicitAdapterLoad = publisher
+    .createSaveSystem({ ...createSaveSystemFixture(), storageAdapter: explicitAdapter })
+    .loadSave().coins;
+  const unconfigured = saveProviderErrorSnapshot(() =>
+    publisher.createSaveSystem(createSaveSystemFixture())
+  );
+  const missingConfiguration = saveProviderErrorSnapshot(() => publisher.configureDefaultProviders({}));
+  const samePublisherAfterMissing = context.TapSurvivorSave === publisher;
+  const configuredStorageCalls = [];
+  const configuredStorage = {
+    createStorageAdapter(options) {
+      configuredStorageCalls.push(options);
+      return createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 5 }));
+    },
+  };
+  publisher.configureDefaultProviders({ storage: configuredStorage });
+  const configuredLoad = publisher.createSaveSystem(createSaveSystemFixture()).loadSave().coins;
+  const undefinedStorageLoad = publisher
+    .createSaveSystem({ ...createSaveSystemFixture(), storage: undefined })
+    .loadSave().coins;
+
+  return {
+    configuredLoad,
+    configuredStorageCalls: configuredStorageCalls.length,
+    explicitAdapterLoad,
+    explicitStorageCalls: explicitStorageCalls.length,
+    explicitStorageLoad,
+    missingConfiguration,
+    samePublisherAfterMissing,
+    samePublisherAfterRecovery: context.TapSurvivorSave === publisher,
+    storageCallsAfterUndefinedOverride: configuredStorageCalls.length,
+    storageReads,
+    undefinedStorageLoad,
+    unconfigured,
+  };
+}
+
+function saveProviderErrorSnapshot(callback) {
+  try {
+    callback();
+  } catch (error) {
+    return {
+      code: error?.code || "",
+      missing: Array.isArray(error?.missing) ? error.missing : [],
+      missingProviders: Array.isArray(error?.missingProviders) ? error.missingProviders : [],
+      name: error?.name || "",
+    };
+  }
+  return { code: "", missing: [], missingProviders: [], name: "" };
 }
 
 function upgradeProviderLifecycleSnapshot() {

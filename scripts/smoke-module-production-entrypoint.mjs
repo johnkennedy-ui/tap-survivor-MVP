@@ -28,6 +28,7 @@ const classicContentSource = readFileSync(join(root, "src/content.generated.js")
 const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
+const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
   "TapSurvivorCombat",
@@ -168,6 +169,13 @@ check(
     classicUpgradesSource.includes("runUpgradeDefs") &&
     !classicUpgradesSource.includes("TapSurvivorContent") &&
     !classicUpgradesSource.includes("TapSurvivorEffects")
+);
+check(
+  "classic fallback preserves the explicit TapSurvivorSave storage provider lifecycle",
+  classicSaveSource.includes("globalThis.TapSurvivorSave =") &&
+    classicSaveSource.includes("createSaveSystem") &&
+    classicSaveSource.includes("configureDefaultProviders") &&
+    !classicSaveSource.includes("TapSurvivorStorage")
 );
 check(
   "production ESM statically imports all seven retired native factories without a namespace bridge or classic side-effect imports",
