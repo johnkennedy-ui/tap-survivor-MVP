@@ -303,9 +303,10 @@ check(
     game.includes("assets,") &&
     levelUp.includes("assets?.createAssetResolver?.(content)") &&
     levelUp.includes("content?.assets?.sprites?.ui?.quest") &&
+    !assets.includes("globalThis.TapSurvivorContent") &&
     !levelUp.includes("globalThis.TapSurvivorAssets") &&
     !levelUp.includes("globalThis.TapSurvivorContent") &&
-    shellUi.includes("assets?.createAssetResolver") &&
+    shellUi.includes("assets?.createAssetResolver?.(content)") &&
     !shellUi.includes("globalThis.TapSurvivorAssets"),
 );
 check("shared audio helper exists", audio.includes("TapSurvivorAudio") && runtimeEntry.includes("TapSurvivorAudio") && audio.includes("setMuted"));

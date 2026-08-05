@@ -33,10 +33,10 @@ Generated content globals:
   the production ESM boot sources.
 - Retirement gate: this proof covers only production ESM consumption. `src/content.generated.js` must continue to
   publish `TapSurvivorContent` for the preserved classic fallback boundary; the production smoke explicitly fails if
-  that publisher disappears. A future publisher-retirement contract must first inventory and resolve the classic
-  fallback consumers (including `src/assets.js`, `src/balance-runtime.js`, and `src/upgrades.js`) and separately
-  prove rollback policy no longer requires the classic boundary. Do not remove the publisher, change the classic
-  fallback, generated content, script order, or the global allowlist in a coverage-only cut.
+  that publisher disappears. A future publisher-retirement contract must first inventory and resolve the remaining
+  classic fallback consumers (including `src/balance-runtime.js` and `src/upgrades.js`) and separately prove rollback
+  policy no longer requires the classic boundary. Do not remove the publisher, change the classic fallback, generated
+  content, script order, or the global allowlist in a coverage-only cut.
 - `src/balance-runtime.js` reads those generated globals, applies the active dev balance profile/overrides, then republishes `TapSurvivorContent` and exposes `TapSurvivorBalanceRuntime` plus `TapSurvivorDebugBalance`.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
@@ -100,8 +100,10 @@ Generated content globals:
   `createUpgradeDefs` and `runUpgradeDefs` members; `src/modules/game-dependencies.js` retains that publisher as
   the legacy fallback until a separate retirement contract changes it.
 - `src/shell-ui.js` now receives asset/content helpers and `TapSurvivorShellRelicUi` through `src/game.js` factory wiring
-  instead of reading those globals directly. `src/shell-relic-ui.js` now receives content through that shell UI seam for
-  relic detail and character sprite fallbacks while keeping its compatibility provider global.
+  instead of reading those globals directly. Its classic adapter forwards that injected content to
+  `TapSurvivorAssets.createAssetResolver(content)`, so `src/assets.js` has no `TapSurvivorContent` reader. `src/shell-relic-ui.js`
+  receives content through that shell UI seam for relic detail and character sprite fallbacks while keeping its
+  compatibility provider global.
 - `src/combat.js` now receives combat damage, enemy system, and weapon fire dependencies through `src/game.js` factory
   wiring; combat damage is dependency-bag injected instead of reading a runtime global.
 - `src/enemies.js` now receives enemy behavior and enemy spawning dependencies through `src/game.js` and

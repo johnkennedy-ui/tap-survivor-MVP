@@ -538,7 +538,7 @@
     persist,
     renderMeta,
   }) {
-    const assetResolver = assets?.createAssetResolver?.() || {
+    const assetResolver = assets?.createAssetResolver?.(content) || {
       relicIcon: (relic) =>
         relic?.iconPath || content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
       runUpgradeSprite: (upgradeId) => content?.assets?.sprites?.runUpgrades?.[upgradeId],

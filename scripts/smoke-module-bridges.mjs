@@ -929,6 +929,10 @@ check(
     shellUiClassicSnapshot.boundListeners.includes("speed5:click")
 );
 check(
+  "classic shell UI forwards exact injected content to asset resolver",
+  shellUiClassicSnapshot.assetResolverReceivedExactContent
+);
+check(
   "classic shell UI frame and panel render through relic bridge path",
   shellUiClassicSnapshot.relicSlotsText.includes("Relic slots: 2/5") &&
     shellUiClassicSnapshot.inventoryClasses.some((className) => className.includes("relic-loadout")) &&
@@ -3685,6 +3689,7 @@ function shellRelicUiSnapshot(createShellRelicUi, options) {
 
 function classicShellUiSnapshot(createShellUiController, options) {
   const calls = [];
+  let receivedAssetResolverContent;
   const game = { running: true, paused: false, pauseReason: "" };
   const save = {
     towerFloor: 20,
@@ -3709,7 +3714,10 @@ function classicShellUiSnapshot(createShellUiController, options) {
   const ui = createClassicShellUiFixture(calls);
   const controller = createShellUiController({
     assets: {
-      createAssetResolver: () => shellRelicUiAssetResolver,
+      createAssetResolver(content) {
+        receivedAssetResolverContent = content;
+        return shellRelicUiAssetResolver;
+      },
     },
     closeEndScreen: () => calls.push("end:close"),
     closeLevelUpMenu: () => calls.push("level-up:close"),
@@ -3799,6 +3807,7 @@ function classicShellUiSnapshot(createShellUiController, options) {
   return {
     activePanel: ui.menuInventoryPanel.classList.contains("hidden") ? "progress" : "inventory",
     apiKeys: Object.keys(controller).sort(),
+    assetResolverReceivedExactContent: receivedAssetResolverContent === shellRelicUiContentFixture,
     boundListeners,
     calls,
     equippedAfterEquip,

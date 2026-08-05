@@ -1,5 +1,7 @@
 (() => {
-function createAssetResolver(content = globalThis.TapSurvivorContent || {}) {
+const EMPTY_CONTENT = Object.freeze({});
+
+function createAssetResolver(content = EMPTY_CONTENT) {
   const sprites = content.assets?.sprites || {};
   const fallbackSkillIcon = sprites.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
 

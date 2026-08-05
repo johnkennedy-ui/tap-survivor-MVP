@@ -47,7 +47,7 @@
   "allowedFileCounts": {
     "scripts/smoke-production-browser-runtime.mjs": 0,
     "scripts/smoke-shop-provider-parity.mjs": 0,
-    "src/assets.js": 2,
+    "src/assets.js": 1,
     "src/audio.js": 5,
     "src/balance-runtime.js": 9,
     "src/balance.js": 0,
