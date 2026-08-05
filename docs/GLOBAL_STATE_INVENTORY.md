@@ -84,8 +84,9 @@ Generated content globals:
   `src/map-system.js` bridge is retired/global-free and no longer publishes or reads `globalThis.TapSurvivorMapSystem`.
 - Generated `src/shop.js` and `src/game-banners.js` remain source-derived classic artifacts without global publishers;
   the classic dependency bridge bundles the native Shop and game banner factories and preserves their explicit wiring.
-- `scripts/smoke-shop-provider-parity.mjs` has two temporary `globalThis.document` getter guard/restore reads. They
-  prove native Shop does not access the global while retaining the generated classic-boundary parity fixture.
+- `scripts/smoke-shop-provider-parity.mjs` uses an explicit platform-target descriptor guard for its native Shop
+  missing-document negative path. The helper poisons and restores the target's `document` property descriptor exactly,
+  including an absent descriptor, while retaining the generated classic-boundary parity fixture.
 - `src/level-up.js` now receives level-up choice helpers from the dependency bag and the optional asset resolver provider
   through `src/game.js` factory wiring.
 - `src/ui.js` now receives `TapSurvivorUiProgression` through `src/game.js` factory wiring instead of reading that global

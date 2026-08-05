@@ -10,7 +10,6 @@
     "globalThis.TapSurvivorContent",
     "globalThis.TapSurvivorDebug",
     "globalThis.TapSurvivorDebugBalance",
-    "globalThis.document",
     "globalThis.TapSurvivorEffects",
     "globalThis.TapSurvivorEnemies",
     "globalThis.TapSurvivorEnemyBehaviors",
@@ -47,7 +46,7 @@
   ],
   "allowedFileCounts": {
     "scripts/smoke-production-browser-runtime.mjs": 0,
-    "scripts/smoke-shop-provider-parity.mjs": 2,
+    "scripts/smoke-shop-provider-parity.mjs": 0,
     "src/assets.js": 2,
     "src/audio.js": 5,
     "src/balance-runtime.js": 9,

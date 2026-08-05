@@ -57,7 +57,7 @@ check(
   !native.snapshot.afterClose.shopModalVisible && !native.snapshot.afterClose.menuShopPanelVisible
 );
 check(
-  "native Shop requires an explicit documentRef without falling back to globalThis.document",
+  "native Shop fails closed without documentRef and restores the injected platform document descriptor",
   missingDocumentRefFailsClosed()
 );
 check(
@@ -639,19 +639,46 @@ function withoutDocumentRef(options) {
 }
 
 function missingDocumentRefFailsClosed() {
-  const previousDocument = globalThis.document;
-  Object.defineProperty(globalThis, "document", {
+  const platformTarget = globalThis;
+  const originalDocumentDescriptor = Object.getOwnPropertyDescriptor(platformTarget, "document");
+  const failsClosed = withPoisonedDocument(platformTarget, () =>
+    throwsStableDocumentError(() => createShopSystem(withoutDocumentRef(createFixture(baseSave()).nativeOptions)))
+  );
+  return (
+    failsClosed &&
+    propertyDescriptorsMatch(
+      Object.getOwnPropertyDescriptor(platformTarget, "document"),
+      originalDocumentDescriptor
+    )
+  );
+}
+
+function withPoisonedDocument(platformTarget, callback) {
+  const originalDocumentDescriptor = Object.getOwnPropertyDescriptor(platformTarget, "document");
+  Object.defineProperty(platformTarget, "document", {
     configurable: true,
     get() {
-      throw new Error("native Shop must not read globalThis.document");
+      throw new Error("native Shop must not read the injected platform document");
     },
   });
   try {
-    return throwsStableDocumentError(() => createShopSystem(withoutDocumentRef(createFixture(baseSave()).nativeOptions)));
+    return callback();
   } finally {
-    if (previousDocument === undefined) delete globalThis.document;
-    else Object.defineProperty(globalThis, "document", { configurable: true, value: previousDocument });
+    if (originalDocumentDescriptor === undefined) Reflect.deleteProperty(platformTarget, "document");
+    else Object.defineProperty(platformTarget, "document", originalDocumentDescriptor);
   }
+}
+
+function propertyDescriptorsMatch(left, right) {
+  if (left === undefined || right === undefined) return left === right;
+  return (
+    left.configurable === right.configurable &&
+    left.enumerable === right.enumerable &&
+    left.get === right.get &&
+    left.set === right.set &&
+    left.value === right.value &&
+    left.writable === right.writable
+  );
 }
 
 function generatedClassicBoundaryUsesDocument() {
