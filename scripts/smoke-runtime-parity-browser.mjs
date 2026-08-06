@@ -1,11 +1,12 @@
 import { spawnSync } from "node:child_process";
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { dirname, extname, join, normalize, resolve } from "node:path";
-import { chromium } from "playwright";
 
 const repoRoot = process.cwd();
+const localRequire = createRequire(import.meta.url);
 const cli = parseCli(process.argv.slice(2));
 const root = cli.root ? resolve(repoRoot, cli.root) : repoRoot;
 const viewport = resolveViewport(cli.viewport);
@@ -18,6 +19,7 @@ const syntheticPages = {
   classic: `${syntheticPagePrefix}classic.html`,
   esm: `${syntheticPagePrefix}esm.html`,
 };
+const runningDockerChild = process.env.PARITY_BROWSER_DOCKER_CHILD === "1";
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -32,34 +34,47 @@ const contentTypes = {
 
 const report = {
   appLevelResult: "fail",
+  browserExecutable: "",
+  browserExecutableSource: "",
+  browserDriverSource: "",
   classic: null,
   comparison: null,
   diagnosticMode: !strict,
   esm: null,
+  exitCode: null,
   firstDivergence: null,
+  medium: runningDockerChild ? "docker" : "host-direct",
   pageUrl: null,
+  reportFile: cli.reportFile ? resolve(repoRoot, cli.reportFile) : "",
   rootDir: root,
   surfaces: [],
   surfaceRoots: [],
+  strictResult: strict ? "pending" : "not-requested",
   strictMode: strict,
   viewport,
+  xdgRuntimeDir: "",
 };
 
-const classicIndexSource = readClassicIndexSource();
-const classicScripts = resolveClassicScripts(classicIndexSource);
-const shellPage = injectBase(stripScripts(classicIndexSource));
-const surfaceRoots = resolveSurfaceRoots(root);
-report.surfaceRoots = surfaceRoots.map((surface) => ({
-  exists: surface.exists,
-  name: surface.name,
-  rootDir: surface.rootDir,
-  surfaceUrl: surface.surfaceUrl,
-}));
+let classicIndexSource = "";
+let classicScripts = [];
+let shellPage = "";
+let surfaceRoots = [];
 
 async function main() {
-  const browser = await chromium.launch({ headless: true });
-  let infraFailure = "";
+  let browser = null;
+  let browserProfileDir = "";
+  let exitCode = 0;
   try {
+    initializeRuntime();
+    const browserDriver = loadBrowserDriver();
+    const browserLaunch = resolveBrowserLaunch(browserDriver.chromium);
+    report.browserExecutable = browserLaunch.executablePath;
+    report.browserExecutableSource = browserLaunch.source;
+    report.browserDriverSource = browserDriver.source;
+    report.xdgRuntimeDir = browserLaunch.xdgRuntimeDir;
+    browserProfileDir = await createBrowserProfile(browserLaunch.xdgRuntimeDir);
+    browser = await browserDriver.chromium.launchPersistentContext(browserProfileDir, browserLaunch.options);
+
     for (const surface of surfaceRoots) {
       const surfaceResult = await runSurface(browser, surface);
       report.surfaces.push(surfaceResult);
@@ -70,24 +85,145 @@ async function main() {
     report.comparison = comparisonSummary.comparison;
     report.firstDivergence = comparisonSummary.firstDivergence;
     report.appLevelResult = comparisonSummary.appLevelResult;
-    emitReport(report);
 
     if (strict && comparisonSummary.strictFailures.length > 0) {
-      process.exitCode = 1;
+      exitCode = 1;
     }
   } catch (error) {
-    infraFailure = error?.stack || error?.message || String(error);
+    const infraFailure = error?.stack || error?.message || String(error);
     report.appLevelResult = "fail";
     report.comparison = {
       appLevelResult: "fail",
       comparisonNotes: [],
       strictFailures: [`infra failure: ${shortMessage(infraFailure)}`],
     };
-    emitReport(report);
-    process.exitCode = 1;
+    exitCode = 1;
   } finally {
-    await browser.close().catch(() => {});
+    await browser?.close().catch(() => {});
+    if (browserProfileDir) await rm(browserProfileDir, { force: true, recursive: true }).catch(() => {});
   }
+
+  report.exitCode = exitCode;
+  report.strictResult = strict ? (exitCode === 0 ? "pass" : "fail") : "not-requested";
+  try {
+    await writeReportFile(report);
+  } catch (error) {
+    report.exitCode = 1;
+    report.reportWriteError = shortMessage(error?.stack || error?.message || String(error));
+    report.strictResult = strict ? "fail" : "not-requested";
+    console.error(`Unable to write parity report: ${report.reportWriteError}`);
+  }
+  emitReport(report);
+  process.exitCode = report.exitCode;
+}
+
+function initializeRuntime() {
+  classicIndexSource = readClassicIndexSource();
+  classicScripts = resolveClassicScripts(classicIndexSource);
+  shellPage = injectBase(stripScripts(classicIndexSource));
+  surfaceRoots = resolveSurfaceRoots(root);
+  report.surfaceRoots = surfaceRoots.map((surface) => ({
+    exists: surface.exists,
+    name: surface.name,
+    rootDir: surface.rootDir,
+    surfaceUrl: surface.surfaceUrl,
+  }));
+}
+
+function resolveBrowserLaunch(chromiumLauncher) {
+  const executable = resolveBrowserExecutable(chromiumLauncher);
+  const xdgRuntimeDir = resolveHostRuntimeDir();
+  return {
+    executablePath: executable.path,
+    options: {
+      env: { ...process.env, XDG_RUNTIME_DIR: xdgRuntimeDir },
+      executablePath: executable.path,
+      headless: true,
+    },
+    source: executable.source,
+    xdgRuntimeDir,
+  };
+}
+
+function resolveBrowserExecutable(chromiumLauncher) {
+  const override = cli.browserExecutable || process.env.PARITY_BROWSER_EXECUTABLE || "";
+  if (override) {
+    const overridePath = resolve(repoRoot, override);
+    if (isExistingExecutable(overridePath)) return { path: overridePath, source: "override" };
+    throw new Error(`Configured browser executable does not exist: ${overridePath}`);
+  }
+
+  const bundledPath = chromiumLauncher.executablePath();
+  if (isExistingExecutable(bundledPath)) return { path: bundledPath, source: "playwright-bundled" };
+
+  const systemPaths = [
+    "/snap/bin/chromium",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+  ];
+  const systemPath = systemPaths.find(isExistingExecutable);
+  if (systemPath) return { path: systemPath, source: "system" };
+
+  throw new Error("No browser executable found: configure --browser-executable or install Playwright/system Chromium first");
+}
+
+function loadBrowserDriver() {
+  const moduleOverride = process.env.PARITY_PLAYWRIGHT_MODULE || "";
+  const candidates = [
+    { load: () => localRequire("playwright"), source: "repo" },
+    ...(moduleOverride
+      ? [{ load: () => localRequire(resolve(repoRoot, moduleOverride)), source: "caller-override" }]
+      : []),
+  ];
+  let lastError = null;
+  for (const candidate of candidates) {
+    try {
+      const playwright = candidate.load();
+      if (!playwright?.chromium) throw new Error("Playwright Chromium launcher is unavailable");
+      return { chromium: playwright.chromium, source: candidate.source };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw new Error(
+    `Playwright module is unavailable without installing packages; set PARITY_PLAYWRIGHT_MODULE to an existing Playwright module path: ${shortMessage(lastError?.message || lastError)}`
+  );
+}
+
+function isExistingExecutable(filePath) {
+  try {
+    return Boolean(filePath && existsSync(filePath) && statSync(filePath).isFile());
+  } catch {
+    return false;
+  }
+}
+
+function resolveHostRuntimeDir() {
+  const runtimeDir = process.env.XDG_RUNTIME_DIR || "";
+  if (!runtimeDir) throw new Error("Direct host Chromium requires a caller-supplied XDG_RUNTIME_DIR");
+  const runtimeStat = statSync(runtimeDir);
+  if (!runtimeStat.isDirectory()) throw new Error(`XDG_RUNTIME_DIR is not a directory: ${runtimeDir}`);
+  if ((runtimeStat.mode & 0o777) !== 0o700) {
+    throw new Error(`XDG_RUNTIME_DIR must have mode 0700: ${runtimeDir}`);
+  }
+  return runtimeDir;
+}
+
+async function createBrowserProfile(runtimeDir) {
+  const profileDir = await mkdtemp(join(runtimeDir, "tap-survivor-parity-profile-"));
+  await chmod(profileDir, 0o700);
+  return profileDir;
+}
+
+async function writeReportFile(finalReport) {
+  if (!cli.reportFile) return;
+  const reportPath = resolve(repoRoot, cli.reportFile);
+  await mkdir(dirname(reportPath), { recursive: true });
+  const temporaryPath = `${reportPath}.tmp-${process.pid}-${Date.now()}`;
+  await writeFile(temporaryPath, `${JSON.stringify(finalReport, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  await rename(temporaryPath, reportPath);
 }
 
 async function runSurface(browser, surface) {
@@ -1244,6 +1380,23 @@ function summarizeSurfaceComparisons(surfaceResults) {
 }
 
 function emitReport(finalReport) {
+  if (cli.compactOutput) {
+    console.log(
+      "PARITY_RESULT " +
+        JSON.stringify({
+          appLevelResult: finalReport.appLevelResult,
+          browserExecutable: finalReport.browserExecutable,
+          exitCode: finalReport.exitCode,
+          firstDivergence: finalReport.firstDivergence,
+          medium: finalReport.medium,
+          reportFile: finalReport.reportFile,
+          strictMode: finalReport.strictMode,
+          strictResult: finalReport.strictResult,
+          xdgRuntimeDir: finalReport.xdgRuntimeDir,
+        })
+    );
+    return;
+  }
   console.log("# Runtime Parity Harness");
   console.log(`mode: ${finalReport.strictMode ? "strict" : "diagnostic"}`);
   console.log(`root: ${finalReport.rootDir}`);
@@ -2013,9 +2166,13 @@ function sendHtml(res, html) {
 
 function parseCli(args) {
   const parsed = {
+    browserExecutable: "",
+    compactOutput: false,
+    docker: false,
     dtMs: 16.666,
     frames: 8,
     failOnDiff: false,
+    reportFile: "",
     root: "",
     screenshotDir: "",
     viewport: "desktop",
@@ -2025,6 +2182,32 @@ function parseCli(args) {
     const arg = args[index];
     if (arg === "--fail-on-diff") {
       parsed.failOnDiff = true;
+      continue;
+    }
+    if (arg === "--browser-executable") {
+      parsed.browserExecutable = args[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--browser-executable=")) {
+      parsed.browserExecutable = arg.slice("--browser-executable=".length);
+      continue;
+    }
+    if (arg === "--compact-output") {
+      parsed.compactOutput = true;
+      continue;
+    }
+    if (arg === "--docker") {
+      parsed.docker = true;
+      continue;
+    }
+    if (arg === "--report-file") {
+      parsed.reportFile = args[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith("--report-file=")) {
+      parsed.reportFile = arg.slice("--report-file=".length);
       continue;
     }
     if (arg === "--root") {
@@ -2139,9 +2322,32 @@ function readJsonSafe(value) {
   }
 }
 
+async function failBeforeMain(message) {
+  report.appLevelResult = "fail";
+  report.comparison = {
+    appLevelResult: "fail",
+    comparisonNotes: [],
+    strictFailures: [message],
+  };
+  report.exitCode = 1;
+  report.strictResult = strict ? "fail" : "not-requested";
+  try {
+    await writeReportFile(report);
+  } catch (error) {
+    report.reportWriteError = shortMessage(error?.stack || error?.message || String(error));
+    console.error(`Unable to write parity report: ${report.reportWriteError}`);
+  }
+  emitReport(report);
+  process.exitCode = 1;
+}
+
 const dockerBinary = existsSync("/usr/bin/docker") ? "/usr/bin/docker" : "docker";
 
-if (process.env.PARITY_BROWSER_DOCKER_CHILD !== "1" && spawnSync(dockerBinary, ["version"], { encoding: "utf8", stdio: "ignore" }).status === 0) {
+if (cli.docker && !runningDockerChild) {
+  const dockerVersion = spawnSync(dockerBinary, ["version"], { encoding: "utf8", stdio: "ignore" });
+  if (dockerVersion.status !== 0) {
+    void failBeforeMain("Docker parity mode was requested but Docker is unavailable");
+  } else {
   const image = process.env.PLAYWRIGHT_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble";
   const smokeArgs = process.argv.slice(2);
   const result = spawnSync(
@@ -2167,11 +2373,14 @@ if (process.env.PARITY_BROWSER_DOCKER_CHILD !== "1" && spawnSync(dockerBinary, [
       [
         "set -euo pipefail",
         'workdir="$(mktemp -d /tmp/tap-survivor-parity.XXXXXX)"',
-        'trap \'rm -rf "$workdir"\' EXIT',
+        'runtime_dir="$(mktemp -d /tmp/tap-survivor-parity-runtime.XXXXXX)"',
+        'trap \'rm -rf "$workdir" "$runtime_dir"\' EXIT',
         'mkdir -p "$workdir/repo"',
         'cp -a /repo/. "$workdir/repo"/',
         'cd "$workdir/repo"',
         "npm ci --ignore-scripts --no-audit --no-fund",
+        'chmod 700 "$runtime_dir"',
+        'export XDG_RUNTIME_DIR="$runtime_dir"',
         ["node", "scripts/smoke-runtime-parity-browser.mjs", ...smokeArgs.map(shellQuote)].join(" "),
       ].join("; "),
     ],
@@ -2187,12 +2396,10 @@ if (process.env.PARITY_BROWSER_DOCKER_CHILD !== "1" && spawnSync(dockerBinary, [
     process.exit(1);
   }
   process.exit(result.status ?? 1);
+  }
+} else {
+  void main();
 }
-
-main().catch((error) => {
-  console.error(error.stack || error);
-  process.exitCode = 1;
-});
 
 function shellQuote(value) {
   return `'${String(value).replace(/'/g, `'\"'\"'`)}'`;
