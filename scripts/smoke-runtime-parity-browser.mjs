@@ -118,6 +118,9 @@ async function main() {
 }
 
 function initializeRuntime() {
+  if (!existsSync(root)) {
+    throw new Error(`Required parity root is missing: ${root}`);
+  }
   classicIndexSource = readClassicIndexSource();
   classicScripts = resolveClassicScripts(classicIndexSource);
   shellPage = injectBase(stripScripts(classicIndexSource));
@@ -249,6 +252,9 @@ async function runSurface(browser, surface) {
     }
     if (requestUrl === syntheticPages.esm) {
       return sendHtml(res, buildEsmPage());
+    }
+    if (requestUrl === "/favicon.ico") {
+      return sendSyntheticFavicon(res);
     }
 
     const fullPath = resolveRequestPath(requestUrl, surface.rootDir);
@@ -2162,6 +2168,14 @@ function sendHtml(res, html) {
     "content-type": "text/html; charset=utf-8",
   });
   res.end(html);
+}
+
+function sendSyntheticFavicon(res) {
+  res.writeHead(200, {
+    "cache-control": "no-store",
+    "content-type": "image/svg+xml",
+  });
+  res.end('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>');
 }
 
 function parseCli(args) {
