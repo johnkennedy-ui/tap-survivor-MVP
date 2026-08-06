@@ -1,5 +1,7 @@
 (() => {
-function createAudioSystem({ sfxDefs = {} }) {
+let defaultProviders = {};
+
+function createAudioSystem({ sfxDefs = {}, audioContextFactory } = {}) {
   const audioById = new Map();
   const lastPlayed = new Map();
   const weaponSfx = sfxDefs.weapons || {};
@@ -44,18 +46,33 @@ function createAudioSystem({ sfxDefs = {} }) {
     return play(runUpgradeSfx[runUpgradeId]);
   }
 
-  function playStartLaugh() {
-    if (muted) return false;
-    const AudioContextRef = globalThis.AudioContext || globalThis.webkitAudioContext;
-    if (!AudioContextRef) return false;
+  function proceduralAudioContext(cueId) {
+    if (audioContext) return audioContext;
+    const contextFactory =
+      typeof audioContextFactory === "function"
+        ? audioContextFactory
+        : defaultProviders.audioContextFactory;
+    if (typeof contextFactory !== "function") return null;
 
     try {
-      audioContext ||= new AudioContextRef();
-      audioContext.resume?.();
-      const startAt = audioContext.currentTime;
-      const master = audioContext.createGain();
-      const tone = audioContext.createBiquadFilter();
-      const throat = audioContext.createBiquadFilter();
+      audioContext = contextFactory(cueId) || null;
+    } catch {
+      return null;
+    }
+    return audioContext;
+  }
+
+  function playStartLaugh() {
+    if (muted) return false;
+
+    try {
+      const context = proceduralAudioContext("start-laugh");
+      if (!context) return false;
+      context.resume?.();
+      const startAt = context.currentTime;
+      const master = context.createGain();
+      const tone = context.createBiquadFilter();
+      const throat = context.createBiquadFilter();
       master.gain.setValueAtTime(0.0001, startAt);
       master.gain.exponentialRampToValueAtTime(volume * 0.55, startAt + 0.04);
       master.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.02);
@@ -67,11 +84,11 @@ function createAudioSystem({ sfxDefs = {} }) {
       throat.Q.setValueAtTime(4.6, startAt);
       tone.connect(throat);
       throat.connect(master);
-      master.connect(audioContext.destination);
+      master.connect(context.destination);
 
       [0, 0.23, 0.48].forEach((offset, index) => {
-        const osc = audioContext.createOscillator();
-        const syllable = audioContext.createGain();
+        const osc = context.createOscillator();
+        const syllable = context.createGain();
         osc.type = "sawtooth";
         osc.frequency.setValueAtTime(118 - index * 16, startAt + offset);
         osc.frequency.exponentialRampToValueAtTime(64 - index * 7, startAt + offset + 0.18);
@@ -91,23 +108,22 @@ function createAudioSystem({ sfxDefs = {} }) {
 
   function playShopPurchase() {
     if (muted) return false;
-    const AudioContextRef = globalThis.AudioContext || globalThis.webkitAudioContext;
-    if (!AudioContextRef) return false;
 
     try {
-      audioContext ||= new AudioContextRef();
-      audioContext.resume?.();
-      const startAt = audioContext.currentTime;
-      const master = audioContext.createGain();
+      const context = proceduralAudioContext("shop-purchase");
+      if (!context) return false;
+      context.resume?.();
+      const startAt = context.currentTime;
+      const master = context.createGain();
       master.gain.setValueAtTime(0.0001, startAt);
       master.gain.exponentialRampToValueAtTime(volume * 0.42, startAt + 0.015);
       master.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.48);
-      master.connect(audioContext.destination);
+      master.connect(context.destination);
 
       [880, 1175, 1480, 1976].forEach((frequency, index) => {
         const offset = index * 0.055;
-        const osc = audioContext.createOscillator();
-        const note = audioContext.createGain();
+        const osc = context.createOscillator();
+        const note = context.createGain();
         osc.type = index % 2 ? "sine" : "triangle";
         osc.frequency.setValueAtTime(frequency, startAt + offset);
         osc.frequency.exponentialRampToValueAtTime(frequency * 0.82, startAt + offset + 0.16);
@@ -150,7 +166,13 @@ function createAudioSystem({ sfxDefs = {} }) {
   };
 }
 
+function configureDefaultProviders({ audioContextFactory } = {}) {
+  defaultProviders = { audioContextFactory };
+  return defaultProviders.audioContextFactory;
+}
+
 globalThis.TapSurvivorAudio = {
   createAudioSystem,
+  configureDefaultProviders,
 };
 })();

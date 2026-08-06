@@ -86,6 +86,10 @@ Generated content globals:
   `storage` or truthy `storageAdapter` values retain precedence; an unconfigured default call fails closed with
   `TapSurvivorSaveProviderError` / `TAP_SURVIVOR_SAVE_PROVIDER_MISSING` and can recover after later valid provider
   configuration on the same publisher object.
+- `src/audio.js` retains the classic `TapSurvivorAudio` publisher and accepts an explicit `audioContextFactory` for
+  procedural cues without reading browser audio globals. `src/modules/game-dependencies.js` configures its default
+  factory from the source-owned `globalRef` boundary; explicit caller factories retain precedence, missing or throwing
+  factories fail procedural cues closed, and later valid configuration recovers on the same publisher object.
 - `src/modules/game-dependencies.js` now wires the native Shop factory explicitly into the classic dependency bag and
   injects the game banner factory; the factories receive the classic `documentRef` boundary without reading
   `globalThis.TapSurvivorShop` or `globalThis.TapSurvivorGameBanners`.
@@ -151,7 +155,8 @@ Runtime module globals:
 Browser/platform globals:
 - `globalThis.localStorage` and `globalThis.location` are used by dev balance profile/override selection.
 - `globalThis.Capacitor?.Plugins?.Preferences` and `globalThis.localStorage` are used by storage adapter platform selection.
-- `globalThis.AudioContext` / `globalThis.webkitAudioContext` are used by audio setup.
+- Audio context construction is supplied to the classic audio publisher through the `globalRef` boundary in
+  `src/modules/game-dependencies.js`; `src/audio.js` has no browser audio-global reader.
 - `globalThis.setTimeout` / `globalThis.clearTimeout` are used by relic UI animation timing.
 
 Browser-smoke diagnostics:

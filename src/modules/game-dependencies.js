@@ -39,9 +39,15 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
   if (typeof save.configureDefaultProviders === "function") {
     save.configureDefaultProviders({ storage });
   }
+  const audio = requireGlobal(globalRef, "TapSurvivorAudio");
+  if (typeof audio.configureDefaultProviders === "function") {
+    audio.configureDefaultProviders({
+      audioContextFactory: createAudioContextFactory(globalRef),
+    });
+  }
 
   return {
-    audio: requireGlobal(globalRef, "TapSurvivorAudio"),
+    audio,
     assets: globalRef.TapSurvivorAssets || {},
     balance: { floorDifficulty },
     balanceRuntime,
@@ -109,6 +115,13 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
 
 function requireGlobal(globalRef, name) {
   return requireValue(globalRef?.[name], name);
+}
+
+function createAudioContextFactory(globalRef) {
+  return () => {
+    const AudioContextRef = globalRef.AudioContext || globalRef.webkitAudioContext;
+    return typeof AudioContextRef === "function" ? new AudioContextRef() : null;
+  };
 }
 
 function requireValue(value, name) {
