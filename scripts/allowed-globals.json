@@ -37,10 +37,8 @@
     "globalThis.TapSurvivorWeaponBehaviors",
     "globalThis.TapSurvivorWeaponFire",
     "globalThis.TapSurvivorWeaponProjectiles",
-    "globalThis.clearTimeout",
     "globalThis.localStorage",
-    "globalThis.location",
-    "globalThis.setTimeout"
+    "globalThis.location"
   ],
   "allowedFileCounts": {
     "scripts/smoke-production-browser-runtime.mjs": 0,
@@ -88,7 +86,7 @@
     "src/save-migrations.js": 0,
     "src/save-normalize.js": 1,
     "src/save.js": 1,
-    "src/shell-relic-ui.js": 4,
+    "src/shell-relic-ui.js": 1,
     "src/shell-ui.js": 1,
     "src/shop-pricing.js": 0,
     "src/shop.js": 2,

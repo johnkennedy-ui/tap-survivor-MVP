@@ -650,19 +650,28 @@
     if (Array.isArray(root.children)) root.children.length = 0;
   }
 
+  let defaultSchedulerProvider;
+
+  const defaultScheduler = {
+    clearTimeout: (timer) => defaultSchedulerProvider?.clearTimeout?.(timer),
+    setTimeout: (callback, delay) => defaultSchedulerProvider?.setTimeout?.(callback, delay),
+    animationSetTimeout: (callback, delay) => defaultSchedulerProvider?.animationSetTimeout?.(callback, delay),
+  };
+
+  function configureDefaultProviders({ scheduler } = {}) {
+    defaultSchedulerProvider = scheduler;
+  }
+
   function createClassicShellRelicUi(options = {}) {
     return createShellRelicUi({
       ...options,
-      scheduler: options.scheduler || {
-        clearTimeout: (timer) => globalThis.clearTimeout?.(timer),
-        setTimeout: (callback, delay) => globalThis.setTimeout?.(callback, delay),
-        animationSetTimeout: (callback, delay) => globalThis.setTimeout?.(callback, delay),
-      },
+      scheduler: options.scheduler || defaultScheduler,
       imageFactory: options.imageFactory || (() => (typeof Image === "undefined" ? null : new Image())),
     });
   }
 
   globalThis.TapSurvivorShellRelicUi = {
     createShellRelicUi: createClassicShellRelicUi,
+    configureDefaultProviders,
   };
 })();

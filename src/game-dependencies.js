@@ -1613,6 +1613,12 @@
         audioContextFactory: createAudioContextFactory(globalRef),
       });
     }
+    const shellRelicUi = requireGlobal(globalRef, "TapSurvivorShellRelicUi");
+    if (typeof shellRelicUi.configureDefaultProviders === "function") {
+      shellRelicUi.configureDefaultProviders({
+        scheduler: createShellRelicSchedulerProvider(globalRef),
+      });
+    }
 
     return {
       audio,
@@ -1658,7 +1664,7 @@
       saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
       saveMigrations: { isPlainObject, migrateSave },
       saveNormalize: { arrayValue, createSaveNormalizer, objectValue },
-      shellRelicUi: requireGlobal(globalRef, "TapSurvivorShellRelicUi"),
+      shellRelicUi,
       shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
       shop: {
         createShopSystem: (options = {}) =>
@@ -1689,6 +1695,14 @@
     return () => {
       const AudioContextRef = globalRef.AudioContext || globalRef.webkitAudioContext;
       return typeof AudioContextRef === "function" ? new AudioContextRef() : null;
+    };
+  }
+
+  function createShellRelicSchedulerProvider(globalRef) {
+    return {
+      clearTimeout: (timer) => globalRef?.clearTimeout?.(timer),
+      setTimeout: (callback, delay) => globalRef?.setTimeout?.(callback, delay),
+      animationSetTimeout: (callback, delay) => globalRef?.setTimeout?.(callback, delay),
     };
   }
 

@@ -157,7 +157,9 @@ Browser/platform globals:
 - `globalThis.Capacitor?.Plugins?.Preferences` and `globalThis.localStorage` are used by storage adapter platform selection.
 - Audio context construction is supplied to the classic audio publisher through the `globalRef` boundary in
   `src/modules/game-dependencies.js`; `src/audio.js` has no browser audio-global reader.
-- `globalThis.setTimeout` / `globalThis.clearTimeout` are used by relic UI animation timing.
+- `TapSurvivorShellRelicUi` remains the classic publisher, while its generated wrapper receives timer behavior through
+  an explicit scheduler provider configured by `src/modules/game-dependencies.js`; caller-supplied schedulers retain
+  precedence and the wrapper has no timer-global reader.
 
 Browser-smoke diagnostics:
 - `document.__TapSurvivorBrowserSmoke` is the test-only, document-scoped sink used by

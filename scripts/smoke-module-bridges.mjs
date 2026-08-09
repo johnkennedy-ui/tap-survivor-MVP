@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
+import { createGameHarness } from "./smoke-game-harness.mjs";
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import { createContentRegistry as createModuleContentRegistry } from "../src/modules/content-registry.js";
 import { createEffects as createModuleEffects } from "../src/modules/effects.js";
@@ -881,6 +882,10 @@ check(
 check("module exports createShellRelicUi", typeof createModuleShellRelicUi === "function");
 check("bridge assigns globalThis.TapSurvivorShellRelicUi", Boolean(bridgeShellRelicUi));
 check("bridge exposes createShellRelicUi", typeof bridgeShellRelicUi?.createShellRelicUi === "function");
+check(
+  "bridge exposes configureDefaultProviders",
+  typeof bridgeShellRelicUi?.configureDefaultProviders === "function"
+);
 check("shell relic UI bridge source has generated banner", hasGeneratedBanner(shellRelicUiBridge.source));
 
 const shellRelicUiFixtureDefs = [
@@ -985,6 +990,82 @@ check(
   shellRelicUiBridgeSnapshot.lockPopupText === "Locked, play more to unlock this skill." &&
     shellRelicUiBridgeSnapshot.lockPopupHidden === true &&
     shellRelicUiBridgeSnapshot.lockTimerDelay === 1800
+);
+
+const nativeShellRelicSchedulerLifecycle = shellRelicNativeSchedulerLifecycleSnapshot();
+const generatedShellRelicSchedulerLifecycle = shellRelicGeneratedSchedulerLifecycleSnapshot();
+check(
+  "native shell relic UI explicit scheduler handles normal missing and recovery behavior",
+  nativeShellRelicSchedulerLifecycle.normal.error === "" &&
+    nativeShellRelicSchedulerLifecycle.normal.lockPopupHidden &&
+    nativeShellRelicSchedulerLifecycle.normal.lockTimerDelay === 1800 &&
+    nativeShellRelicSchedulerLifecycle.normal.previewTimerDelay === 100 &&
+    nativeShellRelicSchedulerLifecycle.missing.error === "" &&
+    nativeShellRelicSchedulerLifecycle.missing.timerCount === 0 &&
+    !nativeShellRelicSchedulerLifecycle.missing.lockPopupHidden &&
+    nativeShellRelicSchedulerLifecycle.recovered.error === "" &&
+    nativeShellRelicSchedulerLifecycle.recovered.lockPopupHidden &&
+    nativeShellRelicSchedulerLifecycle.recovered.lockTimerDelay === 1800 &&
+    nativeShellRelicSchedulerLifecycle.recovered.previewTimerDelay === 100
+);
+check(
+  "generated shell relic scheduler has no timer-global readers and ignores poisoned globals",
+  generatedShellRelicSchedulerLifecycle.sourceHasNoTimerGlobalReaders &&
+    generatedShellRelicSchedulerLifecycle.clearTimeoutReads === 0 &&
+    generatedShellRelicSchedulerLifecycle.setTimeoutReads === 0
+);
+check(
+  "generated shell relic scheduler handles normal missing and recovery behavior",
+  generatedShellRelicSchedulerLifecycle.normal.error === "" &&
+    generatedShellRelicSchedulerLifecycle.normal.lockPopupHidden &&
+    generatedShellRelicSchedulerLifecycle.normal.lockTimerDelay === 1800 &&
+    generatedShellRelicSchedulerLifecycle.normal.previewTimerDelay === 100 &&
+    generatedShellRelicSchedulerLifecycle.missing.error === "" &&
+    generatedShellRelicSchedulerLifecycle.missing.timerCount === 0 &&
+    !generatedShellRelicSchedulerLifecycle.missing.lockPopupHidden &&
+    generatedShellRelicSchedulerLifecycle.recovered.error === "" &&
+    generatedShellRelicSchedulerLifecycle.recovered.lockPopupHidden &&
+    generatedShellRelicSchedulerLifecycle.recovered.lockTimerDelay === 1800 &&
+    generatedShellRelicSchedulerLifecycle.recovered.previewTimerDelay === 100
+);
+check(
+  "generated shell relic scheduler preserves caller precedence and publisher identity",
+  generatedShellRelicSchedulerLifecycle.samePublisher &&
+    generatedShellRelicSchedulerLifecycle.caller.error === "" &&
+    generatedShellRelicSchedulerLifecycle.caller.lockPopupHidden &&
+    generatedShellRelicSchedulerLifecycle.caller.lockTimerDelay === 1800 &&
+    generatedShellRelicSchedulerLifecycle.caller.previewTimerDelay === 100 &&
+    generatedShellRelicSchedulerLifecycle.defaultPrecedenceTimerCount === 0 &&
+    generatedShellRelicSchedulerLifecycle.callerTimerCount === 2
+);
+
+const shellRelicHarness = createGameHarness({
+  fakeCombat: true,
+  initialSave: {
+    coins: 0,
+    equippedRelics: [],
+    shopPurchases: {},
+    towerFloor: 20,
+    unlockedRelics: ["move_speed_focus_relic"],
+    unlockedWeapons: ["spark_bolt"],
+  },
+});
+shellRelicHarness.elements.get("openMenu").click();
+shellRelicHarness.elements.get("menuInventoryTab").click();
+const shellRelicHarnessInventory = shellRelicHarness.elements.get("menuRelicInventory");
+const shellRelicHarnessLockedButton = findShellRelicElement(
+  shellRelicHarnessInventory,
+  (element) =>
+    String(element.className || "").includes("relic-icon-button") &&
+    String(element.className || "").includes("locked")
+);
+shellRelicHarnessLockedButton?.click();
+const shellRelicHarnessLockPopup = shellRelicHarnessInventory.querySelector(".relic-lock-popup");
+check(
+  "classic shell UI harness routes locked relic timing through its configured publisher scheduler",
+  shellRelicHarness.context.__shellRelicTimerCalls.some(
+    (call) => call.method === "setTimeout" && call.delay === 1800
+  ) && shellRelicHarnessLockPopup?.classList.contains("hidden")
 );
 
 check("classic shell UI assigns globalThis.TapSurvivorShellUi", Boolean(bridgeShellUi));
@@ -1477,6 +1558,10 @@ check(
 );
 check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
+check(
+  "dependency bag configures the retained shell relic publisher with a dynamic scheduler",
+  moduleGameDependenciesSnapshot.hasConfiguredShellRelicScheduler
+);
 check("dependency bag exposes native game banner factory", moduleGameDependenciesSnapshot.hasGameBannerFactory);
 check("dependency bag ignores poisoned game banner global", moduleGameDependenciesSnapshot.bannerGlobalReads === 0);
 check("dependency bag exposes native Shop factory", moduleGameDependenciesSnapshot.hasNativeShopFactory);
@@ -2152,6 +2237,14 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorWeaponTargeting",
   ];
   const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
+  const shellRelicProviderCalls = [];
+  const shellRelicUiPublisher = {
+    configureDefaultProviders({ scheduler } = {}) {
+      shellRelicProviderCalls.push(scheduler);
+    },
+    name: "TapSurvivorShellRelicUi",
+  };
+  baseGlobalRef.TapSurvivorShellRelicUi = shellRelicUiPublisher;
   const saveProviderCalls = [];
   const saveStorage = {
     createStorageAdapter(options) {
@@ -2215,6 +2308,18 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     globalRef,
     documentRef
   );
+  const shellRelicSchedulerTimerCalls = [];
+  globalRef.clearTimeout = (timer) => {
+    shellRelicSchedulerTimerCalls.push({ kind: "clearTimeout", timer });
+  };
+  globalRef.setTimeout = (callback, delay) => {
+    shellRelicSchedulerTimerCalls.push({ delay, kind: "setTimeout" });
+    return { callback, delay };
+  };
+  const initialShellRelicScheduler = shellRelicProviderCalls[0];
+  initialShellRelicScheduler?.clearTimeout?.("locked-popup");
+  initialShellRelicScheduler?.setTimeout?.(() => {}, 1800);
+  initialShellRelicScheduler?.animationSetTimeout?.(() => {}, 100);
   const missingGameRuntimeGlobalRef = { ...baseGlobalRef };
   delete missingGameRuntimeGlobalRef.TapSurvivorGameRuntime;
   const missingGameRuntimeResult = createGameDependencyBagResult(
@@ -2377,6 +2482,15 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       configuredSave.coins === 11,
     saveProviderCalls,
     hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
+    hasConfiguredShellRelicScheduler:
+      bag.shellRelicUi === shellRelicUiPublisher &&
+      shellRelicProviderCalls.length > 0 &&
+      JSON.stringify(shellRelicSchedulerTimerCalls) ===
+        JSON.stringify([
+          { kind: "clearTimeout", timer: "locked-popup" },
+          { delay: 1800, kind: "setTimeout" },
+          { delay: 100, kind: "setTimeout" },
+        ]),
     bannerGlobalReads,
     hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
     hasGameRuntime: typeof bag.gameRuntime?.createGameRuntimeController === "function",
@@ -3986,6 +4100,202 @@ function shellRelicUiSnapshot(createShellRelicUi, options) {
     previewTimerDelay: animationTimer?.delay,
     renderMetaCount,
   };
+}
+
+function shellRelicNativeSchedulerLifecycleSnapshot() {
+  const normalTimers = [];
+  const normal = exerciseShellRelicTiming(
+    createShellRelicTimingFixture(createModuleShellRelicUi, {
+      relicSystem: createShellRelicFixtureRelicSystem(createModuleRelicSystem),
+      scheduler: createShellRelicTimerScheduler(normalTimers),
+    }),
+    normalTimers
+  );
+  const recoveryScheduler = {};
+  const recoveryTimers = [];
+  const recoveryFixture = createShellRelicTimingFixture(createModuleShellRelicUi, {
+    relicSystem: createShellRelicFixtureRelicSystem(createModuleRelicSystem),
+    scheduler: recoveryScheduler,
+  });
+  const missing = exerciseShellRelicTiming(recoveryFixture, recoveryTimers);
+  Object.assign(recoveryScheduler, createShellRelicTimerScheduler(recoveryTimers));
+  const recovered = exerciseShellRelicTiming(recoveryFixture, recoveryTimers);
+
+  return { missing, normal, recovered };
+}
+
+function shellRelicGeneratedSchedulerLifecycleSnapshot() {
+  const source = readFileSync(new URL("../src/shell-relic-ui.js", import.meta.url), "utf8");
+  let clearTimeoutReads = 0;
+  let setTimeoutReads = 0;
+  const context = { console };
+  Object.defineProperties(context, {
+    clearTimeout: {
+      configurable: true,
+      get() {
+        clearTimeoutReads += 1;
+        throw new Error("Forbidden clearTimeout global read");
+      },
+    },
+    setTimeout: {
+      configurable: true,
+      get() {
+        setTimeoutReads += 1;
+        throw new Error("Forbidden setTimeout global read");
+      },
+    },
+  });
+  context.globalThis = context;
+  vm.createContext(context);
+  vm.runInContext(source, context, { filename: "src/shell-relic-ui.js" });
+
+  const publisher = context.TapSurvivorShellRelicUi;
+  publisher.configureDefaultProviders({});
+  const recoveryTimers = [];
+  const recoveryFixture = createShellRelicTimingFixture(publisher.createShellRelicUi, {
+    relicSystem: createShellRelicFixtureRelicSystem(createBridgeRelicSystem),
+  });
+  const missing = exerciseShellRelicTiming(recoveryFixture, recoveryTimers);
+  publisher.configureDefaultProviders({
+    scheduler: createShellRelicTimerScheduler(recoveryTimers),
+  });
+  const recovered = exerciseShellRelicTiming(recoveryFixture, recoveryTimers);
+
+  const normalTimers = [];
+  publisher.configureDefaultProviders({
+    scheduler: createShellRelicTimerScheduler(normalTimers),
+  });
+  const normal = exerciseShellRelicTiming(
+    createShellRelicTimingFixture(publisher.createShellRelicUi, {
+      relicSystem: createShellRelicFixtureRelicSystem(createBridgeRelicSystem),
+    }),
+    normalTimers
+  );
+
+  const defaultPrecedenceTimers = [];
+  const callerTimers = [];
+  publisher.configureDefaultProviders({
+    scheduler: createShellRelicTimerScheduler(defaultPrecedenceTimers),
+  });
+  const caller = exerciseShellRelicTiming(
+    createShellRelicTimingFixture(publisher.createShellRelicUi, {
+      relicSystem: createShellRelicFixtureRelicSystem(createBridgeRelicSystem),
+      scheduler: createShellRelicTimerScheduler(callerTimers),
+    }),
+    callerTimers
+  );
+
+  return {
+    caller,
+    callerTimerCount: callerTimers.length,
+    clearTimeoutReads,
+    defaultPrecedenceTimerCount: defaultPrecedenceTimers.length,
+    missing,
+    normal,
+    recovered,
+    samePublisher: context.TapSurvivorShellRelicUi === publisher,
+    setTimeoutReads,
+    sourceHasNoTimerGlobalReaders:
+      !source.includes("globalThis.clearTimeout") && !source.includes("globalThis.setTimeout"),
+  };
+}
+
+function createShellRelicFixtureRelicSystem(createRelicSystem) {
+  return createRelicSystem({
+    relicDefs: shellRelicUiFixtureDefs,
+    random: () => 0,
+    weaponDefs: {},
+  });
+}
+
+function createShellRelicTimingFixture(createShellRelicUi, { relicSystem, scheduler } = {}) {
+  const ui = {
+    menuRelicInventory: createShellRelicFakeElement("div"),
+    menuRelicSlots: createShellRelicFakeElement("div"),
+  };
+  const save = {
+    equippedRelics: ["move_speed_focus_relic"],
+    towerFloor: 20,
+    unlockedRelics: ["move_speed_focus_relic", "pickup_radius_focus_relic"],
+  };
+  const images = [];
+  const options = {
+    assetResolver: shellRelicUiAssetResolver,
+    content: shellRelicUiContentFixture,
+    documentRef: { createElement: createShellRelicFakeElement },
+    getSave: () => save,
+    imageFactory: () => createShellRelicFakeImage(images),
+    persist() {},
+    relicDefs: shellRelicUiFixtureDefs,
+    relicSystem,
+    renderMeta() {},
+    ui,
+  };
+  if (scheduler !== undefined) options.scheduler = scheduler;
+
+  return {
+    controller: createShellRelicUi(options),
+    ui,
+  };
+}
+
+function createShellRelicTimerScheduler(timers) {
+  return {
+    animationSetTimeout(callback, delay) {
+      const timer = { callback, delay, kind: "animation" };
+      timers.push(timer);
+      return timer;
+    },
+    clearTimeout(timer) {
+      if (timer) timer.cleared = true;
+    },
+    setTimeout(callback, delay) {
+      const timer = { callback, delay, kind: "lock" };
+      timers.push(timer);
+      return timer;
+    },
+  };
+}
+
+function exerciseShellRelicTiming(fixture, timers) {
+  const timerStart = timers.length;
+  try {
+    fixture.controller.renderInventory();
+    const lockedButton = findShellRelicElement(
+      fixture.ui.menuRelicInventory,
+      (element) => String(element.innerHTML || "").includes("Locked Focus")
+    );
+    lockedButton?.eventListeners?.click?.[0]?.();
+    const lockPopup = findShellRelicElement(
+      fixture.ui.menuRelicInventory,
+      (element) => String(element.className || "").includes("relic-lock-popup")
+    );
+    const currentTimers = () => timers.slice(timerStart);
+    const lockTimer = currentTimers().find((timer) => timer.kind === "lock");
+    lockTimer?.callback?.();
+    const availableButton = findShellRelicElement(
+      fixture.ui.menuRelicInventory,
+      (element) => String(element.innerHTML || "").includes("Pickup Radius Focus")
+    );
+    availableButton?.eventListeners?.click?.[0]?.();
+    const animationTimer = currentTimers().find((timer) => timer.kind === "animation");
+    return {
+      error: "",
+      lockPopupHidden:
+        lockPopup?.classList?.contains("hidden") || String(lockPopup?.className || "").includes("hidden"),
+      lockTimerDelay: lockTimer?.delay,
+      previewTimerDelay: animationTimer?.delay,
+      timerCount: currentTimers().length,
+    };
+  } catch (error) {
+    return {
+      error: error.message,
+      lockPopupHidden: false,
+      lockTimerDelay: undefined,
+      previewTimerDelay: undefined,
+      timerCount: timers.length - timerStart,
+    };
+  }
 }
 
 function classicShellUiSnapshot(createShellUiController, options) {

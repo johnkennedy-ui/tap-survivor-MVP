@@ -219,6 +219,7 @@ export function createGameHarness({
     },
     __audioPlays: [],
     __audioOscillators: 0,
+    __shellRelicTimerCalls: [],
     __timeouts: 0,
     __startLaughOscillators: 0,
     AudioContext: function FakeAudioContext() {
@@ -427,6 +428,9 @@ export function createGameHarness({
   vm.runInContext(readSource("src/run-update.js"), context);
   vm.runInContext(readSource("src/debug.js"), context);
   vm.runInContext(readSource("src/shell-relic-ui.js"), context);
+  context.TapSurvivorShellRelicUi.configureDefaultProviders({
+    scheduler: createShellRelicScheduler(context),
+  });
   vm.runInContext(readSource("src/shell-ui.js"), context);
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
@@ -592,6 +596,23 @@ export function createGameHarness({
     dispatchVisibilityHidden() {
       context.document.visibilityState = "hidden";
       dispatchListeners(documentListeners, "visibilitychange", {});
+    },
+  };
+}
+
+function createShellRelicScheduler(globalRef) {
+  return {
+    clearTimeout(timer) {
+      globalRef.__shellRelicTimerCalls.push({ method: "clearTimeout" });
+      return globalRef.clearTimeout?.(timer);
+    },
+    setTimeout(callback, delay) {
+      globalRef.__shellRelicTimerCalls.push({ delay, method: "setTimeout" });
+      return globalRef.setTimeout?.(callback, delay);
+    },
+    animationSetTimeout(callback, delay) {
+      globalRef.__shellRelicTimerCalls.push({ delay, method: "animationSetTimeout" });
+      return globalRef.setTimeout?.(callback, delay);
     },
   };
 }
