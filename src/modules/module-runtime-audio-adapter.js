@@ -97,7 +97,48 @@ function createAudioSystem({ audioContextFactory, audioFactory, clock, onError, 
   }
 
   function playShopPurchase() {
-    return playProceduralCue("shop-purchase");
+    if (muted || typeof audioContextFactory !== "function") return false;
+
+    try {
+      const context = audioContextFactory("shop-purchase");
+      if (!context) return false;
+      context.resume?.();
+      if (
+        !Number.isFinite(context.currentTime) ||
+        !context.destination ||
+        typeof context.createGain !== "function" ||
+        typeof context.createOscillator !== "function"
+      ) {
+        return false;
+      }
+
+      const startAt = context.currentTime;
+      const master = context.createGain();
+      master.gain.setValueAtTime(0.0001, startAt);
+      master.gain.exponentialRampToValueAtTime(volume * 0.42, startAt + 0.015);
+      master.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.48);
+      master.connect(context.destination);
+
+      [880, 1175, 1480, 1976].forEach((frequency, index) => {
+        const offset = index * 0.055;
+        const osc = context.createOscillator();
+        const note = context.createGain();
+        osc.type = index % 2 ? "sine" : "triangle";
+        osc.frequency.setValueAtTime(frequency, startAt + offset);
+        osc.frequency.exponentialRampToValueAtTime(frequency * 0.82, startAt + offset + 0.16);
+        note.gain.setValueAtTime(0.0001, startAt + offset);
+        note.gain.exponentialRampToValueAtTime(0.6, startAt + offset + 0.012);
+        note.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.19);
+        osc.connect(note);
+        note.connect(master);
+        osc.start(startAt + offset);
+        osc.stop(startAt + offset + 0.22);
+      });
+      return true;
+    } catch (error) {
+      reportError(onError, "shop-purchase", error);
+      return false;
+    }
   }
 
   function playProceduralCue(cueId) {
