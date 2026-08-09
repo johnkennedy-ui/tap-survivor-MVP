@@ -45,7 +45,7 @@
     "scripts/smoke-shop-provider-parity.mjs": 0,
     "src/assets.js": 1,
     "src/audio.js": 1,
-    "src/balance-runtime.js": 7,
+    "src/balance-runtime.js": 4,
     "src/balance.js": 0,
     "src/combat-damage.js": 0,
     "src/combat.js": 1,

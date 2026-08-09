@@ -1593,6 +1593,7 @@
       balanceRuntime.configureDefaultProviders({
         content: rawContent,
         profiles: rawContent?.balanceProfiles,
+        storage: createBalanceStorageProvider(globalRef),
       });
     }
     const configuredContent = balanceRuntime?.content?.() || rawContent;
@@ -1695,6 +1696,14 @@
     return () => {
       const AudioContextRef = globalRef.AudioContext || globalRef.webkitAudioContext;
       return typeof AudioContextRef === "function" ? new AudioContextRef() : null;
+    };
+  }
+
+  function createBalanceStorageProvider(globalRef) {
+    return {
+      getItem: (key) => globalRef?.localStorage?.getItem?.(key),
+      removeItem: (key) => globalRef?.localStorage?.removeItem?.(key),
+      setItem: (key, value) => globalRef?.localStorage?.setItem?.(key, value),
     };
   }
 

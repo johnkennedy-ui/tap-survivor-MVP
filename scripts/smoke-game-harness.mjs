@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { content, contentSchema } from "../src/content.generated.mjs";
 import { createBrowserDependencyBagOptions } from "../src/app/browser-dependency-bag.js";
 import { composeRuntime } from "../src/app/compose-runtime.js";
+import { createGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createModuleGameDependencyBag } from "../src/modules/module-game-dependencies.js";
 import { createModuleGameLifecycleOwner } from "../src/modules/module-game-lifecycle.js";
 
@@ -435,10 +436,14 @@ export function createGameHarness({
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
   const classicContent = context.TapSurvivorContent;
-  context.TapSurvivorBalanceRuntime.configureDefaultProviders({
-    content: classicContent,
-    profiles: classicContent.balanceProfiles,
-  });
+  if (fakeCombat) {
+    context.TapSurvivorBalanceRuntime.configureDefaultProviders({
+      content: classicContent,
+      profiles: classicContent.balanceProfiles,
+    });
+  } else {
+    createGameDependencyBag({ globalRef: context });
+  }
   const platform = {
     documentRef: context.document,
     runtimeGlobal: context,

@@ -23,9 +23,65 @@ function balanceProviderErrorSnapshot(callback) {
   return { code: "", missing: [], name: "" };
 }
 
-function balanceProviderLifecycleSnapshot() {
+function createMapStorage(entries = {}) {
+  const store = new Map(Object.entries(entries));
+  return {
+    getItem(key) {
+      return store.get(key) || null;
+    },
+    removeItem(key) {
+      store.delete(key);
+    },
+    setItem(key, value) {
+      store.set(key, value);
+    },
+    store,
+  };
+}
+
+function createProviderContent() {
+  return {
+    bossAbilities: {},
+    bossConfig: {},
+    enemyTypes: [],
+    levels: [],
+    maps: [],
+    relics: [],
+    shopItems: [],
+    tuning: { loot: {}, shop: {} },
+    weapons: { spark_bolt: { damage: 12 } },
+  };
+}
+
+function createProviderProfiles() {
+  return [
+    { overrides: {}, profileId: "default" },
+    {
+      overrides: {
+        weapons: {
+          spark_bolt: { damage: 18 },
+        },
+      },
+      profileId: "testing",
+    },
+  ];
+}
+
+function createThrowingStorage() {
+  const fail = () => {
+    throw new Error("Storage unavailable");
+  };
+  return {
+    getItem: fail,
+    removeItem: fail,
+    setItem: fail,
+  };
+}
+
+function createBalanceVmContext() {
   let contentReads = 0;
   let profileReads = 0;
+  let storageReads = 0;
   let publishedContent;
   const context = { console };
   Object.defineProperties(context, {
@@ -46,66 +102,123 @@ function balanceProviderLifecycleSnapshot() {
         publishedContent = value;
       },
     },
+    localStorage: {
+      configurable: true,
+      get() {
+        storageReads += 1;
+        throw new Error("Forbidden direct localStorage global read");
+      },
+    },
   });
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(balanceRuntimeSource, context, { filename: "src/balance-runtime.js" });
 
+  return {
+    context,
+    counts: () => ({ contentReads, profileReads, storageReads }),
+    publishedContent: () => publishedContent,
+  };
+}
+
+function balanceProviderLifecycleSnapshot() {
+  const vmContext = createBalanceVmContext();
+  const { context } = vmContext;
   const publisher = context.TapSurvivorBalanceRuntime;
   const debugPublisher = context.TapSurvivorDebugBalance;
   const unconfiguredContent = balanceProviderErrorSnapshot(() => publisher.content());
   const unconfiguredProfiles = balanceProviderErrorSnapshot(() => debugPublisher.listProfiles());
-  const providerContent = {
-    bossAbilities: {},
-    bossConfig: {},
-    enemyTypes: [],
-    levels: [],
-    maps: [],
-    relics: [],
-    shopItems: [],
-    tuning: { loot: {}, shop: {} },
-    weapons: { spark_bolt: { damage: 12 } },
-  };
-  const providerProfiles = [
-    { overrides: {}, profileId: "default" },
-    {
-      overrides: {
-        weapons: {
-          spark_bolt: { damage: 18 },
-        },
+  const providerContent = createProviderContent();
+  const providerProfiles = createProviderProfiles();
+  const explicitStorage = createMapStorage({
+    "tapSurvivor.balanceOverrides": JSON.stringify({
+      weapons: {
+        spark_bolt: { damage: 99 },
       },
-      profileId: "testing",
-    },
-  ];
+    }),
+    "tapSurvivor.balanceProfile": "testing",
+  });
   const missingProfiles = balanceProviderErrorSnapshot(() =>
     publisher.configureDefaultProviders({ content: providerContent })
   );
+  publisher.configureDefaultProviders({ content: providerContent, profiles: providerProfiles, storage: explicitStorage });
+  const explicitStorageLoad = {
+    activeProfile: publisher.getActiveProfile(),
+    damage: publisher.content().weapons.spark_bolt.damage,
+  };
   publisher.configureDefaultProviders({ content: providerContent, profiles: providerProfiles });
+  debugPublisher.applyOverrides({
+    weapons: {
+      spark_bolt: { damage: 99 },
+    },
+  });
+  const repeatedConfiguration = {
+    activeProfile: publisher.getActiveProfile(),
+    damage: publisher.content().weapons.spark_bolt.damage,
+  };
+  debugPublisher.setProfile("testing");
+  const omittedStoragePreserved = explicitStorage.store.get("tapSurvivor.balanceProfile") === "testing";
+  debugPublisher.applyOverrides({
+    weapons: {
+      spark_bolt: { damage: 99 },
+    },
+  });
+  publisher.configureDefaultProviders({
+    content: providerContent,
+    profiles: providerProfiles,
+    storage: createThrowingStorage(),
+  });
+  debugPublisher.saveOverrides();
+  const recoveredStorage = createMapStorage();
+  publisher.configureDefaultProviders({ content: providerContent, profiles: providerProfiles, storage: recoveredStorage });
+  debugPublisher.saveOverrides();
+  const recoveredOverrideSaved = recoveredStorage.store.has("tapSurvivor.balanceOverrides");
+  debugPublisher.clearOverrides();
+  const recoveredOverrideCleared = !recoveredStorage.store.has("tapSurvivor.balanceOverrides");
+  const counts = vmContext.counts();
+
+  return {
+    activeProfileAfterClear: publisher.getActiveProfile(),
+    contentReads: counts.contentReads,
+    debugIdentity: context.TapSurvivorDebugBalance === debugPublisher,
+    explicitStorageLoad,
+    missingProfiles,
+    omittedStoragePreserved,
+    profileReads: counts.profileReads,
+    publishedContentIsProvider: vmContext.publishedContent() === providerContent,
+    recoveredOverrideCleared,
+    recoveredOverrideSaved,
+    repeatedConfiguration,
+    runtimeContentIsProvider: publisher.content() === providerContent,
+    runtimeIdentity: context.TapSurvivorBalanceRuntime === publisher,
+    storageReads: counts.storageReads,
+    unconfiguredContent,
+    unconfiguredProfiles,
+  };
+}
+
+function unavailableStorageSnapshot(storage) {
+  const vmContext = createBalanceVmContext();
+  const { context } = vmContext;
+  const publisher = context.TapSurvivorBalanceRuntime;
+  const profiles = createProviderProfiles();
+  const providers = { content: createProviderContent(), profiles };
+  if (storage !== undefined) providers.storage = storage;
+  publisher.configureDefaultProviders(providers);
+  const debugPublisher = context.TapSurvivorDebugBalance;
+  const initialProfile = debugPublisher.getActiveProfile();
   debugPublisher.setProfile("testing");
   debugPublisher.applyOverrides({
     weapons: {
       spark_bolt: { damage: 99 },
     },
   });
-  publisher.configureDefaultProviders({ content: providerContent, profiles: providerProfiles });
-  const repeatedConfiguration = {
-    activeProfile: publisher.getActiveProfile(),
-    damage: publisher.content().weapons.spark_bolt.damage,
-  };
+  debugPublisher.saveOverrides();
   debugPublisher.clearOverrides();
-
   return {
-    activeProfileAfterClear: publisher.getActiveProfile(),
-    contentReads,
-    debugIdentity: context.TapSurvivorDebugBalance === debugPublisher,
-    missingProfiles,
-    profileReads,
-    publishedContentIsProvider: publishedContent === providerContent,
-    repeatedConfiguration,
-    runtimeContentIsProvider: publisher.content() === providerContent,
-    runtimeIdentity: context.TapSurvivorBalanceRuntime === publisher,
-    unconfiguredContent,
-    unconfiguredProfiles,
+    activeProfile: debugPublisher.getActiveProfile(),
+    initialProfile,
+    storageReads: vmContext.counts().storageReads,
   };
 }
 
@@ -130,6 +243,12 @@ check(
   providerLifecycle.contentReads === 0 && providerLifecycle.profileReads === 0
 );
 check(
+  "explicit balance storage loads persisted profile and overrides without reading the poisoned global",
+  providerLifecycle.explicitStorageLoad.activeProfile === "testing" &&
+    providerLifecycle.explicitStorageLoad.damage === 99 &&
+    providerLifecycle.storageReads === 0
+);
+check(
   "balance runtime recovers the same runtime and debug publishers after configuration",
   providerLifecycle.runtimeIdentity &&
     providerLifecycle.debugIdentity &&
@@ -141,6 +260,24 @@ check(
   providerLifecycle.repeatedConfiguration.activeProfile === "testing" &&
     providerLifecycle.repeatedConfiguration.damage === 99 &&
     providerLifecycle.activeProfileAfterClear === "testing"
+);
+check(
+  "omitted storage preserves the explicit capability and recovered replacement persists then clears overrides",
+  providerLifecycle.omittedStoragePreserved &&
+    providerLifecycle.recoveredOverrideSaved &&
+    providerLifecycle.recoveredOverrideCleared
+);
+
+const unavailableStorageSnapshots = [
+  unavailableStorageSnapshot(undefined),
+  unavailableStorageSnapshot(null),
+  unavailableStorageSnapshot(createThrowingStorage()),
+];
+check(
+  "omitted, null, and throwing storage retain in-memory behavior without global reads",
+  unavailableStorageSnapshots.every(
+    (snapshot) => snapshot.initialProfile === "default" && snapshot.activeProfile === "testing" && snapshot.storageReads === 0
+  )
 );
 
 const defaultHarness = createGameHarness({ fakeCombat: true });
@@ -159,14 +296,18 @@ check(
   defaultHarness.context.TapSurvivorBalanceRuntime.content() === defaultHarness.context.TapSurvivorContent
 );
 
-const queryHarness = createGameHarness({ fakeCombat: true, search: "?balance=dev-fast" });
+const queryHarness = createGameHarness({
+  search: "?balance=dev-fast",
+  storageEntries: {
+    "tapSurvivor.balanceProfile": "testing",
+  },
+});
 queryHarness.elements.get("titleStartGame").click();
 const queryGame = queryHarness.context.__tapSurvivorHarness.getGame();
 check("query balance profile is selected before next run", queryHarness.context.TapSurvivorDebugBalance.getActiveProfile() === "dev-fast");
 check("query profile is visible on next run state", queryGame.activeBalanceProfile === undefined || queryHarness.context.TapSurvivorContent.activeBalanceProfile === "dev-fast");
 
 const storageHarness = createGameHarness({
-  fakeCombat: true,
   storageEntries: {
     "tapSurvivor.balanceProfile": "testing",
   },
@@ -174,12 +315,36 @@ const storageHarness = createGameHarness({
 check("localStorage balance profile is selected", storageHarness.context.TapSurvivorDebugBalance.getActiveProfile() === "testing");
 
 const fallbackHarness = createGameHarness({
-  fakeCombat: true,
   storageEntries: {
     "tapSurvivor.balanceProfile": "missing-profile",
   },
 });
 check("unknown profile falls back safely", fallbackHarness.context.TapSurvivorDebugBalance.getActiveProfile() === "default");
+
+const recoveryHarness = createGameHarness({
+  storageEntries: {
+    "tapSurvivor.balanceProfile": "testing",
+  },
+});
+const recoveryContext = recoveryHarness.context;
+const recoveredGlobalStorage = recoveryContext.localStorage;
+recoveryContext.localStorage = createThrowingStorage();
+recoveryContext.TapSurvivorDebugBalance.setProfile("testing");
+recoveryContext.localStorage = recoveredGlobalStorage;
+recoveryContext.TapSurvivorDebugBalance.applyOverrides({
+  weapons: {
+    spark_bolt: { damage: 99 },
+  },
+});
+recoveryContext.TapSurvivorDebugBalance.saveOverrides();
+const recoveredGlobalOverrideSaved = recoveredGlobalStorage.store.has("tapSurvivor.balanceOverrides");
+recoveryContext.TapSurvivorDebugBalance.clearOverrides();
+check(
+  "classic dependency bag re-resolves recovered injected globalRef storage",
+  recoveryContext.TapSurvivorDebugBalance.getActiveProfile() === "testing" &&
+    recoveredGlobalOverrideSaved &&
+    !recoveredGlobalStorage.store.has("tapSurvivor.balanceOverrides")
+);
 
 const overrideHarness = createGameHarness({ fakeCombat: true });
 const debugBalance = overrideHarness.context.TapSurvivorDebugBalance;

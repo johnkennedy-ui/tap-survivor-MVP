@@ -138,25 +138,25 @@ function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function readStorage(key) {
+function readStorage(storageRef, key) {
   try {
-    return globalThis.localStorage?.getItem(key) || "";
+    return storageRef.current?.getItem?.(key) || "";
   } catch {
     return "";
   }
 }
 
-function writeStorage(key, value) {
+function writeStorage(storageRef, key, value) {
   try {
-    globalThis.localStorage?.setItem(key, value);
+    storageRef.current?.setItem?.(key, value);
   } catch {
     // Storage can be unavailable in private or embedded contexts; runtime still works in memory.
   }
 }
 
-function removeStorage(key) {
+function removeStorage(storageRef, key) {
   try {
-    globalThis.localStorage?.removeItem(key);
+    storageRef.current?.removeItem?.(key);
   } catch {
     // Storage can be unavailable in private or embedded contexts; runtime still works in memory.
   }
@@ -329,15 +329,17 @@ function replaceObject(target, source) {
   });
 }
 
-function createRuntimeBalance({ content, profiles }) {
+function createRuntimeBalance({ content, profiles, storageRef }) {
   const baseContent = clone(content || {});
   const profileList = Array.isArray(profiles) ? profiles : [];
   const profileById = Object.fromEntries(profileList.map((profile) => [profile.profileId, profile]));
   const activeContent = content || {};
   let runtimeOverrides = {};
-  let activeProfileId = profileIdOrDefault(decodeURIComponent(queryBalanceProfile() || "") || readStorage(profileStorageKey));
+  let activeProfileId = profileIdOrDefault(
+    decodeURIComponent(queryBalanceProfile() || "") || readStorage(storageRef, profileStorageKey),
+  );
 
-  const savedOverrides = readStorage(overrideStorageKey);
+  const savedOverrides = readStorage(storageRef, overrideStorageKey);
   if (savedOverrides) {
     try {
       const parsed = JSON.parse(savedOverrides);
@@ -366,8 +368,8 @@ function createRuntimeBalance({ content, profiles }) {
     const nextProfile = profileIdOrDefault(profileId);
     activeProfileId = nextProfile;
     runtimeOverrides = {};
-    writeStorage(profileStorageKey, nextProfile);
-    removeStorage(overrideStorageKey);
+    writeStorage(storageRef, profileStorageKey, nextProfile);
+    removeStorage(storageRef, overrideStorageKey);
     return {
       activeProfile: activeProfileId,
       content: rebuild(),
@@ -392,7 +394,7 @@ function createRuntimeBalance({ content, profiles }) {
 
   function clearOverrides() {
     runtimeOverrides = {};
-    removeStorage(overrideStorageKey);
+    removeStorage(storageRef, overrideStorageKey);
     return {
       activeProfile: activeProfileId,
       content: rebuild(),
@@ -400,7 +402,7 @@ function createRuntimeBalance({ content, profiles }) {
   }
 
   function saveOverrides() {
-    writeStorage(overrideStorageKey, JSON.stringify(runtimeOverrides));
+    writeStorage(storageRef, overrideStorageKey, JSON.stringify(runtimeOverrides));
     return clone(runtimeOverrides);
   }
 
@@ -459,6 +461,7 @@ function createRuntimeBalanceProvider() {
   let configuredContent;
   let configuredProfiles;
   let configuredRuntime;
+  const storageRef = { current: null };
 
   function requireConfiguredRuntime() {
     if (configuredRuntime) return configuredRuntime;
@@ -468,16 +471,20 @@ function createRuntimeBalanceProvider() {
   const runtimeBalance = {
     applyOverrides: (...args) => requireConfiguredRuntime().applyOverrides(...args),
     clearOverrides: (...args) => requireConfiguredRuntime().clearOverrides(...args),
-    configureDefaultProviders({ content, profiles } = {}) {
+    configureDefaultProviders(providers = {}) {
+      const { content, profiles } = providers;
       const missing = [];
       if (!content || typeof content !== "object") missing.push("content");
       if (!Array.isArray(profiles)) missing.push("profiles");
       if (missing.length) throw balanceProviderError(missing);
+      if (Object.prototype.hasOwnProperty.call(providers, "storage")) {
+        storageRef.current = providers.storage || null;
+      }
       if (content === configuredContent && profiles === configuredProfiles) return runtimeBalance;
 
       configuredContent = content;
       configuredProfiles = profiles;
-      configuredRuntime = createRuntimeBalance({ content, profiles });
+      configuredRuntime = createRuntimeBalance({ content, profiles, storageRef });
       return runtimeBalance;
     },
     content: (...args) => requireConfiguredRuntime().content(...args),

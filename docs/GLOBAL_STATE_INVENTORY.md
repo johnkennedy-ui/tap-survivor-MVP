@@ -41,8 +41,10 @@ Generated content globals:
   `TapSurvivorContent.balanceProfiles` property. `src/balance-runtime.js` does not read either generated global: it
   publishes stable `TapSurvivorBalanceRuntime` and `TapSurvivorDebugBalance` objects that fail closed with
   `TAP_SURVIVOR_BALANCE_PROVIDER_MISSING` until `src/modules/game-dependencies.js` injects the raw content and that
-  attached profiles value. Valid same-reference configuration preserves active profile and overrides while the runtime
-  republishes the configured `TapSurvivorContent`.
+  attached profiles value. The dependency bag also supplies a private balance-storage capability derived from its
+  explicit `globalRef`; omitted or unavailable storage leaves balance state in memory. Valid same-reference
+  configuration preserves active profile and overrides while the runtime republishes the configured
+  `TapSurvivorContent`.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
 - `src/effects.js` is the generated classic bridge for run upgrade effects, shop item effects, shop bonus defaults, and
@@ -153,7 +155,9 @@ Runtime module globals:
   `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
 
 Browser/platform globals:
-- `globalThis.localStorage` and `globalThis.location` are used by dev balance profile/override selection.
+- `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
+  capability from the classic dependency bag; `globalThis.localStorage` remains in the separately owned storage-adapter
+  platform selection.
 - `globalThis.Capacitor?.Plugins?.Preferences` and `globalThis.localStorage` are used by storage adapter platform selection.
 - Audio context construction is supplied to the classic audio publisher through the `globalRef` boundary in
   `src/modules/game-dependencies.js`; `src/audio.js` has no browser audio-global reader.
