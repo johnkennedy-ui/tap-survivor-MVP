@@ -22,6 +22,7 @@ const gameBanners = readRequired("src/game-banners.js");
 const runLifecycle = readRequired("src/run-lifecycle.js");
 const gameRuntime = readRequired("src/game-runtime.js");
 const gameDependencies = readRequired("src/game-dependencies.js");
+const moduleGameDependencies = readRequired("src/modules/game-dependencies.js");
 const styles = readRequired("src/styles.css");
 const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
@@ -406,13 +407,26 @@ check(
     !combat.includes("globalThis.TapSurvivorWeaponFire"),
 );
 check(
-  "shared enemy helper exists",
-  enemies.includes("TapSurvivorEnemies") &&
-    enemySpawning.includes("TapSurvivorEnemySpawning") &&
-    enemyBehaviors.includes("TapSurvivorEnemyBehaviors") &&
-    gameDependencies.includes("TapSurvivorEnemies") &&
-    gameDependencies.includes("TapSurvivorEnemyBehaviors") &&
-    gameDependencies.includes("TapSurvivorEnemySpawning") &&
+  "enemy helpers are native-injected without classic publishers",
+  !enemies.includes("TapSurvivorEnemies") &&
+    !enemySpawning.includes("TapSurvivorEnemySpawning") &&
+    !enemyBehaviors.includes("TapSurvivorEnemyBehaviors") &&
+    moduleGameDependencies.includes('import { createEnemySystem } from "./enemies.js"') &&
+    moduleGameDependencies.includes(
+      'import { createEnemyBehaviorSystem } from "./enemy-behaviors.js"'
+    ) &&
+    moduleGameDependencies.includes(
+      'import { createEnemySpawnSystem } from "./enemy-spawning.js"'
+    ) &&
+    moduleGameDependencies.includes("enemies: { createEnemySystem }") &&
+    moduleGameDependencies.includes("enemyBehaviors: { createEnemyBehaviorSystem }") &&
+    moduleGameDependencies.includes("enemySpawning: { createEnemySpawnSystem }") &&
+    !gameDependencies.includes("TapSurvivorEnemies") &&
+    !gameDependencies.includes("TapSurvivorEnemyBehaviors") &&
+    !gameDependencies.includes("TapSurvivorEnemySpawning") &&
+    gameDependencies.includes("enemies: { createEnemySystem }") &&
+    gameDependencies.includes("enemyBehaviors: { createEnemyBehaviorSystem }") &&
+    gameDependencies.includes("enemySpawning: { createEnemySpawnSystem }") &&
     game.includes("enemies,") &&
     game.includes("enemyBehaviors,") &&
     game.includes("enemySpawning,") &&
@@ -422,8 +436,8 @@ check(
     !combat.includes("globalThis.TapSurvivorEnemies"),
 );
 check(
-  "shared enemy behavior helper exists",
-  enemyBehaviors.includes("TapSurvivorEnemyBehaviors") &&
+  "enemy behavior helper remains factory-wired",
+  !enemyBehaviors.includes("TapSurvivorEnemyBehaviors") &&
     enemies.includes("enemyBehaviors.createEnemyBehaviorSystem") &&
     !enemies.includes("globalThis.TapSurvivorEnemyBehaviors"),
 );

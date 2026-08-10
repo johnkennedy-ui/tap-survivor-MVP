@@ -234,7 +234,4 @@ function createEnemySystem({
   };
 }
 
-globalThis.TapSurvivorEnemies = {
-  createEnemySystem,
-};
 })();

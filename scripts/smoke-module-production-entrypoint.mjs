@@ -52,6 +52,11 @@ const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
   "TapSurvivorWeaponFire",
   "TapSurvivorLevelUp",
 ]);
+const BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
+  "TapSurvivorEnemies",
+  "TapSurvivorEnemyBehaviors",
+  "TapSurvivorEnemySpawning",
+]);
 const retiredBrowserNamespaceSourceFiles = Object.freeze([
   "src/app/browser-dependency-bag.js",
   "src/app/production-module-entrypoint.js",
@@ -225,9 +230,17 @@ check(
     )
 );
 check(
-  "classic root publishers for all seven retired production namespaces remain preserved for GR-3",
-  RETIRED_BROWSER_NAMESPACE_NAMES.every((name) =>
+  "classic root publishers for unselected retired production namespaces remain preserved for later batches",
+  RETIRED_BROWSER_NAMESPACE_NAMES.filter(
+    (name) => !BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name)
+  ).every((name) =>
     classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
+  )
+);
+check(
+  "classic root publishers for Batch 1 enemy namespaces are retired",
+  BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
+    (name) => !classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
   )
 );
 

@@ -1,4 +1,5 @@
 import { createGameHarness } from "./smoke-game-harness.mjs";
+import { createEnemyBehaviorSystem } from "../src/modules/enemy-behaviors.js";
 
 function check(name, pass) {
   console.log(`${pass ? "PASS" : "FAIL"} ${name}`);
@@ -14,7 +15,7 @@ function createBehaviorShot(enemy) {
     enemyBolts: [],
     bossAttacks: [],
   };
-  const behavior = harness.context.TapSurvivorEnemyBehaviors.createEnemyBehaviorSystem({
+  const behavior = createEnemyBehaviorSystem({
     canvas: harness.elements.get("game"),
     bossAbilities: content.bossAbilities,
     boltConfig: content.bossConfig.enemyBolt,

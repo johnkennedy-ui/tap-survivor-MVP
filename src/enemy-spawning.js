@@ -140,7 +140,4 @@ function createEnemySpawnSystem({
   };
 }
 
-globalThis.TapSurvivorEnemySpawning = {
-  createEnemySpawnSystem,
-};
 })();

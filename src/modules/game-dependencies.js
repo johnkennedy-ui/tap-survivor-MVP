@@ -1,6 +1,9 @@
 import { floorDifficulty } from "./balance.js";
 import { createCombatDamageSystem } from "./combat-damage.js";
 import { createContentRegistry } from "./content-registry.js";
+import { createEnemyBehaviorSystem } from "./enemy-behaviors.js";
+import { createEnemySpawnSystem } from "./enemy-spawning.js";
+import { createEnemySystem } from "./enemies.js";
 import { createGameBannerSystem } from "./game-banners.js";
 import { createGameRuntimeController } from "./game-runtime.js";
 import { createMapSystem } from "./map-system.js";
@@ -65,9 +68,9 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     debug: requireGlobal(globalRef, "TapSurvivorDebug"),
     debugBalance: globalRef.TapSurvivorDebugBalance,
     effects: requireValue(effects, "TapSurvivorEffects"),
-    enemies: requireGlobal(globalRef, "TapSurvivorEnemies"),
-    enemyBehaviors: requireGlobal(globalRef, "TapSurvivorEnemyBehaviors"),
-    enemySpawning: requireGlobal(globalRef, "TapSurvivorEnemySpawning"),
+    enemies: { createEnemySystem },
+    enemyBehaviors: { createEnemyBehaviorSystem },
+    enemySpawning: { createEnemySpawnSystem },
     gameBanners: { createGameBannerSystem },
     gameRuntime: { createGameRuntimeController },
     input: {

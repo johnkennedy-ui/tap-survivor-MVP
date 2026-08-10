@@ -124,13 +124,15 @@ Generated content globals:
   compatibility provider global.
 - `src/combat.js` now receives combat damage, enemy system, and weapon fire dependencies through `src/game.js` factory
   wiring; combat damage is dependency-bag injected instead of reading a runtime global.
-- `src/enemies.js` now receives enemy behavior and enemy spawning dependencies through `src/game.js` and
-  `src/combat.js` factory wiring; floor difficulty is dependency-bag injected instead of read from a runtime global.
+- The handwritten classic enemy files no longer publish `TapSurvivorEnemies`, `TapSurvivorEnemyBehaviors`, or
+  `TapSurvivorEnemySpawning`; `src/modules/game-dependencies.js` injects their native factory functions as
+  `enemies`, `enemyBehaviors`, and `enemySpawning` while preserving the existing `src/game.js` dependency-bag API.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.
 - Native dependency bag injection now imports balance, content registry, math, level-up choices, shop pricing, weapon
-  targeting, combat damage, and `createGameRuntimeController` directly; those helpers no longer appear as runtime globals.
+  targeting, combat damage, the three enemy factories, and `createGameRuntimeController` directly; those helpers no
+  longer appear as runtime globals.
 - `src/game-runtime.js` deliberately retains the `TapSurvivorGameRuntime` classic publisher for the current
   `src/game.js` script-order boundary. `src/modules/game-dependencies.js` no longer reads that publisher: it supplies
   the statically imported native controller through its dependency bag. This reader-only retirement intentionally
@@ -146,9 +148,9 @@ Runtime module globals:
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
   `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.
-- Gameplay systems: `TapSurvivorRunUpdate`, `TapSurvivorEnemies`,
-  `TapSurvivorEnemyBehaviors`, `TapSurvivorEnemySpawning`, `TapSurvivorCombat`,
-  `TapSurvivorPickups`, `TapSurvivorRelics`.
+- Gameplay systems: `TapSurvivorRunUpdate`, `TapSurvivorCombat`, `TapSurvivorPickups`, `TapSurvivorRelics`.
+  The retired enemy factories are injected through `TapSurvivorGameDependencies` rather than published as
+  classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`,
   `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`.
 - Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`,

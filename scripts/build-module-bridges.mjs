@@ -370,6 +370,30 @@ function createClassicShellRelicUi(options = {}) {
         exports: ["createContentRegistry"],
       },
       {
+        source: "src/modules/enemies.js",
+        exports: [
+          "MODULE_NATIVE_ENEMY_SLOTS",
+          "MODULE_NATIVE_ENEMY_PROOF_SLOTS",
+          "createEnemySystem",
+        ],
+      },
+      {
+        source: "src/modules/enemy-behaviors.js",
+        exports: [
+          "MODULE_NATIVE_ENEMY_BEHAVIOR_SLOTS",
+          "MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS",
+          "createEnemyBehaviorSystem",
+        ],
+      },
+      {
+        source: "src/modules/enemy-spawning.js",
+        exports: [
+          "MODULE_NATIVE_ENEMY_SPAWN_SLOTS",
+          "MODULE_NATIVE_ENEMY_SPAWN_PROOF_SLOTS",
+          "createEnemySpawnSystem",
+        ],
+      },
+      {
         source: "src/modules/game-banners.js",
         exports: ["createGameBannerSystem"],
       },

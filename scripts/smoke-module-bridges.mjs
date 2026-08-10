@@ -5,6 +5,13 @@ import { createGameHarness } from "./smoke-game-harness.mjs";
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import { createContentRegistry as createModuleContentRegistry } from "../src/modules/content-registry.js";
 import { createEffects as createModuleEffects } from "../src/modules/effects.js";
+import {
+  createEnemyBehaviorSystem as createModuleEnemyBehaviorSystem,
+} from "../src/modules/enemy-behaviors.js";
+import {
+  createEnemySpawnSystem as createModuleEnemySpawnSystem,
+} from "../src/modules/enemy-spawning.js";
+import { createEnemySystem as createModuleEnemySystem } from "../src/modules/enemies.js";
 import { createGameBannerSystem as createModuleGameBannerSystem } from "../src/modules/game-banners.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
@@ -1421,6 +1428,14 @@ check(
   "game dependency bridge does not read the balance profiles global",
   !gameDependenciesBridge.source.includes("TapSurvivorBalanceProfiles")
 );
+check(
+  "game dependency bridge has no retired enemy publisher readers",
+  ["TapSurvivorEnemies", "TapSurvivorEnemyBehaviors", "TapSurvivorEnemySpawning"].every(
+    (name) =>
+      !gameDependenciesBridge.source.includes(`globalThis.${name}`) &&
+      !gameDependenciesBridge.source.includes(`\"${name}\"`)
+  )
+);
 
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
@@ -1434,6 +1449,22 @@ check(
   "module dependency bag exposes statically imported game runtime controller",
   moduleGameDependenciesSnapshot.__bag.gameRuntime.createGameRuntimeController ===
     createModuleGameRuntimeController
+);
+check(
+  "module dependency bag exposes statically imported native enemy factories",
+  moduleGameDependenciesSnapshot.__bag.enemies.createEnemySystem === createModuleEnemySystem &&
+    moduleGameDependenciesSnapshot.__bag.enemyBehaviors.createEnemyBehaviorSystem ===
+      createModuleEnemyBehaviorSystem &&
+    moduleGameDependenciesSnapshot.__bag.enemySpawning.createEnemySpawnSystem ===
+      createModuleEnemySpawnSystem
+);
+check(
+  "generated classic dependency bag exposes enemy factory functions without classic publishers",
+  [
+    bridgeGameDependenciesSnapshot.__bag.enemies.createEnemySystem,
+    bridgeGameDependenciesSnapshot.__bag.enemyBehaviors.createEnemyBehaviorSystem,
+    bridgeGameDependenciesSnapshot.__bag.enemySpawning.createEnemySpawnSystem,
+  ].every((factory) => typeof factory === "function")
 );
 check(
   "dependency bag resolves native game runtime with retained target global",
@@ -2201,9 +2232,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorBalance",
     "TapSurvivorCombat",
     "TapSurvivorCombatDamage",
-    "TapSurvivorEnemies",
-    "TapSurvivorEnemyBehaviors",
-    "TapSurvivorEnemySpawning",
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
     "TapSurvivorEffects",
@@ -2262,6 +2290,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
+    "TapSurvivorEnemies",
+    "TapSurvivorEnemyBehaviors",
+    "TapSurvivorEnemySpawning",
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
     "TapSurvivorMapSystem",
@@ -2438,9 +2469,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasContentRegistry: typeof bag.contentRegistry.createContentRegistry === "function",
     hasBalance: typeof bag.balance.floorDifficulty === "function",
     hasCombatDamage: typeof bag.combatDamage.createCombatDamageSystem === "function",
-    hasEnemies: bag.enemies.name === "TapSurvivorEnemies",
-    hasEnemyBehaviors: bag.enemyBehaviors.name === "TapSurvivorEnemyBehaviors",
-    hasEnemySpawning: bag.enemySpawning.name === "TapSurvivorEnemySpawning",
+    hasEnemies: typeof bag.enemies?.createEnemySystem === "function",
+    hasEnemyBehaviors: typeof bag.enemyBehaviors?.createEnemyBehaviorSystem === "function",
+    hasEnemySpawning: typeof bag.enemySpawning?.createEnemySpawnSystem === "function",
     hasMapSystem: typeof bag.mapSystem?.createMapSystem === "function",
     hasRunLifecycle: typeof bag.runLifecycle?.createRunLifecycle === "function",
     hasRunState: typeof bag.runState?.createRunStateSystem === "function",

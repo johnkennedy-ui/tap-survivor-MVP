@@ -74,6 +74,14 @@ check(
   !generatedClassicGameDependenciesSource.includes("globalThis.TapSurvivorShop")
 );
 check(
+  "generated classic dependency bridge has no retired enemy publisher readers",
+  ["TapSurvivorEnemies", "TapSurvivorEnemyBehaviors", "TapSurvivorEnemySpawning"].every(
+    (name) =>
+      !generatedClassicGameDependenciesSource.includes(`globalThis.${name}`) &&
+      !generatedClassicGameDependenciesSource.includes(`\"${name}\"`)
+  )
+);
+check(
   "selected-browser Shop adapter fails closed before native binding and recovers after binding",
   selectedBrowser.unboundAdapterFailedClosed && selectedBrowser.boundAdapterIdentityPreserved
 );
@@ -209,9 +217,6 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
     "TapSurvivorEffects",
-    "TapSurvivorEnemies",
-    "TapSurvivorEnemyBehaviors",
-    "TapSurvivorEnemySpawning",
     "TapSurvivorGameRuntime",
     "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
@@ -557,9 +562,6 @@ function createCanvas() {
 function createSelectedBrowserGlobal() {
   return {
     TapSurvivorCombat: { createCombatSystem: () => ({}) },
-    TapSurvivorEnemies: { createEnemySystem: () => ({}) },
-    TapSurvivorEnemyBehaviors: { createEnemyBehaviorSystem: () => ({}) },
-    TapSurvivorEnemySpawning: { createEnemySpawnSystem: () => ({}) },
     TapSurvivorLevelUp: { createLevelUpSystem: () => ({}) },
     TapSurvivorProgression: { createProgressionSystem: () => ({}) },
     TapSurvivorQuests: {

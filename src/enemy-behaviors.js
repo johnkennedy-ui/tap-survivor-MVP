@@ -234,7 +234,4 @@
     };
   }
 
-  globalThis.TapSurvivorEnemyBehaviors = {
-    createEnemyBehaviorSystem,
-  };
 })();
