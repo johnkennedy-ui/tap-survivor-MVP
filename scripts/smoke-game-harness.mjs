@@ -457,16 +457,18 @@ export function createGameHarness({
   let lifecycle;
   let runtime;
   let shellUi;
-  const classicAudioSystem = context.TapSurvivorAudio.createAudioSystem({});
+  const createAudioContext = () => {
+    const AudioContextCtor = context.AudioContext || context.webkitAudioContext;
+    return typeof AudioContextCtor === "function" ? new AudioContextCtor() : null;
+  };
+  const classicAudioSystem = context.TapSurvivorAudio.createAudioSystem({
+    audioContextFactory: createAudioContext,
+  });
   let playStartAudio = () => {};
   const startRun = () => lifecycle?.startRun?.();
   const dependencyBagOptions = createBrowserDependencyBagOptions({
     audioAdapters: {
-      audioContextFactory: (cueId) => {
-        if (cueId === "shop-purchase") classicAudioSystem.playShopPurchase();
-        const AudioContextCtor = context.AudioContext || context.webkitAudioContext;
-        return typeof AudioContextCtor === "function" ? new AudioContextCtor() : null;
-      },
+      audioContextFactory: createAudioContext,
       audioFactory: (src) => (typeof context.Audio === "function" ? new context.Audio(src) : null),
       clock: () => context.performance?.now?.() || 0,
     },
