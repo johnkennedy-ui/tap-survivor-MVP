@@ -105,7 +105,10 @@ check(
 );
 check("index keeps generated shell bridge modules", /src="src\/shell-relic-ui\.js(\?[^"]+)?"/.test(index) && /src="src\/shell-ui\.js(\?[^"]+)?"/.test(index));
 check("production module entrypoint is wired for the browser dependency bag", productionModuleEntrypoint.includes("./browser-dependency-bag.js") && productionModuleEntrypoint.includes("../modules/module-game-lifecycle.js") && productionModuleEntrypoint.includes("../modules/module-game-dependencies.js"));
-check("production module autoboot remains a tiny wrapper", productionModuleAutoboot.includes("bootProductionModuleRuntime();"));
+check(
+  "production module autoboot remains the explicit browser-global boundary",
+  productionModuleAutoboot.includes("bootProductionModuleRuntime({ globalRef: globalThis });")
+);
 check("canvas exists", /<canvas[^>]+id="game"/.test(index));
 check("canvas keeps 16:9 resolution", styles.includes("aspect-ratio: 16 / 9") && styles.includes("height: auto"));
 check("speed controls exist", ["data-speed=\"1\"", "data-speed=\"2\"", "data-speed=\"5\""].every((id) => index.includes(id)) && styles.includes(".speed-controls"));

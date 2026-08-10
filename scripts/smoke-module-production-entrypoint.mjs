@@ -18,6 +18,7 @@ import {
   BROWSER_UI_ADAPTER_PROOF_SLOTS,
   createBrowserDependencyBagOptions,
 } from "../src/app/browser-dependency-bag.js";
+import { createBrowserPlatform } from "../src/app/compose-runtime.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -25,6 +26,7 @@ const indexHtmlBefore = readFileSync(join(root, "index.html"), "utf8");
 const candidateSource = readFileSync(join(root, "src/app/production-module-entrypoint.js"), "utf8");
 const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
 const browserDependencyBagSource = readFileSync(join(root, "src/app/browser-dependency-bag.js"), "utf8");
+const composeRuntimeSource = readFileSync(join(root, "src/app/compose-runtime.js"), "utf8");
 const classicContentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
 const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
 const classicContentContext = {};
@@ -73,6 +75,7 @@ const classicRetiredPublisherSources = Object.fromEntries(
 );
 const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
+const MISSING_PLATFORM_CAPABILITY_ERROR = "Missing Tap Survivor platform capability: globalRef";
 
 check("production module entrypoint candidate imports successfully", typeof createProductionModuleEntrypoint === "function");
 check("production module runtime autoboot export imports successfully", typeof bootProductionModuleRuntime === "function");
@@ -140,9 +143,16 @@ check(
   !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(candidateSource)
 );
 check(
-  "production module autoboot wrapper calls explicit runtime boot",
+  "production module autoboot wrapper is the sole explicit browser-global acquisition boundary",
   autobootSource.includes('from "./production-module-entrypoint.js"') &&
-    autobootSource.includes("bootProductionModuleRuntime();")
+    autobootSource.includes("bootProductionModuleRuntime({ globalRef: globalThis });") &&
+    countGlobalThisReferences(autobootSource) === 1 &&
+    [candidateSource, browserDependencyBagSource, composeRuntimeSource].every(
+      (source) => countGlobalThisReferences(source) === 0
+    ) &&
+    !candidateSource.includes("globalRef || globalThis") &&
+    !browserDependencyBagSource.includes("options.globalRef || globalThis") &&
+    !composeRuntimeSource.includes("globalRef = globalThis")
 );
 check(
   "production module autoboot wrapper has no classic TapSurvivor global reads",
@@ -221,6 +231,27 @@ check(
   )
 );
 
+const missingPlatformHostGlobalGuard = installThrowingGlobalReadGuards(
+  globalThis,
+  ["document", "localStorage", "requestAnimationFrame"],
+  "missing production platform capability"
+);
+const missingPlatformErrors = [
+  captureError(() => createProductionModuleEntrypoint()),
+  captureError(() => createBrowserDependencyBagOptions()),
+  captureError(() => createBrowserPlatform()),
+];
+const missingPlatformHostGlobalReads = missingPlatformHostGlobalGuard.readAttempts();
+missingPlatformHostGlobalGuard.restore();
+check(
+  "production factories reject omitted globalRef with one stable platform-capability error",
+  missingPlatformErrors.every((error) => error?.message === MISSING_PLATFORM_CAPABILITY_ERROR)
+);
+check(
+  "omitted production globalRef fails before any host-global capability read",
+  missingPlatformHostGlobalReads === 0
+);
+
 const initialSave = {
   coins: 21,
   selectedStartingWeapon: "spark_bolt",
@@ -283,6 +314,16 @@ const runtimeGlobal = {
     }
   },
 };
+const missingAnimationFrameError = captureError(() =>
+  createProductionModuleEntrypoint({
+    globalRef: { document: documentRef },
+  })
+);
+check(
+  "production entrypoint rejects an injected globalRef without requestAnimationFrame before lifecycle side effects",
+  missingAnimationFrameError?.message ===
+    "Missing Tap Survivor platform capability: requestAnimationFrame" && calls.length === 0
+);
 const runtimeContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(
   runtimeGlobal,
   "injected browser globalRef"
@@ -618,7 +659,18 @@ check(
 
 const browserCalls = [];
 const browserStorage = createMemoryStorage();
+const browserGlobal = {
+  ...runtimeGlobal,
+  document: documentRef,
+  localStorage: browserStorage,
+};
+const injectedBrowserHostGlobalGuard = installThrowingGlobalReadGuards(
+  globalThis,
+  ["document", "localStorage", "requestAnimationFrame"],
+  "explicit fake browser globalRef"
+);
 const browserEntrypoint = bootProductionModuleEntrypoint({
+  globalRef: browserGlobal,
   browserDependencyBagOptions: {
     canvas,
     content,
@@ -639,10 +691,6 @@ const browserEntrypoint = bootProductionModuleEntrypoint({
       browserCalls.push(`browser:update:${dt}`);
       return true;
     },
-  },
-  platform: {
-    documentRef,
-    runtimeGlobal,
   },
 });
 const browserUiAdapters = browserEntrypoint.dependencies.moduleSystems.moduleRuntimeUiAdapters;
@@ -668,6 +716,8 @@ browserUiAdapters.shopSystemAdapter.openShop?.();
 browserUiAdapters.shopSystemAdapter.renderShop?.();
 browserUiAdapters.shopSystemAdapter.closeShop();
 browserEntrypoint.dispose();
+const injectedBrowserHostGlobalReads = injectedBrowserHostGlobalGuard.readAttempts();
+injectedBrowserHostGlobalGuard.restore();
 
 check(
   "production module entrypoint boots without explicit dependencyBagOptions",
@@ -677,6 +727,12 @@ check(
 check(
   "production module entrypoint default browser dependency bag reaches lifecycle",
   browserCalls.includes("browser:update:0.032") && browserCalls.includes("browser:dispose")
+);
+check(
+  "production module entrypoint boots from an injected no-Capacitor fake global without host fallback",
+  !Object.prototype.hasOwnProperty.call(browserGlobal, "Capacitor") &&
+    injectedBrowserHostGlobalReads === 0 &&
+    typeof browserEntrypoint.platform.runtimeGlobal.requestAnimationFrame === "function"
 );
 check(
   "production module entrypoint default browser title start path reaches lifecycle",
@@ -1032,6 +1088,7 @@ check(
 );
 runtimeGlobal.TapSurvivorContentSchema = "malformed schema global";
 const malformedSchemaEntrypoint = createProductionModuleEntrypoint({
+  globalRef: runtimeGlobal,
   browserDependencyBagOptions: {
     canvas,
     initialSave,
@@ -1320,6 +1377,19 @@ function tapSurvivorGlobalNames() {
 
 function sameNames(left, right) {
   return left.length === right.length && left.every((name, index) => name === right[index]);
+}
+
+function countGlobalThisReferences(source) {
+  return (source.match(/\bglobalThis\b/gu) || []).length;
+}
+
+function captureError(action) {
+  try {
+    action();
+    return null;
+  } catch (error) {
+    return error;
+  }
 }
 
 function classicPublisherFile(name) {

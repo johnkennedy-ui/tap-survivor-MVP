@@ -74,7 +74,7 @@ export const BROWSER_UI_ADAPTER_PROOF_SLOTS = Object.freeze([
 ]);
 
 export function createBrowserDependencyBagOptions(options = {}) {
-  const globalRef = options.globalRef || globalThis;
+  const globalRef = requireBrowserGlobalRef(options.globalRef);
   const documentRef = options.documentRef || globalRef.document;
   const content = options.content || {};
   const canvas = options.canvas || documentRef?.getElementById?.("game") || createCanvasFallback();
@@ -164,6 +164,16 @@ export function createBrowserDependencyBagOptions(options = {}) {
         }),
     },
   };
+}
+
+function requireBrowserGlobalRef(globalRef) {
+  if (
+    !globalRef ||
+    (typeof globalRef !== "object" && typeof globalRef !== "function")
+  ) {
+    throw new Error("Missing Tap Survivor platform capability: globalRef");
+  }
+  return globalRef;
 }
 
 function createBrowserUi({ documentRef, canvas }) {

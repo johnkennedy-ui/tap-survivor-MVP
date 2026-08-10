@@ -16,10 +16,15 @@ import { createShellUiController } from "../modules/shell-ui-controller.js";
 import { createShellUiDomAdapter } from "../modules/shell-ui-dom-adapter.js";
 import { createShellUiPresenter } from "../modules/shell-ui-presenter.js";
 
-export function createBrowserPlatform({
-  globalRef = globalThis,
-  documentRef = globalRef.document,
-} = {}) {
+export function createBrowserPlatform(options = {}) {
+  const globalRef = requireBrowserGlobalRef(options.globalRef);
+  const documentRef = options.documentRef || globalRef.document;
+  if (!documentRef) {
+    throw new Error("Missing Tap Survivor platform capability: documentRef");
+  }
+  if (typeof globalRef.requestAnimationFrame !== "function") {
+    throw new Error("Missing Tap Survivor platform capability: requestAnimationFrame");
+  }
   return {
     documentRef,
     runtimeGlobal: {
@@ -28,6 +33,16 @@ export function createBrowserPlatform({
       Capacitor: globalRef.Capacitor,
     },
   };
+}
+
+function requireBrowserGlobalRef(globalRef) {
+  if (
+    !globalRef ||
+    (typeof globalRef !== "object" && typeof globalRef !== "function")
+  ) {
+    throw new Error("Missing Tap Survivor platform capability: globalRef");
+  }
+  return globalRef;
 }
 
 export function composeRuntime({ platform, dependencies }) {

@@ -36,7 +36,7 @@ export function createProductionModuleEntrypoint(options = {}) {
     lifecycleHooks,
     platform,
   } = options;
-  const resolvedGlobalRef = globalRef || globalThis;
+  const resolvedGlobalRef = globalRef ?? browserDependencyBagOptions?.globalRef;
   const resolvedPlatform =
     platform || createBrowserPlatform({ globalRef: resolvedGlobalRef });
   let lifecycle;

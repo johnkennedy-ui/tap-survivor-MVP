@@ -760,7 +760,7 @@ check(
 check(
   "readiness sees production ESM entrypoint has explicit browser auto-boot wrapper",
   productionModuleEntrypointSource.includes("bootProductionModuleRuntime") &&
-    productionModuleAutobootSource.includes("bootProductionModuleRuntime();") &&
+    productionModuleAutobootSource.includes("bootProductionModuleRuntime({ globalRef: globalThis });") &&
     !/\b(?:globalThis|window)\s*\.\s*TapSurvivor[A-Za-z0-9_]*/.test(productionModuleAutobootSource)
 );
 check(
@@ -1310,7 +1310,9 @@ const inventory = {
       "./browser-dependency-bag.js"
     ),
     importsComposeRuntime: productionModuleEntrypointSource.includes("./compose-runtime.js"),
-    hasAutobootWrapper: productionModuleAutobootSource.includes("bootProductionModuleRuntime();"),
+    hasAutobootWrapper: productionModuleAutobootSource.includes(
+      "bootProductionModuleRuntime({ globalRef: globalThis });"
+    ),
     moduleNativeSourceGlobalReads: productionModuleEntrypointGlobalReads,
   },
   browserDependencyBagFactory: {
