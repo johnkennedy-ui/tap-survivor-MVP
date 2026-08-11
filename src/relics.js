@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/relics.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRelics. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -130,8 +131,4 @@
       startingRunUpgradeTiers,
     };
   }
-
-  globalThis.TapSurvivorRelics = {
-    createRelicSystem,
-  };
 })();

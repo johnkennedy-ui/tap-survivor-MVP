@@ -1,4 +1,5 @@
 import { floorDifficulty } from "./balance.js";
+import { createCombatSystem } from "./combat.js";
 import { createCombatDamageSystem } from "./combat-damage.js";
 import { createContentRegistry } from "./content-registry.js";
 import { createEnemyBehaviorSystem } from "./enemy-behaviors.js";
@@ -9,6 +10,8 @@ import { createGameRuntimeController } from "./game-runtime.js";
 import { createMapSystem } from "./map-system.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
+import { createPickupSystem } from "./pickups.js";
+import { createRelicSystem } from "./relics.js";
 import { createSaveLoadHandler } from "./save-corruption.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
 import { isPlainObject, migrateSave } from "./save-migrations.js";
@@ -61,7 +64,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     assets: globalRef.TapSurvivorAssets || {},
     balance: { floorDifficulty },
     balanceRuntime,
-    combat: requireGlobal(globalRef, "TapSurvivorCombat"),
+    combat: { createCombatSystem },
     combatDamage: { createCombatDamageSystem },
     content,
     contentRegistry: { createContentRegistry },
@@ -83,10 +86,10 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
-    pickups: requireGlobal(globalRef, "TapSurvivorPickups"),
+    pickups: { createPickupSystem },
     progression: requireGlobal(globalRef, "TapSurvivorProgression"),
     quests: requireGlobal(globalRef, "TapSurvivorQuests"),
-    relics: requireGlobal(globalRef, "TapSurvivorRelics"),
+    relics: { createRelicSystem },
     renderEnemies: requireGlobal(globalRef, "TapSurvivorRenderEnemies"),
     renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
     renderSkillRail: requireGlobal(globalRef, "TapSurvivorRenderSkillRail"),

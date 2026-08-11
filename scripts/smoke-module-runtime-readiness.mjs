@@ -106,11 +106,17 @@ const browserDependencyBagSource = readFileSync(
   join(root, "src/app/browser-dependency-bag.js"),
   "utf8"
 );
+const moduleGameDependenciesSource = readFileSync(
+  join(root, "src/modules/module-game-dependencies.js"),
+  "utf8"
+);
 const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
   "TapSurvivorCombat",
   "TapSurvivorEnemies",
   "TapSurvivorEnemyBehaviors",
   "TapSurvivorEnemySpawning",
+  "TapSurvivorPickups",
+  "TapSurvivorRelics",
   "TapSurvivorWeaponBehaviors",
   "TapSurvivorWeaponFire",
   "TapSurvivorLevelUp",
@@ -118,11 +124,14 @@ const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
 const retiredBrowserNamespaceSourceFiles = Object.freeze([
   "src/app/browser-dependency-bag.js",
   "src/app/production-module-entrypoint.js",
+  "src/modules/module-game-dependencies.js",
   "src/modules/combat.js",
   "src/modules/enemies.js",
   "src/modules/enemy-behaviors.js",
   "src/modules/enemy-spawning.js",
   "src/modules/level-up.js",
+  "src/modules/pickups.js",
+  "src/modules/relics.js",
   "src/modules/weapon-behaviors.js",
   "src/modules/weapon-fire.js",
 ]);
@@ -130,6 +139,8 @@ const retiredBrowserNamespaceSources = retiredBrowserNamespaceSourceFiles.map((f
   file,
   source: readFileSync(join(root, file), "utf8"),
 }));
+const classicCombatSource = readFileSync(join(root, "src/combat.js"), "utf8");
+const classicPickupsSource = readFileSync(join(root, "src/pickups.js"), "utf8");
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
@@ -795,20 +806,23 @@ check(
     !browserDependencyBagSource.includes("TapSurvivorUpgrades")
 );
 check(
-  "readiness rejects every direct, optional, bracket, proxy, and string-key form of all seven retired publishers from the selected production ESM graph",
+  "readiness rejects every direct, optional, bracket, proxy, and string-key form of all nine retired publishers from the selected production ESM graph",
   [
-    ['../modules/combat.js', "createCombatSystem"],
-    ['../modules/enemies.js', "createEnemySystem"],
-    ['../modules/enemy-behaviors.js', "createEnemyBehaviorSystem"],
-    ['../modules/enemy-spawning.js', "createEnemySpawnSystem"],
-    ['../modules/level-up.js', "createLevelUpSystem"],
-    ['../modules/weapon-behaviors.js', "createWeaponBehaviorSystem"],
-    ['../modules/weapon-fire.js', "createWeaponFireSystem"],
-  ].every(([modulePath, factoryName]) =>
-    browserDependencyBagSource.includes(`import { ${factoryName} } from "${modulePath}";`)
+    [browserDependencyBagSource, "../modules/combat.js", "createCombatSystem"],
+    [browserDependencyBagSource, "../modules/enemies.js", "createEnemySystem"],
+    [browserDependencyBagSource, "../modules/enemy-behaviors.js", "createEnemyBehaviorSystem"],
+    [browserDependencyBagSource, "../modules/enemy-spawning.js", "createEnemySpawnSystem"],
+    [browserDependencyBagSource, "../modules/level-up.js", "createLevelUpSystem"],
+    [moduleGameDependenciesSource, "./pickups.js", "createPickupSystem"],
+    [browserDependencyBagSource, "../modules/relics.js", "createRelicSystem"],
+    [moduleGameDependenciesSource, "./relics.js", "createRelicSystem"],
+    [browserDependencyBagSource, "../modules/weapon-behaviors.js", "createWeaponBehaviorSystem"],
+    [browserDependencyBagSource, "../modules/weapon-fire.js", "createWeaponFireSystem"],
+  ].every(([source, modulePath, factoryName]) =>
+    source.includes(`import { ${factoryName} } from "${modulePath}";`)
   ) &&
     !browserDependencyBagSource.includes("createBrowserNamespaceBridge") &&
-    !/import\s+["']\.\.\/(?:combat|enemies|enemy-behaviors|enemy-spawning|level-up|weapon-behaviors|weapon-fire)\.js["'];/u.test(
+    !/import\s+["']\.\.\/(?:combat|enemies|enemy-behaviors|enemy-spawning|level-up|pickups|relics|weapon-behaviors|weapon-fire)\.js["'];/u.test(
       productionModuleEntrypointSource
     ) &&
     retiredBrowserNamespaceSources.every(({ source }) =>
@@ -816,9 +830,16 @@ check(
     )
 );
 check(
-  "readiness preserves the deliberate classic TapSurvivorRelics publisher",
-  classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
-    classicRelicsSource.includes("createRelicSystem")
+  "readiness sees source-derived B2 gameplay bridges retire their classic publishers",
+  [
+    [classicCombatSource, "TapSurvivorCombat"],
+    [classicPickupsSource, "TapSurvivorPickups"],
+    [classicRelicsSource, "TapSurvivorRelics"],
+  ].every(
+    ([source, name]) =>
+      !source.includes(`globalThis.${name} =`) &&
+      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+  )
 );
 check(
   "readiness preserves the deliberate classic TapSurvivorProgression publisher",

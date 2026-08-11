@@ -367,7 +367,27 @@ check(
     gameRuntime.includes("bindMovementInput") &&
     !gameRuntime.includes("globalThis.TapSurvivorInput"),
 );
-check("shared pickup helper exists", pickups.includes("TapSurvivorPickups") && runtimeEntry.includes("TapSurvivorPickups"));
+check(
+  "combat, pickup, and relic helpers are native-injected without classic publishers",
+  !combat.includes("globalThis.TapSurvivorCombat") &&
+    !pickups.includes("globalThis.TapSurvivorPickups") &&
+    !relics.includes("globalThis.TapSurvivorRelics") &&
+    moduleGameDependencies.includes('import { createCombatSystem } from "./combat.js"') &&
+    moduleGameDependencies.includes('import { createPickupSystem } from "./pickups.js"') &&
+    moduleGameDependencies.includes('import { createRelicSystem } from "./relics.js"') &&
+    moduleGameDependencies.includes("combat: { createCombatSystem }") &&
+    moduleGameDependencies.includes("pickups: { createPickupSystem }") &&
+    moduleGameDependencies.includes("relics: { createRelicSystem }") &&
+    !gameDependencies.includes("TapSurvivorCombat") &&
+    !gameDependencies.includes("TapSurvivorPickups") &&
+    !gameDependencies.includes("TapSurvivorRelics") &&
+    gameDependencies.includes("combat: { createCombatSystem }") &&
+    gameDependencies.includes("pickups: { createPickupSystem }") &&
+    gameDependencies.includes("relics: { createRelicSystem }") &&
+    game.includes("combat,") &&
+    game.includes("pickups,") &&
+    game.includes("relics,")
+);
 check(
   "shared shop helper is explicitly wired without the retired global",
   shop.includes("createShopSystem") &&
@@ -381,7 +401,6 @@ check(
     !shop.includes("globalThis.TapSurvivorShop") &&
     !gameDependencies.includes("globalThis.TapSurvivorShop"),
 );
-check("shared relic helper exists", relics.includes("TapSurvivorRelics") && runtimeEntry.includes("TapSurvivorRelics"));
 check(
   "shared run state helper exists",
   runState.includes("createRunStateSystem") && gameDependencies.includes("createRunStateSystem"),

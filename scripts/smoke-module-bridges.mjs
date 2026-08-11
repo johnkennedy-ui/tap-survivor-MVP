@@ -16,6 +16,7 @@ import { createGameBannerSystem as createModuleGameBannerSystem } from "../src/m
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import { createUpgradeContent as createModuleUpgradeContent } from "../src/modules/upgrades.js";
+import { createCombatSystem as createModuleCombatSystem } from "../src/modules/combat.js";
 import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
 import { createPickupSystem as createModulePickupSystem } from "../src/modules/pickups.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
@@ -156,6 +157,7 @@ const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-
 const gameBannersBridge = loadBridge("../src/game-banners.js", "src/game-banners.js");
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
+const combatBridge = loadBridge("../src/combat.js", "src/combat.js");
 const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecycle.js");
 const runStateBridge = loadBridge("../src/run-state.js", "src/run-state.js");
 const runUiBridge = loadBridge("../src/run-ui.js", "src/run-ui.js");
@@ -191,12 +193,14 @@ const bridgeSaveMigrations = saveMigrationsBridge.context.TapSurvivorSaveMigrati
 const bridgeSaveNormalize = saveNormalizeBridge.context.TapSurvivorSaveNormalize;
 const bridgeSave = saveBridge.context.TapSurvivorSave;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
-const createBridgeRelicSystem = relicsBridge.context.TapSurvivorRelics?.createRelicSystem;
+const bridgeRelics = relicsBridge.context.TapSurvivorRelics;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
+const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
+const bridgeCombat = combatBridge.context.TapSurvivorCombat;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
 const bridgeRunState = runStateBridge.context.TapSurvivorRunState;
 const bridgeRunUi = runUiBridge.context.TapSurvivorRunUi;
@@ -205,6 +209,8 @@ const bridgePickups = pickupsBridge.context.TapSurvivorPickups;
 const bridgeCombatDamage = combatDamageBridge.context.TapSurvivorCombatDamage;
 const bridgeShellRelicUi = shellRelicUiBridge.context.TapSurvivorShellRelicUi;
 const bridgeShellUi = shellUiClassicBridge.context.TapSurvivorShellUi;
+const createBridgePickupSystem = createModulePickupSystem;
+const createBridgeRelicSystem = createModuleRelicSystem;
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check(
@@ -812,9 +818,18 @@ check("shop pricing module boots tier is stable", moduleResults.bootsTier === 1)
 check("shop pricing module orb tier is stable", moduleResults.orbTier === 0);
 
 check("module exports createRelicSystem", typeof createModuleRelicSystem === "function");
-check("bridge assigns globalThis.TapSurvivorRelics", Boolean(relicsBridge.context.TapSurvivorRelics));
-check("bridge exposes createRelicSystem", typeof createBridgeRelicSystem === "function");
+check(
+  "relic bridge retires globalThis.TapSurvivorRelics",
+  bridgeRelics === undefined && !relicsBridge.source.includes("globalThis.TapSurvivorRelics")
+);
+check("module relic factory is callable", typeof createBridgeRelicSystem === "function");
 check("relic bridge source has generated banner", hasGeneratedBanner(relicsBridge.source));
+check("module exports createCombatSystem", typeof createModuleCombatSystem === "function");
+check(
+  "combat bridge retires globalThis.TapSurvivorCombat",
+  bridgeCombat === undefined && !combatBridge.source.includes("globalThis.TapSurvivorCombat")
+);
+check("combat bridge source has generated banner", hasGeneratedBanner(combatBridge.source));
 
 const relicFixtureDefs = [
   {
@@ -862,15 +877,6 @@ const moduleRelicSnapshot = relicSystemSnapshot(
   createModuleRelicSystem(relicSystemOptions),
   relicFixtureSave,
   specialRelicFixtureSave
-);
-const bridgeRelicSnapshot = relicSystemSnapshot(
-  createBridgeRelicSystem(relicSystemOptions),
-  relicFixtureSave,
-  specialRelicFixtureSave
-);
-check(
-  "module and bridge relic provider output match",
-  JSON.stringify(moduleRelicSnapshot) === JSON.stringify(bridgeRelicSnapshot)
 );
 check("relic bridge max equipped slots fixture is unchanged", moduleRelicSnapshot.maxEquippedRelics === 2);
 check(
@@ -1429,14 +1435,20 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorBalanceProfiles")
 );
 check(
-  "game dependency bridge has no retired enemy publisher readers",
-  ["TapSurvivorEnemies", "TapSurvivorEnemyBehaviors", "TapSurvivorEnemySpawning"].every(
+  "game dependency bridge has no retired gameplay publisher readers",
+  [
+    "TapSurvivorCombat",
+    "TapSurvivorEnemies",
+    "TapSurvivorEnemyBehaviors",
+    "TapSurvivorEnemySpawning",
+    "TapSurvivorPickups",
+    "TapSurvivorRelics",
+  ].every(
     (name) =>
       !gameDependenciesBridge.source.includes(`globalThis.${name}`) &&
       !gameDependenciesBridge.source.includes(`\"${name}\"`)
   )
 );
-
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
   bridgeGameDependencies.createGameDependencyBag
@@ -1451,19 +1463,25 @@ check(
     createModuleGameRuntimeController
 );
 check(
-  "module dependency bag exposes statically imported native enemy factories",
-  moduleGameDependenciesSnapshot.__bag.enemies.createEnemySystem === createModuleEnemySystem &&
+  "module dependency bag exposes statically imported native gameplay factories",
+  moduleGameDependenciesSnapshot.__bag.combat.createCombatSystem === createModuleCombatSystem &&
+    moduleGameDependenciesSnapshot.__bag.enemies.createEnemySystem === createModuleEnemySystem &&
     moduleGameDependenciesSnapshot.__bag.enemyBehaviors.createEnemyBehaviorSystem ===
       createModuleEnemyBehaviorSystem &&
     moduleGameDependenciesSnapshot.__bag.enemySpawning.createEnemySpawnSystem ===
-      createModuleEnemySpawnSystem
+      createModuleEnemySpawnSystem &&
+    moduleGameDependenciesSnapshot.__bag.pickups.createPickupSystem === createModulePickupSystem &&
+    moduleGameDependenciesSnapshot.__bag.relics.createRelicSystem === createModuleRelicSystem
 );
 check(
-  "generated classic dependency bag exposes enemy factory functions without classic publishers",
+  "generated classic dependency bag exposes gameplay factory functions without classic publishers",
   [
+    bridgeGameDependenciesSnapshot.__bag.combat.createCombatSystem,
     bridgeGameDependenciesSnapshot.__bag.enemies.createEnemySystem,
     bridgeGameDependenciesSnapshot.__bag.enemyBehaviors.createEnemyBehaviorSystem,
     bridgeGameDependenciesSnapshot.__bag.enemySpawning.createEnemySpawnSystem,
+    bridgeGameDependenciesSnapshot.__bag.pickups.createPickupSystem,
+    bridgeGameDependenciesSnapshot.__bag.relics.createRelicSystem,
   ].every((factory) => typeof factory === "function")
 );
 check(
@@ -1535,6 +1553,7 @@ check(
 );
 check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
 check("dependency bag exposes balance", moduleGameDependenciesSnapshot.hasBalance);
+check("dependency bag exposes combat", moduleGameDependenciesSnapshot.hasCombat);
 check("dependency bag exposes content registry", moduleGameDependenciesSnapshot.hasContentRegistry);
 check("dependency bag exposes combat damage", moduleGameDependenciesSnapshot.hasCombatDamage);
 check("dependency bag exposes enemies", moduleGameDependenciesSnapshot.hasEnemies);
@@ -1542,6 +1561,8 @@ check("dependency bag exposes enemy behaviors", moduleGameDependenciesSnapshot.h
 check("dependency bag exposes enemy spawning", moduleGameDependenciesSnapshot.hasEnemySpawning);
 check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasInputBinder);
 check("dependency bag exposes map factory", moduleGameDependenciesSnapshot.hasMapSystem);
+check("dependency bag exposes pickup factory", moduleGameDependenciesSnapshot.hasPickups);
+check("dependency bag exposes relic factory", moduleGameDependenciesSnapshot.hasRelics);
 check("dependency bag exposes run lifecycle factory", moduleGameDependenciesSnapshot.hasRunLifecycle);
 check("dependency bag exposes run state factory", moduleGameDependenciesSnapshot.hasRunState);
 check("dependency bag exposes run UI factory", moduleGameDependenciesSnapshot.hasRunUi);
@@ -1628,15 +1649,30 @@ check(
 );
 
 check("module exports createPickupSystem", typeof createModulePickupSystem === "function");
-check("bridge assigns globalThis.TapSurvivorPickups", Boolean(bridgePickups));
+check(
+  "pickup bridge retires globalThis.TapSurvivorPickups",
+  bridgePickups === undefined && !pickupsBridge.source.includes("globalThis.TapSurvivorPickups")
+);
 check("pickups bridge source has generated banner", hasGeneratedBanner(pickupsBridge.source));
-check("bridge exposes createPickupSystem", typeof bridgePickups?.createPickupSystem === "function");
+check("module pickup factory is callable", typeof createBridgePickupSystem === "function");
 
 const modulePickupSnapshot = pickupSnapshot(createModulePickupSystem, Math);
-const bridgePickupSnapshot = pickupSnapshot(bridgePickups.createPickupSystem, pickupsBridge.context.Math);
+const injectedBridgeRelicSnapshot = relicSystemSnapshot(
+  bridgeGameDependenciesSnapshot.__bag.relics.createRelicSystem(relicSystemOptions),
+  relicFixtureSave,
+  specialRelicFixtureSave
+);
+const injectedBridgePickupSnapshot = pickupSnapshot(
+  bridgeGameDependenciesSnapshot.__bag.pickups.createPickupSystem,
+  gameDependenciesBridgeMath
+);
 check(
-  "module and bridge pickup output match",
-  JSON.stringify(modulePickupSnapshot) === JSON.stringify(bridgePickupSnapshot)
+  "generated dependency bag relic factory preserves module behavior",
+  JSON.stringify(injectedBridgeRelicSnapshot) === JSON.stringify(moduleRelicSnapshot)
+);
+check(
+  "generated dependency bag pickup factory preserves module behavior",
+  JSON.stringify(injectedBridgePickupSnapshot) === JSON.stringify(modulePickupSnapshot)
 );
 check("pickup system exposes spawnLootDrops", modulePickupSnapshot.exposesSpawnLootDrops);
 check("pickup system exposes updateXpDrops", modulePickupSnapshot.exposesUpdateXpDrops);
@@ -2230,7 +2266,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorAudio",
     "TapSurvivorAssets",
     "TapSurvivorBalance",
-    "TapSurvivorCombat",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
@@ -2239,10 +2274,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorLevelUpChoices",
     "TapSurvivorUpgrades",
     "TapSurvivorMath",
-    "TapSurvivorPickups",
     "TapSurvivorProgression",
     "TapSurvivorQuests",
-    "TapSurvivorRelics",
     "TapSurvivorRenderEnemies",
     "TapSurvivorRenderHud",
     "TapSurvivorRenderSkillRail",
@@ -2288,6 +2321,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   baseGlobalRef.TapSurvivorGameRuntime = { name: "TapSurvivorGameRuntime" };
   const retiredGlobalNames = [
     "TapSurvivorBalance",
+    "TapSurvivorCombat",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
     "TapSurvivorEnemies",
@@ -2296,6 +2330,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
     "TapSurvivorMapSystem",
+    "TapSurvivorPickups",
+    "TapSurvivorRelics",
     "TapSurvivorSaveDefaults",
     "TapSurvivorSaveMigrations",
     "TapSurvivorSaveCorruption",
@@ -2468,11 +2504,14 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasAssets: bag.assets.name === "TapSurvivorAssets",
     hasContentRegistry: typeof bag.contentRegistry.createContentRegistry === "function",
     hasBalance: typeof bag.balance.floorDifficulty === "function",
+    hasCombat: typeof bag.combat?.createCombatSystem === "function",
     hasCombatDamage: typeof bag.combatDamage.createCombatDamageSystem === "function",
     hasEnemies: typeof bag.enemies?.createEnemySystem === "function",
     hasEnemyBehaviors: typeof bag.enemyBehaviors?.createEnemyBehaviorSystem === "function",
     hasEnemySpawning: typeof bag.enemySpawning?.createEnemySpawnSystem === "function",
     hasMapSystem: typeof bag.mapSystem?.createMapSystem === "function",
+    hasPickups: typeof bag.pickups?.createPickupSystem === "function",
+    hasRelics: typeof bag.relics?.createRelicSystem === "function",
     hasRunLifecycle: typeof bag.runLifecycle?.createRunLifecycle === "function",
     hasRunState: typeof bag.runState?.createRunStateSystem === "function",
     hasRunUi: typeof bag.runUi?.createRunUi === "function",

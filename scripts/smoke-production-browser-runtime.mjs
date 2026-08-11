@@ -232,6 +232,8 @@ async function main() {
       "TapSurvivorEnemies",
       "TapSurvivorEnemyBehaviors",
       "TapSurvivorEnemySpawning",
+      "TapSurvivorPickups",
+      "TapSurvivorRelics",
       "TapSurvivorWeaponBehaviors",
       "TapSurvivorWeaponFire",
       "TapSurvivorLevelUp",

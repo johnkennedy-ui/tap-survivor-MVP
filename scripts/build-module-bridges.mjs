@@ -252,7 +252,8 @@ function configureDefaultProviders({ storage } = {}) {
   {
     source: "src/modules/relics.js",
     target: "src/relics.js",
-    globalName: "TapSurvivorRelics",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRelics",
     exports: ["createRelicSystem"],
   },
   {
@@ -362,6 +363,14 @@ function createClassicShellRelicUi(options = {}) {
         exports: ["floorDifficulty"],
       },
       {
+        source: "src/modules/combat.js",
+        exports: [
+          "MODULE_NATIVE_COMBAT_SLOTS",
+          "MODULE_NATIVE_COMBAT_PROOF_SLOTS",
+          "createCombatSystem",
+        ],
+      },
+      {
         source: "src/modules/combat-damage.js",
         exports: ["createCombatDamageSystem"],
       },
@@ -431,6 +440,14 @@ function createClassicShellRelicUi(options = {}) {
         exports: ["clamp", "distance", "formatTime", "randomRange"],
       },
       {
+        source: "src/modules/pickups.js",
+        exports: ["createPickupSystem"],
+      },
+      {
+        source: "src/modules/relics.js",
+        exports: ["createRelicSystem"],
+      },
+      {
         source: "src/modules/shop-pricing.js",
         exports: ["createShopPricing"],
       },
@@ -490,8 +507,20 @@ function createClassicShellRelicUi(options = {}) {
   {
     source: "src/modules/pickups.js",
     target: "src/pickups.js",
-    globalName: "TapSurvivorPickups",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorPickups",
     exports: ["createPickupSystem"],
+  },
+  {
+    source: "src/modules/combat.js",
+    target: "src/combat.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorCombat",
+    exports: [
+      "MODULE_NATIVE_COMBAT_SLOTS",
+      "MODULE_NATIVE_COMBAT_PROOF_SLOTS",
+      "createCombatSystem",
+    ],
   },
   {
     source: "src/modules/combat-damage.js",

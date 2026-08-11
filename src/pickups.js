@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/pickups.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorPickups. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -146,8 +147,4 @@
       updatePickupTexts,
     };
   }
-
-  globalThis.TapSurvivorPickups = {
-    createPickupSystem,
-  };
 })();

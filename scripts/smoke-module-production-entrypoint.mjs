@@ -26,6 +26,10 @@ const indexHtmlBefore = readFileSync(join(root, "index.html"), "utf8");
 const candidateSource = readFileSync(join(root, "src/app/production-module-entrypoint.js"), "utf8");
 const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
 const browserDependencyBagSource = readFileSync(join(root, "src/app/browser-dependency-bag.js"), "utf8");
+const moduleGameDependenciesSource = readFileSync(
+  join(root, "src/modules/module-game-dependencies.js"),
+  "utf8"
+);
 const composeRuntimeSource = readFileSync(join(root, "src/app/compose-runtime.js"), "utf8");
 const classicContentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
 const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
@@ -39,6 +43,8 @@ const classicProfilesDescriptor = Object.getOwnPropertyDescriptor(
   classicContentContext.TapSurvivorContent,
   "balanceProfiles"
 );
+const classicCombatSource = readFileSync(join(root, "src/combat.js"), "utf8");
+const classicPickupsSource = readFileSync(join(root, "src/pickups.js"), "utf8");
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
@@ -48,6 +54,8 @@ const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
   "TapSurvivorEnemies",
   "TapSurvivorEnemyBehaviors",
   "TapSurvivorEnemySpawning",
+  "TapSurvivorPickups",
+  "TapSurvivorRelics",
   "TapSurvivorWeaponBehaviors",
   "TapSurvivorWeaponFire",
   "TapSurvivorLevelUp",
@@ -57,14 +65,22 @@ const BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
   "TapSurvivorEnemyBehaviors",
   "TapSurvivorEnemySpawning",
 ]);
+const BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
+  "TapSurvivorCombat",
+  "TapSurvivorPickups",
+  "TapSurvivorRelics",
+]);
 const retiredBrowserNamespaceSourceFiles = Object.freeze([
   "src/app/browser-dependency-bag.js",
   "src/app/production-module-entrypoint.js",
+  "src/modules/module-game-dependencies.js",
   "src/modules/combat.js",
   "src/modules/enemies.js",
   "src/modules/enemy-behaviors.js",
   "src/modules/enemy-spawning.js",
   "src/modules/level-up.js",
+  "src/modules/pickups.js",
+  "src/modules/relics.js",
   "src/modules/weapon-behaviors.js",
   "src/modules/weapon-fire.js",
 ]);
@@ -128,9 +144,16 @@ check(
   classicContentSource.includes("globalThis.TapSurvivorContent =")
 );
 check(
-  "classic fallback preserves TapSurvivorRelics publisher pending separate publisher retirement",
-  classicRelicsSource.includes("globalThis.TapSurvivorRelics =") &&
-    classicRelicsSource.includes("createRelicSystem")
+  "classic generated B2 bridges retire the selected publishers with provenance",
+  [
+    [classicCombatSource, "TapSurvivorCombat"],
+    [classicPickupsSource, "TapSurvivorPickups"],
+    [classicRelicsSource, "TapSurvivorRelics"],
+  ].every(
+    ([source, name]) =>
+      !source.includes(`globalThis.${name} =`) &&
+      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+  )
 );
 check(
   "classic fallback preserves TapSurvivorProgression publisher pending separate publisher retirement",
@@ -209,20 +232,23 @@ check(
     !classicSaveSource.includes("TapSurvivorStorage")
 );
 check(
-  "production ESM statically imports all seven retired native factories without a namespace bridge or classic side-effect imports",
+  "production ESM statically imports all nine retired native factories without a namespace bridge or classic side-effect imports",
   [
-    ['../modules/combat.js', "createCombatSystem"],
-    ['../modules/enemies.js', "createEnemySystem"],
-    ['../modules/enemy-behaviors.js', "createEnemyBehaviorSystem"],
-    ['../modules/enemy-spawning.js', "createEnemySpawnSystem"],
-    ['../modules/level-up.js', "createLevelUpSystem"],
-    ['../modules/weapon-behaviors.js', "createWeaponBehaviorSystem"],
-    ['../modules/weapon-fire.js', "createWeaponFireSystem"],
-  ].every(([modulePath, factoryName]) =>
-    browserDependencyBagSource.includes(`import { ${factoryName} } from "${modulePath}";`)
+    [browserDependencyBagSource, "../modules/combat.js", "createCombatSystem"],
+    [browserDependencyBagSource, "../modules/enemies.js", "createEnemySystem"],
+    [browserDependencyBagSource, "../modules/enemy-behaviors.js", "createEnemyBehaviorSystem"],
+    [browserDependencyBagSource, "../modules/enemy-spawning.js", "createEnemySpawnSystem"],
+    [browserDependencyBagSource, "../modules/level-up.js", "createLevelUpSystem"],
+    [moduleGameDependenciesSource, "./pickups.js", "createPickupSystem"],
+    [browserDependencyBagSource, "../modules/relics.js", "createRelicSystem"],
+    [moduleGameDependenciesSource, "./relics.js", "createRelicSystem"],
+    [browserDependencyBagSource, "../modules/weapon-behaviors.js", "createWeaponBehaviorSystem"],
+    [browserDependencyBagSource, "../modules/weapon-fire.js", "createWeaponFireSystem"],
+  ].every(([source, modulePath, factoryName]) =>
+    source.includes(`import { ${factoryName} } from "${modulePath}";`)
   ) &&
     !browserDependencyBagSource.includes("createBrowserNamespaceBridge") &&
-    !/import\s+["']\.\.\/(?:combat|enemies|enemy-behaviors|enemy-spawning|level-up|weapon-behaviors|weapon-fire)\.js["'];/u.test(
+    !/import\s+["']\.\.\/(?:combat|enemies|enemy-behaviors|enemy-spawning|level-up|pickups|relics|weapon-behaviors|weapon-fire)\.js["'];/u.test(
       candidateSource
     ) &&
     retiredBrowserNamespaceSources.every(({ source }) =>
@@ -232,7 +258,9 @@ check(
 check(
   "classic root publishers for unselected retired production namespaces remain preserved for later batches",
   RETIRED_BROWSER_NAMESPACE_NAMES.filter(
-    (name) => !BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name)
+    (name) =>
+      !BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name) &&
+      !BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name)
   ).every((name) =>
     classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
   )
@@ -240,6 +268,12 @@ check(
 check(
   "classic root publishers for Batch 1 enemy namespaces are retired",
   BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
+    (name) => !classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
+  )
+);
+check(
+  "classic root publishers for Batch 2 combat, pickup, and relic namespaces are retired",
+  BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
     (name) => !classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
   )
 );
@@ -338,10 +372,6 @@ check(
     "Missing Tap Survivor platform capability: requestAnimationFrame" && calls.length === 0
 );
 const runtimeContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(
-  runtimeGlobal,
-  "injected browser globalRef"
-);
-const runtimeRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(
   runtimeGlobal,
   "injected browser globalRef"
 );
@@ -1125,7 +1155,6 @@ malformedSchemaEntrypoint.dispose();
 delete runtimeGlobal.TapSurvivorContentSchema;
 const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
 const autobootContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(globalThis, "autoboot globalThis");
-const autobootRelicsGlobalGuard = installTapSurvivorRelicsGlobalReadGuard(globalThis, "autoboot globalThis");
 const autobootQuestsGlobalGuard = installTapSurvivorQuestsGlobalReadGuard(globalThis, "autoboot globalThis");
 const autobootProgressionGlobalGuard = installTapSurvivorProgressionGlobalReadGuard(
   globalThis,
@@ -1148,7 +1177,6 @@ await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
 const autobootRafCalls = autobootGlobalRestore.rafCalls();
 autobootGlobalRestore.restore();
 autobootContentGlobalGuard.restore();
-autobootRelicsGlobalGuard.restore();
 autobootQuestsGlobalGuard.restore();
 autobootProgressionGlobalGuard.restore();
 autobootUiProgressionGlobalGuard.restore();
@@ -1158,10 +1186,6 @@ check("production module autoboot wrapper initializes browser runtime", autoboot
 check(
   "production module boot completes without reading guarded TapSurvivorContent globals",
   runtimeContentGlobalGuard.readAttempts() === 0 && autobootContentGlobalGuard.readAttempts() === 0
-);
-check(
-  "production module boot completes without reading guarded TapSurvivorRelics globals",
-  runtimeRelicsGlobalGuard.readAttempts() === 0 && autobootRelicsGlobalGuard.readAttempts() === 0
 );
 check(
   "production module boot completes without reading guarded TapSurvivorQuests globals",
@@ -1180,12 +1204,19 @@ check(
   runtimeUpgradeGlobalGuard.readAttempts() === 0 && autobootUpgradeGlobalGuard.readAttempts() === 0
 );
 check(
-  "throwing getters for all seven retired publishers record zero reads through init, start, movement, x1/x2/x5, tick, render, persist, dispose, and autoboot",
+  "throwing getters for all nine retired publishers record zero reads through init, start, movement, x1/x2/x5, tick, render, persist, dispose, and autoboot",
   runtimeRetiredBrowserNamespaceGuard.readAttempts() === 0 &&
     autobootRetiredBrowserNamespaceGuard.readAttempts() === 0
 );
+check(
+  "throwing getters for each B2 publisher record zero reads through injected and autoboot production paths",
+  BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
+    (name) =>
+      runtimeRetiredBrowserNamespaceGuard.readAttemptsFor(name) === 0 &&
+      autobootRetiredBrowserNamespaceGuard.readAttemptsFor(name) === 0
+  )
+);
 runtimeContentGlobalGuard.restore();
-runtimeRelicsGlobalGuard.restore();
 runtimeQuestsGlobalGuard.restore();
 runtimeProgressionGlobalGuard.restore();
 runtimeUiProgressionGlobalGuard.restore();
@@ -1412,6 +1443,8 @@ function classicPublisherFile(name) {
     TapSurvivorEnemyBehaviors: "enemy-behaviors.js",
     TapSurvivorEnemySpawning: "enemy-spawning.js",
     TapSurvivorLevelUp: "level-up.js",
+    TapSurvivorPickups: "pickups.js",
+    TapSurvivorRelics: "relics.js",
     TapSurvivorWeaponBehaviors: "weapon-behaviors.js",
     TapSurvivorWeaponFire: "weapon-fire.js",
   }[name];
@@ -1450,6 +1483,7 @@ function installThrowingGlobalReadGuards(target, names, label) {
       },
     });
     return {
+      key,
       reads: () => reads,
       restore() {
         if (previous) Object.defineProperty(target, key, previous);
@@ -1459,6 +1493,7 @@ function installThrowingGlobalReadGuards(target, names, label) {
   });
   return {
     readAttempts: () => guards.reduce((total, guard) => total + guard.reads(), 0),
+    readAttemptsFor: (name) => guards.find((guard) => guard.key === name)?.reads() ?? 0,
     restore() {
       guards.slice().reverse().forEach((guard) => guard.restore());
     },
@@ -1474,26 +1509,6 @@ function installTapSurvivorContentGlobalReadGuard(target, label) {
     get() {
       reads += 1;
       throw new Error(`Forbidden classic content global read from ${label}`);
-    },
-  });
-  return {
-    readAttempts: () => reads,
-    restore() {
-      if (previous) Object.defineProperty(target, key, previous);
-      else delete target[key];
-    },
-  };
-}
-
-function installTapSurvivorRelicsGlobalReadGuard(target, label) {
-  const key = "TapSurvivorRelics";
-  const previous = Object.getOwnPropertyDescriptor(target, key);
-  let reads = 0;
-  Object.defineProperty(target, key, {
-    configurable: true,
-    get() {
-      reads += 1;
-      throw new Error(`Forbidden classic relic global read from ${label}`);
     },
   });
   return {

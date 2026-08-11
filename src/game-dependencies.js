@@ -32,6 +32,124 @@
     };
   }
 
+  const MODULE_NATIVE_COMBAT_SLOTS = Object.freeze(["combat"]);
+
+  const MODULE_NATIVE_COMBAT_PROOF_SLOTS = Object.freeze(["createCombatSystem"]);
+
+  /**
+   * @param {any} [options]
+   */
+  function createCombatSystem({
+    canvas,
+    balance,
+    combatDamage,
+    content,
+    enemies,
+    enemyBehaviors,
+    enemySpawning,
+    enemyTypes,
+    bossConfig,
+    bossAbilities,
+    levelDefs,
+    getActiveFloorDef,
+    weaponDefs,
+    getGame,
+    getUpgradeTier,
+    getShopBonuses,
+    getRelicSpecialEffects,
+    addQuestProgress,
+    addQuestProgressForWeapon,
+    addQuestProgressGroup,
+    killQuestIds,
+    damageQuestIds,
+    bossQuestIds,
+    spawnLootDrops,
+    getWeaponDamageMultiplier,
+    playWeaponSfx,
+    advanceTowerFloor,
+    endRun,
+    onBossSpawn,
+    distance,
+    clamp,
+    weaponBehaviors,
+    weaponCooldowns,
+    weaponFire,
+    weaponProjectiles,
+    weaponTargeting,
+  } = {}) {
+    const damageSystem = combatDamage.createCombatDamageSystem({
+      canvas,
+      getGame,
+      getRelicSpecialEffects,
+      addQuestProgressForWeapon,
+      addQuestProgressGroup,
+      killQuestIds,
+      damageQuestIds,
+      bossQuestIds,
+      spawnLootDrops,
+      advanceTowerFloor,
+      distance,
+      clamp,
+    });
+    const enemySystem = enemies.createEnemySystem({
+      canvas,
+      balance,
+      enemyBehaviors,
+      enemySpawning,
+      enemyTypes,
+      bossConfig,
+      bossAbilities,
+      levelDefs,
+      getActiveFloorDef,
+      getGame,
+      distance,
+      clamp,
+      damagePlayer: damageSystem.damagePlayer,
+      onBossSpawn,
+    });
+    const weaponFireSystem = weaponFire.createWeaponFireSystem({
+      canvas,
+      content,
+      weaponDefs,
+      getGame,
+      getUpgradeTier,
+      getRunUpgradeTier,
+      getShopBonuses,
+      getRelicSpecialEffects,
+      getWeaponDamageMultiplier,
+      playWeaponSfx,
+      addQuestProgress,
+      damageEnemy: damageSystem.damageEnemy,
+      reapEnemies: damageSystem.reapEnemies,
+      distance,
+      clamp,
+      weaponBehaviors,
+      weaponCooldowns,
+      weaponProjectiles,
+      weaponTargeting,
+      damagePlayer: damageSystem.damagePlayer,
+    });
+
+    function getRunUpgradeTier(id) {
+      const game = getGame();
+      return game?.runUpgradeTiers?.[id] || 0;
+    }
+
+    return {
+      spawnEnemies: enemySystem.spawnEnemies,
+      spawnBoss: enemySystem.spawnBoss,
+      updateBossSpecials: enemySystem.updateBossSpecials,
+      updateEnemies: enemySystem.updateEnemies,
+      updateEnemyBolts: enemySystem.updateEnemyBolts,
+      updateWeapons: weaponFireSystem.updateWeapons,
+      updateBolts: weaponFireSystem.updateBolts,
+      updateAreas: weaponFireSystem.updateAreas,
+      updateBeams: weaponFireSystem.updateBeams,
+      updateWeaponBursts: weaponFireSystem.updateWeaponBursts,
+      getRunUpgradeTier,
+    };
+  }
+
   function createCombatDamageSystem({
     canvas,
     getGame,
@@ -1522,6 +1640,276 @@
     return `${mins}:${secs}`;
   }
 
+  /**
+   * @typedef {object} PickupLootConfig
+   * @property {number=} coinFloorRewardRate
+   * @property {number=} normalCoinBaseValue
+   * @property {number=} bossCoinBaseValue
+   */
+
+  function createPickupSystem({
+    getGame,
+    getSave,
+    lootConfig = {},
+    getRelicSpecialEffects,
+    persist,
+    renderMeta,
+    collectXp,
+    distance,
+    randomRange,
+  }) {
+    const lootSettings = /** @type {PickupLootConfig} */ (lootConfig || {});
+
+    function coinFloorRewardRate() {
+      return Number.isFinite(lootSettings.coinFloorRewardRate)
+        ? lootSettings.coinFloorRewardRate
+        : 0.06;
+    }
+
+    function normalCoinBaseValue() {
+      return Number.isFinite(lootSettings.normalCoinBaseValue)
+        ? lootSettings.normalCoinBaseValue
+        : 1;
+    }
+
+    function bossCoinBaseValue() {
+      return Number.isFinite(lootSettings.bossCoinBaseValue) ? lootSettings.bossCoinBaseValue : 12;
+    }
+
+    function spawnLootDrops(enemy) {
+      const game = getGame();
+      if (enemy.boss || Math.random() < 0.34) {
+        const value = coinValue(enemy.boss ? bossCoinBaseValue() : normalCoinBaseValue(), game.towerFloor);
+        game.lootDrops.push({
+          type: "coin",
+          x: enemy.x + randomRange(-10, 10),
+          y: enemy.y + randomRange(-10, 10),
+          radius: enemy.boss ? 10 : 7,
+          value,
+        });
+      }
+      if (enemy.boss || Math.random() < 0.12) {
+        game.lootDrops.push({
+          type: "heart",
+          x: enemy.x + randomRange(-12, 12),
+          y: enemy.y + randomRange(-12, 12),
+          radius: enemy.boss ? 11 : 8,
+          healPercent: 0.2,
+        });
+      }
+    }
+
+    function coinValue(baseValue, towerFloor) {
+      const floor = Math.max(1, Math.floor(towerFloor || 1));
+      return Math.ceil(baseValue * (1 + (floor - 1) * coinFloorRewardRate()));
+    }
+
+    function pullDropTowardPlayer(drop, player, speed, dt) {
+      const dx = player.x - drop.x;
+      const dy = player.y - drop.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const step = Math.min(dist, speed * dt);
+      drop.x += (dx / dist) * step;
+      drop.y += (dy / dist) * step;
+    }
+
+    function updateXpDrops(dt) {
+      const game = getGame();
+      const player = game.player;
+      game.xpDrops.forEach((drop) => {
+        if (distance(player, drop) < player.pickupRadius) {
+          pullDropTowardPlayer(drop, player, 480, dt);
+        }
+        if (distance(player, drop) < player.radius + drop.radius) {
+          drop.collected = true;
+          addPickupText(`+${drop.value} XP`, drop.x, drop.y, "#78e08f");
+          collectXp(drop.value);
+        }
+      });
+      game.xpDrops = game.xpDrops.filter((drop) => !drop.collected);
+    }
+
+    function updateLootDrops(dt) {
+      const game = getGame();
+      const player = game.player;
+      game.lootDrops.forEach((drop) => {
+        if (distance(player, drop) < player.pickupRadius) {
+          pullDropTowardPlayer(drop, player, 540, dt);
+        }
+        if (distance(player, drop) < player.radius + drop.radius) {
+          drop.collected = true;
+          collectLoot(drop);
+        }
+      });
+      game.lootDrops = game.lootDrops.filter((drop) => !drop.collected);
+    }
+
+    function collectLoot(drop) {
+      const game = getGame();
+      const save = getSave();
+      if (drop.type === "coin") {
+        const value = Math.ceil(drop.value * (1 + ((getRelicSpecialEffects?.() || {}).coinMultiplier || 0)));
+        save.coins += value;
+        addPickupText(`+${value}`, drop.x, drop.y, "#ffd166");
+        persist();
+        renderMeta();
+      }
+      if (drop.type === "heart") {
+        const healAmount = Math.ceil(game.player.maxHp * drop.healPercent);
+        game.player.hp = Math.min(game.player.maxHp, game.player.hp + healAmount);
+        addPickupText(`+${healAmount} HP`, drop.x, drop.y, "#ff8fa3");
+      }
+    }
+
+    function addPickupText(text, x, y, color) {
+      const game = getGame();
+      game.pickupTexts.push({ text, x, y, color, life: 0.85, maxLife: 0.85 });
+    }
+
+    function updatePickupTexts(dt) {
+      const game = getGame();
+      game.pickupTexts.forEach((text) => {
+        text.y -= 28 * dt;
+        text.life -= dt;
+      });
+      game.pickupTexts = game.pickupTexts.filter((text) => text.life > 0);
+    }
+
+    return {
+      spawnLootDrops,
+      updateXpDrops,
+      updateLootDrops,
+      updatePickupTexts,
+    };
+  }
+
+  function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random }) {
+    function equippedRelics(save) {
+      const equipped = new Set(save.equippedRelics || []);
+      return (relicDefs || []).filter((relic) => equipped.has(relic.id)).slice(0, maxEquippedRelics(save));
+    }
+
+    function maxEquippedRelics(save) {
+      return Math.min(5, Math.floor(Math.max(0, save.towerFloor || 1) / 10));
+    }
+
+    function relicNumber(save, field) {
+      return equippedRelics(save).reduce((total, relic) => total + (relic[field] || 0), 0);
+    }
+
+    function relicBonusFor(save, upgradeId, field) {
+      return equippedRelics(save)
+        .filter((relic) => relic.targetUpgradeId === upgradeId)
+        .reduce((total, relic) => total + (relic[field] || 0), 0);
+    }
+
+    function startingRunUpgradeTiers(save) {
+      return equippedRelics(save).reduce((tiers, relic) => {
+        const bonus = relic.startingTierBonus || 0;
+        if (relic.targetUpgradeId && bonus > 0) {
+          tiers[relic.targetUpgradeId] = (tiers[relic.targetUpgradeId] || 0) + bonus;
+        }
+        return tiers;
+      }, {});
+    }
+
+    function maxEquippedWeapons(save) {
+      return Math.max(1, 4 + relicNumber(save, "weaponSlotBonus"));
+    }
+
+    function getWeaponDamageMultiplier(save) {
+      return equippedRelics(save).reduce((multiplier, relic) => multiplier * (relic.weaponDamageMultiplier || 1), 1);
+    }
+
+    function specialEffects(save) {
+      return equippedRelics(save).reduce((effects, relic) => mergeSpecialAbility(effects, relic.specialAbility), {});
+    }
+
+    function mergeSpecialAbility(effects, ability) {
+      if (!ability?.modifiers) return effects;
+      Object.entries(ability.modifiers).forEach(([key, value]) => {
+        if (!Number.isFinite(value)) return;
+        effects[key] = (effects[key] || 0) + value;
+      });
+      return effects;
+    }
+
+    function grantRelic(save, relic) {
+      if (!relic) return null;
+      const unlocked = new Set(save.unlockedRelics || []);
+      if (unlocked.has(relic.id)) return null;
+      save.unlockedRelics = [...unlocked, relic.id];
+      if ((save.equippedRelics || []).length < maxEquippedRelics(save)) {
+        save.equippedRelics = [...new Set([...(save.equippedRelics || []), relic.id])];
+      }
+      return relic;
+    }
+
+    function setRelicEquipped(save, relicId, equipped) {
+      const unlocked = new Set(save.unlockedRelics || []);
+      if (!unlocked.has(relicId)) return false;
+      const current = (save.equippedRelics || []).filter((id) => unlocked.has(id)).slice(0, maxEquippedRelics(save));
+      if (!equipped) {
+        save.equippedRelics = current.filter((id) => id !== relicId);
+        return true;
+      }
+      if (current.includes(relicId)) return true;
+      if (current.length >= maxEquippedRelics(save)) return false;
+      save.equippedRelics = [...current, relicId];
+      return true;
+    }
+
+    function grantRandomRelic(save) {
+      const unlocked = new Set(save.unlockedRelics || []);
+      const locked = (relicDefs || []).filter((relic) => !unlocked.has(relic.id));
+      if (!locked.length) return null;
+      const relic = locked[Math.floor(random() * locked.length)];
+      return grantRelic(save, relic);
+    }
+
+    function relicChoices(save, equippedWeaponIds, count = 3) {
+      const unlocked = new Set(save.unlockedRelics || []);
+      const locked = (relicDefs || []).filter((relic) => !unlocked.has(relic.id));
+      const relevantIds = relevantRunUpgradeIds(equippedWeaponIds);
+      const relevant = locked.filter((relic) => relevantIds.has(relic.targetUpgradeId));
+      const fallback = locked.filter((relic) => !relevantIds.has(relic.targetUpgradeId));
+      return [...shuffleRelics(relevant), ...shuffleRelics(fallback)].slice(0, count);
+    }
+
+    function relevantRunUpgradeIds(equippedWeaponIds) {
+      const ids = new Set(["run_fire_rate", "run_flat_damage", "run_percent_damage"]);
+      const kinds = new Set((equippedWeaponIds || []).map((id) => weaponDefs[id]?.kind).filter(Boolean));
+      if (kinds.has("projectile")) {
+        ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_split_on_hit"].forEach((id) => ids.add(id));
+      }
+      if (["beam", "cone", "radial", "target_area", "lingering_area", "mine"].some((kind) => kinds.has(kind))) {
+        ids.add("run_attack_radius");
+      }
+      return ids;
+    }
+
+    function shuffleRelics(relics) {
+      return relics
+        .map((relic) => ({ relic, sort: random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ relic }) => relic);
+    }
+
+    return {
+      equippedRelics,
+      maxEquippedRelics,
+      maxEquippedWeapons,
+      getWeaponDamageMultiplier,
+      specialEffects,
+      relicBonusFor,
+      grantRelic,
+      grantRandomRelic,
+      relicChoices,
+      setRelicEquipped,
+      startingRunUpgradeTiers,
+    };
+  }
+
   const SHOP_FLOOR_PRICE_RATE = 0.03;
   const SHOP_INFLATION_RATE = 0.025;
 
@@ -2267,7 +2655,7 @@
       assets: globalRef.TapSurvivorAssets || {},
       balance: { floorDifficulty },
       balanceRuntime,
-      combat: requireGlobal(globalRef, "TapSurvivorCombat"),
+      combat: { createCombatSystem },
       combatDamage: { createCombatDamageSystem },
       content,
       contentRegistry: { createContentRegistry },
@@ -2289,10 +2677,10 @@
       levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
       mapSystem: { createMapSystem },
       math: { clamp, distance, formatTime, randomRange },
-      pickups: requireGlobal(globalRef, "TapSurvivorPickups"),
+      pickups: { createPickupSystem },
       progression: requireGlobal(globalRef, "TapSurvivorProgression"),
       quests: requireGlobal(globalRef, "TapSurvivorQuests"),
-      relics: requireGlobal(globalRef, "TapSurvivorRelics"),
+      relics: { createRelicSystem },
       renderEnemies: requireGlobal(globalRef, "TapSurvivorRenderEnemies"),
       renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
       renderSkillRail: requireGlobal(globalRef, "TapSurvivorRenderSkillRail"),
