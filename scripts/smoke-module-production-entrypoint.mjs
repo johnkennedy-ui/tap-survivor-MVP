@@ -522,6 +522,12 @@ const speedButtons = [1, 2, 5].map((speed) => ({
   },
 }));
 const uiSurface = {
+  choices: createFixtureElement("div"),
+  closeEnd: createVisibilityNode("browser-ui:close-end"),
+  closeEndX: createVisibilityNode("browser-ui:close-end-x"),
+  closeLevelUp: createVisibilityNode("browser-ui:close-level-up"),
+  closeShop: createVisibilityNode("browser-ui:close-shop"),
+  closeShopBottom: createVisibilityNode("browser-ui:close-shop-bottom"),
   endScreen: createVisibilityNode("browser-ui:end-screen"),
   questBanner: {
     classList: {
@@ -530,11 +536,7 @@ const uiSurface = {
     },
     textContent: "",
   },
-  levelUp: {
-    classList: {
-      add: () => calls.push("level-up:hidden"),
-    },
-  },
+  levelUp: createVisibilityNode("browser-ui:level-up"),
   menuInventoryPanel: createVisibilityNode("browser-ui:menu-inventory-panel"),
   menuInventoryTab: createVisibilityNode("browser-ui:menu-inventory-tab"),
   menuProgressPanel: createVisibilityNode("browser-ui:menu-progress-panel"),
@@ -542,6 +544,7 @@ const uiSurface = {
   menuShopNotice: createVisibilityNode("browser-ui:menu-shop-notice"),
   menuShopPanel: createVisibilityNode("browser-ui:menu-shop-panel"),
   menuShopTab: createVisibilityNode("browser-ui:menu-shop-tab"),
+  muteAudio: createVisibilityNode("browser-ui:mute-audio"),
   openMenu: createVisibilityNode("browser-ui:open-menu"),
   exitRun: createVisibilityNode("browser-ui:exit-run"),
   runMenu: createVisibilityNode("browser-ui:run-menu"),
@@ -674,7 +677,9 @@ entrypoint.dispose();
 
 check(
   "production-style startRun reaches module lifecycle path",
-  calls.includes("lifecycle:reset") && calls.includes("shop:close") && calls.includes("level-up:hidden")
+  calls.includes("lifecycle:reset") &&
+    calls.includes("shop:close") &&
+    calls.includes("browser-ui:level-up:add:hidden")
 );
 check(
   "production-style tick reaches module run update path",
@@ -743,6 +748,70 @@ const browserGameAfterStart = browserEntrypoint.dependencies.getGame();
 canvas.listeners.get("mousedown")({ clientX: 240, clientY: 270 });
 const browserMovementTargetUpdated =
   browserGameAfterStart?.player?.targetX === 240 && browserGameAfterStart?.player?.targetY === 270;
+const browserAudioMutedBeforeClick = browserEntrypoint.dependencies.audioSystem.isMuted();
+uiSurface.muteAudio.click();
+const browserAudioMuteStateAfterClick = browserEntrypoint.dependencies.audioSystem.isMuted();
+const browserMuteButtonUpdated =
+  uiSurface.muteAudio.getAttribute("aria-pressed") === "true" &&
+  uiSurface.muteAudio.classList.contains("active") &&
+  uiSurface.muteAudio.textContent === "Muted";
+browserUiAdapters.shopSystemAdapter.openShop();
+const browserShopOpened =
+  !uiSurface.shopModal.hidden &&
+  !uiSurface.menuShopPanel.hidden &&
+  browserGameAfterStart?.paused === true &&
+  browserGameAfterStart?.pauseReason === "shop";
+uiSurface.closeShop.click();
+const browserShopClosedFromTop =
+  uiSurface.shopModal.hidden &&
+  uiSurface.menuShopPanel.hidden &&
+  browserGameAfterStart?.paused === false &&
+  browserGameAfterStart?.pauseReason === "";
+browserUiAdapters.shopSystemAdapter.openShop();
+uiSurface.closeShopBottom.click();
+const browserShopClosedFromBottom =
+  uiSurface.shopModal.hidden &&
+  uiSurface.menuShopPanel.hidden &&
+  browserGameAfterStart?.paused === false &&
+  browserGameAfterStart?.pauseReason === "";
+const browserRunUpdater = browserEntrypoint.dependencies.runUpdater;
+browserRunUpdater.collectXp(browserGameAfterStart.player.xpToLevel);
+const browserLevelUpShown =
+  !uiSurface.levelUp.hidden &&
+  browserGameAfterStart.paused === true &&
+  browserGameAfterStart.pauseReason === "level" &&
+  uiSurface.choices.children.length > 0;
+uiSurface.closeLevelUp.click();
+const browserLevelUpClosed =
+  uiSurface.levelUp.hidden &&
+  browserGameAfterStart.paused === false &&
+  browserGameAfterStart.pauseReason === "";
+browserGameAfterStart.player.hp = Math.min(browserGameAfterStart.player.hp, 50);
+browserRunUpdater.collectXp(browserGameAfterStart.player.xpToLevel);
+const browserLevelChoice = uiSurface.choices.children[uiSurface.choices.children.length - 1];
+const browserLevelChoiceStateBefore = JSON.stringify({
+  equippedWeapons: browserGameAfterStart.player.equippedWeapons,
+  hp: browserGameAfterStart.player.hp,
+  runUpgradeTiers: browserGameAfterStart.runUpgradeTiers,
+});
+browserLevelChoice.disabled = false;
+browserLevelChoice.click();
+const browserLevelChoiceStateAfter = JSON.stringify({
+  equippedWeapons: browserGameAfterStart.player.equippedWeapons,
+  hp: browserGameAfterStart.player.hp,
+  runUpgradeTiers: browserGameAfterStart.runUpgradeTiers,
+});
+const browserLevelChoiceApplied =
+  browserLevelChoiceStateAfter !== browserLevelChoiceStateBefore &&
+  uiSurface.levelUp.hidden &&
+  browserGameAfterStart.paused === false &&
+  browserGameAfterStart.pauseReason === "";
+browserUiAdapters.runUiAdapter.showEndScreen("browser-end-close");
+uiSurface.closeEnd.click();
+const browserEndClosedFromTop = uiSurface.endScreen.hidden && !uiSurface.titleScreen.hidden;
+browserUiAdapters.runUiAdapter.showEndScreen("browser-end-close-x");
+uiSurface.closeEndX.click();
+const browserEndClosedFromX = uiSurface.endScreen.hidden && !uiSurface.titleScreen.hidden;
 browserEntrypoint.tick(0.032);
 browserEntrypoint.render({ frameId: "browser-default" });
 browserEntrypoint.persist();
@@ -755,9 +824,6 @@ browserUiAdapters.runUiAdapter.hideEndScreen();
 browserUiAdapters.shellUiAdapter.bind();
 browserUiAdapters.shellUiAdapter.showTitleScreen();
 browserUiAdapters.shellUiAdapter.closeRunMenu(false);
-browserUiAdapters.shopSystemAdapter.openShop?.();
-browserUiAdapters.shopSystemAdapter.renderShop?.();
-browserUiAdapters.shopSystemAdapter.closeShop();
 browserEntrypoint.dispose();
 const injectedBrowserHostGlobalReads = injectedBrowserHostGlobalGuard.readAttempts();
 injectedBrowserHostGlobalGuard.restore();
@@ -823,6 +889,22 @@ check(
   calls.includes("browser-ui:title-start-game:listener:click") &&
     browserMovementTargetUpdated &&
     [1, 2, 5].every((speed) => calls.includes(`speed:${speed}:active:true`))
+);
+check(
+  "production module browser mute updates the native audio state and button presentation",
+  browserAudioMutedBeforeClick === false && browserAudioMuteStateAfterClick === true && browserMuteButtonUpdated
+);
+check(
+  "production module browser level-up actions render choices and change run state",
+  browserLevelUpShown && browserLevelUpClosed && browserLevelChoiceApplied
+);
+check(
+  "production module browser binds both end and shop close controls to state transitions",
+  browserEndClosedFromTop &&
+    browserEndClosedFromX &&
+    browserShopOpened &&
+    browserShopClosedFromTop &&
+    browserShopClosedFromBottom
 );
 const defaultBrowserOptions = createBrowserDependencyBagOptions({
   canvas,

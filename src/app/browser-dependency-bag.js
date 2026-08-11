@@ -606,8 +606,10 @@ function createBrowserUiAdapters({
     ui,
   });
   const shopBinding = createBrowserShopSystemAdapter();
+  const runtimeUiActions = createBrowserRuntimeUiActionBinding();
   const shopSystemAdapter = shopBinding.shopSystemAdapter;
   return {
+    bindRuntimeUiActions: runtimeUiActions.bindRuntimeUiActions,
     bindShopSystem: shopBinding.bindShopSystem,
     runUi: {
       formatTime: formatBrowserTime,
@@ -617,15 +619,36 @@ function createBrowserUiAdapters({
     },
     runUiAdapter: createBrowserRunUiAdapter({ documentRef, globalRef, ui }),
     shellUiAdapter: createBrowserShellUiAdapter({
+      closeEndScreen: runtimeUiActions.closeEndScreen,
+      closeLevelUpMenu: runtimeUiActions.closeLevelUpMenu,
+      closeShopMenu: runtimeUiActions.closeShopMenu,
+      isAudioMuted: runtimeUiActions.isAudioMuted,
       onStartAudio,
       onStartRun,
       renderInventory: inventoryRenderer.renderInventory,
       renderShop: shopSystemAdapter.renderShop,
+      toggleAudioMute: runtimeUiActions.toggleAudioMute,
       ui,
     }),
     shopDocumentRef: documentRef,
     shopSystemAdapter,
     ui,
+  };
+}
+
+function createBrowserRuntimeUiActionBinding() {
+  let runtimeUiActions = {};
+
+  return {
+    bindRuntimeUiActions(nextRuntimeUiActions = {}) {
+      runtimeUiActions = nextRuntimeUiActions;
+      return true;
+    },
+    closeEndScreen: () => runtimeUiActions.closeEndScreen?.(),
+    closeLevelUpMenu: () => runtimeUiActions.closeLevelUpMenu?.(),
+    closeShopMenu: () => runtimeUiActions.closeShopMenu?.(),
+    isAudioMuted: () => Boolean(runtimeUiActions.isAudioMuted?.()),
+    toggleAudioMute: () => runtimeUiActions.toggleAudioMute?.(),
   };
 }
 
@@ -682,7 +705,18 @@ function createBrowserRunUiAdapter({ documentRef, globalRef, ui }) {
   };
 }
 
-function createBrowserShellUiAdapter({ onStartAudio, onStartRun, renderInventory, renderShop, ui }) {
+function createBrowserShellUiAdapter({
+  closeEndScreen,
+  closeLevelUpMenu,
+  closeShopMenu,
+  isAudioMuted,
+  onStartAudio,
+  onStartRun,
+  renderInventory,
+  renderShop,
+  toggleAudioMute,
+  ui,
+}) {
   let bound = false;
   const renderInventoryPanel = renderInventory || (() => {});
   const renderShopPanel = renderShop || (() => {});
@@ -739,11 +773,16 @@ function createBrowserShellUiAdapter({ onStartAudio, onStartRun, renderInventory
     const result = requestFullscreen?.call(target);
     result?.catch?.(() => {});
   };
-  const toggleMute = () => {
-    const muted = ui.muteAudio?.getAttribute?.("aria-pressed") !== "true";
+  const updateMuteButton = (muted = false) => {
+    if (!ui.muteAudio) return;
     ui.muteAudio?.setAttribute?.("aria-pressed", String(muted));
     ui.muteAudio?.classList?.toggle("active", muted);
     if (ui.muteAudio) ui.muteAudio.textContent = muted ? "Muted" : "Sound";
+  };
+  const toggleMute = () => {
+    const muted = toggleAudioMute?.();
+    if (typeof muted === "boolean") updateMuteButton(muted);
+    return muted;
   };
   return {
     bind() {
@@ -752,11 +791,17 @@ function createBrowserShellUiAdapter({ onStartAudio, onStartRun, renderInventory
       ui.titleStartGame?.addEventListener?.("click", startFromTitle);
       ui.openMenu?.addEventListener?.("click", toggleMenu);
       ui.closeMenu?.addEventListener?.("click", () => setMenuOpen(false));
+      ui.closeLevelUp?.addEventListener?.("click", closeLevelUpMenu);
+      ui.closeEnd?.addEventListener?.("click", closeEndScreen);
+      ui.closeEndX?.addEventListener?.("click", closeEndScreen);
+      ui.closeShop?.addEventListener?.("click", closeShopMenu);
+      ui.closeShopBottom?.addEventListener?.("click", closeShopMenu);
       ui.menuProgressTab?.addEventListener?.("click", () => showMenuTab("progress"));
       ui.menuShopTab?.addEventListener?.("click", () => showMenuTab("shop"));
       ui.menuInventoryTab?.addEventListener?.("click", () => showMenuTab("inventory"));
       ui.fullscreenButton?.addEventListener?.("click", toggleFullscreen);
       ui.muteAudio?.addEventListener?.("click", toggleMute);
+      updateMuteButton(isAudioMuted?.());
       showTitle();
       return true;
     },

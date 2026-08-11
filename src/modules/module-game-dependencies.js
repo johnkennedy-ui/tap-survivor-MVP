@@ -294,6 +294,46 @@ export function createModuleGameDependencyBag({
     weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
     weaponTargeting: { nearestEnemy },
   });
+  const levelUpSystem = progressionAdapters.levelUp.createLevelUpSystem({
+    activeQuestWeaponIds: questSystem.activeQuestWeaponIds,
+    assets: assetAdapters.assets,
+    content,
+    documentRef: injectedUiAdapters.shopDocumentRef,
+    getGame: stateStore.getGame,
+    getRunUpgradeTier: (id) => combatSystem.getRunUpgradeTier?.(id) || 0,
+    getSave: stateStore.getSave,
+    levelUpChoices,
+    maxEquippedWeapons,
+    playChoiceSfx: (choice) => {
+      if (choice?.weaponId) audioSystem.playWeapon(choice.weaponId);
+      if (choice?.runUpgradeId) audioSystem.playRunUpgrade(choice.runUpgradeId);
+    },
+    relicDefs: contentRegistry.relicDefs,
+    runUpgradeDefs: contentRegistry.runUpgradeDefs,
+    ui: uiAdapters.ui,
+    weaponDefs: contentRegistry.weaponDefs,
+  });
+  if (typeof injectedUiAdapters.bindRuntimeUiActions === "function") {
+    injectedUiAdapters.bindRuntimeUiActions({
+      closeEndScreen: () => {
+        uiAdapters.runUiAdapter.hideEndScreen?.();
+        uiAdapters.shellUiAdapter.showTitleScreen?.();
+        return true;
+      },
+      closeLevelUpMenu: () => {
+        if (typeof levelUpSystem?.closeLevelUpMenu !== "function") return false;
+        levelUpSystem.closeLevelUpMenu();
+        return true;
+      },
+      closeShopMenu: () => {
+        uiAdapters.shopSystemAdapter.closeShop?.();
+        if (!stateStore.getGame()?.running) uiAdapters.shellUiAdapter.showTitleScreen?.();
+        return true;
+      },
+      isAudioMuted: () => audioSystem.isMuted?.() ?? false,
+      toggleAudioMute: () => audioSystem.toggleMuted?.() ?? false,
+    });
+  }
   if (hasCombatRuntime(combatSystem)) {
     runUpdater = createRunUpdater({
       canvas: platformAdapters.canvas,
@@ -304,7 +344,12 @@ export function createModuleGameDependencyBag({
       survivalQuestIds: contentRegistry.survivalQuestIds,
       xpQuestIds: contentRegistry.xpQuestIds,
       levelQuestIds: contentRegistry.levelQuestIds,
-      showLevelUp: () => showLevelUp(uiAdapters, stateStore),
+      showLevelUp: () => {
+        if (typeof levelUpSystem?.showLevelUp === "function") {
+          return levelUpSystem.showLevelUp();
+        }
+        return showLevelUp(uiAdapters, stateStore);
+      },
       endRun: (reason) => endRun({ reason, stateStore, uiAdapters }),
       getRelicSpecialEffects,
       mapSystem: mapSystemInstance,
