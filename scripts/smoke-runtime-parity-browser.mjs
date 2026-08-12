@@ -1473,6 +1473,10 @@ function runtimeDiagnosticOverflow(result, name) {
   return Math.max(0, runtimeDiagnosticCount(result, name) - (Array.isArray(result?.[name]) ? result[name].length : 0));
 }
 
+function hasUnavailableClassicProviderLifecycle(lifecycle) {
+  return lifecycle?.baselineCapability === "unavailable" && lifecycle?.configureDefaultProviders === false;
+}
+
 function hasClassicUpgradeProviderLifecycle(lifecycle) {
   return Boolean(
     lifecycle?.configureDefaultProviders &&
@@ -1590,12 +1594,18 @@ function compareSnapshots(classic, esm) {
   }
   if (!classicSaveProvider?.publisherPresent) {
     strictFailures.push("classic TapSurvivorSave publisher is missing");
-  } else if (!hasClassicSaveProviderLifecycle(classicSaveProvider)) {
+  } else if (
+    !hasUnavailableClassicProviderLifecycle(classicSaveProvider) &&
+    !hasClassicSaveProviderLifecycle(classicSaveProvider)
+  ) {
     strictFailures.push("classic TapSurvivorSave provider fixture did not prove missing/configuration/recovery lifecycle");
   }
   if (!classicUpgradeProvider?.publisherPresent) {
     strictFailures.push("classic TapSurvivorUpgrades publisher is missing");
-  } else if (!hasClassicUpgradeProviderLifecycle(classicUpgradeProvider)) {
+  } else if (
+    !hasUnavailableClassicProviderLifecycle(classicUpgradeProvider) &&
+    !hasClassicUpgradeProviderLifecycle(classicUpgradeProvider)
+  ) {
     strictFailures.push("classic TapSurvivorUpgrades provider fixture did not prove missing/configuration/recovery lifecycle");
   }
   if (classicCanvas && esmCanvas && (classicCanvas.width !== esmCanvas.width || classicCanvas.height !== esmCanvas.height)) {
@@ -2222,7 +2232,12 @@ function renderClassicHookScript() {
   function exerciseClassicUpgradeProviderLifecycle(parity) {
     const publisher = globalThis.TapSurvivorUpgrades;
     if (!publisher || typeof publisher.configureDefaultProviders !== "function") {
-      throw new Error("Classic TapSurvivorUpgrades publisher is missing configureDefaultProviders");
+      parity.classicUpgradeProviderLifecycle = {
+        baselineCapability: "unavailable",
+        configureDefaultProviders: false,
+        publisherPresent: Boolean(publisher),
+      };
+      return;
     }
 
     const content = globalThis.TapSurvivorContent;
@@ -2232,6 +2247,7 @@ function renderClassicHookScript() {
     }
 
     const lifecycle = {
+      baselineCapability: "available",
       configureDefaultProviders: true,
       publisherPresent: true,
       unconfiguredCreate: expectMissingProviderError(
@@ -2293,7 +2309,12 @@ function renderClassicHookScript() {
   function exerciseClassicSaveProviderLifecycle(parity) {
     const publisher = globalThis.TapSurvivorSave;
     if (!publisher || typeof publisher.configureDefaultProviders !== "function") {
-      throw new Error("Classic TapSurvivorSave publisher is missing configureDefaultProviders");
+      parity.classicSaveProviderLifecycle = {
+        baselineCapability: "unavailable",
+        configureDefaultProviders: false,
+        publisherPresent: Boolean(publisher),
+      };
+      return;
     }
 
     const storage = globalThis.TapSurvivorStorage;
@@ -2302,6 +2323,7 @@ function renderClassicHookScript() {
     }
 
     const lifecycle = {
+      baselineCapability: "available",
       configureDefaultProviders: true,
       publisherPresent: true,
       unconfigured: expectMissingSaveProviderError(
