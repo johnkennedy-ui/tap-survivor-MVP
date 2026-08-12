@@ -3,7 +3,8 @@ import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { chmod, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { dirname, extname, join, normalize, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { dirname, extname, join, resolve } from "node:path";
 
 const repoRoot = process.cwd();
 const localRequire = createRequire(import.meta.url);
@@ -15,6 +16,8 @@ const framesToAdvance = cli.frames;
 const dtMs = cli.dtMs;
 const screenshotDir = cli.screenshotDir ? resolve(repoRoot, cli.screenshotDir) : "";
 const syntheticPagePrefix = "/__runtime-parity/";
+const classicBaselineRevision = "1a443bffcd92ef10bc89afceaa0463e74c398f2f";
+const classicAssetMount = `${syntheticPagePrefix}classic-assets/`;
 const syntheticPages = {
   classic: `${syntheticPagePrefix}classic.html`,
   esm: `${syntheticPagePrefix}esm.html`,
@@ -37,6 +40,8 @@ const report = {
   browserExecutable: "",
   browserExecutableSource: "",
   browserDriverSource: "",
+  classicAssetMount,
+  classicBaselineRevision,
   classic: null,
   comparison: null,
   diagnosticMode: !strict,
@@ -55,9 +60,9 @@ const report = {
   xdgRuntimeDir: "",
 };
 
-let classicIndexSource = "";
+let classicBaselineRoot = "";
 let classicScripts = [];
-let shellPage = "";
+let classicShellPage = "";
 let surfaceRoots = [];
 
 async function main() {
@@ -65,7 +70,7 @@ async function main() {
   let browserProfileDir = "";
   let exitCode = 0;
   try {
-    initializeRuntime();
+    await initializeRuntime();
     const browserDriver = loadBrowserDriver();
     const browserLaunch = resolveBrowserLaunch(browserDriver.chromium);
     report.browserExecutable = browserLaunch.executablePath;
@@ -101,6 +106,20 @@ async function main() {
   } finally {
     await browser?.close().catch(() => {});
     if (browserProfileDir) await rm(browserProfileDir, { force: true, recursive: true }).catch(() => {});
+    try {
+      await cleanupClassicBaseline();
+    } catch (error) {
+      const cleanupFailure = shortMessage(error?.stack || error?.message || String(error));
+      report.classicBaselineCleanupError = cleanupFailure;
+      report.appLevelResult = "fail";
+      report.comparison = {
+        appLevelResult: "fail",
+        comparisonNotes: report.comparison?.comparisonNotes || [],
+        strictFailures: [...(report.comparison?.strictFailures || []), `classic baseline cleanup failed: ${cleanupFailure}`],
+      };
+      report.firstDivergence ||= `classic baseline cleanup failed: ${cleanupFailure}`;
+      exitCode = 1;
+    }
   }
 
   report.exitCode = exitCode;
@@ -117,13 +136,20 @@ async function main() {
   process.exitCode = report.exitCode;
 }
 
-function initializeRuntime() {
+async function initializeRuntime() {
   if (!existsSync(root)) {
     throw new Error(`Required parity root is missing: ${root}`);
   }
-  classicIndexSource = readClassicIndexSource();
+  await materializeClassicBaseline();
+  const classicIndexSource = readFileSync(join(classicBaselineRoot, "index.html"), "utf8");
   classicScripts = resolveClassicScripts(classicIndexSource);
-  shellPage = injectBase(stripScripts(classicIndexSource));
+  for (const script of classicScripts) {
+    const scriptPath = resolveRequestPath(script, classicBaselineRoot);
+    if (!scriptPath || !existsSync(scriptPath)) {
+      throw new Error(`Classic baseline archive is missing scripted asset: ${script}`);
+    }
+  }
+  classicShellPage = injectBase(stripScripts(classicIndexSource), classicAssetMount);
   surfaceRoots = resolveSurfaceRoots(root);
   report.surfaceRoots = surfaceRoots.map((surface) => ({
     exists: surface.exists,
@@ -131,6 +157,50 @@ function initializeRuntime() {
     rootDir: surface.rootDir,
     surfaceUrl: surface.surfaceUrl,
   }));
+}
+
+async function materializeClassicBaseline() {
+  classicBaselineRoot = await mkdtemp(join(tmpdir(), "tap-survivor-parity-classic-"));
+  await chmod(classicBaselineRoot, 0o700);
+
+  const archive = spawnSync("git", ["archive", "--format=tar", classicBaselineRevision], {
+    cwd: repoRoot,
+    encoding: null,
+    maxBuffer: 512 * 1024 * 1024,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (archive.error || archive.status !== 0 || !archive.stdout?.length) {
+    throw new Error(`Unable to archive classic baseline ${classicBaselineRevision}: ${spawnFailureMessage(archive)}`);
+  }
+
+  const extraction = spawnSync(
+    "tar",
+    ["-xf", "-", "-C", classicBaselineRoot, "--no-same-owner", "--no-same-permissions"],
+    {
+      cwd: repoRoot,
+      encoding: "utf8",
+      input: archive.stdout,
+      maxBuffer: 64 * 1024 * 1024,
+      stdio: ["pipe", "ignore", "pipe"],
+    }
+  );
+  if (extraction.error || extraction.status !== 0) {
+    throw new Error(`Unable to extract classic baseline ${classicBaselineRevision}: ${spawnFailureMessage(extraction)}`);
+  }
+  if (!existsSync(join(classicBaselineRoot, "index.html"))) {
+    throw new Error(`Classic baseline archive ${classicBaselineRevision} is missing index.html`);
+  }
+}
+
+async function cleanupClassicBaseline() {
+  if (!classicBaselineRoot) return;
+  const baselineRoot = classicBaselineRoot;
+  await rm(baselineRoot, { force: true, recursive: true });
+  classicBaselineRoot = "";
+}
+
+function spawnFailureMessage(result) {
+  return shortMessage(result?.error?.message || result?.stderr?.toString("utf8") || `exit ${result?.status ?? "unknown"}`);
 }
 
 function resolveBrowserLaunch(chromiumLauncher) {
@@ -245,37 +315,25 @@ async function runSurface(browser, surface) {
 
   if (!surface.exists) return result;
 
+  const classicPage = buildClassicPage();
+  const esmPage = buildEsmPage(surface);
   const server = createServer((req, res) => {
     const requestUrl = req.url || "/";
-    if (requestUrl === syntheticPages.classic) {
-      return sendHtml(res, buildClassicPage());
+    const requestPath = requestPathFromUrl(requestUrl);
+    if (requestPath === syntheticPages.classic) {
+      return sendHtml(res, classicPage);
     }
-    if (requestUrl === syntheticPages.esm) {
-      return sendHtml(res, buildEsmPage());
+    if (requestPath === syntheticPages.esm) {
+      return sendHtml(res, esmPage);
     }
-    if (requestUrl === "/favicon.ico") {
+    if (requestPath === "/favicon.ico") {
       return sendSyntheticFavicon(res);
     }
 
-    const fullPath = resolveRequestPath(requestUrl, surface.rootDir);
-    if (!fullPath || !fullPath.startsWith(surface.rootDir) || !existsSync(fullPath)) {
-      res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-      res.end("Not found");
-      return;
+    if (requestPath.startsWith(classicAssetMount)) {
+      return sendStaticFile(res, resolveMountedRequestPath(requestUrl, classicAssetMount, classicBaselineRoot));
     }
-
-    const filePath = statSync(fullPath).isDirectory() ? join(fullPath, "index.html") : fullPath;
-    if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
-      res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-      res.end("Not found");
-      return;
-    }
-
-    res.writeHead(200, {
-      "cache-control": "no-store",
-      "content-type": contentTypeFor(filePath),
-    });
-    createReadStream(filePath).pipe(res);
+    return sendStaticFile(res, resolveRequestPath(requestUrl, surface.rootDir));
   });
 
   await new Promise((resolveServer, reject) => {
@@ -636,7 +694,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     const entry = { status: response.status(), url: response.url() };
     result.responses.push(entry);
     responseStatusByUrl.set(normalizeImageSource(entry.url), entry.status);
-    if (isLocalUrl(entry.url, origin) && entry.status >= 400) {
+    if (entry.status >= 400) {
       result.httpFailures.push(entry);
     }
   });
@@ -1138,6 +1196,18 @@ function compareSnapshots(classic, esm) {
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
+  if ((classic.consoleErrors?.length || 0) > 0) {
+    strictFailures.push(`classic runtime emitted ${classic.consoleErrors.length} console error(s)`);
+  }
+  if ((classic.pageErrors?.length || 0) > 0) {
+    strictFailures.push(`classic runtime emitted ${classic.pageErrors.length} page error(s)`);
+  }
+  if ((classic.failedRequests?.length || 0) > 0) {
+    strictFailures.push(`classic runtime recorded ${classic.failedRequests.length} failed request(s)`);
+  }
+  if ((classic.httpFailures?.length || 0) > 0) {
+    strictFailures.push(`classic runtime recorded ${classic.httpFailures.length} HTTP failure(s)`);
+  }
   if (!classicSaveProvider?.publisherPresent) {
     strictFailures.push("classic TapSurvivorSave publisher is missing");
   } else if (!hasClassicSaveProviderLifecycle(classicSaveProvider)) {
@@ -1710,13 +1780,18 @@ function buildClassicPage() {
       return tags;
     })
     .join("\n    ");
-  return shellPage.replace(
+  return classicShellPage.replace(
     "</body>",
     `\n    <script>${renderParityPrelude("classic")}</script>\n    ${renderedScripts}\n  </body>`
   );
 }
 
-function buildEsmPage() {
+function buildEsmPage(surface) {
+  const indexPath = join(surface.rootDir, "index.html");
+  if (!existsSync(indexPath)) {
+    throw new Error(`ESM surface index is missing: ${indexPath}`);
+  }
+  const shellPage = injectBase(stripScripts(readFileSync(indexPath, "utf8")), "/");
   const bootScript = renderEsmBootScript();
   return shellPage.replace(
     "</body>",
@@ -1968,8 +2043,8 @@ globalThis.__TapSurvivorParity.esmApi = bootProductionModuleEntrypoint({
 `;
 }
 
-function injectBase(html) {
-  return html.replace("<head>", '<head><base href="/" />');
+function injectBase(html, baseHref) {
+  return html.replace("<head>", `<head><base href="${baseHref}" />`);
 }
 
 function stripScripts(html) {
@@ -1980,84 +2055,15 @@ function parseScriptSources(html) {
   return [...html.matchAll(/<script[^>]+src="([^"]+)"[^>]*><\/script>/g)].map((match) => match[1]);
 }
 
-function readClassicIndexSource() {
-  const historicalCandidates = [
-    ["HEAD^:index.html"],
-    ["f06d154^:index.html"],
-  ];
-  for (const [spec] of historicalCandidates) {
-    const historical = spawnSync("git", ["show", spec], {
-      cwd: repoRoot,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-    if (historical.status === 0 && historical.stdout) return historical.stdout;
-  }
-  const current = readFileSync(join(repoRoot, "index.html"), "utf8");
-  return current;
-}
-
 function resolveClassicScripts(classicIndexSource) {
   const parsed = parseScriptSources(classicIndexSource);
-  if (parsed.some((src) => /src\/game\.js(\?|$)/.test(src)) && !parsed.some((src) => /production-module-autoboot\.js/.test(src))) {
-    return parsed;
+  if (!parsed.some((src) => /src\/game\.js(\?|$)/.test(src))) {
+    throw new Error(`Classic baseline ${classicBaselineRevision} has no classic game entrypoint`);
   }
-  return [
-    "src/content.generated.js?v=auto-7f90557a",
-    "src/balance-runtime.js?v=auto-balance-runtime",
-    "src/assets.js?v=auto-73843940",
-    "src/math.js?v=maintenance-20260611",
-    "src/sprites.js?v=auto-92dd6d0b",
-    "src/audio.js?v=auto-bbfd1bc6",
-    "src/quests.js?v=maintenance-20260611",
-    "src/storage-adapter.js?v=auto-save-storage",
-    "src/save-defaults.js?v=auto-save-helpers",
-    "src/save-migrations.js?v=auto-save-helpers",
-    "src/save-normalize.js?v=auto-save-helpers",
-    "src/save-corruption.js?v=auto-save-helpers",
-    "src/save.js?v=auto-f7bb016d",
-    "src/effects.js?v=auto-fe2763a1",
-    "src/upgrades.js?v=auto-88b55a84",
-    "src/content-registry.js?v=auto-e9ef327f",
-    "src/map-system.js?v=auto-map-system",
-    "src/progression.js?v=auto-71c4c358",
-    "src/sprite-sheet-renderer.js?v=auto-spritesheets",
-    "src/render-skill-rail.js?v=auto-render-helpers",
-    "src/render-hud.js?v=auto-59cf5b58",
-    "src/render-enemies.js?v=auto-render-helpers",
-    "src/rendering.js?v=auto-03e052a7",
-    "src/balance.js?v=maintenance-20260612",
-    "src/weapon-projectiles.js?v=auto-weapon-helpers",
-    "src/weapon-targeting.js?v=auto-weapon-helpers",
-    "src/weapon-cooldowns.js?v=auto-weapon-helpers",
-    "src/weapon-behaviors.js?v=auto-weapon-helpers",
-    "src/weapon-fire.js?v=auto-b96ca3db",
-    "src/enemy-behaviors.js?v=auto-enemy-helpers",
-    "src/enemy-spawning.js?v=auto-enemy-helpers",
-    "src/enemies.js?v=auto-44e405a4",
-    "src/combat-damage.js?v=auto-combat-helpers",
-    "src/combat.js?v=auto-fb2beec8",
-    "src/ui-progression.js?v=auto-ui-helpers",
-    "src/ui.js?v=auto-6e982117",
-    "src/run-ui.js?v=auto-ca5121aa",
-    "src/level-up-choices.js?v=auto-level-up-helpers",
-    "src/level-up.js?v=auto-1f04c9e8",
-    "src/input.js?v=maintenance-20260611",
-    "src/pickups.js?v=auto-f0c71b70",
-    "src/shop-pricing.js?v=auto-shop-helpers",
-    "src/shop.js?v=auto-1c3b8c96",
-    "src/relics.js?v=auto-815236c5",
-    "src/run-state.js?v=auto-b88ef356",
-    "src/run-update.js?v=auto-4b0f4f98",
-    "src/debug.js?v=maintenance-20260611",
-    "src/shell-relic-ui.js?v=auto-shell-helpers",
-    "src/shell-ui.js?v=auto-b114267e",
-    "src/game-banners.js?v=auto-game-helpers",
-    "src/run-lifecycle.js?v=auto-game-helpers",
-    "src/game-runtime.js?v=auto-game-helpers",
-    "src/game-dependencies.js?v=auto-game-dependencies",
-    "src/game.js?v=auto-3c6b5b28",
-  ];
+  if (parsed.some((src) => /production-module-autoboot\.js/.test(src))) {
+    throw new Error(`Classic baseline ${classicBaselineRevision} unexpectedly includes the ESM autoboot entrypoint`);
+  }
+  return parsed;
 }
 
 function classifyDraws(drawCalls, spriteGroups = {}) {
@@ -2148,10 +2154,59 @@ function contentTypeFor(filePath) {
   return contentTypes[extname(filePath)] || "application/octet-stream";
 }
 
+function requestPathFromUrl(url) {
+  try {
+    return decodeURIComponent(new URL(url, "http://127.0.0.1").pathname);
+  } catch {
+    return "";
+  }
+}
+
 function resolveRequestPath(url, rootDir) {
-  const requested = decodeURIComponent(new URL(url, "http://127.0.0.1").pathname);
-  const safePath = normalize(requested).replace(/^(\.\.[/\\])+/, "");
-  return join(rootDir, safePath === "/" ? "index.html" : safePath);
+  const requested = requestPathFromUrl(url);
+  if (!requested) return "";
+  const resolvedRoot = resolve(rootDir);
+  const relativePath = requested === "/" ? "index.html" : requested.replace(/^[/\\]+/, "");
+  const fullPath = resolve(resolvedRoot, relativePath);
+  return fullPath === resolvedRoot || fullPath.startsWith(`${resolvedRoot}/`) ? fullPath : "";
+}
+
+function resolveMountedRequestPath(url, mount, rootDir) {
+  const requested = requestPathFromUrl(url);
+  if (!requested.startsWith(mount)) return "";
+  return resolveRequestPath(`/${requested.slice(mount.length)}`, rootDir);
+}
+
+function sendStaticFile(res, fullPath) {
+  if (!fullPath || !existsSync(fullPath)) {
+    sendNotFound(res);
+    return;
+  }
+
+  let filePath = fullPath;
+  try {
+    if (statSync(filePath).isDirectory()) filePath = join(filePath, "index.html");
+    if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
+      sendNotFound(res);
+      return;
+    }
+  } catch {
+    sendNotFound(res);
+    return;
+  }
+
+  res.writeHead(200, {
+    "cache-control": "no-store",
+    "content-type": contentTypeFor(filePath),
+  });
+  const stream = createReadStream(filePath);
+  stream.once("error", (error) => res.destroy(error));
+  stream.pipe(res);
+}
+
+function sendNotFound(res) {
+  res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+  res.end("Not found");
 }
 
 function isLocalUrl(url, origin) {
