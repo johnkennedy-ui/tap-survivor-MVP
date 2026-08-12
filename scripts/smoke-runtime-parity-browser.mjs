@@ -1572,6 +1572,7 @@ function compareSnapshots(classic, esm) {
   const esmConsoleErrorCount = runtimeDiagnosticCount(esm, "consoleErrors");
   const esmPageErrorCount = runtimeDiagnosticCount(esm, "pageErrors");
   const esmFailedRequestCount = runtimeDiagnosticCount(esm, "failedRequests");
+  const esmHttpFailureCount = runtimeDiagnosticCount(esm, "httpFailures");
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
@@ -1678,6 +1679,9 @@ function compareSnapshots(classic, esm) {
   }
   if (classicFailedRequestCount === 0 && esmFailedRequestCount > 0) {
     strictFailures.push("classic had no failed requests but ESM did");
+  }
+  if (esmHttpFailureCount > 0) {
+    strictFailures.push(`esm runtime recorded ${esmHttpFailureCount} HTTP failure(s)`);
   }
 
   if (!classicPlayer && !esmPlayer) {
