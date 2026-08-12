@@ -8,6 +8,7 @@ import { composeRuntime } from "../src/app/compose-runtime.js";
 import { createGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createModuleGameDependencyBag } from "../src/modules/module-game-dependencies.js";
 import { createModuleGameLifecycleOwner } from "../src/modules/module-game-lifecycle.js";
+import { createShellRelicUi as createClassicShellRelicUi } from "../src/modules/shell-relic-ui.js";
 
 const root = new URL("..", import.meta.url).pathname;
 
@@ -429,9 +430,6 @@ export function createGameHarness({
   vm.runInContext(readSource("src/run-update.js"), context);
   vm.runInContext(readSource("src/debug.js"), context);
   vm.runInContext(readSource("src/shell-relic-ui.js"), context);
-  context.TapSurvivorShellRelicUi.configureDefaultProviders({
-    scheduler: createShellRelicScheduler(context),
-  });
   vm.runInContext(readSource("src/shell-ui.js"), context);
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
@@ -555,7 +553,21 @@ export function createGameHarness({
     renderMeta: dependencies.renderMeta,
     resetSave: () => runtime?.resetSave?.(),
     setGameSpeed: (speed) => runtime?.setGameSpeed?.(speed),
-    shellRelicUi: context.TapSurvivorShellRelicUi,
+    shellRelicUi: {
+      createShellRelicUi(options = {}) {
+        return createClassicShellRelicUi({
+          ...options,
+          imageFactory: options.imageFactory || (() => (typeof context.Image === "function" ? new context.Image() : null)),
+          scheduler:
+            options.scheduler ||
+            {
+              clearTimeout: (timer) => context.clearTimeout?.(timer),
+              setTimeout: (callback, delay) => context.setTimeout?.(callback, delay),
+              animationSetTimeout: (callback, delay) => context.setTimeout?.(callback, delay),
+            },
+        });
+      },
+    },
     shopSystem: dependencies.shopSystem,
     startRun,
     toggleAudioMute: () => {
@@ -584,6 +596,7 @@ export function createGameHarness({
 
   return {
     context,
+    dependencies,
     elements,
     speedButtons,
     frame(now) {
@@ -603,23 +616,6 @@ export function createGameHarness({
     dispatchVisibilityHidden() {
       context.document.visibilityState = "hidden";
       dispatchListeners(documentListeners, "visibilitychange", {});
-    },
-  };
-}
-
-function createShellRelicScheduler(globalRef) {
-  return {
-    clearTimeout(timer) {
-      globalRef.__shellRelicTimerCalls.push({ method: "clearTimeout" });
-      return globalRef.clearTimeout?.(timer);
-    },
-    setTimeout(callback, delay) {
-      globalRef.__shellRelicTimerCalls.push({ delay, method: "setTimeout" });
-      return globalRef.setTimeout?.(callback, delay);
-    },
-    animationSetTimeout(callback, delay) {
-      globalRef.__shellRelicTimerCalls.push({ delay, method: "animationSetTimeout" });
-      return globalRef.setTimeout?.(callback, delay);
     },
   };
 }

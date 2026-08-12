@@ -20,100 +20,16 @@ const bridges = [
   {
     source: "src/modules/effects.js",
     target: "src/effects.js",
-    globalName: "TapSurvivorEffects",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorEffects",
     exports: ["createEffects"],
-    classicBoundarySource: "const classicEffects = createEffects();",
-    globalMembers: [
-      {
-        name: "applyRunUpgradeEffects",
-        value: "classicEffects.applyRunUpgradeEffects",
-      },
-      {
-        name: "applyShopItemEffectToRun",
-        value: "classicEffects.applyShopItemEffectToRun",
-      },
-      {
-        name: "emptyShopBonuses",
-        value: "classicEffects.emptyShopBonuses",
-      },
-      {
-        name: "addShopItemBonus",
-        value: "classicEffects.addShopItemBonus",
-      },
-      {
-        name: "applyRelicSpecialEffects",
-        value: "classicEffects.applyRelicSpecialEffects",
-      },
-    ],
   },
   {
     source: "src/modules/upgrades.js",
     target: "src/upgrades.js",
-    globalName: "TapSurvivorUpgrades",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorUpgrades",
     exports: ["createUpgradeContent"],
-    classicBoundarySource: `let defaultProviders = {};
-let defaultUpgradeContent;
-
-function missingDefaultProviderNames() {
-  const missingProviders = [];
-  if (defaultProviders.content == null) missingProviders.push("content");
-  if (defaultProviders.effects == null) missingProviders.push("effects");
-  return missingProviders;
-}
-
-function createMissingDefaultProviderError(missingProviders) {
-  const error = new Error(
-    \`Missing Tap Survivor upgrade default providers: \${missingProviders.join(", ")}\`
-  );
-  error.name = "TapSurvivorUpgradeProviderError";
-  error.code = "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING";
-  error.missing = missingProviders;
-  error.missingProviders = missingProviders;
-  return error;
-}
-
-function configuredDefaultUpgradeContent() {
-  const missingProviders = missingDefaultProviderNames();
-  if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
-  return defaultUpgradeContent;
-}
-
-function configureDefaultProviders({ content, effects } = {}) {
-  defaultProviders = { content, effects };
-  defaultUpgradeContent = undefined;
-  const missingProviders = missingDefaultProviderNames();
-  if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
-  defaultUpgradeContent = createUpgradeContent(defaultProviders);
-  return defaultUpgradeContent;
-}`,
-    classicPublisherSource: `globalThis.TapSurvivorUpgrades = {
-    createUpgradeContent,
-    configureDefaultProviders,
-    get createUpgradeDefs() {
-      return configuredDefaultUpgradeContent().createUpgradeDefs;
-    },
-    get runUpgradeDefs() {
-      return configuredDefaultUpgradeContent().runUpgradeDefs;
-    },
-  };`,
-    globalMembers: [
-      {
-        name: "createUpgradeContent",
-        value: "createUpgradeContent",
-      },
-      {
-        name: "configureDefaultProviders",
-        value: "configureDefaultProviders",
-      },
-      {
-        name: "createUpgradeDefs",
-        value: "configuredDefaultUpgradeContent().createUpgradeDefs",
-      },
-      {
-        name: "runUpgradeDefs",
-        value: "configuredDefaultUpgradeContent().runUpgradeDefs",
-      },
-    ],
   },
   {
     source: "src/modules/level-up-choices.js",
@@ -158,83 +74,9 @@ function configureDefaultProviders({ content, effects } = {}) {
   {
     source: "src/modules/save.js",
     target: "src/save.js",
-    globalName: "TapSurvivorSave",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorSave",
     exports: ["createSaveSystem"],
-    classicBoundarySource: `let defaultProviders = {};
-
-function missingDefaultProviderNames() {
-  const missingProviders = [];
-  if (defaultProviders.storage == null) missingProviders.push("storage");
-  return missingProviders;
-}
-
-function createMissingDefaultProviderError(missingProviders) {
-  const error = new Error(
-    \`Missing Tap Survivor save default providers: \${missingProviders.join(", ")}\`
-  );
-  error.name = "TapSurvivorSaveProviderError";
-  error.code = "TAP_SURVIVOR_SAVE_PROVIDER_MISSING";
-  error.missing = missingProviders;
-  error.missingProviders = missingProviders;
-  return error;
-}
-
-function configuredDefaultStorage() {
-  const missingProviders = missingDefaultProviderNames();
-  if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
-  return defaultProviders.storage;
-}
-
-function configureDefaultProviders({ storage } = {}) {
-  defaultProviders = { storage };
-  const missingProviders = missingDefaultProviderNames();
-  if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
-  return defaultProviders.storage;
-}`,
-    classicPublisherSource: `globalThis.TapSurvivorSave = {
-    createSaveSystem: createClassicSaveSystem,
-    configureDefaultProviders,
-  };`,
-    bundledSources: [
-      {
-        source: "src/modules/save-corruption.js",
-        exports: ["createSaveLoadHandler"],
-      },
-      {
-        source: "src/modules/save-normalize.js",
-        exports: ["arrayValue", "createSaveNormalizer", "objectValue"],
-        renames: { DEFAULT_CURRENT_SAVE_VERSION: "DEFAULT_SAVE_NORMALIZE_VERSION" },
-      },
-    ],
-    classicExportWrappers: {
-      createSaveSystem: {
-        name: "createClassicSaveSystem",
-        source: `function createClassicSaveSystem(options = {}) {
-  const callerOptions = options || {};
-  const hasCallerStorage = Object.prototype.hasOwnProperty.call(callerOptions, "storage");
-  const hasCallerStorageAdapter = Boolean(callerOptions.storageAdapter);
-  const defaultStorage =
-    hasCallerStorage || hasCallerStorageAdapter ? {} : { storage: configuredDefaultStorage() };
-
-  return createSaveSystem({
-    saveNormalize: { arrayValue, createSaveNormalizer, objectValue },
-    saveCorruption: { createSaveLoadHandler },
-    ...defaultStorage,
-    ...options,
-  });
-}`,
-      },
-    },
-    globalMembers: [
-      {
-        name: "createSaveSystem",
-        value: "createClassicSaveSystem",
-      },
-      {
-        name: "configureDefaultProviders",
-        value: "configureDefaultProviders",
-      },
-    ],
   },
   {
     source: "src/modules/shop-pricing.js",
@@ -259,42 +101,9 @@ function configureDefaultProviders({ storage } = {}) {
   {
     source: "src/modules/shell-relic-ui.js",
     target: "src/shell-relic-ui.js",
-    globalName: "TapSurvivorShellRelicUi",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorShellRelicUi",
     exports: ["createShellRelicUiAdapter", "createShellRelicUi"],
-    classicExportWrappers: {
-      createShellRelicUi: {
-        name: "createClassicShellRelicUi",
-        source: `let defaultSchedulerProvider;
-
-const defaultScheduler = {
-  clearTimeout: (timer) => defaultSchedulerProvider?.clearTimeout?.(timer),
-  setTimeout: (callback, delay) => defaultSchedulerProvider?.setTimeout?.(callback, delay),
-  animationSetTimeout: (callback, delay) => defaultSchedulerProvider?.animationSetTimeout?.(callback, delay),
-};
-
-function configureDefaultProviders({ scheduler } = {}) {
-  defaultSchedulerProvider = scheduler;
-}
-
-function createClassicShellRelicUi(options = {}) {
-  return createShellRelicUi({
-    ...options,
-    scheduler: options.scheduler || defaultScheduler,
-    imageFactory: options.imageFactory || (() => (typeof Image === "undefined" ? null : new Image())),
-  });
-}`,
-      },
-    },
-    globalMembers: [
-      {
-        name: "createShellRelicUi",
-        value: "createClassicShellRelicUi",
-      },
-      {
-        name: "configureDefaultProviders",
-        value: "configureDefaultProviders",
-      },
-    ],
   },
   {
     source: "src/modules/shell-ui-classic-adapter.js",
@@ -337,7 +146,8 @@ function createClassicShellRelicUi(options = {}) {
   {
     source: "src/modules/weapon-projectiles.js",
     target: "src/weapon-projectiles.js",
-    globalName: "TapSurvivorWeaponProjectiles",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorWeaponProjectiles",
     exports: ["createWeaponProjectileSystem", "rotateVector"],
   },
   {
@@ -377,6 +187,10 @@ function createClassicShellRelicUi(options = {}) {
       {
         source: "src/modules/content-registry.js",
         exports: ["createContentRegistry"],
+      },
+      {
+        source: "src/modules/effects.js",
+        exports: ["createEffects"],
       },
       {
         source: "src/modules/enemies.js",
@@ -432,6 +246,10 @@ function createClassicShellRelicUi(options = {}) {
         renames: { DEFAULT_CURRENT_SAVE_VERSION: "DEFAULT_SAVE_NORMALIZE_VERSION" },
       },
       {
+        source: "src/modules/save.js",
+        exports: ["createSaveSystem"],
+      },
+      {
         source: "src/modules/level-up-choices.js",
         exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
       },
@@ -456,8 +274,20 @@ function createClassicShellRelicUi(options = {}) {
         exports: ["MODULE_NATIVE_SHOP_SLOTS", "MODULE_NATIVE_SHOP_PROOF_SLOTS", "createShopSystem"],
       },
       {
+        source: "src/modules/shell-relic-ui.js",
+        exports: ["createShellRelicUiAdapter", "createShellRelicUi"],
+      },
+      {
+        source: "src/modules/upgrades.js",
+        exports: ["createUpgradeContent"],
+      },
+      {
         source: "src/modules/weapon-cooldowns.js",
         exports: ["createWeaponScaling"],
+      },
+      {
+        source: "src/modules/weapon-projectiles.js",
+        exports: ["createWeaponProjectileSystem", "rotateVector"],
       },
       {
         source: "src/modules/weapon-targeting.js",
@@ -474,6 +304,10 @@ function createClassicShellRelicUi(options = {}) {
       {
         source: "src/modules/run-ui.js",
         exports: ["createRunUi"],
+      },
+      {
+        source: "src/modules/run-update.js",
+        exports: ["createRunUpdater"],
       },
     ],
   },
@@ -494,7 +328,8 @@ function createClassicShellRelicUi(options = {}) {
   {
     source: "src/modules/run-update.js",
     target: "src/run-update.js",
-    globalName: "TapSurvivorRunUpdate",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRunUpdate",
     exports: ["createRunUpdater"],
   },
   {

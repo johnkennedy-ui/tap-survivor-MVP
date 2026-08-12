@@ -47,9 +47,10 @@ Generated content globals:
   `TapSurvivorContent`.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
-- `src/effects.js` is the generated classic bridge for run upgrade effects, shop item effects, shop bonus defaults, and
-  relic special effects from `src/modules/effects.js`. Its classic boundary uses the module's built-in shop-bonus
-  fallback list rather than a content-schema global.
+- `src/effects.js` is a generated, global-free source-derived artifact for run upgrade effects, shop item effects,
+  shop bonus defaults, and relic special effects from `src/modules/effects.js`. The classic dependency bag bundles
+  `createEffects` and instantiates it explicitly; its built-in shop-bonus fallback list does not require a
+  content-schema global.
 - Production ESM inventory rendering in `src/app/browser-dependency-bag.js` calls the statically imported
   `createRelicSystem` from `src/modules/relics.js` directly and does not look up `TapSurvivorRelics`.
   `src/modules/game-dependencies.js` likewise injects the native combat, pickup, and relic factories through the
@@ -82,13 +83,10 @@ Generated content globals:
   The generated `src/save-defaults.js` and `src/save-migrations.js` bridges bundle their exports without publishing
   `TapSurvivorSaveDefaults` or `TapSurvivorSaveMigrations`; the classic `src/game-dependencies.js` bridge supplies those
   exports through `saveDefaults` and `saveMigrations` in the dependency bag.
-- `src/modules/save.js` now receives save normalize, save corruption, and storage helpers through its factory arguments
-  instead of reading those globals directly. The generated `src/save.js` keeps the single `TapSurvivorSave` publisher
-  and a compatibility wrapper, but it never reads `TapSurvivorStorage`: `src/modules/game-dependencies.js` configures
-  its storage provider from the dependency value it already resolves before returning the classic bag. Explicit caller
-  `storage` or truthy `storageAdapter` values retain precedence; an unconfigured default call fails closed with
-  `TapSurvivorSaveProviderError` / `TAP_SURVIVOR_SAVE_PROVIDER_MISSING` and can recover after later valid provider
-  configuration on the same publisher object.
+- `src/modules/save.js` receives save normalize, save corruption, and storage helpers through its factory arguments
+  instead of reading those globals directly. The generated `src/save.js` no longer publishes `TapSurvivorSave`; the
+  classic dependency bag bundles `createSaveSystem` and `src/game.js` supplies its resolved storage through the
+  ordinary factory call. Explicit caller `storage` or truthy `storageAdapter` values retain precedence.
 - `src/audio.js` retains the classic `TapSurvivorAudio` publisher and accepts an explicit `audioContextFactory` for
   procedural cues without reading browser audio globals. `src/modules/game-dependencies.js` configures its default
   factory from the source-owned `globalRef` boundary; explicit caller factories retain precedence, missing or throwing
@@ -110,19 +108,15 @@ Generated content globals:
   injects its `documentRef`; the classic publisher and fallback remain preserved. `src/debug.js` now receives balance
   floor scaling through the debug factory; and `src/level-up.js` receives content for its exact fallback icon path instead
   of reading `globalThis.TapSurvivorContent` directly.
-- `src/modules/upgrades.js` owns the pure `createUpgradeContent({ content, effects })` factory, and the production ESM
-  browser dependency bag statically imports it without looking up `TapSurvivorUpgrades`. The generated classic
-  `src/upgrades.js` bridge deliberately continues to publish the single `TapSurvivorUpgrades` object, but it never
-  reads the content or effects globals. `src/modules/game-dependencies.js` configures its default providers from the
-  dependency values it already resolves before returning the legacy bag. Until configured, default
-  `createUpgradeDefs` and `runUpgradeDefs` access fails with `TapSurvivorUpgradeProviderError` and
-  `TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING`; valid configuration restores their original function/array shapes on the
-  same publisher object.
-- `src/shell-ui.js` now receives asset/content helpers and `TapSurvivorShellRelicUi` through `src/game.js` factory wiring
-  instead of reading those globals directly. Its classic adapter forwards that injected content to
-  `TapSurvivorAssets.createAssetResolver(content)`, so `src/assets.js` has no `TapSurvivorContent` reader. `src/shell-relic-ui.js`
-  receives content through that shell UI seam for relic detail and character sprite fallbacks while keeping its
-  compatibility provider global.
+- `src/modules/upgrades.js` owns the pure `createUpgradeContent({ content, effects })` factory. Both production ESM
+  and the classic dependency bag statically bundle that factory; generated `src/upgrades.js` no longer publishes
+  `TapSurvivorUpgrades` or reads content/effects globals.
+- `src/shell-ui.js` receives asset/content helpers and a `shellRelicUi` dependency through `src/game.js` factory wiring
+  instead of reading `TapSurvivorShellRelicUi`. Its classic adapter forwards injected content to
+  `TapSurvivorAssets.createAssetResolver(content)`, so `src/assets.js` has no `TapSurvivorContent` reader. The classic
+  dependency bag bundles both `createShellRelicUiAdapter` and `createShellRelicUi`, injects only
+  `createShellRelicUi` behavior, and explicitly supplies source-owned scheduler/image defaults while preserving
+  caller overrides.
 - `src/combat.js` now receives combat damage, enemy system, and weapon fire dependencies through `src/game.js` factory
   wiring; combat damage is dependency-bag injected instead of reading a runtime global. It is a source-derived,
   global-free bridge from `src/modules/combat.js`, as are the native pickup and relic bridges.
@@ -140,39 +134,35 @@ Runtime module globals:
   `src/game.js` script-order boundary. `src/modules/game-dependencies.js` no longer reads that publisher: it supplies
   the statically imported native controller through its dependency bag. This reader-only retirement intentionally
   leaves the global-audit count unchanged.
-- Core data/systems: `TapSurvivorProgression`, `TapSurvivorEffects`; map resolution is supplied as `createMapSystem`
-  through the `TapSurvivorGameDependencies` dependency bag, with the former `TapSurvivorMapSystem` publisher retired.
-- Save/storage: `TapSurvivorStorage`, `TapSurvivorSave`; save defaults, migrations, normalization, and corruption
-  handling are supplied as `saveDefaults`, `saveMigrations`, `saveNormalize`, and `saveCorruption` by
-  `TapSurvivorGameDependencies`. The dependency bag configures the retained save publisher with its resolved storage,
-  so the generated classic wrapper has no `TapSurvivorStorage` reader; explicit caller-owned storage/adapters still
-  bypass that default. The wrapper bundles the native normalization and corruption helpers, so
-  `TapSurvivorSaveNormalize` and `TapSurvivorSaveCorruption` have no global publishers.
+- Core data/systems: `TapSurvivorProgression`; effects and map resolution are supplied as native factories through
+  `TapSurvivorGameDependencies`, with the former `TapSurvivorEffects` and `TapSurvivorMapSystem` publishers retired.
+- Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
+  supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
+  `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
-  `TapSurvivorShellUi`, `TapSurvivorShellRelicUi`.
-- Gameplay systems: `TapSurvivorRunUpdate`. The retired combat, pickup, relic, and enemy factories are injected
-  through `TapSurvivorGameDependencies` rather than published as classic namespaces.
-- Weapon systems: `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponProjectiles`,
-  `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, `TapSurvivorUpgrades`, `TapSurvivorLevelUp`.
+  `TapSurvivorShellUi`. The former `TapSurvivorShellRelicUi` publisher is dependency-injected.
+- Gameplay systems: the native `createRunUpdater` plus the retired combat, pickup, relic, and enemy factories are
+  injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
+- Weapon systems: `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, and
+  `TapSurvivorLevelUp`; projectile helpers and upgrade content are dependency-injected native factories.
 - Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`,
   `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
 
 Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
-  `compose-runtime` require injected platform capabilities rather than capturing the host global. This reader-only
-  three-read retirement leaves the dot-expression global audit at 40; the allowlist is intentionally unchanged because
-  it does not count bare `globalThis` fallback syntax.
+  `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
+  dot-expression global audit is 28; the allowlist does not count bare `globalThis` fallback syntax.
 - `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
   capability from the classic dependency bag; `globalThis.localStorage` remains in the separately owned storage-adapter
   platform selection.
 - `globalThis.Capacitor?.Plugins?.Preferences` and `globalThis.localStorage` are used by storage adapter platform selection.
 - Audio context construction is supplied to the classic audio publisher through the `globalRef` boundary in
   `src/modules/game-dependencies.js`; `src/audio.js` has no browser audio-global reader.
-- `TapSurvivorShellRelicUi` remains the classic publisher, while its generated wrapper receives timer behavior through
-  an explicit scheduler provider configured by `src/modules/game-dependencies.js`; caller-supplied schedulers retain
-  precedence and the wrapper has no timer-global reader.
+- `TapSurvivorShellRelicUi` is retired. `src/modules/game-dependencies.js` supplies the native shell-relic factory
+  with explicit scheduler and image defaults sourced from its `globalRef`; caller-supplied scheduler/image options
+  retain precedence and no timer-global reader is introduced.
 
 Browser-smoke diagnostics:
 - `document.__TapSurvivorBrowserSmoke` is the test-only, document-scoped sink used by

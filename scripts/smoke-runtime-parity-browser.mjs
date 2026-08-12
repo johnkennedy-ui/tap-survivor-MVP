@@ -962,8 +962,17 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       const menuInventoryTab = document.getElementById("menuInventoryTab");
       const content = root.TapSurvivorContent || {};
       const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
-      const saveProvider = isClassic ? parity.classicSaveProviderLifecycle || null : null;
-      const upgradeProvider = isClassic ? parity.classicUpgradeProviderLifecycle || null : null;
+      const retiredPublisherNames = [
+        "TapSurvivorEffects",
+        "TapSurvivorUpgrades",
+        "TapSurvivorSave",
+        "TapSurvivorShellRelicUi",
+        "TapSurvivorWeaponProjectiles",
+        "TapSurvivorRunUpdate",
+      ];
+      const retiredPublisherPresence = Object.fromEntries(
+        retiredPublisherNames.map((name) => [name, Object.prototype.hasOwnProperty.call(root, name)])
+      );
       const diagnostics = snapshotDiagnostics(parity);
       const spriteSnapshot = snapshotSpriteIndex(content.assets?.sprites || {}, diagnostics.drawCalls);
       return {
@@ -980,8 +989,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           speedButtons,
         },
         game: snapshotGame(game),
-        saveProvider,
-        upgradeProvider,
+        retiredPublisherPresence,
         registeredSpriteGroupCounts: spriteSnapshot.counts,
         registeredSpriteGroupDefs: spriteSnapshot.definitions,
         registeredSpriteGroupOverflows: spriteSnapshot.overflows,
@@ -1473,61 +1481,6 @@ function runtimeDiagnosticOverflow(result, name) {
   return Math.max(0, runtimeDiagnosticCount(result, name) - (Array.isArray(result?.[name]) ? result[name].length : 0));
 }
 
-function hasUnavailableClassicProviderLifecycle(lifecycle) {
-  return (
-    lifecycle?.baselineCapability === "unavailable" &&
-    lifecycle?.publisherPresent === true &&
-    lifecycle?.configureDefaultProviders === false
-  );
-}
-
-function hasClassicUpgradeProviderLifecycle(lifecycle) {
-  return Boolean(
-    lifecycle?.configureDefaultProviders &&
-      lifecycle?.publisherPresent &&
-      lifecycle?.samePublisherAfterMissing &&
-      lifecycle?.samePublisherAfterRecovery &&
-      lifecycle?.configured?.createUpgradeDefs === "function" &&
-      lifecycle?.configured?.runUpgradeDefs &&
-      lifecycle?.poisonReads?.content === 0 &&
-      lifecycle?.poisonReads?.effects === 0 &&
-      hasMissingProviderError(lifecycle?.unconfiguredCreate, ["content", "effects"]) &&
-      hasMissingProviderError(lifecycle?.unconfiguredRun, ["content", "effects"]) &&
-      hasMissingProviderError(lifecycle?.missingContent, ["content"])
-  );
-}
-
-function hasClassicSaveProviderLifecycle(lifecycle) {
-  return Boolean(
-    lifecycle?.configureDefaultProviders &&
-      lifecycle?.publisherPresent &&
-      lifecycle?.samePublisherAfterMissing &&
-      lifecycle?.samePublisherAfterRecovery &&
-      lifecycle?.configured?.createSaveSystem === "function" &&
-      lifecycle?.poisonReads?.storage === 0 &&
-      hasMissingSaveProviderError(lifecycle?.unconfigured, ["storage"]) &&
-      hasMissingSaveProviderError(lifecycle?.missingStorage, ["storage"])
-  );
-}
-
-function hasMissingProviderError(error, expectedMissing) {
-  return Boolean(
-    error?.name === "TapSurvivorUpgradeProviderError" &&
-      error?.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
-      Array.isArray(error?.missing) &&
-      error.missing.join(",") === expectedMissing.join(",")
-  );
-}
-
-function hasMissingSaveProviderError(error, expectedMissing) {
-  return Boolean(
-    error?.name === "TapSurvivorSaveProviderError" &&
-      error?.code === "TAP_SURVIVOR_SAVE_PROVIDER_MISSING" &&
-      Array.isArray(error?.missing) &&
-      error.missing.join(",") === expectedMissing.join(",")
-  );
-}
-
 function compareSnapshots(classic, esm) {
   const notes = [];
   const strictFailures = [];
@@ -1571,8 +1524,7 @@ function compareSnapshots(classic, esm) {
   const esmFireEvidence = esm.fireEvidence || esm.snapshot?.game?.weaponFireEvidence || null;
   const classicFireObserved = hasWeaponFireEvidence(classicFireEvidence);
   const esmFireObserved = hasWeaponFireEvidence(esmFireEvidence);
-  const classicSaveProvider = classic.snapshot?.saveProvider || null;
-  const classicUpgradeProvider = classic.snapshot?.upgradeProvider || null;
+  const esmRetiredPublisherPresence = esm.snapshot?.retiredPublisherPresence || {};
   const classicConsoleErrorCount = runtimeDiagnosticCount(classic, "consoleErrors");
   const classicPageErrorCount = runtimeDiagnosticCount(classic, "pageErrors");
   const classicFailedRequestCount = runtimeDiagnosticCount(classic, "failedRequests");
@@ -1596,21 +1548,17 @@ function compareSnapshots(classic, esm) {
   if (classicHttpFailureCount > 0) {
     strictFailures.push(`classic runtime recorded ${classicHttpFailureCount} HTTP failure(s)`);
   }
-  if (!classicSaveProvider?.publisherPresent) {
-    strictFailures.push("classic TapSurvivorSave publisher is missing");
-  } else if (
-    !hasUnavailableClassicProviderLifecycle(classicSaveProvider) &&
-    !hasClassicSaveProviderLifecycle(classicSaveProvider)
-  ) {
-    strictFailures.push("classic TapSurvivorSave provider fixture did not prove missing/configuration/recovery lifecycle");
-  }
-  if (!classicUpgradeProvider?.publisherPresent) {
-    strictFailures.push("classic TapSurvivorUpgrades publisher is missing");
-  } else if (
-    !hasUnavailableClassicProviderLifecycle(classicUpgradeProvider) &&
-    !hasClassicUpgradeProviderLifecycle(classicUpgradeProvider)
-  ) {
-    strictFailures.push("classic TapSurvivorUpgrades provider fixture did not prove missing/configuration/recovery lifecycle");
+  for (const name of [
+    "TapSurvivorEffects",
+    "TapSurvivorUpgrades",
+    "TapSurvivorSave",
+    "TapSurvivorShellRelicUi",
+    "TapSurvivorWeaponProjectiles",
+    "TapSurvivorRunUpdate",
+  ]) {
+    if (esmRetiredPublisherPresence[name]) {
+      strictFailures.push(`ESM runtime retained retired publisher ${name}`);
+    }
   }
   if (classicCanvas && esmCanvas && (classicCanvas.width !== esmCanvas.width || classicCanvas.height !== esmCanvas.height)) {
     strictFailures.push(`canvas backing mismatch: classic ${describeSize(classicCanvas)} vs esm ${describeSize(esmCanvas)}`);
@@ -2202,8 +2150,6 @@ function renderClassicHookScript() {
 (() => {
   const parity = globalThis.__TapSurvivorParity = globalThis.__TapSurvivorParity || {};
   parity.classicHooks = parity.classicHooks || {};
-  exerciseClassicSaveProviderLifecycle(parity);
-  exerciseClassicUpgradeProviderLifecycle(parity);
   wrapGlobal("TapSurvivorRunState", "createRunStateSystem", (original, args, context) => {
     const result = original.apply(context, args);
     if (result && typeof result.resetGameState === "function") {
@@ -2216,203 +2162,11 @@ function renderClassicHookScript() {
     }
     return result;
   });
-  wrapGlobal("TapSurvivorRunUpdate", "createRunUpdater", (original, args, context) => {
-    const updater = original.apply(context, args);
-    if (updater && typeof updater.update === "function") {
-      const update = updater.update.bind(updater);
-      updater.update = (dt) => {
-        parity.recordDiagnostic?.("updateCalls", Number(dt) || 0);
-        return update(dt);
-      };
-    }
-    return updater;
-  });
   wrapGlobal("TapSurvivorGameRuntime", "createGameRuntimeController", (original, args, context) => {
     const runtime = original.apply(context, args);
     parity.classicRuntime = runtime;
     return runtime;
   });
-
-  function classifyClassicProviderCapability(publisher) {
-    if (!publisher) return "missing";
-    if (!("configureDefaultProviders" in Object(publisher))) return "unavailable";
-    if (typeof publisher.configureDefaultProviders !== "function") return "malformed";
-    return "available";
-  }
-
-  function exerciseClassicUpgradeProviderLifecycle(parity) {
-    const publisher = globalThis.TapSurvivorUpgrades;
-    const baselineCapability = classifyClassicProviderCapability(publisher);
-    if (baselineCapability !== "available") {
-      parity.classicUpgradeProviderLifecycle = {
-        baselineCapability,
-        configureDefaultProviders: false,
-        publisherPresent: Boolean(publisher),
-      };
-      return;
-    }
-
-    const content = globalThis.TapSurvivorContent;
-    const effects = globalThis.TapSurvivorEffects;
-    if (!content || !effects) {
-      throw new Error("Classic upgrade fixture requires TapSurvivorContent and TapSurvivorEffects providers");
-    }
-
-    const lifecycle = {
-      baselineCapability: "available",
-      configureDefaultProviders: true,
-      publisherPresent: true,
-      unconfiguredCreate: expectMissingProviderError(
-        () => publisher.createUpgradeDefs,
-        ["content", "effects"]
-      ),
-      unconfiguredRun: expectMissingProviderError(
-        () => publisher.runUpgradeDefs,
-        ["content", "effects"]
-      ),
-    };
-    const contentDescriptor = Object.getOwnPropertyDescriptor(globalThis, "TapSurvivorContent");
-    const effectsDescriptor = Object.getOwnPropertyDescriptor(globalThis, "TapSurvivorEffects");
-    if (!contentDescriptor?.configurable || !effectsDescriptor?.configurable) {
-      throw new Error("Classic upgrade fixture cannot safely poison provider globals");
-    }
-
-    let contentReads = 0;
-    let effectsReads = 0;
-    try {
-      Object.defineProperty(globalThis, "TapSurvivorContent", {
-        configurable: true,
-        get() {
-          contentReads += 1;
-          throw new Error("Forbidden late TapSurvivorContent global read");
-        },
-      });
-      Object.defineProperty(globalThis, "TapSurvivorEffects", {
-        configurable: true,
-        get() {
-          effectsReads += 1;
-          throw new Error("Forbidden late TapSurvivorEffects global read");
-        },
-      });
-
-      lifecycle.missingContent = expectMissingProviderError(
-        () => publisher.configureDefaultProviders({ effects }),
-        ["content"]
-      );
-      lifecycle.samePublisherAfterMissing = globalThis.TapSurvivorUpgrades === publisher;
-      publisher.configureDefaultProviders({ content, effects });
-      lifecycle.configured = {
-        createUpgradeDefs: typeof publisher.createUpgradeDefs,
-        runUpgradeDefs: Array.isArray(publisher.runUpgradeDefs),
-      };
-      lifecycle.samePublisherAfterRecovery = globalThis.TapSurvivorUpgrades === publisher;
-      lifecycle.poisonReads = { content: contentReads, effects: effectsReads };
-      if (contentReads !== 0 || effectsReads !== 0) {
-        throw new Error("Classic upgrade publisher read a poisoned provider global");
-      }
-    } finally {
-      Object.defineProperty(globalThis, "TapSurvivorContent", contentDescriptor);
-      Object.defineProperty(globalThis, "TapSurvivorEffects", effectsDescriptor);
-    }
-
-    parity.classicUpgradeProviderLifecycle = lifecycle;
-  }
-
-  function exerciseClassicSaveProviderLifecycle(parity) {
-    const publisher = globalThis.TapSurvivorSave;
-    const baselineCapability = classifyClassicProviderCapability(publisher);
-    if (baselineCapability !== "available") {
-      parity.classicSaveProviderLifecycle = {
-        baselineCapability,
-        configureDefaultProviders: false,
-        publisherPresent: Boolean(publisher),
-      };
-      return;
-    }
-
-    const storage = globalThis.TapSurvivorStorage;
-    if (!storage) {
-      throw new Error("Classic save fixture requires a TapSurvivorStorage provider");
-    }
-
-    const lifecycle = {
-      baselineCapability: "available",
-      configureDefaultProviders: true,
-      publisherPresent: true,
-      unconfigured: expectMissingSaveProviderError(
-        () => publisher.createSaveSystem(),
-        ["storage"]
-      ),
-    };
-    const storageDescriptor = Object.getOwnPropertyDescriptor(globalThis, "TapSurvivorStorage");
-    if (!storageDescriptor?.configurable) {
-      throw new Error("Classic save fixture cannot safely poison the storage provider global");
-    }
-
-    let storageReads = 0;
-    try {
-      Object.defineProperty(globalThis, "TapSurvivorStorage", {
-        configurable: true,
-        get() {
-          storageReads += 1;
-          throw new Error("Forbidden late TapSurvivorStorage global read");
-        },
-      });
-
-      lifecycle.missingStorage = expectMissingSaveProviderError(
-        () => publisher.configureDefaultProviders({}),
-        ["storage"]
-      );
-      lifecycle.samePublisherAfterMissing = globalThis.TapSurvivorSave === publisher;
-      publisher.configureDefaultProviders({ storage });
-      lifecycle.configured = {
-        createSaveSystem: typeof publisher.createSaveSystem,
-      };
-      lifecycle.samePublisherAfterRecovery = globalThis.TapSurvivorSave === publisher;
-      lifecycle.poisonReads = { storage: storageReads };
-      if (storageReads !== 0) {
-        throw new Error("Classic save publisher read a poisoned storage provider global");
-      }
-    } finally {
-      Object.defineProperty(globalThis, "TapSurvivorStorage", storageDescriptor);
-    }
-
-    parity.classicSaveProviderLifecycle = lifecycle;
-  }
-
-  function expectMissingProviderError(access, expectedMissing) {
-    try {
-      access();
-    } catch (error) {
-      const missing = Array.isArray(error?.missing) ? error.missing : [];
-      if (
-        error?.name !== "TapSurvivorUpgradeProviderError" ||
-        error?.code !== "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" ||
-        missing.join(",") !== expectedMissing.join(",")
-      ) {
-        throw error;
-      }
-      return { code: error.code, missing, name: error.name };
-    }
-    throw new Error("Expected missing upgrade providers: " + expectedMissing.join(", "));
-  }
-
-  function expectMissingSaveProviderError(access, expectedMissing) {
-    try {
-      access();
-    } catch (error) {
-      const missing = Array.isArray(error?.missing) ? error.missing : [];
-      if (
-        error?.name !== "TapSurvivorSaveProviderError" ||
-        error?.code !== "TAP_SURVIVOR_SAVE_PROVIDER_MISSING" ||
-        missing.join(",") !== expectedMissing.join(",")
-      ) {
-        throw error;
-      }
-      return { code: error.code, missing, name: error.name };
-    }
-    throw new Error("Expected missing save providers: " + expectedMissing.join(", "));
-  }
 
   function wrapGlobal(globalName, methodName, wrapper) {
     const namespace = globalThis[globalName];

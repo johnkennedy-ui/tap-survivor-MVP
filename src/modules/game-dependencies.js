@@ -5,6 +5,7 @@ import { createContentRegistry } from "./content-registry.js";
 import { createEnemyBehaviorSystem } from "./enemy-behaviors.js";
 import { createEnemySpawnSystem } from "./enemy-spawning.js";
 import { createEnemySystem } from "./enemies.js";
+import { createEffects } from "./effects.js";
 import { createGameBannerSystem } from "./game-banners.js";
 import { createGameRuntimeController } from "./game-runtime.js";
 import { createMapSystem } from "./map-system.js";
@@ -16,13 +17,18 @@ import { createSaveLoadHandler } from "./save-corruption.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
 import { isPlainObject, migrateSave } from "./save-migrations.js";
 import { arrayValue, createSaveNormalizer, objectValue } from "./save-normalize.js";
+import { createSaveSystem } from "./save.js";
+import { createShellRelicUi } from "./shell-relic-ui.js";
 import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
+import { createUpgradeContent } from "./upgrades.js";
 import { createWeaponScaling } from "./weapon-cooldowns.js";
+import { createWeaponProjectileSystem, rotateVector } from "./weapon-projectiles.js";
 import { nearestEnemy } from "./weapon-targeting.js";
 import { createRunLifecycle } from "./run-lifecycle.js";
 import { createRunStateSystem } from "./run-state.js";
 import { createRunUi } from "./run-ui.js";
+import { createRunUpdater } from "./run-update.js";
 
 export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
   const rawContent = globalRef.TapSurvivorContent;
@@ -36,28 +42,17 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
   }
   const configuredContent = balanceRuntime?.content?.() || rawContent;
   const content = configuredContent || {};
-  const effects = globalRef.TapSurvivorEffects;
-  const upgrades = globalRef.TapSurvivorUpgrades || {};
-  if (typeof upgrades.configureDefaultProviders === "function") {
-    upgrades.configureDefaultProviders({ content: configuredContent, effects });
-  }
-  const save = requireGlobal(globalRef, "TapSurvivorSave");
+  const effects = createEffects();
+  const upgrades = { createUpgradeContent };
+  const save = { createSaveSystem };
   const storage = requireGlobal(globalRef, "TapSurvivorStorage");
-  if (typeof save.configureDefaultProviders === "function") {
-    save.configureDefaultProviders({ storage });
-  }
   const audio = requireGlobal(globalRef, "TapSurvivorAudio");
   if (typeof audio.configureDefaultProviders === "function") {
     audio.configureDefaultProviders({
       audioContextFactory: createAudioContextFactory(globalRef),
     });
   }
-  const shellRelicUi = requireGlobal(globalRef, "TapSurvivorShellRelicUi");
-  if (typeof shellRelicUi.configureDefaultProviders === "function") {
-    shellRelicUi.configureDefaultProviders({
-      scheduler: createShellRelicSchedulerProvider(globalRef),
-    });
-  }
+  const shellRelicUi = createShellRelicUiDependency(globalRef);
 
   return {
     audio,
@@ -70,7 +65,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     contentRegistry: { createContentRegistry },
     debug: requireGlobal(globalRef, "TapSurvivorDebug"),
     debugBalance: globalRef.TapSurvivorDebugBalance,
-    effects: requireValue(effects, "TapSurvivorEffects"),
+    effects,
     enemies: { createEnemySystem },
     enemyBehaviors: { createEnemyBehaviorSystem },
     enemySpawning: { createEnemySpawnSystem },
@@ -97,7 +92,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     runLifecycle: { createRunLifecycle },
     runState: { createRunStateSystem },
     runUi: { createRunUi },
-    runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
+    runUpdate: { createRunUpdater },
     save,
     saveCorruption: { createSaveLoadHandler },
     saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
@@ -121,7 +116,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     weaponBehaviors: requireGlobal(globalRef, "TapSurvivorWeaponBehaviors"),
     weaponCooldowns: { createWeaponScaling },
     weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
-    weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
+    weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
     weaponTargeting: { nearestEnemy },
   };
 }
@@ -150,6 +145,23 @@ function createShellRelicSchedulerProvider(globalRef) {
     clearTimeout: (timer) => globalRef?.clearTimeout?.(timer),
     setTimeout: (callback, delay) => globalRef?.setTimeout?.(callback, delay),
     animationSetTimeout: (callback, delay) => globalRef?.setTimeout?.(callback, delay),
+  };
+}
+
+function createShellRelicUiDependency(globalRef) {
+  const scheduler = createShellRelicSchedulerProvider(globalRef);
+  const imageFactory = () => {
+    const ImageRef = globalRef?.Image;
+    return typeof ImageRef === "function" ? new ImageRef() : null;
+  };
+  return {
+    createShellRelicUi(options = {}) {
+      return createShellRelicUi({
+        ...options,
+        scheduler: options.scheduler || scheduler,
+        imageFactory: options.imageFactory || imageFactory,
+      });
+    },
   };
 }
 

@@ -18,6 +18,7 @@ let retiredSaveDefaultsReads = 0;
 let retiredSaveMigrationsReads = 0;
 let retiredSaveNormalizeReads = 0;
 let retiredSaveCorruptionReads = 0;
+let retiredSavePublisherReads = 0;
 const context = {
   console,
   localStorage: {
@@ -60,6 +61,13 @@ Object.defineProperty(context, "TapSurvivorSaveCorruption", {
     throw new Error("Forbidden TapSurvivorSaveCorruption global read");
   },
 });
+Object.defineProperty(context, "TapSurvivorSave", {
+  configurable: true,
+  get() {
+    retiredSavePublisherReads += 1;
+    throw new Error("Forbidden TapSurvivorSave global read");
+  },
+});
 vm.createContext(context);
 vm.runInContext(questsSource, context);
 vm.runInContext(storageSource, context);
@@ -95,9 +103,11 @@ const storageAdapter = context.TapSurvivorStorage.createStorageAdapter({
   legacySaveKey,
   corruptBackupKey,
 });
-const saveSystem = context.TapSurvivorSave.createSaveSystem({
+const saveSystem = dependencyBag.save.createSaveSystem({
   saveKey,
   legacySaveKey,
+  saveNormalize: dependencyBag.saveNormalize,
+  saveCorruption: dependencyBag.saveCorruption,
   saveDefaults,
   saveMigrations,
   starterQuestIds: content.questGroups.starter,
@@ -204,6 +214,7 @@ let throwingRetiredSaveDefaultsReads = 0;
 let throwingRetiredSaveMigrationsReads = 0;
 let throwingRetiredSaveNormalizeReads = 0;
 let throwingRetiredSaveCorruptionReads = 0;
+let throwingRetiredSavePublisherReads = 0;
 const throwingContext = {
   console,
   localStorage: {
@@ -246,6 +257,13 @@ Object.defineProperty(throwingContext, "TapSurvivorSaveCorruption", {
     throw new Error("Forbidden TapSurvivorSaveCorruption global read");
   },
 });
+Object.defineProperty(throwingContext, "TapSurvivorSave", {
+  configurable: true,
+  get() {
+    throwingRetiredSavePublisherReads += 1;
+    throw new Error("Forbidden TapSurvivorSave global read");
+  },
+});
 vm.createContext(throwingContext);
 vm.runInContext(questsSource, throwingContext);
 vm.runInContext(storageSource, throwingContext);
@@ -274,9 +292,11 @@ const throwingAdapter = throwingContext.TapSurvivorStorage.createStorageAdapter(
   saveKey,
   legacySaveKey,
 });
-const throwingSaveSystem = throwingContext.TapSurvivorSave.createSaveSystem({
+const throwingSaveSystem = throwingDependencyBag.save.createSaveSystem({
   saveKey,
   legacySaveKey,
+  saveNormalize: throwingDependencyBag.saveNormalize,
+  saveCorruption: throwingDependencyBag.saveCorruption,
   saveDefaults: throwingDependencyBag.saveDefaults,
   saveMigrations: throwingDependencyBag.saveMigrations,
   starterQuestIds: content.questGroups.starter,
@@ -302,9 +322,9 @@ check(
   !saveCorruptionSource.includes("globalThis.TapSurvivorSaveCorruption")
 );
 check(
-  "classic save wrapper bundles retired helpers",
-  saveSource.includes("function createSaveNormalizer") &&
-    saveSource.includes("function createSaveLoadHandler") &&
+  "classic save bridge retires its publisher for explicit dependency injection",
+  saveSource.includes("function createSaveSystem") &&
+    !saveSource.includes("globalThis.TapSurvivorSave =") &&
     !saveSource.includes("globalThis.TapSurvivorSaveNormalize") &&
     !saveSource.includes("globalThis.TapSurvivorSaveCorruption")
 );
@@ -321,7 +341,9 @@ check(
     retiredSaveNormalizeReads === 0 &&
     throwingRetiredSaveNormalizeReads === 0 &&
     retiredSaveCorruptionReads === 0 &&
-    throwingRetiredSaveCorruptionReads === 0
+    throwingRetiredSaveCorruptionReads === 0 &&
+    retiredSavePublisherReads === 0 &&
+    throwingRetiredSavePublisherReads === 0
 );
 check("storage unavailable load returns default save", unavailableSave.unlockedWeapons.includes("spark_bolt"));
 check("storage unavailable persist reports false", unavailablePersisted === false);

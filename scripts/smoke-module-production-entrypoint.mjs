@@ -49,6 +49,7 @@ const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
+const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
   "TapSurvivorCombat",
   "TapSurvivorEnemies",
@@ -70,6 +71,14 @@ const BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
   "TapSurvivorPickups",
   "TapSurvivorRelics",
 ]);
+const B1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
+  "TapSurvivorEffects",
+  "TapSurvivorRunUpdate",
+  "TapSurvivorSave",
+  "TapSurvivorShellRelicUi",
+  "TapSurvivorUpgrades",
+  "TapSurvivorWeaponProjectiles",
+]);
 const retiredBrowserNamespaceSourceFiles = Object.freeze([
   "src/app/browser-dependency-bag.js",
   "src/app/production-module-entrypoint.js",
@@ -90,6 +99,12 @@ const retiredBrowserNamespaceSources = retiredBrowserNamespaceSourceFiles.map((f
 }));
 const classicRetiredPublisherSources = Object.fromEntries(
   RETIRED_BROWSER_NAMESPACE_NAMES.map((name) => [
+    name,
+    readFileSync(join(root, `src/${classicPublisherFile(name)}`), "utf8"),
+  ])
+);
+const classicB1RetiredPublisherSources = Object.fromEntries(
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES.map((name) => [
     name,
     readFileSync(join(root, `src/${classicPublisherFile(name)}`), "utf8"),
   ])
@@ -215,21 +230,18 @@ check(
     !browserDependencyBagSource.includes("TapSurvivorUpgrades")
 );
 check(
-  "classic fallback preserves the explicit TapSurvivorUpgrades provider lifecycle",
-  classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
-    classicUpgradesSource.includes("createUpgradeContent") &&
-    classicUpgradesSource.includes("configureDefaultProviders") &&
-    classicUpgradesSource.includes("createUpgradeDefs") &&
-    classicUpgradesSource.includes("runUpgradeDefs") &&
-    !classicUpgradesSource.includes("TapSurvivorContent") &&
-    !classicUpgradesSource.includes("TapSurvivorEffects")
+  "classic dependency bag injects native upgrades without a TapSurvivorUpgrades publisher",
+  !classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
+    classicUpgradesSource.includes("// Retired global: TapSurvivorUpgrades.") &&
+    classicGameDependenciesSource.includes("const upgrades = { createUpgradeContent };") &&
+    classicGameDependenciesSource.includes("      upgrades,")
 );
 check(
-  "classic fallback preserves the explicit TapSurvivorSave storage provider lifecycle",
-  classicSaveSource.includes("globalThis.TapSurvivorSave =") &&
-    classicSaveSource.includes("createSaveSystem") &&
-    classicSaveSource.includes("configureDefaultProviders") &&
-    !classicSaveSource.includes("TapSurvivorStorage")
+  "classic dependency bag injects native save creation without a TapSurvivorSave publisher",
+  !classicSaveSource.includes("globalThis.TapSurvivorSave =") &&
+    classicSaveSource.includes("// Retired global: TapSurvivorSave.") &&
+    classicGameDependenciesSource.includes("const save = { createSaveSystem };") &&
+    classicGameDependenciesSource.includes("      save,")
 );
 check(
   "production ESM statically imports all nine retired native factories without a namespace bridge or classic side-effect imports",
@@ -276,6 +288,16 @@ check(
   BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
     (name) => !classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
   )
+);
+check(
+  "classic root publishers for B1 native dependency factories are retired",
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES.every((name) => {
+    const source = classicB1RetiredPublisherSources[name];
+    return (
+      !source.includes(`globalThis.${name} =`) &&
+      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+    );
+  })
 );
 
 const missingPlatformHostGlobalGuard = installThrowingGlobalReadGuards(
@@ -394,6 +416,11 @@ const runtimeUpgradeGlobalGuard = installTapSurvivorUpgradesGlobalReadGuard(
 const runtimeRetiredBrowserNamespaceGuard = installThrowingGlobalReadGuards(
   runtimeGlobal,
   RETIRED_BROWSER_NAMESPACE_NAMES,
+  "injected browser globalRef"
+);
+const runtimeB1RetiredPublisherGuard = installThrowingGlobalReadGuards(
+  runtimeGlobal,
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES,
   "injected browser globalRef"
 );
 function createVisibilityNode(label) {
@@ -1255,6 +1282,11 @@ const autobootRetiredBrowserNamespaceGuard = installThrowingGlobalReadGuards(
   RETIRED_BROWSER_NAMESPACE_NAMES,
   "autoboot globalThis"
 );
+const autobootB1RetiredPublisherGuard = installThrowingGlobalReadGuards(
+  globalThis,
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES,
+  "autoboot globalThis"
+);
 await import(`../src/app/production-module-autoboot.js?smoke=${Date.now()}`);
 const autobootRafCalls = autobootGlobalRestore.rafCalls();
 autobootGlobalRestore.restore();
@@ -1262,8 +1294,9 @@ autobootContentGlobalGuard.restore();
 autobootQuestsGlobalGuard.restore();
 autobootProgressionGlobalGuard.restore();
 autobootUiProgressionGlobalGuard.restore();
-autobootUpgradeGlobalGuard.restore();
+autobootB1RetiredPublisherGuard.restore();
 autobootRetiredBrowserNamespaceGuard.restore();
+autobootUpgradeGlobalGuard.restore();
 check("production module autoboot wrapper initializes browser runtime", autobootRafCalls === 1);
 check(
   "production module boot completes without reading guarded TapSurvivorContent globals",
@@ -1298,12 +1331,21 @@ check(
       autobootRetiredBrowserNamespaceGuard.readAttemptsFor(name) === 0
   )
 );
+check(
+  "throwing getters for every B1 retired publisher record zero reads through injected and autoboot production paths",
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
+    (name) =>
+      runtimeB1RetiredPublisherGuard.readAttemptsFor(name) === 0 &&
+      autobootB1RetiredPublisherGuard.readAttemptsFor(name) === 0
+  )
+);
 runtimeContentGlobalGuard.restore();
 runtimeQuestsGlobalGuard.restore();
 runtimeProgressionGlobalGuard.restore();
 runtimeUiProgressionGlobalGuard.restore();
-runtimeUpgradeGlobalGuard.restore();
+runtimeB1RetiredPublisherGuard.restore();
 runtimeRetiredBrowserNamespaceGuard.restore();
+runtimeUpgradeGlobalGuard.restore();
 check(
   "production module autoboot wrapper publishes no TapSurvivor globals",
   sameNames(beforeTapGlobals, tapSurvivorGlobalNames())
@@ -1524,11 +1566,17 @@ function classicPublisherFile(name) {
     TapSurvivorEnemies: "enemies.js",
     TapSurvivorEnemyBehaviors: "enemy-behaviors.js",
     TapSurvivorEnemySpawning: "enemy-spawning.js",
+    TapSurvivorEffects: "effects.js",
     TapSurvivorLevelUp: "level-up.js",
     TapSurvivorPickups: "pickups.js",
     TapSurvivorRelics: "relics.js",
+    TapSurvivorRunUpdate: "run-update.js",
+    TapSurvivorSave: "save.js",
+    TapSurvivorShellRelicUi: "shell-relic-ui.js",
+    TapSurvivorUpgrades: "upgrades.js",
     TapSurvivorWeaponBehaviors: "weapon-behaviors.js",
     TapSurvivorWeaponFire: "weapon-fire.js",
+    TapSurvivorWeaponProjectiles: "weapon-projectiles.js",
   }[name];
 }
 

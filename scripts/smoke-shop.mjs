@@ -29,9 +29,13 @@ const saved = JSON.parse(harness.context.localStorage.getItem("tap-survivor-mvp-
 check("shop purchase spends coins", saved.coins === 13);
 check("shop purchase plays coin jingle", harness.context.__audioOscillators >= 4);
 check("shop purchase persists tier", saved.shopPurchases.training_boots === 1);
-const registryBonuses = harness.context.TapSurvivorEffects.emptyShopBonuses();
-harness.context.TapSurvivorEffects.addShopItemBonus(registryBonuses, { effect: { stat: "speed", value: 10 } }, 2);
-check("shop bonus registry applies stat tiers", registryBonuses.speed === 20);
+const injectedEffects = harness.dependencies.moduleSystems.effects;
+const registryBonuses = injectedEffects.emptyShopBonuses();
+injectedEffects.addShopItemBonus(registryBonuses, { effect: { stat: "speed", value: 10 } }, 2);
+check(
+  "shop bonus registry applies stat tiers through injected native effects",
+  registryBonuses.speed === 20 && harness.context.TapSurvivorEffects === undefined
+);
 check("shop rerenders balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 13"));
 check("shop shows inflation notice as banner", harness.elements.get("questBanner").textContent.includes("Inflation huh."));
 check("shop inline inflation notice stays empty", !harness.elements.get("shopNotice").textContent.includes("Inflation huh."));

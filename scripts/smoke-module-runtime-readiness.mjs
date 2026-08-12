@@ -145,6 +145,21 @@ const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
+const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
+const B1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
+  "TapSurvivorEffects",
+  "TapSurvivorRunUpdate",
+  "TapSurvivorSave",
+  "TapSurvivorShellRelicUi",
+  "TapSurvivorUpgrades",
+  "TapSurvivorWeaponProjectiles",
+]);
+const classicB1RetiredPublisherSources = Object.fromEntries(
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES.map((name) => [
+    name,
+    readFileSync(join(root, `src/${classicPublisherFile(name)}`), "utf8"),
+  ])
+);
 const missingProductionBrowserAdapterModuleFiles = [
   "src/modules/assets.js",
   "src/modules/combat.js",
@@ -452,6 +467,11 @@ const runtimeRetiredBrowserNamespaceGuard = installThrowingGlobalReadGuards(
   RETIRED_BROWSER_NAMESPACE_NAMES,
   "runtime readiness injected browser globalRef"
 );
+const runtimeB1RetiredPublisherGuard = installThrowingGlobalReadGuards(
+  runtimeGlobal,
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES,
+  "runtime readiness injected browser globalRef"
+);
 const runtimeUiAdapters = createModuleRuntimeUiAdapters({
   ui: {
     speedButtons,
@@ -505,6 +525,11 @@ const browserDependencyGlobalRef = {
 const browserDependencyRetiredBrowserNamespaceGuard = installThrowingGlobalReadGuards(
   browserDependencyGlobalRef,
   RETIRED_BROWSER_NAMESPACE_NAMES,
+  "runtime readiness browser dependency globalRef"
+);
+const browserDependencyB1RetiredPublisherGuard = installThrowingGlobalReadGuards(
+  browserDependencyGlobalRef,
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES,
   "runtime readiness browser dependency globalRef"
 );
 const browserDependencyBagOptions = createBrowserDependencyBagOptions({
@@ -847,21 +872,28 @@ check(
     classicProgressionSource.includes("createProgressionSystem")
 );
 check(
-  "readiness preserves the explicit classic TapSurvivorUpgrades provider lifecycle",
-  classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
-    classicUpgradesSource.includes("createUpgradeContent") &&
-    classicUpgradesSource.includes("configureDefaultProviders") &&
-    classicUpgradesSource.includes("createUpgradeDefs") &&
-    classicUpgradesSource.includes("runUpgradeDefs") &&
-    !classicUpgradesSource.includes("TapSurvivorContent") &&
-    !classicUpgradesSource.includes("TapSurvivorEffects")
+  "readiness sees classic dependency bag inject native upgrades without a publisher",
+  !classicUpgradesSource.includes("globalThis.TapSurvivorUpgrades =") &&
+    classicUpgradesSource.includes("// Retired global: TapSurvivorUpgrades.") &&
+    classicGameDependenciesSource.includes("const upgrades = { createUpgradeContent };") &&
+    classicGameDependenciesSource.includes("      upgrades,")
 );
 check(
-  "readiness preserves the explicit classic TapSurvivorSave storage provider lifecycle",
-  classicSaveSource.includes("globalThis.TapSurvivorSave =") &&
-    classicSaveSource.includes("createSaveSystem") &&
-    classicSaveSource.includes("configureDefaultProviders") &&
-    !classicSaveSource.includes("TapSurvivorStorage")
+  "readiness sees classic dependency bag inject native save creation without a publisher",
+  !classicSaveSource.includes("globalThis.TapSurvivorSave =") &&
+    classicSaveSource.includes("// Retired global: TapSurvivorSave.") &&
+    classicGameDependenciesSource.includes("const save = { createSaveSystem };") &&
+    classicGameDependenciesSource.includes("      save,")
+);
+check(
+  "readiness sees every B1 classic publisher retired with a dependency-bag provenance banner",
+  B1_RETIRED_CLASSIC_PUBLISHER_NAMES.every((name) => {
+    const source = classicB1RetiredPublisherSources[name];
+    return (
+      !source.includes(`globalThis.${name} =`) &&
+      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+    );
+  })
 );
 check(
   "readiness sees production ESM entrypoint candidate can create browser dependency bag options",
@@ -948,9 +980,14 @@ check(
   runtimeUpgradeGlobalGuard.readAttempts() === 0
 );
 check(
-  "readiness browser default dependency bag records zero reads from throwing getters for all seven retired publishers",
+  "readiness browser default dependency bag records zero reads from throwing getters for retired production publishers",
   runtimeRetiredBrowserNamespaceGuard.readAttempts() === 0 &&
     browserDependencyRetiredBrowserNamespaceGuard.readAttempts() === 0
+);
+check(
+  "readiness browser default dependency bag records zero reads from every B1 retired publisher",
+  runtimeB1RetiredPublisherGuard.readAttempts() === 0 &&
+    browserDependencyB1RetiredPublisherGuard.readAttempts() === 0
 );
 check(
   "readiness sees explicit injected dependency adapter slots",
@@ -1590,6 +1627,17 @@ function collectTapSurvivorGlobalReads(file) {
     names.add(match[1]);
   }
   return [...names].sort();
+}
+
+function classicPublisherFile(name) {
+  return {
+    TapSurvivorEffects: "effects.js",
+    TapSurvivorRunUpdate: "run-update.js",
+    TapSurvivorSave: "save.js",
+    TapSurvivorShellRelicUi: "shell-relic-ui.js",
+    TapSurvivorUpgrades: "upgrades.js",
+    TapSurvivorWeaponProjectiles: "weapon-projectiles.js",
+  }[name];
 }
 
 function hasTapSurvivorContentGlobalRead(source) {

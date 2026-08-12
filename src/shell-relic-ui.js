@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/shell-relic-ui.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorShellRelicUi. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -649,29 +650,4 @@
     root.innerHTML = "";
     if (Array.isArray(root.children)) root.children.length = 0;
   }
-
-  let defaultSchedulerProvider;
-
-  const defaultScheduler = {
-    clearTimeout: (timer) => defaultSchedulerProvider?.clearTimeout?.(timer),
-    setTimeout: (callback, delay) => defaultSchedulerProvider?.setTimeout?.(callback, delay),
-    animationSetTimeout: (callback, delay) => defaultSchedulerProvider?.animationSetTimeout?.(callback, delay),
-  };
-
-  function configureDefaultProviders({ scheduler } = {}) {
-    defaultSchedulerProvider = scheduler;
-  }
-
-  function createClassicShellRelicUi(options = {}) {
-    return createShellRelicUi({
-      ...options,
-      scheduler: options.scheduler || defaultScheduler,
-      imageFactory: options.imageFactory || (() => (typeof Image === "undefined" ? null : new Image())),
-    });
-  }
-
-  globalThis.TapSurvivorShellRelicUi = {
-    createShellRelicUi: createClassicShellRelicUi,
-    configureDefaultProviders,
-  };
 })();

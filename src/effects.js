@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/effects.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorEffects. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -91,15 +92,5 @@
       player.maxHp += value;
       player.hp += value;
     },
-  };
-
-  const classicEffects = createEffects();
-
-  globalThis.TapSurvivorEffects = {
-    applyRunUpgradeEffects: classicEffects.applyRunUpgradeEffects,
-    applyShopItemEffectToRun: classicEffects.applyShopItemEffectToRun,
-    emptyShopBonuses: classicEffects.emptyShopBonuses,
-    addShopItemBonus: classicEffects.addShopItemBonus,
-    applyRelicSpecialEffects: classicEffects.applyRelicSpecialEffects,
   };
 })();

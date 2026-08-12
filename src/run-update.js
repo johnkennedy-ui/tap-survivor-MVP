@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/run-update.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRunUpdate. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -101,8 +102,4 @@
       collectXp,
     };
   }
-
-  globalThis.TapSurvivorRunUpdate = {
-    createRunUpdater,
-  };
 })();

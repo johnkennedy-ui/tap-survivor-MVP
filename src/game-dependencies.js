@@ -288,6 +288,95 @@
     };
   }
 
+  const DEFAULT_SHOP_BONUS_STATS = [
+    "speed",
+    "pickupRadius",
+    "maxHp",
+    "flatDamage",
+    "attackRadius",
+    "fireRate",
+    "percentDamage",
+    "relicFocus",
+  ];
+
+  function createEffects({ contentSchema = {} } = {}) {
+    const shopBonusStats =
+      contentSchema["effectRegistries"]?.["shopItem"]?.["stats"] ||
+      DEFAULT_SHOP_BONUS_STATS;
+
+    function applyPlayerStatEffect(player, effect) {
+      const handler = PLAYER_STAT_EFFECTS[effect?.stat];
+      if (!player || !handler) return false;
+      handler(player, effect.value || 0);
+      return true;
+    }
+
+    function applyRunUpgradeEffects(game, effects) {
+      (effects || []).forEach((effect) => {
+        if (effect.type === "playerStatAdd") {
+          applyPlayerStatEffect(game.player, effect);
+          return;
+        }
+        if (effect.type === "playerHeal") {
+          game.player.hp = Math.min(game.player.maxHp, game.player.hp + effect.value);
+        }
+      });
+    }
+
+    function applyShopItemEffectToRun(game, item) {
+      if (!game?.running || !game.player || !item?.effect) return false;
+      return applyPlayerStatEffect(game.player, item.effect);
+    }
+
+    function emptyShopBonuses() {
+      return Object.fromEntries(shopBonusStats.map((stat) => [stat, 0]));
+    }
+
+    function addShopItemBonus(bonuses, item, tier) {
+      if (!item?.effect || !Object.prototype.hasOwnProperty.call(bonuses, item.effect.stat)) return;
+      bonuses[item.effect.stat] += item.effect.value * tier;
+    }
+
+    function applyRelicSpecialEffects(game, effects = {}) {
+      const player = game?.player;
+      if (!player) return;
+      if (effects.maxHpBonus) {
+        player.maxHp += effects.maxHpBonus;
+        player.hp += effects.maxHpBonus;
+      }
+      if (effects.maxHpMultiplier) {
+        const nextMaxHp = Math.ceil(player.maxHp * (1 + effects.maxHpMultiplier));
+        player.hp += nextMaxHp - player.maxHp;
+        player.maxHp = nextMaxHp;
+      }
+      if (effects.speedBonus) player.speed += effects.speedBonus;
+      if (effects.speedMultiplier) player.speed *= 1 + effects.speedMultiplier;
+      if (effects.pickupRadiusBonus) player.pickupRadius += effects.pickupRadiusBonus;
+      if (effects.pickupRadiusMultiplier) player.pickupRadius *= 1 + effects.pickupRadiusMultiplier;
+    }
+
+    return {
+      applyRunUpgradeEffects,
+      applyShopItemEffectToRun,
+      emptyShopBonuses,
+      addShopItemBonus,
+      applyRelicSpecialEffects,
+    };
+  }
+
+  const PLAYER_STAT_EFFECTS = {
+    speed(player, value) {
+      player.speed += value;
+    },
+    pickupRadius(player, value) {
+      player.pickupRadius += value;
+    },
+    maxHp(player, value) {
+      player.maxHp += value;
+      player.hp += value;
+    },
+  };
+
   const MODULE_NATIVE_ENEMY_SLOTS = Object.freeze(["enemies"]);
 
   const MODULE_NATIVE_ENEMY_PROOF_SLOTS = Object.freeze(["createEnemySystem"]);
@@ -1544,6 +1633,103 @@
     };
   }
 
+  function createSaveSystem({
+    saveKey,
+    legacySaveKey,
+    saveNormalize,
+    saveCorruption,
+    saveDefaults,
+    saveMigrations,
+    starterQuestIds,
+    questDefs,
+    weaponUnlocks,
+    upgradeDefs,
+    shopItemDefs = [],
+    questOpenIds,
+    storage,
+    storageAdapter,
+  }) {
+    const { createSaveNormalizer } = saveNormalize;
+    const { createSaveLoadHandler } = saveCorruption;
+    const { createDefaultSave } = saveDefaults;
+    const { migrateSave } = saveMigrations;
+    const currentSaveVersion = saveDefaults.CURRENT_SAVE_VERSION;
+    const shopItemById = new Map(shopItemDefs.map((item) => [item.id, item]));
+    const activeStorage =
+      storageAdapter ||
+      storage?.createStorageAdapter({
+        saveKey,
+        legacySaveKey,
+      });
+
+    function defaultSave() {
+      return createDefaultSave({ starterQuestIds });
+    }
+
+    const { normalizeSave } = createSaveNormalizer({
+      currentSaveVersion,
+      defaultSave,
+      isPlainObject: saveMigrations.isPlainObject,
+      questDefs,
+      weaponUnlocks,
+      upgradeDefs,
+      shopItemById,
+      questOpenIds,
+    });
+
+    const saveLoadHandler = createSaveLoadHandler({
+      defaultSave,
+      normalizeAndMigrateSave,
+      storage: activeStorage,
+    });
+
+    function loadSave() {
+      try {
+        const raw = activeStorage?.getSaveRaw?.();
+        if (raw && typeof raw.then === "function") {
+          return raw.then(saveLoadHandler.fromRaw).catch(saveLoadHandler.storageReadFailed);
+        }
+
+        return saveLoadHandler.fromRaw(raw);
+      } catch {
+        return saveLoadHandler.storageReadFailed();
+      }
+    }
+
+    function normalizeAndMigrateSave(input) {
+      return normalizeSave({
+        ...defaultSave(),
+        ...migrateSave(input, { currentSaveVersion }),
+      });
+    }
+
+    function persist(save) {
+      const unlockedUpgrades = Object.entries(save.upgradeTiers)
+        .filter(([, tier]) => tier > 0)
+        .map(([id]) => id);
+
+      save.unlockedUpgrades = unlockedUpgrades;
+      return activeStorage?.setSaveRaw?.(JSON.stringify(save)) ?? false;
+    }
+
+    function removeSave() {
+      return activeStorage?.removeSaveRaw?.() ?? false;
+    }
+
+    function getLastLoadWarning() {
+      return saveLoadHandler.getLastLoadWarning();
+    }
+
+    return {
+      defaultSave,
+      loadSave,
+      getLastLoadWarning,
+      normalizeSave,
+      persist,
+      removeSave,
+    };
+  }
+
   /**
    * @typedef {{
    *   weaponId?: string,
@@ -2160,6 +2346,700 @@
   }
 
   /**
+   * @param {any} [options]
+   */
+  function createShellRelicUiAdapter(options = {}) {
+    const {
+      presenter,
+      documentRef,
+      root,
+      onEquip,
+      onUnequip,
+      onSelect,
+      onLockedSelect,
+      getSave,
+      relicSystem,
+      persist,
+      renderMeta,
+      scheduler = {},
+      lockPopupDelayMs = 1800,
+      previewAdapter = {},
+    } = options;
+    let lockPopup = null;
+    let lockPopupHideTimer = null;
+    const previewDisposers = [];
+
+    if (!presenter || typeof presenter.createInventoryViewModel !== "function") {
+      throw new Error("Missing Tap Survivor module shell relic UI dependency: presenter");
+    }
+    if (!documentRef || typeof documentRef.createElement !== "function") {
+      throw new Error("Missing Tap Survivor module shell relic UI dependency: documentRef");
+    }
+    if (!root || typeof root.appendChild !== "function") {
+      throw new Error("Missing Tap Survivor module shell relic UI dependency: root");
+    }
+
+    function renderShellRelics(save = {}, renderOptions = {}) {
+      return renderViewModel(presenter.createInventoryViewModel(save), renderOptions);
+    }
+
+    function renderViewModel(model, renderOptions = {}) {
+      const selectedRelicId = renderOptions.selectedRelicId || model.selectedRelicId || "";
+      const selectedRelic = findRelic(model, selectedRelicId);
+      clearRoot(root);
+      root.appendChild(createCharacterPanel(model));
+      root.appendChild(createSummary(model));
+      root.appendChild(createSlotList(model));
+      root.appendChild(createAvailableList(model, selectedRelicId));
+      if (selectedRelic) root.appendChild(createDetail(model, selectedRelic));
+      return model;
+    }
+
+    function createCharacterPanel(model) {
+      const panel = documentRef.createElement("section");
+      panel.className = "relic-character-panel";
+      appendText(documentRef, panel, "strong", "Character");
+      appendText(documentRef, panel, "span", `Tower level ${model.towerFloor}`);
+      return panel;
+    }
+
+    function createSummary(model) {
+      const summary = documentRef.createElement("section");
+      summary.className = "shell-relic-summary";
+      model.summaryRows.forEach((row) => {
+        const item = documentRef.createElement("div");
+        item.className = "shell-relic-summary-row";
+        item.textContent = `${row.label}: ${row.value}`;
+        summary.appendChild(item);
+      });
+      appendText(documentRef, summary, "div", `Can equip more: ${model.canEquipMore ? "Yes" : "No"}`, {
+        className: "shell-relic-summary-row",
+      });
+      appendBonusRows(documentRef, summary, "Run-start bonuses", model.bonuses?.startingRunUpgradeTiers);
+      appendBonusRows(documentRef, summary, "Max-tier bonuses", model.bonuses?.maxTierBonuses);
+      appendModifierRows(documentRef, summary, model.specialModifiers);
+      return summary;
+    }
+
+    function createSlotList(model) {
+      const list = documentRef.createElement("section");
+      list.className = "shell-relic-slots";
+      model.slots.forEach((slot) => {
+        const item = documentRef.createElement("article");
+        const relic = slot.relic;
+        item.className = [
+          "relic-slot",
+          slot.unlocked ? "unlocked" : "locked",
+          relic ? "equipped" : "empty",
+          relic?.rarity === "green" ? "green-relic" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        item.dataset.slotIndex = String(slot.index);
+        if (relic) item.dataset.relicId = relic.id;
+        setRelicBackground(item, relic);
+        appendText(documentRef, item, "span", slot.label, { className: "relic-slot-index" });
+        if (!slot.unlocked) {
+          appendText(documentRef, item, "strong", "Locked");
+          appendText(documentRef, item, "span", `Unlocked at tower level ${slot.unlockLevel}.`);
+        } else if (!relic) {
+          appendText(documentRef, item, "strong", "Empty relic slot");
+          appendText(documentRef, item, "span", "Equip an unlocked relic below.");
+        } else {
+          item.appendChild(createRelicImage(documentRef, relic));
+          appendText(documentRef, item, "strong", relic.name);
+          appendText(documentRef, item, "span", relic.description);
+          const button = documentRef.createElement("button");
+          button.type = "button";
+          button.textContent = "Unequip";
+          button.dataset.action = "unequip";
+          button.addEventListener("click", () => {
+            const changed = commitRelicState(relic, false);
+            onUnequip?.(relic, model, { changed });
+          });
+          item.appendChild(button);
+        }
+        list.appendChild(item);
+      });
+      return list;
+    }
+
+    function createAvailableList(model, selectedRelicId) {
+      const list = documentRef.createElement("section");
+      list.className = "relic-icon-grid shell-relic-available";
+      if (!model.availableRelics.length) {
+        appendText(documentRef, list, "div", "All relics are equipped.", { className: "relic-item locked" });
+        return list;
+      }
+      model.availableRelics.forEach((relic) => {
+        const button = documentRef.createElement("button");
+        button.type = "button";
+        button.className = [
+          "relic-icon-button",
+          "shell-relic-row",
+          relic.unlocked ? "available" : "locked",
+          relic.id === selectedRelicId ? "selected" : "",
+          relic.rarity === "green" ? "green-relic" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        button.disabled = false;
+        button.dataset.relicId = relic.id;
+        button.dataset.unlocked = String(relic.unlocked);
+        setAriaLabel(button, relic.unlocked ? `View ${relic.name}` : `${relic.name} locked`);
+        setRelicBackground(button, relic);
+        button.appendChild(createRelicImage(documentRef, relic));
+        appendText(documentRef, button, "span", relic.name);
+        if (!relic.unlocked) appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
+        if (relic.linkedSkill) appendText(documentRef, button, "span", `Linked skill: ${relic.linkedSkill.name}`);
+        button.addEventListener("click", () => {
+          if (relic.unlocked) onSelect?.(relic, model);
+          else {
+            showLockedMessage();
+            onLockedSelect?.(relic, model);
+          }
+        });
+        list.appendChild(button);
+      });
+      return list;
+    }
+
+    function createDetail(model, relic) {
+      const detail = documentRef.createElement("section");
+      detail.className = `relic-detail-screen ${relic.rarity === "green" ? "green-relic" : ""}`;
+      detail.dataset.relicId = relic.id;
+      setRelicBackground(detail, relic);
+      detail.appendChild(createRelicPreview(relic));
+      appendText(documentRef, detail, "span", "Selected relic", { className: "relic-slot-index" });
+      appendText(documentRef, detail, "strong", relic.name);
+      appendText(documentRef, detail, "p", relic.description);
+      if (relic.specialAbility) {
+        appendText(documentRef, detail, "p", `${relic.specialAbility.label}: ${relic.specialAbility.description}`, {
+          className: "relic-special-ability",
+        });
+      }
+      if (relic.linkedSkill) appendText(documentRef, detail, "p", `Linked skill: ${relic.linkedSkill.name}`);
+
+      const actions = documentRef.createElement("div");
+      actions.className = "relic-detail-actions";
+      const equipButton = documentRef.createElement("button");
+      equipButton.type = "button";
+      equipButton.textContent = "Equip relic";
+      equipButton.dataset.action = "equip";
+      equipButton.disabled = !relic.unlocked || relic.equipped || !model.canEquipMore;
+      equipButton.addEventListener("click", () => {
+        if (!equipButton.disabled) {
+          const changed = commitRelicState(relic, true);
+          onEquip?.(relic, model, { changed });
+        }
+      });
+      const cancelButton = documentRef.createElement("button");
+      cancelButton.type = "button";
+      cancelButton.textContent = "Cancel";
+      cancelButton.dataset.action = "cancel";
+      cancelButton.addEventListener("click", () => onSelect?.(null, model));
+      actions.appendChild(equipButton);
+      actions.appendChild(cancelButton);
+      detail.appendChild(actions);
+      return detail;
+    }
+
+    return {
+      dispose,
+      renderShellRelics,
+      renderViewModel,
+      showLockedMessage,
+    };
+
+    function commitRelicState(relic, equipped) {
+      const save = getSave?.();
+      const changed = Boolean(save && relicSystem?.setRelicEquipped?.(save, relic.id, equipped));
+      if (!changed) return false;
+      persist?.(save);
+      renderShellRelics(save);
+      renderMeta?.(save);
+      return true;
+    }
+
+    function showLockedMessage() {
+      if (!lockPopup) {
+        lockPopup = documentRef.createElement("div");
+        lockPopup.className = "relic-lock-popup";
+        root.appendChild(lockPopup);
+      }
+      lockPopup.textContent = "Locked, play more to unlock this skill.";
+      removeClass(lockPopup, "hidden");
+      if (lockPopupHideTimer) scheduler.clearTimeout?.(lockPopupHideTimer);
+      lockPopupHideTimer =
+        scheduler.setTimeout?.(() => {
+          if (lockPopup?.isConnected !== false) addClass(lockPopup, "hidden");
+          lockPopupHideTimer = null;
+        }, lockPopupDelayMs) || null;
+      return lockPopup;
+    }
+
+    function dispose() {
+      if (lockPopupHideTimer) scheduler.clearTimeout?.(lockPopupHideTimer);
+      lockPopupHideTimer = null;
+      while (previewDisposers.length) previewDisposers.pop()?.();
+    }
+
+    function createRelicPreview(relic) {
+      const sprite = previewAdapter.runUpgradeSprite?.(relic.targetUpgradeId);
+      const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
+      const source = previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || "";
+      if (frames.length && source && previewAdapter.createCanvas && previewAdapter.createImage) {
+        const canvas =
+          previewAdapter.createCanvas({
+            className: "relic-detail-preview relic-detail-canvas",
+            height: 112,
+            relic,
+            sprite,
+            width: 112,
+          }) || documentRef.createElement("canvas");
+        canvas.className = "relic-detail-preview relic-detail-canvas";
+        canvas.width = 112;
+        canvas.height = 112;
+        if (startAnimatedPreview({ canvas, frames, relic, source, sprite })) return canvas;
+      }
+      return createRelicImage(documentRef, relic, "relic-detail-preview");
+    }
+
+    function startAnimatedPreview({ canvas, frames, relic, source, sprite }) {
+      const context = previewAdapter.getContext?.(canvas, { willReadFrequently: true }) || canvas.getContext?.("2d", { willReadFrequently: true });
+      const image = previewAdapter.createImage?.({ relic, source, sprite });
+      if (!context || !image) return false;
+      let frameIndex = 0;
+      let timer = null;
+      let stopped = false;
+
+      function drawFrame() {
+        if (stopped || canvas.isConnected === false) return;
+        const frame = frames[frameIndex % frames.length];
+        frameIndex += 1;
+        previewAdapter.clearFrame?.({ canvas, context, sprite });
+        if (!previewAdapter.clearFrame) context.clearRect?.(0, 0, canvas.width, canvas.height);
+        context.imageSmoothingEnabled = false;
+        previewAdapter.drawFrame?.({ canvas, context, frame, image, sprite });
+        if (!previewAdapter.drawFrame) {
+          context.drawImage?.(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+        }
+        previewAdapter.applyTransparency?.({ canvas, context, sprite });
+        timer = scheduler.setTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10)) || null;
+      }
+
+      const onLoad = () => drawFrame();
+      if (typeof image.addEventListener === "function") image.addEventListener("load", onLoad, { once: true });
+      else previewAdapter.onImageLoad?.(image, onLoad) ?? onLoad();
+      if ("src" in image) image.src = source;
+      else previewAdapter.setImageSource?.(image, source);
+      previewDisposers.push(() => {
+        stopped = true;
+        if (timer) scheduler.clearTimeout?.(timer);
+        previewAdapter.disposeImage?.(image);
+      });
+      return true;
+    }
+  }
+
+  /**
+   * Classic shell relic UI compatibility adapter.
+   *
+   * This preserves the production API consumed by src/shell-ui.js while keeping
+   * the implementation in the module tree for generated bridge output.
+   *
+   * @param {any} [options]
+   */
+  function createShellRelicUi(options = {}) {
+    const {
+      ui,
+      content = {},
+      documentRef = document,
+      assetResolver,
+      getSave,
+      relicDefs = [],
+      relicSystem,
+      persist,
+      renderMeta,
+      scheduler = {
+        clearTimeout: (timer) => clearTimeout(timer),
+        setTimeout: (callback, delay) => setTimeout(callback, delay),
+        animationSetTimeout: (callback, delay) => setTimeout(callback, delay),
+      },
+      imageFactory = () => (typeof Image === "undefined" ? null : new Image()),
+    } = options;
+
+    function renderInventory() {
+      if (!ui.menuRelicSlots || !ui.menuRelicInventory || !relicSystem) return;
+      const save = getSave();
+      const slots = relicSystem.maxEquippedRelics(save);
+      const equippedRelics = relicSystem.equippedRelics(save);
+      const equipped = new Set(equippedRelics.map((relic) => relic.id));
+      const unlocked = new Set(save.unlockedRelics || []);
+      const nextLevel = slots >= 5 ? null : (slots + 1) * 10;
+      ui.menuRelicSlots.textContent = `Relic slots: ${slots}/5 unlocked. ${
+        nextLevel ? `Next slot at tower level ${nextLevel}.` : "Maximum slots unlocked."
+      }`;
+      ui.menuRelicInventory.innerHTML = "";
+      const loadout = documentRef.createElement("div");
+      loadout.className = "relic-loadout";
+      loadout.appendChild(createCharacterPanel(save));
+
+      const slotGrid = documentRef.createElement("div");
+      slotGrid.className = "relic-slots";
+      for (let index = 0; index < 5; index += 1) {
+        slotGrid.appendChild(createRelicSlot(index, slots, equippedRelics[index]));
+      }
+      loadout.appendChild(slotGrid);
+      ui.menuRelicInventory.appendChild(loadout);
+
+      const inventoryRelics = relicDefs.filter((relic) => !equipped.has(relic.id));
+      const list = documentRef.createElement("div");
+      list.className = "relic-icon-grid";
+      if (!inventoryRelics.length) {
+        const empty = documentRef.createElement("div");
+        empty.className = "relic-item locked";
+        empty.textContent = "All relics are equipped.";
+        list.appendChild(empty);
+        ui.menuRelicInventory.appendChild(list);
+        return;
+      }
+      inventoryRelics.forEach((relic) => {
+        list.appendChild(createRelicIconButton(relic, unlocked.has(relic.id)));
+      });
+      ui.menuRelicInventory.appendChild(list);
+    }
+
+    function createRelicIconButton(relic, isUnlocked = true) {
+      const button = documentRef.createElement("button");
+      button.className = `relic-icon-button ${isUnlocked ? "available" : "locked"} ${
+        relic.rarity === "green" ? "green-relic" : ""
+      }`;
+      setRelicBackground(button, relic);
+      button.type = "button";
+      button.setAttribute("aria-label", isUnlocked ? `View ${relic.name}` : `${relic.name} locked`);
+      button.innerHTML = `
+        <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
+        <span>${relic.name}</span>
+        ${isUnlocked ? "" : '<em class="relic-lock-badge">Locked</em>'}
+      `;
+      button.addEventListener("click", () => {
+        if (!isUnlocked) {
+          showRelicLockedMessage();
+          return;
+        }
+        openRelicDetail(relic);
+      });
+      return button;
+    }
+
+    function relicIconSrc(relic) {
+      return assetResolver.relicIcon(relic);
+    }
+
+    function showRelicLockedMessage() {
+      if (!ui.menuRelicInventory) return;
+      let popup = ui.menuRelicInventory.querySelector?.(".relic-lock-popup");
+      if (!popup) {
+        popup = documentRef.createElement("div");
+        popup.className = "relic-lock-popup";
+        ui.menuRelicInventory.prepend?.(popup) || ui.menuRelicInventory.appendChild(popup);
+      }
+      popup.textContent = "Locked, play more to unlock this skill.";
+      popup.classList.remove("hidden");
+      scheduler.clearTimeout?.(popup.hideTimer);
+      popup.hideTimer = scheduler.setTimeout?.(() => {
+        if (popup.isConnected) popup.classList.add("hidden");
+      }, 1800);
+    }
+
+    function openRelicDetail(relic) {
+      const save = getSave();
+      const slots = relicSystem.maxEquippedRelics(save);
+      const equippedRelics = relicSystem.equippedRelics(save);
+      const canEquip = equippedRelics.length < slots;
+      const skill = (content?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
+      ui.menuRelicSlots.textContent = relic.name;
+      ui.menuRelicInventory.innerHTML = "";
+
+      const detail = documentRef.createElement("div");
+      detail.className = `relic-detail-screen ${relic.rarity === "green" ? "green-relic" : ""}`;
+      setRelicBackground(detail, relic);
+      const preview = createRelicSkillPreview(relic);
+      detail.appendChild(preview);
+      const copy = documentRef.createElement("div");
+      copy.className = "relic-detail-copy";
+      copy.innerHTML = `
+        <span class="relic-slot-index">Selected relic</span>
+        <strong>${relic.name}</strong>
+        <p>${relic.description}</p>
+        ${relic.specialAbility ? `<p><strong>${relic.specialAbility.label}</strong>: ${relic.specialAbility.description}</p>` : ""}
+        ${skill ? `<p>Linked skill: ${skill.name}</p>` : ""}
+      `;
+      detail.appendChild(copy);
+
+      const actions = documentRef.createElement("div");
+      actions.className = "relic-detail-actions";
+      const equipButton = documentRef.createElement("button");
+      equipButton.type = "button";
+      equipButton.textContent = "Equip relic";
+      equipButton.disabled = !canEquip;
+      equipButton.addEventListener("click", () => {
+        if (relicSystem.setRelicEquipped(save, relic.id, true)) {
+          persist?.();
+          renderInventory();
+          renderMeta();
+        }
+      });
+      const cancelButton = documentRef.createElement("button");
+      cancelButton.type = "button";
+      cancelButton.textContent = "Cancel";
+      cancelButton.addEventListener("click", renderInventory);
+      actions.appendChild(equipButton);
+      actions.appendChild(cancelButton);
+      detail.appendChild(actions);
+      ui.menuRelicInventory.appendChild(detail);
+    }
+
+    function createRelicSkillPreview(relic) {
+      const sprite = assetResolver.runUpgradeSprite(relic.targetUpgradeId);
+      const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
+      const image = imageFactory();
+      if (frames.length && image) {
+        const canvas = documentRef.createElement("canvas");
+        canvas.className = "relic-detail-preview relic-detail-canvas";
+        canvas.width = 112;
+        canvas.height = 112;
+        if (animateRelicSkillPreview(canvas, sprite, image)) return canvas;
+      }
+      const fallbackImage = documentRef.createElement("img");
+      fallbackImage.className = "relic-detail-preview";
+      fallbackImage.src = relicIconSrc(relic);
+      fallbackImage.alt = "";
+      return fallbackImage;
+    }
+
+    function animateRelicSkillPreview(canvas, sprite, image) {
+      const ctx = canvas.getContext?.("2d", { willReadFrequently: true });
+      const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
+      const src = assetResolver.spriteSource(sprite);
+      if (!ctx || !frames.length || !src) return false;
+      let frameIndex = 0;
+      function drawFrame() {
+        if (canvas.isConnected === false) return;
+        const frame = frames[frameIndex % frames.length];
+        frameIndex += 1;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+        applyPreviewTransparency(ctx, canvas.width, canvas.height, sprite);
+        scheduler.animationSetTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10));
+      }
+      image.addEventListener?.("load", drawFrame, { once: true });
+      image.src = src;
+      return true;
+    }
+
+    function applyPreviewTransparency(ctx, width, height, sprite) {
+      const color = sprite?.transparentColor;
+      if (!Array.isArray(color) || color.length < 3) return;
+      const tolerance = Math.max(0, Number(sprite.transparentTolerance ?? 28));
+      try {
+        const pixels = ctx.getImageData(0, 0, width, height);
+        const data = pixels.data;
+        for (let index = 0; index < data.length; index += 4) {
+          const delta = Math.abs(data[index] - color[0]) + Math.abs(data[index + 1] - color[1]) + Math.abs(data[index + 2] - color[2]);
+          if (delta <= tolerance) data[index + 3] = 0;
+        }
+        ctx.putImageData(pixels, 0, 0);
+      } catch {
+        // If a browser blocks pixel reads, the preview still shows the untrimmed frame.
+      }
+    }
+
+    function createCharacterPanel(save) {
+      const panel = documentRef.createElement("div");
+      panel.className = "relic-character-panel";
+      const playerSprite = content?.assets?.sprites?.player || "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
+      panel.innerHTML = `
+        <img class="relic-character-sprite" src="${playerSprite}" alt="" />
+        <span>
+          <strong>Character</strong>
+          <span>Tower level ${Math.max(1, save.towerFloor || 1)}</span>
+        </span>
+      `;
+      return panel;
+    }
+
+    function createRelicSlot(index, unlockedSlots, relic) {
+      const slot = documentRef.createElement("div");
+      const unlockLevel = (index + 1) * 10;
+      const unlocked = index < unlockedSlots;
+      slot.className = `relic-slot ${unlocked ? (relic ? "equipped" : "empty") : "locked"} ${relic?.rarity === "green" ? "green-relic" : ""}`;
+      setRelicBackground(slot, relic);
+      if (!unlocked) {
+        slot.innerHTML = `
+          <span class="relic-slot-index">Slot ${index + 1}</span>
+          <strong>Locked</strong>
+          <span>Unlocked at tower level ${unlockLevel}.</span>
+        `;
+        return slot;
+      }
+      if (!relic) {
+        slot.innerHTML = `
+          <span class="relic-slot-index">Slot ${index + 1}</span>
+          <strong>Empty relic slot</strong>
+          <span>Equip an unlocked relic below.</span>
+        `;
+        return slot;
+      }
+
+      slot.innerHTML = `
+        <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
+        <span>
+          <span class="relic-slot-index">Slot ${index + 1}</span>
+          <strong>${relic.name}</strong>
+          <span>${relic.description}</span>
+        </span>
+      `;
+      const button = documentRef.createElement("button");
+      button.textContent = "Unequip";
+      button.addEventListener("click", () => {
+        const save = getSave();
+        if (relicSystem.setRelicEquipped(save, relic.id, false)) {
+          persist?.();
+          renderInventory();
+          renderMeta();
+        }
+      });
+      slot.appendChild(button);
+      return slot;
+    }
+
+    return {
+      renderInventory,
+    };
+  }
+
+  function appendBonusRows(documentRef, parent, label, values = {}) {
+    Object.entries(values)
+      .filter(([, value]) => value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .forEach(([key, value]) => {
+        appendText(documentRef, parent, "div", `${label}: ${key} +${value}`, { className: "shell-relic-bonus-row" });
+      });
+  }
+
+  function appendModifierRows(documentRef, parent, modifiers = []) {
+    modifiers.forEach((modifier) => {
+      appendText(documentRef, parent, "div", `Special modifier: ${modifier.key} +${modifier.value}`, {
+        className: "shell-relic-special-row",
+      });
+    });
+  }
+
+  function findRelic(model, relicId) {
+    if (!relicId) return null;
+    return [...(model.equippedRelics || []), ...(model.availableRelics || [])].find((relic) => relic.id === relicId) || null;
+  }
+
+  function createRelicImage(documentRef, relic, className = "relic-icon") {
+    const image = documentRef.createElement("img");
+    image.className = className;
+    image.src = relic?.iconSrc || "";
+    image.alt = "";
+    return image;
+  }
+
+  function appendText(documentRef, parent, tagName, text, attributes = {}) {
+    const item = documentRef.createElement(tagName);
+    item.textContent = text;
+    Object.assign(item, attributes);
+    parent.appendChild(item);
+    return item;
+  }
+
+  function setAriaLabel(element, label) {
+    if (typeof element.setAttribute === "function") element.setAttribute("aria-label", label);
+    else element.ariaLabel = label;
+  }
+
+  function setRelicBackground(element, relic) {
+    if (!element?.style || !relic?.backgroundColor) return;
+    if (typeof element.style.setProperty === "function") element.style.setProperty("--relic-bg", relic.backgroundColor);
+    else element.style["--relic-bg"] = relic.backgroundColor;
+  }
+
+  function addClass(element, className) {
+    const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+    current.add(className);
+    element.className = [...current].join(" ");
+  }
+
+  function removeClass(element, className) {
+    const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+    current.delete(className);
+    element.className = [...current].join(" ");
+  }
+
+  function clearRoot(root) {
+    if (typeof root.replaceChildren === "function") {
+      root.replaceChildren();
+      return;
+    }
+    root.innerHTML = "";
+    if (Array.isArray(root.children)) root.children.length = 0;
+  }
+
+  /** @typedef {import("../types/content.js").GeneratedContent} GeneratedContent */
+  /** @typedef {import("../types/content.js").ContentEntry} ContentEntry */
+  /** @typedef {import("../types/content.js").RunUpgradeDef} RunUpgradeDef */
+  /** @typedef {import("../types/content.js").WeaponDef} WeaponDef */
+  /** @typedef {Record<string, WeaponDef>} WeaponDefs */
+  /** @typedef {{ applyRunUpgradeEffects(game: object, effects: ContentEntry[]): void }} UpgradeEffects */
+  /** @typedef {{ content?: GeneratedContent, effects?: UpgradeEffects }} CreateUpgradeContentOptions */
+
+  /** @param {WeaponDefs} weaponDefs @param {WeaponDef} weapon @returns {string | undefined} */
+  function weaponIdForDef(weaponDefs, weapon) {
+    return Object.keys(weaponDefs).find((id) => weaponDefs[id] === weapon);
+  }
+
+  /** @param {CreateUpgradeContentOptions} [options] */
+  function createUpgradeContent({ content = {}, effects } = {}) {
+    const metaUpgradeDefs = content.metaUpgrades || [];
+    /** @param {WeaponDefs} weaponDefs @returns {ContentEntry[]} */
+    function createUpgradeDefs(weaponDefs) {
+      return [
+        ...Object.values(weaponDefs).map((weapon) => {
+          const weaponId = weaponIdForDef(weaponDefs, weapon);
+          return {
+            id: weapon.upgradeId,
+            name: `${weapon.name} Damage`,
+            description: `Increase ${weapon.name} damage.`,
+            cost: [1, 2, 3, 4, 5],
+            maxTier: 5,
+            requiresWeapon: weaponId,
+            requiresQuest: weapon.upgradeId === "laser_damage" ? "use_laser_run" : `${weaponId}_mastery`,
+            opensQuest: weapon.upgradeId === "laser_damage" ? "laser_damage_5000" : null,
+          };
+        }),
+        ...metaUpgradeDefs,
+      ];
+    }
+
+    /** @type {RunUpgradeDef[]} */
+    const runUpgradeDefs = (content.runUpgrades || []).map((upgrade) => ({
+      ...upgrade,
+      apply: upgrade.effects?.length ? (game) => effects.applyRunUpgradeEffects(game, upgrade.effects) : undefined,
+    }));
+
+    return {
+      createUpgradeDefs,
+      runUpgradeDefs,
+    };
+  }
+
+  /**
    * @typedef {{
    *   id?: string,
    *   kind?: string,
@@ -2307,6 +3187,240 @@
       weaponReach,
       weaponSfxOptions,
       weaponWidth,
+    };
+  }
+
+  /**
+   * @typedef {{ x: number, y: number, radius?: number, hp?: number }} PointLike
+   * @typedef {{
+   *   id?: string,
+   *   kind?: string,
+   *   speed: number,
+   *   color?: string,
+   *   pierce?: number
+   * }} WeaponDef
+   * @typedef {Record<string, WeaponDef>} WeaponDefs
+   * @typedef {{ width: number, height: number }} ProjectileCanvas
+   * @typedef {{ x: number, y: number }} Player
+   * @typedef {{ x: number, y: number, radius: number, hp?: number }} Enemy
+   * @typedef {{
+   *   weaponId: string,
+   *   x: number,
+   *   y: number,
+   *   vx: number,
+   *   vy: number,
+   *   radius: number,
+   *   damage: number,
+   *   life: number,
+   *   pierce: number,
+   *   bounces: number,
+   *   splitDepth: number,
+   *   hit: Set<Enemy>,
+   *   color?: string
+   * }} ProjectileBolt
+   * @typedef {{ x: number, y: number, radius: number, color?: string, life: number, visualOnly: boolean }} AreaEffect
+   * @typedef {{ player: Player, bolts: ProjectileBolt[], enemies: Enemy[], areas: AreaEffect[] }} ProjectileGame
+   * @typedef {{
+   *   fireProjectile(weaponId: string): void,
+   *   spawnProjectileBolt(
+   *     weaponId: string,
+   *     x: number,
+   *     y: number,
+   *     vx: number,
+   *     vy: number,
+   *     overrides?: Partial<ProjectileBolt>
+   *   ): void,
+   *   updateBolts(dt: number): void
+   * }} WeaponProjectileSystem
+   */
+
+  /**
+   * @param {number} vx
+   * @param {number} vy
+   * @param {number} angle
+   * @returns {[number, number]}
+   */
+  function rotateVector(vx, vy, angle) {
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    return [vx * cos - vy * sin, vx * sin + vy * cos];
+  }
+
+  /**
+   * @param {{
+   *   canvas: ProjectileCanvas,
+   *   weaponDefs: WeaponDefs,
+   *   getGame: () => ProjectileGame,
+   *   getRunUpgradeTier: (id: string) => number,
+   *   getRelicSpecialEffects?: () => { doubleShotCount?: number, projectileSpeedBonus?: number },
+   *   nearestEnemy: () => Enemy | null,
+   *   projectileRadius: (weapon: WeaponDef) => number,
+   *   weaponDamage: (weaponId: string) => number,
+   *   projectileSkillModifier: (weapon: WeaponDef, field: string) => number,
+   *   damageEnemy: (enemy: Enemy, damage: number, weaponId: string) => void,
+   *   reapEnemies: () => void,
+   *   distance: (a: PointLike, b: PointLike) => number,
+   *   clamp: (value: number, min: number, max: number) => number
+   * }} options
+   * @returns {WeaponProjectileSystem}
+   */
+  function createWeaponProjectileSystem({
+    canvas,
+    weaponDefs,
+    getGame,
+    getRunUpgradeTier,
+    getRelicSpecialEffects,
+    nearestEnemy,
+    projectileRadius,
+    weaponDamage,
+    projectileSkillModifier,
+    damageEnemy,
+    reapEnemies,
+    distance,
+    clamp,
+  }) {
+    function fireProjectile(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const target = nearestEnemy();
+      if (!target) return;
+      const p = game.player;
+      const dx = target.x - p.x;
+      const dy = target.y - p.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const relicEffects = getRelicSpecialEffects?.() || {};
+      const speed =
+        weapon.speed *
+        (1 + (relicEffects.projectileSpeedBonus || 0)) *
+        projectileSkillModifier(weapon, "projectileSpeedMultiplier");
+      const baseVx = (dx / dist) * speed;
+      const baseVy = (dy / dist) * speed;
+      const splitTier = getRunUpgradeTier("run_split_shot");
+      const spread = 0.26;
+
+      spawnProjectileBolt(weaponId, p.x, p.y, baseVx, baseVy);
+      if (relicEffects.doubleShotCount) {
+        spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread * 0.5));
+      }
+      if (splitTier >= 1) {
+        spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread));
+        spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, spread));
+      }
+      if (splitTier >= 2) {
+        spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread * 2));
+        spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, spread * 2));
+      }
+    }
+
+    function spawnProjectileBolt(weaponId, x, y, vx, vy, overrides = {}) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      game.bolts.push({
+        weaponId,
+        x,
+        y,
+        vx,
+        vy,
+        radius: projectileRadius(weapon),
+        damage: weaponDamage(weaponId),
+        life: 1.8,
+        pierce: (weapon.pierce || 0) + getRunUpgradeTier("run_projectile_pierce"),
+        bounces: getRunUpgradeTier("run_wall_bounce"),
+        splitDepth: 0,
+        hit: new Set(),
+        color: weapon.color,
+        ...overrides,
+      });
+    }
+
+    function updateBolts(dt) {
+      const game = getGame();
+      game.bolts.forEach((bolt) => {
+        bolt.x += bolt.vx * dt;
+        bolt.y += bolt.vy * dt;
+        bolt.life -= dt;
+        if (bolt.bounces > 0 && (bolt.x < bolt.radius || bolt.x > canvas.width - bolt.radius)) {
+          bolt.vx *= -1;
+          bolt.x = clamp(bolt.x, bolt.radius, canvas.width - bolt.radius);
+          bolt.bounces -= 1;
+        }
+        if (bolt.bounces > 0 && (bolt.y < bolt.radius || bolt.y > canvas.height - bolt.radius)) {
+          bolt.vy *= -1;
+          bolt.y = clamp(bolt.y, bolt.radius, canvas.height - bolt.radius);
+          bolt.bounces -= 1;
+        }
+        const enemy = game.enemies.find(
+          (candidate) =>
+            !bolt.hit.has(candidate) && distance(bolt, candidate) < bolt.radius + candidate.radius
+        );
+        if (enemy) {
+          damageEnemy(enemy, bolt.damage, bolt.weaponId);
+          explodeBolt(bolt, enemy);
+          splitBoltOnHit(bolt);
+          bolt.hit.add(enemy);
+          if (bolt.pierce > 0) {
+            bolt.pierce -= 1;
+          } else {
+            bolt.life = 0;
+          }
+        }
+      });
+      game.bolts = game.bolts.filter((bolt) => bolt.life > 0);
+      reapEnemies();
+    }
+
+    function explodeBolt(bolt, enemy) {
+      const explosionTier = getRunUpgradeTier("run_explosive_hit");
+      if (!explosionTier) return;
+      const radius = 42 + explosionTier * 18;
+      const damage = bolt.damage * (0.28 + explosionTier * 0.08);
+      const game = getGame();
+      game.enemies.forEach((candidate) => {
+        if (candidate === enemy || candidate.hp <= 0) return;
+        if (distance(enemy, candidate) <= radius + candidate.radius) {
+          damageEnemy(candidate, damage, bolt.weaponId);
+        }
+      });
+      game.areas.push({
+        x: enemy.x,
+        y: enemy.y,
+        radius,
+        color: bolt.color,
+        life: 0.18,
+        visualOnly: true,
+      });
+    }
+
+    function splitBoltOnHit(bolt) {
+      const splitTier = getRunUpgradeTier("run_split_on_hit");
+      if (!splitTier || bolt.splitDepth >= splitTier) return;
+      const speed = Math.max(1, Math.hypot(bolt.vx, bolt.vy));
+      const left = rotateVector(bolt.vx, bolt.vy, -0.72);
+      const right = rotateVector(bolt.vx, bolt.vy, 0.72);
+      [left, right].forEach(([vx, vy]) => {
+        const magnitude = Math.max(1, Math.hypot(vx, vy));
+        spawnProjectileBolt(
+          bolt.weaponId,
+          bolt.x,
+          bolt.y,
+          (vx / magnitude) * speed,
+          (vy / magnitude) * speed,
+          {
+            damage: bolt.damage * 0.55,
+            life: 0.9,
+            pierce: 0,
+            bounces: 0,
+            splitDepth: bolt.splitDepth + 1,
+            hit: new Set(bolt.hit),
+          }
+        );
+      });
+    }
+
+    return {
+      fireProjectile,
+      spawnProjectileBolt,
+      updateBolts,
     };
   }
 
@@ -2615,6 +3729,104 @@
     };
   }
 
+  function createRunUpdater({
+    canvas,
+    getGame,
+    combat,
+    pickupSystem,
+    addQuestProgressGroup,
+    survivalQuestIds,
+    xpQuestIds,
+    levelQuestIds,
+    showLevelUp,
+    endRun,
+    getRelicSpecialEffects,
+    mapSystem,
+    clamp,
+  }) {
+    function movePlayer(player, dt) {
+      const dx = player.targetX - player.x;
+      const dy = player.targetY - player.y;
+      const dist = Math.hypot(dx, dy);
+      player.moving = dist > 3;
+      if (dist > 3) {
+        player.facingX = dx / dist;
+        player.facingY = dy / dist;
+        const step = Math.min(dist, player.speed * dt);
+        player.x += player.facingX * step;
+        player.y += player.facingY * step;
+      }
+      player.x = clamp(player.x, 18, canvas.width - 18);
+      player.y = clamp(player.y, 18, canvas.height - 18);
+    }
+
+    function update(dt) {
+      const game = getGame();
+      if (!game || !game.running || game.paused) return;
+      const player = game.player;
+      if (game.awaitingFirstMoveInput) return;
+      game.elapsed += dt;
+      mapSystem?.applyToGame?.(game);
+      addQuestProgressGroup(survivalQuestIds, dt);
+      if (game.elapsed >= game.duration) {
+        combat.spawnBoss();
+      }
+
+      movePlayer(player, dt);
+      combat.spawnEnemies(dt);
+      combat.updateEnemies(dt);
+      combat.updateEnemyBolts(dt);
+      combat.updateBossSpecials(dt);
+      combat.updateWeapons(dt);
+      combat.updateBolts(dt);
+      combat.updateAreas(dt);
+      combat.updateBeams(dt);
+      combat.updateWeaponBursts(dt);
+      updateRelicTimers(player, dt);
+      updatePlayerAnimation(player, dt);
+      pickupSystem.updateXpDrops(dt);
+      pickupSystem.updateLootDrops(dt);
+      pickupSystem.updatePickupTexts(dt);
+
+      if (player.hp <= 0) endRun("Player defeated");
+    }
+
+    function updatePlayerAnimation(player, dt) {
+      if (!player.actionTimer) return;
+      player.actionTimer = Math.max(0, player.actionTimer - dt);
+      if (player.actionTimer <= 0) player.actionSprite = "";
+    }
+
+    function updateRelicTimers(player, dt) {
+      player.invincibleTimer = Math.max(0, (player.invincibleTimer || 0) - dt);
+      player.blinkTimer = Math.max(0, (player.blinkTimer || 0) - dt);
+      player.teleportCooldown = Math.max(0, (player.teleportCooldown || 0) - dt);
+    }
+
+    function collectXp(value) {
+      const game = getGame();
+      if (!game?.player) return;
+      const player = game.player;
+      const xpValue = Math.ceil(value * (1 + ((getRelicSpecialEffects?.() || {}).xpMultiplier || 0)));
+      player.xp += xpValue;
+      game.xpCollected += xpValue;
+      addQuestProgressGroup(xpQuestIds, value);
+      if (player.xp >= player.xpToLevel) {
+        player.xp -= player.xpToLevel;
+        player.level += 1;
+        player.xpToLevel += 4;
+        game.levelUps += 1;
+        addQuestProgressGroup(levelQuestIds, 1);
+        showLevelUp();
+      }
+    }
+
+    return {
+      update,
+      collectXp,
+    };
+  }
+
   function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
     const rawContent = globalRef.TapSurvivorContent;
     const balanceRuntime = globalRef.TapSurvivorBalanceRuntime;
@@ -2627,28 +3839,17 @@
     }
     const configuredContent = balanceRuntime?.content?.() || rawContent;
     const content = configuredContent || {};
-    const effects = globalRef.TapSurvivorEffects;
-    const upgrades = globalRef.TapSurvivorUpgrades || {};
-    if (typeof upgrades.configureDefaultProviders === "function") {
-      upgrades.configureDefaultProviders({ content: configuredContent, effects });
-    }
-    const save = requireGlobal(globalRef, "TapSurvivorSave");
+    const effects = createEffects();
+    const upgrades = { createUpgradeContent };
+    const save = { createSaveSystem };
     const storage = requireGlobal(globalRef, "TapSurvivorStorage");
-    if (typeof save.configureDefaultProviders === "function") {
-      save.configureDefaultProviders({ storage });
-    }
     const audio = requireGlobal(globalRef, "TapSurvivorAudio");
     if (typeof audio.configureDefaultProviders === "function") {
       audio.configureDefaultProviders({
         audioContextFactory: createAudioContextFactory(globalRef),
       });
     }
-    const shellRelicUi = requireGlobal(globalRef, "TapSurvivorShellRelicUi");
-    if (typeof shellRelicUi.configureDefaultProviders === "function") {
-      shellRelicUi.configureDefaultProviders({
-        scheduler: createShellRelicSchedulerProvider(globalRef),
-      });
-    }
+    const shellRelicUi = createShellRelicUiDependency(globalRef);
 
     return {
       audio,
@@ -2661,7 +3862,7 @@
       contentRegistry: { createContentRegistry },
       debug: requireGlobal(globalRef, "TapSurvivorDebug"),
       debugBalance: globalRef.TapSurvivorDebugBalance,
-      effects: requireValue(effects, "TapSurvivorEffects"),
+      effects,
       enemies: { createEnemySystem },
       enemyBehaviors: { createEnemyBehaviorSystem },
       enemySpawning: { createEnemySpawnSystem },
@@ -2688,7 +3889,7 @@
       runLifecycle: { createRunLifecycle },
       runState: { createRunStateSystem },
       runUi: { createRunUi },
-      runUpdate: requireGlobal(globalRef, "TapSurvivorRunUpdate"),
+      runUpdate: { createRunUpdater },
       save,
       saveCorruption: { createSaveLoadHandler },
       saveDefaults: { CURRENT_SAVE_VERSION, createDefaultSave },
@@ -2712,7 +3913,7 @@
       weaponBehaviors: requireGlobal(globalRef, "TapSurvivorWeaponBehaviors"),
       weaponCooldowns: { createWeaponScaling },
       weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
-      weaponProjectiles: requireGlobal(globalRef, "TapSurvivorWeaponProjectiles"),
+      weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
       weaponTargeting: { nearestEnemy },
     };
   }
@@ -2741,6 +3942,23 @@
       clearTimeout: (timer) => globalRef?.clearTimeout?.(timer),
       setTimeout: (callback, delay) => globalRef?.setTimeout?.(callback, delay),
       animationSetTimeout: (callback, delay) => globalRef?.setTimeout?.(callback, delay),
+    };
+  }
+
+  function createShellRelicUiDependency(globalRef) {
+    const scheduler = createShellRelicSchedulerProvider(globalRef);
+    const imageFactory = () => {
+      const ImageRef = globalRef?.Image;
+      return typeof ImageRef === "function" ? new ImageRef() : null;
+    };
+    return {
+      createShellRelicUi(options = {}) {
+        return createShellRelicUi({
+          ...options,
+          scheduler: options.scheduler || scheduler,
+          imageFactory: options.imageFactory || imageFactory,
+        });
+      },
     };
   }
 

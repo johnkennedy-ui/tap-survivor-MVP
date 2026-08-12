@@ -298,24 +298,13 @@ check(
 );
 
 check("module exports createEffects", typeof createModuleEffects === "function");
-check("bridge assigns globalThis.TapSurvivorEffects", Boolean(bridgeEffects));
+check(
+  "effects bridge retires its classic publisher",
+  bridgeEffects === undefined && !effectsBridge.source.includes("globalThis.TapSurvivorEffects")
+);
 check("effects bridge source has generated banner", hasGeneratedBanner(effectsBridge.source));
-for (const exportName of [
-  "applyRunUpgradeEffects",
-  "applyShopItemEffectToRun",
-  "emptyShopBonuses",
-  "addShopItemBonus",
-  "applyRelicSpecialEffects",
-]) {
-  check(`bridge exposes effects ${exportName}`, typeof bridgeEffects?.[exportName] === "function");
-}
 
 const moduleEffectsSnapshot = effectsSnapshot(createModuleEffects({ contentSchema: contentSchemaFixture }));
-const bridgeEffectsSnapshot = effectsSnapshot(bridgeEffects);
-check(
-  "module and bridge effects output match",
-  JSON.stringify(moduleEffectsSnapshot) === JSON.stringify(bridgeEffectsSnapshot)
-);
 check("effects apply run upgrade stat effects", moduleEffectsSnapshot.runUpgradeSpeed === 110);
 check("effects cap run upgrade healing", moduleEffectsSnapshot.runUpgradeHp === 100);
 check("effects create shop bonus defaults", moduleEffectsSnapshot.shopBonuses.pickupRadius === 0);
@@ -324,7 +313,10 @@ check("effects apply shop item run effect", moduleEffectsSnapshot.shopApplied ==
 check("effects apply relic special effects", moduleEffectsSnapshot.relicSpeed === 115);
 
 check("module exports createUpgradeContent", typeof createModuleUpgradeContent === "function");
-check("upgrade bridge assigns globalThis.TapSurvivorUpgrades", Boolean(bridgeUpgrades));
+check(
+  "upgrades bridge retires its classic publisher",
+  bridgeUpgrades === undefined && !upgradesBridge.source.includes("globalThis.TapSurvivorUpgrades")
+);
 check("upgrade bridge source has generated banner", hasGeneratedBanner(upgradesBridge.source));
 check(
   "upgrade bridge relocates all JSDoc content type imports",
@@ -335,70 +327,11 @@ check(
   upgradesBridge.source.split('import("../../types/content.js")').length - 1 === 0
 );
 check(
-  "upgrade bridge does not read content or effects globals",
+  "upgrades bridge contains only the explicit native factory",
   !upgradesBridge.source.includes("TapSurvivorContent") &&
     !upgradesBridge.source.includes("TapSurvivorEffects")
 );
-const upgradeProviderLifecycle = upgradeProviderLifecycleSnapshot();
-check(
-  "upgrade bridge publishes an explicit default-provider lifecycle",
-  typeof bridgeUpgrades?.createUpgradeContent === "function" &&
-    typeof bridgeUpgrades?.configureDefaultProviders === "function"
-);
-check(
-  "upgrade bridge leaves poisoned content and effects globals unread",
-  upgradeProviderLifecycle.contentReads === 0 && upgradeProviderLifecycle.effectsReads === 0
-);
-check(
-  "upgrade bridge rejects unconfigured default members with the named provider error",
-  [upgradeProviderLifecycle.unconfiguredCreate, upgradeProviderLifecycle.unconfiguredRun].every(
-    (error) =>
-      error.name === "TapSurvivorUpgradeProviderError" &&
-      error.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
-      error.missing.join(",") === "content,effects"
-  )
-);
-check(
-  "upgrade bridge rejects a missing content provider with a named error",
-  upgradeProviderLifecycle.missingContent.name === "TapSurvivorUpgradeProviderError" &&
-    upgradeProviderLifecycle.missingContent.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
-    upgradeProviderLifecycle.missingContent.missing.join(",") === "content"
-);
-check(
-  "upgrade bridge recovers the same publisher after a missing content provider",
-  upgradeProviderLifecycle.samePublisherAfterContentRecovery &&
-    upgradeProviderLifecycle.contentRecovery.createUpgradeDefs === "function" &&
-    upgradeProviderLifecycle.contentRecovery.runUpgradeDefs
-);
-check(
-  "upgrade bridge rejects a missing effects provider with a named error",
-  upgradeProviderLifecycle.missingEffects.name === "TapSurvivorUpgradeProviderError" &&
-    upgradeProviderLifecycle.missingEffects.code === "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING" &&
-    upgradeProviderLifecycle.missingEffects.missing.join(",") === "effects"
-);
-check(
-  "upgrade bridge recovers the same publisher after a missing effects provider",
-  upgradeProviderLifecycle.samePublisherAfterEffectsRecovery &&
-    upgradeProviderLifecycle.effectsRecovery.createUpgradeDefs === "function" &&
-    upgradeProviderLifecycle.effectsRecovery.runUpgradeDefs
-);
-const bridgeUpgradesIdentity = bridgeUpgrades;
-bridgeUpgrades.configureDefaultProviders({
-  content: upgradeBridgeContentFixture,
-  effects: upgradeBridgeEffectsFixture,
-});
-check(
-  "upgrade bridge exposes original default member shapes after configuration",
-  upgradesBridge.context.TapSurvivorUpgrades === bridgeUpgradesIdentity &&
-    typeof bridgeUpgrades.createUpgradeDefs === "function" &&
-    Array.isArray(bridgeUpgrades.runUpgradeDefs)
-);
 const moduleUpgradeSnapshot = upgradeContentSnapshot(createModuleUpgradeContent);
-const bridgeUpgradeSnapshot = upgradeContentSnapshot(bridgeUpgrades.createUpgradeContent);
-check(
-  "native and classic upgrade factory output match",
-  JSON.stringify(moduleUpgradeSnapshot) === JSON.stringify(bridgeUpgradeSnapshot)
-);
 check(
   "native upgrade factory preserves weapon and meta upgrade definitions",
   moduleUpgradeSnapshot.upgradeIds.join(",") === "arc_damage,laser_damage,meta_focus" &&
@@ -409,12 +342,6 @@ check(
   "native upgrade factory preserves run-upgrade effect application",
   moduleUpgradeSnapshot.runUpgradeApplyFlags.join(",") === "true,false" &&
     moduleUpgradeSnapshot.effectCalls.join(",") === "fireRate:12"
-);
-check(
-  "generated classic upgrades default members preserve source-derived content",
-  JSON.stringify(bridgeUpgrades.createUpgradeDefs(upgradeWeaponDefs)) ===
-    JSON.stringify(moduleUpgradeSnapshot.upgradeDefs) &&
-    bridgeUpgrades.runUpgradeDefs.map((upgrade) => upgrade.id).join(",") === "rapid_fire,steady_aim"
 );
 
 const composeRuntimeSource = readFileSync(
@@ -693,69 +620,18 @@ check(
 );
 
 check("module exports createSaveSystem", typeof createModuleSaveSystem === "function");
-check("bridge assigns globalThis.TapSurvivorSave", Boolean(bridgeSave));
+check(
+  "save bridge retires its classic publisher",
+  bridgeSave === undefined && !saveBridge.source.includes("globalThis.TapSurvivorSave")
+);
 check("save bridge source has generated banner", hasGeneratedBanner(saveBridge.source));
 check(
-  "save bridge bundles retired save helpers",
-  saveBridge.source.includes("function createSaveLoadHandler") &&
-    saveBridge.source.includes("function createSaveNormalizer") &&
-    !saveBridge.source.includes("globalThis.TapSurvivorSaveNormalize") &&
-    !saveBridge.source.includes("globalThis.TapSurvivorSaveCorruption")
+  "save bridge contains the native factory without ambient providers",
+  saveBridge.source.includes("function createSaveSystem") &&
+    !saveBridge.source.includes("globalThis.TapSurvivorSave") &&
+    !saveBridge.source.includes("TapSurvivorStorage")
 );
-check(
-  "save bridge does not read the storage global",
-  !saveBridge.source.includes("TapSurvivorStorage")
-);
-const saveProviderLifecycle = saveProviderLifecycleSnapshot();
-check(
-  "save bridge publishes an explicit default-provider lifecycle",
-  typeof bridgeSave?.createSaveSystem === "function" &&
-    typeof bridgeSave?.configureDefaultProviders === "function"
-);
-check(
-  "save bridge leaves a poisoned storage global unread",
-  saveProviderLifecycle.storageReads === 0
-);
-check(
-  "save bridge rejects unconfigured default storage with the named provider error",
-  saveProviderLifecycle.unconfigured.name === "TapSurvivorSaveProviderError" &&
-    saveProviderLifecycle.unconfigured.code === "TAP_SURVIVOR_SAVE_PROVIDER_MISSING" &&
-    saveProviderLifecycle.unconfigured.missing.join(",") === "storage"
-);
-check(
-  "save bridge rejects a missing storage provider with the named error",
-  saveProviderLifecycle.missingConfiguration.name === "TapSurvivorSaveProviderError" &&
-    saveProviderLifecycle.missingConfiguration.code === "TAP_SURVIVOR_SAVE_PROVIDER_MISSING" &&
-    saveProviderLifecycle.missingConfiguration.missing.join(",") === "storage"
-);
-check(
-  "save bridge keeps explicit storage and adapter callers working before configuration",
-  saveProviderLifecycle.explicitStorageLoad === 7 &&
-    saveProviderLifecycle.explicitAdapterLoad === 9 &&
-    saveProviderLifecycle.explicitStorageCalls === 1
-);
-check(
-  "save bridge recovers the same publisher after valid storage configuration",
-  saveProviderLifecycle.samePublisherAfterMissing &&
-    saveProviderLifecycle.samePublisherAfterRecovery &&
-    saveProviderLifecycle.configuredLoad === 5 &&
-    saveProviderLifecycle.configuredStorageCalls === 1
-);
-check(
-  "save bridge lets an explicit undefined storage override the configured default",
-  saveProviderLifecycle.undefinedStorageLoad === 0 &&
-    saveProviderLifecycle.storageCallsAfterUndefinedOverride === 1
-);
-const moduleSaveSystemSnapshot = saveSystemSnapshot(createModuleSaveSystem, globalThis);
-const bridgeSaveSystemSnapshot = saveSystemSnapshot(
-  bridgeSave.createSaveSystem,
-  saveBridge.context,
-  bridgeSave.configureDefaultProviders
-);
-check(
-  "module and bridge save system output match",
-  JSON.stringify(moduleSaveSystemSnapshot) === JSON.stringify(bridgeSaveSystemSnapshot)
-);
+const moduleSaveSystemSnapshot = saveSystemSnapshot(createModuleSaveSystem);
 check(
   "defaultSave parity fixture keeps starter quest",
   JSON.stringify(moduleSaveSystemSnapshot.defaultSave.activeQuests) === JSON.stringify(["starter"])
@@ -893,13 +769,17 @@ check(
 );
 
 check("module exports createShellRelicUi", typeof createModuleShellRelicUi === "function");
-check("bridge assigns globalThis.TapSurvivorShellRelicUi", Boolean(bridgeShellRelicUi));
-check("bridge exposes createShellRelicUi", typeof bridgeShellRelicUi?.createShellRelicUi === "function");
 check(
-  "bridge exposes configureDefaultProviders",
-  typeof bridgeShellRelicUi?.configureDefaultProviders === "function"
+  "shell relic UI bridge retires its classic publisher",
+  bridgeShellRelicUi === undefined &&
+    !shellRelicUiBridge.source.includes("globalThis.TapSurvivorShellRelicUi")
 );
 check("shell relic UI bridge source has generated banner", hasGeneratedBanner(shellRelicUiBridge.source));
+check(
+  "shell relic UI bridge transforms both native exports for dependency-bag bundling",
+  shellRelicUiBridge.source.includes("function createShellRelicUiAdapter") &&
+    shellRelicUiBridge.source.includes("function createShellRelicUi")
+);
 
 const shellRelicUiFixtureDefs = [
   {
@@ -953,16 +833,6 @@ const shellRelicUiAssetResolver = {
   }),
   spriteSource: (sprite) => sprite.src,
 };
-const shellRelicUiBridgeSnapshot = shellRelicUiSnapshot(bridgeShellRelicUi.createShellRelicUi, {
-  assetResolver: shellRelicUiAssetResolver,
-  content: shellRelicUiContentFixture,
-  relicDefs: shellRelicUiFixtureDefs,
-  relicSystem: createBridgeRelicSystem({
-    relicDefs: shellRelicUiFixtureDefs,
-    random: () => 0,
-    weaponDefs: {},
-  }),
-});
 const shellRelicUiModuleSnapshot = shellRelicUiSnapshot(createModuleShellRelicUi, {
   assetResolver: shellRelicUiAssetResolver,
   content: shellRelicUiContentFixture,
@@ -974,39 +844,34 @@ const shellRelicUiModuleSnapshot = shellRelicUiSnapshot(createModuleShellRelicUi
   }),
 });
 check(
-  "module and bridge shell relic UI output match",
-  JSON.stringify(shellRelicUiBridgeSnapshot) === JSON.stringify(shellRelicUiModuleSnapshot)
-);
-check(
-  "shell relic UI bridge preserves classic inventory API",
-  shellRelicUiBridgeSnapshot.initialSlotText ===
+  "shell relic UI native factory preserves classic inventory API",
+  shellRelicUiModuleSnapshot.initialSlotText ===
     "Relic slots: 2/5 unlocked. Next slot at tower level 30." &&
-    shellRelicUiBridgeSnapshot.inventoryClasses.includes("relic-loadout") &&
-    shellRelicUiBridgeSnapshot.inventoryClasses.includes("relic-icon-grid")
+    shellRelicUiModuleSnapshot.inventoryClasses.includes("relic-loadout") &&
+    shellRelicUiModuleSnapshot.inventoryClasses.includes("relic-icon-grid")
 );
 check(
-  "shell relic UI bridge preserves classic detail and preview behavior",
-  shellRelicUiBridgeSnapshot.detailSlotText === "Pickup Radius Focus" &&
-    shellRelicUiBridgeSnapshot.detailClasses.some((className) => className.includes("relic-detail-screen")) &&
-    shellRelicUiBridgeSnapshot.previewDraws === 1 &&
-    shellRelicUiBridgeSnapshot.previewTimerDelay === 100
+  "shell relic UI native factory preserves classic detail and preview behavior",
+  shellRelicUiModuleSnapshot.detailSlotText === "Pickup Radius Focus" &&
+    shellRelicUiModuleSnapshot.detailClasses.some((className) => className.includes("relic-detail-screen")) &&
+    shellRelicUiModuleSnapshot.previewDraws === 1 &&
+    shellRelicUiModuleSnapshot.previewTimerDelay === 100
 );
 check(
-  "shell relic UI bridge preserves classic equip unequip and persistence behavior",
-  shellRelicUiBridgeSnapshot.equippedAfterEquip.includes("pickup_radius_focus_relic") &&
-    !shellRelicUiBridgeSnapshot.equippedAfterUnequip.includes("move_speed_focus_relic") &&
-    shellRelicUiBridgeSnapshot.persistCount === 2 &&
-    shellRelicUiBridgeSnapshot.renderMetaCount === 2
+  "shell relic UI native factory preserves classic equip unequip and persistence behavior",
+  shellRelicUiModuleSnapshot.equippedAfterEquip.includes("pickup_radius_focus_relic") &&
+    !shellRelicUiModuleSnapshot.equippedAfterUnequip.includes("move_speed_focus_relic") &&
+    shellRelicUiModuleSnapshot.persistCount === 2 &&
+    shellRelicUiModuleSnapshot.renderMetaCount === 2
 );
 check(
-  "shell relic UI bridge preserves classic lock popup behavior",
-  shellRelicUiBridgeSnapshot.lockPopupText === "Locked, play more to unlock this skill." &&
-    shellRelicUiBridgeSnapshot.lockPopupHidden === true &&
-    shellRelicUiBridgeSnapshot.lockTimerDelay === 1800
+  "shell relic UI native factory preserves classic lock popup behavior",
+  shellRelicUiModuleSnapshot.lockPopupText === "Locked, play more to unlock this skill." &&
+    shellRelicUiModuleSnapshot.lockPopupHidden === true &&
+    shellRelicUiModuleSnapshot.lockTimerDelay === 1800
 );
 
 const nativeShellRelicSchedulerLifecycle = shellRelicNativeSchedulerLifecycleSnapshot();
-const generatedShellRelicSchedulerLifecycle = shellRelicGeneratedSchedulerLifecycleSnapshot();
 check(
   "native shell relic UI explicit scheduler handles normal missing and recovery behavior",
   nativeShellRelicSchedulerLifecycle.normal.error === "" &&
@@ -1020,36 +885,6 @@ check(
     nativeShellRelicSchedulerLifecycle.recovered.lockPopupHidden &&
     nativeShellRelicSchedulerLifecycle.recovered.lockTimerDelay === 1800 &&
     nativeShellRelicSchedulerLifecycle.recovered.previewTimerDelay === 100
-);
-check(
-  "generated shell relic scheduler has no timer-global readers and ignores poisoned globals",
-  generatedShellRelicSchedulerLifecycle.sourceHasNoTimerGlobalReaders &&
-    generatedShellRelicSchedulerLifecycle.clearTimeoutReads === 0 &&
-    generatedShellRelicSchedulerLifecycle.setTimeoutReads === 0
-);
-check(
-  "generated shell relic scheduler handles normal missing and recovery behavior",
-  generatedShellRelicSchedulerLifecycle.normal.error === "" &&
-    generatedShellRelicSchedulerLifecycle.normal.lockPopupHidden &&
-    generatedShellRelicSchedulerLifecycle.normal.lockTimerDelay === 1800 &&
-    generatedShellRelicSchedulerLifecycle.normal.previewTimerDelay === 100 &&
-    generatedShellRelicSchedulerLifecycle.missing.error === "" &&
-    generatedShellRelicSchedulerLifecycle.missing.timerCount === 0 &&
-    !generatedShellRelicSchedulerLifecycle.missing.lockPopupHidden &&
-    generatedShellRelicSchedulerLifecycle.recovered.error === "" &&
-    generatedShellRelicSchedulerLifecycle.recovered.lockPopupHidden &&
-    generatedShellRelicSchedulerLifecycle.recovered.lockTimerDelay === 1800 &&
-    generatedShellRelicSchedulerLifecycle.recovered.previewTimerDelay === 100
-);
-check(
-  "generated shell relic scheduler preserves caller precedence and publisher identity",
-  generatedShellRelicSchedulerLifecycle.samePublisher &&
-    generatedShellRelicSchedulerLifecycle.caller.error === "" &&
-    generatedShellRelicSchedulerLifecycle.caller.lockPopupHidden &&
-    generatedShellRelicSchedulerLifecycle.caller.lockTimerDelay === 1800 &&
-    generatedShellRelicSchedulerLifecycle.caller.previewTimerDelay === 100 &&
-    generatedShellRelicSchedulerLifecycle.defaultPrecedenceTimerCount === 0 &&
-    generatedShellRelicSchedulerLifecycle.callerTimerCount === 2
 );
 
 const shellRelicHarness = createGameHarness({
@@ -1075,10 +910,8 @@ const shellRelicHarnessLockedButton = findShellRelicElement(
 shellRelicHarnessLockedButton?.click();
 const shellRelicHarnessLockPopup = shellRelicHarnessInventory.querySelector(".relic-lock-popup");
 check(
-  "classic shell UI harness routes locked relic timing through its configured publisher scheduler",
-  shellRelicHarness.context.__shellRelicTimerCalls.some(
-    (call) => call.method === "setTimeout" && call.delay === 1800
-  ) && shellRelicHarnessLockPopup?.classList.contains("hidden")
+  "classic shell UI harness uses injected native shell relic behavior",
+  shellRelicHarnessLockPopup?.classList.contains("hidden")
 );
 
 check("classic shell UI assigns globalThis.TapSurvivorShellUi", Boolean(bridgeShellUi));
@@ -1092,7 +925,7 @@ check(
   typeof bridgeShellUi?.createShellUiController === "function"
 );
 const shellUiClassicSnapshot = classicShellUiSnapshot(bridgeShellUi.createShellUiController, {
-  createShellRelicUi: bridgeShellRelicUi.createShellRelicUi,
+  createShellRelicUi: createModuleShellRelicUi,
   relicSystem: createBridgeRelicSystem({
     relicDefs: shellRelicUiFixtureDefs,
     random: () => 0,
@@ -1270,34 +1103,20 @@ check(
   "module exports createWeaponProjectileSystem",
   typeof createModuleWeaponProjectileSystem === "function"
 );
-check("bridge assigns globalThis.TapSurvivorWeaponProjectiles", Boolean(bridgeProjectiles));
 check(
-  "weapon projectiles bridge source has generated banner",
-  hasGeneratedBanner(projectileBridge.source)
+  "weapon projectiles bridge retires its classic publisher",
+  bridgeProjectiles === undefined &&
+    !projectileBridge.source.includes("globalThis.TapSurvivorWeaponProjectiles")
 );
-check("bridge exposes rotateVector", typeof bridgeProjectiles?.rotateVector === "function");
-check(
-  "bridge exposes createWeaponProjectileSystem",
-  typeof bridgeProjectiles?.createWeaponProjectileSystem === "function"
-);
+check("weapon projectiles bridge source has generated banner", hasGeneratedBanner(projectileBridge.source));
 
 const moduleRotated = moduleRotateVector(1, 0, Math.PI / 2);
-const bridgeRotated = bridgeProjectiles.rotateVector(1, 0, Math.PI / 2);
 check(
   "module rotateVector fixture is unchanged",
   approxEqual(moduleRotated[0], 0) && approxEqual(moduleRotated[1], 1)
 );
-check(
-  "module and bridge rotateVector output match",
-  approxVectorEqual(moduleRotated, bridgeRotated)
-);
 
 const moduleProjectileFire = runProjectileFireFixture(createModuleWeaponProjectileSystem);
-const bridgeProjectileFire = runProjectileFireFixture(bridgeProjectiles.createWeaponProjectileSystem);
-check(
-  "module and bridge projectile fire output match",
-  JSON.stringify(moduleProjectileFire) === JSON.stringify(bridgeProjectileFire)
-);
 check("projectile fire fixture spawns one bolt", moduleProjectileFire.boltCount === 1);
 check("projectile fire fixture direction uses target vector", approxEqual(moduleProjectileFire.vx, 6));
 check("projectile fire fixture speed uses target vector", approxEqual(moduleProjectileFire.vy, 8));
@@ -1307,42 +1126,20 @@ check("projectile fire fixture color is preserved", moduleProjectileFire.color =
 check("projectile fire fixture life is unchanged", moduleProjectileFire.life === 1.8);
 
 const moduleNoTarget = runNoTargetProjectileFixture(createModuleWeaponProjectileSystem);
-const bridgeNoTarget = runNoTargetProjectileFixture(bridgeProjectiles.createWeaponProjectileSystem);
 check("module no-target fixture spawns no bolts", moduleNoTarget.boltCount === 0);
-check(
-  "module and bridge no-target output match",
-  JSON.stringify(moduleNoTarget) === JSON.stringify(bridgeNoTarget)
-);
 
 const moduleSplitDouble = runSplitDoubleProjectileFixture(createModuleWeaponProjectileSystem);
-const bridgeSplitDouble = runSplitDoubleProjectileFixture(
-  bridgeProjectiles.createWeaponProjectileSystem
-);
 check("split/double fixture spawns expected bolt count", moduleSplitDouble.boltCount === 4);
-check(
-  "module and bridge split/double output match",
-  JSON.stringify(moduleSplitDouble) === JSON.stringify(bridgeSplitDouble)
-);
 
 const moduleBounce = runWallBounceFixture(createModuleWeaponProjectileSystem);
-const bridgeBounce = runWallBounceFixture(bridgeProjectiles.createWeaponProjectileSystem);
 check("wall bounce fixture flips velocity", moduleBounce.vx > 0);
 check("wall bounce fixture decreases bounce count", moduleBounce.bounces === 0);
-check(
-  "module and bridge wall bounce output match",
-  JSON.stringify(moduleBounce) === JSON.stringify(bridgeBounce)
-);
 
 const moduleCollision = runCollisionFixture(createModuleWeaponProjectileSystem);
-const bridgeCollision = runCollisionFixture(bridgeProjectiles.createWeaponProjectileSystem);
 check("collision fixture calls damageEnemy", moduleCollision.damageCalls.length === 1);
 check("collision fixture passes expected damage", moduleCollision.damageCalls[0]?.damage === 21);
 check("collision fixture passes expected weapon ID", moduleCollision.damageCalls[0]?.weaponId === "bolt");
 check("collision fixture calls reapEnemies", moduleCollision.reapCount === 1);
-check(
-  "module and bridge collision output match",
-  JSON.stringify(moduleCollision) === JSON.stringify(bridgeCollision)
-);
 
 check(
   "module exports createGameRuntimeController",
@@ -1429,6 +1226,21 @@ check(
 check(
   "game dependency bridge has no TapSurvivorGameRuntime reader",
   !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
+);
+check(
+  "game dependency bridge has no six retired publisher readers",
+  [
+    "TapSurvivorEffects",
+    "TapSurvivorUpgrades",
+    "TapSurvivorSave",
+    "TapSurvivorShellRelicUi",
+    "TapSurvivorWeaponProjectiles",
+    "TapSurvivorRunUpdate",
+  ].every(
+    (name) =>
+      !gameDependenciesBridge.source.includes(`globalThis.${name}`) &&
+      !gameDependenciesBridge.source.includes(`\"${name}\"`)
+  )
 );
 check(
   "game dependency bridge does not read the balance profiles global",
@@ -1611,8 +1423,21 @@ check(
 check("dependency bag exposes save normalize", moduleGameDependenciesSnapshot.hasSaveNormalize);
 check("dependency bag exposes shell relic UI", moduleGameDependenciesSnapshot.hasShellRelicUi);
 check(
-  "dependency bag configures the retained shell relic publisher with a dynamic scheduler",
-  moduleGameDependenciesSnapshot.hasConfiguredShellRelicScheduler
+  "dependency bag preserves default shell relic scheduler and image behavior",
+  moduleGameDependenciesSnapshot.shellRelicDefaultTiming.error === "" &&
+    moduleGameDependenciesSnapshot.shellRelicDefaultTiming.lockPopupHidden &&
+    moduleGameDependenciesSnapshot.shellRelicDefaultTiming.lockTimerDelay === 1800 &&
+    moduleGameDependenciesSnapshot.shellRelicDefaultTiming.previewTimerDelay === 100 &&
+    moduleGameDependenciesSnapshot.shellRelicDefaultTimerCount === 2 &&
+    moduleGameDependenciesSnapshot.shellRelicDefaultImageCalls === 1
+);
+check(
+  "dependency bag preserves caller-owned shell relic scheduler precedence",
+  moduleGameDependenciesSnapshot.shellRelicCallerTiming.error === "" &&
+    moduleGameDependenciesSnapshot.shellRelicCallerTiming.lockPopupHidden &&
+    moduleGameDependenciesSnapshot.shellRelicCallerTiming.lockTimerDelay === 1800 &&
+    moduleGameDependenciesSnapshot.shellRelicCallerTiming.previewTimerDelay === 100 &&
+    moduleGameDependenciesSnapshot.shellRelicCallerTimerCount === 2
 );
 check("dependency bag exposes native game banner factory", moduleGameDependenciesSnapshot.hasGameBannerFactory);
 check("dependency bag ignores poisoned game banner global", moduleGameDependenciesSnapshot.bannerGlobalReads === 0);
@@ -1621,27 +1446,21 @@ check("dependency bag creates native Shop with preserved documentRef", moduleGam
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
 check("dependency bag exposes UI progression", moduleGameDependenciesSnapshot.hasUiProgression);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
-check("dependency bag preserves optional upgrades fallback", moduleGameDependenciesSnapshot.emptyUpgradeKeys === 0);
 check(
-  "dependency bag preserves generated classic upgrades fallback",
-  moduleGameDependenciesSnapshot.hasClassicUpgradeFactory &&
-    moduleGameDependenciesSnapshot.hasConfiguredClassicUpgradeDefaults &&
+  "dependency bag injects native upgrade content",
+  typeof moduleGameDependenciesSnapshot.__bag.upgrades.createUpgradeContent === "function" &&
     moduleGameDependenciesSnapshot.defaultUpgradeIds.join(",") === "arc_damage,laser_damage,meta_focus" &&
     moduleGameDependenciesSnapshot.defaultRunUpgradeIds.join(",") === "rapid_fire,steady_aim"
 );
 check(
-  "dependency bag configures the same classic save publisher with its resolved storage",
-  moduleGameDependenciesSnapshot.hasConfiguredClassicSaveDefault &&
+  "dependency bag injects native save creation with caller-owned storage",
+  moduleGameDependenciesSnapshot.hasSaveFactory &&
+    moduleGameDependenciesSnapshot.injectedSaveCoins === 11 &&
     moduleGameDependenciesSnapshot.saveProviderCalls.length === 1 &&
     JSON.stringify(moduleGameDependenciesSnapshot.saveProviderCalls[0]) ===
       JSON.stringify({ saveKey: "save-key", legacySaveKey: "legacy-key" })
 );
-check(
-  "dependency bag recovers generated classic upgrades after a missing-provider fallback",
-  moduleGameDependenciesSnapshot.recoveredClassicUpgradeFactory &&
-    moduleGameDependenciesSnapshot.recoveredClassicUpgradeDefaults &&
-    moduleGameDependenciesSnapshot.recoveredUpgradeIds.join(",") === "arc_damage,laser_damage,meta_focus"
-);
+check("dependency bag injects native effects", moduleGameDependenciesSnapshot.hasEffects);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
 check(
   "dependency bag reports missing input binder",
@@ -1860,16 +1679,13 @@ check("run ui showEndScreen opens end screen", moduleRunUiSnapshot.endScreen.ope
 check("run ui hideEndScreen hides end screen", moduleRunUiSnapshot.endScreen.hidden);
 
 check("module exports createRunUpdater", typeof createModuleRunUpdater === "function");
-check("bridge assigns globalThis.TapSurvivorRunUpdate", Boolean(bridgeRunUpdate));
+check(
+  "run update bridge retires its classic publisher",
+  bridgeRunUpdate === undefined && !runUpdateBridge.source.includes("globalThis.TapSurvivorRunUpdate")
+);
 check("run update bridge source has generated banner", hasGeneratedBanner(runUpdateBridge.source));
-check("bridge exposes createRunUpdater", typeof bridgeRunUpdate?.createRunUpdater === "function");
 
 const moduleRunUpdateSnapshot = runUpdateSnapshot(createModuleRunUpdater);
-const bridgeRunUpdateSnapshot = runUpdateSnapshot(bridgeRunUpdate.createRunUpdater);
-check(
-  "module and bridge run update output match",
-  JSON.stringify(moduleRunUpdateSnapshot) === JSON.stringify(bridgeRunUpdateSnapshot)
-);
 check("run updater exposes update", moduleRunUpdateSnapshot.exposesUpdate);
 check("run updater exposes collectXp", moduleRunUpdateSnapshot.exposesCollectXp);
 check("run update with no game is no-op", moduleRunUpdateSnapshot.noOps.noGame);
@@ -2265,47 +2081,23 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorAudio",
     "TapSurvivorAssets",
-    "TapSurvivorBalance",
-    "TapSurvivorCombatDamage",
-    "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
-    "TapSurvivorEffects",
     "TapSurvivorLevelUp",
-    "TapSurvivorLevelUpChoices",
-    "TapSurvivorUpgrades",
-    "TapSurvivorMath",
     "TapSurvivorProgression",
     "TapSurvivorQuests",
     "TapSurvivorRenderEnemies",
     "TapSurvivorRenderHud",
     "TapSurvivorRenderSkillRail",
     "TapSurvivorRendering",
-    "TapSurvivorRunLifecycle",
-    "TapSurvivorRunState",
-    "TapSurvivorRunUi",
-    "TapSurvivorRunUpdate",
-    "TapSurvivorSave",
-    "TapSurvivorShellRelicUi",
     "TapSurvivorShellUi",
-    "TapSurvivorShopPricing",
     "TapSurvivorSprites",
     "TapSurvivorStorage",
     "TapSurvivorUi",
     "TapSurvivorUiProgression",
     "TapSurvivorWeaponBehaviors",
     "TapSurvivorWeaponFire",
-    "TapSurvivorWeaponProjectiles",
-    "TapSurvivorWeaponTargeting",
   ];
   const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
-  const shellRelicProviderCalls = [];
-  const shellRelicUiPublisher = {
-    configureDefaultProviders({ scheduler } = {}) {
-      shellRelicProviderCalls.push(scheduler);
-    },
-    name: "TapSurvivorShellRelicUi",
-  };
-  baseGlobalRef.TapSurvivorShellRelicUi = shellRelicUiPublisher;
   const saveProviderCalls = [];
   const saveStorage = {
     createStorageAdapter(options) {
@@ -2314,16 +2106,14 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     },
     name: "TapSurvivorStorage",
   };
-  baseGlobalRef.TapSurvivorSave = bridgeSave;
   baseGlobalRef.TapSurvivorStorage = saveStorage;
-  baseGlobalRef.TapSurvivorUpgrades = bridgeUpgrades;
-  baseGlobalRef.TapSurvivorEffects = upgradeBridgeEffectsFixture;
   baseGlobalRef.TapSurvivorGameRuntime = { name: "TapSurvivorGameRuntime" };
   const retiredGlobalNames = [
     "TapSurvivorBalance",
     "TapSurvivorCombat",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
+    "TapSurvivorEffects",
     "TapSurvivorEnemies",
     "TapSurvivorEnemyBehaviors",
     "TapSurvivorEnemySpawning",
@@ -2332,6 +2122,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorMapSystem",
     "TapSurvivorPickups",
     "TapSurvivorRelics",
+    "TapSurvivorRunUpdate",
+    "TapSurvivorSave",
     "TapSurvivorSaveDefaults",
     "TapSurvivorSaveMigrations",
     "TapSurvivorSaveCorruption",
@@ -2339,7 +2131,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRunLifecycle",
     "TapSurvivorRunState",
     "TapSurvivorRunUi",
+    "TapSurvivorShellRelicUi",
     "TapSurvivorShopPricing",
+    "TapSurvivorUpgrades",
+    "TapSurvivorWeaponProjectiles",
     "TapSurvivorWeaponTargeting",
   ];
   const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
@@ -2370,23 +2165,24 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.TapSurvivorInput = {
     bindMovementInput,
   };
+  const shellRelicSchedulerTimers = [];
+  const shellRelicDefaultImages = [];
+  globalRef.clearTimeout = (timer) => {
+    if (timer) timer.cleared = true;
+  };
+  globalRef.setTimeout = (callback, delay) => {
+    const timer = { callback, delay, kind: delay === 1800 ? "lock" : "animation" };
+    shellRelicSchedulerTimers.push(timer);
+    return timer;
+  };
+  globalRef.Image = function TapSurvivorShellRelicImage() {
+    return createShellRelicFakeImage(shellRelicDefaultImages);
+  };
   const normalGameRuntimeResult = createGameDependencyBagResult(
     createGameDependencyBag,
     globalRef,
     documentRef
   );
-  const shellRelicSchedulerTimerCalls = [];
-  globalRef.clearTimeout = (timer) => {
-    shellRelicSchedulerTimerCalls.push({ kind: "clearTimeout", timer });
-  };
-  globalRef.setTimeout = (callback, delay) => {
-    shellRelicSchedulerTimerCalls.push({ delay, kind: "setTimeout" });
-    return { callback, delay };
-  };
-  const initialShellRelicScheduler = shellRelicProviderCalls[0];
-  initialShellRelicScheduler?.clearTimeout?.("locked-popup");
-  initialShellRelicScheduler?.setTimeout?.(() => {}, 1800);
-  initialShellRelicScheduler?.animationSetTimeout?.(() => {}, 100);
   const missingGameRuntimeGlobalRef = { ...baseGlobalRef };
   delete missingGameRuntimeGlobalRef.TapSurvivorGameRuntime;
   const missingGameRuntimeResult = createGameDependencyBagResult(
@@ -2427,14 +2223,14 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     documentRef
   );
   let bannerGlobalReads = 0;
-  Object.defineProperty(globalRef, "TapSurvivorGameBanners", {
+  const poisonedGlobalRef = { ...globalRef };
+  Object.defineProperty(poisonedGlobalRef, "TapSurvivorGameBanners", {
     configurable: true,
     get() {
       bannerGlobalReads += 1;
       throw new Error("Forbidden TapSurvivorGameBanners global read");
     },
   });
-  const poisonedGlobalRef = { ...globalRef };
   for (const name of retiredGlobalNames) {
     Object.defineProperty(poisonedGlobalRef, name, {
       configurable: true,
@@ -2445,8 +2241,31 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     });
   }
   const bag = createGameDependencyBag({ globalRef: poisonedGlobalRef, documentRef });
-  const configuredSaveSystem = bag.save.createSaveSystem(createSaveSystemFixture());
+  const configuredSaveSystem = bag.save.createSaveSystem({
+    ...createSaveSystemFixture(),
+    storage: saveStorage,
+  });
   const configuredSave = configuredSaveSystem.loadSave();
+  const injectedUpgradeContent = bag.upgrades.createUpgradeContent({
+    content: upgradeBridgeContentFixture,
+    effects: upgradeBridgeEffectsFixture,
+  });
+  const defaultShellRelicTiming = exerciseShellRelicTiming(
+    createShellRelicTimingFixture(bag.shellRelicUi.createShellRelicUi, {
+      omitImageFactory: true,
+      relicSystem: createShellRelicFixtureRelicSystem(createModuleRelicSystem),
+    }),
+    shellRelicSchedulerTimers
+  );
+  const defaultShellRelicTimerCount = shellRelicSchedulerTimers.length;
+  const callerShellRelicTimers = [];
+  const callerShellRelicTiming = exerciseShellRelicTiming(
+    createShellRelicTimingFixture(bag.shellRelicUi.createShellRelicUi, {
+      relicSystem: createShellRelicFixtureRelicSystem(createModuleRelicSystem),
+      scheduler: createShellRelicTimerScheduler(callerShellRelicTimers),
+    }),
+    callerShellRelicTimers
+  );
   const shop = bag.shop.createShopSystem({
     effects: {
       addShopItemBonus() {},
@@ -2464,10 +2283,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
 
   const fallbackGlobalRef = { ...baseGlobalRef };
   delete fallbackGlobalRef.TapSurvivorBalanceRuntime;
-  delete fallbackGlobalRef.TapSurvivorUpgrades;
   const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
-  fallbackGlobalRef.TapSurvivorUpgrades = bridgeUpgrades;
-  const recoveredLegacyBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
 
   const missingGlobalRef = { ...baseGlobalRef };
   delete missingGlobalRef.TapSurvivorAudio;
@@ -2493,14 +2309,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     balanceProviderCalls,
     balanceProviderUsesProducerValues,
     contentId: bag.content.id,
-    defaultUpgradeIds: bag.upgrades.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
-    defaultRunUpgradeIds: bag.upgrades.runUpgradeDefs.map((upgrade) => upgrade.id),
+    defaultUpgradeIds: injectedUpgradeContent.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
+    defaultRunUpgradeIds: injectedUpgradeContent.runUpgradeDefs.map((upgrade) => upgrade.id),
     debugProfile: bag.debugBalance.getActiveProfile(),
-    emptyUpgradeKeys: Object.keys(fallbackBag.upgrades).length,
     fallbackContentId: fallbackBag.content.id,
-    hasClassicUpgradeFactory: typeof bag.upgrades.createUpgradeContent === "function",
-    hasConfiguredClassicUpgradeDefaults:
-      typeof bag.upgrades.createUpgradeDefs === "function" && Array.isArray(bag.upgrades.runUpgradeDefs),
     hasAssets: bag.assets.name === "TapSurvivorAssets",
     hasContentRegistry: typeof bag.contentRegistry.createContentRegistry === "function",
     hasBalance: typeof bag.balance.floorDifficulty === "function",
@@ -2529,7 +2341,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
     hasWeaponCooldowns: typeof bag.weaponCooldowns.createWeaponScaling === "function",
     hasWeaponFire: bag.weaponFire.name === "TapSurvivorWeaponFire",
-    hasWeaponProjectiles: bag.weaponProjectiles.name === "TapSurvivorWeaponProjectiles",
+    hasWeaponProjectiles:
+      typeof bag.weaponProjectiles.createWeaponProjectileSystem === "function" &&
+      typeof bag.weaponProjectiles.rotateVector === "function",
     hasWeaponTargeting: typeof bag.weaponTargeting.nearestEnemy === "function",
     hasSaveCorruption: typeof bag.saveCorruption?.createSaveLoadHandler === "function",
     hasSaveDefaults:
@@ -2546,21 +2360,21 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.saveNormalize?.arrayValue === "function" &&
       typeof bag.saveNormalize?.createSaveNormalizer === "function" &&
       typeof bag.saveNormalize?.objectValue === "function",
-    hasConfiguredClassicSaveDefault:
-      bag.save === baseGlobalRef.TapSurvivorSave &&
-      bag.storage === baseGlobalRef.TapSurvivorStorage &&
-      configuredSave.coins === 11,
+    hasEffects:
+      typeof bag.effects.applyRunUpgradeEffects === "function" &&
+      typeof bag.effects.applyShopItemEffectToRun === "function" &&
+      typeof bag.effects.emptyShopBonuses === "function" &&
+      typeof bag.effects.addShopItemBonus === "function" &&
+      typeof bag.effects.applyRelicSpecialEffects === "function",
+    hasSaveFactory: typeof bag.save.createSaveSystem === "function",
+    injectedSaveCoins: configuredSave.coins,
     saveProviderCalls,
-    hasShellRelicUi: bag.shellRelicUi.name === "TapSurvivorShellRelicUi",
-    hasConfiguredShellRelicScheduler:
-      bag.shellRelicUi === shellRelicUiPublisher &&
-      shellRelicProviderCalls.length > 0 &&
-      JSON.stringify(shellRelicSchedulerTimerCalls) ===
-        JSON.stringify([
-          { kind: "clearTimeout", timer: "locked-popup" },
-          { delay: 1800, kind: "setTimeout" },
-          { delay: 100, kind: "setTimeout" },
-        ]),
+    hasShellRelicUi: typeof bag.shellRelicUi.createShellRelicUi === "function",
+    shellRelicCallerTimerCount: callerShellRelicTimers.length,
+    shellRelicCallerTiming: callerShellRelicTiming,
+    shellRelicDefaultImageCalls: shellRelicDefaultImages.length,
+    shellRelicDefaultTimerCount: defaultShellRelicTimerCount,
+    shellRelicDefaultTiming: defaultShellRelicTiming,
     bannerGlobalReads,
     hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
     hasGameRuntime: typeof bag.gameRuntime?.createGameRuntimeController === "function",
@@ -2585,18 +2399,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     recoveredGameRuntimeFactory:
       typeof recoveredGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
     gameRuntimeTargetGlobalReads,
-    recoveredClassicUpgradeFactory:
-      typeof recoveredLegacyBag.upgrades.createUpgradeContent === "function",
-    recoveredClassicUpgradeDefaults:
-      typeof recoveredLegacyBag.upgrades.createUpgradeDefs === "function" &&
-      Array.isArray(recoveredLegacyBag.upgrades.runUpgradeDefs),
-    recoveredUpgradeIds: recoveredLegacyBag.upgrades
-      .createUpgradeContent({
-        content: upgradeBridgeContentFixture,
-        effects: { applyRunUpgradeEffects() {} },
-      })
-      .createUpgradeDefs(upgradeWeaponDefs)
-      .map((upgrade) => upgrade.id),
     retiredGlobalReads,
   };
   Object.defineProperty(snapshot, "__bag", { value: bag, enumerable: false });
@@ -3865,7 +3667,7 @@ function saveNormalizeSnapshot(createSaveNormalizer) {
   };
 }
 
-function saveSystemSnapshot(createSaveSystem, globalScope, configureDefaultProviders) {
+function saveSystemSnapshot(createSaveSystem) {
   const fallbackCalls = [];
   const fallbackStorage = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 5 }));
   const fallbackStorageDependency = {
@@ -3874,11 +3676,7 @@ function saveSystemSnapshot(createSaveSystem, globalScope, configureDefaultProvi
       return fallbackStorage;
     },
   };
-  const previousStorage = globalScope.TapSurvivorStorage;
-  globalScope.TapSurvivorStorage = fallbackStorageDependency;
-  const saveSystemFixture = createSaveSystemFixture(
-    globalScope === globalThis ? { storage: fallbackStorageDependency } : {}
-  );
+  const saveSystemFixture = createSaveSystemFixture({ storage: fallbackStorageDependency });
 
   const providedStorage = createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 7 }));
   const system = createSaveSystem({
@@ -3919,17 +3717,8 @@ function saveSystemSnapshot(createSaveSystem, globalScope, configureDefaultProvi
   const removed = system.removeSave();
   const providedFallbackCalls = fallbackCalls.length;
 
-  if (typeof configureDefaultProviders === "function") {
-    configureDefaultProviders({ storage: fallbackStorageDependency });
-  }
   const fallbackSystem = createSaveSystem(saveSystemFixture);
   const fallbackDefault = fallbackSystem.defaultSave();
-
-  if (previousStorage === undefined) {
-    delete globalScope.TapSurvivorStorage;
-  } else {
-    globalScope.TapSurvivorStorage = previousStorage;
-  }
 
   return {
     defaultSave,
@@ -4278,7 +4067,10 @@ function createShellRelicFixtureRelicSystem(createRelicSystem) {
   });
 }
 
-function createShellRelicTimingFixture(createShellRelicUi, { relicSystem, scheduler } = {}) {
+function createShellRelicTimingFixture(
+  createShellRelicUi,
+  { omitImageFactory = false, relicSystem, scheduler } = {}
+) {
   const ui = {
     menuRelicInventory: createShellRelicFakeElement("div"),
     menuRelicSlots: createShellRelicFakeElement("div"),
@@ -4294,13 +4086,13 @@ function createShellRelicTimingFixture(createShellRelicUi, { relicSystem, schedu
     content: shellRelicUiContentFixture,
     documentRef: { createElement: createShellRelicFakeElement },
     getSave: () => save,
-    imageFactory: () => createShellRelicFakeImage(images),
     persist() {},
     relicDefs: shellRelicUiFixtureDefs,
     relicSystem,
     renderMeta() {},
     ui,
   };
+  if (!omitImageFactory) options.imageFactory = () => createShellRelicFakeImage(images);
   if (scheduler !== undefined) options.scheduler = scheduler;
 
   return {

@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/weapon-projectiles.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorWeaponProjectiles. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -237,9 +238,4 @@
       updateBolts,
     };
   }
-
-  globalThis.TapSurvivorWeaponProjectiles = {
-    createWeaponProjectileSystem,
-    rotateVector,
-  };
 })();

@@ -26,6 +26,7 @@ const moduleGameDependencies = readRequired("src/modules/game-dependencies.js");
 const styles = readRequired("src/styles.css");
 const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
+const effects = readRequired("src/effects.js");
 const math = readRequired("src/math.js");
 const sprites = readRequired("src/sprites.js");
 const spriteSheetRenderer = readRequired("src/sprite-sheet-renderer.js");
@@ -285,7 +286,18 @@ check("debug balance system exists", debug.includes("createDebugSystem") && runt
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
 check("local save exists", game.includes("tap-survivor-mvp-save-v2") && storageAdapter.includes("localStorage") && storageAdapter.includes("getSaveRaw"));
 check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && runtimeEntry.includes("TapSurvivorQuests"));
-check("shared save helpers exist", save.includes("TapSurvivorSave") && saveDefaults.includes("TapSurvivorSaveDefaults") && saveMigrations.includes("TapSurvivorSaveMigrations") && saveNormalize.includes("TapSurvivorSaveNormalize") && runtimeEntry.includes("TapSurvivorSave") && storageAdapter.includes("TapSurvivorStorage"));
+check(
+  "shared save helpers are explicitly dependency-injected without a classic publisher",
+  save.includes("function createSaveSystem") &&
+    !save.includes("globalThis.TapSurvivorSave =") &&
+    saveDefaults.includes("TapSurvivorSaveDefaults") &&
+    saveMigrations.includes("TapSurvivorSaveMigrations") &&
+    saveNormalize.includes("TapSurvivorSaveNormalize") &&
+    gameDependencies.includes("const save = { createSaveSystem };") &&
+    gameDependencies.includes("      save,") &&
+    game.includes("saveDependencies.createSaveSystem") &&
+    storageAdapter.includes("TapSurvivorStorage"),
+);
 check(
   "shared math helpers exist",
   math.includes("function clamp") &&
@@ -299,6 +311,16 @@ check(
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
 check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && runtimeEntry.includes("TapSurvivorSprites"));
+check(
+  "effects and upgrade content are explicitly dependency-injected without classic publishers",
+  !effects.includes("globalThis.TapSurvivorEffects =") &&
+    !upgrades.includes("globalThis.TapSurvivorUpgrades =") &&
+    gameDependencies.includes("const effects = createEffects();") &&
+    gameDependencies.includes("const upgrades = { createUpgradeContent };") &&
+    gameDependencies.includes("      upgrades,") &&
+    game.includes("effects,") &&
+    game.includes("upgrades: upgradeContent"),
+);
 check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
 check(
   "shared asset resolver exists",
@@ -405,14 +427,22 @@ check(
   "shared run state helper exists",
   runState.includes("createRunStateSystem") && gameDependencies.includes("createRunStateSystem"),
 );
-check("shared run update helper exists", runUpdate.includes("TapSurvivorRunUpdate") && runtimeEntry.includes("TapSurvivorRunUpdate"));
+check(
+  "shared run update helper is explicitly dependency-injected without a classic publisher",
+  runUpdate.includes("function createRunUpdater") &&
+    !runUpdate.includes("globalThis.TapSurvivorRunUpdate =") &&
+    gameDependencies.includes("runUpdate: { createRunUpdater }") &&
+    game.includes("runUpdate.createRunUpdater"),
+);
 check(
   "shared weapon helpers exist",
-  weaponProjectiles.includes("TapSurvivorWeaponProjectiles") &&
+  weaponProjectiles.includes("function createWeaponProjectileSystem") &&
+    !weaponProjectiles.includes("globalThis.TapSurvivorWeaponProjectiles =") &&
     weaponTargeting.includes("function nearestEnemy") &&
     weaponFire.includes("TapSurvivorWeaponFire") &&
     gameDependencies.includes("TapSurvivorWeaponBehaviors") &&
     gameDependencies.includes("TapSurvivorWeaponFire") &&
+    gameDependencies.includes("weaponProjectiles: { createWeaponProjectileSystem, rotateVector }") &&
     gameDependencies.includes("weaponTargeting: { nearestEnemy }") &&
     game.includes("weaponBehaviors,") &&
     game.includes("weaponFire,") &&
@@ -471,7 +501,15 @@ check(
     !enemies.includes("globalThis.TapSurvivorBalance"),
 );
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));
-check("shared shell UI helper exists", shellUi.includes("TapSurvivorShellUi") && shellRelicUi.includes("TapSurvivorShellRelicUi") && runtimeEntry.includes("TapSurvivorShellUi"));
+check(
+  "shared shell UI helper injects native relic behavior without a relic publisher",
+  shellUi.includes("TapSurvivorShellUi") &&
+    shellRelicUi.includes("function createShellRelicUi") &&
+    !shellRelicUi.includes("globalThis.TapSurvivorShellRelicUi =") &&
+    gameDependencies.includes("function createShellRelicUiDependency") &&
+    game.includes("shellRelicUi,") &&
+    runtimeEntry.includes("TapSurvivorShellUi"),
+);
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check("pipeline documents test URL", pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/"));

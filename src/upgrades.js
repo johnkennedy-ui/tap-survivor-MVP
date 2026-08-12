@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/upgrades.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorUpgrades. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -51,51 +52,4 @@
       runUpgradeDefs,
     };
   }
-
-  let defaultProviders = {};
-  let defaultUpgradeContent;
-
-  function missingDefaultProviderNames() {
-    const missingProviders = [];
-    if (defaultProviders.content == null) missingProviders.push("content");
-    if (defaultProviders.effects == null) missingProviders.push("effects");
-    return missingProviders;
-  }
-
-  function createMissingDefaultProviderError(missingProviders) {
-    const error = new Error(
-      `Missing Tap Survivor upgrade default providers: ${missingProviders.join(", ")}`
-    );
-    error.name = "TapSurvivorUpgradeProviderError";
-    error.code = "TAP_SURVIVOR_UPGRADES_PROVIDER_MISSING";
-    error.missing = missingProviders;
-    error.missingProviders = missingProviders;
-    return error;
-  }
-
-  function configuredDefaultUpgradeContent() {
-    const missingProviders = missingDefaultProviderNames();
-    if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
-    return defaultUpgradeContent;
-  }
-
-  function configureDefaultProviders({ content, effects } = {}) {
-    defaultProviders = { content, effects };
-    defaultUpgradeContent = undefined;
-    const missingProviders = missingDefaultProviderNames();
-    if (missingProviders.length) throw createMissingDefaultProviderError(missingProviders);
-    defaultUpgradeContent = createUpgradeContent(defaultProviders);
-    return defaultUpgradeContent;
-  }
-
-  globalThis.TapSurvivorUpgrades = {
-    createUpgradeContent,
-    configureDefaultProviders,
-    get createUpgradeDefs() {
-      return configuredDefaultUpgradeContent().createUpgradeDefs;
-    },
-    get runUpgradeDefs() {
-      return configuredDefaultUpgradeContent().runUpgradeDefs;
-    },
-  };
 })();
