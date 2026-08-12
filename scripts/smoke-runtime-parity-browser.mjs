@@ -23,6 +23,42 @@ const syntheticPages = {
   esm: `${syntheticPagePrefix}esm.html`,
 };
 const runningDockerChild = process.env.PARITY_BROWSER_DOCKER_CHILD === "1";
+const browserDiagnosticSampleLimits = Object.freeze({
+  consoleErrors: 32,
+  failedRequests: 32,
+  httpFailures: 32,
+  moduleUrls: 32,
+  pageErrors: 32,
+  requests: 96,
+  responses: 96,
+  scriptUrls: 64,
+});
+const pageDiagnosticSampleLimits = Object.freeze({
+  audioAttempts: { first: 32, total: 64 },
+  audioErrors: { first: 32, total: 32 },
+  audioPatchErrors: { first: 32, total: 32 },
+  consoleErrors: { first: 32, total: 32 },
+  drawCalls: { first: 64, total: 256 },
+  failedRequests: { first: 32, total: 32 },
+  httpFailures: { first: 32, total: 32 },
+  moduleRequests: { first: 32, total: 64 },
+  pageErrors: { first: 32, total: 32 },
+  rafSamples: { first: 32, total: 64 },
+  requestErrors: { first: 32, total: 32 },
+  requests: { first: 32, total: 64 },
+  responses: { first: 32, total: 64 },
+  scriptRequests: { first: 32, total: 64 },
+  spriteLoadRequests: { first: 32, total: 64 },
+  spriteLoads: { first: 32, total: 64 },
+  spriteRegistrations: { first: 32, total: 64 },
+  updateCalls: { first: 32, total: 64 },
+});
+const reportBounds = Object.freeze({
+  maxArrayEntries: 256,
+  maxDepth: 16,
+  maxObjectKeys: 128,
+  maxStringLength: 8192,
+});
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -41,6 +77,11 @@ const report = {
   browserExecutableSource: "",
   browserDriverSource: "",
   classicAssetMount,
+  classicBaseline: {
+    cleanupStatus: "pending",
+    materialized: false,
+    revision: classicBaselineRevision,
+  },
   classicBaselineRevision,
   classic: null,
   comparison: null,
@@ -111,6 +152,11 @@ async function main() {
     } catch (error) {
       const cleanupFailure = shortMessage(error?.stack || error?.message || String(error));
       report.classicBaselineCleanupError = cleanupFailure;
+      report.classicBaseline = {
+        cleanupStatus: "failed",
+        materialized: Boolean(report.classicBaseline?.materialized),
+        revision: classicBaselineRevision,
+      };
       report.appLevelResult = "fail";
       report.comparison = {
         appLevelResult: "fail",
@@ -190,6 +236,11 @@ async function materializeClassicBaseline() {
   if (!existsSync(join(classicBaselineRoot, "index.html"))) {
     throw new Error(`Classic baseline archive ${classicBaselineRevision} is missing index.html`);
   }
+  report.classicBaseline = {
+    cleanupStatus: "pending",
+    materialized: true,
+    revision: classicBaselineRevision,
+  };
 }
 
 async function cleanupClassicBaseline() {
@@ -197,6 +248,11 @@ async function cleanupClassicBaseline() {
   const baselineRoot = classicBaselineRoot;
   await rm(baselineRoot, { force: true, recursive: true });
   classicBaselineRoot = "";
+  report.classicBaseline = {
+    cleanupStatus: "complete",
+    materialized: Boolean(report.classicBaseline?.materialized),
+    revision: classicBaselineRevision,
+  };
 }
 
 function spawnFailureMessage(result) {
@@ -295,8 +351,51 @@ async function writeReportFile(finalReport) {
   const reportPath = resolve(repoRoot, cli.reportFile);
   await mkdir(dirname(reportPath), { recursive: true });
   const temporaryPath = `${reportPath}.tmp-${process.pid}-${Date.now()}`;
-  await writeFile(temporaryPath, `${JSON.stringify(finalReport, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  const outputReport = createBoundedReport(finalReport);
+  await writeFile(temporaryPath, `${JSON.stringify(outputReport, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
   await rename(temporaryPath, reportPath);
+}
+
+function createBoundedReport(value) {
+  return boundReportValue(value, new WeakSet(), 0);
+}
+
+function boundReportValue(value, ancestors, depth) {
+  if (value === null || value === undefined || typeof value === "boolean") return value ?? null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : String(value);
+  if (typeof value === "string") return boundReportString(value);
+  if (typeof value === "bigint") return value.toString();
+  if (typeof value === "function" || typeof value === "symbol") return `[${typeof value}]`;
+  if (depth >= reportBounds.maxDepth) return "[depth-limit]";
+  if (typeof value !== "object") return String(value);
+  if (ancestors.has(value)) return "[circular]";
+
+  ancestors.add(value);
+  let bounded;
+  if (Array.isArray(value)) {
+    const retained = value.slice(0, reportBounds.maxArrayEntries);
+    bounded = retained.map((entry) => boundReportValue(entry, ancestors, depth + 1));
+    if (value.length > retained.length) {
+      bounded.push({ omittedEntries: value.length - retained.length, truncated: true });
+    }
+  } else {
+    bounded = {};
+    const entries = Object.entries(value);
+    for (const [key, entry] of entries.slice(0, reportBounds.maxObjectKeys)) {
+      bounded[boundReportString(key)] = boundReportValue(entry, ancestors, depth + 1);
+    }
+    if (entries.length > reportBounds.maxObjectKeys) {
+      bounded.__truncatedKeys = entries.length - reportBounds.maxObjectKeys;
+    }
+  }
+  ancestors.delete(value);
+  return bounded;
+}
+
+function boundReportString(value) {
+  const text = String(value ?? "");
+  if (text.length <= reportBounds.maxStringLength) return text;
+  return `${text.slice(0, reportBounds.maxStringLength)}…[truncated ${text.length - reportBounds.maxStringLength} chars]`;
 }
 
 async function runSurface(browser, surface) {
@@ -384,34 +483,98 @@ async function runSurface(browser, surface) {
 async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surface) {
   const page = await browser.newPage({ viewport: runtimeViewport || viewport });
   const result = createRuntimeResult(mode, pagePath);
-  const responseStatusByUrl = new Map();
-
-  await page.addInitScript(({ mode: initMode }) => {
+  await page.addInitScript(({ diagnosticLimits: initDiagnosticLimits, mode: initMode }) => {
     const root = globalThis;
     const parity = (root.__TapSurvivorParity = root.__TapSurvivorParity || {});
+    const diagnosticLimits = initDiagnosticLimits || {};
     parity.mode = initMode;
-    parity.drawCalls = [];
-    parity.raf = parity.raf || { count: 0, dts: [], timestamps: [] };
-    parity.raf.count = 0;
-    parity.raf.dts = [];
-    parity.raf.timestamps = [];
-    parity.pageErrors = [];
-    parity.requestErrors = [];
-    parity.spriteRegistrations = parity.spriteRegistrations || [];
-    parity.spriteLoads = parity.spriteLoads || [];
-    parity.spriteLoadRequests = parity.spriteLoadRequests || [];
-    parity.scriptRequests = parity.scriptRequests || [];
-    parity.moduleRequests = parity.moduleRequests || [];
+    parity.diagnosticCounts = {};
+    parity.diagnosticOverflows = {};
+    parity.diagnosticSampleOrders = {};
     parity.started = false;
+    [
+      "consoleErrors",
+      "drawCalls",
+      "failedRequests",
+      "httpFailures",
+      "moduleRequests",
+      "pageErrors",
+      "requestErrors",
+      "requests",
+      "responses",
+      "scriptRequests",
+      "spriteLoadRequests",
+      "spriteLoads",
+      "spriteRegistrations",
+      "updateCalls",
+    ].forEach((name) => resetDiagnostic(name));
+    parity.raf = { count: 0, dts: [], sampleCount: 0, sampleOverflow: 0, timestamps: [] };
+    parity.recordDiagnostic = recordDiagnostic;
+
+    function diagnosticLimit(name) {
+      const configured = diagnosticLimits[name] || {};
+      const total = Math.max(1, Math.floor(Number(configured.total) || 32));
+      const first = Math.min(total, Math.max(0, Math.floor(Number(configured.first) || total)));
+      return { first, total };
+    }
+
+    function resetDiagnostic(name, target) {
+      const samples = Array.isArray(target) ? target : [];
+      samples.length = 0;
+      if (!Array.isArray(target)) parity[name] = samples;
+      parity.diagnosticCounts[name] = 0;
+      parity.diagnosticOverflows[name] = 0;
+      parity.diagnosticSampleOrders[name] = [];
+      return samples;
+    }
+
+    function recordDiagnostic(name, entry, target) {
+      const samples = Array.isArray(target) ? target : Array.isArray(parity[name]) ? parity[name] : resetDiagnostic(name);
+      const { first, total } = diagnosticLimit(name);
+      const count = Number(parity.diagnosticCounts[name] || 0) + 1;
+      const orders = parity.diagnosticSampleOrders[name] || (parity.diagnosticSampleOrders[name] = []);
+      parity.diagnosticCounts[name] = count;
+      if (samples.length < total) {
+        samples.push(entry);
+        orders.push(count);
+      } else if (first < total) {
+        const tailLength = total - first;
+        const index = first + ((count - first - 1) % tailLength);
+        samples[index] = entry;
+        orders[index] = count;
+      }
+      parity.diagnosticOverflows[name] = Math.max(0, count - samples.length);
+      return entry;
+    }
+
+    function recordRafSample(timestamp, delta) {
+      const raf = parity.raf;
+      const { first, total } = diagnosticLimit("rafSamples");
+      raf.count += 1;
+      raf.sampleCount = raf.count;
+      const orders = parity.diagnosticSampleOrders.rafSamples || (parity.diagnosticSampleOrders.rafSamples = []);
+      parity.diagnosticCounts.rafSamples = raf.count;
+      if (raf.dts.length < total) {
+        raf.dts.push(delta);
+        raf.timestamps.push(timestamp);
+        orders.push(raf.count);
+      } else if (first < total) {
+        const tailLength = total - first;
+        const index = first + ((raf.count - first - 1) % tailLength);
+        raf.dts[index] = delta;
+        raf.timestamps[index] = timestamp;
+        orders[index] = raf.count;
+      }
+      raf.sampleOverflow = Math.max(0, raf.count - raf.dts.length);
+      parity.diagnosticOverflows.rafSamples = raf.sampleOverflow;
+    }
 
     const nativeRAF = root.requestAnimationFrame?.bind(root);
     let lastTimestamp = null;
     if (typeof nativeRAF === "function") {
       root.requestAnimationFrame = (callback) =>
         nativeRAF((timestamp) => {
-          parity.raf.count += 1;
-          parity.raf.timestamps.push(timestamp);
-          parity.raf.dts.push(lastTimestamp === null ? 0 : timestamp - lastTimestamp);
+          recordRafSample(timestamp, lastTimestamp === null ? 0 : timestamp - lastTimestamp);
           lastTimestamp = timestamp;
           return callback(timestamp);
         });
@@ -431,7 +594,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           throw error;
         } finally {
           const afterStats = sampleCanvasRect(this, before.visibleRect);
-          parity.drawCalls.push({
+          parity.recordDiagnostic("drawCalls", {
             ...before,
             afterStats,
             beforeStats,
@@ -444,33 +607,62 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     }
 
     root.addEventListener?.("error", (event) => {
-      parity.pageErrors.push({
+      parity.recordDiagnostic("pageErrors", {
         message: event?.error?.message || event?.message || "window error",
       });
     });
     root.addEventListener?.("unhandledrejection", (event) => {
-      parity.pageErrors.push({
+      parity.recordDiagnostic("pageErrors", {
         message: event?.reason?.message || String(event?.reason || "unhandled rejection"),
       });
     });
 
-    const audio = (parity.audio = parity.audio || {
+    const audio = (parity.audio = {
       api: {
         hasAudioContext: Boolean(root.AudioContext || root.webkitAudioContext),
         hasAudioElement: Boolean(root.Audio),
         hasMediaPlay: Boolean(root.HTMLMediaElement?.prototype?.play),
       },
       attempts: [],
+      buckets: {},
       errors: [],
       patchErrors: [],
     });
-    parity.audioScope = parity.audioScope || null;
+    resetDiagnostic("audioAttempts", audio.attempts);
+    resetDiagnostic("audioErrors", audio.errors);
+    resetDiagnostic("audioPatchErrors", audio.patchErrors);
+    parity.audioScope = null;
+
+    function audioBucket(scope) {
+      const key = scope === "start" || scope === "weapon" || scope === "menu" ? scope : "unscoped";
+      return (audio.buckets[key] = audio.buckets[key] || {
+        attemptCount: 0,
+        errorCount: 0,
+        firstAttempt: null,
+        operations: {},
+      });
+    }
+
+    function recordAudioAttempt(entry) {
+      parity.recordDiagnostic("audioAttempts", entry, audio.attempts);
+      const bucket = audioBucket(entry.scope);
+      bucket.attemptCount += 1;
+      bucket.firstAttempt ||= entry;
+      const operation = entry.operation || "unknown";
+      bucket.operations[operation] = Number(bucket.operations[operation] || 0) + 1;
+    }
+
+    function recordAudioError(entry) {
+      parity.recordDiagnostic("audioErrors", entry, audio.errors);
+      audioBucket(entry.scope).errorCount += 1;
+    }
+
     const mediaProto = root.HTMLMediaElement?.prototype;
     if (mediaProto && !mediaProto.__tapParityAudioPatched) {
       const originalPlay = mediaProto.play;
       if (typeof originalPlay === "function") {
         mediaProto.play = function patchedMediaPlay(...playArgs) {
-          audio.attempts.push({
+          recordAudioAttempt({
             operation: "play",
             scope: parity.audioScope || null,
             source: this?.currentSrc || this?.src || "",
@@ -479,7 +671,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           try {
             const result = originalPlay.apply(this, playArgs);
             result?.catch?.((error) => {
-              audio.errors.push({
+              recordAudioError({
                 message: error?.message || String(error || "media play rejected"),
                 operation: "play",
                 scope: parity.audioScope || null,
@@ -487,7 +679,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
             });
             return result;
           } catch (error) {
-            audio.errors.push({
+            recordAudioError({
               message: error?.message || String(error || "media play failed"),
               operation: "play",
               scope: parity.audioScope || null,
@@ -500,7 +692,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       if (audioContextProto && typeof audioContextProto.resume === "function") {
         const originalResume = audioContextProto.resume;
         audioContextProto.resume = function patchedAudioResume(...resumeArgs) {
-          audio.attempts.push({
+          recordAudioAttempt({
             operation: "resume",
             scope: parity.audioScope || null,
             state: this?.state || "",
@@ -508,7 +700,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           try {
             const result = originalResume.apply(this, resumeArgs);
             result?.catch?.((error) => {
-              audio.errors.push({
+              recordAudioError({
                 message: error?.message || String(error || "audio resume rejected"),
                 operation: "resume",
                 scope: parity.audioScope || null,
@@ -516,7 +708,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
             });
             return result;
           } catch (error) {
-            audio.errors.push({
+            recordAudioError({
               message: error?.message || String(error || "audio resume failed"),
               operation: "resume",
               scope: parity.audioScope || null,
@@ -657,11 +849,11 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         Math.abs((afterStats.colorSum || 0) - (beforeStats.colorSum || 0))
       );
     }
-  }, { mode });
+  }, { diagnosticLimits: pageDiagnosticSampleLimits, mode });
 
   page.on("console", (message) => {
     if (message.type() === "error") {
-      result.consoleErrors.push({
+      recordRuntimeDiagnostic(result, "consoleErrors", {
         location: message.location(),
         message: message.text(),
         type: message.type(),
@@ -669,21 +861,21 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     }
   });
   page.on("pageerror", (error) => {
-    result.pageErrors.push({ message: error.message, stack: error.stack });
+    recordRuntimeDiagnostic(result, "pageErrors", { message: error.message, stack: error.stack });
   });
   page.on("request", (request) => {
     const entry = { method: request.method(), resourceType: request.resourceType(), url: request.url() };
-    result.requests.push(entry);
+    recordRuntimeDiagnostic(result, "requests", entry);
     if (entry.resourceType === "script" || entry.resourceType === "document") {
-      result.scriptUrls.push(entry.url);
+      recordRuntimeDiagnostic(result, "scriptUrls", entry.url);
     }
     if (entry.url.includes("/src/app/production-module-entrypoint.js") || entry.url.includes("/src/app/production-module-autoboot.js")) {
-      result.moduleUrls.push(entry.url);
+      recordRuntimeDiagnostic(result, "moduleUrls", entry.url);
     }
   });
   page.on("requestfailed", (request) => {
     const failure = request.failure();
-    result.failedRequests.push({
+    recordRuntimeDiagnostic(result, "failedRequests", {
       errorText: failure?.errorText || "request failed",
       method: request.method(),
       resourceType: request.resourceType(),
@@ -692,10 +884,9 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
   });
   page.on("response", (response) => {
     const entry = { status: response.status(), url: response.url() };
-    result.responses.push(entry);
-    responseStatusByUrl.set(normalizeImageSource(entry.url), entry.status);
+    recordRuntimeDiagnostic(result, "responses", entry);
     if (entry.status >= 400) {
-      result.httpFailures.push(entry);
+      recordRuntimeDiagnostic(result, "httpFailures", entry);
     }
   });
 
@@ -722,7 +913,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       await setAudioScope(page, "start");
       await startButton.click({ timeout: 5000 }).catch((error) => {
         result.startGameClickThrew = true;
-        result.pageErrors.push({ message: `Start Game click failed: ${error.message}`, stack: error.stack });
+        recordRuntimeDiagnostic(result, "pageErrors", { message: `Start Game click failed: ${error.message}`, stack: error.stack });
       });
     }
 
@@ -773,6 +964,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
       const saveProvider = isClassic ? parity.classicSaveProviderLifecycle || null : null;
       const upgradeProvider = isClassic ? parity.classicUpgradeProviderLifecycle || null : null;
+      const diagnostics = snapshotDiagnostics(parity);
+      const spriteSnapshot = snapshotSpriteIndex(content.assets?.sprites || {}, diagnostics.drawCalls);
       return {
         assetsLoaded: Boolean(content.assets),
         contentLoaded: Boolean(root.TapSurvivorContent),
@@ -789,22 +982,16 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         game: snapshotGame(game),
         saveProvider,
         upgradeProvider,
-        registeredSpriteGroups: snapshotSpriteGroups(content.assets?.sprites || {}),
-        registeredSpriteGroupDefs: content.assets?.sprites || {},
+        registeredSpriteGroupCounts: spriteSnapshot.counts,
+        registeredSpriteGroupDefs: spriteSnapshot.definitions,
+        registeredSpriteGroupOverflows: spriteSnapshot.overflows,
+        registeredSpriteGroups: spriteSnapshot.groups,
         audio: snapshotAudio(parity),
         title: {
           startTransitionHidden: startTransition?.classList.contains("hidden") ?? null,
           titleHidden: titleScreen?.classList.contains("hidden") ?? null,
         },
-        diagnostics: {
-          drawCalls: parity.drawCalls || [],
-          pageErrors: parity.pageErrors || [],
-          raf: parity.raf || { count: 0, dts: [], timestamps: [] },
-          requestErrors: parity.requestErrors || [],
-          spriteLoadRequests: parity.spriteLoadRequests || [],
-          spriteLoads: parity.spriteLoads || [],
-          spriteRegistrations: parity.spriteRegistrations || [],
-        },
+        diagnostics,
       };
 
       function rectSize(rect) {
@@ -843,40 +1030,170 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         };
       }
 
-      function snapshotAudio(parityState) {
-        const audioState = parityState.audio || {};
-        const attempts = Array.isArray(audioState.attempts) ? [...audioState.attempts] : [];
-        const errors = Array.isArray(audioState.errors) ? [...audioState.errors] : [];
+      function snapshotDiagnostics(parityState) {
+        const raf = parityState.raf || {};
+        const rafDts = orderedDiagnosticSamples(parityState, "rafSamples", raf.dts);
+        const rafTimestamps = orderedDiagnosticSamples(parityState, "rafSamples", raf.timestamps);
         return {
-          adapterPresent: Boolean(parityState.esmApi?.dependencies?.audio?.createAudioSystem),
-          api: audioState.api || {
-            hasAudioContext: Boolean(root.AudioContext || root.webkitAudioContext),
-            hasAudioElement: Boolean(root.Audio),
-            hasMediaPlay: Boolean(root.HTMLMediaElement?.prototype?.play),
+          drawCallCount: diagnosticCount(parityState, "drawCalls", parityState.drawCalls),
+          drawCallOverflow: diagnosticOverflow(parityState, "drawCalls", parityState.drawCalls),
+          drawCalls: orderedDiagnosticSamples(parityState, "drawCalls", parityState.drawCalls),
+          pageErrorCount: diagnosticCount(parityState, "pageErrors", parityState.pageErrors),
+          pageErrorOverflow: diagnosticOverflow(parityState, "pageErrors", parityState.pageErrors),
+          pageErrors: orderedDiagnosticSamples(parityState, "pageErrors", parityState.pageErrors),
+          raf: {
+            count: Number(raf.count || 0),
+            dts: rafDts,
+            sampleCount: diagnosticCount(parityState, "rafSamples", rafDts),
+            sampleOverflow: diagnosticOverflow(parityState, "rafSamples", rafDts),
+            timestamps: rafTimestamps,
           },
-          attempts,
-          errors,
-          observed: Boolean(attempts.length || errors.length),
-          startGesture: summarizeAudioBucket(attempts, errors, "start"),
-          weaponFire: summarizeAudioBucket(attempts, errors, "weapon"),
-          menuShop: summarizeAudioBucket(attempts, errors, "menu"),
-          unscoped: summarizeAudioBucket(attempts, errors, null),
+          requestErrorCount: diagnosticCount(parityState, "requestErrors", parityState.requestErrors),
+          requestErrorOverflow: diagnosticOverflow(parityState, "requestErrors", parityState.requestErrors),
+          requestErrors: orderedDiagnosticSamples(parityState, "requestErrors", parityState.requestErrors),
+          spriteLoadRequestCount: diagnosticCount(parityState, "spriteLoadRequests", parityState.spriteLoadRequests),
+          spriteLoadRequestOverflow: diagnosticOverflow(parityState, "spriteLoadRequests", parityState.spriteLoadRequests),
+          spriteLoadRequests: orderedDiagnosticSamples(parityState, "spriteLoadRequests", parityState.spriteLoadRequests),
+          spriteLoadCount: diagnosticCount(parityState, "spriteLoads", parityState.spriteLoads),
+          spriteLoadOverflow: diagnosticOverflow(parityState, "spriteLoads", parityState.spriteLoads),
+          spriteLoads: orderedDiagnosticSamples(parityState, "spriteLoads", parityState.spriteLoads),
+          spriteRegistrationCount: diagnosticCount(parityState, "spriteRegistrations", parityState.spriteRegistrations),
+          spriteRegistrationOverflow: diagnosticOverflow(parityState, "spriteRegistrations", parityState.spriteRegistrations),
+          spriteRegistrations: orderedDiagnosticSamples(parityState, "spriteRegistrations", parityState.spriteRegistrations),
         };
       }
 
-      function summarizeAudioBucket(attempts, errors, scope) {
-        const bucketAttempts = attempts.filter((attempt) => (attempt?.scope ?? null) === scope);
-        const bucketErrors = errors.filter((error) => (error?.scope ?? null) === scope);
+      function diagnosticCount(parityState, name, samples) {
+        const count = Number(parityState?.diagnosticCounts?.[name]);
+        return Number.isFinite(count) ? count : Array.isArray(samples) ? samples.length : 0;
+      }
+
+      function diagnosticOverflow(parityState, name, samples) {
+        const overflow = Number(parityState?.diagnosticOverflows?.[name]);
+        if (Number.isFinite(overflow)) return overflow;
+        return Math.max(0, diagnosticCount(parityState, name, samples) - (Array.isArray(samples) ? samples.length : 0));
+      }
+
+      function orderedDiagnosticSamples(parityState, name, samples) {
+        if (!Array.isArray(samples)) return [];
+        const orders = Array.isArray(parityState?.diagnosticSampleOrders?.[name])
+          ? parityState.diagnosticSampleOrders[name]
+          : [];
+        return samples
+          .map((entry, index) => ({ entry, index, order: Number(orders[index] || index + 1) }))
+          .sort((left, right) => left.order - right.order || left.index - right.index)
+          .map(({ entry }) => entry);
+      }
+
+      function snapshotAudio(parityState) {
+        const audioState = parityState.audio || {};
+        const attempts = orderedDiagnosticSamples(parityState, "audioAttempts", audioState.attempts);
+        const errors = orderedDiagnosticSamples(parityState, "audioErrors", audioState.errors);
+        const attemptCount = diagnosticCount(parityState, "audioAttempts", attempts);
+        const errorCount = diagnosticCount(parityState, "audioErrors", errors);
         return {
-          attemptCount: bucketAttempts.length,
-          errorCount: bucketErrors.length,
-          firstAttempt: bucketAttempts[0] || null,
-          operations: bucketAttempts.reduce((acc, attempt) => {
-            const key = attempt?.operation || "unknown";
-            acc[key] = (acc[key] || 0) + 1;
-            return acc;
-          }, {}),
+          adapterPresent: Boolean(parityState.esmApi?.dependencies?.audio?.createAudioSystem),
+          api: {
+            hasAudioContext: Boolean(audioState.api?.hasAudioContext),
+            hasAudioElement: Boolean(audioState.api?.hasAudioElement),
+            hasMediaPlay: Boolean(audioState.api?.hasMediaPlay),
+          },
+          attemptCount,
+          attemptOverflow: diagnosticOverflow(parityState, "audioAttempts", attempts),
+          attempts,
+          errorCount,
+          errorOverflow: diagnosticOverflow(parityState, "audioErrors", errors),
+          errors,
+          observed: Boolean(attemptCount || errorCount),
+          startGesture: summarizeAudioBucket(audioState, attempts, "start"),
+          weaponFire: summarizeAudioBucket(audioState, attempts, "weapon"),
+          menuShop: summarizeAudioBucket(audioState, attempts, "menu"),
+          unscoped: summarizeAudioBucket(audioState, attempts, "unscoped"),
         };
+      }
+
+      function summarizeAudioBucket(audioState, attempts, scope) {
+        const bucket = audioState.buckets?.[scope] || {};
+        const fallbackAttempts = attempts.filter((attempt) => (attempt?.scope || "unscoped") === scope);
+        return {
+          attemptCount: Number(bucket.attemptCount || fallbackAttempts.length),
+          errorCount: Number(bucket.errorCount || 0),
+          firstAttempt: bucket.firstAttempt || fallbackAttempts[0] || null,
+          operations: Object.fromEntries(Object.entries(bucket.operations || {}).slice(0, 16)),
+        };
+      }
+
+      function snapshotSpriteIndex(spriteGroups, drawCalls) {
+        const groupNames = [
+          "backgrounds",
+          "enemies",
+          "playerAnimations",
+          "runUpgradeIcons",
+          "runUpgrades",
+          "ui",
+          "weapons",
+        ];
+        const maxEntriesPerGroup = 64;
+        const observedSources = new Set(
+          (drawCalls || []).map((entry) => normalizeSpriteSource(entry?.imageSrc || "")).filter(Boolean)
+        );
+        const definitions = Object.fromEntries(groupNames.map((name) => [name, {}]));
+        const counts = {};
+        const overflows = {};
+
+        for (const name of groupNames) {
+          const entries = Object.entries(spriteGroups?.[name] || {});
+          counts[name] = entries.length;
+          overflows[name] = 0;
+          for (const [id, value] of entries) {
+            const definition = compactSpriteDefinition(value);
+            if (!spriteDefinitionMatches(definition, observedSources)) continue;
+            if (Object.keys(definitions[name]).length >= maxEntriesPerGroup) {
+              overflows[name] += 1;
+              continue;
+            }
+            definitions[name][id] = definition;
+          }
+        }
+
+        counts.player = spriteGroups?.player ? 1 : 0;
+        overflows.player = 0;
+        const playerDefinition = compactSpriteDefinition(spriteGroups?.player);
+        if (spriteDefinitionMatches(playerDefinition, observedSources)) definitions.player = playerDefinition;
+
+        return {
+          counts,
+          definitions,
+          groups: snapshotSpriteGroups(definitions),
+          overflows,
+        };
+      }
+
+      function compactSpriteDefinition(definition) {
+        if (Array.isArray(definition)) return compactSpriteDefinition(definition[0]);
+        if (typeof definition === "string") return { src: definition };
+        if (!definition || typeof definition !== "object") return {};
+        const compact = {};
+        for (const field of ["src", "path", "iconSrc"]) {
+          if (typeof definition[field] === "string" && definition[field]) compact[field] = definition[field];
+        }
+        return compact;
+      }
+
+      function spriteDefinitionMatches(definition, observedSources) {
+        if (observedSources.size === 0) return false;
+        return [definition?.src, definition?.path, definition?.iconSrc]
+          .filter((value) => typeof value === "string" && value)
+          .some((value) => observedSources.has(normalizeSpriteSource(value)));
+      }
+
+      function normalizeSpriteSource(value) {
+        try {
+          const url = new URL(String(value || ""), document.baseURI || location.href);
+          return `${url.pathname}${url.search}`;
+        } catch {
+          return String(value || "");
+        }
       }
 
       function snapshotSpriteGroups(spriteGroups) {
@@ -1019,12 +1336,29 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     result.spriteGroups = result.snapshot?.registeredSpriteGroups || null;
     result.titleVisible = Boolean(result.snapshot?.title?.titleHidden === false);
     result.raf = result.snapshot?.diagnostics?.raf || { count: 0, dts: [], timestamps: [] };
-    result.consoleErrors = result.consoleErrors || [];
-    result.pageErrors = (result.pageErrors || []).concat(result.snapshot?.diagnostics?.pageErrors || []);
+    const snapshotDiagnostics = result.snapshot?.diagnostics || {};
+    appendRuntimeDiagnosticSamples(
+      result,
+      "pageErrors",
+      snapshotDiagnostics.pageErrors,
+      snapshotDiagnostics.pageErrorCount
+    );
     result.browserErrors = {
+      counts: {
+        consoleErrors: runtimeDiagnosticCount(result, "consoleErrors"),
+        failedRequests: runtimeDiagnosticCount(result, "failedRequests"),
+        httpFailures: runtimeDiagnosticCount(result, "httpFailures"),
+        pageErrors: runtimeDiagnosticCount(result, "pageErrors"),
+      },
       consoleErrors: result.consoleErrors,
       failedRequests: result.failedRequests,
       httpFailures: result.httpFailures,
+      overflow: {
+        consoleErrors: runtimeDiagnosticOverflow(result, "consoleErrors"),
+        failedRequests: runtimeDiagnosticOverflow(result, "failedRequests"),
+        httpFailures: runtimeDiagnosticOverflow(result, "httpFailures"),
+        pageErrors: runtimeDiagnosticOverflow(result, "pageErrors"),
+      },
       pageErrors: result.pageErrors,
     };
     result.summary = summarizeRuntime(result, origin);
@@ -1060,8 +1394,9 @@ function createRuntimeResult(mode, pagePath) {
     classified: null,
     consoleErrors: [],
     contentLoaded: false,
+    diagnosticCounts: createRuntimeDiagnosticMap(),
+    diagnosticOverflows: createRuntimeDiagnosticMap(),
     diagnostics: null,
-    drawCalls: [],
     enemyDraw: null,
     failedRequests: [],
     httpFailures: [],
@@ -1099,6 +1434,43 @@ function createRuntimeResult(mode, pagePath) {
     audioEvidence: null,
     fireEvidence: null,
   };
+}
+
+function createRuntimeDiagnosticMap() {
+  return Object.fromEntries(Object.keys(browserDiagnosticSampleLimits).map((name) => [name, 0]));
+}
+
+function recordRuntimeDiagnostic(result, name, entry) {
+  appendRuntimeDiagnosticSamples(result, name, [entry], 1);
+}
+
+function appendRuntimeDiagnosticSamples(result, name, samples, totalCount) {
+  const retained = Array.isArray(result[name]) ? result[name] : (result[name] = []);
+  const incoming = Array.isArray(samples) ? samples : [];
+  const reportedCount = Number(totalCount);
+  const count = Number.isFinite(reportedCount) ? Math.max(incoming.length, Math.floor(reportedCount)) : incoming.length;
+  const limit = Number(browserDiagnosticSampleLimits[name] || 32);
+  let inserted = 0;
+  for (const sample of incoming) {
+    if (retained.length >= limit) break;
+    retained.push(sample);
+    inserted += 1;
+  }
+  result.diagnosticCounts ||= {};
+  result.diagnosticOverflows ||= {};
+  result.diagnosticCounts[name] = Number(result.diagnosticCounts[name] || 0) + count;
+  result.diagnosticOverflows[name] = Number(result.diagnosticOverflows[name] || 0) + Math.max(0, count - inserted);
+}
+
+function runtimeDiagnosticCount(result, name) {
+  const count = Number(result?.diagnosticCounts?.[name]);
+  return Number.isFinite(count) ? count : Array.isArray(result?.[name]) ? result[name].length : 0;
+}
+
+function runtimeDiagnosticOverflow(result, name) {
+  const overflow = Number(result?.diagnosticOverflows?.[name]);
+  if (Number.isFinite(overflow)) return overflow;
+  return Math.max(0, runtimeDiagnosticCount(result, name) - (Array.isArray(result?.[name]) ? result[name].length : 0));
 }
 
 function hasClassicUpgradeProviderLifecycle(lifecycle) {
@@ -1193,20 +1565,27 @@ function compareSnapshots(classic, esm) {
   const esmFireObserved = hasWeaponFireEvidence(esmFireEvidence);
   const classicSaveProvider = classic.snapshot?.saveProvider || null;
   const classicUpgradeProvider = classic.snapshot?.upgradeProvider || null;
+  const classicConsoleErrorCount = runtimeDiagnosticCount(classic, "consoleErrors");
+  const classicPageErrorCount = runtimeDiagnosticCount(classic, "pageErrors");
+  const classicFailedRequestCount = runtimeDiagnosticCount(classic, "failedRequests");
+  const classicHttpFailureCount = runtimeDiagnosticCount(classic, "httpFailures");
+  const esmConsoleErrorCount = runtimeDiagnosticCount(esm, "consoleErrors");
+  const esmPageErrorCount = runtimeDiagnosticCount(esm, "pageErrors");
+  const esmFailedRequestCount = runtimeDiagnosticCount(esm, "failedRequests");
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
-  if ((classic.consoleErrors?.length || 0) > 0) {
-    strictFailures.push(`classic runtime emitted ${classic.consoleErrors.length} console error(s)`);
+  if (classicConsoleErrorCount > 0) {
+    strictFailures.push(`classic runtime emitted ${classicConsoleErrorCount} console error(s)`);
   }
-  if ((classic.pageErrors?.length || 0) > 0) {
-    strictFailures.push(`classic runtime emitted ${classic.pageErrors.length} page error(s)`);
+  if (classicPageErrorCount > 0) {
+    strictFailures.push(`classic runtime emitted ${classicPageErrorCount} page error(s)`);
   }
-  if ((classic.failedRequests?.length || 0) > 0) {
-    strictFailures.push(`classic runtime recorded ${classic.failedRequests.length} failed request(s)`);
+  if (classicFailedRequestCount > 0) {
+    strictFailures.push(`classic runtime recorded ${classicFailedRequestCount} failed request(s)`);
   }
-  if ((classic.httpFailures?.length || 0) > 0) {
-    strictFailures.push(`classic runtime recorded ${classic.httpFailures.length} HTTP failure(s)`);
+  if (classicHttpFailureCount > 0) {
+    strictFailures.push(`classic runtime recorded ${classicHttpFailureCount} HTTP failure(s)`);
   }
   if (!classicSaveProvider?.publisherPresent) {
     strictFailures.push("classic TapSurvivorSave publisher is missing");
@@ -1291,13 +1670,13 @@ function compareSnapshots(classic, esm) {
   ) {
     notes.push("audio remained diagnostic-only; no safe start, weapon, or menu audio attempt observed");
   }
-  if ((classic.consoleErrors?.length || 0) === 0 && (esm.consoleErrors?.length || 0) > 0) {
+  if (classicConsoleErrorCount === 0 && esmConsoleErrorCount > 0) {
     strictFailures.push("classic had no console errors but ESM did");
   }
-  if ((classic.pageErrors?.length || 0) === 0 && (esm.pageErrors?.length || 0) > 0) {
+  if (classicPageErrorCount === 0 && esmPageErrorCount > 0) {
     strictFailures.push("classic had no page errors but ESM did");
   }
-  if ((classic.failedRequests?.length || 0) === 0 && (esm.failedRequests?.length || 0) > 0) {
+  if (classicFailedRequestCount === 0 && esmFailedRequestCount > 0) {
     strictFailures.push("classic had no failed requests but ESM did");
   }
 
@@ -1355,10 +1734,10 @@ function summarizeRuntime(result, origin) {
     assetsLoaded: Boolean(snapshot.assetsLoaded),
     startControlFound: result.startControlFound,
     startClicked: result.startGameClicked,
-    consoleErrors: result.consoleErrors.length,
-    pageErrors: result.pageErrors.length,
-    failedRequests: result.failedRequests.length,
-    httpFailures: result.httpFailures.length,
+    consoleErrors: runtimeDiagnosticCount(result, "consoleErrors"),
+    pageErrors: runtimeDiagnosticCount(result, "pageErrors"),
+    failedRequests: runtimeDiagnosticCount(result, "failedRequests"),
+    httpFailures: runtimeDiagnosticCount(result, "httpFailures"),
     loadedScriptUrls: result.loadedScriptUrls.filter((url) => isLocalUrl(url, origin)),
     loadedModuleUrls: result.loadedModuleUrls.filter((url) => isLocalUrl(url, origin)),
     player: game?.player || null,
@@ -1373,8 +1752,8 @@ function summarizeRuntime(result, origin) {
     projectileSource: result.projectileEvidenceObserved?.source || game?.projectileSource || null,
     menuTabs,
     menuOpen: Boolean(result.menuEvidence?.runMenuVisible ?? snapshot.menu?.runMenuVisible ?? false),
-    audioAttempts: Array.isArray(audio?.attempts) ? audio.attempts.length : 0,
-    audioErrors: Array.isArray(audio?.errors) ? audio.errors.length : 0,
+    audioAttempts: Number(audio?.attemptCount || 0),
+    audioErrors: Number(audio?.errorCount || 0),
     audioStartAttempts: Number(audio?.startGesture?.attemptCount || 0),
     audioWeaponAttempts: Number(audio?.weaponFire?.attemptCount || 0),
     audioMenuAttempts: Number(audio?.menuShop?.attemptCount || 0),
@@ -1456,29 +1835,30 @@ function summarizeSurfaceComparisons(surfaceResults) {
 }
 
 function emitReport(finalReport) {
+  const outputReport = createBoundedReport(finalReport);
   if (cli.compactOutput) {
     console.log(
       "PARITY_RESULT " +
         JSON.stringify({
-          appLevelResult: finalReport.appLevelResult,
-          browserExecutable: finalReport.browserExecutable,
-          exitCode: finalReport.exitCode,
-          firstDivergence: finalReport.firstDivergence,
-          medium: finalReport.medium,
-          reportFile: finalReport.reportFile,
-          strictMode: finalReport.strictMode,
-          strictResult: finalReport.strictResult,
-          xdgRuntimeDir: finalReport.xdgRuntimeDir,
+          appLevelResult: outputReport.appLevelResult,
+          browserExecutable: outputReport.browserExecutable,
+          exitCode: outputReport.exitCode,
+          firstDivergence: outputReport.firstDivergence,
+          medium: outputReport.medium,
+          reportFile: outputReport.reportFile,
+          strictMode: outputReport.strictMode,
+          strictResult: outputReport.strictResult,
+          xdgRuntimeDir: outputReport.xdgRuntimeDir,
         })
     );
     return;
   }
   console.log("# Runtime Parity Harness");
-  console.log(`mode: ${finalReport.strictMode ? "strict" : "diagnostic"}`);
-  console.log(`root: ${finalReport.rootDir}`);
-  console.log(`viewport: ${finalReport.viewport.width}x${finalReport.viewport.height} @${finalReport.viewport.deviceScaleFactor}`);
-  console.log(`app result: ${finalReport.appLevelResult}`);
-  console.log("REPORT_JSON " + JSON.stringify(finalReport, null, 2));
+  console.log(`mode: ${outputReport.strictMode ? "strict" : "diagnostic"}`);
+  console.log(`root: ${outputReport.rootDir}`);
+  console.log(`viewport: ${outputReport.viewport.width}x${outputReport.viewport.height} @${outputReport.viewport.deviceScaleFactor}`);
+  console.log(`app result: ${outputReport.appLevelResult}`);
+  console.log("REPORT_JSON " + JSON.stringify(outputReport, null, 2));
 }
 
 async function waitForFrameBudget(page, result, frameCount, stepMs) {
@@ -1823,8 +2203,7 @@ function renderClassicHookScript() {
     if (updater && typeof updater.update === "function") {
       const update = updater.update.bind(updater);
       updater.update = (dt) => {
-        parity.updateCalls = parity.updateCalls || [];
-        parity.updateCalls.push(Number(dt) || 0);
+        parity.recordDiagnostic?.("updateCalls", Number(dt) || 0);
         return update(dt);
       };
     }
