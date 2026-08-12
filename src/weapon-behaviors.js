@@ -7,9 +7,7 @@
 
   const MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS = Object.freeze(["weaponBehaviors"]);
 
-  const MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS = Object.freeze([
-    "createWeaponBehaviorSystem",
-  ]);
+  const MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS = Object.freeze(["createWeaponBehaviorSystem"]);
 
   /**
    * @param {any} [options]

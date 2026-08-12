@@ -624,9 +624,7 @@
 
   const MODULE_NATIVE_ENEMY_BEHAVIOR_SLOTS = Object.freeze(["enemyBehaviors"]);
 
-  const MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS = Object.freeze([
-    "createEnemyBehaviorSystem",
-  ]);
+  const MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS = Object.freeze(["createEnemyBehaviorSystem"]);
 
   /**
    * @param {any} [options]
@@ -3582,9 +3580,7 @@
 
   const MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS = Object.freeze(["weaponBehaviors"]);
 
-  const MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS = Object.freeze([
-    "createWeaponBehaviorSystem",
-  ]);
+  const MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS = Object.freeze(["createWeaponBehaviorSystem"]);
 
   /**
    * @param {any} [options]

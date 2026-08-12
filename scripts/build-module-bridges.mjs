@@ -533,7 +533,7 @@ ${indent(classicBody, 2)}${publisherSeparator}${publisherSource}
   }
 
   await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, generatedSource);
+  await writeFile(target, normalizeGeneratedSource(generatedSource));
   console.log(`PASS generated ${target} from ${source}`);
 }
 
@@ -880,4 +880,20 @@ function indent(source, spaces) {
     .split("\n")
     .map((line) => (line ? `${prefix}${line}` : ""))
     .join("\n");
+}
+
+/**
+ * Keep generated single-string frozen slot declarations in the same shape
+ * Prettier chooses when the resulting line fits the repository print width.
+ * @param {string} source
+ * @returns {string}
+ */
+function normalizeGeneratedSource(source) {
+  return source.replace(
+    /(\n[ \t]*)const ([A-Z0-9_]+) = Object\.freeze\(\[\n[ \t]+("(?:[^"\\]|\\.)*"),\n[ \t]+\]\);/g,
+    (match, indentation, name, value) => {
+      const compact = `${indentation}const ${name} = Object.freeze([${value}]);`;
+      return compact.length <= 100 ? compact : match;
+    }
+  );
 }
