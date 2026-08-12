@@ -1330,8 +1330,12 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     result.enemyDraw = result.classified.drawCalls.find((entry) => entry.kind === "enemy" && entry.intersectsCanvas) || null;
     result.weaponDraw = result.classified.drawCalls.find((entry) => entry.kind === "weapon" && entry.intersectsCanvas) || null;
     result.menuEvidence = await collectMenuEvidence(page);
+    result.controlEvidence = await collectControlEvidence(page, mode, result.menuEvidence);
     await setAudioScope(page, null);
-    if (result.snapshot) result.snapshot.menu = result.menuEvidence;
+    if (result.snapshot) {
+      result.snapshot.controls = result.controlEvidence;
+      result.snapshot.menu = result.menuEvidence;
+    }
     result.audioEvidence = result.snapshot?.audio || null;
     result.playerVisible = Boolean(result.classified.playerCanvasVisible);
     result.loadedScriptUrls = result.scriptUrls.filter((url) => isLocalUrl(url, origin));
@@ -1401,6 +1405,7 @@ function createRuntimeResult(mode, pagePath) {
     canvasFound: false,
     classified: null,
     consoleErrors: [],
+    controlEvidence: null,
     contentLoaded: false,
     diagnosticCounts: createRuntimeDiagnosticMap(),
     diagnosticOverflows: createRuntimeDiagnosticMap(),
@@ -1524,6 +1529,8 @@ function compareSnapshots(classic, esm) {
   const esmFireEvidence = esm.fireEvidence || esm.snapshot?.game?.weaponFireEvidence || null;
   const classicFireObserved = hasWeaponFireEvidence(classicFireEvidence);
   const esmFireObserved = hasWeaponFireEvidence(esmFireEvidence);
+  const classicControls = classic.controlEvidence || classic.snapshot?.controls || null;
+  const esmControls = esm.controlEvidence || esm.snapshot?.controls || null;
   const esmRetiredPublisherPresence = esm.snapshot?.retiredPublisherPresence || {};
   const classicConsoleErrorCount = runtimeDiagnosticCount(classic, "consoleErrors");
   const classicPageErrorCount = runtimeDiagnosticCount(classic, "pageErrors");
@@ -1548,6 +1555,8 @@ function compareSnapshots(classic, esm) {
   if (classicHttpFailureCount > 0) {
     strictFailures.push(`classic runtime recorded ${classicHttpFailureCount} HTTP failure(s)`);
   }
+  appendRuntimeControlFailures(strictFailures, "classic", classicControls);
+  appendRuntimeControlFailures(strictFailures, "esm", esmControls);
   for (const name of [
     "TapSurvivorEffects",
     "TapSurvivorUpgrades",
@@ -1674,14 +1683,62 @@ function compareSnapshots(classic, esm) {
     comparisonNotes: notes,
     classicHasPlayerDraw: classicPlayerVisible,
     classicHasStartControl: classic.startControlFound,
+    classicControls,
     classicPlayer,
     classicSummary: classic.summary,
     esmHasPlayerDraw: esmPlayerVisible,
     esmHasStartControl: esm.startControlFound,
+    esmControls,
     esmPlayer,
     esmSummary: esm.summary,
     strictFailures,
   };
+}
+
+function appendRuntimeControlFailures(strictFailures, runtime, controls) {
+  if (!controls || typeof controls !== "object") {
+    strictFailures.push(`${runtime} runtime is missing control evidence`);
+    return;
+  }
+
+  const mute = controls.mute || {};
+  if (!mute.found) strictFailures.push(`${runtime} runtime is missing #muteAudio`);
+  if (!mute.clicked) strictFailures.push(`${runtime} runtime did not click #muteAudio`);
+  if (!mute.succeeded) strictFailures.push(`${runtime} runtime #muteAudio did not prove a state transition`);
+
+  const runMenu = controls.runMenu || {};
+  const menuOpen = runMenu.open || {};
+  const menuClose = runMenu.close || {};
+  if (!menuOpen.action?.found) strictFailures.push(`${runtime} runtime is missing #openMenu`);
+  if (!menuOpen.action?.clicked) strictFailures.push(`${runtime} runtime did not click #openMenu`);
+  if (!menuOpen.succeeded) strictFailures.push(`${runtime} runtime #openMenu did not make #runMenu visible`);
+  if (!menuClose.action?.found) strictFailures.push(`${runtime} runtime is missing #closeMenu`);
+  if (!menuClose.action?.clicked) strictFailures.push(`${runtime} runtime did not click #closeMenu`);
+  if (!menuClose.succeeded) {
+    strictFailures.push(`${runtime} runtime #closeMenu did not make #runMenu hidden with #openMenu aria-expanded=false`);
+  }
+
+  for (const [controlName, control] of Object.entries({
+    "#closeShop": controls.shop?.top,
+    "#closeShopBottom": controls.shop?.bottom,
+  })) {
+    if (!control) {
+      strictFailures.push(`${runtime} runtime is missing ${controlName} control evidence`);
+      continue;
+    }
+    const setup = control.setup || {};
+    const action = control.action || {};
+    const final = control.final || {};
+    if (!setup.sourceCaptured) strictFailures.push(`${runtime} runtime ${controlName} setup did not capture its source-owned shop system`);
+    if (!setup.methodAvailable) strictFailures.push(`${runtime} runtime ${controlName} setup has no callable openShop boundary`);
+    if (!setup.called) strictFailures.push(`${runtime} runtime ${controlName} setup did not call openShop`);
+    if (!setup.succeeded) strictFailures.push(`${runtime} runtime ${controlName} setup did not make #shopModal visible and pause the game`);
+    if (!action.found) strictFailures.push(`${runtime} runtime is missing ${controlName}`);
+    if (!action.clicked) strictFailures.push(`${runtime} runtime did not click ${controlName}`);
+    if (!final.succeeded) {
+      strictFailures.push(`${runtime} runtime ${controlName} did not hide #shopModal and restore an unpaused empty-reason game`);
+    }
+  }
 }
 
 function summarizeRuntime(result, origin) {
@@ -1718,6 +1775,7 @@ function summarizeRuntime(result, origin) {
     projectileSource: result.projectileEvidenceObserved?.source || game?.projectileSource || null,
     menuTabs,
     menuOpen: Boolean(result.menuEvidence?.runMenuVisible ?? snapshot.menu?.runMenuVisible ?? false),
+    controls: result.controlEvidence || snapshot.controls || null,
     audioAttempts: Number(audio?.attemptCount || 0),
     audioErrors: Number(audio?.errorCount || 0),
     audioStartAttempts: Number(audio?.startGesture?.attemptCount || 0),
@@ -1952,15 +2010,16 @@ async function collectMenuEvidence(page) {
   const result = {
     openMenuClicked: false,
     openMenuFound: false,
+    openTransition: null,
     runMenuVisible: null,
     tabs: {},
   };
 
-  result.openMenuFound = (await page.locator("#openMenu").count().catch(() => 0)) > 0;
-  if (!result.openMenuFound) return result;
-
-  result.openMenuClicked = await openMenuIfNeeded(page);
-  result.runMenuVisible = await isRunMenuVisible(page);
+  result.openTransition = await openRunMenuControl(page);
+  result.openMenuFound = Boolean(result.openTransition.action?.found);
+  result.openMenuClicked = Boolean(result.openTransition.action?.clicked);
+  result.runMenuVisible = result.openTransition.final?.visible ?? null;
+  if (!result.runMenuVisible) return result;
   await page.waitForTimeout(100);
 
   for (const tab of ["progress", "shop", "inventory"]) {
@@ -1969,6 +2028,22 @@ async function collectMenuEvidence(page) {
   }
 
   return result;
+}
+
+async function collectControlEvidence(page, mode, menuEvidence) {
+  const runMenuClose = await closeRunMenuControl(page);
+  const mute = await collectMuteControlEvidence(page);
+  return {
+    mute,
+    runMenu: {
+      close: runMenuClose,
+      open: menuEvidence?.openTransition || null,
+    },
+    shop: {
+      top: await exerciseShopCloseControl(page, mode, "#closeShop"),
+      bottom: await exerciseShopCloseControl(page, mode, "#closeShopBottom"),
+    },
+  };
 }
 
 async function setAudioScope(page, scope) {
@@ -1981,21 +2056,238 @@ async function setAudioScope(page, scope) {
   ).catch(() => {});
 }
 
-async function openMenuIfNeeded(page) {
-  if (await isRunMenuVisible(page)) return true;
-  const button = page.locator("#openMenu");
-  if ((await button.count().catch(() => 0)) === 0) return false;
-  await button.click({ timeout: 3000 }).catch(() => {});
+async function collectMuteControlEvidence(page) {
+  const before = await readMuteControlState(page);
+  const button = page.locator("#muteAudio");
+  const action = {
+    clicked: false,
+    error: "",
+    found: (await button.count().catch(() => 0)) > 0,
+  };
+  if (action.found) {
+    try {
+      await button.click({ timeout: 3000 });
+      action.clicked = true;
+    } catch (error) {
+      action.error = shortMessage(error?.message || String(error));
+    }
+  }
   await page.waitForTimeout(100);
-  return await isRunMenuVisible(page);
+  const after = await readMuteControlState(page);
+  return {
+    ...action,
+    after,
+    before,
+    succeeded:
+      Boolean(action.found && action.clicked) &&
+      before.ariaPressed !== null &&
+      after.ariaPressed !== null &&
+      before.ariaPressed !== after.ariaPressed,
+  };
 }
 
-async function isRunMenuVisible(page) {
-  return page.evaluate(() => {
-    const runMenu = document.getElementById("runMenu");
-    if (!runMenu) return null;
-    return !runMenu.classList.contains("hidden");
-  }).catch(() => null);
+async function readMuteControlState(page) {
+  return page
+    .evaluate(() => {
+      const button = document.getElementById("muteAudio");
+      return {
+        active: button ? button.classList.contains("active") : null,
+        ariaPressed: button?.getAttribute("aria-pressed") ?? null,
+        text: button?.textContent?.trim() ?? null,
+      };
+    })
+    .catch(() => ({ active: null, ariaPressed: null, text: null }));
+}
+
+async function openRunMenuControl(page) {
+  const initial = await readRunMenuState(page);
+  const button = page.locator("#openMenu");
+  const action = {
+    clicked: false,
+    error: "",
+    found: (await button.count().catch(() => 0)) > 0,
+  };
+  if (action.found && initial.hidden === true) {
+    try {
+      await button.click({ timeout: 3000 });
+      action.clicked = true;
+    } catch (error) {
+      action.error = shortMessage(error?.message || String(error));
+    }
+  }
+  await page.waitForTimeout(100);
+  const final = await readRunMenuState(page);
+  return {
+    action,
+    final,
+    initial,
+    succeeded: Boolean(action.found && action.clicked && final.visible && final.ariaExpanded === "true"),
+  };
+}
+
+async function closeRunMenuControl(page) {
+  const initial = await readRunMenuState(page);
+  const button = page.locator("#closeMenu");
+  const action = {
+    clicked: false,
+    error: "",
+    found: (await button.count().catch(() => 0)) > 0,
+  };
+  if (action.found && initial.visible === true) {
+    try {
+      await button.click({ timeout: 3000 });
+      action.clicked = true;
+    } catch (error) {
+      action.error = shortMessage(error?.message || String(error));
+    }
+  }
+  await page.waitForTimeout(100);
+  const final = await readRunMenuState(page);
+  return {
+    action,
+    final,
+    initial,
+    succeeded: Boolean(action.found && action.clicked && final.hidden && final.ariaExpanded === "false"),
+  };
+}
+
+async function readRunMenuState(page) {
+  return page
+    .evaluate(() => {
+      const runMenu = document.getElementById("runMenu");
+      const openMenu = document.getElementById("openMenu");
+      const hidden = runMenu ? runMenu.classList.contains("hidden") : null;
+      return {
+        ariaExpanded: openMenu?.getAttribute("aria-expanded") ?? null,
+        hidden,
+        runMenuFound: Boolean(runMenu),
+        visible: hidden === null ? null : !hidden,
+      };
+    })
+    .catch(() => ({ ariaExpanded: null, hidden: null, runMenuFound: false, visible: null }));
+}
+
+async function exerciseShopCloseControl(page, mode, selector) {
+  const setup = await openShopFromSourceBoundary(page, mode);
+  const action = {
+    clicked: false,
+    error: "",
+    found: false,
+    selector,
+    skipped: false,
+  };
+  if (setup.succeeded) {
+    const button = page.locator(selector);
+    action.found = (await button.count().catch(() => 0)) > 0;
+    if (action.found) {
+      try {
+        await button.click({ timeout: 3000 });
+        action.clicked = true;
+      } catch (error) {
+        action.error = shortMessage(error?.message || String(error));
+      }
+    }
+  } else {
+    action.skipped = true;
+  }
+  await page.waitForTimeout(100);
+  const final = await readShopControlState(page);
+  final.succeeded = Boolean(
+    action.found && action.clicked && final.modalHidden && final.gamePresent && final.paused === false && final.pauseReason === ""
+  );
+  return {
+    action,
+    final,
+    setup,
+    succeeded: Boolean(setup.succeeded && final.succeeded),
+  };
+}
+
+async function openShopFromSourceBoundary(page, mode) {
+  const invocation = await page
+    .evaluate((runtimeMode) => {
+      const root = globalThis;
+      const parity = root.__TapSurvivorParity || {};
+      const classicCapture = parity.classicShopSystemCapture || {};
+      const shopSystem =
+        runtimeMode === "classic"
+          ? parity.classicShopSystem
+          : parity.esmApi?.dependencies?.shopSystem;
+      const result = {
+        boundary:
+          runtimeMode === "classic"
+            ? "TapSurvivorShop.createShopSystem return"
+            : "__TapSurvivorParity.esmApi.dependencies.shopSystem",
+        callError: "",
+        called: false,
+        methodAvailable: typeof shopSystem?.openShop === "function",
+        sourceCaptured:
+          runtimeMode === "classic"
+            ? Boolean(classicCapture.captured && classicCapture.factory === "TapSurvivorShop.createShopSystem")
+            : Boolean(parity.esmApi?.dependencies?.shopSystem),
+      };
+      if (!result.methodAvailable) return result;
+      try {
+        shopSystem.openShop();
+        result.called = true;
+      } catch (error) {
+        result.callError = String(error?.message || error || "openShop failed");
+      }
+      return result;
+    }, mode)
+    .catch((error) => ({
+      boundary: mode === "classic" ? "TapSurvivorShop.createShopSystem return" : "__TapSurvivorParity.esmApi.dependencies.shopSystem",
+      callError: shortMessage(error?.message || String(error)),
+      called: false,
+      methodAvailable: false,
+      sourceCaptured: false,
+    }));
+  await page.waitForTimeout(100);
+  const state = await readShopControlState(page);
+  return {
+    ...invocation,
+    state,
+    succeeded: Boolean(
+      invocation.sourceCaptured &&
+        invocation.methodAvailable &&
+        invocation.called &&
+        state.modalVisible &&
+        state.gamePresent &&
+        state.paused === true &&
+        state.pauseReason === "shop"
+    ),
+  };
+}
+
+async function readShopControlState(page) {
+  return page
+    .evaluate(() => {
+      const root = globalThis;
+      const parity = root.__TapSurvivorParity || {};
+      const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+      const shopModal = document.getElementById("shopModal");
+      const menuShopPanel = document.getElementById("menuShopPanel");
+      const modalHidden = shopModal ? shopModal.classList.contains("hidden") : null;
+      const menuPanelHidden = menuShopPanel ? menuShopPanel.classList.contains("hidden") : null;
+      return {
+        gamePresent: Boolean(game),
+        menuPanelHidden,
+        modalFound: Boolean(shopModal),
+        modalHidden,
+        modalVisible: modalHidden === null ? null : !modalHidden,
+        pauseReason: typeof game?.pauseReason === "string" ? game.pauseReason : null,
+        paused: typeof game?.paused === "boolean" ? game.paused : null,
+      };
+    })
+    .catch(() => ({
+      gamePresent: false,
+      menuPanelHidden: null,
+      modalFound: false,
+      modalHidden: null,
+      modalVisible: null,
+      pauseReason: null,
+      paused: null,
+    }));
 }
 
 async function selectMenuTab(page, tab) {
@@ -2166,6 +2458,16 @@ function renderClassicHookScript() {
     const runtime = original.apply(context, args);
     parity.classicRuntime = runtime;
     return runtime;
+  });
+  wrapGlobal("TapSurvivorShop", "createShopSystem", (original, args, context) => {
+    const shopSystem = original.apply(context, args);
+    parity.classicShopSystem = shopSystem;
+    parity.classicShopSystemCapture = {
+      captured: Boolean(shopSystem),
+      factory: "TapSurvivorShop.createShopSystem",
+      openShopCallable: typeof shopSystem?.openShop === "function",
+    };
+    return shopSystem;
   });
 
   function wrapGlobal(globalName, methodName, wrapper) {
