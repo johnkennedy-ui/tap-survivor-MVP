@@ -19,12 +19,21 @@ import { createUpgradeContent as createModuleUpgradeContent } from "../src/modul
 import { createCombatSystem as createModuleCombatSystem } from "../src/modules/combat.js";
 import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
 import { createPickupSystem as createModulePickupSystem } from "../src/modules/pickups.js";
+import { createProgressionSystem as createModuleProgressionSystem } from "../src/modules/progression.js";
+import {
+  createQuestSystem as createModuleQuestSystem,
+  questOpenIds as moduleQuestOpenIds,
+} from "../src/modules/quests.js";
 import { createRunLifecycle as createModuleRunLifecycle } from "../src/modules/run-lifecycle.js";
 import { createRunStateSystem as createModuleRunStateSystem } from "../src/modules/run-state.js";
 import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import { createRelicSystem as createModuleRelicSystem } from "../src/modules/relics.js";
 import { createShellRelicUi as createModuleShellRelicUi } from "../src/modules/shell-relic-ui.js";
+import { createUi as createModuleUi, createUiRenderer as createModuleUiRenderer } from "../src/modules/ui.js";
+import {
+  createUiProgressionRenderer as createModuleUiProgressionRenderer,
+} from "../src/modules/ui-progression.js";
 import { createShellUiController as createModuleShellUiController } from "../src/modules/shell-ui-controller.js";
 import {
   choiceId as moduleChoiceId,
@@ -55,6 +64,8 @@ const {
 const { createSaveSystem: createModuleSaveSystem } = await import("../src/modules/save.js");
 import { createShopPricing as createModuleShopPricing } from "../src/modules/shop-pricing.js";
 import { createWeaponScaling as createModuleWeaponScaling } from "../src/modules/weapon-cooldowns.js";
+import { createWeaponBehaviorSystem as createModuleWeaponBehaviorSystem } from "../src/modules/weapon-behaviors.js";
+import { createWeaponFireSystem as createModuleWeaponFireSystem } from "../src/modules/weapon-fire.js";
 import {
   createWeaponProjectileSystem as createModuleWeaponProjectileSystem,
   rotateVector as moduleRotateVector,
@@ -157,6 +168,12 @@ const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-
 const gameBannersBridge = loadBridge("../src/game-banners.js", "src/game-banners.js");
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
+const progressionBridge = loadBridge("../src/progression.js", "src/progression.js");
+const questsBridge = loadBridge("../src/quests.js", "src/quests.js");
+const uiBridge = loadBridge("../src/ui.js", "src/ui.js");
+const uiProgressionBridge = loadBridge("../src/ui-progression.js", "src/ui-progression.js");
+const weaponBehaviorsBridge = loadBridge("../src/weapon-behaviors.js", "src/weapon-behaviors.js");
+const weaponFireBridge = loadBridge("../src/weapon-fire.js", "src/weapon-fire.js");
 const combatBridge = loadBridge("../src/combat.js", "src/combat.js");
 const runLifecycleBridge = loadBridge("../src/run-lifecycle.js", "src/run-lifecycle.js");
 const runStateBridge = loadBridge("../src/run-state.js", "src/run-state.js");
@@ -1261,6 +1278,22 @@ check(
       !gameDependenciesBridge.source.includes(`\"${name}\"`)
   )
 );
+check(
+  "selected classic publisher bridges are global-free with retired provenance",
+  [
+    [progressionBridge, "TapSurvivorProgression"],
+    [questsBridge, "TapSurvivorQuests"],
+    [uiBridge, "TapSurvivorUi"],
+    [uiProgressionBridge, "TapSurvivorUiProgression"],
+    [weaponBehaviorsBridge, "TapSurvivorWeaponBehaviors"],
+    [weaponFireBridge, "TapSurvivorWeaponFire"],
+  ].every(
+    ([bridge, name]) =>
+      bridge.context[name] === undefined &&
+      !bridge.source.includes(`globalThis.${name} =`) &&
+      bridge.source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+  )
+);
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
   bridgeGameDependencies.createGameDependencyBag
@@ -1389,9 +1422,9 @@ check(
 );
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
-check("dependency bag exposes weapon behaviors", moduleGameDependenciesSnapshot.hasWeaponBehaviors);
+check("dependency bag injects native weapon behaviors", moduleGameDependenciesSnapshot.hasWeaponBehaviors);
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
-check("dependency bag exposes weapon fire", moduleGameDependenciesSnapshot.hasWeaponFire);
+check("dependency bag injects native weapon fire", moduleGameDependenciesSnapshot.hasWeaponFire);
 check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
 check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
 check("dependency bag exposes save corruption", moduleGameDependenciesSnapshot.hasSaveCorruption);
@@ -1444,7 +1477,23 @@ check("dependency bag ignores poisoned game banner global", moduleGameDependenci
 check("dependency bag exposes native Shop factory", moduleGameDependenciesSnapshot.hasNativeShopFactory);
 check("dependency bag creates native Shop with preserved documentRef", moduleGameDependenciesSnapshot.hasNativeShop);
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
-check("dependency bag exposes UI progression", moduleGameDependenciesSnapshot.hasUiProgression);
+check("dependency bag injects native UI progression", moduleGameDependenciesSnapshot.hasUiProgression);
+check("dependency bag injects native progression", moduleGameDependenciesSnapshot.hasProgression);
+check("dependency bag injects native quests", moduleGameDependenciesSnapshot.hasQuests);
+check("dependency bag injects native UI", moduleGameDependenciesSnapshot.hasUi);
+check(
+  "module dependency bag uses the six native injected factories",
+  moduleGameDependenciesSnapshot.__bag.progression.createProgressionSystem === createModuleProgressionSystem &&
+    moduleGameDependenciesSnapshot.__bag.quests.createQuestSystem === createModuleQuestSystem &&
+    moduleGameDependenciesSnapshot.__bag.quests.questOpenIds === moduleQuestOpenIds &&
+    moduleGameDependenciesSnapshot.__bag.ui.createUi === createModuleUi &&
+    moduleGameDependenciesSnapshot.__bag.ui.createUiRenderer === createModuleUiRenderer &&
+    moduleGameDependenciesSnapshot.__bag.uiProgression.createUiProgressionRenderer ===
+      createModuleUiProgressionRenderer &&
+    moduleGameDependenciesSnapshot.__bag.weaponBehaviors.createWeaponBehaviorSystem ===
+      createModuleWeaponBehaviorSystem &&
+    moduleGameDependenciesSnapshot.__bag.weaponFire.createWeaponFireSystem === createModuleWeaponFireSystem
+);
 check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
 check(
   "dependency bag injects native upgrade content",
@@ -2340,7 +2389,18 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.math.randomRange === "function",
     hasRenderSkillRail: bag.renderSkillRail.name === "TapSurvivorRenderSkillRail",
     hasWeaponCooldowns: typeof bag.weaponCooldowns.createWeaponScaling === "function",
-    hasWeaponFire: bag.weaponFire.name === "TapSurvivorWeaponFire",
+    hasProgression: typeof bag.progression?.createProgressionSystem === "function",
+    hasQuests:
+      typeof bag.quests?.createQuestSystem === "function" &&
+      typeof bag.quests?.questOpenIds === "function",
+    hasUi:
+      typeof bag.ui?.createUi === "function" &&
+      typeof bag.ui?.createUiRenderer === "function",
+    hasUiProgression:
+      typeof bag.uiProgression?.createUiProgressionRenderer === "function",
+    hasWeaponBehaviors:
+      typeof bag.weaponBehaviors?.createWeaponBehaviorSystem === "function",
+    hasWeaponFire: typeof bag.weaponFire?.createWeaponFireSystem === "function",
     hasWeaponProjectiles:
       typeof bag.weaponProjectiles.createWeaponProjectileSystem === "function" &&
       typeof bag.weaponProjectiles.rotateVector === "function",
@@ -2381,8 +2441,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasNativeShopFactory: typeof bag.shop.createShopSystem === "function",
     hasNativeShop: Boolean(shop),
     hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
-    hasUiProgression: bag.uiProgression.name === "TapSurvivorUiProgression",
-    hasWeaponBehaviors: bag.weaponBehaviors.name === "TapSurvivorWeaponBehaviors",
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,

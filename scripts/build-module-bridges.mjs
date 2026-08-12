@@ -44,6 +44,20 @@ const bridges = [
     exports: ["createMapSystem"],
   },
   {
+    source: "src/modules/progression.js",
+    target: "src/progression.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorProgression",
+    exports: ["MODULE_NATIVE_PROGRESSION_SLOTS", "MODULE_NATIVE_PROGRESSION_PROOF_SLOTS", "createProgressionSystem"],
+  },
+  {
+    source: "src/modules/quests.js",
+    target: "src/quests.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorQuests",
+    exports: ["MODULE_NATIVE_QUEST_SLOTS", "MODULE_NATIVE_QUEST_PROOF_SLOTS", "createQuestSystem", "questOpenIds"],
+  },
+  {
     source: "src/modules/save-corruption.js",
     target: "src/save-corruption.js",
     globalName: null,
@@ -262,6 +276,14 @@ const bridges = [
         exports: ["createPickupSystem"],
       },
       {
+        source: "src/modules/progression.js",
+        exports: ["MODULE_NATIVE_PROGRESSION_SLOTS", "MODULE_NATIVE_PROGRESSION_PROOF_SLOTS", "createProgressionSystem"],
+      },
+      {
+        source: "src/modules/quests.js",
+        exports: ["MODULE_NATIVE_QUEST_SLOTS", "MODULE_NATIVE_QUEST_PROOF_SLOTS", "createQuestSystem", "questOpenIds"],
+      },
+      {
         source: "src/modules/relics.js",
         exports: ["createRelicSystem"],
       },
@@ -282,8 +304,24 @@ const bridges = [
         exports: ["createUpgradeContent"],
       },
       {
+        source: "src/modules/ui.js",
+        exports: ["MODULE_NATIVE_UI_SLOTS", "MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS", "createUi", "createUiRenderer"],
+      },
+      {
+        source: "src/modules/ui-progression.js",
+        exports: ["MODULE_NATIVE_UI_PROGRESSION_RENDERER_PROOF_SLOTS", "createUiProgressionRenderer"],
+      },
+      {
+        source: "src/modules/weapon-behaviors.js",
+        exports: ["MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS", "MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS", "createWeaponBehaviorSystem"],
+      },
+      {
         source: "src/modules/weapon-cooldowns.js",
         exports: ["createWeaponScaling"],
+      },
+      {
+        source: "src/modules/weapon-fire.js",
+        exports: ["MODULE_NATIVE_WEAPON_FIRE_SLOTS", "MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS", "createWeaponFireSystem"],
       },
       {
         source: "src/modules/weapon-projectiles.js",
@@ -362,6 +400,34 @@ const bridges = [
     target: "src/combat-damage.js",
     globalName: null,
     exports: ["createCombatDamageSystem"],
+  },
+  {
+    source: "src/modules/ui.js",
+    target: "src/ui.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorUi",
+    exports: ["MODULE_NATIVE_UI_SLOTS", "MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS", "createUi", "createUiRenderer"],
+  },
+  {
+    source: "src/modules/ui-progression.js",
+    target: "src/ui-progression.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorUiProgression",
+    exports: ["MODULE_NATIVE_UI_PROGRESSION_RENDERER_PROOF_SLOTS", "createUiProgressionRenderer"],
+  },
+  {
+    source: "src/modules/weapon-behaviors.js",
+    target: "src/weapon-behaviors.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorWeaponBehaviors",
+    exports: ["MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS", "MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS", "createWeaponBehaviorSystem"],
+  },
+  {
+    source: "src/modules/weapon-fire.js",
+    target: "src/weapon-fire.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorWeaponFire",
+    exports: ["MODULE_NATIVE_WEAPON_FIRE_SLOTS", "MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS", "createWeaponFireSystem"],
   },
 ];
 

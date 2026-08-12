@@ -1969,6 +1969,204 @@
     };
   }
 
+  const MODULE_NATIVE_PROGRESSION_SLOTS = Object.freeze(["progression"]);
+
+  const MODULE_NATIVE_PROGRESSION_PROOF_SLOTS = Object.freeze(["createProgressionSystem"]);
+
+  /**
+   * @param {{
+   *   weaponDefs: Record<string, any>,
+   *   weaponUnlocks: Array<any>,
+   *   upgradeDefs: Array<any>,
+   *   questDefs: Record<string, any>,
+   *   getSave: () => any,
+   *   openQuest: (id: string) => void,
+   *   persist: () => void,
+   *   renderMeta: () => void,
+   *   applyRunMetaUpgrades: () => void,
+   * }} options
+   */
+  function createProgressionSystem({
+    weaponDefs,
+    weaponUnlocks,
+    upgradeDefs,
+    questDefs,
+    getSave,
+    openQuest,
+    persist,
+    renderMeta,
+    applyRunMetaUpgrades,
+  }) {
+    const maxTierByUpgradeId = new Map(upgradeDefs.map((upgrade) => [upgrade.id, upgrade.maxTier]));
+
+    function hasNode(id) {
+      return getSave().unlockedNodes.includes(id);
+    }
+
+    function getUpgradeTier(id) {
+      const tier = getSave().upgradeTiers[id] || 0;
+      const maxTier = maxTierByUpgradeId.get(id);
+      return Math.min(maxTier || tier, tier);
+    }
+
+    function isQuestComplete(id) {
+      return !id || getSave().completedQuests.includes(id);
+    }
+
+    function labelUnlock(id) {
+      const unlock = weaponUnlocks.find((node) => node.id === id);
+      return unlock ? weaponDefs[unlock.weaponId].name : id;
+    }
+
+    function isNodeVisible(node) {
+      return !node.requiresNode || hasNode(node.requiresNode);
+    }
+
+    function nodeGateStatus(node) {
+      const save = getSave();
+      if (node.requiresNode && !hasNode(node.requiresNode)) {
+        return `Requires ${labelUnlock(node.requiresNode)}`;
+      }
+      if (node.requiresQuest && !isQuestComplete(node.requiresQuest)) {
+        return `Complete quest: ${questDefs[node.requiresQuest]?.name || node.requiresQuest}`;
+      }
+      if (save.questPoints < node.cost) {
+        return `Needs ${node.cost} QP`;
+      }
+      return "";
+    }
+
+    function buyWeaponUnlock(unlock) {
+      const save = getSave();
+      if (hasNode(unlock.id) || nodeGateStatus(unlock)) return;
+      save.questPoints -= unlock.cost;
+      save.unlockedNodes.push(unlock.id);
+      if (!save.unlockedWeapons.includes(unlock.weaponId)) {
+        save.unlockedWeapons.push(unlock.weaponId);
+      }
+      if (unlock.opensQuest) openQuest(unlock.opensQuest);
+      persist();
+      renderMeta();
+    }
+
+    function buyUpgrade(upgrade) {
+      const save = getSave();
+      const tier = getUpgradeTier(upgrade.id);
+      if (tier >= upgrade.maxTier) return;
+      if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return;
+      if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return;
+      if (upgrade.requiresQuest && !isQuestComplete(upgrade.requiresQuest)) return;
+      const cost = upgrade.cost[tier];
+      if (save.questPoints < cost) return;
+      save.questPoints -= cost;
+      save.upgradeTiers[upgrade.id] = tier + 1;
+      if (upgrade.opensQuest && tier === 0) openQuest(upgrade.opensQuest);
+      persist();
+      applyRunMetaUpgrades();
+      renderMeta();
+    }
+
+    return {
+      hasNode,
+      getUpgradeTier,
+      isQuestComplete,
+      isNodeVisible,
+      nodeGateStatus,
+      buyWeaponUnlock,
+      buyUpgrade,
+    };
+  }
+
+  const MODULE_NATIVE_QUEST_SLOTS = Object.freeze(["quests"]);
+
+  const MODULE_NATIVE_QUEST_PROOF_SLOTS = Object.freeze([
+    "createQuestSystem",
+    "questOpenIds",
+  ]);
+
+  /**
+   * @param {any} quest
+   */
+  function questOpenIds(quest) {
+    return [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean);
+  }
+
+  /**
+   * @param {{
+   *   getSave: () => any,
+   *   onQuestComplete?: (quest: any, reward: number) => void,
+   *   persist: () => void,
+   *   questDefs: Record<string, any>,
+   *   renderMeta: () => void,
+   * }} options
+   */
+  function createQuestSystem({ questDefs, getSave, persist, renderMeta, onQuestComplete }) {
+    function hasQuest(id) {
+      const save = getSave();
+      return save.activeQuests.includes(id) || save.completedQuests.includes(id);
+    }
+
+    function openQuest(id) {
+      const save = getSave();
+      if (!questDefs[id] || hasQuest(id)) return;
+      save.activeQuests.push(id);
+      save.questProgress[id] = save.questProgress[id] || 0;
+      persist();
+    }
+
+    function completeQuest(id) {
+      const save = getSave();
+      if (!save.activeQuests.includes(id) || save.completedQuests.includes(id)) return;
+      save.activeQuests = save.activeQuests.filter((questId) => questId !== id);
+      save.completedQuests.push(id);
+      const reward = questDefs[id].rewardQp || 0;
+      save.questPoints += reward;
+      save.totalQuestPoints += reward;
+      questOpenIds(questDefs[id]).forEach(openQuest);
+      persist();
+      renderMeta();
+      onQuestComplete?.(questDefs[id], reward);
+    }
+
+    function addQuestProgress(id, amount) {
+      const save = getSave();
+      if (!questDefs[id] || !save.activeQuests.includes(id)) return;
+      save.questProgress[id] = Math.min(
+        questDefs[id].target,
+        (save.questProgress[id] || 0) + amount,
+      );
+      if (save.questProgress[id] >= questDefs[id].target) completeQuest(id);
+    }
+
+    function addQuestProgressGroup(ids, amount) {
+      ids.forEach((questId) => addQuestProgress(questId, amount));
+    }
+
+    function addQuestProgressForWeapon(weaponId, amount) {
+      const save = getSave();
+      save.activeQuests
+        .filter((questId) => questDefs[questId]?.weaponId === weaponId)
+        .forEach((questId) => addQuestProgress(questId, amount));
+    }
+
+    function activeQuestWeaponIds() {
+      const save = getSave();
+      return save.activeQuests
+        .map((questId) => questDefs[questId]?.weaponId)
+        .filter(Boolean);
+    }
+
+    return {
+      activeQuestWeaponIds,
+      addQuestProgress,
+      addQuestProgressForWeapon,
+      addQuestProgressGroup,
+      completeQuest,
+      hasQuest,
+      openQuest,
+    };
+  }
+
   function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random }) {
     function equippedRelics(save) {
       const equipped = new Set(save.equippedRelics || []);
@@ -3039,6 +3237,668 @@
     };
   }
 
+  const MODULE_NATIVE_UI_SLOTS = Object.freeze([
+    "canvas",
+    "choices",
+    "closeEnd",
+    "closeEndX",
+    "closeLevelUp",
+    "closeMenu",
+    "closeShop",
+    "closeShopBottom",
+    "debugPanel",
+    "debugStats",
+    "endScreen",
+    "exitRun",
+    "fullscreenButton",
+    "levelUp",
+    "menuInventoryPanel",
+    "menuInventoryTab",
+    "menuProgressPanel",
+    "menuProgressTab",
+    "menuQpHud",
+    "menuQuests",
+    "menuRelicInventory",
+    "menuRelicSlots",
+    "menuShopCoinHud",
+    "menuShopItems",
+    "menuShopNotice",
+    "menuShopPanel",
+    "menuShopTab",
+    "menuTree",
+    "muteAudio",
+    "openMenu",
+    "questBanner",
+    "relicChoice",
+    "relicChoices",
+    "relicChoiceText",
+    "relicChoiceTitle",
+    "runHud",
+    "runMenu",
+    "runStats",
+    "shopCoinHud",
+    "shopItems",
+    "shopModal",
+    "shopNotice",
+    "speedButtons",
+    "startTransition",
+    "titleScreen",
+    "titleStartGame",
+    "toggleDebug",
+  ]);
+
+  const MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS = Object.freeze([
+    "createUi",
+    "createUiRenderer",
+  ]);
+
+  /**
+   * @typedef {object} UiRendererOptions
+   * @property {*} [ui]
+   * @property {*} [uiProgression]
+   * @property {*} [weaponDefs]
+   * @property {*} [weaponUnlocks]
+   * @property {*} [upgradeDefs]
+   * @property {*} [questDefs]
+   * @property {() => *} [getSave]
+   * @property {(upgradeId: string) => number} [getUpgradeTier]
+   * @property {(nodeId: string) => boolean} [hasNode]
+   * @property {(unlock: *) => boolean} [isNodeVisible]
+   * @property {(questId: string) => boolean} [isQuestComplete]
+   * @property {(unlock: *) => string | null | undefined} [nodeGateStatus]
+   * @property {(unlock: *) => *} [buyWeaponUnlock]
+   * @property {(upgrade: *) => *} [buyUpgrade]
+   */
+
+  function createUi(options = {}) {
+    const documentRef = options.documentRef;
+    const canvas = options.canvas || documentRef?.getElementById?.("game") || null;
+    const get = (id) => documentRef?.getElementById?.(id) || null;
+
+    return {
+      canvas,
+      choices: get("choices"),
+      closeEnd: get("closeEnd"),
+      closeEndX: get("closeEndX"),
+      closeLevelUp: get("closeLevelUp"),
+      closeMenu: get("closeMenu"),
+      closeShop: get("closeShop"),
+      closeShopBottom: get("closeShopBottom"),
+      debugPanel: get("debugPanel"),
+      debugStats: get("debugStats"),
+      endScreen: get("endScreen"),
+      exitRun: get("exitRun"),
+      fullscreenButton: get("fullscreenButton"),
+      levelUp: get("levelUp"),
+      menuInventoryPanel: get("menuInventoryPanel"),
+      menuInventoryTab: get("menuInventoryTab"),
+      menuProgressPanel: get("menuProgressPanel"),
+      menuProgressTab: get("menuProgressTab"),
+      menuQpHud: get("menuQpHud"),
+      menuQuests: get("menuQuests"),
+      menuRelicInventory: get("menuRelicInventory"),
+      menuRelicSlots: get("menuRelicSlots"),
+      menuShopCoinHud: get("menuShopCoinHud"),
+      menuShopItems: get("menuShopItems"),
+      menuShopNotice: get("menuShopNotice"),
+      menuShopPanel: get("menuShopPanel"),
+      menuShopTab: get("menuShopTab"),
+      menuTree: get("menuTree"),
+      muteAudio: get("muteAudio"),
+      openMenu: get("openMenu"),
+      questBanner: get("questBanner"),
+      relicChoice: get("relicChoice"),
+      relicChoices: get("relicChoices"),
+      relicChoiceText: get("relicChoiceText"),
+      relicChoiceTitle: get("relicChoiceTitle"),
+      runHud: get("runHud"),
+      runMenu: get("runMenu"),
+      runStats: get("runStats"),
+      shopCoinHud: get("shopCoinHud"),
+      shopItems: get("shopItems"),
+      shopModal: get("shopModal"),
+      shopNotice: get("shopNotice"),
+      speedButtons: [...(documentRef?.querySelectorAll?.("[data-speed]") || [])],
+      startTransition: get("startTransition"),
+      titleScreen: get("titleScreen"),
+      titleStartGame: get("titleStartGame"),
+      toggleDebug: get("toggleDebug"),
+    };
+  }
+
+  /**
+   * @param {UiRendererOptions} [options]
+   */
+  function createUiRenderer({
+    ui,
+    uiProgression,
+    weaponDefs,
+    weaponUnlocks,
+    upgradeDefs,
+    questDefs,
+    getSave,
+    getUpgradeTier,
+    hasNode,
+    isNodeVisible,
+    isQuestComplete,
+    nodeGateStatus,
+    buyWeaponUnlock,
+    buyUpgrade,
+  } = {}) {
+    if (!ui || typeof ui !== "object") {
+      throw new Error("Missing Tap Survivor module UI dependency: ui");
+    }
+    if (!uiProgression || typeof uiProgression.createUiProgressionRenderer !== "function") {
+      throw new Error("Missing Tap Survivor module UI dependency: uiProgression");
+    }
+
+    return uiProgression.createUiProgressionRenderer({
+      ui,
+      weaponDefs,
+      weaponUnlocks,
+      upgradeDefs,
+      questDefs,
+      getSave,
+      getUpgradeTier,
+      hasNode,
+      isNodeVisible,
+      isQuestComplete,
+      nodeGateStatus,
+      buyWeaponUnlock,
+      buyUpgrade,
+    });
+  }
+
+  const MODULE_NATIVE_UI_PROGRESSION_RENDERER_PROOF_SLOTS = Object.freeze([
+    "renderMeta",
+    "renderTree",
+    "renderQuests",
+  ]);
+
+  /**
+   * @typedef {object} UiProgressionRendererOptions
+   * @property {*} [ui]
+   * @property {*} [weaponDefs]
+   * @property {*} [weaponUnlocks]
+   * @property {*} [upgradeDefs]
+   * @property {*} [questDefs]
+   * @property {() => *} [getSave]
+   * @property {(upgradeId: string) => number} [getUpgradeTier]
+   * @property {(nodeId: string) => boolean} [hasNode]
+   * @property {(unlock: *) => boolean} [isNodeVisible]
+   * @property {(questId: string) => boolean} [isQuestComplete]
+   * @property {(unlock: *) => string | null | undefined} [nodeGateStatus]
+   * @property {(unlock: *) => *} [buyWeaponUnlock]
+   * @property {(upgrade: *) => *} [buyUpgrade]
+   * @property {Document} [documentRef]
+   */
+
+  /**
+   * @param {UiProgressionRendererOptions} [options]
+   */
+  function createUiProgressionRenderer({
+    ui,
+    weaponDefs,
+    weaponUnlocks,
+    upgradeDefs,
+    questDefs,
+    getSave,
+    getUpgradeTier,
+    hasNode,
+    isNodeVisible,
+    isQuestComplete,
+    nodeGateStatus,
+    buyWeaponUnlock,
+    buyUpgrade,
+    documentRef,
+  } = {}) {
+    const resolvedUi = requireObject(ui, "ui");
+
+    function renderMeta() {
+      const save = getSave();
+      const qpText = `Coins: ${save.coins} | Quest Points: ${save.questPoints} available, ${save.totalQuestPoints} earned.`;
+      resolvedUi.menuQpHud.textContent = qpText;
+
+      renderTree(resolvedUi.menuTree);
+      renderQuests(resolvedUi.menuQuests);
+    }
+
+    function renderTree(container) {
+      const doc = requireDocument(documentRef);
+      const save = getSave();
+      container.innerHTML = "";
+      const availableWeaponUnlocks = weaponUnlocks.filter(
+        (unlock) => !hasNode(unlock.id) && isNodeVisible(unlock)
+      );
+      const availableUpgrades = upgradeDefs.filter((upgrade) => {
+        const tier = getUpgradeTier(upgrade.id);
+        if (tier >= upgrade.maxTier) return false;
+        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return false;
+        if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return false;
+        return !upgrade.requiresQuest || isQuestComplete(upgrade.requiresQuest);
+      });
+
+      if (!availableWeaponUnlocks.length && !availableUpgrades.length) {
+        const empty = doc.createElement("div");
+        empty.className = "node";
+        empty.textContent = "No available skill nodes. Complete active quests to reveal the next branch.";
+        container.appendChild(empty);
+        return;
+      }
+
+      availableWeaponUnlocks.forEach((unlock) => {
+        const weapon = weaponDefs[unlock.weaponId];
+        const gateStatus = nodeGateStatus(unlock);
+        const el = doc.createElement("div");
+        el.className = `node ${gateStatus ? "locked" : "available"}`;
+        el.innerHTML = `
+          <strong>Unlock ${weapon.name}</strong>
+          <span>${weapon.description}</span><br />
+          <span>Branch: ${unlock.branch} | Cost: ${unlock.cost} QP</span><br />
+          <span>${gateStatus || "Ready to unlock"}</span>
+        `;
+        const button = doc.createElement("button");
+        button.textContent = gateStatus ? "Locked" : "Unlock";
+        button.disabled = Boolean(gateStatus);
+        button.addEventListener("click", () => buyWeaponUnlock(unlock));
+        el.appendChild(button);
+        container.appendChild(el);
+      });
+
+      availableUpgrades.forEach((upgrade) => {
+        const save = getSave();
+        const tier = getUpgradeTier(upgrade.id);
+        const nextCost = upgrade.cost[tier];
+        const canBuy = save.questPoints >= nextCost;
+        const el = doc.createElement("div");
+        el.className = `node ${canBuy ? "available" : "locked"}`;
+        el.innerHTML = `
+          <strong>${upgrade.name}</strong>
+          <span>${upgrade.description}</span><br />
+          <span>Tier: ${tier}/${upgrade.maxTier}</span><br />
+          <span>${canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`}</span>
+        `;
+        const button = doc.createElement("button");
+        button.textContent = `Buy Tier ${tier + 1}`;
+        button.disabled = !canBuy;
+        button.addEventListener("click", () => buyUpgrade(upgrade));
+        el.appendChild(button);
+        container.appendChild(el);
+      });
+    }
+
+    function renderQuests(container) {
+      const doc = requireDocument(documentRef);
+      const save = getSave();
+      container.innerHTML = "";
+      const activeQuestIds = Object.keys(questDefs).filter((id) => save.activeQuests.includes(id));
+      if (!activeQuestIds.length) {
+        const empty = doc.createElement("div");
+        empty.className = "quest";
+        empty.textContent = "No active quests. Unlock the next available skill node to reveal one.";
+        container.appendChild(empty);
+        return;
+      }
+
+      activeQuestIds.forEach((id) => {
+        const quest = questDefs[id];
+        const progress = save.questProgress[id] || 0;
+        const el = doc.createElement("div");
+        el.className = "quest active";
+        el.innerHTML = `
+          <strong>${quest.name}</strong>
+          <span>${quest.description}</span><br />
+          <span>Status: Active</span><br />
+          <span>Progress: ${Math.floor(progress)} / ${quest.target}</span><br />
+          <span>Reward: ${quest.rewardQp} QP</span>
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    return {
+      renderMeta,
+      renderQuests,
+      renderTree,
+    };
+  }
+
+  function requireObject(value, name) {
+    if (!value || typeof value !== "object") {
+      throw new Error(`Missing Tap Survivor module UI progression dependency: ${name}`);
+    }
+    return value;
+  }
+
+  function requireDocument(documentRef) {
+    if (!documentRef || typeof documentRef.createElement !== "function") {
+      throw new Error("Missing Tap Survivor module UI progression dependency: documentRef");
+    }
+    return documentRef;
+  }
+
+  const MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS = Object.freeze(["weaponBehaviors"]);
+
+  const MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS = Object.freeze([
+    "createWeaponBehaviorSystem",
+  ]);
+
+  /**
+   * @param {any} [options]
+   */
+  function createWeaponBehaviorSystem({
+    weaponDefs,
+    getGame,
+    nearestEnemy,
+    weaponDamage,
+    weaponReach,
+    weaponWidth,
+    damageEnemy,
+    reapEnemies,
+    addQuestProgress,
+    distance,
+  } = {}) {
+    function fireBeam(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const target = nearestEnemy();
+      if (!target) return;
+      const p = game.player;
+      const dx = target.x - p.x;
+      const dy = target.y - p.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const dirX = dx / dist;
+      const dirY = dy / dist;
+      let dealt = 0;
+
+      game.enemies.forEach((enemy) => {
+        const toEnemyX = enemy.x - p.x;
+        const toEnemyY = enemy.y - p.y;
+        const along = toEnemyX * dirX + toEnemyY * dirY;
+        const reach = weaponReach(weapon);
+        if (along < 0 || along > reach) return;
+        const side = Math.abs(toEnemyX * dirY - toEnemyY * dirX);
+        if (side <= weaponWidth(weapon) + enemy.radius) {
+          dealt += damageEnemy(enemy, weaponDamage(weaponId), weaponId);
+        }
+      });
+
+      if (dealt > 0 && weaponId === "prism_beam") {
+        game.laserDamage += dealt;
+        addQuestProgress("use_laser_run", 1);
+      }
+
+      game.beams.push({
+        weaponId,
+        x: p.x,
+        y: p.y,
+        endX: p.x + dirX * weaponReach(weapon),
+        endY: p.y + dirY * weaponReach(weapon),
+        width: weaponWidth(weapon),
+        color: weapon.color,
+        life: 0.16,
+      });
+      reapEnemies();
+    }
+
+    function fireCone(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const target = nearestEnemy();
+      if (!target) return;
+      const p = game.player;
+      const dx = target.x - p.x;
+      const dy = target.y - p.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      const dirX = dx / dist;
+      const dirY = dy / dist;
+      game.enemies.forEach((enemy) => {
+        const toEnemyX = enemy.x - p.x;
+        const toEnemyY = enemy.y - p.y;
+        const along = toEnemyX * dirX + toEnemyY * dirY;
+        const reach = weaponReach(weapon);
+        if (along < 0 || along > reach) return;
+        const side = Math.abs(toEnemyX * dirY - toEnemyY * dirX);
+        if (side <= weaponWidth(weapon)) damageEnemy(enemy, weaponDamage(weaponId), weaponId);
+      });
+      game.beams.push({
+        weaponId,
+        x: p.x,
+        y: p.y,
+        endX: p.x + dirX * weaponReach(weapon),
+        endY: p.y + dirY * weaponReach(weapon),
+        width: weaponWidth(weapon),
+        color: weapon.color,
+        life: 0.14,
+      });
+      reapEnemies();
+    }
+
+    function fireRadial(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const p = game.player;
+      const reach = weaponReach(weapon);
+      game.enemies.forEach((enemy) => {
+        if (distance(p, enemy) <= reach + enemy.radius) {
+          damageEnemy(enemy, weaponDamage(weaponId), weaponId);
+        }
+      });
+      if (weaponId === "shield_pulse") {
+        chargeProjectileBlock(destroyEnemyProjectilesInRange(p, reach));
+      }
+      game.areas.push({
+        weaponId,
+        x: p.x,
+        y: p.y,
+        radius: reach,
+        color: weapon.color,
+        life: 0.24,
+        visualOnly: true,
+      });
+      reapEnemies();
+    }
+
+    function destroyEnemyProjectilesInRange(player, reach) {
+      const game = getGame();
+      let destroyed = 0;
+      game.enemyBolts.forEach((bolt) => {
+        if (bolt.life > 0 && distance(player, bolt) <= reach + bolt.radius) {
+          bolt.life = 0;
+          destroyed += 1;
+        }
+      });
+      game.enemyBolts = game.enemyBolts.filter((bolt) => bolt.life > 0);
+      return destroyed;
+    }
+
+    function chargeProjectileBlock(amount) {
+      const game = getGame();
+      const p = game.player;
+      if (!amount || p.projectileBlockReady) return;
+      p.projectileBlockCharge = Math.min(p.projectileBlockNeeded, p.projectileBlockCharge + amount);
+      if (p.projectileBlockCharge >= p.projectileBlockNeeded) {
+        p.projectileBlockReady = true;
+        p.projectileBlockCharge = p.projectileBlockNeeded;
+      }
+    }
+
+    function fireChain(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const p = game.player;
+      const targets = [...game.enemies]
+        .sort((a, b) => distance(p, a) - distance(p, b))
+        .slice(0, weapon.jumps);
+      let from = p;
+      targets.forEach((enemy) => {
+        if (distance(from, enemy) > weaponReach(weapon)) return;
+        damageEnemy(enemy, weaponDamage(weaponId), weaponId);
+        game.beams.push({
+          weaponId,
+          x: from.x,
+          y: from.y,
+          endX: enemy.x,
+          endY: enemy.y,
+          width: 4,
+          color: weapon.color,
+          life: 0.12,
+        });
+        from = enemy;
+      });
+      reapEnemies();
+    }
+
+    function fireTargetArea(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const target = nearestEnemy();
+      if (!target) return;
+      game.enemies.forEach((enemy) => {
+        if (distance(target, enemy) <= weaponReach(weapon) + enemy.radius) {
+          damageEnemy(enemy, weaponDamage(weaponId), weaponId);
+        }
+      });
+      game.areas.push({
+        weaponId,
+        x: target.x,
+        y: target.y,
+        radius: weaponReach(weapon),
+        color: weapon.color,
+        life: 0.28,
+        visualOnly: true,
+      });
+      reapEnemies();
+    }
+
+    function fireLingeringArea(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const target = nearestEnemy();
+      if (!target) return;
+      game.areas.push({
+        weaponId,
+        x: target.x,
+        y: target.y,
+        radius: weaponReach(weapon),
+        color: weapon.color,
+        life: weapon.duration,
+        tick: weapon.tick,
+        tickTimer: 0,
+        damage: weaponDamage(weaponId),
+      });
+    }
+
+    function fireMine(weaponId) {
+      const game = getGame();
+      const weapon = weaponDefs[weaponId];
+      const p = game.player;
+      const facing = playerFacingVector(p);
+      const armDelay = mineArmDelay(weapon);
+      game.areas.push({
+        weaponId,
+        x: p.x - facing.x * mineSpawnOffset(weapon),
+        y: p.y - facing.y * mineSpawnOffset(weapon),
+        radius: weaponReach(weapon),
+        color: weapon.color,
+        life: armDelay + mineExplosionLife(weapon),
+        armDelay,
+        explosionLife: mineExplosionLife(weapon),
+        damageOnce: true,
+        damage: weaponDamage(weaponId),
+      });
+    }
+
+    function updateAreas(dt) {
+      const game = getGame();
+      game.areas.forEach((area) => {
+        area.life -= dt;
+        if (area.visualOnly || !area.weaponId) return;
+        if (area.armDelay > 0) {
+          area.armDelay = Math.max(0, area.armDelay - dt);
+          if (area.armDelay > 0) return;
+        }
+        if (area.damageOnce) {
+          if (!area.exploded) {
+            damageEnemiesInArea(area);
+            area.exploded = true;
+            area.life = Math.min(area.life, area.explosionLife || 0.28);
+          }
+          return;
+        }
+        area.tickTimer -= dt;
+        if (area.tickTimer > 0) return;
+        area.tickTimer = area.tick;
+        damageEnemiesInArea(area);
+      });
+      game.areas = game.areas.filter((area) => area.life > 0);
+      reapEnemies();
+    }
+
+    function damageEnemiesInArea(area) {
+      const game = getGame();
+      game.enemies.forEach((enemy) => {
+        if (distance(area, enemy) <= area.radius + enemy.radius) {
+          damageEnemy(enemy, area.damage, area.weaponId);
+        }
+      });
+    }
+
+    function playerFacingVector(player) {
+      if (Number.isFinite(player.facingX) && Number.isFinite(player.facingY)) {
+        const length = Math.hypot(player.facingX, player.facingY);
+        if (length > 0) return { x: player.facingX / length, y: player.facingY / length };
+      }
+      const dx = player.targetX - player.x;
+      const dy = player.targetY - player.y;
+      const distanceToTarget = Math.hypot(dx, dy);
+      if (distanceToTarget > 0) return { x: dx / distanceToTarget, y: dy / distanceToTarget };
+      return { x: 0, y: 1 };
+    }
+
+    function mineArmDelay(weapon) {
+      return Number.isFinite(weapon.armDelay) ? weapon.armDelay : 2;
+    }
+
+    function mineExplosionLife(weapon) {
+      return Number.isFinite(weapon.explosionLife) ? weapon.explosionLife : 0.32;
+    }
+
+    function mineSpawnOffset(weapon) {
+      return Math.max(24, weapon.spawnOffset || 58);
+    }
+
+    function updateBeams(dt) {
+      const game = getGame();
+      game.beams.forEach((beam) => (beam.life -= dt));
+      game.beams = game.beams.filter((beam) => beam.life > 0);
+    }
+
+    function updateWeaponBursts(dt) {
+      const game = getGame();
+      game.weaponBursts.forEach((burst) => (burst.life -= dt));
+      game.weaponBursts = game.weaponBursts.filter((burst) => burst.life > 0);
+      Object.entries(game.weaponIconFlashes || {}).forEach(([weaponId, flash]) => {
+        const next = flash - dt * 3.6;
+        if (next > 0) game.weaponIconFlashes[weaponId] = next;
+        else delete game.weaponIconFlashes[weaponId];
+      });
+    }
+
+    return {
+      fireBeam,
+      fireChain,
+      fireCone,
+      fireLingeringArea,
+      fireMine,
+      fireRadial,
+      fireTargetArea,
+      updateAreas,
+      updateBeams,
+      updateWeaponBursts,
+    };
+  }
+
   /**
    * @typedef {{
    *   id?: string,
@@ -3187,6 +4047,158 @@
       weaponReach,
       weaponSfxOptions,
       weaponWidth,
+    };
+  }
+
+  const MODULE_NATIVE_WEAPON_FIRE_SLOTS = Object.freeze(["weaponFire"]);
+
+  const MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS = Object.freeze(["createWeaponFireSystem"]);
+
+  /**
+   * @param {any} [options]
+   */
+  function createWeaponFireSystem({
+    canvas,
+    content,
+    weaponDefs,
+    getGame,
+    getUpgradeTier,
+    getRunUpgradeTier,
+    getShopBonuses,
+    getRelicSpecialEffects,
+    getWeaponDamageMultiplier,
+    playWeaponSfx,
+    addQuestProgress,
+    damageEnemy,
+    reapEnemies,
+    distance,
+    clamp,
+    weaponBehaviors,
+    weaponCooldowns,
+    weaponProjectiles,
+    weaponTargeting,
+  } = {}) {
+    const nearestEnemy = () => weaponTargeting.nearestEnemy(getGame(), distance);
+    const scaling = weaponCooldowns.createWeaponScaling({
+      content,
+      weaponDefs,
+      getUpgradeTier,
+      getRunUpgradeTier,
+      getShopBonuses,
+      getRelicSpecialEffects,
+      getWeaponDamageMultiplier,
+      clamp,
+    });
+    const projectileSystem = weaponProjectiles.createWeaponProjectileSystem({
+      canvas,
+      weaponDefs,
+      getGame,
+      getRunUpgradeTier,
+      getRelicSpecialEffects,
+      nearestEnemy,
+      projectileRadius: scaling.projectileRadius,
+      weaponDamage: scaling.weaponDamage,
+      projectileSkillModifier: scaling.projectileSkillModifier,
+      damageEnemy,
+      reapEnemies,
+      distance,
+      clamp,
+    });
+    const behaviorSystem = weaponBehaviors.createWeaponBehaviorSystem({
+      weaponDefs,
+      getGame,
+      nearestEnemy,
+      weaponDamage: scaling.weaponDamage,
+      weaponReach: scaling.weaponReach,
+      weaponWidth: scaling.weaponWidth,
+      damageEnemy,
+      reapEnemies,
+      addQuestProgress,
+      distance,
+    });
+
+    const weaponKindHandlers = {
+      radial: behaviorSystem.fireRadial,
+      beam: behaviorSystem.fireBeam,
+      cone: behaviorSystem.fireCone,
+      chain: behaviorSystem.fireChain,
+      projectile: projectileSystem.fireProjectile,
+      target_area: behaviorSystem.fireTargetArea,
+      lingering_area: behaviorSystem.fireLingeringArea,
+      mine: behaviorSystem.fireMine,
+    };
+
+    function updateWeapons(dt) {
+      const game = getGame();
+      game.player.equippedWeapons.forEach((weaponId) => {
+        const weapon = weaponDefs[weaponId];
+        game.weaponTimers[weaponId] = (game.weaponTimers[weaponId] || 0) - dt;
+        if (game.weaponTimers[weaponId] <= 0) {
+          game.weaponTimers[weaponId] = scaling.weaponCooldown(weapon);
+          fireWeapon(weaponId);
+        }
+      });
+    }
+
+    function fireWeapon(weaponId) {
+      const weapon = weaponDefs[weaponId];
+      if (!weapon) return;
+      setPlayerAttackAnimation(weapon);
+      playWeaponSfx?.(weaponId, weaponSfxOptions(weapon));
+      flashWeaponIcon(weaponId);
+      addWeaponBurst(weaponId, weapon);
+      weaponKindHandlers[weapon.kind]?.(weaponId);
+    }
+
+    function weaponSfxOptions(weapon) {
+      return scaling.weaponSfxOptions(weapon);
+    }
+
+    function flashWeaponIcon(weaponId) {
+      const game = getGame();
+      game.weaponIconFlashes ||= {};
+      game.weaponIconFlashes[weaponId] = 1;
+    }
+
+    function setPlayerAttackAnimation(weapon) {
+      const player = getGame()?.player;
+      if (!player) return;
+      player.actionSprite = playerAttackSprite(weapon.kind);
+      player.actionTimer = 0.22;
+    }
+
+    function playerAttackSprite(kind) {
+      if (kind === "beam" || kind === "cone" || kind === "chain") return "cast_beam";
+      if (
+        kind === "radial" ||
+        kind === "target_area" ||
+        kind === "lingering_area" ||
+        kind === "mine"
+      )
+        return "sweep";
+      return "cast_orb";
+    }
+
+    function addWeaponBurst(weaponId, weapon) {
+      const game = getGame();
+      const p = game.player;
+      game.weaponBursts.push({
+        weaponId,
+        x: p.x,
+        y: p.y,
+        radius: Math.max(20, weapon.radius || weapon.width || 26),
+        color: weapon.color,
+        life: 0.32,
+        maxLife: 0.32,
+      });
+    }
+
+    return {
+      updateWeapons,
+      updateBolts: projectileSystem.updateBolts,
+      updateAreas: behaviorSystem.updateAreas,
+      updateBeams: behaviorSystem.updateBeams,
+      updateWeaponBursts: behaviorSystem.updateWeaponBursts,
     };
   }
 
@@ -3879,8 +4891,8 @@
       mapSystem: { createMapSystem },
       math: { clamp, distance, formatTime, randomRange },
       pickups: { createPickupSystem },
-      progression: requireGlobal(globalRef, "TapSurvivorProgression"),
-      quests: requireGlobal(globalRef, "TapSurvivorQuests"),
+      progression: { createProgressionSystem },
+      quests: { createQuestSystem, questOpenIds },
       relics: { createRelicSystem },
       renderEnemies: requireGlobal(globalRef, "TapSurvivorRenderEnemies"),
       renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
@@ -3907,12 +4919,12 @@
       shopPricing: { createShopPricing },
       sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
       storage,
-      ui: requireGlobal(globalRef, "TapSurvivorUi"),
-      uiProgression: requireGlobal(globalRef, "TapSurvivorUiProgression"),
+      ui: { createUi, createUiRenderer },
+      uiProgression: { createUiProgressionRenderer },
       upgrades,
-      weaponBehaviors: requireGlobal(globalRef, "TapSurvivorWeaponBehaviors"),
+      weaponBehaviors: { createWeaponBehaviorSystem },
       weaponCooldowns: { createWeaponScaling },
-      weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
+      weaponFire: { createWeaponFireSystem },
       weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
       weaponTargeting: { nearestEnemy },
     };

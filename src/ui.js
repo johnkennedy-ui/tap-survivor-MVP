@@ -1,76 +1,145 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/ui.js
+// Run: npm run build:bridges
+// Retired global: TapSurvivorUi. Exports are supplied through the game dependency bag.
 (() => {
-function createUi() {
-  return {
-    canvas: document.getElementById("game"),
-    titleScreen: document.getElementById("titleScreen"),
-    titleStartGame: document.getElementById("titleStartGame"),
-    startTransition: document.getElementById("startTransition"),
-    openShop: document.getElementById("openShop"),
-    resetSave: document.getElementById("resetSave"),
-    toggleDebug: document.getElementById("toggleDebug"),
-    fullscreenButton: document.getElementById("fullscreenButton"),
-    muteAudio: document.getElementById("muteAudio"),
-    openMenu: document.getElementById("openMenu"),
-    questBanner: document.getElementById("questBanner"),
-    exitRun: document.getElementById("exitRun"),
-    closeMenu: document.getElementById("closeMenu"),
-    closeShop: document.getElementById("closeShop"),
-    closeShopBottom: document.getElementById("closeShopBottom"),
-    closeLevelUp: document.getElementById("closeLevelUp"),
-    menuProgressTab: document.getElementById("menuProgressTab"),
-    menuInventoryTab: document.getElementById("menuInventoryTab"),
-    menuShopTab: document.getElementById("menuShopTab"),
-    menuProgressPanel: document.getElementById("menuProgressPanel"),
-    menuInventoryPanel: document.getElementById("menuInventoryPanel"),
-    menuShopPanel: document.getElementById("menuShopPanel"),
-    speedButtons: [...document.querySelectorAll("[data-speed]")],
-    runMenu: document.getElementById("runMenu"),
-    shopModal: document.getElementById("shopModal"),
-    shopCoinHud: document.getElementById("shopCoinHud"),
-    shopNotice: document.getElementById("shopNotice"),
-    shopItems: document.getElementById("shopItems"),
-    menuShopCoinHud: document.getElementById("menuShopCoinHud"),
-    menuShopNotice: document.getElementById("menuShopNotice"),
-    menuShopItems: document.getElementById("menuShopItems"),
-    menuRelicSlots: document.getElementById("menuRelicSlots"),
-    menuRelicInventory: document.getElementById("menuRelicInventory"),
-    runHud: document.getElementById("runHud"),
-    debugPanel: document.getElementById("debugPanel"),
-    debugStats: document.getElementById("debugStats"),
-    menuQpHud: document.getElementById("menuQpHud"),
-    menuTree: document.getElementById("menuTree"),
-    menuQuests: document.getElementById("menuQuests"),
-    levelUp: document.getElementById("levelUp"),
-    choices: document.getElementById("choices"),
-    relicChoice: document.getElementById("relicChoice"),
-    relicChoiceTitle: document.getElementById("relicChoiceTitle"),
-    relicChoiceText: document.getElementById("relicChoiceText"),
-    relicChoices: document.getElementById("relicChoices"),
-    endScreen: document.getElementById("endScreen"),
-    runStats: document.getElementById("runStats"),
-    closeEnd: document.getElementById("closeEnd"),
-    closeEndX: document.getElementById("closeEndX"),
-  };
-}
+  "use strict";
 
-function createUiRenderer({
-  ui,
-  uiProgression,
-  weaponDefs,
-  weaponUnlocks,
-  upgradeDefs,
-  questDefs,
-  getSave,
-  getUpgradeTier,
-  hasNode,
-  isNodeVisible,
-  isQuestComplete,
-  nodeGateStatus,
-  buyWeaponUnlock,
-  buyUpgrade,
-}) {
-  return uiProgression.createUiProgressionRenderer({
+  const MODULE_NATIVE_UI_SLOTS = Object.freeze([
+    "canvas",
+    "choices",
+    "closeEnd",
+    "closeEndX",
+    "closeLevelUp",
+    "closeMenu",
+    "closeShop",
+    "closeShopBottom",
+    "debugPanel",
+    "debugStats",
+    "endScreen",
+    "exitRun",
+    "fullscreenButton",
+    "levelUp",
+    "menuInventoryPanel",
+    "menuInventoryTab",
+    "menuProgressPanel",
+    "menuProgressTab",
+    "menuQpHud",
+    "menuQuests",
+    "menuRelicInventory",
+    "menuRelicSlots",
+    "menuShopCoinHud",
+    "menuShopItems",
+    "menuShopNotice",
+    "menuShopPanel",
+    "menuShopTab",
+    "menuTree",
+    "muteAudio",
+    "openMenu",
+    "questBanner",
+    "relicChoice",
+    "relicChoices",
+    "relicChoiceText",
+    "relicChoiceTitle",
+    "runHud",
+    "runMenu",
+    "runStats",
+    "shopCoinHud",
+    "shopItems",
+    "shopModal",
+    "shopNotice",
+    "speedButtons",
+    "startTransition",
+    "titleScreen",
+    "titleStartGame",
+    "toggleDebug",
+  ]);
+
+  const MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS = Object.freeze([
+    "createUi",
+    "createUiRenderer",
+  ]);
+
+  /**
+   * @typedef {object} UiRendererOptions
+   * @property {*} [ui]
+   * @property {*} [uiProgression]
+   * @property {*} [weaponDefs]
+   * @property {*} [weaponUnlocks]
+   * @property {*} [upgradeDefs]
+   * @property {*} [questDefs]
+   * @property {() => *} [getSave]
+   * @property {(upgradeId: string) => number} [getUpgradeTier]
+   * @property {(nodeId: string) => boolean} [hasNode]
+   * @property {(unlock: *) => boolean} [isNodeVisible]
+   * @property {(questId: string) => boolean} [isQuestComplete]
+   * @property {(unlock: *) => string | null | undefined} [nodeGateStatus]
+   * @property {(unlock: *) => *} [buyWeaponUnlock]
+   * @property {(upgrade: *) => *} [buyUpgrade]
+   */
+
+  function createUi(options = {}) {
+    const documentRef = options.documentRef;
+    const canvas = options.canvas || documentRef?.getElementById?.("game") || null;
+    const get = (id) => documentRef?.getElementById?.(id) || null;
+
+    return {
+      canvas,
+      choices: get("choices"),
+      closeEnd: get("closeEnd"),
+      closeEndX: get("closeEndX"),
+      closeLevelUp: get("closeLevelUp"),
+      closeMenu: get("closeMenu"),
+      closeShop: get("closeShop"),
+      closeShopBottom: get("closeShopBottom"),
+      debugPanel: get("debugPanel"),
+      debugStats: get("debugStats"),
+      endScreen: get("endScreen"),
+      exitRun: get("exitRun"),
+      fullscreenButton: get("fullscreenButton"),
+      levelUp: get("levelUp"),
+      menuInventoryPanel: get("menuInventoryPanel"),
+      menuInventoryTab: get("menuInventoryTab"),
+      menuProgressPanel: get("menuProgressPanel"),
+      menuProgressTab: get("menuProgressTab"),
+      menuQpHud: get("menuQpHud"),
+      menuQuests: get("menuQuests"),
+      menuRelicInventory: get("menuRelicInventory"),
+      menuRelicSlots: get("menuRelicSlots"),
+      menuShopCoinHud: get("menuShopCoinHud"),
+      menuShopItems: get("menuShopItems"),
+      menuShopNotice: get("menuShopNotice"),
+      menuShopPanel: get("menuShopPanel"),
+      menuShopTab: get("menuShopTab"),
+      menuTree: get("menuTree"),
+      muteAudio: get("muteAudio"),
+      openMenu: get("openMenu"),
+      questBanner: get("questBanner"),
+      relicChoice: get("relicChoice"),
+      relicChoices: get("relicChoices"),
+      relicChoiceText: get("relicChoiceText"),
+      relicChoiceTitle: get("relicChoiceTitle"),
+      runHud: get("runHud"),
+      runMenu: get("runMenu"),
+      runStats: get("runStats"),
+      shopCoinHud: get("shopCoinHud"),
+      shopItems: get("shopItems"),
+      shopModal: get("shopModal"),
+      shopNotice: get("shopNotice"),
+      speedButtons: [...(documentRef?.querySelectorAll?.("[data-speed]") || [])],
+      startTransition: get("startTransition"),
+      titleScreen: get("titleScreen"),
+      titleStartGame: get("titleStartGame"),
+      toggleDebug: get("toggleDebug"),
+    };
+  }
+
+  /**
+   * @param {UiRendererOptions} [options]
+   */
+  function createUiRenderer({
     ui,
+    uiProgression,
     weaponDefs,
     weaponUnlocks,
     upgradeDefs,
@@ -83,11 +152,28 @@ function createUiRenderer({
     nodeGateStatus,
     buyWeaponUnlock,
     buyUpgrade,
-  });
-}
+  } = {}) {
+    if (!ui || typeof ui !== "object") {
+      throw new Error("Missing Tap Survivor module UI dependency: ui");
+    }
+    if (!uiProgression || typeof uiProgression.createUiProgressionRenderer !== "function") {
+      throw new Error("Missing Tap Survivor module UI dependency: uiProgression");
+    }
 
-globalThis.TapSurvivorUi = {
-  createUi,
-  createUiRenderer,
-};
+    return uiProgression.createUiProgressionRenderer({
+      ui,
+      weaponDefs,
+      weaponUnlocks,
+      upgradeDefs,
+      questDefs,
+      getSave,
+      getUpgradeTier,
+      hasNode,
+      isNodeVisible,
+      isQuestComplete,
+      nodeGateStatus,
+      buyWeaponUnlock,
+      buyUpgrade,
+    });
+  }
 })();

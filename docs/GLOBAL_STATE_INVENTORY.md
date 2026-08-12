@@ -74,6 +74,10 @@ Generated content globals:
   helpers remain injected through the same factory path.
 - `src/weapon-fire.js` now receives weapon behavior helpers through `src/game.js` and `src/combat.js` factory wiring
   instead of reading `globalThis.TapSurvivorWeaponBehaviors` directly.
+- `src/modules/game-dependencies.js` now injects the native progression, quest, UI, UI-progression, weapon-behavior,
+  and weapon-fire factories directly. The generated `src/progression.js`, `src/quests.js`, `src/ui.js`,
+  `src/ui-progression.js`, `src/weapon-behaviors.js`, and `src/weapon-fire.js` bridges are source-derived and
+  global-free; their former classic publishers are retired.
 - `src/modules/weapon-cooldowns.js` and generated `src/weapon-cooldowns.js` now receive content through combat/weapon-fire
   factory wiring instead of reading `globalThis.TapSurvivorContent` for projectile run-upgrade scaling.
 - `src/modules/save.js` now receives save defaults and save migration helpers through `src/game.js` factory wiring instead
@@ -103,11 +107,12 @@ Generated content globals:
   including an absent descriptor, while retaining the generated classic-boundary parity fixture.
 - `src/level-up.js` now receives level-up choice helpers from the dependency bag and the optional asset resolver provider
   through `src/game.js` factory wiring.
-- `src/ui.js` now receives `TapSurvivorUiProgression` through `src/game.js` factory wiring instead of reading that global
-  directly. The production ESM browser dependency bag statically imports the native `createUiProgressionRenderer` and
-  injects its `documentRef`; the classic publisher and fallback remain preserved. `src/debug.js` now receives balance
-  floor scaling through the debug factory; and `src/level-up.js` receives content for its exact fallback icon path instead
-  of reading `globalThis.TapSurvivorContent` directly.
+- `src/ui.js` now receives the native UI-progression renderer through `src/game.js` factory wiring instead of reading
+  `TapSurvivorUiProgression`. The production ESM browser dependency bag statically imports the native renderer and
+  injects its `documentRef`; the generated classic UI bridges use the same explicit factories without publishing
+  `TapSurvivorUi` or `TapSurvivorUiProgression`. `src/debug.js` now receives balance floor scaling through the debug
+  factory; and `src/level-up.js` receives content for its exact fallback icon path instead of reading
+  `globalThis.TapSurvivorContent` directly.
 - `src/modules/upgrades.js` owns the pure `createUpgradeContent({ content, effects })` factory. Both production ESM
   and the classic dependency bag statically bundle that factory; generated `src/upgrades.js` no longer publishes
   `TapSurvivorUpgrades` or reads content/effects globals.
@@ -134,26 +139,28 @@ Runtime module globals:
   `src/game.js` script-order boundary. `src/modules/game-dependencies.js` no longer reads that publisher: it supplies
   the statically imported native controller through its dependency bag. This reader-only retirement intentionally
   leaves the global-audit count unchanged.
-- Core data/systems: `TapSurvivorProgression`; effects and map resolution are supplied as native factories through
-  `TapSurvivorGameDependencies`, with the former `TapSurvivorEffects` and `TapSurvivorMapSystem` publishers retired.
+- Core data/systems: progression and quest behavior are supplied as native factories through
+  `TapSurvivorGameDependencies`; the former `TapSurvivorProgression` and `TapSurvivorQuests` publishers are retired.
+  Effects and map resolution are also supplied as native factories, with their former publishers retired.
 - Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
   supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
 - Rendering/UI: `TapSurvivorAssets`, `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`,
-  `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, `TapSurvivorUi`, `TapSurvivorUiProgression`,
-  `TapSurvivorShellUi`. The former `TapSurvivorShellRelicUi` publisher is dependency-injected.
+  `TapSurvivorRenderEnemies`, `TapSurvivorRenderSkillRail`, and `TapSurvivorShellUi`. The former
+  `TapSurvivorUi`, `TapSurvivorUiProgression`, and `TapSurvivorShellRelicUi` publishers are dependency-injected.
 - Gameplay systems: the native `createRunUpdater` plus the retired combat, pickup, relic, and enemy factories are
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
-- Weapon systems: `TapSurvivorWeaponCooldowns`, `TapSurvivorWeaponBehaviors`, `TapSurvivorWeaponFire`, and
-  `TapSurvivorLevelUp`; projectile helpers and upgrade content are dependency-injected native factories.
-- Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`,
-  `TapSurvivorGameRuntime`, `TapSurvivorQuests`.
+- Weapon systems: `TapSurvivorWeaponCooldowns` and `TapSurvivorLevelUp`; weapon behaviors and weapon fire are
+  dependency-injected native factories, as are projectile helpers and upgrade content.
+- Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`, and `TapSurvivorGameRuntime`.
 
 Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 28; the allowlist does not count bare `globalThis` fallback syntax.
+  dot-expression global audit is 22 (27 -> 21 allowed expressions and 34 -> 28 allowed usages); the allowlist does
+  not count bare `globalThis` fallback syntax. The six-publisher retirement leaves only the explicitly listed
+  compatibility boundaries above for the next migration batch.
 - `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
   capability from the classic dependency bag; `globalThis.localStorage` remains in the separately owned storage-adapter
   platform selection.

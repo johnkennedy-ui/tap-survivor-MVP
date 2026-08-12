@@ -1,4 +1,19 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/weapon-behaviors.js
+// Run: npm run build:bridges
+// Retired global: TapSurvivorWeaponBehaviors. Exports are supplied through the game dependency bag.
 (() => {
+  "use strict";
+
+  const MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS = Object.freeze(["weaponBehaviors"]);
+
+  const MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS = Object.freeze([
+    "createWeaponBehaviorSystem",
+  ]);
+
+  /**
+   * @param {any} [options]
+   */
   function createWeaponBehaviorSystem({
     weaponDefs,
     getGame,
@@ -10,7 +25,7 @@
     reapEnemies,
     addQuestProgress,
     distance,
-  }) {
+  } = {}) {
     function fireBeam(weaponId) {
       const game = getGame();
       const weapon = weaponDefs[weaponId];
@@ -311,8 +326,4 @@
       updateWeaponBursts,
     };
   }
-
-  globalThis.TapSurvivorWeaponBehaviors = {
-    createWeaponBehaviorSystem,
-  };
 })();

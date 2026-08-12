@@ -73,11 +73,12 @@ Files split:
 
 - `src/weapon-projectiles.js`: projectile vector helper ownership, currently `rotateVector(...)`.
 - `src/weapon-targeting.js`: nearest-enemy targeting helper ownership.
-- `src/weapon-fire.js`: firing behavior integration, weapon cooldown/damage scaling, projectile spawning, beam/area updates, and public `TapSurvivorWeaponFire` factory.
+- `src/weapon-fire.js`: firing behavior integration, weapon cooldown/damage scaling, projectile spawning, and
+  beam/area updates owned by the native `createWeaponFireSystem` factory.
 
 Public APIs preserved:
 
-- `globalThis.TapSurvivorWeaponFire.createWeaponFireSystem(...)`
+- `createWeaponFireSystem(...)` supplied through the `weaponFire` dependency-bag slot
 - weapon kind handler names and dispatch behavior
 - existing projectile, beam, area, and burst update methods returned by the weapon fire system
 
@@ -94,3 +95,27 @@ npm run smoke:save
 npm run smoke:start-run
 npm run agent:check
 ```
+
+## 2026-08-12 Classic Publisher Retirement Batch
+
+Scope:
+
+- Compatibility-boundary maintenance only.
+- No gameplay, content, save schema, persistence, platform, script-order, or browser-runtime changes.
+- Existing native module factories remain the behavior owners.
+
+The classic dependency bag now injects native progression, quest, UI, UI-progression, weapon-behavior, and weapon-fire
+factories. The generated bridges for those six owners are source-derived, global-free artifacts with retired-global
+provenance comments; they must be regenerated only with `npm run build:bridges`.
+
+Retired classic publishers:
+
+- `TapSurvivorProgression`
+- `TapSurvivorQuests`
+- `TapSurvivorUi`
+- `TapSurvivorUiProgression`
+- `TapSurvivorWeaponBehaviors`
+- `TapSurvivorWeaponFire`
+
+The global audit target after this batch is 22 actual uses, 21 allowed expressions, and 28 allowed usages. Preserve
+the remaining compatibility publishers until a separate scoped contract supplies their dependency seam and validation.

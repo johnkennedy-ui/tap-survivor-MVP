@@ -285,7 +285,14 @@ check("first three floors have explicit balance tuning", balance.includes("floor
 check("debug balance system exists", debug.includes("createDebugSystem") && runtimeEntry.includes("TapSurvivorDebug"));
 check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
 check("local save exists", game.includes("tap-survivor-mvp-save-v2") && storageAdapter.includes("localStorage") && storageAdapter.includes("getSaveRaw"));
-check("shared quest helpers exist", quests.includes("TapSurvivorQuests") && runtimeEntry.includes("TapSurvivorQuests"));
+check(
+  "shared quest helpers are explicitly dependency-injected without a classic publisher",
+  quests.includes("function createQuestSystem") &&
+    !quests.includes("globalThis.TapSurvivorQuests =") &&
+    gameDependencies.includes("quests: { createQuestSystem, questOpenIds }") &&
+    game.includes("quests.createQuestSystem") &&
+    game.includes("questOpenIds")
+);
 check(
   "shared save helpers are explicitly dependency-injected without a classic publisher",
   save.includes("function createSaveSystem") &&
@@ -348,7 +355,13 @@ check(
     !contentRegistry.includes("globalThis.TapSurvivorContentRegistry") &&
     !gameDependencies.includes("TapSurvivorContentRegistry"),
 );
-check("shared progression helper exists", progression.includes("TapSurvivorProgression") && runtimeEntry.includes("TapSurvivorProgression"));
+check(
+  "shared progression helper is explicitly dependency-injected without a classic publisher",
+  progression.includes("function createProgressionSystem") &&
+    !progression.includes("globalThis.TapSurvivorProgression =") &&
+    gameDependencies.includes("progression: { createProgressionSystem }") &&
+    game.includes("progression.createProgressionSystem")
+);
 check(
   "shared HUD renderer helper exists",
   renderHud.includes("TapSurvivorRenderHud") &&
@@ -364,7 +377,16 @@ check(
     rendering.includes("createEnemyRenderer") &&
     !rendering.includes("globalThis.TapSurvivorRenderEnemies"),
 );
-check("shared UI helper exists", ui.includes("TapSurvivorUi") && uiProgression.includes("TapSurvivorUiProgression") && runtimeEntry.includes("TapSurvivorUi") && game.includes("createUiRenderer"));
+check(
+  "shared UI helpers are explicitly dependency-injected without classic publishers",
+  ui.includes("function createUi") &&
+    uiProgression.includes("function createUiProgressionRenderer") &&
+    !ui.includes("globalThis.TapSurvivorUi =") &&
+    !uiProgression.includes("globalThis.TapSurvivorUiProgression =") &&
+    gameDependencies.includes("ui: { createUi, createUiRenderer }") &&
+    gameDependencies.includes("uiProgression: { createUiProgressionRenderer }") &&
+    game.includes("uiDependencies.createUiRenderer")
+);
 check(
   "shared run UI helper exists",
   runUi.includes("createRunUi") && gameDependencies.includes("createRunUi"),
@@ -439,9 +461,10 @@ check(
   weaponProjectiles.includes("function createWeaponProjectileSystem") &&
     !weaponProjectiles.includes("globalThis.TapSurvivorWeaponProjectiles =") &&
     weaponTargeting.includes("function nearestEnemy") &&
-    weaponFire.includes("TapSurvivorWeaponFire") &&
-    gameDependencies.includes("TapSurvivorWeaponBehaviors") &&
-    gameDependencies.includes("TapSurvivorWeaponFire") &&
+    weaponFire.includes("function createWeaponFireSystem") &&
+    !weaponFire.includes("globalThis.TapSurvivorWeaponFire =") &&
+    gameDependencies.includes("weaponBehaviors: { createWeaponBehaviorSystem }") &&
+    gameDependencies.includes("weaponFire: { createWeaponFireSystem }") &&
     gameDependencies.includes("weaponProjectiles: { createWeaponProjectileSystem, rotateVector }") &&
     gameDependencies.includes("weaponTargeting: { nearestEnemy }") &&
     game.includes("weaponBehaviors,") &&

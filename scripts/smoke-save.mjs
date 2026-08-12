@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
+import { questOpenIds } from "../src/modules/quests.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -115,7 +116,7 @@ const saveSystem = dependencyBag.save.createSaveSystem({
   weaponUnlocks: content.weaponUnlocks,
   upgradeDefs: [{ id: "laser_damage", opensQuest: "laser_damage_5000" }],
   shopItemDefs: content.shopItems,
-  questOpenIds: context.TapSurvivorQuests.questOpenIds,
+  questOpenIds,
   storageAdapter,
 });
 
@@ -123,6 +124,11 @@ function check(name, pass) {
   console.log(`${pass ? "PASS" : "FAIL"} ${name}`);
   if (!pass) process.exitCode = 1;
 }
+
+check(
+  "retired quest publisher is absent from save bridge context",
+  context.TapSurvivorQuests === undefined && !questsSource.includes("globalThis.TapSurvivorQuests =")
+);
 
 const fresh = await saveSystem.loadSave();
 check("fresh save starts with Spark Bolt", fresh.unlockedWeapons.includes("spark_bolt"));
@@ -304,7 +310,7 @@ const throwingSaveSystem = throwingDependencyBag.save.createSaveSystem({
   weaponUnlocks: content.weaponUnlocks,
   upgradeDefs: [],
   shopItemDefs: content.shopItems,
-  questOpenIds: throwingContext.TapSurvivorQuests.questOpenIds,
+  questOpenIds,
   storageAdapter: throwingAdapter,
 });
 

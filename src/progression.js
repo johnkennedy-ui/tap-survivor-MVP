@@ -1,4 +1,27 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/progression.js
+// Run: npm run build:bridges
+// Retired global: TapSurvivorProgression. Exports are supplied through the game dependency bag.
 (() => {
+  "use strict";
+
+  const MODULE_NATIVE_PROGRESSION_SLOTS = Object.freeze(["progression"]);
+
+  const MODULE_NATIVE_PROGRESSION_PROOF_SLOTS = Object.freeze(["createProgressionSystem"]);
+
+  /**
+   * @param {{
+   *   weaponDefs: Record<string, any>,
+   *   weaponUnlocks: Array<any>,
+   *   upgradeDefs: Array<any>,
+   *   questDefs: Record<string, any>,
+   *   getSave: () => any,
+   *   openQuest: (id: string) => void,
+   *   persist: () => void,
+   *   renderMeta: () => void,
+   *   applyRunMetaUpgrades: () => void,
+   * }} options
+   */
   function createProgressionSystem({
     weaponDefs,
     weaponUnlocks,
@@ -89,8 +112,4 @@
       buyUpgrade,
     };
   }
-
-  globalThis.TapSurvivorProgression = {
-    createProgressionSystem,
-  };
 })();

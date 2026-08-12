@@ -1,4 +1,17 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/weapon-fire.js
+// Run: npm run build:bridges
+// Retired global: TapSurvivorWeaponFire. Exports are supplied through the game dependency bag.
 (() => {
+  "use strict";
+
+  const MODULE_NATIVE_WEAPON_FIRE_SLOTS = Object.freeze(["weaponFire"]);
+
+  const MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS = Object.freeze(["createWeaponFireSystem"]);
+
+  /**
+   * @param {any} [options]
+   */
   function createWeaponFireSystem({
     canvas,
     content,
@@ -19,7 +32,7 @@
     weaponCooldowns,
     weaponProjectiles,
     weaponTargeting,
-  }) {
+  } = {}) {
     const nearestEnemy = () => weaponTargeting.nearestEnemy(getGame(), distance);
     const scaling = weaponCooldowns.createWeaponScaling({
       content,
@@ -143,13 +156,4 @@
       updateWeaponBursts: behaviorSystem.updateWeaponBursts,
     };
   }
-
-  // Verifier compatibility tokens for moved helpers:
-  // spawnProjectileBolt splitBoltOnHit explodeBolt
-  // weaponId === "shield_pulse" destroyEnemyProjectilesInRange chargeProjectileBlock
-  // run_projectile_pierce run_wall_bounce run_split_shot run_explosive_hit run_split_on_hit
-  // shopBonuses.flatDamage shopBonuses.fireRate shopBonuses.attackRadius shopBonuses.percentDamage
-  globalThis.TapSurvivorWeaponFire = {
-    createWeaponFireSystem,
-  };
 })();

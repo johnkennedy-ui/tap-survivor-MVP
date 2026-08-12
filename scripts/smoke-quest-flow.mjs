@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
+import { createProgressionSystem } from "../src/modules/progression.js";
+import { createQuestSystem } from "../src/modules/quests.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -23,7 +25,7 @@ let persistCount = 0;
 let renderCount = 0;
 let completedQuestBanner = "";
 
-const questSystem = context.TapSurvivorQuests.createQuestSystem({
+const questSystem = createQuestSystem({
   questDefs: content.quests,
   getSave: () => save,
   persist: () => {
@@ -41,6 +43,14 @@ function check(name, pass) {
   console.log(`${pass ? "PASS" : "FAIL"} ${name}`);
   if (!pass) process.exitCode = 1;
 }
+
+check(
+  "retired quest and progression publishers are absent",
+  context.TapSurvivorQuests === undefined &&
+    context.TapSurvivorProgression === undefined &&
+    !questsSource.includes("globalThis.TapSurvivorQuests =") &&
+    !progressionSource.includes("globalThis.TapSurvivorProgression =")
+);
 
 check("active quest weapons include Spark Bolt", questSystem.activeQuestWeaponIds().includes("spark_bolt"));
 questSystem.addQuestProgressForWeapon("spark_bolt", 100);
@@ -75,7 +85,7 @@ const progressionSave = {
 };
 let progressionPersistCount = 0;
 let progressionRenderCount = 0;
-const progressionSystem = context.TapSurvivorProgression.createProgressionSystem({
+const progressionSystem = createProgressionSystem({
   weaponDefs: content.weapons,
   weaponUnlocks: content.weaponUnlocks,
   upgradeDefs: content.metaUpgrades,

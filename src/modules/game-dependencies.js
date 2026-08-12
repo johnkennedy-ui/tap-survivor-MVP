@@ -12,6 +12,8 @@ import { createMapSystem } from "./map-system.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createPickupSystem } from "./pickups.js";
+import { createProgressionSystem } from "./progression.js";
+import { createQuestSystem, questOpenIds } from "./quests.js";
 import { createRelicSystem } from "./relics.js";
 import { createSaveLoadHandler } from "./save-corruption.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
@@ -22,7 +24,11 @@ import { createShellRelicUi } from "./shell-relic-ui.js";
 import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
 import { createUpgradeContent } from "./upgrades.js";
+import { createUi, createUiRenderer } from "./ui.js";
+import { createUiProgressionRenderer } from "./ui-progression.js";
+import { createWeaponBehaviorSystem } from "./weapon-behaviors.js";
 import { createWeaponScaling } from "./weapon-cooldowns.js";
+import { createWeaponFireSystem } from "./weapon-fire.js";
 import { createWeaponProjectileSystem, rotateVector } from "./weapon-projectiles.js";
 import { nearestEnemy } from "./weapon-targeting.js";
 import { createRunLifecycle } from "./run-lifecycle.js";
@@ -82,8 +88,8 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },
     pickups: { createPickupSystem },
-    progression: requireGlobal(globalRef, "TapSurvivorProgression"),
-    quests: requireGlobal(globalRef, "TapSurvivorQuests"),
+    progression: { createProgressionSystem },
+    quests: { createQuestSystem, questOpenIds },
     relics: { createRelicSystem },
     renderEnemies: requireGlobal(globalRef, "TapSurvivorRenderEnemies"),
     renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
@@ -110,12 +116,12 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     shopPricing: { createShopPricing },
     sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
     storage,
-    ui: requireGlobal(globalRef, "TapSurvivorUi"),
-    uiProgression: requireGlobal(globalRef, "TapSurvivorUiProgression"),
+    ui: { createUi, createUiRenderer },
+    uiProgression: { createUiProgressionRenderer },
     upgrades,
-    weaponBehaviors: requireGlobal(globalRef, "TapSurvivorWeaponBehaviors"),
+    weaponBehaviors: { createWeaponBehaviorSystem },
     weaponCooldowns: { createWeaponScaling },
-    weaponFire: requireGlobal(globalRef, "TapSurvivorWeaponFire"),
+    weaponFire: { createWeaponFireSystem },
     weaponProjectiles: { createWeaponProjectileSystem, rotateVector },
     weaponTargeting: { nearestEnemy },
   };

@@ -143,6 +143,11 @@ const classicCombatSource = readFileSync(join(root, "src/combat.js"), "utf8");
 const classicPickupsSource = readFileSync(join(root, "src/pickups.js"), "utf8");
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
 const classicProgressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
+const classicQuestsSource = readFileSync(join(root, "src/quests.js"), "utf8");
+const classicUiSource = readFileSync(join(root, "src/ui.js"), "utf8");
+const classicUiProgressionSource = readFileSync(join(root, "src/ui-progression.js"), "utf8");
+const classicWeaponBehaviorsSource = readFileSync(join(root, "src/weapon-behaviors.js"), "utf8");
+const classicWeaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "utf8");
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
@@ -867,9 +872,19 @@ check(
   )
 );
 check(
-  "readiness preserves the deliberate classic TapSurvivorProgression publisher",
-  classicProgressionSource.includes("globalThis.TapSurvivorProgression =") &&
-    classicProgressionSource.includes("createProgressionSystem")
+  "readiness sees source-derived B3 bridges retire the selected classic publishers",
+  [
+    [classicProgressionSource, "TapSurvivorProgression"],
+    [classicQuestsSource, "TapSurvivorQuests"],
+    [classicUiSource, "TapSurvivorUi"],
+    [classicUiProgressionSource, "TapSurvivorUiProgression"],
+    [classicWeaponBehaviorsSource, "TapSurvivorWeaponBehaviors"],
+    [classicWeaponFireSource, "TapSurvivorWeaponFire"],
+  ].every(
+    ([source, name]) =>
+      !source.includes(`globalThis.${name} =`) &&
+      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+  )
 );
 check(
   "readiness sees classic dependency bag inject native upgrades without a publisher",
