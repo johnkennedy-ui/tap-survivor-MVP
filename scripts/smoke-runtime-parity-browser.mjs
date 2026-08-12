@@ -1474,7 +1474,11 @@ function runtimeDiagnosticOverflow(result, name) {
 }
 
 function hasUnavailableClassicProviderLifecycle(lifecycle) {
-  return lifecycle?.baselineCapability === "unavailable" && lifecycle?.configureDefaultProviders === false;
+  return (
+    lifecycle?.baselineCapability === "unavailable" &&
+    lifecycle?.publisherPresent === true &&
+    lifecycle?.configureDefaultProviders === false
+  );
 }
 
 function hasClassicUpgradeProviderLifecycle(lifecycle) {
@@ -2229,11 +2233,19 @@ function renderClassicHookScript() {
     return runtime;
   });
 
+  function classifyClassicProviderCapability(publisher) {
+    if (!publisher) return "missing";
+    if (!("configureDefaultProviders" in Object(publisher))) return "unavailable";
+    if (typeof publisher.configureDefaultProviders !== "function") return "malformed";
+    return "available";
+  }
+
   function exerciseClassicUpgradeProviderLifecycle(parity) {
     const publisher = globalThis.TapSurvivorUpgrades;
-    if (!publisher || typeof publisher.configureDefaultProviders !== "function") {
+    const baselineCapability = classifyClassicProviderCapability(publisher);
+    if (baselineCapability !== "available") {
       parity.classicUpgradeProviderLifecycle = {
-        baselineCapability: "unavailable",
+        baselineCapability,
         configureDefaultProviders: false,
         publisherPresent: Boolean(publisher),
       };
@@ -2308,9 +2320,10 @@ function renderClassicHookScript() {
 
   function exerciseClassicSaveProviderLifecycle(parity) {
     const publisher = globalThis.TapSurvivorSave;
-    if (!publisher || typeof publisher.configureDefaultProviders !== "function") {
+    const baselineCapability = classifyClassicProviderCapability(publisher);
+    if (baselineCapability !== "available") {
       parity.classicSaveProviderLifecycle = {
-        baselineCapability: "unavailable",
+        baselineCapability,
         configureDefaultProviders: false,
         publisherPresent: Boolean(publisher),
       };
