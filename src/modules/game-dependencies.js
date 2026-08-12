@@ -116,8 +116,25 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     shopPricing: { createShopPricing },
     sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
     storage,
-    ui: { createUi, createUiRenderer },
-    uiProgression: { createUiProgressionRenderer },
+    ui: {
+      createUi: (options = {}) =>
+        createUi({
+          ...options,
+          documentRef: options.documentRef || documentRef,
+        }),
+      createUiRenderer: (options = {}) =>
+        createUiRenderer({
+          ...options,
+          documentRef: options.documentRef || documentRef,
+        }),
+    },
+    uiProgression: {
+      createUiProgressionRenderer: (options = {}) =>
+        createUiProgressionRenderer({
+          ...options,
+          documentRef: options.documentRef || documentRef,
+        }),
+    },
     upgrades,
     weaponBehaviors: { createWeaponBehaviorSystem },
     weaponCooldowns: { createWeaponScaling },

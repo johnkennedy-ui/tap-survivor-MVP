@@ -1226,6 +1226,8 @@ check(
   "bridge exposes createGameDependencyBag",
   typeof bridgeGameDependencies?.createGameDependencyBag === "function"
 );
+check("module UI factories are callable", typeof createModuleUi === "function" && typeof createModuleUiRenderer === "function");
+check("module UI progression factory is callable", typeof createModuleUiProgressionRenderer === "function");
 check(
   "game banners bridge source has generated banner",
   hasGeneratedBanner(gameBannersBridge.source)
@@ -1482,14 +1484,34 @@ check("dependency bag injects native progression", moduleGameDependenciesSnapsho
 check("dependency bag injects native quests", moduleGameDependenciesSnapshot.hasQuests);
 check("dependency bag injects native UI", moduleGameDependenciesSnapshot.hasUi);
 check(
+  "classic dependency-bag createUi receives captured canvas",
+  moduleGameDependenciesSnapshot.uiDependency.classicCanvas &&
+    bridgeGameDependenciesSnapshot.uiDependency.classicCanvas
+);
+check(
+  "dependency-bag UI factories preserve caller canvas options",
+  moduleGameDependenciesSnapshot.uiDependency.callerCanvas &&
+    bridgeGameDependenciesSnapshot.uiDependency.callerCanvas
+);
+check(
+  "dependency-bag createUiRenderer propagates documentRef to progression rendering",
+  moduleGameDependenciesSnapshot.uiDependency.rendererDocument &&
+    bridgeGameDependenciesSnapshot.uiDependency.rendererDocument
+);
+check(
+  "dependency-bag createUiProgressionRenderer propagates documentRef",
+  moduleGameDependenciesSnapshot.uiDependency.progressionDocument &&
+    bridgeGameDependenciesSnapshot.uiDependency.progressionDocument
+);
+check(
   "module dependency bag uses the six native injected factories",
   moduleGameDependenciesSnapshot.__bag.progression.createProgressionSystem === createModuleProgressionSystem &&
     moduleGameDependenciesSnapshot.__bag.quests.createQuestSystem === createModuleQuestSystem &&
     moduleGameDependenciesSnapshot.__bag.quests.questOpenIds === moduleQuestOpenIds &&
-    moduleGameDependenciesSnapshot.__bag.ui.createUi === createModuleUi &&
-    moduleGameDependenciesSnapshot.__bag.ui.createUiRenderer === createModuleUiRenderer &&
-    moduleGameDependenciesSnapshot.__bag.uiProgression.createUiProgressionRenderer ===
-      createModuleUiProgressionRenderer &&
+    typeof moduleGameDependenciesSnapshot.__bag.ui.createUi === "function" &&
+    typeof moduleGameDependenciesSnapshot.__bag.ui.createUiRenderer === "function" &&
+    typeof moduleGameDependenciesSnapshot.__bag.uiProgression.createUiProgressionRenderer ===
+      "function" &&
     moduleGameDependenciesSnapshot.__bag.weaponBehaviors.createWeaponBehaviorSystem ===
       createModuleWeaponBehaviorSystem &&
     moduleGameDependenciesSnapshot.__bag.weaponFire.createWeaponFireSystem === createModuleWeaponFireSystem
@@ -2126,6 +2148,81 @@ function gameRuntimeSnapshot(createGameRuntimeController) {
   };
 }
 
+function uiDependencySnapshot(bag, documentRef) {
+  const ui = bag.ui.createUi();
+  const customCanvas = { id: "caller-canvas" };
+  const callerUi = bag.ui.createUi({ canvas: customCanvas });
+  const rendererOptions = {
+    getSave: () => ({
+      activeQuests: [],
+      coins: 0,
+      questPoints: 0,
+      totalQuestPoints: 0,
+      questProgress: {},
+    }),
+    getUpgradeTier: () => 0,
+    hasNode: () => false,
+    isNodeVisible: () => true,
+    isQuestComplete: () => false,
+    nodeGateStatus: () => null,
+    buyUpgrade() {},
+    buyWeaponUnlock() {},
+    questDefs: {},
+    ui,
+    upgradeDefs: [],
+    weaponDefs: {},
+    weaponUnlocks: [],
+  };
+  let rendererError = "";
+  let progressionError = "";
+  try {
+    const renderer = bag.ui.createUiRenderer({
+      ...rendererOptions,
+      uiProgression: bag.uiProgression,
+    });
+    renderer.renderTree(ui.menuTree);
+  } catch (error) {
+    rendererError = error.message;
+  }
+  try {
+    const progressionRenderer = bag.uiProgression.createUiProgressionRenderer(rendererOptions);
+    progressionRenderer.renderQuests(ui.menuQuests);
+  } catch (error) {
+    progressionError = error.message;
+  }
+  return {
+    callerCanvas: callerUi.canvas === customCanvas,
+    classicCanvas: ui.canvas === documentRef.getElementById("game"),
+    progressionDocument: progressionError === "" && ui.menuQuests.children.length === 1,
+    progressionError,
+    rendererDocument: rendererError === "" && ui.menuTree.children.length === 1,
+    rendererError,
+  };
+}
+
+function createUiDependencyFakeElement(tagName) {
+  const element = {
+    appendChild(child) {
+      this.children.push(child);
+      return child;
+    },
+    children: [],
+    className: "",
+    innerHTML: "",
+    tagName,
+    textContent: "",
+    addEventListener() {},
+    classList: {
+      add() {},
+      contains() {
+        return false;
+      },
+      remove() {},
+    },
+  };
+  return element;
+}
+
 function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorAudio",
@@ -2188,7 +2285,26 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   ];
   const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
   const globalRef = baseGlobalRef;
-  const documentRef = { createElement() {} };
+  const uiElements = new Map();
+  const documentRef = {
+    createElement(tagName) {
+      return createUiDependencyFakeElement(tagName);
+    },
+    getElementById(id) {
+      return uiElements.get(id) || null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+  };
+  const canvasElement = createUiDependencyFakeElement("canvas");
+  canvasElement.getContext = () => ({
+    clearRect() {},
+  });
+  uiElements.set("game", canvasElement);
+  ["menuTree", "menuQuests"].forEach((id) => {
+    uiElements.set(id, createUiDependencyFakeElement("div"));
+  });
   globalRef.document = documentRef;
   const rawContent = { ...upgradeBridgeContentFixture, id: "fallback" };
   const rawProfiles = [{ overrides: {}, profileId: "default" }];
@@ -2290,6 +2406,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     });
   }
   const bag = createGameDependencyBag({ globalRef: poisonedGlobalRef, documentRef });
+  const uiDependency = uiDependencySnapshot(bag, documentRef);
   const configuredSaveSystem = bag.save.createSaveSystem({
     ...createSaveSystemFixture(),
     storage: saveStorage,
@@ -2398,6 +2515,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.ui?.createUiRenderer === "function",
     hasUiProgression:
       typeof bag.uiProgression?.createUiProgressionRenderer === "function",
+    uiDependency,
     hasWeaponBehaviors:
       typeof bag.weaponBehaviors?.createWeaponBehaviorSystem === "function",
     hasWeaponFire: typeof bag.weaponFire?.createWeaponFireSystem === "function",

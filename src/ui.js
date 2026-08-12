@@ -64,6 +64,7 @@
    * @typedef {object} UiRendererOptions
    * @property {*} [ui]
    * @property {*} [uiProgression]
+   * @property {Document} [documentRef]
    * @property {*} [weaponDefs]
    * @property {*} [weaponUnlocks]
    * @property {*} [upgradeDefs]
@@ -140,6 +141,7 @@
   function createUiRenderer({
     ui,
     uiProgression,
+    documentRef,
     weaponDefs,
     weaponUnlocks,
     upgradeDefs,
@@ -167,6 +169,7 @@
       upgradeDefs,
       questDefs,
       getSave,
+      documentRef,
       getUpgradeTier,
       hasNode,
       isNodeVisible,

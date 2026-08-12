@@ -3296,6 +3296,7 @@
    * @typedef {object} UiRendererOptions
    * @property {*} [ui]
    * @property {*} [uiProgression]
+   * @property {Document} [documentRef]
    * @property {*} [weaponDefs]
    * @property {*} [weaponUnlocks]
    * @property {*} [upgradeDefs]
@@ -3372,6 +3373,7 @@
   function createUiRenderer({
     ui,
     uiProgression,
+    documentRef,
     weaponDefs,
     weaponUnlocks,
     upgradeDefs,
@@ -3399,6 +3401,7 @@
       upgradeDefs,
       questDefs,
       getSave,
+      documentRef,
       getUpgradeTier,
       hasNode,
       isNodeVisible,
@@ -4919,8 +4922,25 @@
       shopPricing: { createShopPricing },
       sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
       storage,
-      ui: { createUi, createUiRenderer },
-      uiProgression: { createUiProgressionRenderer },
+      ui: {
+        createUi: (options = {}) =>
+          createUi({
+            ...options,
+            documentRef: options.documentRef || documentRef,
+          }),
+        createUiRenderer: (options = {}) =>
+          createUiRenderer({
+            ...options,
+            documentRef: options.documentRef || documentRef,
+          }),
+      },
+      uiProgression: {
+        createUiProgressionRenderer: (options = {}) =>
+          createUiProgressionRenderer({
+            ...options,
+            documentRef: options.documentRef || documentRef,
+          }),
+      },
       upgrades,
       weaponBehaviors: { createWeaponBehaviorSystem },
       weaponCooldowns: { createWeaponScaling },

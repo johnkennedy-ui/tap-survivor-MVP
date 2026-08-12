@@ -49,6 +49,10 @@ const balance = readRequired("src/balance.js");
 const weaponProjectiles = readRequired("src/weapon-projectiles.js");
 const weaponTargeting = readRequired("src/weapon-targeting.js");
 const weaponFire = readRequired("src/weapon-fire.js");
+const nativeWeaponFire = readRequired("src/modules/weapon-fire.js");
+const nativeWeaponBehaviors = readRequired("src/modules/weapon-behaviors.js");
+const nativeWeaponProjectiles = readRequired("src/modules/weapon-projectiles.js");
+const nativeWeaponCooldowns = readRequired("src/modules/weapon-cooldowns.js");
 const enemyBehaviors = readRequired("src/enemy-behaviors.js");
 const enemySpawning = readRequired("src/enemy-spawning.js");
 const enemies = readRequired("src/enemies.js");
@@ -93,7 +97,22 @@ const contentSchemaTools = readRequired("scripts/content/content-schema.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
 const contentText = `${contentSource}\n${generatedContent}`;
 const staleText = `${index}\n${contentSource}\n${generatedContent}\n${agentContext}`;
-const runtime = `${game}\n${gameBanners}\n${runLifecycle}\n${combat}\n${combatDamage}\n${weaponFire}\n${enemyBehaviors}\n${enemySpawning}\n${enemies}\n${runState}\n${runUpdate}`;
+const runtime = [
+  game,
+  gameBanners,
+  runLifecycle,
+  combat,
+  combatDamage,
+  nativeWeaponFire,
+  nativeWeaponBehaviors,
+  nativeWeaponProjectiles,
+  nativeWeaponCooldowns,
+  enemyBehaviors,
+  enemySpawning,
+  enemies,
+  runState,
+  runUpdate,
+].join("\n");
 const runtimeEntry = `${game}\n${gameDependencies}`;
 const metaUpgradeIds = new Set((content.metaUpgrades || []).map((upgrade) => upgrade.id));
 const runUpgradeIds = new Set((content.runUpgrades || []).map((upgrade) => upgrade.id));
@@ -127,13 +146,13 @@ check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "s
 check("generated tower background asset exists", content.assets?.sources?.some((source) => source.id === "generated_tower_floor" && source.commercialUse === true && source.attributionRequired === false) && content.assets?.sprites?.backgrounds?.tower_floor);
 check("player uses wizard sprite", content.assets?.sprites?.player?.includes("wizard-idle-staff") && rendering.includes("Math.max(70"));
 check("wizard sprite flips by facing", sprites.includes("flipX") && rendering.includes("playerFacesLeft") && rendering.includes("flipX: playerFacesLeft(p)"));
-check("wizard uses movement and attack animation sprites", content.assets?.sprites?.playerAnimations?.walk && content.assets?.sprites?.playerAnimations?.cast_orb && sprites.includes("playerAnimations") && rendering.includes("playerSpriteId") && weaponFire.includes("setPlayerAttackAnimation") && runUpdate.includes("updatePlayerAnimation"));
+check("wizard uses movement and attack animation sprites", content.assets?.sprites?.playerAnimations?.walk && content.assets?.sprites?.playerAnimations?.cast_orb && sprites.includes("playerAnimations") && rendering.includes("playerSpriteId") && nativeWeaponFire.includes("setPlayerAttackAnimation") && runUpdate.includes("updatePlayerAnimation"));
 check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
 check("enemy floor tint steps every five floors to 100", enemySpawning.includes("towerFloor: game.towerFloor") && renderEnemies.includes("function drawEnemyFloorTint") && renderEnemies.includes("Math.floor((floor - 1) / 5)") && renderEnemies.includes("clamp(Math.floor(enemy.towerFloor || 1), 1, 100)"));
-check("beam and cone effects can use weapon sprites", weaponFire.includes("weaponId,") && rendering.includes("drawSprite(`weapon:${weapon.assetId || beam.weaponId}`") && rendering.includes("spriteHeight"));
+check("beam and cone effects can use weapon sprites", nativeWeaponFire.includes("weaponId,") && rendering.includes("drawSprite(`weapon:${weapon.assetId || beam.weaponId}`") && rendering.includes("spriteHeight"));
 const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
 check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
-check("weapon sound effects are wired", Object.keys(content.weapons || {}).every((id) => content.assets?.sfx?.weapons?.[id]) && audio.includes("createAudioSystem") && audio.includes("playbackRate") && weaponFire.includes("weaponSfxOptions") && weaponFire.includes("playWeaponSfx?.(weaponId, weaponSfxOptions(weapon))") && combat.includes("playWeaponSfx") && game.includes("audioSystem.playWeapon"));
+check("weapon sound effects are wired", Object.keys(content.weapons || {}).every((id) => content.assets?.sfx?.weapons?.[id]) && audio.includes("createAudioSystem") && audio.includes("playbackRate") && nativeWeaponFire.includes("weaponSfxOptions") && nativeWeaponFire.includes("playWeaponSfx?.(weaponId, weaponSfxOptions(weapon))") && combat.includes("playWeaponSfx") && game.includes("audioSystem.playWeapon"));
 check("run upgrade sound effects are wired", (content.runUpgrades || []).every((upgrade) => content.assets?.sfx?.runUpgrades?.[upgrade.id]) && audio.includes("playRunUpgrade") && levelUp.includes("playChoiceSfx?.(choice)") && game.includes("playLevelChoiceSfx"));
 check("generated tower sprite set exists", content.assets?.sources?.some((source) => source.id === "generated_tower_sprites" && source.commercialUse === true && source.attributionRequired === false));
 check("user enemy sprite sheet exists", content.assets?.sources?.some((source) => source.id === "user_enemy_sprite_sheet_20260614" && source.commercialUse === true && source.attributionRequired === false) && ["drifter", "skitter", "bulwark", "hexer", "boss"].every((id) => content.assets?.sprites?.enemies?.[id]?.includes("sheet-20260614")));
@@ -169,10 +188,10 @@ check("enemy spawns are content-counted and patterned", runtime.includes("spawnP
 check("enemy projectiles update through combat loop", runState.includes("enemyBolts") && combat.includes("updateEnemyBolts") && runUpdate.includes("combat.updateEnemyBolts(dt)") && renderEnemies.includes("drawEnemyBolt"));
 check("enemy projectiles are high-visibility", content.bossConfig?.enemyBolt?.radius >= 7 && renderEnemies.includes("tailX") && renderEnemies.includes("bolt.radius + 4"));
 check("enemy projectile pacing scales by tower floor", enemies.includes("projectileFireRateScale") && enemies.includes("scaledProjectileCooldown") && enemies.includes("scaledProjectileSpeed") && content.bossConfig?.projectileScaling?.fireRateBase < 1 && content.bossConfig?.projectileScaling?.fireRateMax > 1);
-check("shield pulse clears enemy projectiles and charges block", weaponFire.includes('weaponId === "shield_pulse"') && weaponFire.includes("destroyEnemyProjectilesInRange") && weaponFire.includes("chargeProjectileBlock") && runState.includes("projectileBlockCharge") && enemyBehaviors.includes("projectileBlockReady") && rendering.includes("drawProjectileBlockBar"));
+check("shield pulse clears enemy projectiles and charges block", nativeWeaponBehaviors.includes('weaponId === "shield_pulse"') && nativeWeaponBehaviors.includes("destroyEnemyProjectilesInRange") && nativeWeaponBehaviors.includes("chargeProjectileBlock") && runState.includes("projectileBlockCharge") && enemyBehaviors.includes("projectileBlockReady") && rendering.includes("drawProjectileBlockBar"));
 check("speed multiplier scales game loop", gameRuntime.includes("let gameSpeed = 1") && game.includes("runUpdater.update(dt * (gameRuntime?.getGameSpeed() || 1))") && gameRuntime.includes("setGameSpeed"));
 check("auto attack loop exists", runtime.includes("updateWeapons") && runtime.includes("fireWeapon"));
-check("weapon kind dispatch table exists", weaponFire.includes("weaponKindHandlers") && ["radial", "beam", "cone", "chain", "projectile", "target_area", "lingering_area", "mine"].every((kind) => weaponFire.includes(`${kind}:`)));
+check("weapon kind dispatch table exists", nativeWeaponFire.includes("weaponKindHandlers") && ["radial", "beam", "cone", "chain", "projectile", "target_area", "lingering_area", "mine"].every((kind) => nativeWeaponFire.includes(`${kind}:`)));
 check("XP drops exist", runState.includes("xpDrops") && runUpdate.includes("collectXp"));
 check("coin and heart drops exist", runState.includes("lootDrops") && pickups.includes("spawnLootDrops") && pickups.includes('type: "coin"') && pickups.includes('type: "heart"'));
 check("coin and heart pickups use sprites", content.assets?.sprites?.ui?.coin && content.assets?.sprites?.ui?.heart && rendering.includes("ui:coin") && rendering.includes("ui:heart"));
@@ -212,7 +231,7 @@ check("level-up choices are limited to 3 random options", levelUpChoices.include
 check("level-up choices avoid immediate repeats", levelUp.includes("lastLevelUpChoiceIds") && levelUp.includes("freshChoices") && levelUp.includes("repeatChoices"));
 check("level-up choices have icons and click guard", levelUp.includes("level-choice-icon") && levelUp.includes("button.disabled = true") && levelUp.includes("}, 500)") && styles.includes("#levelUp .modal-box") && styles.includes("grid-template-columns: repeat(3"));
 check("level-up skill select uses static icons", levelUp.includes("createChoiceIcon") && levelUp.includes("assetResolver.choiceIconPath") && !levelUp.includes("renderChoiceSprite") && !levelUp.includes("requestAnimationFrame(drawFrame)") && Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]?.iconSrc?.includes("assets/generated/tower/sprites/")) && (content.runUpgrades || []).every((upgrade) => content.assets?.sprites?.runUpgrades?.[upgrade.id]?.iconSrc?.includes("assets/generated/tower/sprites/")));
-check("clean icons render and flash on left HUD", sprites.includes("weaponIcon:") && sprites.includes("options.trim === false") && sprites.includes("runUpgradeIcons") && renderSkillRail.includes("weaponFlashAmount") && renderSkillRail.includes("drawFallbackWeaponGlyph") && renderSkillRail.includes("weaponIcon:") && renderSkillRail.includes("drawUpgradeRail") && renderSkillRail.includes("drawFallbackUpgradeGlyph") && renderSkillRail.includes("runUpgradeIcon:") && runState.includes("weaponIconFlashes") && weaponFire.includes("flashWeaponIcon") && weaponFire.includes("weaponIconFlashes[weaponId] = 1") && (content.runUpgrades || []).every((upgrade) => content.assets?.sprites?.runUpgradeIcons?.[upgrade.id]?.includes("assets/generated/tower/sprites/")));
+check("clean icons render and flash on left HUD", sprites.includes("weaponIcon:") && sprites.includes("options.trim === false") && sprites.includes("runUpgradeIcons") && renderSkillRail.includes("weaponFlashAmount") && renderSkillRail.includes("drawFallbackWeaponGlyph") && renderSkillRail.includes("weaponIcon:") && renderSkillRail.includes("drawUpgradeRail") && renderSkillRail.includes("drawFallbackUpgradeGlyph") && renderSkillRail.includes("runUpgradeIcon:") && runState.includes("weaponIconFlashes") && nativeWeaponFire.includes("flashWeaponIcon") && nativeWeaponFire.includes("weaponIconFlashes[weaponId] = 1") && (content.runUpgrades || []).every((upgrade) => content.assets?.sprites?.runUpgradeIcons?.[upgrade.id]?.includes("assets/generated/tower/sprites/")));
 check("unique weapons are capped", levelUp.includes("maxEquippedWeapons") && levelUp.includes("equippedWeapons.length < maxWeapons") && game.includes("maxEquippedWeapons"));
 check("active quest weapons are offered on level-up", levelUp.includes("activeQuestWeaponIds") && levelUp.includes("questWeaponChoices"));
 check("new combat upgrade types exist", ["attack_radius", "fire_rate", "flat_damage", "percent_damage"].every((id) => metaUpgradeIds.has(id)));
@@ -220,7 +239,7 @@ check("new run upgrade types exist", ["run_attack_radius", "run_fire_rate", "run
 check("projectile behavior run upgrades exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit"].every((id) => runUpgradeIds.has(id)));
 check("more attack speed and damage levels exist", content.runUpgrades?.find((upgrade) => upgrade.id === "run_fire_rate")?.maxTier === 8 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_percent_damage")?.maxTier === 8 && content.metaUpgrades?.find((upgrade) => upgrade.id === "fire_rate")?.maxTier === 5 && content.metaUpgrades?.find((upgrade) => upgrade.id === "percent_damage")?.maxTier === 5);
 check("weapon damage upgrades have more tiers", upgrades.includes("cost: [1, 2, 3, 4, 5]") && upgrades.includes("maxTier: 5"));
-check("projectile behavior hooks exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit", "spawnProjectileBolt", "splitBoltOnHit", "explodeBolt"].every((token) => weaponFire.includes(token)));
+check("projectile behavior hooks exist", ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_explosive_hit", "run_split_on_hit", "spawnProjectileBolt", "splitBoltOnHit", "explodeBolt"].every((token) => nativeWeaponProjectiles.includes(token)));
 check("level-up choices favor started upgrade families", levelUpChoices.includes("weightedChoices") && levelUp.includes("familyTiers") && levelUp.includes("choice.runUpgradeId"));
 check("relic content exists for run skills", (content.relics || []).length >= 24 && (content.runUpgrades || []).every((upgrade) => (content.relics || []).filter((relic) => relic.targetUpgradeId === upgrade.id).length >= 2));
 check("relics affect level-up choices and run starts", levelUp.includes("relicSpawnRateMultiplier") && levelUp.includes("maxTierBonus") && levelUp.includes("equippedRelics") && levelUpChoices.includes("relic_compass") && relics.includes("startingRunUpgradeTiers") && game.includes("applyRelicStartingRunUpgrades") && game.includes("upgrade.apply?.(run)") && (content.relics || []).filter((relic) => relic.id.includes("_focus_relic")).every((relic) => relic.startingTierBonus === 1 && relic.maxTierBonus === 1 && relic.selectionWeightBonus === 2) && (content.relics || []).filter((relic) => /^random_.*_obsessed_relic$/.test(relic.id)).every((relic) => relic.startingTierBonus === 2 && relic.maxTierBonus === 2 && relic.selectionWeightBonus === 3) && (content.relics || []).filter((relic) => /^random_.*_mastery_relic$/.test(relic.id)).every((relic) => relic.startingTierBonus === 3 && relic.maxTierBonus === 3 && relic.selectionWeightBonus === 5) && (content.relics || []).filter((relic) => !relic.id.startsWith("random_") && relic.id.includes("_mastery_relic")).every((relic) => relic.startingTierBonus === 2 && relic.maxTierBonus === 2 && relic.selectionWeightBonus === 3));
@@ -247,7 +266,7 @@ check(
 );
 check("coin rewards scale toward floor 100 shop buyout", pickups.includes("function coinValue") && pickups.includes("(floor - 1) * coinFloorRewardRate") && pickups.includes("game.towerFloor") && shopPricing.includes("SHOP_FLOOR_PRICE_RATE = 0.03") && content.tuning?.loot?.coinFloorRewardRate === 0.06);
 check("shop bonuses affect run starts", game.includes("shopSystem.getShopBonuses") && runState.includes("shopBonuses.speed") && runState.includes("shopBonuses.maxHp"));
-check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => weaponFire.includes(token)) && game.includes("getShopBonuses"));
+check("shop damage bonus affects combat", ["shopBonuses.flatDamage", "shopBonuses.fireRate", "shopBonuses.attackRadius", "shopBonuses.percentDamage"].every((token) => nativeWeaponCooldowns.includes(token)) && game.includes("getShopBonuses"));
 check("title screen starts first", index.includes('id="titleScreen" class="modal"') && !index.includes('id="startMenu"') && shellUi.includes('currentScreen = "title"'));
 check("title Start Game starts run after transition", index.includes('id="titleStartGame"') && shellUi.includes("function startGameFromTitle") && shellUi.includes("startRun();"));
 check("title Start Game plays procedural laugh once", audio.includes("function playStartLaugh") && audio.includes("createOscillator") && shellUi.includes("if (currentScreen !== \"title\") return") && shellUi.includes("playStartLaugh?.()") && game.includes("playStartLaugh: audioSystem.playStartLaugh"));
@@ -279,7 +298,7 @@ check("boss spawn warning and sky drop exist", enemies.includes("bossSpawnNotice
 check("boss shockwave special exists", runtime.includes("updateBossSpecials") && rendering.includes("drawBossAttack") && runtime.includes('type: "shockwave"'));
 check("boss variants include charger and turret", content.bossAbilities?.charger && content.bossAbilities?.turret && enemyBehaviors.includes("startBossCharge") && enemyBehaviors.includes('type: "boss_slash"') && enemies.includes("projectileCooldown") && rendering.includes("drawBossSlash"));
 check("super bosses combine two boss abilities", enemies.includes("superBossAbilityCount") && enemies.includes("chooseBossAbilities") && enemies.includes("bossAbilities") && enemies.includes("hasBossAbility"));
-check("weapon attack animations exist", runState.includes("weaponBursts") && weaponFire.includes("addWeaponBurst") && weaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
+check("weapon attack animations exist", runState.includes("weaponBursts") && nativeWeaponFire.includes("addWeaponBurst") && nativeWeaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("balance.floorDifficulty") && game.includes("balance,"));
 check("debug balance system exists", debug.includes("createDebugSystem") && runtimeEntry.includes("TapSurvivorDebug"));
@@ -383,8 +402,9 @@ check(
     uiProgression.includes("function createUiProgressionRenderer") &&
     !ui.includes("globalThis.TapSurvivorUi =") &&
     !uiProgression.includes("globalThis.TapSurvivorUiProgression =") &&
-    gameDependencies.includes("ui: { createUi, createUiRenderer }") &&
-    gameDependencies.includes("uiProgression: { createUiProgressionRenderer }") &&
+    moduleGameDependencies.includes("createUi: (options = {})") &&
+    moduleGameDependencies.includes("createUiRenderer: (options = {})") &&
+    moduleGameDependencies.includes("createUiProgressionRenderer: (options = {})") &&
     game.includes("uiDependencies.createUiRenderer")
 );
 check(
