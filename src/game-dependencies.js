@@ -3709,13 +3709,10 @@
       const game = getGame();
       const weapon = weaponDefs[weaponId];
       const target = nearestEnemy();
-      if (!target) return;
       const p = game.player;
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      const dirX = dx / dist;
-      const dirY = dy / dist;
+      const { x: dirX, y: dirY } = target
+        ? normalizeVector(target.x - p.x, target.y - p.y)
+        : playerFacingVector(p);
       let dealt = 0;
 
       game.enemies.forEach((enemy) => {
@@ -3752,13 +3749,10 @@
       const game = getGame();
       const weapon = weaponDefs[weaponId];
       const target = nearestEnemy();
-      if (!target) return;
       const p = game.player;
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      const dirX = dx / dist;
-      const dirY = dy / dist;
+      const { x: dirX, y: dirY } = target
+        ? normalizeVector(target.x - p.x, target.y - p.y)
+        : playerFacingVector(p);
       game.enemies.forEach((enemy) => {
         const toEnemyX = enemy.x - p.x;
         const toEnemyY = enemy.y - p.y;
@@ -3838,6 +3832,7 @@
         .sort((a, b) => distance(p, a) - distance(p, b))
         .slice(0, weapon.jumps);
       let from = p;
+      let emitted = false;
       targets.forEach((enemy) => {
         if (distance(from, enemy) > weaponReach(weapon)) return;
         damageEnemy(enemy, weaponDamage(weaponId), weaponId);
@@ -3851,8 +3846,22 @@
           color: weapon.color,
           life: 0.12,
         });
+        emitted = true;
         from = enemy;
       });
+      if (!emitted) {
+        const { x: dirX, y: dirY } = playerFacingVector(p);
+        game.beams.push({
+          weaponId,
+          x: p.x,
+          y: p.y,
+          endX: p.x + dirX * weaponReach(weapon),
+          endY: p.y + dirY * weaponReach(weapon),
+          width: 4,
+          color: weapon.color,
+          life: 0.12,
+        });
+      }
       reapEnemies();
     }
 
@@ -3961,6 +3970,11 @@
       const distanceToTarget = Math.hypot(dx, dy);
       if (distanceToTarget > 0) return { x: dx / distanceToTarget, y: dy / distanceToTarget };
       return { x: 0, y: 1 };
+    }
+
+    function normalizeVector(x, y) {
+      const length = Math.max(1, Math.hypot(x, y));
+      return { x: x / length, y: y / length };
     }
 
     function mineArmDelay(weapon) {
@@ -4402,18 +4416,17 @@
       const game = getGame();
       const weapon = weaponDefs[weaponId];
       const target = nearestEnemy();
-      if (!target) return;
       const p = game.player;
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
+      const direction = target
+        ? normalizeVector(target.x - p.x, target.y - p.y)
+        : playerFacingVector(p);
       const relicEffects = getRelicSpecialEffects?.() || {};
       const speed =
         weapon.speed *
         (1 + (relicEffects.projectileSpeedBonus || 0)) *
         projectileSkillModifier(weapon, "projectileSpeedMultiplier");
-      const baseVx = (dx / dist) * speed;
-      const baseVy = (dy / dist) * speed;
+      const baseVx = direction.x * speed;
+      const baseVy = direction.y * speed;
       const splitTier = getRunUpgradeTier("run_split_shot");
       const spread = 0.26;
 
@@ -4429,6 +4442,23 @@
         spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread * 2));
         spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, spread * 2));
       }
+    }
+
+    function normalizeVector(x, y) {
+      const length = Math.max(1, Math.hypot(x, y));
+      return { x: x / length, y: y / length };
+    }
+
+    function playerFacingVector(player) {
+      if (Number.isFinite(player.facingX) && Number.isFinite(player.facingY)) {
+        const length = Math.hypot(player.facingX, player.facingY);
+        if (length > 0) return { x: player.facingX / length, y: player.facingY / length };
+      }
+      const dx = player.targetX - player.x;
+      const dy = player.targetY - player.y;
+      const distanceToTarget = Math.hypot(dx, dy);
+      if (distanceToTarget > 0) return { x: dx / distanceToTarget, y: dy / distanceToTarget };
+      return { x: 0, y: 1 };
     }
 
     function spawnProjectileBolt(weaponId, x, y, vx, vy, overrides = {}) {
