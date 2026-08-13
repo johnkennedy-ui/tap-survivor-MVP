@@ -1545,8 +1545,8 @@
       return [
         ...new Set(
           arrayValue(value).filter(
-            (questId) => typeof questId === "string" && knownQuestIds.has(questId),
-          ),
+            (questId) => typeof questId === "string" && knownQuestIds.has(questId)
+          )
         ),
       ];
     }
@@ -1601,12 +1601,12 @@
       normalized.questPoints = nonNegativeInteger(normalized.questPoints);
       normalized.totalQuestPoints = Math.max(
         normalized.questPoints,
-        nonNegativeInteger(normalized.totalQuestPoints),
+        nonNegativeInteger(normalized.totalQuestPoints)
       );
       normalized.completedQuests = normalizeQuestIds(normalized.completedQuests);
       const completedQuestIds = new Set(normalized.completedQuests);
       normalized.activeQuests = normalizeQuestIds(normalized.activeQuests).filter(
-        (questId) => !completedQuestIds.has(questId),
+        (questId) => !completedQuestIds.has(questId)
       );
       normalized.questProgress = normalizeQuestProgress(normalized.questProgress);
 
