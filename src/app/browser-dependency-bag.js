@@ -1243,6 +1243,7 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   const ImageCtor = globalRef?.Image;
   const diagnostics = canvas?.ownerDocument?.__TapSurvivorBrowserSmoke?.diagnostics;
   const sprites = new Map();
+  const spriteSheets = new Map();
   const spriteConfigs = new Map();
   const rasterCache = new Map();
 
@@ -1309,6 +1310,40 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
     });
   }
 
+  function registerSpriteSheet(id, definition) {
+    const src = spriteSource(definition);
+    if (!id || !src || typeof ImageCtor !== "function") return false;
+    const config = definition && typeof definition === "object" && !Array.isArray(definition)
+      ? definition
+      : {};
+    const image = new ImageCtor();
+    image.addEventListener?.("load", () => {
+      diagnostics?.spriteLoads?.push?.({
+        id: `spriteSheet:${id}`,
+        naturalHeight: image.naturalHeight || image.height || 0,
+        naturalWidth: image.naturalWidth || image.width || 0,
+        src,
+        success: true,
+      });
+    });
+    image.addEventListener?.("error", () => {
+      diagnostics?.spriteLoads?.push?.({
+        id: `spriteSheet:${id}`,
+        naturalHeight: image.naturalHeight || image.height || 0,
+        naturalWidth: image.naturalWidth || image.width || 0,
+        src,
+        success: false,
+      });
+    });
+    image.src = src;
+    spriteSheets.set(id, { config, image });
+    diagnostics?.spriteRegistrations?.push?.({
+      id: `spriteSheet:${id}`,
+      src,
+    });
+    return true;
+  }
+
   function loadSprites(spriteDefs = assetDefs.sprites || assetDefs || {}) {
     diagnostics?.spriteLoadRequests?.push?.({
       backgrounds: Object.keys(spriteDefs.backgrounds || {}),
@@ -1329,6 +1364,9 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
     registerGroup("runUpgrade", spriteDefs.runUpgrades);
     registerGroup("runUpgradeIcon", spriteDefs.runUpgradeIcons);
     registerGroup("ui", spriteDefs.ui);
+    Object.entries(spriteDefs.spriteSheets || {}).forEach(([id, definition]) => {
+      registerSpriteSheet(id, definition);
+    });
     return true;
   }
 
@@ -1370,17 +1408,43 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
   }
 
   function drawSprite(id, x = 0, y = 0, size = 32, rotation = 0, options = {}) {
+    const width = Math.max(1, numberValue(options.width, size));
+    const height = Math.max(1, numberValue(options.height, size));
+    const sheetDraw = drawSpriteSheet({
+      height,
+      options,
+      rotation,
+      width,
+      x,
+      y,
+    });
+    if (sheetDraw?.drawn) {
+      recordSpriteDraw({
+        animationId: options.animationId,
+        frameIndex: sheetDraw.frame,
+        id,
+        image: sheetDraw.image,
+        row: sheetDraw.row,
+        sheetId: options.sheetId,
+        source: "spriteSheet",
+        state: options.animationState,
+        success: true,
+      });
+      return true;
+    }
+
     const image = sprites.get(id);
     if (!context || !isDrawableImage(image)) {
-      diagnostics?.spriteDraws?.push?.({
+      recordSpriteDraw({
+        animationId: options.animationId,
         id,
-        kind: "drawSprite",
+        image,
+        sheetId: options.sheetId,
+        source: options.sheetId ? "staticFallbackAfterSpriteSheet" : "static",
         success: false,
       });
       return false;
     }
-    const width = Math.max(1, numberValue(options.width, size));
-    const height = Math.max(1, numberValue(options.height, size));
     const config = spriteConfigs.get(id) || {};
     const frameIndex = currentFrameIndex(config, options);
     const bounds = spriteSourceBounds(image, config, frameIndex);
@@ -1421,16 +1485,114 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
       if (Number.isFinite(Number(options.alpha))) context.globalAlpha = previousAlpha;
       context.restore?.();
     }
-    diagnostics?.spriteDraws?.push?.({
-      id,
-      kind: "drawSprite",
+    recordSpriteDraw({
+      animationId: options.animationId,
       frameIndex,
-      naturalHeight: image.naturalHeight || image.height || 0,
-      naturalWidth: image.naturalWidth || image.width || 0,
-      src: image.src || "",
+      id,
+      image,
+      sheetId: options.sheetId,
+      source: options.sheetId ? "staticFallbackAfterSpriteSheet" : "static",
+      state: options.animationState,
       success: drawn,
     });
     return drawn;
+  }
+
+  function drawSpriteSheet({ height, options, rotation, width, x, y }) {
+    const sheetId = options.sheetId;
+    const sheet = spriteSheets.get(sheetId);
+    const image = sheet?.image;
+    const animation = resolveSpriteSheetAnimation(
+      sheet?.config,
+      options.animationId,
+      options.animationState
+    );
+    if (!context || !isDrawableImage(image) || !animation) return null;
+    const columns = Math.max(1, Math.floor(numberValue(sheet.config?.columns, 1)));
+    const rows = Math.max(1, Math.floor(numberValue(sheet.config?.rows, 1)));
+    const frame = selectedSpriteSheetFrame(animation, options.time);
+    const row = Number(animation.row);
+    if (!Number.isInteger(row) || row < 0 || row >= rows || frame < 0 || frame >= columns) return null;
+
+    const frameWidth = (image.naturalWidth || image.width) / columns;
+    const frameHeight = (image.naturalHeight || image.height) / rows;
+    if (!Number.isFinite(frameWidth) || !Number.isFinite(frameHeight) || frameWidth <= 0 || frameHeight <= 0) {
+      return null;
+    }
+
+    const previousAlpha = context.globalAlpha;
+    let drawn = false;
+    try {
+      context.save?.();
+      context.translate?.(x, y);
+      context.rotate?.(rotation);
+      context.scale?.(options.flipX ? -1 : 1, options.flipY ? -1 : 1);
+      if (Number.isFinite(Number(options.alpha))) {
+        context.globalAlpha = (Number.isFinite(previousAlpha) ? previousAlpha : 1) * clampValue(options.alpha, 0, 1);
+      }
+      context.imageSmoothingEnabled = false;
+      context.drawImage(
+        image,
+        frame * frameWidth,
+        row * frameHeight,
+        frameWidth,
+        frameHeight,
+        -width / 2,
+        -height / 2,
+        width,
+        height
+      );
+      drawn = true;
+    } catch {
+      drawn = false;
+    } finally {
+      if (Number.isFinite(Number(options.alpha))) context.globalAlpha = previousAlpha;
+      context.restore?.();
+    }
+    return { drawn, frame, image, row };
+  }
+
+  function resolveSpriteSheetAnimation(sheet, animationId, state) {
+    const definition = sheet?.animations?.[animationId];
+    if (!definition) return null;
+    if (Array.isArray(definition.frames)) return definition;
+    const stateDefinition = definition[state] || definition.idle || definition.default;
+    if (!stateDefinition) return null;
+    return {
+      ...definition,
+      ...stateDefinition,
+      row: stateDefinition.row ?? definition.row,
+    };
+  }
+
+  function selectedSpriteSheetFrame(animation, suppliedTime) {
+    const frames = Array.isArray(animation?.frames) ? animation.frames : [];
+    if (!frames.length) return -1;
+    if (frames.length === 1) return Number(frames[0]);
+    const fps = Math.max(1, numberValue(animation.fps, 8));
+    const time = Number(suppliedTime);
+    const elapsed = Number.isFinite(time)
+      ? Math.max(0, time)
+      : Math.max(0, numberValue(globalRef?.performance?.now?.(), 0) / 1000);
+    const frameIndex = Math.floor(elapsed * fps);
+    return Number(frames[animation.loop === false ? Math.min(frames.length - 1, frameIndex) : frameIndex % frames.length]);
+  }
+
+  function recordSpriteDraw({ animationId, frameIndex, id, image, row, sheetId, source, state, success }) {
+    diagnostics?.spriteDraws?.push?.({
+      animationId,
+      frameIndex,
+      id,
+      kind: "drawSprite",
+      naturalHeight: image?.naturalHeight || image?.height || 0,
+      naturalWidth: image?.naturalWidth || image?.width || 0,
+      row,
+      sheetId,
+      source,
+      src: image?.src || "",
+      state,
+      success,
+    });
   }
 
   function rasterizedSprite(id, image, width, height, config, frameIndex, bounds) {
@@ -1572,6 +1734,7 @@ function createBrowserUiAdapters({
       onStartRun,
       renderInventory: inventoryRenderer.renderInventory,
       renderShop: shopSystemAdapter.renderShop,
+      setRunMenuOpen: runtimeUiActions.setRunMenuOpen,
       toggleAudioMute: runtimeUiActions.toggleAudioMute,
       ui,
     }),
@@ -1593,6 +1756,7 @@ function createBrowserRuntimeUiActionBinding() {
     closeLevelUpMenu: () => runtimeUiActions.closeLevelUpMenu?.(),
     closeShopMenu: () => runtimeUiActions.closeShopMenu?.(),
     isAudioMuted: () => Boolean(runtimeUiActions.isAudioMuted?.()),
+    setRunMenuOpen: (open) => runtimeUiActions.setRunMenuOpen?.(Boolean(open)),
     toggleAudioMute: () => runtimeUiActions.toggleAudioMute?.(),
   };
 }
@@ -1659,6 +1823,7 @@ function createBrowserShellUiAdapter({
   onStartRun,
   renderInventory,
   renderShop,
+  setRunMenuOpen,
   toggleAudioMute,
   ui,
 }) {
@@ -1666,6 +1831,7 @@ function createBrowserShellUiAdapter({
   const renderInventoryPanel = renderInventory || (() => {});
   const renderShopPanel = renderShop || (() => {});
   const setMenuOpen = (open) => {
+    setRunMenuOpen?.(Boolean(open));
     toggleHidden(ui.runMenu, !open);
     ui.openMenu?.setAttribute?.("aria-expanded", String(Boolean(open)));
     if (ui.exitRun) ui.exitRun.disabled = !open;
