@@ -381,8 +381,10 @@ export function createModuleGameDependencyBag({
         const game = stateStore.getGame();
         if (!game?.running) return false;
         if (open) {
-          game.paused = true;
-          game.pauseReason = "menu";
+          if (!game.paused) {
+            game.paused = true;
+            game.pauseReason = "menu";
+          }
         } else if (game.pauseReason === "menu") {
           game.paused = false;
           game.pauseReason = "";

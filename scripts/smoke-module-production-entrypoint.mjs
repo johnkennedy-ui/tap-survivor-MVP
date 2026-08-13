@@ -577,6 +577,7 @@ const uiSurface = {
   closeEnd: createVisibilityNode("browser-ui:close-end"),
   closeEndX: createVisibilityNode("browser-ui:close-end-x"),
   closeLevelUp: createVisibilityNode("browser-ui:close-level-up"),
+  closeMenu: createVisibilityNode("browser-ui:close-menu"),
   closeShop: createVisibilityNode("browser-ui:close-shop"),
   closeShopBottom: createVisibilityNode("browser-ui:close-shop-bottom"),
   endScreen: createVisibilityNode("browser-ui:end-screen"),
@@ -806,6 +807,20 @@ const browserMuteButtonUpdated =
   uiSurface.muteAudio.getAttribute("aria-pressed") === "true" &&
   uiSurface.muteAudio.classList.contains("active") &&
   uiSurface.muteAudio.textContent === "Muted";
+browserGameAfterStart.paused = true;
+browserGameAfterStart.pauseReason = "level";
+uiSurface.openMenu.click();
+const browserMenuPreservedLevelPauseOnOpen =
+  browserGameAfterStart.paused === true &&
+  browserGameAfterStart.pauseReason === "level" &&
+  uiSurface.runMenu.hidden === false;
+uiSurface.closeMenu.click();
+const browserMenuPreservedLevelPauseOnClose =
+  browserGameAfterStart.paused === true &&
+  browserGameAfterStart.pauseReason === "level" &&
+  uiSurface.runMenu.hidden === true;
+browserGameAfterStart.paused = false;
+browserGameAfterStart.pauseReason = "";
 browserUiAdapters.shopSystemAdapter.openShop();
 const browserShopOpened =
   !uiSurface.shopModal.hidden &&
@@ -944,6 +959,10 @@ check(
 check(
   "production module browser mute updates the native audio state and button presentation",
   browserAudioMutedBeforeClick === false && browserAudioMuteStateAfterClick === true && browserMuteButtonUpdated
+);
+check(
+  "production module browser menu preserves an existing non-menu pause",
+  browserMenuPreservedLevelPauseOnOpen && browserMenuPreservedLevelPauseOnClose
 );
 check(
   "production module browser level-up actions render choices and change run state",
