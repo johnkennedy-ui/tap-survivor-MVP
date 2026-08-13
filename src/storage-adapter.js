@@ -1,9 +1,17 @@
 (() => {
-  function createStorageAdapter({
-    saveKey,
-    legacySaveKey,
-    corruptBackupKey = `${saveKey}-corrupt-backup`,
-  }) {
+  let defaultPlatformCapabilities = null;
+
+  function createStorageAdapter(options) {
+    const {
+      saveKey,
+      legacySaveKey,
+      corruptBackupKey = `${saveKey}-corrupt-backup`,
+      platformCapabilities,
+    } = options;
+    const hasExplicitPlatformCapabilities = Object.prototype.hasOwnProperty.call(
+      options,
+      "platformCapabilities"
+    );
     let backendName = "unavailable";
     let lastStorageError = null;
 
@@ -18,11 +26,27 @@
     }
 
     function preferencesPlugin() {
-      return globalThis.Capacitor?.Plugins?.Preferences || null;
+      return resolvePlatformCapability("getPreferences");
     }
 
     function browserStorage() {
-      return globalThis.localStorage || null;
+      return resolvePlatformCapability("getLocalStorage");
+    }
+
+    function resolvePlatformCapability(name) {
+      const resolver = activePlatformCapabilities()?.[name];
+      if (typeof resolver !== "function") return null;
+
+      try {
+        return resolver() || null;
+      } catch (error) {
+        rememberError(`platform-${name}`, error);
+        return null;
+      }
+    }
+
+    function activePlatformCapabilities() {
+      return hasExplicitPlatformCapabilities ? platformCapabilities : defaultPlatformCapabilities;
     }
 
     async function getFromPreferences(plugin, key) {
@@ -209,7 +233,15 @@
     };
   }
 
-  globalThis.TapSurvivorStorage = {
+  function configureDefaultProviders({ platformCapabilities } = {}) {
+    defaultPlatformCapabilities = platformCapabilities || null;
+    return storagePublisher;
+  }
+
+  const storagePublisher = {
+    configureDefaultProviders,
     createStorageAdapter,
   };
+
+  globalThis.TapSurvivorStorage = storagePublisher;
 })();

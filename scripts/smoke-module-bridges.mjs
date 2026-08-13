@@ -1305,6 +1305,24 @@ check(
   JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
 );
 check(
+  "native and generated dependency bags configure injected storage capabilities",
+  moduleGameDependenciesSnapshot.storagePlatformProviderCalls.length > 0 &&
+    JSON.stringify(moduleGameDependenciesSnapshot.storagePlatformProviderCalls) ===
+      JSON.stringify(bridgeGameDependenciesSnapshot.storagePlatformProviderCalls) &&
+    moduleGameDependenciesSnapshot.storagePlatformProviderCalls[0].hasLocalStorageResolver &&
+    moduleGameDependenciesSnapshot.storagePlatformProviderCalls[0].hasPreferencesResolver &&
+    moduleGameDependenciesSnapshot.storagePlatformProviderCalls[0].localStorage &&
+    moduleGameDependenciesSnapshot.storagePlatformProviderCalls.every(
+      ({ hasLocalStorageResolver, hasPreferencesResolver, localStorage, preferences }) =>
+        hasLocalStorageResolver && hasPreferencesResolver && localStorage && preferences
+    )
+);
+check(
+  "generated storage dependency bridge has no direct platform global reads",
+  !gameDependenciesBridge.source.includes("globalThis.Capacitor") &&
+    !gameDependenciesBridge.source.includes("globalThis.localStorage")
+);
+check(
   "module dependency bag exposes statically imported game runtime controller",
   moduleGameDependenciesSnapshot.__bag.gameRuntime.createGameRuntimeController ===
     createModuleGameRuntimeController
@@ -2245,7 +2263,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   ];
   const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
   const saveProviderCalls = [];
+  const storagePlatformProviderCalls = [];
   const saveStorage = {
+    configureDefaultProviders(options) {
+      storagePlatformProviderCalls.push(options);
+    },
     createStorageAdapter(options) {
       saveProviderCalls.push(options);
       return createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 11 }));
@@ -2253,6 +2275,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     name: "TapSurvivorStorage",
   };
   baseGlobalRef.TapSurvivorStorage = saveStorage;
+  baseGlobalRef.localStorage = { getItem() {}, setItem() {}, removeItem() {} };
+  baseGlobalRef.Capacitor = { Plugins: { Preferences: {} } };
   baseGlobalRef.TapSurvivorGameRuntime = { name: "TapSurvivorGameRuntime" };
   const retiredGlobalNames = [
     "TapSurvivorBalance",
@@ -2547,6 +2571,12 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasSaveFactory: typeof bag.save.createSaveSystem === "function",
     injectedSaveCoins: configuredSave.coins,
     saveProviderCalls,
+    storagePlatformProviderCalls: storagePlatformProviderCalls.map(({ platformCapabilities }) => ({
+      hasLocalStorageResolver: typeof platformCapabilities?.getLocalStorage === "function",
+      hasPreferencesResolver: typeof platformCapabilities?.getPreferences === "function",
+      localStorage: platformCapabilities?.getLocalStorage?.() === globalRef.localStorage,
+      preferences: platformCapabilities?.getPreferences?.() === globalRef.Capacitor?.Plugins?.Preferences,
+    })),
     hasShellRelicUi: typeof bag.shellRelicUi.createShellRelicUi === "function",
     shellRelicCallerTimerCount: callerShellRelicTimers.length,
     shellRelicCallerTiming: callerShellRelicTiming,

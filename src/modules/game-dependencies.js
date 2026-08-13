@@ -52,6 +52,11 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
   const upgrades = { createUpgradeContent };
   const save = { createSaveSystem };
   const storage = requireGlobal(globalRef, "TapSurvivorStorage");
+  if (typeof storage.configureDefaultProviders === "function") {
+    storage.configureDefaultProviders({
+      platformCapabilities: createStoragePlatformCapabilities(globalRef),
+    });
+  }
   const audio = requireGlobal(globalRef, "TapSurvivorAudio");
   if (typeof audio.configureDefaultProviders === "function") {
     audio.configureDefaultProviders({
@@ -160,6 +165,13 @@ function createBalanceStorageProvider(globalRef) {
     getItem: (key) => globalRef?.localStorage?.getItem?.(key),
     removeItem: (key) => globalRef?.localStorage?.removeItem?.(key),
     setItem: (key, value) => globalRef?.localStorage?.setItem?.(key, value),
+  };
+}
+
+function createStoragePlatformCapabilities(globalRef) {
+  return {
+    getLocalStorage: () => globalRef?.localStorage || null,
+    getPreferences: () => globalRef?.Capacitor?.Plugins?.Preferences || null,
   };
 }
 

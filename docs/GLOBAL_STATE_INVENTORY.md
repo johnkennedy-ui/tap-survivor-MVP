@@ -158,13 +158,14 @@ Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 22 (27 -> 21 allowed expressions and 34 -> 28 allowed usages); the allowlist does
+  dot-expression global audit is 20 (27 -> 19 allowed expressions and 34 -> 26 allowed usages); the allowlist does
   not count bare `globalThis` fallback syntax. The six-publisher retirement leaves only the explicitly listed
   compatibility boundaries above for the next migration batch.
 - `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
-  capability from the classic dependency bag; `globalThis.localStorage` remains in the separately owned storage-adapter
-  platform selection.
-- `globalThis.Capacitor?.Plugins?.Preferences` and `globalThis.localStorage` are used by storage adapter platform selection.
+  capability from the classic dependency bag.
+- Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
+  `globalRef` through `TapSurvivorStorage.configureDefaultProviders`; the retained publisher has no direct platform-global
+  reads and preserves Preferences-first, fallback, and unavailable behavior.
 - Audio context construction is supplied to the classic audio publisher through the `globalRef` boundary in
   `src/modules/game-dependencies.js`; `src/audio.js` has no browser audio-global reader.
 - `TapSurvivorShellRelicUi` is retired. `src/modules/game-dependencies.js` supplies the native shell-relic factory

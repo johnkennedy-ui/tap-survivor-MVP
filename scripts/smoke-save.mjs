@@ -15,6 +15,7 @@ const saveCorruptionSource = readFileSync(join(root, "src/save-corruption.js"), 
 const saveSource = readFileSync(join(root, "src/save.js"), "utf8");
 
 const storage = new Map();
+const localStorage = createStorageBackend(storage);
 let retiredSaveDefaultsReads = 0;
 let retiredSaveMigrationsReads = 0;
 let retiredSaveNormalizeReads = 0;
@@ -22,17 +23,7 @@ let retiredSaveCorruptionReads = 0;
 let retiredSavePublisherReads = 0;
 const context = {
   console,
-  localStorage: {
-    getItem(key) {
-      return storage.get(key) || null;
-    },
-    setItem(key, value) {
-      storage.set(key, value);
-    },
-    removeItem(key) {
-      storage.delete(key);
-    },
-  },
+  localStorage,
 };
 Object.defineProperty(context, "TapSurvivorSaveDefaults", {
   configurable: true,
@@ -99,7 +90,14 @@ const saveMigrations = dependencyBag.saveMigrations;
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";
 const corruptBackupKey = `${saveKey}-corrupt-backup`;
-const storageAdapter = context.TapSurvivorStorage.createStorageAdapter({
+const storagePublisher = context.TapSurvivorStorage;
+storagePublisher.configureDefaultProviders({
+  platformCapabilities: {
+    getLocalStorage: () => localStorage,
+    getPreferences: () => null,
+  },
+});
+const storageAdapter = storagePublisher.createStorageAdapter({
   saveKey,
   legacySaveKey,
   corruptBackupKey,
@@ -294,7 +292,14 @@ const throwingDependencyBag = throwingContext.TapSurvivorGameDependencies.create
   documentRef: {},
 });
 
-const throwingAdapter = throwingContext.TapSurvivorStorage.createStorageAdapter({
+const throwingStoragePublisher = throwingContext.TapSurvivorStorage;
+throwingStoragePublisher.configureDefaultProviders({
+  platformCapabilities: {
+    getLocalStorage: () => throwingContext.localStorage,
+    getPreferences: () => null,
+  },
+});
+const throwingAdapter = throwingStoragePublisher.createStorageAdapter({
   saveKey,
   legacySaveKey,
 });
@@ -355,9 +360,153 @@ check("storage unavailable load returns default save", unavailableSave.unlockedW
 check("storage unavailable persist reports false", unavailablePersisted === false);
 check("storage unavailable backend is controlled", throwingAdapter.getStorageBackendName() === "unavailable");
 
+const guardedStorage = createStorageBackend();
+const guardedPreferences = createPreferencesBackend();
+let retiredCapacitorReads = 0;
+let retiredLocalStorageReads = 0;
+storagePublisher.configureDefaultProviders({
+  platformCapabilities: {
+    getLocalStorage: () => guardedStorage,
+    getPreferences: () => guardedPreferences,
+  },
+});
+Object.defineProperty(context, "Capacitor", {
+  configurable: true,
+  get() {
+    retiredCapacitorReads += 1;
+    throw new Error("Forbidden direct Capacitor global read");
+  },
+});
+Object.defineProperty(context, "localStorage", {
+  configurable: true,
+  get() {
+    retiredLocalStorageReads += 1;
+    throw new Error("Forbidden direct localStorage global read");
+  },
+});
+const guardedAdapter = storagePublisher.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
+const guardedSet = await guardedAdapter.setSaveRaw("preferences-current");
+const guardedCurrent = await guardedAdapter.getSaveRaw();
+guardedPreferences.values.delete(saveKey);
+guardedPreferences.values.set(legacySaveKey, "preferences-legacy");
+const guardedLegacy = await guardedAdapter.getSaveRaw();
+const guardedBackup = await guardedAdapter.setCorruptBackupRaw("preferences-backup");
+guardedStorage.setItem(saveKey, "local-current");
+guardedStorage.setItem(legacySaveKey, "local-legacy");
+const guardedRemove = await guardedAdapter.removeSaveRaw();
+check(
+  "preferences-first storage uses injected capabilities only",
+  typeof storagePublisher.configureDefaultProviders === "function" &&
+    guardedSet === true &&
+    guardedCurrent === "preferences-current" &&
+    guardedLegacy === "preferences-legacy" &&
+    guardedBackup === true &&
+    guardedPreferences.values.get(corruptBackupKey) === "preferences-backup" &&
+    guardedAdapter.getStorageBackendName() === "capacitor-preferences" &&
+    retiredCapacitorReads === 0 &&
+    retiredLocalStorageReads === 0
+);
+check(
+  "preference removal cleans local storage too",
+  guardedRemove === true &&
+    !guardedPreferences.values.has(saveKey) &&
+    !guardedPreferences.values.has(legacySaveKey) &&
+    !guardedStorage.values.has(saveKey) &&
+    !guardedStorage.values.has(legacySaveKey)
+);
+
+const fallbackStorage = createStorageBackend();
+const failingPreferences = {
+  get() { throw new Error("preferences unavailable"); },
+  remove() { throw new Error("preferences unavailable"); },
+  set() { throw new Error("preferences unavailable"); },
+};
+storagePublisher.configureDefaultProviders({
+  platformCapabilities: {
+    getLocalStorage: () => fallbackStorage,
+    getPreferences: () => failingPreferences,
+  },
+});
+const fallbackAdapter = storagePublisher.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
+const fallbackSet = await fallbackAdapter.setSaveRaw("fallback-current");
+const fallbackCurrent = await fallbackAdapter.getSaveRaw();
+const fallbackBackup = await fallbackAdapter.setCorruptBackupRaw("fallback-backup");
+const fallbackRemove = await fallbackAdapter.removeSaveRaw();
+check(
+  "preference failures fall back to local storage",
+  fallbackSet === true &&
+    fallbackCurrent === "fallback-current" &&
+    fallbackBackup === true &&
+    fallbackStorage.values.get(corruptBackupKey) === "fallback-backup" &&
+    fallbackRemove === true &&
+    !fallbackStorage.values.has(saveKey) &&
+    !fallbackStorage.values.has(legacySaveKey)
+);
+
+let recoveredStorage = null;
+storagePublisher.configureDefaultProviders({
+  platformCapabilities: {
+    getLocalStorage: () => recoveredStorage,
+    getPreferences: () => null,
+  },
+});
+const recoveringAdapter = storagePublisher.createStorageAdapter({ saveKey, legacySaveKey });
+const missingRaw = recoveringAdapter.getSaveRaw();
+const missingPersisted = recoveringAdapter.setSaveRaw("missing-current");
+recoveredStorage = createStorageBackend();
+const recoveredPersisted = recoveringAdapter.setSaveRaw("recovered-current");
+const recoveredRaw = recoveringAdapter.getSaveRaw();
+const configuredStorage = createStorageBackend();
+const explicitStorage = createStorageBackend();
+storagePublisher.configureDefaultProviders({
+  platformCapabilities: { getLocalStorage: () => configuredStorage, getPreferences: () => null },
+});
+const explicitAdapter = storagePublisher.createStorageAdapter({
+  saveKey,
+  legacySaveKey,
+  platformCapabilities: { getLocalStorage: () => explicitStorage, getPreferences: () => null },
+});
+const explicitPersisted = explicitAdapter.setSaveRaw("explicit-current");
+check(
+  "missing capabilities fail closed and later resolver availability recovers",
+  missingRaw === null &&
+    missingPersisted === false &&
+    recoveredPersisted === true &&
+    recoveredRaw === "recovered-current" &&
+    recoveringAdapter.getStorageBackendName() === "localStorage"
+);
+check(
+  "explicit platform capabilities override configured defaults",
+  explicitPersisted === true &&
+    explicitStorage.values.get(saveKey) === "explicit-current" &&
+    !configuredStorage.values.has(saveKey)
+);
+check(
+  "storage adapter removes direct platform global reads",
+  !storageSource.includes("globalThis.Capacitor") && !storageSource.includes("globalThis.localStorage")
+);
+
 if (process.exitCode) {
   console.error("\nSave smoke failed.");
   process.exit(process.exitCode);
 }
 
 console.log("\nSave smoke passed.");
+
+function createPreferencesBackend(values = new Map()) {
+  return {
+    values,
+    async get({ key }) { return { value: values.get(key) || null }; },
+    async remove({ key }) { values.delete(key); },
+    async set({ key, value }) { values.set(key, value); },
+  };
+}
+
+function createStorageBackend(values = new Map()) {
+  return {
+    values,
+    getItem(key) { return values.get(key) || null; },
+    removeItem(key) { values.delete(key); },
+    setItem(key, value) { values.set(key, value); },
+  };
+}
