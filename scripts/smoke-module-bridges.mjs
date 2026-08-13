@@ -1143,7 +1143,10 @@ check("projectile fire fixture color is preserved", moduleProjectileFire.color =
 check("projectile fire fixture life is unchanged", moduleProjectileFire.life === 1.8);
 
 const moduleNoTarget = runNoTargetProjectileFixture(createModuleWeaponProjectileSystem);
-check("module no-target fixture spawns no bolts", moduleNoTarget.boltCount === 0);
+check(
+  "module no-target fixture spawns a facing-direction bolt",
+  moduleNoTarget.boltCount === 1 && moduleNoTarget.vx === 0 && moduleNoTarget.vy > 0
+);
 
 const moduleSplitDouble = runSplitDoubleProjectileFixture(createModuleWeaponProjectileSystem);
 check("split/double fixture spawns expected bolt count", moduleSplitDouble.boltCount === 4);
@@ -1934,8 +1937,11 @@ function runNoTargetProjectileFixture(createWeaponProjectileSystem) {
   const fixture = createProjectileFixture({ nearestEnemy: () => null });
   const system = createWeaponProjectileSystem(fixture.options);
   system.fireProjectile("bolt");
+  const bolt = fixture.game.bolts[0];
   return {
     boltCount: fixture.game.bolts.length,
+    vx: bolt?.vx,
+    vy: bolt?.vy,
   };
 }
 

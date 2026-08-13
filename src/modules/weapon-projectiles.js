@@ -129,7 +129,11 @@ export function createWeaponProjectileSystem({
       const length = Math.hypot(player.facingX, player.facingY);
       if (length > 0) return { x: player.facingX / length, y: player.facingY / length };
     }
-    return normalizeVector(player.targetX - player.x, player.targetY - player.y);
+    const dx = player.targetX - player.x;
+    const dy = player.targetY - player.y;
+    const distanceToTarget = Math.hypot(dx, dy);
+    if (distanceToTarget > 0) return { x: dx / distanceToTarget, y: dy / distanceToTarget };
+    return { x: 0, y: 1 };
   }
 
   function spawnProjectileBolt(weaponId, x, y, vx, vy, overrides = {}) {
