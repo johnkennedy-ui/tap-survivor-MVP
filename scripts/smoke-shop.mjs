@@ -51,6 +51,30 @@ check("run menu shop tab renders items", harness.elements.get("menuShopItems").c
 check("run menu shop tab shows scaled floor context", harness.elements.get("menuShopCoinHud").textContent.includes("Tower Floor"));
 check("run menu shop tab leaves inline inflation notice empty", !harness.elements.get("menuShopNotice").textContent.includes("Inflation huh."));
 
+const rewards = createGameHarness({
+  fakeCombat: true,
+  initialSave: {
+    activeQuests: ["first_blood"],
+    completedQuests: ["spark_bolt_mastery"],
+    questPoints: 1,
+    questProgress: { first_blood: 0 },
+    totalQuestPoints: 1,
+    unlockedWeapons: ["spark_bolt"],
+  },
+});
+rewards.elements.get("titleStartGame").click();
+rewards.elements.get("openMenu").click();
+const rewardNode = rewards.elements.get("menuTree").children[0];
+const rewardIcon = rewardNode?.children[0];
+const rewardButton = rewardNode?.children[1];
+check("Rewards tab renders a nonempty QP balance", rewards.elements.get("menuQpHud").textContent.includes("Quest Points: 1"));
+check("Rewards tab renders progression nodes and active quests", rewards.elements.get("menuTree").children.length > 0 && rewards.elements.get("menuQuests").children.length > 0);
+check("Rewards weapon node uses a source-owned skill icon", Boolean(rewardIcon?.src) && rewardIcon?.alt === "Prism Beam skill icon");
+check("Rewards funded unlock is enabled", rewardButton?.textContent === "Unlock" && rewardButton?.disabled === false);
+rewardButton.click();
+const rewardsSaved = JSON.parse(rewards.context.localStorage.getItem("tap-survivor-mvp-save-v2"));
+check("Rewards unlock updates save and DOM", rewardsSaved.questPoints === 0 && rewardsSaved.unlockedNodes.includes("unlock_laser") && rewardsSaved.activeQuests.includes("use_laser_run") && rewards.elements.get("menuQpHud").textContent.includes("Quest Points: 0"));
+
 const floorHundred = createGameHarness({
   fakeCombat: true,
   initialSave: {

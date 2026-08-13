@@ -133,10 +133,15 @@ export function createModuleGameDependencyBag({
     contentRegistry,
     storageAdapter: storageAdapters.storageAdapter,
   });
+  let uiProgressionRenderer = null;
   const stateStore = createGameStateStore({
     initialGame: resolvedAdapters.initialGame || null,
     initialSave: resolvedAdapters.initialSave,
-    renderMetaSink: resolvedAdapters.renderMetaSink,
+    renderMetaSink: (payload) => {
+      const result = resolvedAdapters.renderMetaSink?.(payload);
+      uiProgressionRenderer?.renderMeta?.();
+      return result;
+    },
     saveSystem,
   });
   const injectedUiAdapters = requireObject(resolvedAdapters.uiAdapters, "adapters.uiAdapters");
@@ -238,6 +243,35 @@ export function createModuleGameDependencyBag({
       onQuestComplete: (quest, reward) => platformAdapters.bannerSystem.showQuestBanner?.(quest, reward),
     })
   );
+  const progressionSystem = progressionAdapters.progression.createProgressionSystem({
+    applyRunMetaUpgrades: (game) => runStateSystem.applyRunMetaUpgrades(game),
+    getSave: stateStore.getSave,
+    openQuest: questSystem.openQuest,
+    persist: stateStore.persist,
+    questDefs: contentRegistry.questDefs,
+    renderMeta: stateStore.renderMeta,
+    upgradeDefs: contentRegistry.upgradeDefs,
+    weaponDefs: contentRegistry.weaponDefs,
+    weaponUnlocks: contentRegistry.weaponUnlocks,
+  });
+  uiProgressionRenderer = progressionAdapters.uiProgression.createUiProgressionRenderer({
+    assets: assetAdapters.assets,
+    buyUpgrade: progressionSystem.buyUpgrade,
+    buyWeaponUnlock: progressionSystem.buyWeaponUnlock,
+    documentRef: injectedUiAdapters.shopDocumentRef,
+    getSave: stateStore.getSave,
+    getUpgradeTier: progressionSystem.getUpgradeTier,
+    hasNode: progressionSystem.hasNode,
+    isNodeVisible: progressionSystem.isNodeVisible,
+    isQuestComplete: progressionSystem.isQuestComplete,
+    nodeGateStatus: progressionSystem.nodeGateStatus,
+    questDefs: contentRegistry.questDefs,
+    ui: uiAdapters.ui,
+    upgradeDefs: contentRegistry.upgradeDefs,
+    weaponDefs: contentRegistry.weaponDefs,
+    weaponUnlocks: contentRegistry.weaponUnlocks,
+  });
+  uiProgressionRenderer?.renderMeta?.();
   let runUpdater = null;
   const pickupSystem = createPickupSystem({
     getGame: stateStore.getGame,
@@ -388,6 +422,8 @@ export function createModuleGameDependencyBag({
     moduleRuntimeSpriteAdapter: spriteAdapters,
     moduleRuntimeStorageAdapter: storageAdapters,
     moduleRuntimeUiAdapters: uiAdapters,
+    progression: progressionSystem,
+    uiProgression: uiProgressionRenderer,
     pickups: { createPickupSystem, instance: pickupSystem },
     relicProgression: { createRelicProgression },
     relics,
@@ -504,6 +540,7 @@ function createQuestSystemFacade(questSystem = {}) {
       typeof questSystem.addQuestProgressGroup === "function"
         ? questSystem.addQuestProgressGroup
         : noop,
+    openQuest: typeof questSystem.openQuest === "function" ? questSystem.openQuest : noop,
   };
 }
 

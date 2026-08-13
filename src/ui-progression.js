@@ -14,6 +14,7 @@
   /**
    * @typedef {object} UiProgressionRendererOptions
    * @property {*} [ui]
+   * @property {*} [assets]
    * @property {*} [weaponDefs]
    * @property {*} [weaponUnlocks]
    * @property {*} [upgradeDefs]
@@ -34,6 +35,7 @@
    */
   function createUiProgressionRenderer({
     ui,
+    assets,
     weaponDefs,
     weaponUnlocks,
     upgradeDefs,
@@ -49,17 +51,19 @@
     documentRef,
   } = {}) {
     const resolvedUi = requireObject(ui, "ui");
+    const assetResolver = assets?.createAssetResolver?.();
 
     function renderMeta() {
       const save = getSave();
       const qpText = `Coins: ${save.coins} | Quest Points: ${save.questPoints} available, ${save.totalQuestPoints} earned.`;
-      resolvedUi.menuQpHud.textContent = qpText;
+      if (resolvedUi.menuQpHud) resolvedUi.menuQpHud.textContent = qpText;
 
-      renderTree(resolvedUi.menuTree);
-      renderQuests(resolvedUi.menuQuests);
+      if (resolvedUi.menuTree) renderTree(resolvedUi.menuTree);
+      if (resolvedUi.menuQuests) renderQuests(resolvedUi.menuQuests);
     }
 
     function renderTree(container) {
+      if (!container) return;
       const doc = requireDocument(documentRef);
       const save = getSave();
       container.innerHTML = "";
@@ -67,6 +71,7 @@
         (unlock) => !hasNode(unlock.id) && isNodeVisible(unlock)
       );
       const availableUpgrades = upgradeDefs.filter((upgrade) => {
+        if (!Array.isArray(upgrade.cost) || !Number.isFinite(upgrade.maxTier)) return false;
         const tier = getUpgradeTier(upgrade.id);
         if (tier >= upgrade.maxTier) return false;
         if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return false;
@@ -93,6 +98,14 @@
           <span>Branch: ${unlock.branch} | Cost: ${unlock.cost} QP</span><br />
           <span>${gateStatus || "Ready to unlock"}</span>
         `;
+        const iconSource = assetResolver?.weaponIcon?.(unlock.weaponId);
+        if (iconSource) {
+          const icon = doc.createElement("img");
+          icon.className = "level-choice-icon";
+          icon.src = iconSource;
+          icon.alt = `${weapon.name} skill icon`;
+          el.prepend?.(icon);
+        }
         const button = doc.createElement("button");
         button.textContent = gateStatus ? "Locked" : "Unlock";
         button.disabled = Boolean(gateStatus);
@@ -124,6 +137,7 @@
     }
 
     function renderQuests(container) {
+      if (!container) return;
       const doc = requireDocument(documentRef);
       const save = getSave();
       container.innerHTML = "";
