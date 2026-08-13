@@ -59,10 +59,35 @@ export function createProductionModuleEntrypoint(options = {}) {
     dependencies: resolvedDependencies,
     platform: resolvedPlatform,
   });
-  playStartAudio = () => resolvedDependencies.audioSystem?.playStartLaugh?.();
+  playStartAudio = () => {
+    let started = false;
+    try {
+      started = Boolean(resolvedDependencies.audioSystem?.playStartLaugh?.()) || started;
+    } catch {
+      // A missing or rejected procedural cue must not block the start gesture.
+    }
+    try {
+      started = Boolean(resolvedDependencies.audioSystem?.startBgm?.()) || started;
+    } catch {
+      // BGM is an optional capability; the injected SFX path remains usable.
+    }
+    return started;
+  };
+  const baseLifecycleHooks = lifecycleHooks || {};
+  const audioLifecycleHooks = {
+    ...baseLifecycleHooks,
+    stop: (payload) => {
+      resolvedDependencies.audioSystem?.stopBgm?.();
+      return baseLifecycleHooks.stop?.(payload);
+    },
+    dispose: (payload) => {
+      resolvedDependencies.audioSystem?.stopBgm?.();
+      return baseLifecycleHooks.dispose?.(payload);
+    },
+  };
   lifecycle = createModuleGameLifecycleOwner({
     dependencies: resolvedDependencies,
-    lifecycleHooks,
+    lifecycleHooks: audioLifecycleHooks,
     platform: resolvedPlatform,
     runtime,
   });

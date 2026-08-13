@@ -1128,7 +1128,8 @@ const content = {
       "spark_bolt_mastery",
       "first_blood",
       "gatherer",
-      "survivor_60"
+      "survivor_60",
+      "boss_hunter"
     ],
     "kill": [
       "first_blood",

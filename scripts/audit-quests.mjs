@@ -26,7 +26,17 @@ function requireWeapon(id, owner) {
   if (id && !weaponDefs[id]) fail(`${owner} references missing weapon ${id}`);
 }
 
+const uniqueStarterQuestIds = new Set(starterQuestIds);
+if (uniqueStarterQuestIds.size !== starterQuestIds.length) {
+  fail("starter quest group contains duplicate quest IDs");
+}
 starterQuestIds.forEach((questId) => requireQuest(questId, "starter quest group"));
+
+Object.entries(content.questGroups || {}).forEach(([groupId, questIds]) => {
+  if (new Set(questIds).size !== questIds.length) {
+    fail(`${groupId} quest group contains duplicate quest IDs`);
+  }
+});
 
 weaponUnlocks.forEach((unlock) => {
   requireWeapon(unlock.weaponId, unlock.id);
@@ -51,6 +61,30 @@ const weaponQuestIds = new Set(
     .filter(([, quest]) => quest.weaponId)
     .map(([questId]) => questId),
 );
+
+const starterReachableQuestIds = new Set(starterQuestIds.filter((questId) => questDefs[questId]));
+const pendingStarterQuestIds = [...starterReachableQuestIds];
+while (pendingStarterQuestIds.length) {
+  const questId = pendingStarterQuestIds.shift();
+  const quest = questDefs[questId];
+  const nextQuestIds = [quest?.opensQuest, ...(quest?.opensQuests || [])].filter(Boolean);
+  nextQuestIds.forEach((nextQuestId) => {
+    if (!starterReachableQuestIds.has(nextQuestId) && questDefs[nextQuestId]) {
+      starterReachableQuestIds.add(nextQuestId);
+      pendingStarterQuestIds.push(nextQuestId);
+    }
+  });
+}
+
+if (!starterReachableQuestIds.has("boss_hunter")) {
+  fail("boss_hunter is not reachable from the starter/open quest graph");
+}
+
+Object.entries(questDefs).forEach(([questId, quest]) => {
+  if (!quest.weaponId && !starterReachableQuestIds.has(questId)) {
+    fail(`${questId} is not reachable from the starter/open quest graph`);
+  }
+});
 
 for (const questId of weaponQuestIds) {
   if (questId === "spark_bolt_mastery" || questId === "laser_damage_5000") continue;

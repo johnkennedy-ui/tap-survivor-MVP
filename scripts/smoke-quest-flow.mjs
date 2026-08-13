@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
+import { content } from "../src/content.generated.mjs";
 import { createProgressionSystem } from "../src/modules/progression.js";
 import { createQuestSystem } from "../src/modules/quests.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const questsSource = readFileSync(join(root, "src/quests.js"), "utf8");
 const progressionSource = readFileSync(join(root, "src/progression.js"), "utf8");
 
@@ -70,8 +70,54 @@ check("opensQuest follow-up opens", save.activeQuests.includes("rapid_growth"));
 check("opensQuests follow-up opens", save.activeQuests.includes("gem_hoarder"));
 check("completion persists and rerenders", persistCount >= 1 && renderCount === 1);
 
+const persistAfterFirstCompletion = persistCount;
+const renderAfterFirstCompletion = renderCount;
+questSystem.completeQuest("gatherer");
+check(
+  "repeated quest completion does not award QP twice",
+  save.questPoints === 1 &&
+    save.totalQuestPoints === 1 &&
+    persistCount === persistAfterFirstCompletion &&
+    renderCount === renderAfterFirstCompletion,
+);
+
 questSystem.addQuestProgressGroup(["first_blood"], 15);
 check("inactive group progress is ignored", !save.completedQuests.includes("first_blood"));
+
+check("boss hunter is exposed by the starter quest group", content.questGroups.starter.includes("boss_hunter"));
+const bossSave = {
+  questPoints: 0,
+  totalQuestPoints: 0,
+  activeQuests: ["boss_hunter"],
+  completedQuests: [],
+  questProgress: {},
+};
+let bossPersistCount = 0;
+const bossQuestSystem = createQuestSystem({
+  questDefs: content.quests,
+  getSave: () => bossSave,
+  persist: () => {
+    bossPersistCount += 1;
+  },
+  renderMeta() {},
+});
+bossQuestSystem.addQuestProgress("boss_hunter", 1);
+check(
+  "boss hunter completion opens the boss chain",
+  bossSave.completedQuests.length === 1 &&
+    bossSave.completedQuests[0] === "boss_hunter" &&
+    bossSave.activeQuests.includes("boss_slayer") &&
+    bossSave.questPoints === 4 &&
+    bossSave.totalQuestPoints === 4,
+);
+const bossPersistAfterFirstCompletion = bossPersistCount;
+bossQuestSystem.completeQuest("boss_hunter");
+check(
+  "repeated boss completion does not award QP twice",
+  bossSave.questPoints === 4 &&
+    bossSave.totalQuestPoints === 4 &&
+    bossPersistCount === bossPersistAfterFirstCompletion,
+);
 
 const progressionSave = {
   questPoints: 2,

@@ -128,13 +128,13 @@ function runParityScenario(kind, initialSave = baseSave()) {
     shopModalVisible: !fixture.ui.shopModal.classList.contains("hidden"),
   };
 
-  fixture.ui.shopItems.children[0].children.at(-1).click();
+  shopItemAt(fixture.ui.shopItems, 0).children.at(-1).click();
   const afterPurchase = {
-    bootsButton: fixture.ui.shopItems.children[0].children.at(-1).textContent,
+    bootsButton: shopItemAt(fixture.ui.shopItems, 0).children.at(-1).textContent,
     effects: fixture.effectCount(),
     hud: fixture.ui.shopCoinHud.textContent,
     notices: [...fixture.calls.notices],
-    orbCost: extractShopCost(fixture.ui.shopItems.children[1].innerHTML),
+    orbCost: extractShopCost(shopItemAt(fixture.ui.shopItems, 1).innerHTML),
     persisted: persistedShopState(fixture.persistedSave()),
     purchases: { ...fixture.getSave().shopPurchases },
     renderMeta: fixture.calls.renderMeta,
@@ -324,8 +324,8 @@ function runRecoveryScenario(kind, persistedSave) {
   return {
     bonuses: normalizeObject(bonuses),
     bootsTier: recovered.getSave().shopPurchases.boots,
-    nextBootsButton: recovered.ui.shopItems.children[0].children.at(-1).textContent,
-    nextBootsCost: extractShopCost(recovered.ui.shopItems.children[0].innerHTML),
+    nextBootsButton: shopItemAt(recovered.ui.shopItems, 0).children.at(-1).textContent,
+    nextBootsCost: extractShopCost(shopItemAt(recovered.ui.shopItems, 0).innerHTML),
   };
 }
 
@@ -343,8 +343,8 @@ function verifyDeniedAndMaxedPurchases(kind, originalFixture) {
   });
   denied.provider.renderShop();
   const deniedBefore = JSON.stringify({ calls: denied.calls, save: denied.getSave() });
-  denied.ui.shopItems.children[1].children.at(-1).click();
-  const deniedUnchanged = denied.ui.shopItems.children[1].children.at(-1).disabled &&
+  shopItemAt(denied.ui.shopItems, 1).children.at(-1).click();
+  const deniedUnchanged = shopItemAt(denied.ui.shopItems, 1).children.at(-1).disabled &&
     deniedBefore === JSON.stringify({ calls: denied.calls, save: denied.getSave() });
 
   const maxed = runProviderFixture(kind, {
@@ -354,8 +354,8 @@ function verifyDeniedAndMaxedPurchases(kind, originalFixture) {
   });
   maxed.provider.renderShop();
   const maxedBefore = JSON.stringify({ calls: maxed.calls, save: maxed.getSave() });
-  maxed.ui.shopItems.children[0].children.at(-1).click();
-  const maxedUnchanged = maxed.ui.shopItems.children[0].children.at(-1).disabled &&
+  shopItemAt(maxed.ui.shopItems, 0).children.at(-1).click();
+  const maxedUnchanged = shopItemAt(maxed.ui.shopItems, 0).children.at(-1).disabled &&
     maxedBefore === JSON.stringify({ calls: maxed.calls, save: maxed.getSave() });
 
   return deniedUnchanged && maxedUnchanged && Boolean(originalFixture);
@@ -624,8 +624,12 @@ function shopDomSnapshot(fixture) {
   return {
     huds: [fixture.ui.shopCoinHud.textContent, fixture.ui.menuShopCoinHud.textContent],
     itemNodes: [fixture.ui.shopItems.children.length, fixture.ui.menuShopItems.children.length],
-    firstButton: fixture.ui.shopItems.children[0]?.children.at(-1)?.textContent || "",
+    firstButton: shopItemAt(fixture.ui.shopItems, 0)?.children.at(-1)?.textContent || "",
   };
+}
+
+function shopItemAt(container, sectionIndex, itemIndex = 0) {
+  return container?.children?.[sectionIndex]?.children?.[1]?.children?.[itemIndex];
 }
 
 function once(callback) {

@@ -1517,6 +1517,8 @@
     shopItemById,
     questOpenIds,
   }) {
+    const questDefinitions = isPlainObjectValue(questDefs) ? questDefs : {};
+    const knownQuestIds = new Set(Object.keys(questDefinitions));
     const knownWeaponIds = new Set([
       "spark_bolt",
       ...arrayValue(weaponUnlocks)
@@ -1537,6 +1539,37 @@
       });
 
       return normalizedPurchases;
+    }
+
+    function normalizeQuestIds(value) {
+      return [
+        ...new Set(
+          arrayValue(value).filter(
+            (questId) => typeof questId === "string" && knownQuestIds.has(questId),
+          ),
+        ),
+      ];
+    }
+
+    function normalizeQuestProgress(progress) {
+      const normalizedProgress = {};
+
+      Object.entries(objectValue(progress)).forEach(([questId, rawProgress]) => {
+        const quest = questDefinitions[questId];
+        if (!quest) return;
+        const numericProgress = Number(rawProgress);
+        if (!Number.isFinite(numericProgress)) return;
+        const target = Number(quest.target);
+        const upperBound = Number.isFinite(target) ? Math.max(0, target) : numericProgress;
+        normalizedProgress[questId] = Math.min(upperBound, Math.max(0, numericProgress));
+      });
+
+      return normalizedProgress;
+    }
+
+    function nonNegativeInteger(value) {
+      const numericValue = Number(value);
+      return Number.isFinite(numericValue) ? Math.max(0, Math.floor(numericValue)) : 0;
     }
 
     function normalizeSave(input) {
@@ -1565,12 +1598,20 @@
       ]
         .filter((id) => normalized.unlockedRelics.includes(id))
         .slice(0, 5);
-      normalized.activeQuests = arrayValue(normalized.activeQuests);
-      normalized.completedQuests = arrayValue(normalized.completedQuests);
-      normalized.questProgress = objectValue(normalized.questProgress);
+      normalized.questPoints = nonNegativeInteger(normalized.questPoints);
+      normalized.totalQuestPoints = Math.max(
+        normalized.questPoints,
+        nonNegativeInteger(normalized.totalQuestPoints),
+      );
+      normalized.completedQuests = normalizeQuestIds(normalized.completedQuests);
+      const completedQuestIds = new Set(normalized.completedQuests);
+      normalized.activeQuests = normalizeQuestIds(normalized.activeQuests).filter(
+        (questId) => !completedQuestIds.has(questId),
+      );
+      normalized.questProgress = normalizeQuestProgress(normalized.questProgress);
 
       const ensureQuestOpen = (questId) => {
-        if (!questId || !questDefs[questId]) return;
+        if (!questId || !questDefinitions[questId]) return;
         if (
           !normalized.activeQuests.includes(questId) &&
           !normalized.completedQuests.includes(questId)
@@ -1606,7 +1647,7 @@
       });
 
       normalized.completedQuests.forEach((questId) => {
-        questOpenIds(questDefs[questId]).forEach(ensureQuestOpen);
+        questOpenIds(questDefinitions[questId]).forEach(ensureQuestOpen);
       });
 
       normalized.unlockedNodes.forEach((nodeId) => {
@@ -2447,13 +2488,41 @@
         return;
       }
 
-      shopItemDefs.forEach((item) => {
+      const groupedItems = groupShopItems(shopItemDefs);
+      groupedItems.forEach((items, stat) => {
+        const section = documentRef.createElement("section");
+        section.className = "shop-section";
+        if (section.dataset) section.dataset.shopStat = stat;
+        else section.setAttribute?.("data-shop-stat", stat);
+
+        const header = documentRef.createElement("div");
+        header.className = "shop-section-header";
+        const title = documentRef.createElement("h3");
+        title.textContent = shopStatLabel(stat);
+        const count = documentRef.createElement("span");
+        count.className = "shop-section-count";
+        count.textContent = `${items.length} items`;
+        header.appendChild(title);
+        header.appendChild(count);
+        section.appendChild(header);
+
+        const sectionGrid = documentRef.createElement("div");
+        sectionGrid.className = "shop-section-grid";
+        items.forEach((item) => sectionGrid.appendChild(renderShopItem(item, save)));
+        section.appendChild(sectionGrid);
+        container.appendChild(section);
+      });
+    }
+
+    function renderShopItem(item, save) {
         const tier = pricing.tierFor(item);
         const maxed = tier >= item.maxTier;
         const cost = pricing.costFor(item, tier);
         const affordable = !maxed && save.coins >= cost;
         const el = documentRef.createElement("div");
         el.className = `shop-item ${affordable ? "available" : "locked"}`;
+        if (el.dataset) el.dataset.shopItemId = item.id;
+        else el.setAttribute?.("data-shop-item-id", item.id);
         el.innerHTML = `
           <div class="shop-item-icon">
             ${item.spritePath ? `<img class="shop-item-sprite" src="${item.spritePath}" alt="" />` : ""}
@@ -2470,8 +2539,7 @@
         button.disabled = maxed || !affordable;
         button.addEventListener("click", () => buyItem(item));
         el.appendChild(button);
-        container.appendChild(el);
-      });
+        return el;
     }
 
     function openShop() {
@@ -2511,6 +2579,32 @@
       openShop,
       renderShop,
     };
+  }
+
+  function groupShopItems(items) {
+    const groupedItems = new Map();
+    items.forEach((item) => {
+      const stat = item.effect?.stat || "other";
+      const group = groupedItems.get(stat) || [];
+      group.push(item);
+      groupedItems.set(stat, group);
+    });
+    return groupedItems;
+  }
+
+  function shopStatLabel(stat) {
+    const labels = {
+      speed: "Movement Speed",
+      pickupRadius: "Pickup Radius",
+      maxHp: "Max Health",
+      flatDamage: "Flat Damage",
+      attackRadius: "Attack Radius",
+      fireRate: "Fire Rate",
+      percentDamage: "Percent Damage",
+      relicFocus: "Relic Focus",
+      other: "Other Boosts",
+    };
+    return labels[stat] || stat.replace(/([a-z])([A-Z])/g, "$1 $2");
   }
 
   function requireArray(value, name) {

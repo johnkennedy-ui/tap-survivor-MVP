@@ -1255,12 +1255,14 @@ check(
 );
 check(
   "production browser sprite defaults draw through canvas context",
-  calls.includes("canvas:draw:5") && calls.includes("canvas:save") && calls.includes("canvas:restore")
+  calls.some((call) => /^canvas:draw:(?:5|9)$/.test(call)) &&
+    calls.includes("canvas:save") &&
+    calls.includes("canvas:restore")
 );
 check(
   "production browser render defaults route frame enemy and skill sprites",
   calls.includes("canvas:clear:0,0,960,540") &&
-    calls.filter((call) => call === "canvas:draw:5").length >= 4
+    calls.filter((call) => /^canvas:draw:(?:5|9)$/.test(call)).length >= 4
 );
 runtimeGlobal.TapSurvivorContentSchema = "malformed schema global";
 const malformedSchemaEntrypoint = createProductionModuleEntrypoint({

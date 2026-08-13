@@ -1,10 +1,11 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
+import { content } from "../src/content.generated.mjs";
+import { createSaveNormalizer } from "../src/modules/save-normalize.js";
 import { questOpenIds } from "../src/modules/quests.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const questsSource = readFileSync(join(root, "src/quests.js"), "utf8");
 const storageSource = readFileSync(join(root, "src/storage-adapter.js"), "utf8");
 const saveDefaultsSource = readFileSync(join(root, "src/save-defaults.js"), "utf8");
@@ -86,6 +87,58 @@ const dependencyBag = context.TapSurvivorGameDependencies.createGameDependencyBa
 });
 const saveDefaults = dependencyBag.saveDefaults;
 const saveMigrations = dependencyBag.saveMigrations;
+
+const isolatedSaveNormalizer = createSaveNormalizer({
+  currentSaveVersion: 3,
+  defaultSave: () => saveDefaults.createDefaultSave({ starterQuestIds: [] }),
+  questDefs: content.quests,
+  weaponUnlocks: content.weaponUnlocks,
+  upgradeDefs: [{ id: "laser_damage", opensQuest: "laser_damage_5000" }],
+  shopItemById: new Map(content.shopItems.map((item) => [item.id, item])),
+  questOpenIds,
+});
+
+const normalizedQuestState = isolatedSaveNormalizer.normalizeSave({
+  activeQuests: ["gatherer", "gatherer", "boss_hunter", "missing_quest"],
+  completedQuests: ["gatherer", "spark_bolt_mastery", "spark_bolt_mastery", "missing_quest"],
+  questProgress: {
+    gatherer: 12,
+    boss_hunter: -4,
+    spark_bolt_mastery: 999,
+    missing_quest: 42,
+  },
+  questPoints: 7,
+  totalQuestPoints: 2,
+});
+const activeQuestSet = new Set(normalizedQuestState.activeQuests);
+const completedQuestSet = new Set(normalizedQuestState.completedQuests);
+check(
+  "save normalizer keeps known quest IDs unique and disjoint",
+  activeQuestSet.size === normalizedQuestState.activeQuests.length &&
+    completedQuestSet.size === normalizedQuestState.completedQuests.length &&
+    normalizedQuestState.activeQuests.every((id) => !completedQuestSet.has(id)) &&
+    normalizedQuestState.activeQuests.every((id) => content.quests[id]) &&
+    normalizedQuestState.completedQuests.every((id) => content.quests[id]),
+);
+check(
+  "save normalizer preserves legitimate quest progress",
+  normalizedQuestState.questProgress.gatherer === 12 &&
+    normalizedQuestState.questProgress.boss_hunter === 0 &&
+    normalizedQuestState.questProgress.spark_bolt_mastery === content.quests.spark_bolt_mastery.target &&
+    normalizedQuestState.questProgress.missing_quest === undefined,
+);
+check(
+  "save normalizer keeps available QP nonnegative and within earned QP",
+  normalizedQuestState.questPoints === 7 && normalizedQuestState.totalQuestPoints === 7,
+);
+const nonNegativeQuestState = isolatedSaveNormalizer.normalizeSave({
+  questPoints: -4,
+  totalQuestPoints: -9,
+});
+check(
+  "save normalizer clamps negative QP values",
+  nonNegativeQuestState.questPoints === 0 && nonNegativeQuestState.totalQuestPoints === 0,
+);
 
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";

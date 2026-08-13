@@ -227,9 +227,48 @@ section + section {
 
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  min-width: 0;
+  max-height: min(64vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 4px 6px 0;
+}
+
+.shop-section {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.shop-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 6px;
+  border-bottom: 1px solid #46566a;
+}
+
+.shop-section-header h3 {
+  margin: 0;
+  color: #dff6ff;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.shop-section-count {
+  color: #9fb0c5;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.shop-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
   gap: 10px;
-  align-items: stretch;
+  min-width: 0;
 }
 
 .node,
@@ -688,7 +727,7 @@ section + section {
     grid-template-columns: 1fr;
   }
 
-  .shop-grid {
+  .shop-section-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
@@ -711,5 +750,11 @@ section + section {
   .shop-item-copy span {
     font-size: 11px;
     line-height: 1.25;
+  }
+}
+
+@media (max-width: 420px) {
+  .shop-section-grid {
+    grid-template-columns: 1fr;
   }
 }

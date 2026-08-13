@@ -1,4 +1,5 @@
 import { createGameHarness } from "./smoke-game-harness.mjs";
+import { content } from "../src/content.generated.mjs";
 
 const harness = createGameHarness({
   fakeCombat: true,
@@ -14,14 +15,56 @@ function check(name, pass) {
   if (!pass) process.exitCode = 1;
 }
 
+function descendantsWithClass(root, className) {
+  const found = [];
+  const pending = [...(root.children || [])];
+  while (pending.length) {
+    const child = pending.shift();
+    if (String(child.className || "").split(/\s+/).includes(className)) found.push(child);
+    pending.push(...(child.children || []));
+  }
+  return found;
+}
+
+function shopSections(container) {
+  return (container.children || []).filter((child) =>
+    String(child.className || "").split(/\s+/).includes("shop-section"),
+  );
+}
+
+function sectionStats(container) {
+  return shopSections(container).map((section) => section.dataset?.shopStat);
+}
+
+function sectionCount(section) {
+  return section.children?.[0]?.children?.[1]?.textContent || "";
+}
+
+function shopItemById(container, itemId) {
+  return descendantsWithClass(container, "shop-item").find(
+    (item) => item.dataset?.shopItemId === itemId,
+  );
+}
+
+const expectedStats = [...new Set(content.shopItems.map((item) => item.effect?.stat || "other"))];
+const expectedItemsByStat = Object.fromEntries(
+  expectedStats.map((stat) => [stat, content.shopItems.filter((item) => (item.effect?.stat || "other") === stat).length]),
+);
+
 harness.elements.get("openShop").click();
 
 check("shop opens from main menu", !harness.elements.get("shopModal").classList.contains("hidden"));
 check("first shop visit banner is recorded", harness.context.__tapSurvivorHarness.getSave().seenBanners.includes("first_shop_visit"));
 check("shop renders coin balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 40"));
-check("shop renders expanded content items", harness.elements.get("shopItems").children.length >= 100);
+const renderedShopItems = descendantsWithClass(harness.elements.get("shopItems"), "shop-item");
+const renderedMenuShopItems = descendantsWithClass(harness.elements.get("menuShopItems"), "shop-item");
+check("shop renders all expanded content items", renderedShopItems.length === content.shopItems.length);
+check("main shop groups items by effect stat", sectionStats(harness.elements.get("shopItems")).join("|") === expectedStats.join("|"));
+check("main shop section counts match effect stats", shopSections(harness.elements.get("shopItems")).every((section) => sectionCount(section) === `${expectedItemsByStat[section.dataset.shopStat]} items`));
+check("menu shop groups items by effect stat", sectionStats(harness.elements.get("menuShopItems")).join("|") === expectedStats.join("|"));
+check("menu shop preserves all grouped items", renderedMenuShopItems.length === content.shopItems.length);
 
-const firstItem = harness.elements.get("shopItems").children[0];
+const firstItem = shopItemById(harness.elements.get("shopItems"), "training_boots");
 const buyButton = firstItem.children[0];
 buyButton.click();
 
@@ -39,7 +82,10 @@ check(
 check("shop rerenders balance", harness.elements.get("shopCoinHud").textContent.includes("Coins: 13"));
 check("shop shows inflation notice as banner", harness.elements.get("questBanner").textContent.includes("Inflation huh."));
 check("shop inline inflation notice stays empty", !harness.elements.get("shopNotice").textContent.includes("Inflation huh."));
-check("other shop item price inflates", harness.elements.get("shopItems").children[1].innerHTML.includes("Needs 22 coins"));
+check(
+  "other shop item price inflates",
+  shopItemById(harness.elements.get("shopItems"), "coin_magnet").innerHTML.includes("Needs 22 coins"),
+);
 
 harness.elements.get("closeShop").click();
 check("shop closes", harness.elements.get("shopModal").classList.contains("hidden"));
@@ -47,7 +93,7 @@ check("shop closes", harness.elements.get("shopModal").classList.contains("hidde
 harness.elements.get("titleStartGame").click();
 harness.elements.get("openMenu").click();
 harness.elements.get("menuShopTab").click();
-check("run menu shop tab renders items", harness.elements.get("menuShopItems").children.length >= 4);
+check("run menu shop tab renders grouped items", descendantsWithClass(harness.elements.get("menuShopItems"), "shop-item").length === content.shopItems.length);
 check("run menu shop tab shows scaled floor context", harness.elements.get("menuShopCoinHud").textContent.includes("Tower Floor"));
 check("run menu shop tab leaves inline inflation notice empty", !harness.elements.get("menuShopNotice").textContent.includes("Inflation huh."));
 
@@ -91,9 +137,14 @@ const floorHundred = createGameHarness({
   },
 });
 floorHundred.elements.get("openShop").click();
-const floorHundredFirstItem = floorHundred.elements.get("shopItems").children[0];
+const floorHundredFirstItem = shopItemById(floorHundred.elements.get("shopItems"), "training_boots");
 floorHundredFirstItem.children[0].click();
-check("floor 100 shop prices stay buyout-scale", floorHundred.elements.get("shopItems").children[1].innerHTML.includes("Cost: 85 coins"));
+check(
+  "floor 100 shop prices stay buyout-scale",
+  shopItemById(floorHundred.elements.get("shopItems"), "coin_magnet").innerHTML.includes(
+    "Cost: 85 coins",
+  ),
+);
 
 if (process.exitCode) {
   console.error("\nShop smoke failed.");

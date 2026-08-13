@@ -29,6 +29,8 @@
     shopItemById,
     questOpenIds,
   }) {
+    const questDefinitions = isPlainObjectValue(questDefs) ? questDefs : {};
+    const knownQuestIds = new Set(Object.keys(questDefinitions));
     const knownWeaponIds = new Set([
       "spark_bolt",
       ...arrayValue(weaponUnlocks)
@@ -49,6 +51,37 @@
       });
 
       return normalizedPurchases;
+    }
+
+    function normalizeQuestIds(value) {
+      return [
+        ...new Set(
+          arrayValue(value).filter(
+            (questId) => typeof questId === "string" && knownQuestIds.has(questId),
+          ),
+        ),
+      ];
+    }
+
+    function normalizeQuestProgress(progress) {
+      const normalizedProgress = {};
+
+      Object.entries(objectValue(progress)).forEach(([questId, rawProgress]) => {
+        const quest = questDefinitions[questId];
+        if (!quest) return;
+        const numericProgress = Number(rawProgress);
+        if (!Number.isFinite(numericProgress)) return;
+        const target = Number(quest.target);
+        const upperBound = Number.isFinite(target) ? Math.max(0, target) : numericProgress;
+        normalizedProgress[questId] = Math.min(upperBound, Math.max(0, numericProgress));
+      });
+
+      return normalizedProgress;
+    }
+
+    function nonNegativeInteger(value) {
+      const numericValue = Number(value);
+      return Number.isFinite(numericValue) ? Math.max(0, Math.floor(numericValue)) : 0;
     }
 
     function normalizeSave(input) {
@@ -77,12 +110,20 @@
       ]
         .filter((id) => normalized.unlockedRelics.includes(id))
         .slice(0, 5);
-      normalized.activeQuests = arrayValue(normalized.activeQuests);
-      normalized.completedQuests = arrayValue(normalized.completedQuests);
-      normalized.questProgress = objectValue(normalized.questProgress);
+      normalized.questPoints = nonNegativeInteger(normalized.questPoints);
+      normalized.totalQuestPoints = Math.max(
+        normalized.questPoints,
+        nonNegativeInteger(normalized.totalQuestPoints),
+      );
+      normalized.completedQuests = normalizeQuestIds(normalized.completedQuests);
+      const completedQuestIds = new Set(normalized.completedQuests);
+      normalized.activeQuests = normalizeQuestIds(normalized.activeQuests).filter(
+        (questId) => !completedQuestIds.has(questId),
+      );
+      normalized.questProgress = normalizeQuestProgress(normalized.questProgress);
 
       const ensureQuestOpen = (questId) => {
-        if (!questId || !questDefs[questId]) return;
+        if (!questId || !questDefinitions[questId]) return;
         if (
           !normalized.activeQuests.includes(questId) &&
           !normalized.completedQuests.includes(questId)
@@ -118,7 +159,7 @@
       });
 
       normalized.completedQuests.forEach((questId) => {
-        questOpenIds(questDefs[questId]).forEach(ensureQuestOpen);
+        questOpenIds(questDefinitions[questId]).forEach(ensureQuestOpen);
       });
 
       normalized.unlockedNodes.forEach((nodeId) => {

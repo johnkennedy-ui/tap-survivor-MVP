@@ -2,12 +2,15 @@ export const MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS = Object.freeze(["audio"]);
 
 export const MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS = Object.freeze([
   "createAudioSystem",
+  "isBgmPlaying",
   "isMuted",
   "play",
   "playRunUpgrade",
   "playShopPurchase",
   "playStartLaugh",
   "playWeapon",
+  "startBgm",
+  "stopBgm",
   "setMuted",
   "toggleMuted",
 ]);
@@ -44,9 +47,16 @@ function createAudioSystem({ audioContextFactory, audioFactory, clock, onError, 
   const weaponSfx = sfxDefs.weapons || {};
   const runUpgradeSfx = sfxDefs.runUpgrades || {};
   const volume = Number.isFinite(sfxDefs.volume) ? sfxDefs.volume : 0.45;
+  const bgmVolume = Number.isFinite(sfxDefs.bgmVolume)
+    ? Math.max(0, Math.min(0.12, sfxDefs.bgmVolume))
+    : Math.min(0.1, volume * 0.18);
   const minGapMs = Number.isFinite(sfxDefs.minGapMs) ? sfxDefs.minGapMs : 70;
   const now = typeof clock === "function" ? clock : () => 0;
   let muted = false;
+  let bgmContext = null;
+  let bgmMaster = null;
+  let bgmVoices = [];
+  let bgmRequested = false;
 
   function audioFor(src) {
     if (!src || typeof audioFactory !== "function") return null;
@@ -102,7 +112,7 @@ function createAudioSystem({ audioContextFactory, audioFactory, clock, onError, 
     try {
       const context = audioContextFactory("shop-purchase");
       if (!context) return false;
-      context.resume?.();
+      resumeContext(context, "shop-purchase");
       if (
         !Number.isFinite(context.currentTime) ||
         !context.destination ||
@@ -146,7 +156,7 @@ function createAudioSystem({ audioContextFactory, audioFactory, clock, onError, 
 
     try {
       const context = audioContextFactory(cueId);
-      context?.resume?.();
+      resumeContext(context, cueId);
       return Boolean(context);
     } catch (error) {
       reportError(onError, cueId, error);
@@ -154,8 +164,143 @@ function createAudioSystem({ audioContextFactory, audioFactory, clock, onError, 
     }
   }
 
+  function startBgm() {
+    bgmRequested = true;
+    if (muted || typeof audioContextFactory !== "function") return false;
+    if (bgmVoices.length > 0) {
+      resumeContext(bgmContext, "bgm");
+      return true;
+    }
+
+    try {
+      bgmContext ||= audioContextFactory("bgm");
+      const context = bgmContext;
+      resumeContext(context, "bgm");
+      if (
+        !Number.isFinite(context?.currentTime) ||
+        !context.destination ||
+        typeof context.createGain !== "function" ||
+        typeof context.createOscillator !== "function"
+      ) {
+        return false;
+      }
+
+      const startAt = context.currentTime;
+      const master = context.createGain();
+      if (!master?.gain || typeof master.connect !== "function") return false;
+      setAudioParam(master.gain, 0.0001, startAt);
+      rampAudioParam(master.gain, bgmVolume, startAt + 0.24);
+      master.connect(context.destination);
+
+      const voices = [
+        { frequency: 110, gain: 0.42, type: "triangle" },
+        { frequency: 164.81, gain: 0.22, type: "sine" },
+        { frequency: 220, gain: 0.12, type: "sine" },
+      ]
+        .map((voice) => createBgmVoice(context, master, startAt, voice))
+        .filter(Boolean);
+      if (voices.length === 0) {
+        master.disconnect?.();
+        return false;
+      }
+
+      bgmMaster = master;
+      bgmVoices = voices;
+      return true;
+    } catch (error) {
+      reportError(onError, "bgm", error);
+      stopBgm({ clearRequest: false });
+      return false;
+    }
+  }
+
+  function stopBgm({ clearRequest = true } = {}) {
+    if (clearRequest) bgmRequested = false;
+    const context = bgmContext;
+    const stopAt = Number.isFinite(context?.currentTime) ? context.currentTime + 0.02 : undefined;
+    bgmVoices.forEach(({ oscillator, gain }) => {
+      try {
+        if (stopAt === undefined) oscillator.stop?.();
+        else oscillator.stop?.(stopAt);
+      } catch (error) {
+        reportError(onError, "bgm-stop", error);
+      }
+      oscillator.disconnect?.();
+      gain.disconnect?.();
+    });
+    if (bgmMaster) {
+      try {
+        setAudioParam(bgmMaster.gain, 0.0001, stopAt ?? 0);
+        bgmMaster.disconnect?.();
+      } catch (error) {
+        reportError(onError, "bgm-stop", error);
+      }
+    }
+    bgmVoices = [];
+    bgmMaster = null;
+    return true;
+  }
+
+  function isBgmPlaying() {
+    return bgmVoices.length > 0;
+  }
+
+  function createBgmVoice(context, master, startAt, voice) {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    if (
+      !oscillator ||
+      !gain?.gain ||
+      typeof oscillator.connect !== "function" ||
+      typeof oscillator.start !== "function" ||
+      typeof gain.connect !== "function"
+    ) {
+      return null;
+    }
+    oscillator.type = voice.type;
+    setAudioParam(oscillator.frequency, voice.frequency, startAt);
+    setAudioParam(gain.gain, voice.gain, startAt);
+    oscillator.connect(gain);
+    gain.connect(master);
+    oscillator.start(startAt);
+    return { gain, oscillator };
+  }
+
+  function resumeContext(context, operation) {
+    try {
+      const result = context?.resume?.();
+      result?.catch?.((error) => reportError(onError, operation, error));
+    } catch (error) {
+      reportError(onError, operation, error);
+    }
+  }
+
+  function setAudioParam(param, value, at) {
+    if (!param) return;
+    if (typeof param.setValueAtTime === "function" && Number.isFinite(at)) {
+      param.setValueAtTime(value, at);
+      return;
+    }
+    param.value = value;
+  }
+
+  function rampAudioParam(param, value, at) {
+    if (!param) return;
+    if (typeof param.exponentialRampToValueAtTime === "function" && Number.isFinite(at)) {
+      param.exponentialRampToValueAtTime(Math.max(0.0001, value), at);
+      return;
+    }
+    if (typeof param.linearRampToValueAtTime === "function" && Number.isFinite(at)) {
+      param.linearRampToValueAtTime(value, at);
+      return;
+    }
+    param.value = value;
+  }
+
   function setMuted(nextMuted) {
     muted = Boolean(nextMuted);
+    if (muted) stopBgm({ clearRequest: false });
+    else if (bgmRequested) startBgm();
     return muted;
   }
 
@@ -168,12 +313,15 @@ function createAudioSystem({ audioContextFactory, audioFactory, clock, onError, 
   }
 
   return {
+    isBgmPlaying,
     isMuted,
     play,
     playRunUpgrade,
     playShopPurchase,
     playStartLaugh,
     playWeapon,
+    startBgm,
+    stopBgm,
     setMuted,
     toggleMuted,
   };
