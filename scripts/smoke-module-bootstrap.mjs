@@ -15,6 +15,7 @@ import {
   composeShopEconomy,
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
+import { createModuleRuntimeStorageAdapter } from "../src/modules/module-runtime-storage-adapter.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -270,6 +271,42 @@ function createMemoryStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey }
     },
   };
 }
+
+const receiverStorage = {
+  store: new Map([[saveKey, "receiver-seed"]]),
+  getItem(key) {
+    if (this !== receiverStorage) throw new Error("storage receiver was not preserved");
+    return this.store.get(key) ?? null;
+  },
+  setItem(key, value) {
+    if (this !== receiverStorage) throw new Error("storage receiver was not preserved");
+    this.store.set(key, String(value));
+  },
+  removeItem(key) {
+    if (this !== receiverStorage) throw new Error("storage receiver was not preserved");
+    this.store.delete(key);
+  },
+};
+const receiverStorageAdapter = createModuleRuntimeStorageAdapter({
+  storage: receiverStorage,
+  saveKey,
+  legacySaveKey,
+  corruptBackupKey,
+});
+check(
+  "module storage adapter reads receiver-sensitive storage",
+  receiverStorageAdapter.storageAdapter.getSaveRaw() === "receiver-seed"
+);
+receiverStorageAdapter.storageAdapter.setSaveRaw("receiver-written");
+check(
+  "module storage adapter writes through receiver-sensitive storage",
+  receiverStorage.store.get(saveKey) === "receiver-written"
+);
+receiverStorageAdapter.storageAdapter.removeSaveRaw();
+check(
+  "module storage adapter removes through receiver-sensitive storage",
+  !receiverStorage.store.has(saveKey)
+);
 
 const runtime = composeRuntime({ platform, dependencies });
 runtime.initializeRuntime();
