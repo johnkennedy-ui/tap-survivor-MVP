@@ -70,6 +70,7 @@
     "smoke:module-production-entrypoint": "node scripts/smoke-module-production-entrypoint.mjs",
     "smoke:module-runtime-readiness": "node scripts/smoke-module-runtime-readiness.mjs",
     "smoke:module-bridges": "node scripts/smoke-module-bridges.mjs",
+    "smoke:no-target-weapon-effects": "node scripts/smoke-no-target-weapon-effects.mjs",
     "smoke:production-browser:docker": "node scripts/run-production-browser-smoke-docker.mjs",
     "smoke:production-browser:docker:strict": "SMOKE_PRODUCTION_BROWSER_STRICT=1 node scripts/run-production-browser-smoke-docker.mjs",
     "smoke:runtime-parity:browser": "node scripts/smoke-runtime-parity-browser.mjs",

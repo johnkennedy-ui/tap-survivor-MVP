@@ -28,13 +28,10 @@
       const game = getGame();
       const weapon = weaponDefs[weaponId];
       const target = nearestEnemy();
-      if (!target) return;
       const p = game.player;
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      const dirX = dx / dist;
-      const dirY = dy / dist;
+      const { x: dirX, y: dirY } = target
+        ? normalizeVector(target.x - p.x, target.y - p.y)
+        : playerFacingVector(p);
       let dealt = 0;
 
       game.enemies.forEach((enemy) => {
@@ -71,13 +68,10 @@
       const game = getGame();
       const weapon = weaponDefs[weaponId];
       const target = nearestEnemy();
-      if (!target) return;
       const p = game.player;
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
-      const dirX = dx / dist;
-      const dirY = dy / dist;
+      const { x: dirX, y: dirY } = target
+        ? normalizeVector(target.x - p.x, target.y - p.y)
+        : playerFacingVector(p);
       game.enemies.forEach((enemy) => {
         const toEnemyX = enemy.x - p.x;
         const toEnemyY = enemy.y - p.y;
@@ -157,6 +151,7 @@
         .sort((a, b) => distance(p, a) - distance(p, b))
         .slice(0, weapon.jumps);
       let from = p;
+      let emitted = false;
       targets.forEach((enemy) => {
         if (distance(from, enemy) > weaponReach(weapon)) return;
         damageEnemy(enemy, weaponDamage(weaponId), weaponId);
@@ -170,8 +165,22 @@
           color: weapon.color,
           life: 0.12,
         });
+        emitted = true;
         from = enemy;
       });
+      if (!emitted) {
+        const { x: dirX, y: dirY } = playerFacingVector(p);
+        game.beams.push({
+          weaponId,
+          x: p.x,
+          y: p.y,
+          endX: p.x + dirX * weaponReach(weapon),
+          endY: p.y + dirY * weaponReach(weapon),
+          width: 4,
+          color: weapon.color,
+          life: 0.12,
+        });
+      }
       reapEnemies();
     }
 
@@ -280,6 +289,11 @@
       const distanceToTarget = Math.hypot(dx, dy);
       if (distanceToTarget > 0) return { x: dx / distanceToTarget, y: dy / distanceToTarget };
       return { x: 0, y: 1 };
+    }
+
+    function normalizeVector(x, y) {
+      const length = Math.max(1, Math.hypot(x, y));
+      return { x: x / length, y: y / length };
     }
 
     function mineArmDelay(weapon) {

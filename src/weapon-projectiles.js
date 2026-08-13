@@ -98,18 +98,17 @@
       const game = getGame();
       const weapon = weaponDefs[weaponId];
       const target = nearestEnemy();
-      if (!target) return;
       const p = game.player;
-      const dx = target.x - p.x;
-      const dy = target.y - p.y;
-      const dist = Math.max(1, Math.hypot(dx, dy));
+      const direction = target
+        ? normalizeVector(target.x - p.x, target.y - p.y)
+        : playerFacingVector(p);
       const relicEffects = getRelicSpecialEffects?.() || {};
       const speed =
         weapon.speed *
         (1 + (relicEffects.projectileSpeedBonus || 0)) *
         projectileSkillModifier(weapon, "projectileSpeedMultiplier");
-      const baseVx = (dx / dist) * speed;
-      const baseVy = (dy / dist) * speed;
+      const baseVx = direction.x * speed;
+      const baseVy = direction.y * speed;
       const splitTier = getRunUpgradeTier("run_split_shot");
       const spread = 0.26;
 
@@ -125,6 +124,19 @@
         spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, -spread * 2));
         spawnProjectileBolt(weaponId, p.x, p.y, ...rotateVector(baseVx, baseVy, spread * 2));
       }
+    }
+
+    function normalizeVector(x, y) {
+      const length = Math.max(1, Math.hypot(x, y));
+      return { x: x / length, y: y / length };
+    }
+
+    function playerFacingVector(player) {
+      if (Number.isFinite(player.facingX) && Number.isFinite(player.facingY)) {
+        const length = Math.hypot(player.facingX, player.facingY);
+        if (length > 0) return { x: player.facingX / length, y: player.facingY / length };
+      }
+      return normalizeVector(player.targetX - player.x, player.targetY - player.y);
     }
 
     function spawnProjectileBolt(weaponId, x, y, vx, vy, overrides = {}) {
