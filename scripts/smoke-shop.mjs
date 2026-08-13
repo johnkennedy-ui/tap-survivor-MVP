@@ -73,7 +73,13 @@ check("Rewards weapon node uses a source-owned skill icon", Boolean(rewardIcon?.
 check("Rewards funded unlock is enabled", rewardButton?.textContent === "Unlock" && rewardButton?.disabled === false);
 rewardButton.click();
 const rewardsSaved = JSON.parse(rewards.context.localStorage.getItem("tap-survivor-mvp-save-v2"));
-check("Rewards unlock updates save and DOM", rewardsSaved.questPoints === 0 && rewardsSaved.unlockedNodes.includes("unlock_laser") && rewardsSaved.activeQuests.includes("use_laser_run") && rewards.elements.get("menuQpHud").textContent.includes("Quest Points: 0"));
+check(
+  "Rewards unlock updates save and DOM",
+  rewardsSaved.questPoints === 0 &&
+    rewardsSaved.unlockedNodes.includes("unlock_laser") &&
+    rewardsSaved.activeQuests.includes("use_laser_run") &&
+    rewards.elements.get("menuQpHud").textContent.includes("Quest Points: 0"),
+);
 
 const floorHundred = createGameHarness({
   fakeCombat: true,
