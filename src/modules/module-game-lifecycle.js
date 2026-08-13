@@ -62,6 +62,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
   const resolvedRuntime = requireObject(runtime, "runtime");
   const runLifecycle = createLifecycle({
     dependencies: runtimeDependencies,
+    documentRef,
     lifecycleHooks,
   });
   runtimeDependencies.bindRunLifecycle?.(runLifecycle);
@@ -214,8 +215,9 @@ export function createModuleGameLifecycleOwner(options = {}) {
   return api;
 }
 
-function createLifecycle({ dependencies, lifecycleHooks }) {
+function createLifecycle({ dependencies, documentRef, lifecycleHooks }) {
   return createRunLifecycle({
+    documentRef: lifecycleHooks.documentRef || documentRef,
     ui: dependencies.ui,
     getGame: dependencies.getGame,
     getSave: dependencies.getSave,

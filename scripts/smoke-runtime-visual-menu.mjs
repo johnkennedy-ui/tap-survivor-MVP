@@ -50,6 +50,7 @@ const globalRef = {
 const content = {
   assets: {
     sprites: {
+      player: "static-player",
       enemies: {
         boss: "static-boss",
         drifter: "static-drifter",
@@ -136,6 +137,11 @@ assert(
     animationState: "idle",
     sheetId: "unavailable",
   }) === true && drawCalls.at(-1)?.[0]?.src === "static-fallback"
+);
+assert(
+  "unframed static player sprites draw their full source image instead of a single pixel",
+  spriteSystem.drawSprite("player", 20, 20, 32) === true &&
+    drawCallMatches(drawCalls.at(-1), "static-player", [0, 0, 16, 16, -16, -16, 32, 32])
 );
 
 const menuUi = createUi();

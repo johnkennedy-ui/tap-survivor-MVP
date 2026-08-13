@@ -1,4 +1,5 @@
 export function createRunLifecycle({
+  documentRef,
   ui,
   getGame,
   getSave,
@@ -56,7 +57,10 @@ export function createRunLifecycle({
     ui.relicChoiceText.textContent = "Pick one reward shaped by your current weapons.";
     ui.relicChoices.innerHTML = "";
     choices.forEach((relic) => {
-      const button = document.createElement("button");
+      const button = documentRef?.createElement?.("button");
+      if (!button) {
+        throw new Error("Missing Tap Survivor run lifecycle dependency: documentRef.createElement");
+      }
       button.className = relic.rarity === "green" ? "green-relic" : "";
       if (relic.backgroundColor && typeof button.style?.setProperty === "function") {
         button.style.setProperty("--relic-bg", relic.backgroundColor);

@@ -404,6 +404,7 @@ const runUi = runUiDependencies.createRunUi({
 });
 
 runLifecycle = runLifecycleDependencies.createRunLifecycle({
+  documentRef: document,
   ui,
   getGame: () => game,
   getSave: () => save,

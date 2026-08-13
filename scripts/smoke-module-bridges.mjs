@@ -2927,8 +2927,6 @@ function withCombatRandomSequence(mathRef, values, callback) {
 }
 
 function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
-  const previousDocument = Reflect.get(runtimeGlobal, "document");
-  const hadDocument = Reflect.has(runtimeGlobal, "document");
   const calls = {
     closeRunMenu: [],
     closeShop: 0,
@@ -2969,8 +2967,6 @@ function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
       return button;
     },
   };
-  Reflect.set(runtimeGlobal, "document", documentRef);
-
   function createFixture(initialGame) {
     let game = initialGame;
     const save = { towerFloor: 5 };
@@ -3004,6 +3000,7 @@ function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
       },
     };
     const controller = createRunLifecycle({
+      documentRef,
       ui,
       getGame: () => game,
       getSave: () => save,
@@ -3145,12 +3142,6 @@ function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
     saveTowerFloor: relicFixture.save.towerFloor,
     updateRunHud: calls.updateRunHud - updateBeforeRelic,
   };
-
-  if (hadDocument) {
-    Reflect.set(runtimeGlobal, "document", previousDocument);
-  } else {
-    Reflect.deleteProperty(runtimeGlobal, "document");
-  }
 
   return {
     end: endSnapshot,

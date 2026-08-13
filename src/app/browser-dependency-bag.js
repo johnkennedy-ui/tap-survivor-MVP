@@ -1669,8 +1669,8 @@ function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef }) {
     const imageHeight = Math.max(1, image.naturalHeight || image.height || 1);
     const x = clampInteger(bounds?.x, 0, imageWidth - 1);
     const y = clampInteger(bounds?.y, 0, imageHeight - 1);
-    const width = clampInteger(bounds?.width ?? bounds?.w, 1, imageWidth - x);
-    const height = clampInteger(bounds?.height ?? bounds?.h, 1, imageHeight - y);
+    const width = clampInteger(bounds?.width ?? bounds?.w ?? imageWidth - x, 1, imageWidth - x);
+    const height = clampInteger(bounds?.height ?? bounds?.h ?? imageHeight - y, 1, imageHeight - y);
     return { x, y, width, height };
   }
 
