@@ -273,6 +273,18 @@ export function createModuleGameDependencyBag({
   });
   uiProgressionRenderer?.renderMeta?.();
   let runUpdater = null;
+  let boundRunLifecycle = null;
+  const advanceTowerFloor = () => {
+    if (typeof boundRunLifecycle?.advanceTowerFloor === "function") {
+      return boundRunLifecycle.advanceTowerFloor();
+    }
+    return advanceTowerFloorFallback(stateStore);
+  };
+  const bindRunLifecycle = (runLifecycle) => {
+    boundRunLifecycle =
+      runLifecycle && typeof runLifecycle.advanceTowerFloor === "function" ? runLifecycle : null;
+    return Boolean(boundRunLifecycle);
+  };
   const pickupSystem = createPickupSystem({
     getGame: stateStore.getGame,
     getSave: stateStore.getSave,
@@ -311,7 +323,7 @@ export function createModuleGameDependencyBag({
     spawnLootDrops: pickupSystem.spawnLootDrops,
     getWeaponDamageMultiplier,
     playWeaponSfx: audioSystem.playWeapon,
-    advanceTowerFloor: () => advanceTowerFloor(stateStore),
+    advanceTowerFloor,
     endRun: (reason) => endRun({ reason, stateStore, uiAdapters }),
     onBossSpawn: ({ superBoss }) =>
       platformAdapters.bannerSystem.showOnceBanner?.(
@@ -365,6 +377,18 @@ export function createModuleGameDependencyBag({
         return true;
       },
       isAudioMuted: () => audioSystem.isMuted?.() ?? false,
+      setRunMenuOpen: (open) => {
+        const game = stateStore.getGame();
+        if (!game?.running) return false;
+        if (open) {
+          game.paused = true;
+          game.pauseReason = "menu";
+        } else if (game.pauseReason === "menu") {
+          game.paused = false;
+          game.pauseReason = "";
+        }
+        return true;
+      },
       toggleAudioMute: () => audioSystem.toggleMuted?.() ?? false,
     });
   }
@@ -457,6 +481,7 @@ export function createModuleGameDependencyBag({
     audio: audioAdapters.audio,
     audioSystem,
     bannerSystem: platformAdapters.bannerSystem,
+    bindRunLifecycle,
     bindMovementInput: platformAdapters.bindMovementInput,
     canvas: platformAdapters.canvas,
     combat: gameplayAdapters.combat,
@@ -478,6 +503,7 @@ export function createModuleGameDependencyBag({
     renderMeta: stateStore.renderMeta,
     renderSkillRail: renderingAdapters.renderSkillRail,
     rendering: renderingAdapters.rendering,
+    relicSystem: relics,
     resetGameState,
     runUpdater,
     runUi: uiAdapters.runUiAdapter,
@@ -588,7 +614,7 @@ function showLevelUp(uiAdapters, stateStore) {
   return true;
 }
 
-function advanceTowerFloor(stateStore) {
+function advanceTowerFloorFallback(stateStore) {
   const game = stateStore.getGame();
   const save = stateStore.getSave();
   if (!game || !save) return false;

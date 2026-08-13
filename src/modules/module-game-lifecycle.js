@@ -64,6 +64,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
     dependencies: runtimeDependencies,
     lifecycleHooks,
   });
+  runtimeDependencies.bindRunLifecycle?.(runLifecycle);
   let lastFrame = resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
   let initialized = false;
   let stopped = false;
@@ -236,9 +237,12 @@ function createLifecycle({ dependencies, lifecycleHooks }) {
         (() => {}),
     },
     runUi: dependencies.runUi,
-    relicSystem: lifecycleHooks.relicSystem || {
-      relicChoices: () => [],
-    },
+    relicSystem:
+      lifecycleHooks.relicSystem ||
+      dependencies.relicSystem ||
+      dependencies.moduleSystems?.relics || {
+        relicChoices: () => [],
+      },
     persist: dependencies.persist,
     renderMeta: dependencies.renderMeta,
     updateRunHud:
