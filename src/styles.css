@@ -754,6 +754,17 @@ section + section {
 }
 
 @media (max-width: 420px) {
+  .speed-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    gap: 6px;
+  }
+
+  .mute-button {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
   .shop-section-grid {
     grid-template-columns: 1fr;
   }

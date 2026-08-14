@@ -33,6 +33,7 @@ const report = {
   moduleScriptUrl: null,
   movementInputTriggered: false,
   menuButtons: {},
+  muteControlProbeResult: null,
   nonStartButtonsDetected: [],
   nonStartButtonsProbed: [],
   nonStartButtonProbeResults: [],
@@ -726,6 +727,9 @@ async function main() {
       )
         ? "one or more speed controls x1/x2/x5 did not click"
         : null,
+      !report.muteControlProbeResult?.succeeded
+        ? `mute control strict probe failed: ${report.muteControlProbeResult?.failureDetail || "probe did not complete"}`
+        : null,
       !report.canvasFound ? "no canvas found" : null,
       !report.startGameFound && !report.titleVisible ? "no title or Start Game control found" : null,
     ].filter(Boolean);
@@ -893,6 +897,9 @@ async function probeButtons(page, report) {
     }
   }
 
+  const muteControlProbeResult = await probeMuteControl(page);
+  probed.push("muteAudio");
+
   const openMenu = page.locator("#openMenu");
   if ((await openMenu.count().catch(() => 0)) > 0) {
     probed.push("menu:open/close");
@@ -924,7 +931,208 @@ async function probeButtons(page, report) {
 
   report.nonStartButtonsProbed = probed;
   report.nonStartButtonProbeResults = probed.map((item) => `${item}:attempted`);
+  report.muteControlProbeResult = muteControlProbeResult;
   report.speedControlProbeResults = speedControlProbeResults;
+}
+
+async function probeMuteControl(page) {
+  const control = page.locator("#muteAudio");
+  const result = {
+    clicks: {
+      mute: false,
+      restore: false,
+    },
+    clickError: "",
+    failureDetail: "",
+    layout: {
+      centre: null,
+      centreHitTarget: null,
+      centreHitsMute: false,
+      fullyVisible: false,
+      layoutError: "",
+      positiveVisibleRect: false,
+      rect: null,
+      visibleRect: null,
+    },
+    postToggle: null,
+    preToggle: null,
+    present: (await control.count().catch(() => 0)) > 0,
+    restoreClickError: "",
+    restoredState: null,
+    succeeded: false,
+    successfulMuteTransition: false,
+    successfulRestoration: false,
+  };
+
+  if (!result.present) {
+    result.layout.layoutError = "#muteAudio is absent";
+    result.failureDetail = result.layout.layoutError;
+    return result;
+  }
+
+  result.layout = await inspectMuteControlLayout(page);
+  result.preToggle = await readMuteControlState(page);
+
+  try {
+    await control.click({ timeout: 5000 });
+    result.clicks.mute = true;
+  } catch (error) {
+    result.clickError = shortMessage(error?.message || String(error));
+  }
+  await page.waitForTimeout(100);
+  result.postToggle = await readMuteControlState(page);
+
+  if (result.clicks.mute && result.postToggle.ariaPressed === "true") {
+    try {
+      await control.click({ timeout: 5000 });
+      result.clicks.restore = true;
+    } catch (error) {
+      result.restoreClickError = shortMessage(error?.message || String(error));
+    }
+    await page.waitForTimeout(100);
+  }
+  result.restoredState = await readMuteControlState(page);
+
+  result.successfulMuteTransition =
+    result.clicks.mute &&
+    isMuteControlState(result.preToggle, "false", "Sound") &&
+    isMuteControlState(result.postToggle, "true", "Muted");
+  result.successfulRestoration =
+    result.successfulMuteTransition &&
+    result.clicks.restore &&
+    isMuteControlState(result.restoredState, "false", "Sound");
+  result.succeeded =
+    result.present &&
+    result.layout.positiveVisibleRect &&
+    result.layout.fullyVisible &&
+    result.layout.centreHitsMute &&
+    result.successfulMuteTransition &&
+    result.successfulRestoration;
+  result.failureDetail = describeMuteControlFailure(result);
+  return result;
+}
+
+async function inspectMuteControlLayout(page) {
+  return page
+    .evaluate(() => {
+      const control = document.getElementById("muteAudio");
+      if (!control) {
+        return {
+          centre: null,
+          centreHitTarget: null,
+          centreHitsMute: false,
+          fullyVisible: false,
+          layoutError: "#muteAudio is absent",
+          positiveVisibleRect: false,
+          rect: null,
+          visibleRect: null,
+        };
+      }
+
+      const rect = control.getBoundingClientRect();
+      const view = document.defaultView;
+      const viewportWidth = document.documentElement.clientWidth || view?.innerWidth || 0;
+      const viewportHeight = document.documentElement.clientHeight || view?.innerHeight || 0;
+      const visibleLeft = Math.max(0, rect.left);
+      const visibleTop = Math.max(0, rect.top);
+      const visibleRight = Math.min(viewportWidth, rect.right);
+      const visibleBottom = Math.min(viewportHeight, rect.bottom);
+      const visibleRect = {
+        height: Math.max(0, visibleBottom - visibleTop),
+        width: Math.max(0, visibleRight - visibleLeft),
+        x: visibleLeft,
+        y: visibleTop,
+      };
+      const styles = view?.getComputedStyle(control);
+      const rendered =
+        styles?.display !== "none" &&
+        styles?.visibility !== "hidden" &&
+        styles?.pointerEvents !== "none" &&
+        Number(styles?.opacity) > 0;
+      const positiveVisibleRect = rendered && visibleRect.width > 0 && visibleRect.height > 0;
+      const fullyVisible =
+        positiveVisibleRect &&
+        Math.abs(visibleRect.width - rect.width) < 0.5 &&
+        Math.abs(visibleRect.height - rect.height) < 0.5;
+      const centre =
+        rect.width > 0 && rect.height > 0
+          ? {
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2,
+            }
+          : null;
+      const hitTarget = centre ? document.elementFromPoint(centre.x, centre.y) : null;
+      const centreHitsMute = Boolean(hitTarget && (hitTarget === control || control.contains(hitTarget)));
+      let layoutError = "";
+      if (!positiveVisibleRect) {
+        layoutError = "#muteAudio has no positive visible rectangle";
+      } else if (!fullyVisible) {
+        layoutError = "#muteAudio is clipped by the viewport";
+      } else if (!centreHitsMute) {
+        layoutError = "#muteAudio centre resolves to another element";
+      }
+
+      return {
+        centre,
+        centreHitTarget: hitTarget
+          ? {
+              className: typeof hitTarget.className === "string" ? hitTarget.className : "",
+              id: hitTarget.id || "",
+              tagName: hitTarget.tagName || "",
+            }
+          : null,
+        centreHitsMute,
+        fullyVisible,
+        layoutError,
+        positiveVisibleRect,
+        rect: {
+          height: rect.height,
+          width: rect.width,
+          x: rect.x,
+          y: rect.y,
+        },
+        visibleRect,
+      };
+    })
+    .catch((error) => ({
+      centre: null,
+      centreHitTarget: null,
+      centreHitsMute: false,
+      fullyVisible: false,
+      layoutError: shortMessage(error?.message || String(error)),
+      positiveVisibleRect: false,
+      rect: null,
+      visibleRect: null,
+    }));
+}
+
+async function readMuteControlState(page) {
+  return page
+    .evaluate(() => {
+      const control = document.getElementById("muteAudio");
+      return {
+        active: control?.classList.contains("active") ?? null,
+        ariaPressed: control?.getAttribute("aria-pressed") ?? null,
+        text: control?.textContent?.trim() ?? null,
+      };
+    })
+    .catch(() => ({ active: null, ariaPressed: null, text: null }));
+}
+
+function isMuteControlState(state, ariaPressed, text) {
+  return state?.ariaPressed === ariaPressed && state?.text === text;
+}
+
+function describeMuteControlFailure(result) {
+  const failures = [
+    !result.present ? "#muteAudio is absent" : "",
+    result.layout.layoutError,
+    result.clickError ? `mute click failed: ${result.clickError}` : "",
+    result.restoreClickError ? `restore click failed: ${result.restoreClickError}` : "",
+    !result.successfulMuteTransition ? "mute state did not transition Sound/false to Muted/true" : "",
+    !result.successfulRestoration ? "mute state did not restore to Sound/false" : "",
+  ].filter(Boolean);
+  return failures.join("; ");
 }
 
 function emitReport(report, extras = {}) {
@@ -942,6 +1150,7 @@ function emitReport(report, extras = {}) {
     indexLoaded: report.indexLoaded,
     moduleScriptUrl: report.moduleScriptUrl,
     movementInputTriggered: report.movementInputTriggered,
+    muteControlProbeResult: report.muteControlProbeResult,
     nonStartButtonsDetected: report.nonStartButtonsDetected,
     nonStartButtonsProbed: report.nonStartButtonsProbed,
     nonStartButtonProbeResults: report.nonStartButtonProbeResults,
@@ -989,6 +1198,7 @@ function emitReport(report, extras = {}) {
   console.log(`non-start buttons probed: ${report.nonStartButtonsProbed.join(", ") || "none"}`);
   console.log(`non-start probe results: ${report.nonStartButtonProbeResults.join(", ") || "none"}`);
   console.log(`speed probe results: ${JSON.stringify(report.speedControlProbeResults)}`);
+  console.log(`mute control probe: ${JSON.stringify(report.muteControlProbeResult)}`);
   console.log(`retired diagnostic globals present: ${report.retiredDiagnosticGlobalsPresent.join(", ") || "none"}`);
   console.log(`retired publisher global reads: ${report.retiredPublisherGlobalReadCount}`);
   console.log(`console errors: ${report.console.error.length}`);
