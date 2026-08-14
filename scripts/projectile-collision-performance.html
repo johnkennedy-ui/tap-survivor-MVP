@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tap Survivor Projectile Collision Performance Fixture</title>
+  </head>
+  <body>
+    <pre id="result">SMOKE_PROJECTILE_COLLISION_PERFORMANCE_RUNNING</pre>
+    <script id="smoke-browser-report" type="application/json"></script>
+    <script type="module">
+      import { createWeaponProjectileSystem } from "/src/modules/weapon-projectiles.js";
+
+      const result = document.getElementById("result");
+      const reportElement = document.getElementById("smoke-browser-report");
+      const successToken = "SMOKE_PROJECTILE_COLLISION_PERFORMANCE_PASS";
+      const failureToken = "SMOKE_PROJECTILE_COLLISION_PERFORMANCE_FAIL";
+      const timingSampleCount = 21;
+      const timingIterationsPerSample = 20;
+
+      function createSparseScenario() {
+        return {
+          bolts: [{ id: "sparse-bolt", x: 120, y: 120 }],
+          enemies: [
+            { id: "sparse-far", x: 360, y: 360, radius: 5, hp: 100 },
+            { id: "sparse-target", x: 128, y: 120, radius: 4, hp: 100 },
+          ],
+          id: "sparse",
+        };
+      }
+
+      function createDenseScenario(multiplier) {
+        const bolts = Array.from({ length: multiplier }, (_, index) => ({
+          id: `dense-${multiplier}-bolt-${index + 1}`,
+          x: 120 + index * 150,
+          y: 160,
+        }));
+        const farEnemies = Array.from({ length: 64 }, (_, index) => ({
+          id: `dense-${multiplier}-far-${index + 1}`,
+          x: 700 + (index % 8) * 24,
+          y: 360 + Math.floor(index / 8) * 20,
+          radius: 5,
+          hp: 100,
+        }));
+        const targets = bolts.map((bolt, index) => ({
+          id: `dense-${multiplier}-target-${index + 1}`,
+          x: bolt.x + 8,
+          y: bolt.y,
+          radius: 4,
+          hp: 100,
+        }));
+        return {
+          bolts,
+          enemies: [...farEnemies, ...targets],
+          id: `dense_x${multiplier}`,
+        };
+      }
+
+      function createState(definition) {
+        return {
+          damageCalls: [],
+          game: {
+            areas: [],
+            bolts: [],
+            enemies: definition.enemies.map((enemy) => ({ ...enemy })),
+            player: { x: 0, y: 0 },
+          },
+          reapCount: 0,
+        };
+      }
+
+      function snapshot(state) {
+        return {
+          areas: state.game.areas.map(({ color, life, radius, visualOnly, x, y }) => ({
+            color,
+            life,
+            radius,
+            visualOnly,
+            x,
+            y,
+          })),
+          damageCalls: state.damageCalls.map(({ damage, enemyId, weaponId }) => ({
+            damage,
+            enemyId,
+            weaponId,
+          })),
+          remainingBolts: state.game.bolts.map(({ damage, life, pierce, weaponId, x, y }) => ({
+            damage,
+            life,
+            pierce,
+            weaponId,
+            x,
+            y,
+          })),
+          reapCount: state.reapCount,
+        };
+      }
+
+      function executeRealScenario(definition) {
+        const state = createState(definition);
+        let distanceCalls = 0;
+        const system = createWeaponProjectileSystem({
+          canvas: { height: 540, width: 960 },
+          clamp: (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value)),
+          damageEnemy: (enemy, damage, weaponId) => {
+            state.damageCalls.push({ damage, enemyId: enemy.id, weaponId });
+          },
+          distance: (left, right) => {
+            distanceCalls += 1;
+            return Math.hypot(left.x - right.x, left.y - right.y);
+          },
+          getGame: () => state.game,
+          getRelicSpecialEffects: () => ({}),
+          getRunUpgradeTier: () => 0,
+          nearestEnemy: () => null,
+          projectileRadius: () => 5,
+          projectileSkillModifier: () => 1,
+          reapEnemies: () => {
+            state.reapCount += 1;
+          },
+          weaponDamage: () => 17,
+          weaponDefs: {
+            fixture_bolt: {
+              color: "#abcdef",
+              id: "fixture_bolt",
+              pierce: 0,
+              speed: 0,
+            },
+          },
+        });
+        definition.bolts.forEach((bolt) => {
+          system.spawnProjectileBolt("fixture_bolt", bolt.x, bolt.y, 0, 0);
+        });
+        system.updateBolts(0);
+        return { distanceCalls, snapshot: snapshot(state) };
+      }
+
+      function executeLegacyReference(definition) {
+        const state = createState(definition);
+        let distanceCalls = 0;
+        state.game.bolts = definition.bolts.map((bolt) => ({
+          bounces: 0,
+          damage: 17,
+          hit: new Set(),
+          life: 1.8,
+          pierce: 0,
+          radius: 5,
+          splitDepth: 0,
+          vx: 0,
+          vy: 0,
+          weaponId: "fixture_bolt",
+          x: bolt.x,
+          y: bolt.y,
+        }));
+        state.game.bolts.forEach((bolt) => {
+          const enemy = state.game.enemies.find((candidate) => {
+            if (bolt.hit.has(candidate)) return false;
+            distanceCalls += 1;
+            return Math.hypot(bolt.x - candidate.x, bolt.y - candidate.y) < bolt.radius + candidate.radius;
+          });
+          if (!enemy) return;
+          state.damageCalls.push({ damage: bolt.damage, enemyId: enemy.id, weaponId: bolt.weaponId });
+          bolt.hit.add(enemy);
+          bolt.life = 0;
+        });
+        state.game.bolts = state.game.bolts.filter((bolt) => bolt.life > 0);
+        state.reapCount += 1;
+        return { distanceCalls, snapshot: snapshot(state) };
+      }
+
+      function median(values) {
+        const ordered = [...values].sort((left, right) => left - right);
+        const middle = Math.floor(ordered.length / 2);
+        return ordered.length % 2 ? ordered[middle] : (ordered[middle - 1] + ordered[middle]) / 2;
+      }
+
+      function timing(work, definition) {
+        const samples = [];
+        for (let sample = 0; sample < timingSampleCount; sample += 1) {
+          const startedAt = performance.now();
+          for (let iteration = 0; iteration < timingIterationsPerSample; iteration += 1) {
+            work(definition);
+          }
+          samples.push(performance.now() - startedAt);
+        }
+        return {
+          iterationsPerSample: timingIterationsPerSample,
+          medianMs: Number(median(samples).toFixed(6)),
+          sampleCount: timingSampleCount,
+        };
+      }
+
+      function summarizeScenario(definition) {
+        const real = executeRealScenario(definition);
+        const legacy = executeLegacyReference(definition);
+        const functionalMatch = JSON.stringify(real.snapshot) === JSON.stringify(legacy.snapshot);
+        return {
+          definition: {
+            bolts: definition.bolts,
+            enemies: definition.enemies,
+            id: definition.id,
+          },
+          distanceCalls: {
+            legacyReference: legacy.distanceCalls,
+            realModule: real.distanceCalls,
+            reducedVersusLegacy: real.distanceCalls < legacy.distanceCalls,
+          },
+          functionalMatch,
+          functionalSnapshots: {
+            legacyReference: legacy.snapshot,
+            realModule: real.snapshot,
+          },
+          medianPerformanceNow: {
+            legacyReference: timing(executeLegacyReference, definition),
+            realModule: timing(executeRealScenario, definition),
+          },
+        };
+      }
+
+      function publish(token, report) {
+        reportElement.textContent = JSON.stringify(report);
+        result.textContent = `${token}\n${report.summary}`;
+      }
+
+      try {
+        const scenarios = [createSparseScenario(), createDenseScenario(1), createDenseScenario(5)];
+        const results = Object.fromEntries(
+          scenarios.map((scenario) => [scenario.id, summarizeScenario(scenario)]),
+        );
+        const denseGate = ["dense_x1", "dense_x5"].map((id) => ({
+          distanceCalls: results[id].distanceCalls,
+          functionalMatch: results[id].functionalMatch,
+          id,
+        }));
+        const functionalParity = Object.values(results).every((scenario) => scenario.functionalMatch);
+        const report = {
+          fixture: "projectile-collision-performance/v1",
+          functionalParity,
+          module: "/src/modules/weapon-projectiles.js#createWeaponProjectileSystem",
+          notes: [
+            "Deterministic micro-workload only; this telemetry is not a broad FPS claim.",
+            "The legacy reference reproduces the pre-rejection linear distance scan for the fixed fixture inputs.",
+          ],
+          optimizationGate: {
+            dense: denseGate,
+            passes: denseGate.every(
+              ({ distanceCalls, functionalMatch }) =>
+                functionalMatch && distanceCalls.realModule < distanceCalls.legacyReference,
+            ),
+          },
+          scenarios: results,
+          schema_version: 1,
+          status: functionalParity ? "pass" : "fail",
+          summary: functionalParity
+            ? "real module snapshots match the local legacy reference"
+            : "real module snapshot diverged from the local legacy reference",
+        };
+        publish(functionalParity ? successToken : failureToken, report);
+      } catch (error) {
+        publish(failureToken, {
+          error: String(error?.stack || error),
+          fixture: "projectile-collision-performance/v1",
+          schema_version: 1,
+          status: "fail",
+          summary: "fixture execution failed",
+        });
+      }
+    </script>
+  </body>
+</html>

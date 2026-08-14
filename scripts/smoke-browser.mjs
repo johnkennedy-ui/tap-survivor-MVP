@@ -1,11 +1,21 @@
 import { createServer } from "node:http";
-import { createReadStream, existsSync, statSync } from "node:fs";
-import { extname, join, normalize } from "node:path";
-import { spawnSync } from "node:child_process";
+import { createReadStream, existsSync, mkdirSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { chmod, mkdtemp, rm, stat } from "node:fs/promises";
+import { extname, join, normalize, resolve } from "node:path";
+import { spawn } from "node:child_process";
 
 const root = new URL("..", import.meta.url).pathname;
 const required = process.env.SMOKE_BROWSER_REQUIRED === "1";
-const browserTimeoutMs = Number(process.env.SMOKE_BROWSER_TIMEOUT_MS || 15000);
+const configuredBrowserTimeoutMs = Number(process.env.SMOKE_BROWSER_TIMEOUT_MS || 15000);
+const browserTimeoutMs = Number.isFinite(configuredBrowserTimeoutMs) && configuredBrowserTimeoutMs > 0
+  ? configuredBrowserTimeoutMs
+  : 15000;
+const fixture = resolveFixture(process.env.SMOKE_BROWSER_FIXTURE || "scripts/browser-smoke.html");
+const successToken = process.env.SMOKE_BROWSER_SUCCESS_TOKEN || "SMOKE_BROWSER_PASS";
+const failureToken = process.env.SMOKE_BROWSER_FAILURE_TOKEN || successToken.replace(/PASS$/, "FAIL");
+const reportFile = process.env.SMOKE_BROWSER_REPORT_FILE || "";
+const snapChromiumPath = "/snap/bin/chromium";
+const defaultSnapRuntimeParent = "/home/logix/snap/chromium/common";
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -27,8 +37,8 @@ function resolvePath(url) {
 }
 
 function candidateBrowsers() {
+  if (process.env.CHROME_BIN) return [process.env.CHROME_BIN];
   return [
-    process.env.CHROME_BIN,
     "chromium",
     "chromium-browser",
     "google-chrome",
@@ -36,8 +46,8 @@ function candidateBrowsers() {
   ].filter(Boolean);
 }
 
-function runBrowser(browser, url) {
-  return spawnSync(browser, [
+function browserArgs(url, profileDir = "") {
+  return [
     "--headless",
     "--disable-gpu",
     "--disable-dev-shm-usage",
@@ -45,12 +55,198 @@ function runBrowser(browser, url) {
     "--hide-scrollbars",
     "--virtual-time-budget=5000",
     "--dump-dom",
+    ...(profileDir ? [`--user-data-dir=${profileDir}`] : []),
     url,
-  ], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-    timeout: browserTimeoutMs,
+  ];
+}
+
+function isSnapChromium(browser) {
+  return resolve(browser) === snapChromiumPath;
+}
+
+async function createBrowserLaunch(browser) {
+  if (!isSnapChromium(browser)) {
+    return {
+      environment: process.env,
+      metadata: {
+        browserExecutable: browser,
+        privateRuntime: {
+          cleanup: { attempted: false, success: true },
+          enabled: false,
+          mode: "not-applicable",
+        },
+      },
+      profileDir: "",
+      runtimeDir: "",
+    };
+  }
+
+  const runtimeParent = process.env.SMOKE_BROWSER_RUNTIME_PARENT || defaultSnapRuntimeParent;
+  let runtimeDir = "";
+  let profileDir = "";
+  try {
+    const parentStat = await stat(runtimeParent);
+    if (!parentStat.isDirectory()) {
+      throw new Error(`Snap browser runtime parent is not a directory: ${runtimeParent}`);
+    }
+    runtimeDir = await mkdtemp(join(runtimeParent, "tap-survivor-smoke-runtime-"));
+    await chmod(runtimeDir, 0o700);
+    profileDir = await mkdtemp(join(runtimeParent, "tap-survivor-smoke-profile-"));
+    await chmod(profileDir, 0o700);
+  } catch (error) {
+    await removeOwnedDirectories(profileDir, runtimeDir);
+    throw error;
+  }
+
+  return {
+    environment: { ...process.env, XDG_RUNTIME_DIR: runtimeDir },
+    metadata: {
+      browserExecutable: browser,
+      privateRuntime: {
+        cleanup: { attempted: false, success: false },
+        enabled: true,
+        mode: "snap-private",
+        profileDirectoryMode: "0700",
+        runtimeDirectoryMode: "0700",
+        runtimeParent,
+      },
+    },
+    profileDir,
+    runtimeDir,
+  };
+}
+
+async function removeOwnedDirectories(profileDir, runtimeDir) {
+  const cleanup = {
+    attempted: Boolean(profileDir || runtimeDir),
+    profile: { removed: !profileDir },
+    runtime: { removed: !runtimeDir },
+    success: false,
+  };
+  if (profileDir) {
+    try {
+      await rm(profileDir, { force: true, recursive: true });
+      cleanup.profile.removed = true;
+    } catch (error) {
+      cleanup.profile.error = error.message;
+    }
+  }
+  if (runtimeDir) {
+    try {
+      await rm(runtimeDir, { force: true, recursive: true });
+      cleanup.runtime.removed = true;
+    } catch (error) {
+      cleanup.runtime.error = error.message;
+    }
+  }
+  cleanup.success = cleanup.profile.removed && cleanup.runtime.removed;
+  return cleanup;
+}
+
+function runBrowserProcess(browser, url, launch) {
+  return new Promise((resolveResult) => {
+    let output = "";
+    let errorOutput = "";
+    let settled = false;
+    let timedOut = false;
+    const child = spawn(browser, browserArgs(url, launch.profileDir), {
+      env: launch.environment,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      resolveResult({ ...result, stderr: errorOutput, stdout: output, timedOut });
+    };
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGKILL");
+    }, browserTimeoutMs);
+    child.stdout?.setEncoding("utf8");
+    child.stderr?.setEncoding("utf8");
+    child.stdout?.on("data", (chunk) => {
+      output += chunk;
+    });
+    child.stderr?.on("data", (chunk) => {
+      errorOutput += chunk;
+    });
+    child.once("error", (error) => finish({ error, status: null }));
+    child.once("close", (status, signal) => finish({ error: null, signal, status }));
   });
+}
+
+async function runBrowser(browser, url) {
+  let launch;
+  let result;
+  try {
+    launch = await createBrowserLaunch(browser);
+    result = await runBrowserProcess(browser, url, launch);
+  } catch (error) {
+    result = { error, status: null, stderr: "", stdout: "", timedOut: false };
+  } finally {
+    if (launch?.metadata.privateRuntime.enabled) {
+      launch.metadata.privateRuntime.cleanup = await removeOwnedDirectories(
+        launch.profileDir,
+        launch.runtimeDir
+      );
+    }
+  }
+  return {
+    ...result,
+    metadata: launch?.metadata || {
+      browserExecutable: browser,
+      privateRuntime: {
+        cleanup: { attempted: false, success: false },
+        enabled: isSnapChromium(browser),
+        mode: isSnapChromium(browser) ? "snap-private-setup-failed" : "not-applicable",
+      },
+    },
+  };
+}
+
+function resolveFixture(value) {
+  const normalized = normalize(String(value || "")).replace(/^[/\\]+/, "");
+  if (!normalized || normalized === "." || normalized.startsWith("..")) return "";
+  return normalized;
+}
+
+function extractBrowserReport(output) {
+  const match = output.match(
+    /<script\b(?=[^>]*\bid=["']smoke-browser-report["'])[^>]*>([\s\S]*?)<\/script>/i
+  );
+  if (!match) return { error: "browser fixture did not emit #smoke-browser-report", report: null };
+  try {
+    const report = JSON.parse(match[1]);
+    if (!report || typeof report !== "object" || Array.isArray(report)) {
+      return { error: "browser fixture report must be a JSON object", report: null };
+    }
+    return { error: "", report };
+  } catch (error) {
+    return { error: `browser fixture report is not valid JSON: ${error.message}`, report: null };
+  }
+}
+
+function writeBrowserReport(report) {
+  if (!reportFile) return;
+  const reportPath = normalize(reportFile);
+  const parent = reportPath.slice(0, Math.max(0, reportPath.lastIndexOf("/"))) || ".";
+  const temporaryPath = `${reportPath}.tmp-${process.pid}-${Date.now()}`;
+  mkdirSync(parent, { recursive: true });
+  writeFileSync(temporaryPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  renameSync(temporaryPath, reportPath);
+}
+
+function addRunnerMetadata(report, metadata) {
+  return {
+    ...report,
+    runner: {
+      browserExecutable: metadata.browserExecutable,
+      fixture,
+      privateRuntime: metadata.privateRuntime,
+      timeoutMs: browserTimeoutMs,
+    },
+  };
 }
 
 function skipOrFail(reason) {
@@ -82,42 +278,77 @@ server.on("error", (error) => {
   skipOrFail(`local server unavailable: ${error.code || error.message}.`);
 });
 
-server.listen(0, "127.0.0.1", () => {
+function closeServer() {
+  return new Promise((resolveClose) => server.close(resolveClose));
+}
+
+async function runSmoke() {
   const { port } = server.address();
-  const url = `http://127.0.0.1:${port}/scripts/browser-smoke.html`;
+  const url = `http://127.0.0.1:${port}/${fixture}`;
   let lastError = "";
 
-  for (const browser of candidateBrowsers()) {
-    const result = runBrowser(browser, url);
-    if (result.error?.code === "ENOENT") continue;
-    if (result.error?.code === "ETIMEDOUT") {
-      lastError = `Browser ${browser} timed out after ${browserTimeoutMs}ms.`;
-      continue;
-    }
-    const output = `${result.stdout || ""}\n${result.stderr || ""}`;
-    if (result.status === 0 && output.includes("SMOKE_BROWSER_PASS")) {
-      console.log(`# Browser Smoke\nPASS ${browser}`);
-      output
-        .split("\n")
-        .filter((line) => line.startsWith("PASS ") || line.startsWith("FAIL "))
-        .forEach((line) => console.log(line));
-      server.close();
+  try {
+    if (!fixture) {
+      skipOrFail("configured browser fixture path is invalid.");
       return;
     }
-    if (output.includes("SMOKE_BROWSER_FAIL")) {
-      console.error(`Browser ${browser} found an app smoke failure.\n${output}`);
-      server.close();
-      process.exitCode = 1;
+
+    for (const browser of candidateBrowsers()) {
+      const result = await runBrowser(browser, url);
+      if (result.error?.code === "ENOENT") continue;
+      if (result.timedOut) {
+        lastError = `Browser ${browser} timed out after ${browserTimeoutMs}ms.`;
+        continue;
+      }
+      const output = `${result.stdout || ""}\n${result.stderr || ""}`;
+      if (result.status === 0 && output.includes(successToken)) {
+        if (!result.metadata.privateRuntime.cleanup.success) {
+          lastError = `Browser ${browser} completed but private runtime cleanup failed.`;
+          continue;
+        }
+        if (reportFile) {
+          const parsed = extractBrowserReport(output);
+          if (parsed.error) {
+            lastError = `Browser ${browser} returned ${successToken} but ${parsed.error}.\n${output}`;
+            continue;
+          }
+          try {
+            writeBrowserReport(addRunnerMetadata(parsed.report, result.metadata));
+          } catch (error) {
+            lastError = `Browser ${browser} completed but could not write its report: ${error.message}.\n${output}`;
+            continue;
+          }
+        }
+        console.log(`# Browser Smoke\nPASS ${browser}`);
+        output
+          .split("\n")
+          .filter((line) => line.startsWith("PASS ") || line.startsWith("FAIL "))
+          .forEach((line) => console.log(line));
+        return;
+      }
+      if (output.includes(failureToken) || output.includes("SMOKE_BROWSER_FAIL")) {
+        console.error(`Browser ${browser} found an app smoke failure.\n${output}`);
+        process.exitCode = 1;
+        return;
+      }
+      lastError = `Browser ${browser} failed.\n${output}`;
+    }
+
+    if (!lastError) {
+      skipOrFail("no headless browser found.");
       return;
     }
-    lastError = `Browser ${browser} failed.\n${output}`;
-  }
 
-  server.close();
-  if (!lastError) {
-    skipOrFail("no headless browser found.");
-    return;
+    skipOrFail(lastError);
+  } finally {
+    await closeServer();
   }
+}
 
-  skipOrFail(lastError);
+server.listen(0, "127.0.0.1", () => {
+  void runSmoke().catch(async (error) => {
+    console.error(error.stack || error.message || String(error));
+    process.exitCode = 1;
+    await closeServer();
+  });
 });
