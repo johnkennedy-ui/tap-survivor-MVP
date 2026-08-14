@@ -2,7 +2,6 @@
   "allowedExpressions": [
     "globalThis.TapSurvivorBalanceRuntime",
     "globalThis.TapSurvivorContent",
-    "globalThis.TapSurvivorDebug",
     "globalThis.TapSurvivorGameDependencies",
     "globalThis.TapSurvivorRenderEnemies",
     "globalThis.TapSurvivorRenderHud",
@@ -19,7 +18,7 @@
     "src/combat-damage.js": 0,
     "src/content-registry.js": 0,
     "src/content.generated.js": 1,
-    "src/debug.js": 1,
+    "src/debug.js": 0,
     "src/game-banners.js": 0,
     "src/game-dependencies.js": 1,
     "src/game.js": 1,

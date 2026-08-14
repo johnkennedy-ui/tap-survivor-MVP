@@ -115,8 +115,9 @@ Generated content globals:
 - `src/ui.js` now receives the native UI-progression renderer through `src/game.js` factory wiring instead of reading
   `TapSurvivorUiProgression`. The production ESM browser dependency bag statically imports the native renderer and
   injects its `documentRef`; the generated classic UI bridges use the same explicit factories without publishing
-  `TapSurvivorUi` or `TapSurvivorUiProgression`. `src/debug.js` now receives balance floor scaling through the debug
-  factory; and `src/level-up.js` receives content for its exact fallback icon path instead of reading
+  `TapSurvivorUi` or `TapSurvivorUiProgression`. `src/modules/debug.js` owns the debug factory, its generated
+  `src/debug.js` bridge is global-free, and `src/modules/game-dependencies.js` supplies `createDebugSystem` through
+  the retained classic dependency bag. `src/level-up.js` receives content for its exact fallback icon path instead of reading
   `globalThis.TapSurvivorContent` directly.
 - `src/modules/upgrades.js` owns the pure `createUpgradeContent({ content, effects })` factory. Both production ESM
   and the classic dependency bag statically bundle that factory; generated `src/upgrades.js` no longer publishes

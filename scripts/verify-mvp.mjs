@@ -74,7 +74,8 @@ const shop = readRequired("src/shop.js");
 const relics = readRequired("src/relics.js");
 const runState = readRequired("src/run-state.js");
 const runUpdate = readRequired("src/run-update.js");
-const debug = readRequired("src/debug.js");
+const debugBridge = readRequired("src/debug.js");
+const nativeDebug = readRequired("src/modules/debug.js");
 const shellRelicUi = readRequired("src/shell-relic-ui.js");
 const shellUi = readRequired("src/shell-ui.js");
 const productionModuleEntrypoint = readRequired("src/app/production-module-entrypoint.js");
@@ -306,8 +307,18 @@ check("super bosses combine two boss abilities", enemies.includes("superBossAbil
 check("weapon attack animations exist", runState.includes("weaponBursts") && nativeWeaponFire.includes("addWeaponBurst") && nativeWeaponFire.includes("updateWeaponBursts") && rendering.includes("drawWeaponBurst"));
 check("all weapons have sprite mappings", Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]));
 check("first three floors have explicit balance tuning", balance.includes("floorTable") && balance.includes("hp: 0.9") && balance.includes("hp: 1.1") && balance.includes("hp: 1.33") && enemies.includes("balance.floorDifficulty") && game.includes("balance,"));
-check("debug balance system exists", debug.includes("createDebugSystem") && runtimeEntry.includes("TapSurvivorDebug"));
-check("debug overlay reports balance stats", ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) => debug.includes(token)));
+check(
+  "debug balance system exists",
+  nativeDebug.includes("createDebugSystem") &&
+    gameDependencies.includes("debug: { createDebugSystem }") &&
+    !runtimeEntry.includes("TapSurvivorDebug")
+);
+check(
+  "debug overlay reports balance stats",
+  ["Enemy HP", "Enemy DMG", "Weapon slots", "Weapon damage", "Run upgrades", "Relics"].every((token) =>
+    nativeDebug.includes(token)
+  )
+);
 check("local save exists", game.includes("tap-survivor-mvp-save-v2") && storageAdapter.includes("localStorage") && storageAdapter.includes("getSaveRaw"));
 check(
   "shared quest helpers are explicitly dependency-injected without a classic publisher",
@@ -578,7 +589,16 @@ check(
     !/\bTapSurvivorBalance\b/.test(gameDependencies) &&
     !enemies.includes("globalThis.TapSurvivorBalance"),
 );
-check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));
+check(
+  "shared debug helper is native and publisher-free",
+  nativeDebug.includes("export function createDebugSystem") &&
+    debugBridge.includes("// Retired global: TapSurvivorDebug. Exports are supplied through the game dependency bag.") &&
+    !debugBridge.includes("globalThis.TapSurvivorDebug") &&
+    moduleGameDependencies.includes('import { createDebugSystem } from "./debug.js";') &&
+    moduleGameDependencies.includes("debug: { createDebugSystem }") &&
+    !moduleGameDependencies.includes("TapSurvivorDebug") &&
+    !gameDependencies.includes("TapSurvivorDebug")
+);
 check(
   "shared shell UI helper uses a source-owned provider without a publisher",
   shellUi.includes(

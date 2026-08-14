@@ -1,4 +1,10 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/debug.js
+// Run: npm run build:bridges
+// Retired global: TapSurvivorDebug. Exports are supplied through the game dependency bag.
 (() => {
+  "use strict";
+
   function createDebugSystem({
     ui,
     floorDifficulty,
@@ -87,8 +93,4 @@
       isEnabled: () => enabled,
     };
   }
-
-  globalThis.TapSurvivorDebug = {
-    createDebugSystem,
-  };
 })();

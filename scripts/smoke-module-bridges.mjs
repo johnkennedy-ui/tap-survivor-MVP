@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { createGameHarness } from "./smoke-game-harness.mjs";
 import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance.js";
 import { createContentRegistry as createModuleContentRegistry } from "../src/modules/content-registry.js";
+import { createDebugSystem as createModuleDebugSystem } from "../src/modules/debug.js";
 import { createEffects as createModuleEffects } from "../src/modules/effects.js";
 import {
   createEnemyBehaviorSystem as createModuleEnemyBehaviorSystem,
@@ -132,6 +133,7 @@ const audioBridge = loadBridge("../src/audio.js", "src/audio.js");
 const effectsBridge = loadBridge("../src/effects.js", "src/effects.js", {
   TapSurvivorContentSchema: contentSchemaFixture,
 });
+const debugBridge = loadBridge("../src/debug.js", "src/debug.js");
 const upgradesBridge = loadBridge("../src/upgrades.js", "src/upgrades.js");
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
 const levelUpBridge = loadBridge("../src/level-up.js", "src/level-up.js");
@@ -1667,12 +1669,12 @@ check(
   moduleGameDependenciesSnapshot.hasLevelUp && bridgeGameDependenciesSnapshot.hasLevelUp
 );
 check(
-  "dependency bag tolerates missing retired asset, level-up, and Shell UI publishers",
+  "dependency bag tolerates missing retired asset, Debug, level-up, and Shell UI publishers",
   moduleGameDependenciesSnapshot.missingRetiredPublisherError === "" &&
     bridgeGameDependenciesSnapshot.missingRetiredPublisherError === ""
 );
 check(
-  "dependency bag ignores poisoned retired asset, level-up, and Shell UI publishers",
+  "dependency bag ignores poisoned retired asset, Debug, level-up, and Shell UI publishers",
   moduleGameDependenciesSnapshot.poisonedRetiredPublisherError === "" &&
     bridgeGameDependenciesSnapshot.poisonedRetiredPublisherError === "" &&
     Object.values(moduleGameDependenciesSnapshot.retiredPublisherGlobalReads).every(
@@ -1683,7 +1685,7 @@ check(
     )
 );
 check(
-  "dependency bag recovers after retired asset, level-up, and Shell UI descriptors are removed",
+  "dependency bag recovers after retired asset, Debug, level-up, and Shell UI descriptors are removed",
   moduleGameDependenciesSnapshot.recoveredRetiredPublisherError === "" &&
     bridgeGameDependenciesSnapshot.recoveredRetiredPublisherError === ""
 );
@@ -1841,7 +1843,17 @@ check(
       JSON.stringify({ saveKey: "save-key", legacySaveKey: "legacy-key" })
 );
 check("dependency bag injects native effects", moduleGameDependenciesSnapshot.hasEffects);
-check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorDebug"));
+check(
+  "dependency bag injects the native Debug factory",
+  moduleGameDependenciesSnapshot.__bag.debug.createDebugSystem === createModuleDebugSystem &&
+    typeof bridgeGameDependenciesSnapshot.__bag.debug.createDebugSystem === "function"
+);
+check(
+  "debug bridge retires globalThis.TapSurvivorDebug",
+  debugBridge.context.TapSurvivorDebug === undefined && !debugBridge.source.includes("globalThis.TapSurvivorDebug")
+);
+check("debug bridge source has generated banner", hasGeneratedBanner(debugBridge.source));
+check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorStorage"));
 check("module exports createPickupSystem", typeof createModulePickupSystem === "function");
 check(
   "pickup bridge retires globalThis.TapSurvivorPickups",
@@ -2645,7 +2657,6 @@ function createUiDependencyFakeElement(tagName) {
 
 function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
-    "TapSurvivorDebug",
     "TapSurvivorProgression",
     "TapSurvivorQuests",
     "TapSurvivorRenderEnemies",
@@ -2682,6 +2693,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorCombat",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
+    "TapSurvivorDebug",
     "TapSurvivorEffects",
     "TapSurvivorEnemies",
     "TapSurvivorEnemyBehaviors",
@@ -2871,7 +2883,12 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     documentRef
   );
   const poisonedRetiredPublisherGlobalRef = { ...globalRef };
-  const retiredPublisherNames = ["TapSurvivorAssets", "TapSurvivorLevelUp", "TapSurvivorShellUi"];
+  const retiredPublisherNames = [
+    "TapSurvivorAssets",
+    "TapSurvivorDebug",
+    "TapSurvivorLevelUp",
+    "TapSurvivorShellUi",
+  ];
   const retiredPublisherGlobalReads = Object.fromEntries(
     retiredPublisherNames.map((name) => [name, 0])
   );
@@ -3037,7 +3054,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
 
   const missingGlobalRef = { ...baseGlobalRef };
-  delete missingGlobalRef.TapSurvivorDebug;
+  delete missingGlobalRef.TapSurvivorStorage;
   let missingError = "";
   try {
     createGameDependencyBag({ globalRef: missingGlobalRef });
@@ -3147,6 +3164,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.effects.emptyShopBonuses === "function" &&
       typeof bag.effects.addShopItemBonus === "function" &&
       typeof bag.effects.applyRelicSpecialEffects === "function",
+    hasDebug: typeof bag.debug?.createDebugSystem === "function",
     hasSaveFactory: typeof bag.save.createSaveSystem === "function",
     injectedSaveCoins: configuredSave.coins,
     saveProviderCalls,

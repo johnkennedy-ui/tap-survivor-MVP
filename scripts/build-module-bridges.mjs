@@ -18,6 +18,13 @@ const bridges = [
     exports: ["createContentRegistry"],
   },
   {
+    source: "src/modules/debug.js",
+    target: "src/debug.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorDebug",
+    exports: ["createDebugSystem"],
+  },
+  {
     source: "src/modules/assets.js",
     target: "src/assets.js",
     globalName: null,
@@ -263,6 +270,10 @@ const bridges = [
       {
         source: "src/modules/content-registry.js",
         exports: ["createContentRegistry"],
+      },
+      {
+        source: "src/modules/debug.js",
+        exports: ["createDebugSystem"],
       },
       {
         source: "src/modules/effects.js",

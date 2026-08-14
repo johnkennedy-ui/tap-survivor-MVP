@@ -3,6 +3,7 @@ import { createAssetResolver } from "./assets.js";
 import { createCombatSystem } from "./combat.js";
 import { createCombatDamageSystem } from "./combat-damage.js";
 import { createContentRegistry } from "./content-registry.js";
+import { createDebugSystem } from "./debug.js";
 import { createEnemyBehaviorSystem } from "./enemy-behaviors.js";
 import { createEnemySpawnSystem } from "./enemy-spawning.js";
 import { createEnemySystem } from "./enemies.js";
@@ -100,7 +101,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     combatDamage: { createCombatDamageSystem },
     content,
     contentRegistry: { createContentRegistry },
-    debug: requireGlobal(globalRef, "TapSurvivorDebug"),
+    debug: { createDebugSystem },
     debugBalance: balanceRuntime,
     effects,
     enemies: { createEnemySystem },

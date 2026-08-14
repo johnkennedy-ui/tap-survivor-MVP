@@ -5,6 +5,7 @@ import vm from "node:vm";
 import { content, contentSchema } from "../src/content.generated.mjs";
 import { createBrowserDependencyBagOptions } from "../src/app/browser-dependency-bag.js";
 import { composeRuntime } from "../src/app/compose-runtime.js";
+import { createDebugSystem } from "../src/modules/debug.js";
 import { createGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createModuleGameDependencyBag } from "../src/modules/module-game-dependencies.js";
 import { createModuleGameLifecycleOwner } from "../src/modules/module-game-lifecycle.js";
@@ -430,7 +431,6 @@ export function createGameHarness({
   vm.runInContext(readSource("src/relics.js"), context);
   vm.runInContext(readSource("src/run-state.js"), context);
   vm.runInContext(readSource("src/run-update.js"), context);
-  vm.runInContext(readSource("src/debug.js"), context);
   vm.runInContext(readSource("src/shell-relic-ui.js"), context);
   vm.runInContext(readSource("src/shell-ui.js"), context);
   vm.runInContext(readSource("src/game-banners.js"), context);
@@ -490,7 +490,7 @@ export function createGameHarness({
   dependencyBagOptions.adapters.uiAdapters.ui.openShop = elements.get("openShop");
   const browserPlatformAdapters = dependencyBagOptions.adapters.platformAdapters;
   const browserBannerSystem = browserPlatformAdapters.bannerSystem;
-  const debugSystem = context.TapSurvivorDebug.createDebugSystem({
+  const debugSystem = createDebugSystem({
     floorDifficulty: (floor) => dependencies?.moduleSystems?.balance?.floorDifficulty?.(floor),
     getActiveProfile: () => context.TapSurvivorBalanceRuntime?.getActiveProfile?.() || "default",
     getGame: () => dependencies?.getGame?.(),
