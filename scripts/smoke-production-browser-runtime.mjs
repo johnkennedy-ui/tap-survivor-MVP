@@ -607,7 +607,24 @@ async function main() {
     const canvas = page.locator("#game");
     if ((await canvas.count().catch(() => 0)) > 0) {
       try {
-        await canvas.click({ position: { x: 240, y: 270 }, timeout: 5000 });
+        const canvasBox = await canvas.boundingBox();
+        if (
+          !canvasBox ||
+          !Number.isFinite(canvasBox.width) ||
+          !Number.isFinite(canvasBox.height) ||
+          canvasBox.width < 3 ||
+          canvasBox.height < 3
+        ) {
+          throw new Error("Movement input requires a usable #game canvas bounding box.");
+        }
+        const insideCanvas = (size) => Math.min(Math.max(Math.round(size / 2), 1), Math.floor(size) - 1);
+        await canvas.click({
+          position: {
+            x: insideCanvas(canvasBox.width),
+            y: insideCanvas(canvasBox.height)
+          },
+          timeout: 5000
+        });
         report.movementInputTriggered = true;
       } catch (error) {
         report.pageErrors.push({ message: `Movement input failed: ${error.message}`, stack: error.stack });
