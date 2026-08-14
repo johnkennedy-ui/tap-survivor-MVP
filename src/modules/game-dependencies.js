@@ -101,7 +101,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     content,
     contentRegistry: { createContentRegistry },
     debug: requireGlobal(globalRef, "TapSurvivorDebug"),
-    debugBalance: globalRef.TapSurvivorDebugBalance,
+    debugBalance: balanceRuntime,
     effects,
     enemies: { createEnemySystem },
     enemyBehaviors: { createEnemyBehaviorSystem },

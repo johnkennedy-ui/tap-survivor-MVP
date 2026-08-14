@@ -7329,5 +7329,4 @@ const balanceProfiles = [
 ];
 Object.defineProperty(content, "balanceProfiles", { value: balanceProfiles });
 globalThis.TapSurvivorContent = content;
-globalThis.TapSurvivorBalanceProfiles = balanceProfiles;
 })();

@@ -20,7 +20,6 @@ const classicGenerated = [
   `const balanceProfiles = ${JSON.stringify(balanceProfiles, null, 2)};`,
   'Object.defineProperty(content, "balanceProfiles", { value: balanceProfiles });',
   "globalThis.TapSurvivorContent = content;",
-  "globalThis.TapSurvivorBalanceProfiles = balanceProfiles;",
   "})();",
   "",
 ].join("\n");

@@ -492,7 +492,7 @@ export function createGameHarness({
   const browserBannerSystem = browserPlatformAdapters.bannerSystem;
   const debugSystem = context.TapSurvivorDebug.createDebugSystem({
     floorDifficulty: (floor) => dependencies?.moduleSystems?.balance?.floorDifficulty?.(floor),
-    getActiveProfile: () => context.TapSurvivorDebugBalance?.getActiveProfile?.() || "default",
+    getActiveProfile: () => context.TapSurvivorBalanceRuntime?.getActiveProfile?.() || "default",
     getGame: () => dependencies?.getGame?.(),
     getRelicSpecialEffects: () => dependencies?.moduleSystems?.relics?.specialEffects?.(dependencies?.getSave?.()),
     getRunUpgradeTier: (id) => dependencies?.getGame?.()?.runUpgradeTiers?.[id] || 0,

@@ -163,15 +163,15 @@ check(
   )
 );
 check(
-  "classic generated content publishes no schema global",
+  "classic generated content publishes content but not balanceProfiles global",
   classicContentSource.includes("globalThis.TapSurvivorContent =") &&
-    classicContentSource.includes("globalThis.TapSurvivorBalanceProfiles =") &&
+    !classicContentSource.includes("globalThis.TapSurvivorBalanceProfiles =") &&
     !classicContentSource.includes("TapSurvivorContentSchema")
 );
 check(
   "classic generated content carries profiles on a non-enumerable producer property",
   classicProfilesDescriptor?.enumerable === false &&
-    classicProfilesDescriptor.value === classicContentContext.TapSurvivorBalanceProfiles
+    classicProfilesDescriptor.value === classicContentContext.TapSurvivorContent.balanceProfiles
 );
 check(
   "classic fallback preserves TapSurvivorContent publisher pending separate dependency retirement",

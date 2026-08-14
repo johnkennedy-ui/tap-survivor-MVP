@@ -1822,7 +1822,10 @@ check(
       createModuleWeaponBehaviorSystem &&
     moduleGameDependenciesSnapshot.__bag.weaponFire.createWeaponFireSystem === createModuleWeaponFireSystem
 );
-check("dependency bag preserves optional debug balance", moduleGameDependenciesSnapshot.debugProfile === "testing");
+check(
+  "dependency bag preserves balance runtime profile",
+  moduleGameDependenciesSnapshot.runtimeProfile === "testing"
+);
 check(
   "dependency bag injects native upgrade content",
   typeof moduleGameDependenciesSnapshot.__bag.upgrades.createUpgradeContent === "function" &&
@@ -2798,12 +2801,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       balanceProfileSearchUsesGlobalRef &&=
         typeof profileSearch === "function" && profileSearch() === globalRef.location.search;
     },
+    getActiveProfile: () => "testing",
     content: () => configuredContent,
   };
   globalRef.TapSurvivorContent = rawContent;
-  globalRef.TapSurvivorDebugBalance = {
-    getActiveProfile: () => "testing",
-  };
   const shellRelicSchedulerTimers = [];
   const shellRelicDefaultImages = [];
   globalRef.clearTimeout = (timer) => {
@@ -3073,7 +3074,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     contentId: bag.content.id,
     defaultUpgradeIds: injectedUpgradeContent.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
     defaultRunUpgradeIds: injectedUpgradeContent.runUpgradeDefs.map((upgrade) => upgrade.id),
-    debugProfile: bag.debugBalance.getActiveProfile(),
+    runtimeProfile: bag.balanceRuntime.getActiveProfile(),
     fallbackContentId: fallbackBag.content.id,
     assetResolverFallback: assetResolver.choiceIconPath({}),
     assetResolverWeaponIcon: assetResolver.choiceIconPath({ weaponId: "fixture_weapon" }),

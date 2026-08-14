@@ -133,7 +133,7 @@ function balanceProviderLifecycleSnapshot() {
   const vmContext = createBalanceVmContext();
   const { context } = vmContext;
   const publisher = context.TapSurvivorBalanceRuntime;
-  const debugPublisher = context.TapSurvivorDebugBalance;
+  const debugPublisher = publisher;
   const unconfiguredContent = balanceProviderErrorSnapshot(() => publisher.content());
   const unconfiguredProfiles = balanceProviderErrorSnapshot(() => debugPublisher.listProfiles());
   const providerContent = createProviderContent();
@@ -197,7 +197,7 @@ function balanceProviderLifecycleSnapshot() {
   return {
     activeProfileAfterClear: publisher.getActiveProfile(),
     contentReads: counts.contentReads,
-    debugIdentity: context.TapSurvivorDebugBalance === debugPublisher,
+    debugIdentity: context.TapSurvivorBalanceRuntime === debugPublisher,
     explicitStorageLoad,
     locationReads: counts.locationReads,
     missingProfiles,
@@ -223,7 +223,7 @@ function unavailableStorageSnapshot(storage) {
   const providers = { content: createProviderContent(), profiles };
   if (storage !== undefined) providers.storage = storage;
   publisher.configureDefaultProviders(providers);
-  const debugPublisher = context.TapSurvivorDebugBalance;
+  const debugPublisher = publisher;
   const initialProfile = debugPublisher.getActiveProfile();
   debugPublisher.setProfile("testing");
   debugPublisher.applyOverrides({
@@ -339,7 +339,7 @@ check(
 );
 
 const defaultHarness = createGameHarness({ fakeCombat: true });
-check("default runtime uses default balance profile", defaultHarness.context.TapSurvivorDebugBalance.getActiveProfile() === "default");
+check("default runtime uses default balance profile", defaultHarness.context.TapSurvivorBalanceRuntime.getActiveProfile() === "default");
 const producerProfiles = Object.getOwnPropertyDescriptor(
   defaultHarness.context.TapSurvivorContent,
   "balanceProfiles"
@@ -347,7 +347,7 @@ const producerProfiles = Object.getOwnPropertyDescriptor(
 check(
   "classic content producer carries the exact profiles value on a non-enumerable property",
   producerProfiles?.enumerable === false &&
-    producerProfiles.value === defaultHarness.context.TapSurvivorBalanceProfiles
+    producerProfiles.value === defaultHarness.context.TapSurvivorContent.balanceProfiles
 );
 check(
   "classic harness receives configured runtime content through the producer seam",
@@ -362,7 +362,7 @@ const queryHarness = createGameHarness({
 });
 queryHarness.elements.get("titleStartGame").click();
 const queryGame = queryHarness.context.__tapSurvivorHarness.getGame();
-check("query balance profile is selected before next run", queryHarness.context.TapSurvivorDebugBalance.getActiveProfile() === "dev-fast");
+check("query balance profile is selected before next run", queryHarness.context.TapSurvivorBalanceRuntime.getActiveProfile() === "dev-fast");
 check("query profile is visible on next run state", queryGame.activeBalanceProfile === undefined || queryHarness.context.TapSurvivorContent.activeBalanceProfile === "dev-fast");
 
 const storageHarness = createGameHarness({
@@ -370,14 +370,14 @@ const storageHarness = createGameHarness({
     "tapSurvivor.balanceProfile": "testing",
   },
 });
-check("localStorage balance profile is selected", storageHarness.context.TapSurvivorDebugBalance.getActiveProfile() === "testing");
+check("localStorage balance profile is selected", storageHarness.context.TapSurvivorBalanceRuntime.getActiveProfile() === "testing");
 
 const fallbackHarness = createGameHarness({
   storageEntries: {
     "tapSurvivor.balanceProfile": "missing-profile",
   },
 });
-check("unknown profile falls back safely", fallbackHarness.context.TapSurvivorDebugBalance.getActiveProfile() === "default");
+check("unknown profile falls back safely", fallbackHarness.context.TapSurvivorBalanceRuntime.getActiveProfile() === "default");
 
 const recoveryHarness = createGameHarness({
   storageEntries: {
@@ -387,25 +387,25 @@ const recoveryHarness = createGameHarness({
 const recoveryContext = recoveryHarness.context;
 const recoveredGlobalStorage = recoveryContext.localStorage;
 recoveryContext.localStorage = createThrowingStorage();
-recoveryContext.TapSurvivorDebugBalance.setProfile("testing");
+recoveryContext.TapSurvivorBalanceRuntime.setProfile("testing");
 recoveryContext.localStorage = recoveredGlobalStorage;
-recoveryContext.TapSurvivorDebugBalance.applyOverrides({
+recoveryContext.TapSurvivorBalanceRuntime.applyOverrides({
   weapons: {
     spark_bolt: { damage: 99 },
   },
 });
-recoveryContext.TapSurvivorDebugBalance.saveOverrides();
+recoveryContext.TapSurvivorBalanceRuntime.saveOverrides();
 const recoveredGlobalOverrideSaved = recoveredGlobalStorage.store.has("tapSurvivor.balanceOverrides");
-recoveryContext.TapSurvivorDebugBalance.clearOverrides();
+recoveryContext.TapSurvivorBalanceRuntime.clearOverrides();
 check(
   "classic dependency bag re-resolves recovered injected globalRef storage",
-  recoveryContext.TapSurvivorDebugBalance.getActiveProfile() === "testing" &&
+  recoveryContext.TapSurvivorBalanceRuntime.getActiveProfile() === "testing" &&
     recoveredGlobalOverrideSaved &&
     !recoveredGlobalStorage.store.has("tapSurvivor.balanceOverrides")
 );
 
 const overrideHarness = createGameHarness({ fakeCombat: true });
-const debugBalance = overrideHarness.context.TapSurvivorDebugBalance;
+const debugBalance = overrideHarness.context.TapSurvivorBalanceRuntime;
 debugBalance.applyOverrides({
   weapons: {
     spark_bolt: {

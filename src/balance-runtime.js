@@ -509,15 +509,4 @@ function createRuntimeBalanceProvider() {
 const runtimeBalance = createRuntimeBalanceProvider();
 
 globalThis.TapSurvivorBalanceRuntime = runtimeBalance;
-globalThis.TapSurvivorDebugBalance = {
-  applyOverrides: runtimeBalance.applyOverrides,
-  clearOverrides: runtimeBalance.clearOverrides,
-  exportOverrides: runtimeBalance.exportOverrides,
-  getActiveProfile: runtimeBalance.getActiveProfile,
-  listProfiles: runtimeBalance.listProfiles,
-  printSummary: runtimeBalance.printSummary,
-  saveOverrides: runtimeBalance.saveOverrides,
-  setProfile: runtimeBalance.setProfile,
-  validateOverrides: runtimeBalance.validateOverrides,
-};
 })();
