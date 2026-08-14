@@ -1,4 +1,5 @@
 import { floorDifficulty } from "./balance.js";
+import { createAssetResolver } from "./assets.js";
 import { createCombatSystem } from "./combat.js";
 import { createCombatDamageSystem } from "./combat-damage.js";
 import { createContentRegistry } from "./content-registry.js";
@@ -9,6 +10,7 @@ import { createEffects } from "./effects.js";
 import { createGameBannerSystem } from "./game-banners.js";
 import { createGameRuntimeController } from "./game-runtime.js";
 import { createMapSystem } from "./map-system.js";
+import { createLevelUpSystem } from "./level-up.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
 import { createPickupSystem } from "./pickups.js";
@@ -48,7 +50,20 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
   }
   const configuredContent = balanceRuntime?.content?.() || rawContent;
   const content = configuredContent || {};
+  const assets = {
+    createAssetResolver(assetContent) {
+      return createAssetResolver({ content: assetContent });
+    },
+  };
   const effects = createEffects();
+  const levelUp = {
+    createLevelUpSystem(options = {}) {
+      return createLevelUpSystem({
+        ...options,
+        documentRef: options.documentRef || documentRef,
+      });
+    },
+  };
   const upgrades = { createUpgradeContent };
   const save = { createSaveSystem };
   const storage = requireGlobal(globalRef, "TapSurvivorStorage");
@@ -67,7 +82,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
 
   return {
     audio,
-    assets: globalRef.TapSurvivorAssets || {},
+    assets,
     balance: { floorDifficulty },
     balanceRuntime,
     combat: { createCombatSystem },
@@ -88,7 +103,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
         "globalThis.TapSurvivorInput.bindMovementInput"
       ),
     },
-    levelUp: requireGlobal(globalRef, "TapSurvivorLevelUp"),
+    levelUp,
     levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
     mapSystem: { createMapSystem },
     math: { clamp, distance, formatTime, randomRange },

@@ -89,6 +89,14 @@ check(
   )
 );
 check(
+  "generated classic dependency bridge has no retired asset or level-up publisher readers",
+  ["TapSurvivorAssets", "TapSurvivorLevelUp"].every(
+    (name) =>
+      !generatedClassicGameDependenciesSource.includes(`globalThis.${name}`) &&
+      !generatedClassicGameDependenciesSource.includes(`\"${name}\"`)
+  )
+);
+check(
   "selected-browser Shop adapter fails closed before native binding and recovers after binding",
   selectedBrowser.unboundAdapterFailedClosed && selectedBrowser.boundAdapterIdentityPreserved
 );
@@ -99,6 +107,10 @@ check(
 check(
   "classic dependency bag does not read a poisoned TapSurvivorGameBanners global",
   classic.poisonedBannerGlobalReads === 0
+);
+check(
+  "classic dependency bag does not read poisoned retired asset or level-up globals",
+  classic.poisonedGlobalReads === 0
 );
 check(
   "selected-browser native Shop handles malformed unused storage without invalid purchase tiers",
@@ -186,7 +198,7 @@ function createProvider(kind, fixture) {
     return {
       boundAdapterIdentityPreserved: true,
       poisonedBannerGlobalReads: classicProvider.poisonedBannerGlobalReads,
-      poisonedGlobalReads: 0,
+      poisonedGlobalReads: classicProvider.poisonedRetiredPublisherGlobalReads,
       provider: classicProvider.provider,
       unboundAdapterFailedClosed: true,
     };
@@ -210,6 +222,7 @@ function createClassicProvider(fixture) {
   return {
     provider: dependencies.shop.createShopSystem(withoutDocumentRef(fixture.nativeOptions)),
     poisonedBannerGlobalReads: globalRef.__bannerGlobalReads(),
+    poisonedRetiredPublisherGlobalReads: globalRef.__retiredPublisherGlobalReads(),
   };
 }
 
@@ -217,14 +230,12 @@ function createClassicProvider(fixture) {
 function createClassicDependencyGlobal(fixture) {
   const names = [
     "TapSurvivorAudio",
-    "TapSurvivorAssets",
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
     "TapSurvivorEffects",
     "TapSurvivorGameRuntime",
-    "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
     "TapSurvivorProgression",
@@ -255,6 +266,19 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorWeaponTargeting",
   ];
   const globalRef = Object.fromEntries(names.map((name) => [name, { name }]));
+  const retiredPublisherNames = ["TapSurvivorAssets", "TapSurvivorLevelUp"];
+  const retiredPublisherReads = Object.fromEntries(
+    retiredPublisherNames.map((name) => [name, 0])
+  );
+  retiredPublisherNames.forEach((name) => {
+    Object.defineProperty(globalRef, name, {
+      configurable: true,
+      get() {
+        retiredPublisherReads[name] += 1;
+        throw new Error(`Forbidden ${name} global read`);
+      },
+    });
+  });
   let bannerGlobalReads = 0;
   Object.defineProperty(globalRef, "TapSurvivorGameBanners", {
     configurable: true,
@@ -266,6 +290,10 @@ function createClassicDependencyGlobal(fixture) {
   Object.defineProperty(globalRef, "__bannerGlobalReads", {
     configurable: true,
     value: () => bannerGlobalReads,
+  });
+  Object.defineProperty(globalRef, "__retiredPublisherGlobalReads", {
+    configurable: true,
+    value: () => Object.values(retiredPublisherReads).reduce((total, reads) => total + reads, 0),
   });
   globalRef.document = fixture.documentRef;
   globalRef.TapSurvivorBalanceRuntime = { content: () => ({}) };
@@ -565,7 +593,6 @@ function createCanvas() {
 
 function createSelectedBrowserGlobal() {
   return {
-    TapSurvivorLevelUp: { createLevelUpSystem: () => ({}) },
     TapSurvivorProgression: { createProgressionSystem: () => ({}) },
     TapSurvivorQuests: {
       createQuestSystem: () => ({}),

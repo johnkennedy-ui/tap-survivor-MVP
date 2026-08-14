@@ -111,6 +111,7 @@ const moduleGameDependenciesSource = readFileSync(
   "utf8"
 );
 const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
+  "TapSurvivorAssets",
   "TapSurvivorCombat",
   "TapSurvivorEnemies",
   "TapSurvivorEnemyBehaviors",
@@ -124,6 +125,7 @@ const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
 const retiredBrowserNamespaceSourceFiles = Object.freeze([
   "src/app/browser-dependency-bag.js",
   "src/app/production-module-entrypoint.js",
+  "src/modules/assets.js",
   "src/modules/module-game-dependencies.js",
   "src/modules/combat.js",
   "src/modules/enemies.js",
@@ -151,6 +153,8 @@ const classicWeaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
+const classicAssetsSource = readFileSync(join(root, "src/assets.js"), "utf8");
+const classicLevelUpSource = readFileSync(join(root, "src/level-up.js"), "utf8");
 const B1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
   "TapSurvivorEffects",
   "TapSurvivorRunUpdate",
@@ -159,6 +163,14 @@ const B1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
   "TapSurvivorUpgrades",
   "TapSurvivorWeaponProjectiles",
 ]);
+const BATCH_4_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
+  "TapSurvivorAssets",
+  "TapSurvivorLevelUp",
+]);
+const classicB4RetiredPublisherSources = {
+  TapSurvivorAssets: classicAssetsSource,
+  TapSurvivorLevelUp: classicLevelUpSource,
+};
 const classicB1RetiredPublisherSources = Object.fromEntries(
   B1_RETIRED_CLASSIC_PUBLISHER_NAMES.map((name) => [
     name,
@@ -836,7 +848,7 @@ check(
     !browserDependencyBagSource.includes("TapSurvivorUpgrades")
 );
 check(
-  "readiness rejects every direct, optional, bracket, proxy, and string-key form of all nine retired publishers from the selected production ESM graph",
+  "readiness rejects every direct, optional, bracket, proxy, and string-key form of all ten retired publishers from the selected production ESM graph",
   [
     [browserDependencyBagSource, "../modules/combat.js", "createCombatSystem"],
     [browserDependencyBagSource, "../modules/enemies.js", "createEnemySystem"],
@@ -885,6 +897,16 @@ check(
       !source.includes(`globalThis.${name} =`) &&
       source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
   )
+);
+check(
+  "readiness sees source-derived B4 bridges retire assets and level-up",
+  BATCH_4_RETIRED_CLASSIC_PUBLISHER_NAMES.every((name) => {
+    const source = classicB4RetiredPublisherSources[name];
+    return (
+      !source.includes(`globalThis.${name} =`) &&
+      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+    );
+  })
 );
 check(
   "readiness sees classic dependency bag inject native upgrades without a publisher",

@@ -18,6 +18,18 @@ const bridges = [
     exports: ["createContentRegistry"],
   },
   {
+    source: "src/modules/assets.js",
+    target: "src/assets.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorAssets",
+    exports: [
+      "MODULE_NATIVE_ASSET_RESOLVER_SLOTS",
+      "MODULE_NATIVE_ASSET_RESOLVER_PROOF_SLOTS",
+      "MODULE_NATIVE_ASSET_RESOLVER_LOW_LEVEL_SLOTS",
+      "createAssetResolver",
+    ],
+  },
+  {
     source: "src/modules/effects.js",
     target: "src/effects.js",
     globalName: null,
@@ -36,6 +48,17 @@ const bridges = [
     target: "src/level-up-choices.js",
     globalName: null,
     exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
+  },
+  {
+    source: "src/modules/level-up.js",
+    target: "src/level-up.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorLevelUp",
+    exports: [
+      "MODULE_NATIVE_LEVEL_UP_SLOTS",
+      "MODULE_NATIVE_LEVEL_UP_PROOF_SLOTS",
+      "createLevelUpSystem",
+    ],
   },
   {
     source: "src/modules/map-system.js",
@@ -183,6 +206,15 @@ const bridges = [
     exports: ["createGameDependencyBag"],
     bundledSources: [
       {
+        source: "src/modules/assets.js",
+        exports: [
+          "MODULE_NATIVE_ASSET_RESOLVER_SLOTS",
+          "MODULE_NATIVE_ASSET_RESOLVER_PROOF_SLOTS",
+          "MODULE_NATIVE_ASSET_RESOLVER_LOW_LEVEL_SLOTS",
+          "createAssetResolver",
+        ],
+      },
+      {
         source: "src/modules/balance.js",
         exports: ["floorDifficulty"],
       },
@@ -266,6 +298,14 @@ const bridges = [
       {
         source: "src/modules/level-up-choices.js",
         exports: ["choiceId", "shopFocusBonus", "shuffleChoices", "weightedChoices"],
+      },
+      {
+        source: "src/modules/level-up.js",
+        exports: [
+          "MODULE_NATIVE_LEVEL_UP_SLOTS",
+          "MODULE_NATIVE_LEVEL_UP_PROOF_SLOTS",
+          "createLevelUpSystem",
+        ],
       },
       {
         source: "src/modules/math.js",

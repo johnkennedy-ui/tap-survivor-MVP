@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 
+import { createAssetResolver } from "../src/modules/assets.js";
+
 function assert(name, condition) {
   if (!condition) {
     console.error(`FAIL ${name}`);
@@ -14,18 +16,18 @@ function assert(name, condition) {
 const root = new URL("..", import.meta.url).pathname;
 const assetsSource = readFileSync(join(root, "src/assets.js"), "utf8");
 const contentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
+const gameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 
 function createAssetContext({ loadContent = false } = {}) {
   const context = { console };
   vm.createContext(context);
   if (loadContent) vm.runInContext(contentSource, context);
-  vm.runInContext(assetsSource, context);
   return context;
 }
 
-function createResolverSafely(assets, content) {
+function createResolverSafely(content) {
   try {
-    return { resolver: assets.createAssetResolver(content) };
+    return { resolver: createAssetResolver({ content }) };
   } catch (error) {
     return { error };
   }
@@ -82,13 +84,26 @@ function withPoisonedContent(context, callback) {
 
 const context = createAssetContext({ loadContent: true });
 const content = context.TapSurvivorContent;
-const assets = context.TapSurvivorAssets;
 const presentContentScenario = withPoisonedContent(context, (getPoisonReads) => {
-  const explicit = createResolverSafely(assets, content);
+  const explicit = createResolverSafely(content);
   const poisonReadsAfterExplicitCreation = getPoisonReads();
-  const empty = createResolverSafely(assets);
+  const empty = createResolverSafely();
   return { empty, explicit, poisonReadsAfterExplicitCreation };
 });
+
+assert(
+  "generated asset bridge is global-free with retired provenance",
+  !assetsSource.includes("globalThis.TapSurvivorAssets =") &&
+    assetsSource.includes(
+      "// Retired global: TapSurvivorAssets. Exports are supplied through the game dependency bag."
+    )
+);
+assert(
+  "generated dependency bridge bundles the native asset resolver without an asset global",
+  gameDependenciesSource.includes("function createAssetResolver(options = {})") &&
+    gameDependenciesSource.includes("createAssetResolver(assetContent)") &&
+    !gameDependenciesSource.includes("TapSurvivorAssets")
+);
 
 assert(
   "asset resolver explicit content creation does not read poisoned content global",
@@ -111,7 +126,7 @@ assert(
     "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
 );
 
-const resolver = assets.createAssetResolver(content);
+const resolver = createAssetResolver({ content });
 const sparkIcon = resolver.choiceIconPath({ weaponId: "spark_bolt" });
 const moveSpeedIcon = resolver.choiceIconPath({ runUpgradeId: "run_move_speed" });
 const moveSpeedRelic = content.relics.find((relic) => relic.id === "move_speed_focus_relic");
@@ -126,7 +141,7 @@ assert("weapon effect sprite remains available separately", sparkSprite.src.incl
 
 const absentContentContext = createAssetContext();
 const absentContentScenario = withPoisonedContent(absentContentContext, () =>
-  createResolverSafely(absentContentContext.TapSurvivorAssets)
+  createResolverSafely()
 );
 
 assert(

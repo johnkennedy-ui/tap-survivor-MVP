@@ -4,6 +4,107 @@
 (() => {
   "use strict";
 
+  const MODULE_NATIVE_ASSET_RESOLVER_SLOTS = Object.freeze([
+    "choiceIconDefinition",
+    "choiceIconPath",
+    "fallbackSkillIcon",
+    "relicIcon",
+    "runUpgradeIcon",
+    "runUpgradeSprite",
+    "spriteSource",
+    "weaponIcon",
+    "weaponSprite",
+  ]);
+
+  const MODULE_NATIVE_ASSET_RESOLVER_PROOF_SLOTS = Object.freeze([
+    "createAssetResolver",
+    ...MODULE_NATIVE_ASSET_RESOLVER_SLOTS,
+  ]);
+
+  const MODULE_NATIVE_ASSET_RESOLVER_LOW_LEVEL_SLOTS = Object.freeze([
+    "assetDefs",
+    "fallbackSkillIcon",
+  ]);
+
+  const DEFAULT_SKILL_ICON = "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+
+  function createAssetResolver(options = {}) {
+    const resolvedOptions = requireObject(options, "options");
+    const assetDefs = requireObject(
+      resolvedOptions.assetDefs || resolvedOptions.content?.assets || {},
+      "options.assetDefs"
+    );
+    const sprites = assetDefs.sprites || {};
+    const fallbackSkillIcon =
+      resolvedOptions.fallbackSkillIcon || sprites.ui?.quest || DEFAULT_SKILL_ICON;
+
+    function spriteSource(definition) {
+      if (typeof definition === "string") return definition;
+      if (definition && typeof definition === "object") {
+        return definition.src || definition.path || definition.iconSrc || "";
+      }
+      return "";
+    }
+
+    function weaponSprite(weaponId) {
+      return sprites.weapons?.[weaponId] || fallbackSkillIcon;
+    }
+
+    function weaponIcon(weaponId) {
+      const definition = weaponSprite(weaponId);
+      return definition?.iconSrc || spriteSource(definition) || fallbackSkillIcon;
+    }
+
+    function runUpgradeSprite(upgradeId) {
+      return sprites.runUpgrades?.[upgradeId] || fallbackSkillIcon;
+    }
+
+    function runUpgradeIcon(upgradeId) {
+      const definition = runUpgradeSprite(upgradeId);
+      return (
+        sprites.runUpgradeIcons?.[upgradeId] ||
+        definition?.iconSrc ||
+        spriteSource(definition) ||
+        fallbackSkillIcon
+      );
+    }
+
+    function relicIcon(relic) {
+      return relic?.iconPath || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon;
+    }
+
+    function choiceIconDefinition(choice) {
+      if (choice?.weaponId) return weaponSprite(choice.weaponId);
+      if (choice?.runUpgradeId) return runUpgradeSprite(choice.runUpgradeId);
+      return fallbackSkillIcon;
+    }
+
+    function choiceIconPath(choice) {
+      if (choice?.weaponId) return weaponIcon(choice.weaponId);
+      if (choice?.runUpgradeId) return runUpgradeIcon(choice.runUpgradeId);
+      return fallbackSkillIcon;
+    }
+
+    return {
+      choiceIconDefinition,
+      choiceIconPath,
+      fallbackSkillIcon,
+      relicIcon,
+      runUpgradeIcon,
+      runUpgradeSprite,
+      spriteSource,
+      weaponIcon,
+      weaponSprite,
+    };
+  }
+
+  function requireObject(value, name) {
+    if (!value || typeof value !== "object") {
+      throw new Error(`Missing Tap Survivor module assets dependency: ${name}`);
+    }
+    return value;
+  }
+
   /**
    * @typedef {{ hp: number, damage: number, spawnRate: number }} FloorDifficulty
    */
@@ -1820,6 +1921,189 @@
    */
   function shopFocusBonus(save) {
     return (save.shopPurchases?.relic_compass || 0) * 0.5;
+  }
+
+  const MODULE_NATIVE_LEVEL_UP_SLOTS = Object.freeze(["levelUp"]);
+
+  const MODULE_NATIVE_LEVEL_UP_PROOF_SLOTS = Object.freeze(["createLevelUpSystem"]);
+
+  /**
+   * @param {any} [options]
+   */
+  function createLevelUpSystem({
+    documentRef,
+    ui,
+    assets,
+    content,
+    levelUpChoices,
+    weaponDefs,
+    runUpgradeDefs,
+    relicDefs,
+    getSave,
+    getGame,
+    getRunUpgradeTier,
+    maxEquippedWeapons,
+    activeQuestWeaponIds,
+    playChoiceSfx,
+  } = {}) {
+    if (!documentRef || typeof documentRef.createElement !== "function") {
+      throw new Error("Missing Tap Survivor native level-up dependency: documentRef");
+    }
+    const { choiceId, shopFocusBonus, weightedChoices } = levelUpChoices;
+    const fallbackIcon =
+      content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+    const assetResolver = assets?.createAssetResolver?.(content) || {
+      fallbackSkillIcon: fallbackIcon,
+      choiceIconDefinition: () => fallbackIcon,
+      choiceIconPath: () => fallbackIcon,
+      spriteSource: (definition) =>
+        typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
+    };
+    const fallbackSkillIcon = assetResolver.fallbackSkillIcon;
+
+    function showLevelUp() {
+      const game = getGame();
+      if (!game) return;
+      const save = getSave();
+      game.paused = true;
+      game.pauseReason = "level";
+      ui.choices.innerHTML = "";
+      const maxWeapons = maxEquippedWeapons?.() || 4;
+      const canEquipWeapon = game.player.equippedWeapons.length < maxWeapons;
+      const weaponChoices = canEquipWeapon
+        ? save.unlockedWeapons
+            .filter((weaponId) => !game.player.equippedWeapons.includes(weaponId))
+            .map((weaponId) => ({
+              weaponId,
+              name: weaponDefs[weaponId].name,
+              description: `Equip ${weaponDefs[weaponId].name} for this run. Weapon ${game.player.equippedWeapons.length + 1}/${maxWeapons}.`,
+              apply: () => game.player.equippedWeapons.push(weaponId),
+            }))
+        : [];
+      const questWeaponIds = activeQuestWeaponIds();
+      const questWeaponChoices = weaponChoices.filter((choice) => questWeaponIds.includes(choice.weaponId));
+      const otherWeaponChoices = weaponChoices.filter((choice) => !questWeaponChoices.includes(choice));
+      const activeRelics = (save.equippedRelics || [])
+        .map((id) => (relicDefs || []).find((relic) => relic.id === id))
+        .filter(Boolean);
+      function relicBonusFor(upgradeId, field) {
+        return activeRelics
+          .filter((relic) => relic.targetUpgradeId === upgradeId)
+          .reduce((total, relic) => total + (relic[field] || 0), 0);
+      }
+      function relicSpawnRateMultiplierFor(upgradeId) {
+        return activeRelics
+          .filter((relic) => relic.targetUpgradeId === upgradeId)
+          .reduce((multiplier, relic) => multiplier * Math.max(1, relic.selectionWeightBonus || 1), 1);
+      }
+      const runUpgradeChoices = runUpgradeDefs
+        .filter(
+          (upgrade) =>
+            getRunUpgradeTier(upgrade.id) < upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus")
+        )
+        .map((upgrade) => {
+          const tier = getRunUpgradeTier(upgrade.id);
+          const maxTier = upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus");
+          return {
+            name: `${upgrade.name} ${tier + 1}`,
+            description: `${upgrade.description} Tier ${tier + 1}/${maxTier}.`,
+            family: upgrade.family || upgrade.id,
+            relicSpawnRateMultiplier: relicSpawnRateMultiplierFor(upgrade.id),
+            runUpgradeId: upgrade.id,
+            apply: () => {
+              game.runUpgradeTiers[upgrade.id] = tier + 1;
+              upgrade.apply?.(game);
+            },
+          };
+        });
+      const familyTiers = runUpgradeDefs.reduce((totals, upgrade) => {
+        const family = upgrade.family || upgrade.id;
+        totals[family] = (totals[family] || 0) + getRunUpgradeTier(upgrade.id);
+        return totals;
+      }, {});
+      const recentChoiceIds = new Set(game.lastLevelUpChoiceIds || []);
+      const otherChoicePool = [...otherWeaponChoices, ...runUpgradeChoices];
+      const freshChoices = otherChoicePool.filter((choice) => !recentChoiceIds.has(choiceId(choice)));
+      const repeatChoices = otherChoicePool.filter((choice) => recentChoiceIds.has(choiceId(choice)));
+      const otherChoices = [
+        ...weightedChoices(freshChoices, choiceWeight),
+        ...weightedChoices(repeatChoices, choiceWeight),
+      ];
+      function choiceWeight(choice) {
+        if (!choice.runUpgradeId) return 1;
+        const shopFocus = shopFocusBonus(save);
+        const baseWeight =
+          1 +
+          (familyTiers[choice.family] || 0) * 1.4 +
+          getRunUpgradeTier(choice.runUpgradeId) * 0.8 +
+          shopFocus;
+        return baseWeight * choice.relicSpawnRateMultiplier;
+      }
+      const choices = [...questWeaponChoices, ...otherChoices].slice(0, 3);
+
+      if (!choices.length) {
+        choices.push({
+          name: "Repair",
+          description: "Recover 30 HP.",
+          apply: () => {
+            game.player.hp = Math.min(game.player.maxHp, game.player.hp + 30);
+          },
+        });
+      }
+      game.lastLevelUpChoiceIds = choices.map(choiceId);
+
+      choices.forEach((choice) => {
+        const button = documentRef.createElement("button");
+        button.className = "level-choice";
+        button.disabled = true;
+        button.appendChild(createChoiceIcon(choice));
+        const copy = documentRef.createElement("span");
+        copy.className = "level-choice-copy";
+        const name = documentRef.createElement("strong");
+        name.textContent = choice.name;
+        const description = documentRef.createElement("span");
+        description.textContent = choice.description;
+        copy.appendChild(name);
+        copy.appendChild(description);
+        button.appendChild(copy);
+        button.addEventListener("click", () => {
+          if (button.disabled) return;
+          choice.apply();
+          playChoiceSfx?.(choice);
+          game.paused = false;
+          game.pauseReason = "";
+          ui.levelUp.classList.add("hidden");
+        });
+        setTimeout(() => {
+          if (!ui.levelUp.classList.contains("hidden")) button.disabled = false;
+        }, 500);
+        ui.choices.appendChild(button);
+      });
+      ui.levelUp.classList.remove("hidden");
+    }
+
+    function createChoiceIcon(choice) {
+      const path = assetResolver.choiceIconPath(choice) || fallbackSkillIcon;
+      const image = documentRef.createElement("img");
+      image.className = "level-choice-icon";
+      image.src = path;
+      image.alt = "";
+      return image;
+    }
+
+    function closeLevelUpMenu() {
+      ui.levelUp.classList.add("hidden");
+      const game = getGame();
+      if (game?.pauseReason === "level") {
+        game.paused = false;
+        game.pauseReason = "";
+      }
+    }
+
+    return {
+      showLevelUp,
+      closeLevelUpMenu,
+    };
   }
 
   /**
@@ -4992,7 +5276,20 @@
     }
     const configuredContent = balanceRuntime?.content?.() || rawContent;
     const content = configuredContent || {};
+    const assets = {
+      createAssetResolver(assetContent) {
+        return createAssetResolver({ content: assetContent });
+      },
+    };
     const effects = createEffects();
+    const levelUp = {
+      createLevelUpSystem(options = {}) {
+        return createLevelUpSystem({
+          ...options,
+          documentRef: options.documentRef || documentRef,
+        });
+      },
+    };
     const upgrades = { createUpgradeContent };
     const save = { createSaveSystem };
     const storage = requireGlobal(globalRef, "TapSurvivorStorage");
@@ -5011,7 +5308,7 @@
 
     return {
       audio,
-      assets: globalRef.TapSurvivorAssets || {},
+      assets,
       balance: { floorDifficulty },
       balanceRuntime,
       combat: { createCombatSystem },
@@ -5032,7 +5329,7 @@
           "globalThis.TapSurvivorInput.bindMovementInput"
         ),
       },
-      levelUp: requireGlobal(globalRef, "TapSurvivorLevelUp"),
+      levelUp,
       levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
       mapSystem: { createMapSystem },
       math: { clamp, distance, formatTime, randomRange },

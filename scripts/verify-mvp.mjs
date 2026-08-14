@@ -31,6 +31,7 @@ const math = readRequired("src/math.js");
 const sprites = readRequired("src/sprites.js");
 const spriteSheetRenderer = readRequired("src/sprite-sheet-renderer.js");
 const assets = readRequired("src/assets.js");
+const nativeAssets = readRequired("src/modules/assets.js");
 const audio = readRequired("src/audio.js");
 const quests = readRequired("src/quests.js");
 const storageAdapter = readRequired("src/storage-adapter.js");
@@ -63,6 +64,7 @@ const ui = readRequired("src/ui.js");
 const runUi = readRequired("src/run-ui.js");
 const levelUpChoices = readRequired("src/level-up-choices.js");
 const levelUp = readRequired("src/level-up.js");
+const nativeLevelUp = readRequired("src/modules/level-up.js");
 const input = readRequired("src/input.js");
 const pickups = readRequired("src/pickups.js");
 const shopPricing = readRequired("src/shop-pricing.js");
@@ -349,9 +351,13 @@ check(
 );
 check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
 check(
-  "shared asset resolver exists",
-  assets.includes("TapSurvivorAssets") &&
-    gameDependencies.includes("TapSurvivorAssets") &&
+  "shared asset resolver is explicitly dependency-injected without a classic publisher",
+  nativeAssets.includes("function createAssetResolver") &&
+    !assets.includes("globalThis.TapSurvivorAssets =") &&
+    assets.includes("// Retired global: TapSurvivorAssets.") &&
+    moduleGameDependencies.includes('import { createAssetResolver } from "./assets.js"') &&
+    moduleGameDependencies.includes("createAssetResolver(assetContent)") &&
+    !gameDependencies.includes("TapSurvivorAssets") &&
     game.includes("assets,") &&
     levelUp.includes("assets?.createAssetResolver?.(content)") &&
     levelUp.includes("content?.assets?.sprites?.ui?.quest") &&
@@ -412,13 +418,16 @@ check(
   runUi.includes("createRunUi") && gameDependencies.includes("createRunUi"),
 );
 check(
-  "shared level-up helper exists",
-  levelUp.includes("levelUpChoices") &&
+  "shared level-up helper is explicitly dependency-injected without a classic publisher",
+  nativeLevelUp.includes("function createLevelUpSystem") &&
+    levelUp.includes("levelUpChoices") &&
     levelUpChoices.includes("function choiceId") &&
+    !levelUp.includes("globalThis.TapSurvivorLevelUp =") &&
+    levelUp.includes("// Retired global: TapSurvivorLevelUp.") &&
+    moduleGameDependencies.includes('import { createLevelUpSystem } from "./level-up.js"') &&
+    !gameDependencies.includes("TapSurvivorLevelUp") &&
     gameDependencies.includes("levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices }") &&
     game.includes("levelUpChoices,") &&
-    levelUp.includes("TapSurvivorLevelUp") &&
-    runtimeEntry.includes("TapSurvivorLevelUp") &&
     !levelUpChoices.includes("globalThis.TapSurvivorLevelUpChoices") &&
     !levelUp.includes("globalThis.TapSurvivorLevelUpChoices") &&
     !gameDependencies.includes("TapSurvivorLevelUpChoices"),

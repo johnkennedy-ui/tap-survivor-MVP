@@ -56,6 +56,7 @@ const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
+  "TapSurvivorAssets",
   "TapSurvivorCombat",
   "TapSurvivorEnemies",
   "TapSurvivorEnemyBehaviors",
@@ -92,9 +93,14 @@ const BATCH_3_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
   "TapSurvivorWeaponBehaviors",
   "TapSurvivorWeaponFire",
 ]);
+const BATCH_4_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
+  "TapSurvivorAssets",
+  "TapSurvivorLevelUp",
+]);
 const retiredBrowserNamespaceSourceFiles = Object.freeze([
   "src/app/browser-dependency-bag.js",
   "src/app/production-module-entrypoint.js",
+  "src/modules/assets.js",
   "src/modules/module-game-dependencies.js",
   "src/modules/combat.js",
   "src/modules/enemies.js",
@@ -199,6 +205,16 @@ check(
   )
 );
 check(
+  "classic generated B4 bridges retire assets and level-up with provenance",
+  BATCH_4_RETIRED_CLASSIC_PUBLISHER_NAMES.every((name) => {
+    const source = classicRetiredPublisherSources[name];
+    return (
+      !source.includes(`globalThis.${name} =`) &&
+      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+    );
+  })
+);
+check(
   "production module entrypoint candidate exposes expected proof slots",
   ["boot", "createDependencyBag", "createLifecycleOwner", "init", "startRun", "tick", "render", "persist", "dispose"].every(
     (slot) => PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes(slot)
@@ -267,7 +283,7 @@ check(
     classicGameDependenciesSource.includes("      save,")
 );
 check(
-  "production ESM statically imports all nine retired native factories without a namespace bridge or classic side-effect imports",
+  "production ESM excludes all ten retired publisher namespaces without a namespace bridge or classic side-effect imports",
   [
     [browserDependencyBagSource, "../modules/combat.js", "createCombatSystem"],
     [browserDependencyBagSource, "../modules/enemies.js", "createEnemySystem"],
@@ -296,7 +312,8 @@ check(
     (name) =>
       !BATCH_1_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name) &&
       !BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name) &&
-      !BATCH_3_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name)
+      !BATCH_3_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name) &&
+      !BATCH_4_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name)
   ).every((name) =>
     classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
   )
@@ -1364,13 +1381,21 @@ check(
   runtimeUpgradeGlobalGuard.readAttempts() === 0 && autobootUpgradeGlobalGuard.readAttempts() === 0
 );
 check(
-  "throwing getters for all nine retired publishers record zero reads through init, start, movement, x1/x2/x5, tick, render, persist, dispose, and autoboot",
+  "throwing getters for all ten retired publishers record zero reads through init, start, movement, x1/x2/x5, tick, render, persist, dispose, and autoboot",
   runtimeRetiredBrowserNamespaceGuard.readAttempts() === 0 &&
     autobootRetiredBrowserNamespaceGuard.readAttempts() === 0
 );
 check(
   "throwing getters for each B2 publisher record zero reads through injected and autoboot production paths",
   BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
+    (name) =>
+      runtimeRetiredBrowserNamespaceGuard.readAttemptsFor(name) === 0 &&
+      autobootRetiredBrowserNamespaceGuard.readAttemptsFor(name) === 0
+  )
+);
+check(
+  "throwing getters for each B4 publisher record zero reads through injected and autoboot production paths",
+  BATCH_4_RETIRED_CLASSIC_PUBLISHER_NAMES.every(
     (name) =>
       runtimeRetiredBrowserNamespaceGuard.readAttemptsFor(name) === 0 &&
       autobootRetiredBrowserNamespaceGuard.readAttemptsFor(name) === 0
@@ -1607,6 +1632,7 @@ function captureError(action) {
 
 function classicPublisherFile(name) {
   return {
+    TapSurvivorAssets: "assets.js",
     TapSurvivorCombat: "combat.js",
     TapSurvivorEnemies: "enemies.js",
     TapSurvivorEnemyBehaviors: "enemy-behaviors.js",

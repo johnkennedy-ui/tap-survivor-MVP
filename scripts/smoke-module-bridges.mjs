@@ -125,11 +125,13 @@ const contentRegistryBridge = loadBridge(
   "../src/content-registry.js",
   "src/content-registry.js"
 );
+const assetsBridge = loadBridge("../src/assets.js", "src/assets.js");
 const effectsBridge = loadBridge("../src/effects.js", "src/effects.js", {
   TapSurvivorContentSchema: contentSchemaFixture,
 });
 const upgradesBridge = loadBridge("../src/upgrades.js", "src/upgrades.js");
 const choicesBridge = loadBridge("../src/level-up-choices.js", "src/level-up-choices.js");
+const levelUpBridge = loadBridge("../src/level-up.js", "src/level-up.js");
 const mapBridge = loadBridge("../src/map-system.js", "src/map-system.js");
 const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-corruption.js");
 const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defaults.js");
@@ -397,6 +399,18 @@ check("module exports weightedChoices", typeof moduleWeightedChoices === "functi
 check(
   "bridge does not publish retired TapSurvivorLevelUpChoices",
   bridgeChoices === undefined && !choicesBridge.source.includes("globalThis.TapSurvivorLevelUpChoices")
+);
+check(
+  "asset and level-up bridges are global-free with dependency-bag provenance",
+  [
+    [assetsBridge, "TapSurvivorAssets"],
+    [levelUpBridge, "TapSurvivorLevelUp"],
+  ].every(
+    ([bridge, name]) =>
+      bridge.context[name] === undefined &&
+      !bridge.source.includes(`globalThis.${name} =`) &&
+      bridge.source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+  )
 );
 check(
   "level-up choices bridge source has generated banner",
@@ -1250,9 +1264,11 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
 );
 check(
-  "game dependency bridge has no six retired publisher readers",
+  "game dependency bridge has no eight retired publisher readers",
   [
+    "TapSurvivorAssets",
     "TapSurvivorEffects",
+    "TapSurvivorLevelUp",
     "TapSurvivorUpgrades",
     "TapSurvivorSave",
     "TapSurvivorShellRelicUi",
@@ -1412,6 +1428,41 @@ check(
 for (const [name, readCount] of Object.entries(moduleGameDependenciesSnapshot.retiredGlobalReads)) {
   check(`dependency bag does not read retired ${name}`, readCount === 0);
 }
+check(
+  "dependency bag keeps the explicit asset resolver shape with native and generated parity",
+  moduleGameDependenciesSnapshot.hasAssets &&
+    moduleGameDependenciesSnapshot.assetResolverFallback === "fixture-fallback-icon" &&
+    moduleGameDependenciesSnapshot.assetResolverWeaponIcon === "fixture-weapon-icon" &&
+    moduleGameDependenciesSnapshot.assetResolverFallback ===
+      bridgeGameDependenciesSnapshot.assetResolverFallback &&
+    moduleGameDependenciesSnapshot.assetResolverWeaponIcon ===
+      bridgeGameDependenciesSnapshot.assetResolverWeaponIcon
+);
+check(
+  "dependency bag injects the level-up factory with native and generated parity",
+  moduleGameDependenciesSnapshot.hasLevelUp && bridgeGameDependenciesSnapshot.hasLevelUp
+);
+check(
+  "dependency bag tolerates missing retired asset and level-up publishers",
+  moduleGameDependenciesSnapshot.missingRetiredPublisherError === "" &&
+    bridgeGameDependenciesSnapshot.missingRetiredPublisherError === ""
+);
+check(
+  "dependency bag ignores poisoned retired asset and level-up publishers",
+  moduleGameDependenciesSnapshot.poisonedRetiredPublisherError === "" &&
+    bridgeGameDependenciesSnapshot.poisonedRetiredPublisherError === "" &&
+    Object.values(moduleGameDependenciesSnapshot.retiredPublisherGlobalReads).every(
+      (readCount) => readCount === 0
+    ) &&
+    Object.values(bridgeGameDependenciesSnapshot.retiredPublisherGlobalReads).every(
+      (readCount) => readCount === 0
+    )
+);
+check(
+  "dependency bag recovers after retired asset and level-up descriptors are removed",
+  moduleGameDependenciesSnapshot.recoveredRetiredPublisherError === "" &&
+    bridgeGameDependenciesSnapshot.recoveredRetiredPublisherError === ""
+);
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
 check(
   "dependency bag configures balance from the raw producer content and attached profiles",
@@ -1444,6 +1495,7 @@ check(
     JSON.stringify(bridgeGameDependenciesSnapshot.mapSnapshot)
 );
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
+check("dependency bag exposes native level-up factory", moduleGameDependenciesSnapshot.hasLevelUp);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
 check("dependency bag injects native weapon behaviors", moduleGameDependenciesSnapshot.hasWeaponBehaviors);
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
@@ -2250,9 +2302,7 @@ function createUiDependencyFakeElement(tagName) {
 function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorAudio",
-    "TapSurvivorAssets",
     "TapSurvivorDebug",
-    "TapSurvivorLevelUp",
     "TapSurvivorProgression",
     "TapSurvivorQuests",
     "TapSurvivorRenderEnemies",
@@ -2285,6 +2335,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   baseGlobalRef.Capacitor = { Plugins: { Preferences: {} } };
   baseGlobalRef.TapSurvivorGameRuntime = { name: "TapSurvivorGameRuntime" };
   const retiredGlobalNames = [
+    "TapSurvivorAssets",
     "TapSurvivorBalance",
     "TapSurvivorCombat",
     "TapSurvivorCombatDamage",
@@ -2293,6 +2344,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorEnemies",
     "TapSurvivorEnemyBehaviors",
     "TapSurvivorEnemySpawning",
+    "TapSurvivorLevelUp",
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
     "TapSurvivorMapSystem",
@@ -2373,6 +2425,38 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.Image = function TapSurvivorShellRelicImage() {
     return createShellRelicFakeImage(shellRelicDefaultImages);
   };
+  const missingRetiredPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    globalRef,
+    documentRef
+  );
+  const poisonedRetiredPublisherGlobalRef = { ...globalRef };
+  const retiredPublisherNames = ["TapSurvivorAssets", "TapSurvivorLevelUp"];
+  const retiredPublisherGlobalReads = Object.fromEntries(
+    retiredPublisherNames.map((name) => [name, 0])
+  );
+  retiredPublisherNames.forEach((name) => {
+    Object.defineProperty(poisonedRetiredPublisherGlobalRef, name, {
+      configurable: true,
+      get() {
+        retiredPublisherGlobalReads[name] += 1;
+        throw new Error(`Forbidden ${name} global read`);
+      },
+    });
+  });
+  const poisonedRetiredPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedRetiredPublisherGlobalRef,
+    documentRef
+  );
+  retiredPublisherNames.forEach((name) => {
+    Reflect.deleteProperty(poisonedRetiredPublisherGlobalRef, name);
+  });
+  const recoveredRetiredPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedRetiredPublisherGlobalRef,
+    documentRef
+  );
   const normalGameRuntimeResult = createGameDependencyBagResult(
     createGameDependencyBag,
     globalRef,
@@ -2499,6 +2583,26 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingInputError = error.message;
   }
 
+  const assetContentFixture = {
+    assets: {
+      sprites: {
+        ui: { quest: "fixture-fallback-icon" },
+        weapons: { fixture_weapon: { iconSrc: "fixture-weapon-icon" } },
+      },
+    },
+  };
+  const assetResolver = bag.assets.createAssetResolver(assetContentFixture);
+  const injectedLevelUpSystem = bag.levelUp.createLevelUpSystem({
+    assets: bag.assets,
+    content: assetContentFixture,
+    levelUpChoices: {
+      choiceId: () => "fixture",
+      shopFocusBonus: () => 0,
+      weightedChoices: () => [],
+    },
+    ui: {},
+  });
+
   const snapshot = {
     balanceProfilesAreNonEnumerable:
       Object.getOwnPropertyDescriptor(rawContent, "balanceProfiles")?.enumerable === false,
@@ -2509,7 +2613,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     defaultRunUpgradeIds: injectedUpgradeContent.runUpgradeDefs.map((upgrade) => upgrade.id),
     debugProfile: bag.debugBalance.getActiveProfile(),
     fallbackContentId: fallbackBag.content.id,
-    hasAssets: bag.assets.name === "TapSurvivorAssets",
+    assetResolverFallback: assetResolver.choiceIconPath({}),
+    assetResolverWeaponIcon: assetResolver.choiceIconPath({ weaponId: "fixture_weapon" }),
+    hasAssets: typeof bag.assets.createAssetResolver === "function",
     hasContentRegistry: typeof bag.contentRegistry.createContentRegistry === "function",
     hasBalance: typeof bag.balance.floorDifficulty === "function",
     hasCombat: typeof bag.combat?.createCombatSystem === "function",
@@ -2529,6 +2635,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.levelUpChoices.shopFocusBonus === "function" &&
       typeof bag.levelUpChoices.shuffleChoices === "function" &&
       typeof bag.levelUpChoices.weightedChoices === "function",
+    hasLevelUp:
+      typeof bag.levelUp.createLevelUpSystem === "function" &&
+      typeof injectedLevelUpSystem.showLevelUp === "function" &&
+      typeof injectedLevelUpSystem.closeLevelUpMenu === "function",
     hasMath:
       typeof bag.math.clamp === "function" &&
       typeof bag.math.distance === "function" &&
@@ -2598,6 +2708,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
     missingError,
     missingInputError,
+    missingRetiredPublisherError: missingRetiredPublisherResult.error,
     normalGameRuntimeError: normalGameRuntimeResult.error,
     normalGameRuntimeFactory:
       typeof normalGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
@@ -2611,6 +2722,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     recoveredGameRuntimeFactory:
       typeof recoveredGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
     gameRuntimeTargetGlobalReads,
+    poisonedRetiredPublisherError: poisonedRetiredPublisherResult.error,
+    retiredPublisherGlobalReads,
+    recoveredRetiredPublisherError: recoveredRetiredPublisherResult.error,
     retiredGlobalReads,
   };
   Object.defineProperty(snapshot, "__bag", { value: bag, enumerable: false });

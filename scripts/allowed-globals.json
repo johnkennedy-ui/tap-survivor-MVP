@@ -1,6 +1,5 @@
 {
   "allowedExpressions": [
-    "globalThis.TapSurvivorAssets",
     "globalThis.TapSurvivorAudio",
     "globalThis.TapSurvivorBalanceProfiles",
     "globalThis.TapSurvivorBalanceRuntime",
@@ -10,7 +9,6 @@
     "globalThis.TapSurvivorGameDependencies",
     "globalThis.TapSurvivorGameRuntime",
     "globalThis.TapSurvivorInput",
-    "globalThis.TapSurvivorLevelUp",
     "globalThis.TapSurvivorRenderEnemies",
     "globalThis.TapSurvivorRenderHud",
     "globalThis.TapSurvivorRenderSkillRail",
@@ -23,7 +21,6 @@
   "allowedFileCounts": {
     "scripts/smoke-production-browser-runtime.mjs": 0,
     "scripts/smoke-shop-provider-parity.mjs": 0,
-    "src/assets.js": 1,
     "src/audio.js": 1,
     "src/balance-runtime.js": 4,
     "src/balance.js": 0,
@@ -37,7 +34,6 @@
     "src/game.js": 1,
     "src/input.js": 1,
     "src/level-up-choices.js": 0,
-    "src/level-up.js": 1,
     "src/map-system.js": 0,
     "src/math.js": 0,
     "src/modules/weapon-cooldowns.js": 0,
