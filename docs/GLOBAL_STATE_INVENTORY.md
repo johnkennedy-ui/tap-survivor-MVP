@@ -160,14 +160,16 @@ Runtime module globals:
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and
   upgrade content are dependency-injected native factories.
-- Utilities/debug: `TapSurvivorDebug`; audio and input are dependency-injected.
+- Utilities/debug: `TapSurvivorDebug` is retired. `src/modules/debug.js` owns `createDebugSystem`, and the retained
+  `TapSurvivorGameDependencies` rollback boundary supplies it explicitly through the dependency bag; audio and input
+  are likewise dependency-injected.
 
 Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 13 (12 allowed expressions and 19 allowed usages); the allowlist does not count bare
-  `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Audio, Shell
+  dot-expression global audit is 10 actual usages (9 allowed expressions and 16 allowed usages); the allowlist does not count bare
+  `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Debug, Audio, Shell
   UI, and input are supplied through source-owned providers for the next migration batch.
 - Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;
   balance runtime has no direct `globalThis.location` read.
