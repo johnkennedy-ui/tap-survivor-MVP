@@ -56,28 +56,31 @@
         app.getElementById("titleStartGame").click();
         await wait(50);
         check("start game hides title screen", app.getElementById("titleScreen").classList.contains("hidden"));
-        check("start game shows transition first", !app.getElementById("startTransition").classList.contains("hidden"));
-        await wait(500);
-        check("transition hides after delay", app.getElementById("startTransition").classList.contains("hidden"));
-        check("start game creates game state", Boolean(frame.contentWindow.__tapSurvivorHarness?.getGame?.()?.running));
+        check(
+          "start game keeps legacy transition hidden",
+          app.getElementById("startTransition").classList.contains("hidden"),
+        );
 
         app.getElementById("openMenu").click();
         await wait(50);
         check("menu button opens menu", !app.getElementById("runMenu").classList.contains("hidden"));
-        app.getElementById("openMenu").click();
+        app.getElementById("closeMenu").click();
         await wait(50);
-        check("menu button closes menu", app.getElementById("runMenu").classList.contains("hidden"));
+        check("menu close control closes menu", app.getElementById("runMenu").classList.contains("hidden"));
+
+        const speedTwo = [...app.querySelectorAll("[data-speed]")].find((button) => button.dataset.speed === "2");
+        speedTwo.click();
+        await wait(50);
+        check("speed control updates page state", app.body.dataset.gameSpeed === "2");
 
         app.getElementById("openMenu").click();
         await wait(50);
         app.getElementById("exitRun").click();
         await wait(50);
         check("exit run opens end screen", !app.getElementById("endScreen").classList.contains("hidden"));
-
-        const speedTwo = [...app.querySelectorAll("[data-speed]")].find((button) => button.dataset.speed === "2");
-        speedTwo.click();
+        app.getElementById("closeEnd").click();
         await wait(50);
-        check("speed control updates page state", app.body.dataset.gameSpeed === "2");
+        check("end close returns to title", !app.getElementById("titleScreen").classList.contains("hidden"));
 
         finish();
       }

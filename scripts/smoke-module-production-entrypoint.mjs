@@ -889,9 +889,35 @@ const browserLevelChoiceApplied =
   uiSurface.levelUp.hidden &&
   browserGameAfterStart.paused === false &&
   browserGameAfterStart.pauseReason === "";
-browserUiAdapters.runUiAdapter.showEndScreen("browser-end-close");
+uiSurface.openMenu.click();
+const browserExitRunMenuOpened =
+  browserGameAfterStart.running === true &&
+  browserGameAfterStart.paused === true &&
+  browserGameAfterStart.pauseReason === "menu" &&
+  uiSurface.runMenu.hidden === false;
+uiSurface.exitRun.click();
+const browserExitRunUsesModuleEndRun =
+  browserGameAfterStart.running === false &&
+  browserGameAfterStart.paused === false &&
+  browserGameAfterStart.pauseReason === "" &&
+  browserGameAfterStart.endReason === "Run exited" &&
+  uiSurface.runMenu.hidden === true &&
+  uiSurface.endScreen.hidden === false &&
+  uiSurface.runStats.innerHTML.includes("Result: Run exited");
 uiSurface.closeEnd.click();
 const browserEndClosedFromTop = uiSurface.endScreen.hidden && !uiSurface.titleScreen.hidden;
+const browserExitStateAfterEndClose = JSON.stringify({
+  endReason: browserGameAfterStart.endReason,
+  endScreenHidden: uiSurface.endScreen.hidden,
+  running: browserGameAfterStart.running,
+});
+uiSurface.exitRun.click();
+const browserExitRunNoopWhenStopped =
+  JSON.stringify({
+    endReason: browserGameAfterStart.endReason,
+    endScreenHidden: uiSurface.endScreen.hidden,
+    running: browserGameAfterStart.running,
+  }) === browserExitStateAfterEndClose;
 browserUiAdapters.runUiAdapter.showEndScreen("browser-end-close-x");
 uiSurface.closeEndX.click();
 const browserEndClosedFromX = uiSurface.endScreen.hidden && !uiSurface.titleScreen.hidden;
@@ -992,6 +1018,10 @@ check(
     browserShopOpened &&
     browserShopClosedFromTop &&
     browserShopClosedFromBottom
+);
+check(
+  "production module browser Exit Run uses module end-run semantics and is inactive after a run ends",
+  browserExitRunMenuOpened && browserExitRunUsesModuleEndRun && browserExitRunNoopWhenStopped
 );
 const defaultBrowserOptions = createBrowserDependencyBagOptions({
   canvas,

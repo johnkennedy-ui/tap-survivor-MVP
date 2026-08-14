@@ -48,6 +48,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     balanceRuntime.configureDefaultProviders({
       content: rawContent,
       profiles: rawContent?.balanceProfiles,
+      profileSearch: createBalanceProfileSearchProvider(globalRef),
       storage: createBalanceStorageProvider(globalRef),
     });
   }
@@ -197,6 +198,10 @@ function createBalanceStorageProvider(globalRef) {
     removeItem: (key) => globalRef?.localStorage?.removeItem?.(key),
     setItem: (key, value) => globalRef?.localStorage?.setItem?.(key, value),
   };
+}
+
+function createBalanceProfileSearchProvider(globalRef) {
+  return () => globalRef?.location?.search || "";
 }
 
 function createStoragePlatformCapabilities(globalRef) {

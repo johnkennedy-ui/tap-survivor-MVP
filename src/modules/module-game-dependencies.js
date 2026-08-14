@@ -376,6 +376,14 @@ export function createModuleGameDependencyBag({
         if (!stateStore.getGame()?.running) uiAdapters.shellUiAdapter.showTitleScreen?.();
         return true;
       },
+      exitRun: () => {
+        const game = stateStore.getGame();
+        if (!game?.running) return false;
+        uiAdapters.shellUiAdapter.closeRunMenu?.(false);
+        game.paused = false;
+        game.pauseReason = "";
+        return endRun({ reason: "Run exited", stateStore, uiAdapters });
+      },
       isAudioMuted: () => audioSystem.isMuted?.() ?? false,
       setRunMenuOpen: (open) => {
         const game = stateStore.getGame();

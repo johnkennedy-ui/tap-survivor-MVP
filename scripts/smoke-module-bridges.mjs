@@ -1200,6 +1200,67 @@ check("collision fixture passes expected damage", moduleCollision.damageCalls[0]
 check("collision fixture passes expected weapon ID", moduleCollision.damageCalls[0]?.weaponId === "bolt");
 check("collision fixture calls reapEnemies", moduleCollision.reapCount === 1);
 
+const moduleCollisionFilter = runCollisionFilterFixture(createModuleWeaponProjectileSystem);
+check(
+  "projectile collision keeps strict contact boundaries and rejects far candidates before distance",
+  moduleCollisionFilter.strictEdge.damageCalls === 0 &&
+    moduleCollisionFilter.strictEdge.distanceCalls === 0 &&
+    moduleCollisionFilter.strictEdge.remainingBolts === 1 &&
+    moduleCollisionFilter.far.damageCalls === 0 &&
+    moduleCollisionFilter.far.distanceCalls === 0 &&
+    moduleCollisionFilter.far.remainingBolts === 1
+);
+check(
+  "projectile collision retains the injected strict distance predicate for near candidates",
+  moduleCollisionFilter.injectedStrict.damageCalls === 0 &&
+    moduleCollisionFilter.injectedStrict.distanceCalls === 1 &&
+    moduleCollisionFilter.injectedStrict.remainingBolts === 1
+);
+
+const moduleCollisionOrder = runCollisionOrderFixture(createModuleWeaponProjectileSystem);
+check(
+  "projectile collision preserves enemy order, one hit per update, pierce, and hit-set skips",
+  JSON.stringify(moduleCollisionOrder.afterFirstUpdate.damageIds) === JSON.stringify(["first"]) &&
+    moduleCollisionOrder.afterFirstUpdate.hitCount === 1 &&
+    moduleCollisionOrder.afterFirstUpdate.pierce === 0 &&
+    moduleCollisionOrder.afterFirstUpdate.remainingBolts === 1 &&
+    JSON.stringify(moduleCollisionOrder.damageIds) === JSON.stringify(["first", "second"]) &&
+    moduleCollisionOrder.distanceCalls === 2 &&
+    moduleCollisionOrder.remainingBolts === 0
+);
+
+const moduleSplitOnHit = runSplitOnHitFixture(createModuleWeaponProjectileSystem);
+check(
+  "projectile split-on-hit preserves child count and child bolt properties",
+  JSON.stringify(moduleSplitOnHit.damageIds) === JSON.stringify(["split-target"]) &&
+    moduleSplitOnHit.childBolts.length === 2 &&
+    moduleSplitOnHit.childBolts.every(
+      (bolt) =>
+        bolt.bounces === 0 &&
+        bolt.damage === 11.55 &&
+        bolt.life === 0.9 &&
+        bolt.pierce === 0 &&
+        bolt.splitDepth === 1
+    )
+);
+
+const moduleExplosion = runExplosionFixture(createModuleWeaponProjectileSystem);
+check(
+  "projectile explosion excludes the primary and dead enemies while preserving radius-edge damage",
+  moduleExplosion.damageCalls.length === 3 &&
+    moduleExplosion.damageCalls[0]?.enemyId === "primary" &&
+    moduleExplosion.damageCalls[0]?.weaponId === "bolt" &&
+    moduleExplosion.damageCalls[0]?.damage === 21 &&
+    moduleExplosion.damageCalls[1]?.enemyId === "inside" &&
+    moduleExplosion.damageCalls[1]?.weaponId === "bolt" &&
+    approxEqual(moduleExplosion.damageCalls[1]?.damage, 7.56) &&
+    moduleExplosion.damageCalls[2]?.enemyId === "edge" &&
+    moduleExplosion.damageCalls[2]?.weaponId === "bolt" &&
+    approxEqual(moduleExplosion.damageCalls[2]?.damage, 7.56) &&
+    JSON.stringify(moduleExplosion.areas) ===
+      JSON.stringify([{ life: 0.18, radius: 60, visualOnly: true, x: 0, y: 0 }])
+);
+
 check(
   "module exports createGameRuntimeController",
   typeof createModuleGameRuntimeController === "function"
@@ -1629,9 +1690,18 @@ check(
 check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
 check(
   "dependency bag configures balance from the raw producer content and attached profiles",
-  moduleGameDependenciesSnapshot.balanceProviderCalls > 0 &&
-    moduleGameDependenciesSnapshot.balanceProviderUsesProducerValues &&
-    moduleGameDependenciesSnapshot.balanceProfilesAreNonEnumerable
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    (snapshot) =>
+      snapshot.balanceProviderCalls > 0 &&
+      snapshot.balanceProviderUsesProducerValues &&
+      snapshot.balanceProfilesAreNonEnumerable
+  )
+);
+check(
+  "native and generated dependency bags inject profile search from globalRef without globalThis.location",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    (snapshot) => snapshot.balanceProfileSearchUsesGlobalRef
+  ) && !gameDependenciesBridge.source.includes("globalThis.location")
 );
 check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
 check("dependency bag exposes balance", moduleGameDependenciesSnapshot.hasBalance);
@@ -2198,6 +2268,119 @@ function runCollisionFixture(createWeaponProjectileSystem) {
   };
 }
 
+function runCollisionFilterFixture(createWeaponProjectileSystem) {
+  const strictEdgeFixture = createProjectileFixture({
+    enemies: [{ id: "strict-edge", x: 11, y: 0, radius: 4, hp: 10 }],
+  });
+  const strictEdgeSystem = createWeaponProjectileSystem(strictEdgeFixture.options);
+  strictEdgeSystem.spawnProjectileBolt("bolt", 0, 0, 0, 0);
+  strictEdgeSystem.updateBolts(0);
+
+  const farFixture = createProjectileFixture({
+    enemies: [{ id: "far", x: 200, y: 0, radius: 4, hp: 10 }],
+  });
+  const farSystem = createWeaponProjectileSystem(farFixture.options);
+  farSystem.spawnProjectileBolt("bolt", 0, 0, 0, 0);
+  farSystem.updateBolts(0);
+
+  const injectedStrictFixture = createProjectileFixture({
+    distance: () => 11,
+    enemies: [{ id: "injected-strict", x: 10, y: 0, radius: 4, hp: 10 }],
+  });
+  const injectedStrictSystem = createWeaponProjectileSystem(injectedStrictFixture.options);
+  injectedStrictSystem.spawnProjectileBolt("bolt", 0, 0, 0, 0);
+  injectedStrictSystem.updateBolts(0);
+
+  return {
+    far: {
+      damageCalls: farFixture.damageCalls.length,
+      distanceCalls: farFixture.distanceCalls(),
+      remainingBolts: farFixture.game.bolts.length,
+    },
+    injectedStrict: {
+      damageCalls: injectedStrictFixture.damageCalls.length,
+      distanceCalls: injectedStrictFixture.distanceCalls(),
+      remainingBolts: injectedStrictFixture.game.bolts.length,
+    },
+    strictEdge: {
+      damageCalls: strictEdgeFixture.damageCalls.length,
+      distanceCalls: strictEdgeFixture.distanceCalls(),
+      remainingBolts: strictEdgeFixture.game.bolts.length,
+    },
+  };
+}
+
+function runCollisionOrderFixture(createWeaponProjectileSystem) {
+  const first = { id: "first", x: 4, y: 0, radius: 5, hp: 10 };
+  const second = { id: "second", x: 4, y: 0, radius: 5, hp: 10 };
+  const fixture = createProjectileFixture({
+    enemies: [first, second],
+    getRunUpgradeTier: (id) => (id === "run_projectile_pierce" ? 1 : 0),
+  });
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.spawnProjectileBolt("bolt", 0, 0, 0, 0);
+  system.updateBolts(0);
+  const afterFirstUpdate = {
+    damageIds: fixture.damageCalls.map((call) => call.enemyId),
+    hitCount: fixture.game.bolts[0]?.hit.size,
+    pierce: fixture.game.bolts[0]?.pierce,
+    remainingBolts: fixture.game.bolts.length,
+  };
+  system.updateBolts(0);
+  return {
+    afterFirstUpdate,
+    damageIds: fixture.damageCalls.map((call) => call.enemyId),
+    distanceCalls: fixture.distanceCalls(),
+    remainingBolts: fixture.game.bolts.length,
+  };
+}
+
+function runSplitOnHitFixture(createWeaponProjectileSystem) {
+  const fixture = createProjectileFixture({
+    enemies: [{ id: "split-target", x: 4, y: 0, radius: 5, hp: 10 }],
+    getRunUpgradeTier: (id) => (id === "run_split_on_hit" ? 1 : 0),
+  });
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.spawnProjectileBolt("bolt", 0, 0, 10, 0);
+  system.updateBolts(0);
+  return {
+    childBolts: fixture.game.bolts.map((bolt) => ({
+      bounces: bolt.bounces,
+      damage: bolt.damage,
+      life: bolt.life,
+      pierce: bolt.pierce,
+      splitDepth: bolt.splitDepth,
+    })),
+    damageIds: fixture.damageCalls.map((call) => call.enemyId),
+  };
+}
+
+function runExplosionFixture(createWeaponProjectileSystem) {
+  const fixture = createProjectileFixture({
+    enemies: [
+      { id: "primary", x: 0, y: 0, radius: 4, hp: 10 },
+      { id: "inside", x: 64, y: 0, radius: 5, hp: 10 },
+      { id: "edge", x: 65, y: 0, radius: 5, hp: 10 },
+      { id: "outside", x: 65.1, y: 0, radius: 5, hp: 10 },
+      { id: "dead", x: 1, y: 0, radius: 5, hp: 0 },
+    ],
+    getRunUpgradeTier: (id) => (id === "run_explosive_hit" ? 1 : 0),
+  });
+  const system = createWeaponProjectileSystem(fixture.options);
+  system.spawnProjectileBolt("bolt", 0, 0, 0, 0);
+  system.updateBolts(0);
+  return {
+    areas: fixture.game.areas.map(({ life, radius, visualOnly, x, y }) => ({
+      life,
+      radius,
+      visualOnly,
+      x,
+      y,
+    })),
+    damageCalls: fixture.damageCalls,
+  };
+}
+
 function gameRuntimeDependencyErrors(createGameRuntimeController) {
   const { controllerOptions: baseOptions } = createGameRuntimeOptions();
   const { bindMovementInput, ...missingOptions } = baseOptions;
@@ -2597,6 +2780,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     uiElements.set(id, createUiDependencyFakeElement("div"));
   });
   globalRef.document = documentRef;
+  globalRef.location = { search: "?balance=testing" };
   const rawContent = { ...upgradeBridgeContentFixture, id: "fallback" };
   const rawProfiles = [{ overrides: {}, profileId: "default" }];
   Object.defineProperty(rawContent, "balanceProfiles", {
@@ -2604,12 +2788,15 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     value: rawProfiles,
   });
   let balanceProviderCalls = 0;
+  let balanceProfileSearchUsesGlobalRef = true;
   let balanceProviderUsesProducerValues = true;
   const configuredContent = { ...upgradeBridgeContentFixture, id: "override" };
   globalRef.TapSurvivorBalanceRuntime = {
-    configureDefaultProviders({ content, profiles }) {
+    configureDefaultProviders({ content, profileSearch, profiles }) {
       balanceProviderCalls += 1;
       balanceProviderUsesProducerValues &&= content === rawContent && profiles === rawProfiles;
+      balanceProfileSearchUsesGlobalRef &&=
+        typeof profileSearch === "function" && profileSearch() === globalRef.location.search;
     },
     content: () => configuredContent,
   };
@@ -2881,6 +3068,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     balanceProfilesAreNonEnumerable:
       Object.getOwnPropertyDescriptor(rawContent, "balanceProfiles")?.enumerable === false,
     balanceProviderCalls,
+    balanceProfileSearchUsesGlobalRef,
     balanceProviderUsesProducerValues,
     contentId: bag.content.id,
     defaultUpgradeIds: injectedUpgradeContent.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
@@ -4196,6 +4384,7 @@ function createProjectileFixture(overrides = {}) {
     areas: [],
   };
   const damageCalls = [];
+  let distanceCalls = 0;
   let reapCount = 0;
   const weaponDefs = {
     bolt: {
@@ -4211,6 +4400,7 @@ function createProjectileFixture(overrides = {}) {
   const getRunUpgradeTier = overrides.getRunUpgradeTier || (() => 0);
   return {
     damageCalls,
+    distanceCalls: () => distanceCalls,
     game,
     options: {
       canvas: { width: 100, height: 100 },
@@ -4228,7 +4418,10 @@ function createProjectileFixture(overrides = {}) {
       reapEnemies: () => {
         reapCount += 1;
       },
-      distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+      distance: (a, b) => {
+        distanceCalls += 1;
+        return overrides.distance?.(a, b) ?? Math.hypot(a.x - b.x, a.y - b.y);
+      },
       clamp: moduleClamp,
     },
     reapCount: () => reapCount,

@@ -80,6 +80,7 @@ function createThrowingStorage() {
 
 function createBalanceVmContext() {
   let contentReads = 0;
+  let locationReads = 0;
   let profileReads = 0;
   let storageReads = 0;
   let publishedContent;
@@ -109,6 +110,13 @@ function createBalanceVmContext() {
         throw new Error("Forbidden direct localStorage global read");
       },
     },
+    location: {
+      configurable: true,
+      get() {
+        locationReads += 1;
+        throw new Error("Forbidden direct location global read");
+      },
+    },
   });
   context.globalThis = context;
   vm.createContext(context);
@@ -116,7 +124,7 @@ function createBalanceVmContext() {
 
   return {
     context,
-    counts: () => ({ contentReads, profileReads, storageReads }),
+    counts: () => ({ contentReads, locationReads, profileReads, storageReads }),
     publishedContent: () => publishedContent,
   };
 }
@@ -136,17 +144,26 @@ function balanceProviderLifecycleSnapshot() {
         spark_bolt: { damage: 99 },
       },
     }),
-    "tapSurvivor.balanceProfile": "testing",
+    "tapSurvivor.balanceProfile": "default",
   });
   const missingProfiles = balanceProviderErrorSnapshot(() =>
     publisher.configureDefaultProviders({ content: providerContent })
   );
-  publisher.configureDefaultProviders({ content: providerContent, profiles: providerProfiles, storage: explicitStorage });
+  publisher.configureDefaultProviders({
+    content: providerContent,
+    profiles: providerProfiles,
+    profileSearch: () => "?balance=test%69ng",
+    storage: explicitStorage,
+  });
   const explicitStorageLoad = {
     activeProfile: publisher.getActiveProfile(),
     damage: publisher.content().weapons.spark_bolt.damage,
   };
-  publisher.configureDefaultProviders({ content: providerContent, profiles: providerProfiles });
+  publisher.configureDefaultProviders({
+    content: providerContent,
+    profiles: providerProfiles,
+    profileSearch: () => "?balance=default",
+  });
   debugPublisher.applyOverrides({
     weapons: {
       spark_bolt: { damage: 99 },
@@ -182,6 +199,7 @@ function balanceProviderLifecycleSnapshot() {
     contentReads: counts.contentReads,
     debugIdentity: context.TapSurvivorDebugBalance === debugPublisher,
     explicitStorageLoad,
+    locationReads: counts.locationReads,
     missingProfiles,
     omittedStoragePreserved,
     profileReads: counts.profileReads,
@@ -218,7 +236,26 @@ function unavailableStorageSnapshot(storage) {
   return {
     activeProfile: debugPublisher.getActiveProfile(),
     initialProfile,
+    locationReads: vmContext.counts().locationReads,
     storageReads: vmContext.counts().storageReads,
+  };
+}
+
+function profileSearchFallbackSnapshot(profileSearch, storageEntries = {}) {
+  const vmContext = createBalanceVmContext();
+  const { context } = vmContext;
+  const publisher = context.TapSurvivorBalanceRuntime;
+  const providers = {
+    content: createProviderContent(),
+    profiles: createProviderProfiles(),
+    storage: createMapStorage(storageEntries),
+  };
+  if (profileSearch !== undefined) providers.profileSearch = profileSearch;
+  publisher.configureDefaultProviders(providers);
+  const counts = vmContext.counts();
+  return {
+    activeProfile: publisher.getActiveProfile(),
+    locationReads: counts.locationReads,
   };
 }
 
@@ -239,11 +276,13 @@ check(
     providerLifecycle.missingProfiles.missing.join(",") === "profiles"
 );
 check(
-  "balance runtime leaves poisoned content and profiles globals unread",
-  providerLifecycle.contentReads === 0 && providerLifecycle.profileReads === 0
+  "balance runtime leaves poisoned content, profile, and location globals unread",
+  providerLifecycle.contentReads === 0 &&
+    providerLifecycle.locationReads === 0 &&
+    providerLifecycle.profileReads === 0
 );
 check(
-  "explicit balance storage loads persisted profile and overrides without reading the poisoned global",
+  "explicit decoded profile search wins over stored profile and preserves overrides",
   providerLifecycle.explicitStorageLoad.activeProfile === "testing" &&
     providerLifecycle.explicitStorageLoad.damage === 99 &&
     providerLifecycle.storageReads === 0
@@ -256,7 +295,7 @@ check(
     providerLifecycle.publishedContentIsProvider
 );
 check(
-  "balance runtime same-reference configuration preserves profile and overrides",
+  "balance runtime same-reference configuration preserves profile and overrides when profile search changes",
   providerLifecycle.repeatedConfiguration.activeProfile === "testing" &&
     providerLifecycle.repeatedConfiguration.damage === 99 &&
     providerLifecycle.activeProfileAfterClear === "testing"
@@ -276,8 +315,27 @@ const unavailableStorageSnapshots = [
 check(
   "omitted, null, and throwing storage retain in-memory behavior without global reads",
   unavailableStorageSnapshots.every(
-    (snapshot) => snapshot.initialProfile === "default" && snapshot.activeProfile === "testing" && snapshot.storageReads === 0
+    (snapshot) =>
+      snapshot.initialProfile === "default" &&
+      snapshot.activeProfile === "testing" &&
+      snapshot.locationReads === 0 &&
+      snapshot.storageReads === 0
   )
+);
+
+const profileSearchFallbackSnapshots = [
+  profileSearchFallbackSnapshot(undefined, { "tapSurvivor.balanceProfile": "testing" }),
+  profileSearchFallbackSnapshot(() => "", { "tapSurvivor.balanceProfile": "testing" }),
+  profileSearchFallbackSnapshot(() => "?balance=", { "tapSurvivor.balanceProfile": "testing" }),
+  profileSearchFallbackSnapshot(() => ""),
+];
+check(
+  "absent and empty injected profile search retain stored-profile then default fallback",
+  profileSearchFallbackSnapshots[0].activeProfile === "testing" &&
+    profileSearchFallbackSnapshots[1].activeProfile === "testing" &&
+    profileSearchFallbackSnapshots[2].activeProfile === "testing" &&
+    profileSearchFallbackSnapshots[3].activeProfile === "default" &&
+    profileSearchFallbackSnapshots.every((snapshot) => snapshot.locationReads === 0)
 );
 
 const defaultHarness = createGameHarness({ fakeCombat: true });

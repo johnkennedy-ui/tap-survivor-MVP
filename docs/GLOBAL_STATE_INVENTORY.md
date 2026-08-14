@@ -165,11 +165,11 @@ Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 14 (13 allowed expressions and 20 allowed usages); the allowlist does not count bare
+  dot-expression global audit is 13 (12 allowed expressions and 19 allowed usages); the allowlist does not count bare
   `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Audio, Shell
   UI, and input are supplied through source-owned providers for the next migration batch.
-- `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
-  capability from the classic dependency bag.
+- Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;
+  balance runtime has no direct `globalThis.location` read.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
   `globalRef` through `TapSurvivorStorage.configureDefaultProviders`; the retained publisher has no direct platform-global
   reads and preserves Preferences-first, fallback, and unavailable behavior.

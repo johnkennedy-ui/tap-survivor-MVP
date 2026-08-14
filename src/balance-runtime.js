@@ -162,8 +162,8 @@ function removeStorage(storageRef, key) {
   }
 }
 
-function queryBalanceProfile() {
-  const search = String(globalThis.location?.search || "").replace(/^\?/, "");
+function queryBalanceProfile(profileSearch) {
+  const search = String(profileSearch?.() || "").replace(/^\?/, "");
   return search
     .split("&")
     .map((part) => part.split("="))
@@ -329,14 +329,14 @@ function replaceObject(target, source) {
   });
 }
 
-function createRuntimeBalance({ content, profiles, storageRef }) {
+function createRuntimeBalance({ content, profiles, profileSearch, storageRef }) {
   const baseContent = clone(content || {});
   const profileList = Array.isArray(profiles) ? profiles : [];
   const profileById = Object.fromEntries(profileList.map((profile) => [profile.profileId, profile]));
   const activeContent = content || {};
   let runtimeOverrides = {};
   let activeProfileId = profileIdOrDefault(
-    decodeURIComponent(queryBalanceProfile() || "") || readStorage(storageRef, profileStorageKey),
+    decodeURIComponent(queryBalanceProfile(profileSearch) || "") || readStorage(storageRef, profileStorageKey),
   );
 
   const savedOverrides = readStorage(storageRef, overrideStorageKey);
@@ -484,7 +484,12 @@ function createRuntimeBalanceProvider() {
 
       configuredContent = content;
       configuredProfiles = profiles;
-      configuredRuntime = createRuntimeBalance({ content, profiles, storageRef });
+      configuredRuntime = createRuntimeBalance({
+        content,
+        profiles,
+        profileSearch: providers.profileSearch,
+        storageRef,
+      });
       return runtimeBalance;
     },
     content: (...args) => requireConfiguredRuntime().content(...args),

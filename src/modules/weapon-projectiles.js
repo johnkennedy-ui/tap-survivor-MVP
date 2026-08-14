@@ -173,10 +173,13 @@ export function createWeaponProjectileSystem({
         bolt.y = clamp(bolt.y, bolt.radius, canvas.height - bolt.radius);
         bolt.bounces -= 1;
       }
-      const enemy = game.enemies.find(
-        (candidate) =>
-          !bolt.hit.has(candidate) && distance(bolt, candidate) < bolt.radius + candidate.radius
-      );
+      const enemy = game.enemies.find((candidate) => {
+        if (bolt.hit.has(candidate)) return false;
+        const radius = bolt.radius + candidate.radius;
+        const x = bolt.x - candidate.x;
+        const y = bolt.y - candidate.y;
+        return x * x + y * y < radius * radius && distance(bolt, candidate) < radius;
+      });
       if (enemy) {
         damageEnemy(enemy, bolt.damage, bolt.weaponId);
         explodeBolt(bolt, enemy);

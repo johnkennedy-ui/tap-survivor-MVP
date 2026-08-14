@@ -1710,6 +1710,7 @@ function createBrowserUiAdapters({
       closeEndScreen: runtimeUiActions.closeEndScreen,
       closeLevelUpMenu: runtimeUiActions.closeLevelUpMenu,
       closeShopMenu: runtimeUiActions.closeShopMenu,
+      exitRun: runtimeUiActions.exitRun,
       isAudioMuted: runtimeUiActions.isAudioMuted,
       onStartAudio,
       onStartRun,
@@ -1736,6 +1737,7 @@ function createBrowserRuntimeUiActionBinding() {
     closeEndScreen: () => runtimeUiActions.closeEndScreen?.(),
     closeLevelUpMenu: () => runtimeUiActions.closeLevelUpMenu?.(),
     closeShopMenu: () => runtimeUiActions.closeShopMenu?.(),
+    exitRun: () => runtimeUiActions.exitRun?.(),
     isAudioMuted: () => Boolean(runtimeUiActions.isAudioMuted?.()),
     setRunMenuOpen: (open) => runtimeUiActions.setRunMenuOpen?.(Boolean(open)),
     toggleAudioMute: () => runtimeUiActions.toggleAudioMute?.(),
@@ -1799,6 +1801,7 @@ function createBrowserShellUiAdapter({
   closeEndScreen,
   closeLevelUpMenu,
   closeShopMenu,
+  exitRun,
   isAudioMuted,
   onStartAudio,
   onStartRun,
@@ -1876,6 +1879,7 @@ function createBrowserShellUiAdapter({
     if (typeof muted === "boolean") updateMuteButton(muted);
     return muted;
   };
+  const exitCurrentRun = () => exitRun?.();
   return {
     bind() {
       if (bound) return true;
@@ -1888,6 +1892,7 @@ function createBrowserShellUiAdapter({
       ui.closeEndX?.addEventListener?.("click", closeEndScreen);
       ui.closeShop?.addEventListener?.("click", closeShopMenu);
       ui.closeShopBottom?.addEventListener?.("click", closeShopMenu);
+      ui.exitRun?.addEventListener?.("click", exitCurrentRun);
       ui.menuProgressTab?.addEventListener?.("click", () => showMenuTab("progress"));
       ui.menuShopTab?.addEventListener?.("click", () => showMenuTab("shop"));
       ui.menuInventoryTab?.addEventListener?.("click", () => showMenuTab("inventory"));
