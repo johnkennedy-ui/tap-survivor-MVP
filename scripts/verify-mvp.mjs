@@ -554,13 +554,24 @@ check(
 );
 check("shared debug helper exists", debug.includes("TapSurvivorDebug") && runtimeEntry.includes("TapSurvivorDebug"));
 check(
-  "shared shell UI helper injects native relic behavior without a relic publisher",
-  shellUi.includes("TapSurvivorShellUi") &&
+  "shared shell UI helper uses a source-owned provider without a publisher",
+  shellUi.includes(
+    "// Retired global: TapSurvivorShellUi. Exports are supplied through the game dependency bag."
+  ) &&
+    !shellUi.includes("globalThis.TapSurvivorShellUi") &&
+    moduleGameDependencies.includes(
+      'import { createShellUiController } from "./shell-ui-classic-adapter.js";'
+    ) &&
+    moduleGameDependencies.includes("const shellUi = {") &&
+    moduleGameDependencies.includes("createShellUiController(options = {})") &&
+    gameDependencies.includes("const shellUi = {") &&
+    gameDependencies.includes("createShellUiController(options = {})") &&
+    !gameDependencies.includes("TapSurvivorShellUi") &&
+    !productionModuleEntrypoint.includes("TapSurvivorShellUi") &&
     shellRelicUi.includes("function createShellRelicUi") &&
     !shellRelicUi.includes("globalThis.TapSurvivorShellRelicUi =") &&
     gameDependencies.includes("function createShellRelicUiDependency") &&
-    game.includes("shellRelicUi,") &&
-    runtimeEntry.includes("TapSurvivorShellUi"),
+    game.includes("shellRelicUi,"),
 );
 
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));

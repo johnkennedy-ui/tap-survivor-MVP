@@ -434,13 +434,15 @@ export function createGameHarness({
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
   const classicContent = context.TapSurvivorContent;
+  const sourceGameDependencies = createGameDependencyBag({
+    globalRef: context,
+    documentRef: context.document,
+  });
   if (fakeCombat) {
     context.TapSurvivorBalanceRuntime.configureDefaultProviders({
       content: classicContent,
       profiles: classicContent.balanceProfiles,
     });
-  } else {
-    createGameDependencyBag({ globalRef: context });
   }
   const platform = {
     documentRef: context.document,
@@ -522,7 +524,7 @@ export function createGameHarness({
     dependencies.audioSystem?.playStartLaugh?.();
     return classicAudioSystem.playStartLaugh?.();
   };
-  shellUi = context.TapSurvivorShellUi.createShellUiController({
+  shellUi = sourceGameDependencies.shellUi.createShellUiController({
     assets: dependencies.assets,
     closeEndScreen: () => {
       dependencies.runUi.hideEndScreen();
@@ -552,6 +554,10 @@ export function createGameHarness({
     relicSystem: relics,
     renderMeta: dependencies.renderMeta,
     resetSave: () => runtime?.resetSave?.(),
+    scheduler: {
+      clearTimeout: context.clearTimeout,
+      setTimeout: context.setTimeout,
+    },
     setGameSpeed: (speed) => runtime?.setGameSpeed?.(speed),
     shellRelicUi: {
       createShellRelicUi(options = {}) {

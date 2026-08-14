@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/shell-ui-classic-adapter.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorShellUi. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -520,6 +521,10 @@
     content = {},
     shellRelicUi,
     documentRef = document,
+    scheduler = {
+      clearTimeout: (timer) => clearTimeout(timer),
+      setTimeout: (callback, delay) => setTimeout(callback, delay),
+    },
     getGame,
     getSave,
     weaponDefs = {},
@@ -628,8 +633,8 @@
       currentScreen = "startingTransition";
       ui.titleScreen?.classList.add("hidden");
       ui.startTransition?.classList.remove("hidden");
-      if (startTransitionTimer) clearTimeout(startTransitionTimer);
-      startTransitionTimer = setTimeout(() => {
+      if (startTransitionTimer) scheduler.clearTimeout(startTransitionTimer);
+      startTransitionTimer = scheduler.setTimeout(() => {
         startTransitionTimer = null;
         moduleController.startRun();
         startRun();
@@ -798,8 +803,4 @@
       showTitleScreen,
     };
   }
-
-  globalThis.TapSurvivorShellUi = {
-    createShellUiController,
-  };
 })();

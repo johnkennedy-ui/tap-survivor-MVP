@@ -14,6 +14,10 @@ export function createShellUiController({
   content = {},
   shellRelicUi,
   documentRef = document,
+  scheduler = {
+    clearTimeout: (timer) => clearTimeout(timer),
+    setTimeout: (callback, delay) => setTimeout(callback, delay),
+  },
   getGame,
   getSave,
   weaponDefs = {},
@@ -122,8 +126,8 @@ export function createShellUiController({
     currentScreen = "startingTransition";
     ui.titleScreen?.classList.add("hidden");
     ui.startTransition?.classList.remove("hidden");
-    if (startTransitionTimer) clearTimeout(startTransitionTimer);
-    startTransitionTimer = setTimeout(() => {
+    if (startTransitionTimer) scheduler.clearTimeout(startTransitionTimer);
+    startTransitionTimer = scheduler.setTimeout(() => {
       startTransitionTimer = null;
       moduleController.startRun();
       startRun();

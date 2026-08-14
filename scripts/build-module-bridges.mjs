@@ -145,7 +145,8 @@ const bridges = [
   {
     source: "src/modules/shell-ui-classic-adapter.js",
     target: "src/shell-ui.js",
-    globalName: "TapSurvivorShellUi",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorShellUi",
     exports: ["createShellUiController"],
     bundledSources: [
       {
@@ -339,6 +340,22 @@ const bridges = [
       {
         source: "src/modules/shell-relic-ui.js",
         exports: ["createShellRelicUiAdapter", "createShellRelicUi"],
+      },
+      {
+        source: "src/modules/shell-ui-presenter.js",
+        exports: ["createShellUiPresenter"],
+      },
+      {
+        source: "src/modules/shell-ui-dom-adapter.js",
+        exports: ["createShellUiDomAdapter"],
+      },
+      {
+        source: "src/modules/shell-ui-controller.js",
+        exports: [{ name: "createShellUiController", as: "createModuleShellUiController" }],
+      },
+      {
+        source: "src/modules/shell-ui-classic-adapter.js",
+        exports: ["createShellUiController"],
       },
       {
         source: "src/modules/upgrades.js",

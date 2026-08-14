@@ -23,6 +23,7 @@ import { isPlainObject, migrateSave } from "./save-migrations.js";
 import { arrayValue, createSaveNormalizer, objectValue } from "./save-normalize.js";
 import { createSaveSystem } from "./save.js";
 import { createShellRelicUi } from "./shell-relic-ui.js";
+import { createShellUiController } from "./shell-ui-classic-adapter.js";
 import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
 import { createUpgradeContent } from "./upgrades.js";
@@ -79,6 +80,14 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     });
   }
   const shellRelicUi = createShellRelicUiDependency(globalRef);
+  const shellUi = {
+    createShellUiController(options = {}) {
+      return createShellUiController({
+        ...options,
+        documentRef: options.documentRef || documentRef,
+      });
+    },
+  };
 
   return {
     audio,
@@ -125,7 +134,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     saveMigrations: { isPlainObject, migrateSave },
     saveNormalize: { arrayValue, createSaveNormalizer, objectValue },
     shellRelicUi,
-    shellUi: requireGlobal(globalRef, "TapSurvivorShellUi"),
+    shellUi,
     shop: {
       createShopSystem: (options = {}) =>
         createShopSystem({

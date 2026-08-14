@@ -12,7 +12,6 @@
     "globalThis.TapSurvivorRenderHud",
     "globalThis.TapSurvivorRenderSkillRail",
     "globalThis.TapSurvivorRendering",
-    "globalThis.TapSurvivorShellUi",
     "globalThis.TapSurvivorSprites",
     "globalThis.TapSurvivorStorage",
     "globalThis.location"
@@ -49,7 +48,6 @@
     "src/save-defaults.js": 0,
     "src/save-migrations.js": 0,
     "src/save-normalize.js": 1,
-    "src/shell-ui.js": 1,
     "src/shop-pricing.js": 0,
     "src/shop.js": 2,
     "src/sprites.js": 1,

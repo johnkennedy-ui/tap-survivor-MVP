@@ -239,6 +239,7 @@ async function main() {
       "TapSurvivorWeaponFire",
       "TapSurvivorLevelUp",
       "TapSurvivorGameRuntime",
+      "TapSurvivorShellUi",
     ];
     const retiredPublisherReads = Object.fromEntries(
       retiredPublisherNames.map((name) => [name, 0])

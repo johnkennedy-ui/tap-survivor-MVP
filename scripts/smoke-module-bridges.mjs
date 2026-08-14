@@ -30,6 +30,7 @@ import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import { createRelicSystem as createModuleRelicSystem } from "../src/modules/relics.js";
 import { createShellRelicUi as createModuleShellRelicUi } from "../src/modules/shell-relic-ui.js";
+import { createShellUiController as createModuleClassicShellUiController } from "../src/modules/shell-ui-classic-adapter.js";
 import { createUi as createModuleUi, createUiRenderer as createModuleUiRenderer } from "../src/modules/ui.js";
 import {
   createUiProgressionRenderer as createModuleUiProgressionRenderer,
@@ -162,7 +163,7 @@ const shellUiClassicBridge = loadBridge("../src/shell-ui.js", "src/shell-ui.js",
     callback();
     return timer;
   },
-});
+}, ["TapSurvivorShellUi"]);
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
@@ -171,7 +172,12 @@ const gameBannersBridge = loadBridge("../src/game-banners.js", "src/game-banners
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js", {}, [
   "TapSurvivorGameRuntime",
 ]);
-const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
+const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js", {
+  setTimeout(callback) {
+    callback();
+    return null;
+  },
+});
 const progressionBridge = loadBridge("../src/progression.js", "src/progression.js");
 const questsBridge = loadBridge("../src/quests.js", "src/quests.js");
 const uiBridge = loadBridge("../src/ui.js", "src/ui.js");
@@ -228,7 +234,6 @@ const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
 const bridgePickups = pickupsBridge.context.TapSurvivorPickups;
 const bridgeCombatDamage = combatDamageBridge.context.TapSurvivorCombatDamage;
 const bridgeShellRelicUi = shellRelicUiBridge.context.TapSurvivorShellRelicUi;
-const bridgeShellUi = shellUiClassicBridge.context.TapSurvivorShellUi;
 const createBridgePickupSystem = createModulePickupSystem;
 const createBridgeRelicSystem = createModuleRelicSystem;
 
@@ -946,23 +951,22 @@ check(
   shellRelicHarnessLockPopup?.classList.contains("hidden")
 );
 
-check("classic shell UI assigns globalThis.TapSurvivorShellUi", Boolean(bridgeShellUi));
 check("shell UI bridge source has generated banner", hasGeneratedBanner(shellUiClassicBridge.source));
 check(
   "shell UI bridge source is generated from module classic adapter",
   shellUiClassicBridge.source.includes("Source: src/modules/shell-ui-classic-adapter.js")
 );
 check(
-  "classic shell UI exposes createShellUiController",
-  typeof bridgeShellUi?.createShellUiController === "function"
+  "shell UI bridge is global-free with retired provenance",
+  !shellUiClassicBridge.source.includes("globalThis.TapSurvivorShellUi") &&
+    shellUiClassicBridge.source.includes(
+      "// Retired global: TapSurvivorShellUi. Exports are supplied through the game dependency bag."
+    )
 );
-const shellUiClassicSnapshot = classicShellUiSnapshot(bridgeShellUi.createShellUiController, {
-  createShellRelicUi: createModuleShellRelicUi,
-  relicSystem: createBridgeRelicSystem({
-    relicDefs: shellRelicUiFixtureDefs,
-    random: () => 0,
-    weaponDefs: {},
-  }),
+const shellUiClassicTimers = [];
+const shellUiClassicSnapshot = classicShellUiSnapshot(createModuleClassicShellUiController, {
+  ...classicShellUiFixtureOptions(),
+  scheduler: createImmediateShellUiScheduler(shellUiClassicTimers),
 });
 const shellUiModuleSnapshot = moduleShellUiSnapshot(createModuleShellUiController);
 check(
@@ -989,7 +993,7 @@ check(
   shellUiClassicSnapshot.assetResolverReceivedExactContent
 );
 check(
-  "classic shell UI frame and panel render through relic bridge path",
+  "classic shell UI adapter keeps injected native relic behavior through the frame and panel path",
   shellUiClassicSnapshot.relicSlotsText.includes("Relic slots: 2/5") &&
     shellUiClassicSnapshot.inventoryClasses.some((className) => className.includes("relic-loadout")) &&
     shellUiClassicSnapshot.progressHidden === true &&
@@ -1012,6 +1016,22 @@ check(
     shellUiClassicSnapshot.calls.includes("speed:5")
 );
 check(
+  "classic shell UI uses the injected transition scheduler at the existing 450ms delay",
+  shellUiClassicTimers.length === 1 && shellUiClassicTimers[0]?.delay === 450
+);
+const shellUiClassicAdapterSource = readFileSync(
+  new URL("../src/modules/shell-ui-classic-adapter.js", import.meta.url),
+  "utf8"
+);
+check(
+  "classic shell UI defaults its optional transition scheduler to browser timers",
+  shellUiClassicAdapterSource.includes("scheduler = {") &&
+    shellUiClassicAdapterSource.includes("clearTimeout: (timer) => clearTimeout(timer)") &&
+    shellUiClassicAdapterSource.includes("setTimeout: (callback, delay) => setTimeout(callback, delay)") &&
+    shellUiClassicAdapterSource.includes("scheduler.clearTimeout(startTransitionTimer)") &&
+    shellUiClassicAdapterSource.includes("scheduler.setTimeout(() =>")
+);
+check(
   "classic shell UI public methods preserve close and title behavior",
   shellUiClassicSnapshot.runMenuClosed === true &&
     shellUiClassicSnapshot.openMenuCollapsed === "false" &&
@@ -1032,7 +1052,7 @@ check(
     shellUiClassicSnapshot.activePanel === shellUiModuleSnapshot.activePanel
 );
 check(
-  "module shell UI API remains broader than generated classic compatibility API",
+  "module shell UI API remains broader than native classic compatibility API",
   shellUiModuleSnapshot.apiKeys.includes("dispose") &&
     shellUiModuleSnapshot.apiKeys.includes("openPanel") &&
     !shellUiClassicSnapshot.apiKeys.includes("dispose")
@@ -1252,7 +1272,7 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
 );
 check(
-  "game dependency bridge has no eight retired publisher readers",
+  "game dependency bridge has no nine retired publisher readers",
   [
     "TapSurvivorAssets",
     "TapSurvivorEffects",
@@ -1260,6 +1280,7 @@ check(
     "TapSurvivorUpgrades",
     "TapSurvivorSave",
     "TapSurvivorShellRelicUi",
+    "TapSurvivorShellUi",
     "TapSurvivorWeaponProjectiles",
     "TapSurvivorRunUpdate",
   ].every(
@@ -1400,6 +1421,30 @@ check(
       recoveredGameRuntimeFactory: bridgeGameDependenciesSnapshot.recoveredGameRuntimeFactory,
     })
 );
+check(
+  "native and generated dependency bags expose the native Shell UI provider",
+  moduleGameDependenciesSnapshot.hasShellUi && bridgeGameDependenciesSnapshot.hasShellUi
+);
+check(
+  "native and generated dependency bags inject their documentRef into Shell UI without an ambient fallback",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    ({ shellUiDocumentLifecycle }) =>
+      shellUiDocumentLifecycle.injectedError === "" &&
+      shellUiDocumentLifecycle.injectedPlatformDocumentReads === 0 &&
+      shellUiDocumentLifecycle.injectedBehaviorPreserved &&
+      shellUiDocumentLifecycle.documentDescriptorRestored
+  )
+);
+check(
+  "native and generated dependency bags fail closed for missing Shell UI documentRef and recover after injection",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    ({ shellUiDocumentLifecycle }) =>
+      shellUiDocumentLifecycle.missingFailsClosed &&
+      shellUiDocumentLifecycle.recoveredError === "" &&
+      shellUiDocumentLifecycle.recoveredPlatformDocumentReads === 0 &&
+      shellUiDocumentLifecycle.recoveredBehaviorPreserved
+  )
+);
 const moduleDependencyBagGameRuntimeSnapshot = gameRuntimeSnapshot(
   moduleGameDependenciesSnapshot.__bag.gameRuntime.createGameRuntimeController
 );
@@ -1429,12 +1474,12 @@ check(
   moduleGameDependenciesSnapshot.hasLevelUp && bridgeGameDependenciesSnapshot.hasLevelUp
 );
 check(
-  "dependency bag tolerates missing retired asset and level-up publishers",
+  "dependency bag tolerates missing retired asset, level-up, and Shell UI publishers",
   moduleGameDependenciesSnapshot.missingRetiredPublisherError === "" &&
     bridgeGameDependenciesSnapshot.missingRetiredPublisherError === ""
 );
 check(
-  "dependency bag ignores poisoned retired asset and level-up publishers",
+  "dependency bag ignores poisoned retired asset, level-up, and Shell UI publishers",
   moduleGameDependenciesSnapshot.poisonedRetiredPublisherError === "" &&
     bridgeGameDependenciesSnapshot.poisonedRetiredPublisherError === "" &&
     Object.values(moduleGameDependenciesSnapshot.retiredPublisherGlobalReads).every(
@@ -1445,7 +1490,7 @@ check(
     )
 );
 check(
-  "dependency bag recovers after retired asset and level-up descriptors are removed",
+  "dependency bag recovers after retired asset, level-up, and Shell UI descriptors are removed",
   moduleGameDependenciesSnapshot.recoveredRetiredPublisherError === "" &&
     bridgeGameDependenciesSnapshot.recoveredRetiredPublisherError === ""
 );
@@ -2295,7 +2340,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRenderHud",
     "TapSurvivorRenderSkillRail",
     "TapSurvivorRendering",
-    "TapSurvivorShellUi",
     "TapSurvivorSprites",
     "TapSurvivorStorage",
     "TapSurvivorUi",
@@ -2345,6 +2389,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorRunState",
     "TapSurvivorRunUi",
     "TapSurvivorShellRelicUi",
+    "TapSurvivorShellUi",
     "TapSurvivorShopPricing",
     "TapSurvivorUpgrades",
     "TapSurvivorWeaponProjectiles",
@@ -2416,7 +2461,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     documentRef
   );
   const poisonedRetiredPublisherGlobalRef = { ...globalRef };
-  const retiredPublisherNames = ["TapSurvivorAssets", "TapSurvivorLevelUp"];
+  const retiredPublisherNames = ["TapSurvivorAssets", "TapSurvivorLevelUp", "TapSurvivorShellUi"];
   const retiredPublisherGlobalReads = Object.fromEntries(
     retiredPublisherNames.map((name) => [name, 0])
   );
@@ -2498,6 +2543,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     });
   }
   const bag = createGameDependencyBag({ globalRef: poisonedGlobalRef, documentRef });
+  const shellUiDocumentLifecycle = shellUiDocumentLifecycleSnapshot(
+    createGameDependencyBag,
+    globalRef,
+    createShellUiDocumentFixture()
+  );
   const uiDependency = uiDependencySnapshot(bag, documentRef);
   const configuredSaveSystem = bag.save.createSaveSystem({
     ...createSaveSystemFixture(),
@@ -2672,11 +2722,13 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       preferences: platformCapabilities?.getPreferences?.() === globalRef.Capacitor?.Plugins?.Preferences,
     })),
     hasShellRelicUi: typeof bag.shellRelicUi.createShellRelicUi === "function",
+    hasShellUi: typeof bag.shellUi?.createShellUiController === "function",
     shellRelicCallerTimerCount: callerShellRelicTimers.length,
     shellRelicCallerTiming: callerShellRelicTiming,
     shellRelicDefaultImageCalls: shellRelicDefaultImages.length,
     shellRelicDefaultTimerCount: defaultShellRelicTimerCount,
     shellRelicDefaultTiming: defaultShellRelicTiming,
+    shellUiDocumentLifecycle,
     bannerGlobalReads,
     hasGameBannerFactory: typeof bag.gameBanners?.createGameBannerSystem === "function",
     hasGameRuntime: typeof bag.gameRuntime?.createGameRuntimeController === "function",
@@ -2718,6 +2770,140 @@ function createGameDependencyBagResult(createGameDependencyBag, globalRef, docum
       error: error.message,
     };
   }
+}
+
+function shellUiDocumentLifecycleSnapshot(createGameDependencyBag, globalRef, documentRef) {
+  const platformTarget = globalThis;
+  const originalDocumentDescriptor = Object.getOwnPropertyDescriptor(platformTarget, "document");
+  let platformDocumentReads = 0;
+  let lifecycle;
+  Object.defineProperty(platformTarget, "document", {
+    configurable: true,
+    get() {
+      platformDocumentReads += 1;
+      throw new Error("Forbidden ambient Shell UI document read");
+    },
+  });
+  try {
+    const injected = classicShellUiSnapshotResult(
+      withoutDocumentRef(
+        createGameDependencyBag({ globalRef, documentRef }).shellUi.createShellUiController
+      ),
+      classicShellUiFixtureOptions()
+    );
+    const injectedPlatformDocumentReads = platformDocumentReads;
+    const missingDocumentGlobalRef = { ...globalRef };
+    Reflect.deleteProperty(missingDocumentGlobalRef, "document");
+    const missing = classicShellUiSnapshotResult(
+      withoutDocumentRef(
+        createGameDependencyBag({ globalRef: missingDocumentGlobalRef }).shellUi.createShellUiController
+      ),
+      classicShellUiFixtureOptions()
+    );
+    const missingPlatformDocumentReads = platformDocumentReads - injectedPlatformDocumentReads;
+    const recovered = classicShellUiSnapshotResult(
+      withoutDocumentRef(
+        createGameDependencyBag({ globalRef: missingDocumentGlobalRef, documentRef }).shellUi
+          .createShellUiController
+      ),
+      classicShellUiFixtureOptions()
+    );
+    lifecycle = {
+      injectedBehaviorPreserved:
+        injected.snapshot?.assetResolverReceivedExactContent === true &&
+        injected.snapshot?.boundListeners.includes("menuInventoryTab:click") === true,
+      injectedError: injected.error,
+      injectedPlatformDocumentReads,
+      missingFailsClosed: missing.error !== "",
+      recoveredBehaviorPreserved:
+        recovered.snapshot?.assetResolverReceivedExactContent === true &&
+        recovered.snapshot?.boundListeners.includes("menuInventoryTab:click") === true,
+      recoveredError: recovered.error,
+      recoveredPlatformDocumentReads:
+        platformDocumentReads - injectedPlatformDocumentReads - missingPlatformDocumentReads,
+    };
+  } finally {
+    if (originalDocumentDescriptor === undefined) Reflect.deleteProperty(platformTarget, "document");
+    else Object.defineProperty(platformTarget, "document", originalDocumentDescriptor);
+  }
+  return {
+    ...lifecycle,
+    documentDescriptorRestored: propertyDescriptorsMatch(
+      Object.getOwnPropertyDescriptor(platformTarget, "document"),
+      originalDocumentDescriptor
+    ),
+  };
+}
+
+function classicShellUiFixtureOptions() {
+  return {
+    createShellRelicUi: createModuleShellRelicUi,
+    relicSystem: createBridgeRelicSystem({
+      relicDefs: shellRelicUiFixtureDefs,
+      random: () => 0,
+      weaponDefs: {},
+    }),
+  };
+}
+
+function createShellUiDocumentFixture() {
+  return {
+    addEventListener() {},
+    createElement: createShellRelicFakeElement,
+    documentElement: createShellRelicFakeElement("html"),
+    exitFullscreen() {},
+    fullscreenElement: null,
+    getElementById() {
+      return null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+  };
+}
+
+function withoutDocumentRef(createShellUiController) {
+  return ({ documentRef: _documentRef, ...options }) => createShellUiController(options);
+}
+
+function classicShellUiSnapshotResult(createShellUiController, options) {
+  try {
+    return {
+      error: "",
+      snapshot: classicShellUiSnapshot(createShellUiController, {
+        ...options,
+        scheduler: options.scheduler || createImmediateShellUiScheduler(),
+      }),
+    };
+  } catch (error) {
+    return { error: error.message, snapshot: null };
+  }
+}
+
+function createImmediateShellUiScheduler(timers = []) {
+  return {
+    clearTimeout(timer) {
+      if (timer) timer.cleared = true;
+    },
+    setTimeout(callback, delay) {
+      const timer = { callback, delay };
+      timers.push(timer);
+      callback();
+      return timer;
+    },
+  };
+}
+
+function propertyDescriptorsMatch(left, right) {
+  if (left === undefined || right === undefined) return left === right;
+  return (
+    left.configurable === right.configurable &&
+    left.enumerable === right.enumerable &&
+    left.get === right.get &&
+    left.set === right.set &&
+    left.value === right.value &&
+    left.writable === right.writable
+  );
 }
 
 function upgradeContentSnapshot(createUpgradeContent) {
@@ -4497,6 +4683,7 @@ function classicShellUiSnapshot(createShellUiController, options) {
     relicSystem: options.relicSystem,
     renderMeta: () => calls.push("render-meta"),
     resetSave: () => calls.push("reset-save"),
+    scheduler: options.scheduler,
     setGameSpeed: (speed) => calls.push(`speed:${speed}`),
     shellRelicUi: {
       createShellRelicUi: options.createShellRelicUi,
