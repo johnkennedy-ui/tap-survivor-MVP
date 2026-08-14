@@ -2454,11 +2454,6 @@ function renderClassicHookScript() {
     }
     return result;
   });
-  wrapGlobal("TapSurvivorGameRuntime", "createGameRuntimeController", (original, args, context) => {
-    const runtime = original.apply(context, args);
-    parity.classicRuntime = runtime;
-    return runtime;
-  });
   wrapGlobal("TapSurvivorShop", "createShopSystem", (original, args, context) => {
     const shopSystem = original.apply(context, args);
     parity.classicShopSystem = shopSystem;

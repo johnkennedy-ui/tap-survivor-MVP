@@ -168,7 +168,9 @@ const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-tar
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
 const gameBannersBridge = loadBridge("../src/game-banners.js", "src/game-banners.js");
-const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js");
+const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js", {}, [
+  "TapSurvivorGameRuntime",
+]);
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js");
 const progressionBridge = loadBridge("../src/progression.js", "src/progression.js");
 const questsBridge = loadBridge("../src/quests.js", "src/quests.js");
@@ -216,7 +218,6 @@ const bridgeRelics = relicsBridge.context.TapSurvivorRelics;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
-const bridgeGameRuntime = gameRuntimeBridge.context.TapSurvivorGameRuntime;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
 const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
 const bridgeCombat = combatBridge.context.TapSurvivorCombat;
@@ -1179,17 +1180,19 @@ check(
   "module exports createGameRuntimeController",
   typeof createModuleGameRuntimeController === "function"
 );
-check("bridge assigns globalThis.TapSurvivorGameRuntime", Boolean(bridgeGameRuntime));
 check("game runtime bridge source has generated banner", hasGeneratedBanner(gameRuntimeBridge.source));
+check(
+  "game runtime bridge is global-free with retired provenance",
+  !gameRuntimeBridge.source.includes("globalThis.TapSurvivorGameRuntime") &&
+    gameRuntimeBridge.source.includes(
+      "// Retired global: TapSurvivorGameRuntime. Exports are supplied through the game dependency bag."
+    )
+);
 check(
   "game runtime module does not read TapSurvivorInput directly",
   !readFileSync(new URL("../src/modules/game-runtime.js", import.meta.url), "utf8").includes(
     "globalThis.TapSurvivorInput"
   )
-);
-check(
-  "bridge exposes createGameRuntimeController",
-  typeof bridgeGameRuntime?.createGameRuntimeController === "function"
 );
 
 const moduleGameRuntimeErrors = gameRuntimeDependencyErrors(createModuleGameRuntimeController);
@@ -1202,22 +1205,7 @@ check(
   moduleGameRuntimeErrors.invalid.includes("bindMovementInput")
 );
 
-const bridgeGameRuntimeErrors = gameRuntimeDependencyErrors(bridgeGameRuntime.createGameRuntimeController);
-check(
-  "bridge game runtime reports missing bindMovementInput",
-  bridgeGameRuntimeErrors.missing.includes("bindMovementInput")
-);
-check(
-  "bridge game runtime rejects non-function bindMovementInput",
-  bridgeGameRuntimeErrors.invalid.includes("bindMovementInput")
-);
-
 const moduleGameRuntimeSnapshot = gameRuntimeSnapshot(createModuleGameRuntimeController);
-const bridgeGameRuntimeSnapshot = gameRuntimeSnapshot(bridgeGameRuntime.createGameRuntimeController);
-check(
-  "module and bridge game runtime output match",
-  JSON.stringify(moduleGameRuntimeSnapshot) === JSON.stringify(bridgeGameRuntimeSnapshot)
-);
 check("game runtime initializes with loaded save", moduleGameRuntimeSnapshot.saveCoins === 7);
 check("game runtime resets speed controls", moduleGameRuntimeSnapshot.initialSpeed === 1);
 check("game runtime speed setter accepts x5", moduleGameRuntimeSnapshot.speedAfterSet === 5);
@@ -1369,45 +1357,43 @@ check(
   ].every((factory) => typeof factory === "function")
 );
 check(
-  "dependency bag resolves native game runtime with retained target global",
-  moduleGameDependenciesSnapshot.normalGameRuntimeFactory &&
-    moduleGameDependenciesSnapshot.normalGameRuntimeError === ""
+  "native and generated dependency bags resolve direct game runtime without the retired publisher",
+  moduleGameDependenciesSnapshot.absentGameRuntimeFactory &&
+    moduleGameDependenciesSnapshot.absentGameRuntimeError === "" &&
+    bridgeGameDependenciesSnapshot.absentGameRuntimeFactory &&
+    bridgeGameDependenciesSnapshot.absentGameRuntimeError === ""
 );
 check(
-  "dependency bag resolves native game runtime without target global",
-  moduleGameDependenciesSnapshot.missingGameRuntimeFactory &&
-    moduleGameDependenciesSnapshot.missingGameRuntimeError === ""
-);
-check(
-  "dependency bag ignores poisoned game runtime target global",
+  "native and generated dependency bags ignore a poisoned retired game runtime publisher",
   moduleGameDependenciesSnapshot.poisonedGameRuntimeFactory &&
     moduleGameDependenciesSnapshot.poisonedGameRuntimeError === "" &&
-    moduleGameDependenciesSnapshot.gameRuntimeTargetGlobalReads === 0
+    moduleGameDependenciesSnapshot.gameRuntimeTargetGlobalReads === 0 &&
+    bridgeGameDependenciesSnapshot.poisonedGameRuntimeFactory &&
+    bridgeGameDependenciesSnapshot.poisonedGameRuntimeError === "" &&
+    bridgeGameDependenciesSnapshot.gameRuntimeTargetGlobalReads === 0
 );
 check(
-  "dependency bag recovers game runtime after target descriptor restoration",
+  "native and generated dependency bags recover after retired game runtime publisher descriptor restoration",
   moduleGameDependenciesSnapshot.recoveredGameRuntimeFactory &&
-    moduleGameDependenciesSnapshot.recoveredGameRuntimeError === ""
+    moduleGameDependenciesSnapshot.recoveredGameRuntimeError === "" &&
+    bridgeGameDependenciesSnapshot.recoveredGameRuntimeFactory &&
+    bridgeGameDependenciesSnapshot.recoveredGameRuntimeError === ""
 );
 check(
-  "native and generated dependency bags preserve game runtime target lifecycle parity",
+  "native and generated dependency bags preserve retired game runtime publisher lifecycle parity",
   JSON.stringify({
+    absentGameRuntimeError: moduleGameDependenciesSnapshot.absentGameRuntimeError,
+    absentGameRuntimeFactory: moduleGameDependenciesSnapshot.absentGameRuntimeFactory,
     gameRuntimeTargetGlobalReads: moduleGameDependenciesSnapshot.gameRuntimeTargetGlobalReads,
-    missingGameRuntimeError: moduleGameDependenciesSnapshot.missingGameRuntimeError,
-    missingGameRuntimeFactory: moduleGameDependenciesSnapshot.missingGameRuntimeFactory,
-    normalGameRuntimeError: moduleGameDependenciesSnapshot.normalGameRuntimeError,
-    normalGameRuntimeFactory: moduleGameDependenciesSnapshot.normalGameRuntimeFactory,
     poisonedGameRuntimeError: moduleGameDependenciesSnapshot.poisonedGameRuntimeError,
     poisonedGameRuntimeFactory: moduleGameDependenciesSnapshot.poisonedGameRuntimeFactory,
     recoveredGameRuntimeError: moduleGameDependenciesSnapshot.recoveredGameRuntimeError,
     recoveredGameRuntimeFactory: moduleGameDependenciesSnapshot.recoveredGameRuntimeFactory,
   }) ===
     JSON.stringify({
+      absentGameRuntimeError: bridgeGameDependenciesSnapshot.absentGameRuntimeError,
+      absentGameRuntimeFactory: bridgeGameDependenciesSnapshot.absentGameRuntimeFactory,
       gameRuntimeTargetGlobalReads: bridgeGameDependenciesSnapshot.gameRuntimeTargetGlobalReads,
-      missingGameRuntimeError: bridgeGameDependenciesSnapshot.missingGameRuntimeError,
-      missingGameRuntimeFactory: bridgeGameDependenciesSnapshot.missingGameRuntimeFactory,
-      normalGameRuntimeError: bridgeGameDependenciesSnapshot.normalGameRuntimeError,
-      normalGameRuntimeFactory: bridgeGameDependenciesSnapshot.normalGameRuntimeFactory,
       poisonedGameRuntimeError: bridgeGameDependenciesSnapshot.poisonedGameRuntimeError,
       poisonedGameRuntimeFactory: bridgeGameDependenciesSnapshot.poisonedGameRuntimeFactory,
       recoveredGameRuntimeError: bridgeGameDependenciesSnapshot.recoveredGameRuntimeError,
@@ -2333,7 +2319,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   baseGlobalRef.TapSurvivorStorage = saveStorage;
   baseGlobalRef.localStorage = { getItem() {}, setItem() {}, removeItem() {} };
   baseGlobalRef.Capacitor = { Plugins: { Preferences: {} } };
-  baseGlobalRef.TapSurvivorGameRuntime = { name: "TapSurvivorGameRuntime" };
   const retiredGlobalNames = [
     "TapSurvivorAssets",
     "TapSurvivorBalance",
@@ -2457,16 +2442,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     poisonedRetiredPublisherGlobalRef,
     documentRef
   );
-  const normalGameRuntimeResult = createGameDependencyBagResult(
+  const absentGameRuntimeResult = createGameDependencyBagResult(
     createGameDependencyBag,
     globalRef,
-    documentRef
-  );
-  const missingGameRuntimeGlobalRef = { ...baseGlobalRef };
-  delete missingGameRuntimeGlobalRef.TapSurvivorGameRuntime;
-  const missingGameRuntimeResult = createGameDependencyBagResult(
-    createGameDependencyBag,
-    missingGameRuntimeGlobalRef,
     documentRef
   );
   const poisonedGameRuntimeGlobalRef = { ...baseGlobalRef };
@@ -2709,12 +2687,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     missingError,
     missingInputError,
     missingRetiredPublisherError: missingRetiredPublisherResult.error,
-    normalGameRuntimeError: normalGameRuntimeResult.error,
-    normalGameRuntimeFactory:
-      typeof normalGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
-    missingGameRuntimeError: missingGameRuntimeResult.error,
-    missingGameRuntimeFactory:
-      typeof missingGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
+    absentGameRuntimeError: absentGameRuntimeResult.error,
+    absentGameRuntimeFactory:
+      typeof absentGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
     poisonedGameRuntimeError: poisonedGameRuntimeResult.error,
     poisonedGameRuntimeFactory:
       typeof poisonedGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",

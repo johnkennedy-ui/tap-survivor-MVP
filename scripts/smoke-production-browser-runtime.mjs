@@ -238,6 +238,7 @@ async function main() {
       "TapSurvivorWeaponBehaviors",
       "TapSurvivorWeaponFire",
       "TapSurvivorLevelUp",
+      "TapSurvivorGameRuntime",
     ];
     const retiredPublisherReads = Object.fromEntries(
       retiredPublisherNames.map((name) => [name, 0])

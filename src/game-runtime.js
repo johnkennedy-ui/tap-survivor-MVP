@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/game-runtime.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorGameRuntime. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -156,8 +157,4 @@
       initializeRuntime,
     };
   }
-
-  globalThis.TapSurvivorGameRuntime = {
-    createGameRuntimeController,
-  };
 })();

@@ -109,7 +109,7 @@ check(
   classic.poisonedBannerGlobalReads === 0
 );
 check(
-  "classic dependency bag does not read poisoned retired asset or level-up globals",
+  "classic dependency bag does not read poisoned retired asset, level-up, or game-runtime globals",
   classic.poisonedGlobalReads === 0
 );
 check(
@@ -235,7 +235,6 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorContentRegistry",
     "TapSurvivorDebug",
     "TapSurvivorEffects",
-    "TapSurvivorGameRuntime",
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
     "TapSurvivorProgression",
@@ -266,7 +265,11 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorWeaponTargeting",
   ];
   const globalRef = Object.fromEntries(names.map((name) => [name, { name }]));
-  const retiredPublisherNames = ["TapSurvivorAssets", "TapSurvivorLevelUp"];
+  const retiredPublisherNames = [
+    "TapSurvivorAssets",
+    "TapSurvivorGameRuntime",
+    "TapSurvivorLevelUp",
+  ];
   const retiredPublisherReads = Object.fromEntries(
     retiredPublisherNames.map((name) => [name, 0])
   );

@@ -196,7 +196,8 @@ const bridges = [
   {
     source: "src/modules/game-runtime.js",
     target: "src/game-runtime.js",
-    globalName: "TapSurvivorGameRuntime",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorGameRuntime",
     exports: ["createGameRuntimeController"],
   },
   {

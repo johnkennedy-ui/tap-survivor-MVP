@@ -138,10 +138,9 @@ Runtime module globals:
 - Native dependency bag injection now imports the asset resolver, balance, content registry, level-up factory,
   math, level-up choices, shop pricing, weapon targeting, combat damage, the combat/pickup/relic factories, the three
   enemy factories, and `createGameRuntimeController` directly; those helpers no longer appear as runtime globals.
-- `src/game-runtime.js` deliberately retains the `TapSurvivorGameRuntime` classic publisher for the current
-  `src/game.js` script-order boundary. `src/modules/game-dependencies.js` no longer reads that publisher: it supplies
-  the statically imported native controller through its dependency bag. This reader-only retirement intentionally
-  leaves the global-audit count unchanged.
+- `src/game-runtime.js` is a source-derived, global-free generated artifact. `src/game.js`,
+  `src/app/compose-runtime.js`, and `src/modules/game-dependencies.js` import `createGameRuntimeController` directly;
+  the dependency bag supplies that native factory without reading or publishing `TapSurvivorGameRuntime`.
 - Core data/systems: progression and quest behavior are supplied as native factories through
   `TapSurvivorGameDependencies`; the former `TapSurvivorProgression` and `TapSurvivorQuests` publishers are retired.
   Effects and map resolution are also supplied as native factories, with their former publishers retired.
@@ -155,14 +154,14 @@ Runtime module globals:
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and
   upgrade content are dependency-injected native factories.
-- Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, `TapSurvivorDebug`, and `TapSurvivorGameRuntime`.
+- Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, and `TapSurvivorDebug`.
 
 Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 18 (17 allowed expressions and 24 allowed usages); the allowlist does not count bare
-  `globalThis` fallback syntax. The assets/level-up retirement leaves only the explicitly listed compatibility
+  dot-expression global audit is 17 (16 allowed expressions and 23 allowed usages); the allowlist does not count bare
+  `globalThis` fallback syntax. The runtime-publisher retirement leaves only the explicitly listed compatibility
   boundaries above for the next migration batch.
 - `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
   capability from the classic dependency bag.
@@ -208,7 +207,7 @@ Current DOM/game coupling is concentrated in:
 - `src/ui.js`, `src/run-ui.js`, `src/shell-ui.js`, and `src/shell-relic-ui.js` for DOM element lookup/render/update.
 - `src/input.js` for canvas/keyboard/touch/mouse binding.
 - `src/modules/game-runtime.js` owns the runtime controller implementation and receives input binding through dependency injection.
-  `src/game-runtime.js` is the generated classic bridge until the browser entrypoint migrates away from script-order globals.
+  `src/game-runtime.js` is the generated global-free artifact; direct imports and the dependency bag use the native controller without a runtime global.
 - `src/modules/run-lifecycle.js` owns run lifecycle behavior; `src/run-lifecycle.js` is the generated classic bridge.
 - `src/modules/run-state.js` owns run state/player reset construction; `src/run-state.js` is the generated classic bridge.
 - `src/modules/run-ui.js` owns run HUD/end-screen rendering; `src/run-ui.js` is the generated classic bridge.

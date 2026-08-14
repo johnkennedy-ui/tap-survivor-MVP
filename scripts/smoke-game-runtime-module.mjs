@@ -11,10 +11,13 @@ function check(name, pass) {
 const classicBridgeSource = readFileSync(new URL("../src/game-runtime.js", import.meta.url), "utf8");
 const sharedHarnessSource = readFileSync(new URL("./smoke-game-harness.mjs", import.meta.url), "utf8");
 check(
-  "classic runtime bridge is a generated IIFE publisher",
+  "generated runtime artifact is a global-free IIFE",
   classicBridgeSource.startsWith("// GENERATED FILE. Do not edit directly.") &&
     classicBridgeSource.includes("(() => {") &&
-    classicBridgeSource.includes("globalThis.TapSurvivorGameRuntime")
+    classicBridgeSource.includes(
+      "// Retired global: TapSurvivorGameRuntime. Exports are supplied through the game dependency bag."
+    ) &&
+    !classicBridgeSource.includes("globalThis.TapSurvivorGameRuntime")
 );
 check(
   "classic runtime bridge has no static ESM import",
@@ -22,12 +25,21 @@ check(
 );
 
 const classicContext = vm.createContext({});
+let retiredPublisherReads = 0;
+const retiredPublisherGetter = () => {
+  retiredPublisherReads += 1;
+  throw new Error("Forbidden TapSurvivorGameRuntime global read");
+};
+Object.defineProperty(classicContext, "TapSurvivorGameRuntime", {
+  configurable: true,
+  get: retiredPublisherGetter,
+});
 vm.runInContext(classicBridgeSource, classicContext, { filename: "src/game-runtime.js" });
-const createClassicGameRuntimeController =
-  classicContext.TapSurvivorGameRuntime?.createGameRuntimeController;
 check(
-  "classic runtime bridge publishes createGameRuntimeController",
-  typeof createClassicGameRuntimeController === "function"
+  "generated runtime artifact executes without reading or publishing its retired global",
+  retiredPublisherReads === 0 &&
+    Object.getOwnPropertyDescriptor(classicContext, "TapSurvivorGameRuntime")?.get ===
+      retiredPublisherGetter
 );
 check(
   "native runtime controller is imported normally",
@@ -42,104 +54,64 @@ check(
   !sharedHarnessSource.includes("gameRuntimeMode") && !sharedHarnessSource.includes("globalThis")
 );
 
-if (
-  typeof createClassicGameRuntimeController !== "function" ||
-  typeof createModuleGameRuntimeController !== "function"
-) {
+if (typeof createModuleGameRuntimeController !== "function") {
   console.error("\nGame runtime controller fixture setup failed.");
   process.exit(1);
 }
 
-const classicFixture = makeRuntimeFixture(createClassicGameRuntimeController);
 const moduleFixture = makeRuntimeFixture(createModuleGameRuntimeController);
 
-classicFixture.controller.initializeRuntime();
 moduleFixture.controller.initializeRuntime();
 
-const initializedClassic = classicFixture.snapshot();
 const initializedModule = moduleFixture.snapshot();
 check(
-  "classic and native controllers initialize with equivalent snapshots",
-  snapshotsMatch(initializedClassic, initializedModule)
-);
-check(
-  "controllers initialize speed input lifecycle and render ownership",
-  [initializedClassic, initializedModule].every(
-    (snapshot) =>
-      snapshot.gameSpeed === 1 &&
-      snapshot.documentSpeed === "1" &&
-      snapshot.hud === "Speed x1" &&
-      snapshot.inputBound === true &&
-      snapshot.inputUsesFixtureCanvas === true &&
-      snapshot.inputUsesFixtureGameGetter === true &&
-      snapshot.canvasListeners.mousedown === 1 &&
-      snapshot.canvasListeners.touchstart === 1 &&
-      snapshot.documentListeners.visibilitychange === 1 &&
-      snapshot.globalListeners.beforeunload === 1 &&
-      snapshot.globalListeners.pagehide === 1 &&
-      snapshot.shellBinds === 1 &&
-      snapshot.debugBinds === 1 &&
-      snapshot.spriteLoads === 1 &&
-      snapshot.renderMetaCalls === 1 &&
-      snapshot.rafSchedules === 1
-  )
+  "native controller initializes speed input lifecycle and render ownership",
+  initializedModule.gameSpeed === 1 &&
+    initializedModule.documentSpeed === "1" &&
+    initializedModule.hud === "Speed x1" &&
+    initializedModule.inputBound === true &&
+    initializedModule.inputUsesFixtureCanvas === true &&
+    initializedModule.inputUsesFixtureGameGetter === true &&
+    initializedModule.canvasListeners.mousedown === 1 &&
+    initializedModule.canvasListeners.touchstart === 1 &&
+    initializedModule.documentListeners.visibilitychange === 1 &&
+    initializedModule.globalListeners.beforeunload === 1 &&
+    initializedModule.globalListeners.pagehide === 1 &&
+    initializedModule.shellBinds === 1 &&
+    initializedModule.debugBinds === 1 &&
+    initializedModule.spriteLoads === 1 &&
+    initializedModule.renderMetaCalls === 1 &&
+    initializedModule.rafSchedules === 1
 );
 
 const moveEvent = { buttons: 1, clientX: 130, clientY: 95 };
-classicFixture.dispatchCanvas("mousedown", moveEvent);
 moduleFixture.dispatchCanvas("mousedown", moveEvent);
-const movedClassic = classicFixture.snapshot();
 const movedModule = moduleFixture.snapshot();
 check(
-  "classic and native controllers clear the movement gate identically",
-  snapshotsMatch(movedClassic, movedModule)
-);
-check(
-  "controllers map the same canvas mouse fixture to the same target",
-  [movedClassic, movedModule].every(
-    (snapshot) =>
-      snapshot.awaitingFirstMoveInput === false &&
-      snapshot.targetX === 240 &&
-      snapshot.targetY === 150 &&
-      snapshot.hiddenMovementBanners === 1
-  )
+  "native controller clears the movement gate from canvas input",
+  movedModule.awaitingFirstMoveInput === false &&
+    movedModule.targetX === 240 &&
+    movedModule.targetY === 150 &&
+    movedModule.hiddenMovementBanners === 1
 );
 
-classicFixture.clickSpeed(5);
 moduleFixture.clickSpeed(5);
-const spedClassic = classicFixture.snapshot();
 const spedModule = moduleFixture.snapshot();
 check(
-  "classic and native controllers keep x5 speed snapshots equivalent",
-  snapshotsMatch(spedClassic, spedModule)
-);
-check(
-  "controllers update speed button body state and HUD",
-  [spedClassic, spedModule].every(
-    (snapshot) =>
-      snapshot.gameSpeed === 5 &&
-      snapshot.documentSpeed === "5" &&
-      snapshot.hud === "Speed x5" &&
-      snapshot.speedButtonStates["5"].active === true &&
-      snapshot.speedButtonStates["5"].pressed === "true"
-  )
+  "native controller updates speed button body state and HUD",
+  spedModule.gameSpeed === 5 &&
+    spedModule.documentSpeed === "5" &&
+    spedModule.hud === "Speed x5" &&
+    spedModule.speedButtonStates["5"].active === true &&
+    spedModule.speedButtonStates["5"].pressed === "true"
 );
 
-classicFixture.getSave().coins = 77;
 moduleFixture.getSave().coins = 77;
-classicFixture.dispatchPagehide();
 moduleFixture.dispatchPagehide();
-const flushedClassic = classicFixture.snapshot();
 const flushedModule = moduleFixture.snapshot();
 check(
-  "classic and native lifecycle flush snapshots remain equivalent",
-  snapshotsMatch(flushedClassic, flushedModule)
-);
-check(
-  "controllers persist the injected save on pagehide",
-  [flushedClassic, flushedModule].every(
-    (snapshot) => snapshot.persistCalls === 1 && snapshot.persistedCoins.join(",") === "77"
-  )
+  "native controller persists the injected save on pagehide",
+  flushedModule.persistCalls === 1 && flushedModule.persistedCoins.join(",") === "77"
 );
 
 if (process.exitCode) {
@@ -373,8 +345,4 @@ function listenerCounts(listeners) {
   return Object.fromEntries(
     [...listeners.entries()].map(([type, handlers]) => [type, handlers.length]).sort()
   );
-}
-
-function snapshotsMatch(left, right) {
-  return JSON.stringify(left) === JSON.stringify(right);
 }
