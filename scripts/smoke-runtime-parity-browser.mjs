@@ -3,7 +3,7 @@ import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { chmod, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
 
 const repoRoot = process.cwd();
@@ -99,6 +99,8 @@ const report = {
   strictMode: strict,
   viewport,
   xdgRuntimeDir: "",
+  xdgRuntimeOwned: false,
+  xdgRuntimeSource: "",
 };
 
 let classicBaselineRoot = "";
@@ -109,15 +111,19 @@ let surfaceRoots = [];
 async function main() {
   let browser = null;
   let browserProfileDir = "";
+  let browserRuntime = null;
   let exitCode = 0;
   try {
     await initializeRuntime();
     const browserDriver = loadBrowserDriver();
-    const browserLaunch = resolveBrowserLaunch(browserDriver.chromium);
+    const browserLaunch = await resolveBrowserLaunch(browserDriver.chromium);
+    browserRuntime = browserLaunch.runtime;
     report.browserExecutable = browserLaunch.executablePath;
     report.browserExecutableSource = browserLaunch.source;
     report.browserDriverSource = browserDriver.source;
     report.xdgRuntimeDir = browserLaunch.xdgRuntimeDir;
+    report.xdgRuntimeOwned = browserLaunch.runtime.owned;
+    report.xdgRuntimeSource = browserLaunch.runtime.source;
     browserProfileDir = await createBrowserProfile(browserLaunch.xdgRuntimeDir);
     browser = await browserDriver.chromium.launchPersistentContext(browserProfileDir, browserLaunch.options);
 
@@ -147,6 +153,7 @@ async function main() {
   } finally {
     await browser?.close().catch(() => {});
     if (browserProfileDir) await rm(browserProfileDir, { force: true, recursive: true }).catch(() => {});
+    if (browserRuntime?.owned) await rm(browserRuntime.dir, { force: true, recursive: true }).catch(() => {});
     try {
       await cleanupClassicBaseline();
     } catch (error) {
@@ -259,18 +266,19 @@ function spawnFailureMessage(result) {
   return shortMessage(result?.error?.message || result?.stderr?.toString("utf8") || `exit ${result?.status ?? "unknown"}`);
 }
 
-function resolveBrowserLaunch(chromiumLauncher) {
+async function resolveBrowserLaunch(chromiumLauncher) {
   const executable = resolveBrowserExecutable(chromiumLauncher);
-  const xdgRuntimeDir = resolveHostRuntimeDir();
+  const runtime = isSnapChromium(executable.path) ? await createSnapRuntime() : resolveHostRuntime();
   return {
     executablePath: executable.path,
     options: {
-      env: { ...process.env, XDG_RUNTIME_DIR: xdgRuntimeDir },
+      env: { ...process.env, XDG_RUNTIME_DIR: runtime.dir },
       executablePath: executable.path,
       headless: true,
     },
+    runtime,
     source: executable.source,
-    xdgRuntimeDir,
+    xdgRuntimeDir: runtime.dir,
   };
 }
 
@@ -329,7 +337,28 @@ function isExistingExecutable(filePath) {
   }
 }
 
-function resolveHostRuntimeDir() {
+function isSnapChromium(executablePath) {
+  return resolve(executablePath) === "/snap/bin/chromium";
+}
+
+async function createSnapRuntime() {
+  const runtimeParent = resolveSnapRuntimeParent();
+  const runtimeDir = await mkdtemp(join(runtimeParent.dir, "tap-survivor-parity-runtime-"));
+  await chmod(runtimeDir, 0o700);
+  return { dir: runtimeDir, owned: true, source: runtimeParent.source };
+}
+
+function resolveSnapRuntimeParent() {
+  const callerParent = process.env.PARITY_BROWSER_RUNTIME_PARENT || "";
+  const runtimeParent = callerParent
+    ? resolve(repoRoot, callerParent)
+    : join(homedir(), "snap", "chromium", "common");
+  const runtimeStat = statSync(runtimeParent);
+  if (!runtimeStat.isDirectory()) throw new Error(`Snap browser runtime parent is not a directory: ${runtimeParent}`);
+  return { dir: runtimeParent, source: callerParent ? "caller-override" : "snap-common" };
+}
+
+function resolveHostRuntime() {
   const runtimeDir = process.env.XDG_RUNTIME_DIR || "";
   if (!runtimeDir) throw new Error("Direct host Chromium requires a caller-supplied XDG_RUNTIME_DIR");
   const runtimeStat = statSync(runtimeDir);
@@ -337,7 +366,7 @@ function resolveHostRuntimeDir() {
   if ((runtimeStat.mode & 0o777) !== 0o700) {
     throw new Error(`XDG_RUNTIME_DIR must have mode 0700: ${runtimeDir}`);
   }
-  return runtimeDir;
+  return { dir: runtimeDir, owned: false, source: "caller" };
 }
 
 async function createBrowserProfile(runtimeDir) {
