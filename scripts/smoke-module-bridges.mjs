@@ -15,6 +15,7 @@ import { createEnemySystem as createModuleEnemySystem } from "../src/modules/ene
 import { createGameBannerSystem as createModuleGameBannerSystem } from "../src/modules/game-banners.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+import { bindMovementInput as bindModuleMovementInput } from "../src/modules/input.js";
 import { createUpgradeContent as createModuleUpgradeContent } from "../src/modules/upgrades.js";
 import { createCombatSystem as createModuleCombatSystem } from "../src/modules/combat.js";
 import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
@@ -172,6 +173,7 @@ const gameBannersBridge = loadBridge("../src/game-banners.js", "src/game-banners
 const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime.js", {}, [
   "TapSurvivorGameRuntime",
 ]);
+const inputBridge = loadBridge("../src/input.js", "src/input.js", {}, ["TapSurvivorInput"]);
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js", {
   setTimeout(callback) {
     callback();
@@ -1214,6 +1216,23 @@ check(
     "globalThis.TapSurvivorInput"
   )
 );
+check("module exports bindMovementInput", typeof bindModuleMovementInput === "function");
+check(
+  "input bridge is global-free with retired provenance",
+  Object.getOwnPropertyDescriptor(inputBridge.context, "TapSurvivorInput")?.get &&
+    !inputBridge.source.includes("globalThis.TapSurvivorInput") &&
+    inputBridge.source.includes(
+      "// Retired global: TapSurvivorInput. Exports are supplied through the game dependency bag."
+    )
+);
+check(
+  "native and generated game dependency sources do not look up TapSurvivorInput",
+  !readFileSync(new URL("../src/modules/game-dependencies.js", import.meta.url), "utf8").includes(
+    "TapSurvivorInput"
+  ) &&
+    !gameDependenciesBridge.source.includes("globalThis.TapSurvivorInput") &&
+    !gameDependenciesBridge.source.includes('"TapSurvivorInput"')
+);
 
 const moduleGameRuntimeErrors = gameRuntimeDependencyErrors(createModuleGameRuntimeController);
 check(
@@ -1356,6 +1375,30 @@ check(
     createModuleGameRuntimeController
 );
 check(
+  "module dependency bag exposes the statically imported source input binder",
+  moduleGameDependenciesSnapshot.__bag.input.bindMovementInput === bindModuleMovementInput
+);
+const moduleMovementInputSnapshot = movementInputSnapshot(bindModuleMovementInput);
+const bridgeMovementInputSnapshot = movementInputSnapshot(
+  bridgeGameDependenciesSnapshot.__bag.input.bindMovementInput
+);
+check(
+  "native and generated input binders preserve mouse drag and touch targeting behavior",
+  JSON.stringify(moduleMovementInputSnapshot) === JSON.stringify(bridgeMovementInputSnapshot) &&
+    JSON.stringify(moduleMovementInputSnapshot) ===
+      JSON.stringify({
+        afterDrag: [480, 270],
+        afterMouse: [240, 135],
+        afterPausedTouch: [720, 405],
+        afterStoppedMouse: [720, 405],
+        afterTouchMove: [800, 400],
+        afterTouchStart: [720, 405],
+        ignoredMouse: [240, 135],
+        listenerTypes: ["mousedown", "mousemove", "touchmove", "touchstart"],
+        touchPrevented: 3,
+      })
+);
+check(
   "module dependency bag exposes statically imported native gameplay factories",
   moduleGameDependenciesSnapshot.__bag.combat.createCombatSystem === createModuleCombatSystem &&
     moduleGameDependenciesSnapshot.__bag.enemies.createEnemySystem === createModuleEnemySystem &&
@@ -1383,6 +1426,29 @@ check(
     moduleGameDependenciesSnapshot.absentGameRuntimeError === "" &&
     bridgeGameDependenciesSnapshot.absentGameRuntimeFactory &&
     bridgeGameDependenciesSnapshot.absentGameRuntimeError === ""
+);
+check(
+  "native and generated dependency bags resolve source input while TapSurvivorInput is absent",
+  moduleGameDependenciesSnapshot.absentInputBinder &&
+    moduleGameDependenciesSnapshot.absentInputError === "" &&
+    bridgeGameDependenciesSnapshot.absentInputBinder &&
+    bridgeGameDependenciesSnapshot.absentInputError === ""
+);
+check(
+  "native and generated dependency bags ignore a poisoned TapSurvivorInput global",
+  moduleGameDependenciesSnapshot.poisonedInputBinder &&
+    moduleGameDependenciesSnapshot.poisonedInputError === "" &&
+    moduleGameDependenciesSnapshot.inputTargetGlobalReads === 0 &&
+    bridgeGameDependenciesSnapshot.poisonedInputBinder &&
+    bridgeGameDependenciesSnapshot.poisonedInputError === "" &&
+    bridgeGameDependenciesSnapshot.inputTargetGlobalReads === 0
+);
+check(
+  "native and generated dependency bags recover after TapSurvivorInput descriptor restoration",
+  moduleGameDependenciesSnapshot.recoveredInputBinder &&
+    moduleGameDependenciesSnapshot.recoveredInputError === "" &&
+    bridgeGameDependenciesSnapshot.recoveredInputBinder &&
+    bridgeGameDependenciesSnapshot.recoveredInputError === ""
 );
 check(
   "native and generated dependency bags ignore a poisoned retired game runtime publisher",
@@ -1637,11 +1703,6 @@ check(
 );
 check("dependency bag injects native effects", moduleGameDependenciesSnapshot.hasEffects);
 check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
-check(
-  "dependency bag reports missing input binder",
-  moduleGameDependenciesSnapshot.missingInputError.includes("TapSurvivorInput.bindMovementInput")
-);
-
 check("module exports createPickupSystem", typeof createModulePickupSystem === "function");
 check(
   "pickup bridge retires globalThis.TapSurvivorPickups",
@@ -2377,6 +2438,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMath",
     "TapSurvivorMapSystem",
+    "TapSurvivorInput",
     "TapSurvivorPickups",
     "TapSurvivorRelics",
     "TapSurvivorRunUpdate",
@@ -2438,10 +2500,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.TapSurvivorDebugBalance = {
     getActiveProfile: () => "testing",
   };
-  function bindMovementInput() {}
-  globalRef.TapSurvivorInput = {
-    bindMovementInput,
-  };
   const shellRelicSchedulerTimers = [];
   const shellRelicDefaultImages = [];
   globalRef.clearTimeout = (timer) => {
@@ -2490,6 +2548,39 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const absentGameRuntimeResult = createGameDependencyBagResult(
     createGameDependencyBag,
     globalRef,
+    documentRef
+  );
+  const absentInputResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    globalRef,
+    documentRef
+  );
+  const poisonedInputGlobalRef = { ...baseGlobalRef };
+  const inputTargetDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedInputGlobalRef,
+    "TapSurvivorInput"
+  );
+  let inputTargetGlobalReads = 0;
+  Object.defineProperty(poisonedInputGlobalRef, "TapSurvivorInput", {
+    configurable: true,
+    get() {
+      inputTargetGlobalReads += 1;
+      throw new Error("Forbidden TapSurvivorInput global read");
+    },
+  });
+  const poisonedInputResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedInputGlobalRef,
+    documentRef
+  );
+  if (inputTargetDescriptor) {
+    Object.defineProperty(poisonedInputGlobalRef, "TapSurvivorInput", inputTargetDescriptor);
+  } else {
+    delete poisonedInputGlobalRef.TapSurvivorInput;
+  }
+  const recoveredInputResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedInputGlobalRef,
     documentRef
   );
   const poisonedGameRuntimeGlobalRef = { ...baseGlobalRef };
@@ -2600,15 +2691,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     createGameDependencyBag({ globalRef: missingGlobalRef });
   } catch (error) {
     missingError = error.message;
-  }
-
-  const missingInputGlobalRef = { ...baseGlobalRef };
-  delete missingInputGlobalRef.TapSurvivorInput;
-  let missingInputError = "";
-  try {
-    createGameDependencyBag({ globalRef: missingInputGlobalRef });
-  } catch (error) {
-    missingInputError = error.message;
   }
 
   const assetContentFixture = {
@@ -2735,10 +2817,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasNativeShopFactory: typeof bag.shop.createShopSystem === "function",
     hasNativeShop: Boolean(shop),
     hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
-    hasInputBinder: bag.input.bindMovementInput === bindMovementInput,
+    hasInputBinder: typeof bag.input.bindMovementInput === "function",
     missingError,
-    missingInputError,
     missingRetiredPublisherError: missingRetiredPublisherResult.error,
+    absentInputError: absentInputResult.error,
+    absentInputBinder: typeof absentInputResult.bag?.input?.bindMovementInput === "function",
+    poisonedInputError: poisonedInputResult.error,
+    poisonedInputBinder: typeof poisonedInputResult.bag?.input?.bindMovementInput === "function",
+    recoveredInputError: recoveredInputResult.error,
+    recoveredInputBinder: typeof recoveredInputResult.bag?.input?.bindMovementInput === "function",
+    inputTargetGlobalReads,
     absentGameRuntimeError: absentGameRuntimeResult.error,
     absentGameRuntimeFactory:
       typeof absentGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
@@ -2770,6 +2858,72 @@ function createGameDependencyBagResult(createGameDependencyBag, globalRef, docum
       error: error.message,
     };
   }
+}
+
+function movementInputSnapshot(bindMovementInput) {
+  const listeners = new Map();
+  const canvas = {
+    height: 540,
+    width: 960,
+    addEventListener(type, handler) {
+      listeners.set(type, handler);
+    },
+    getBoundingClientRect() {
+      return { height: 540, left: 0, top: 0, width: 960 };
+    },
+  };
+  const game = {
+    paused: false,
+    player: { targetX: 0, targetY: 0 },
+    running: true,
+  };
+  let touchPrevented = 0;
+  bindMovementInput({ canvas, getGame: () => game });
+
+  listeners.get("mousedown")({ clientX: 240, clientY: 135 });
+  const afterMouse = [game.player.targetX, game.player.targetY];
+  listeners.get("mousemove")({ buttons: 0, clientX: 480, clientY: 270 });
+  const ignoredMouse = [game.player.targetX, game.player.targetY];
+  listeners.get("mousemove")({ buttons: 1, clientX: 480, clientY: 270 });
+  const afterDrag = [game.player.targetX, game.player.targetY];
+  listeners.get("touchstart")({
+    preventDefault() {
+      touchPrevented += 1;
+    },
+    touches: [{ clientX: 720, clientY: 405 }],
+  });
+  const afterTouchStart = [game.player.targetX, game.player.targetY];
+  game.paused = true;
+  listeners.get("touchmove")({
+    preventDefault() {
+      touchPrevented += 1;
+    },
+    touches: [{ clientX: 800, clientY: 400 }],
+  });
+  const afterPausedTouch = [game.player.targetX, game.player.targetY];
+  game.paused = false;
+  game.running = false;
+  listeners.get("mousedown")({ clientX: 800, clientY: 400 });
+  const afterStoppedMouse = [game.player.targetX, game.player.targetY];
+  game.running = true;
+  listeners.get("touchmove")({
+    preventDefault() {
+      touchPrevented += 1;
+    },
+    touches: [{ clientX: 800, clientY: 400 }],
+  });
+
+  return {
+    afterDrag,
+    afterMouse,
+    afterPausedTouch,
+    afterStoppedMouse,
+    afterTouchMove: [game.player.targetX, game.player.targetY],
+    afterTouchStart,
+    ignoredMouse,
+    listenerTypes: [...listeners.keys()].sort(),
+    touchPrevented,
+  };
 }
 
 function shellUiDocumentLifecycleSnapshot(createGameDependencyBag, globalRef, documentRef) {

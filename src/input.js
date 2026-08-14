@@ -1,4 +1,10 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/input.js
+// Run: npm run build:bridges
+// Retired global: TapSurvivorInput. Exports are supplied through the game dependency bag.
 (() => {
+  "use strict";
+
   function setTargetFromEvent({ event, canvas, game }) {
     if (!game || !game.running || game.paused) return;
 
@@ -10,27 +16,22 @@
 
   function bindMovementInput({ canvas, getGame }) {
     function setTarget(event) {
-      setTargetFromEvent({ event, canvas, game: getGame() });
+      setTargetFromEvent({ event, canvas, game: getGame?.() });
     }
 
-    canvas.addEventListener("mousedown", setTarget);
-    canvas.addEventListener("mousemove", (event) => {
+    canvas.addEventListener?.("mousedown", setTarget);
+    canvas.addEventListener?.("mousemove", (event) => {
       if (event.buttons === 1) setTarget(event);
     });
-    canvas.addEventListener("touchstart", (event) => {
-      event.preventDefault();
+    canvas.addEventListener?.("touchstart", (event) => {
+      event.preventDefault?.();
       setTarget(event);
     });
-    canvas.addEventListener("touchmove", (event) => {
-      event.preventDefault();
+    canvas.addEventListener?.("touchmove", (event) => {
+      event.preventDefault?.();
       setTarget(event);
     });
 
     return { setTarget };
   }
-
-  globalThis.TapSurvivorInput = {
-    bindMovementInput,
-    setTargetFromEvent,
-  };
 })();

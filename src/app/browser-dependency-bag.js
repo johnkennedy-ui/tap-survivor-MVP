@@ -2,6 +2,7 @@ import { createCombatSystem } from "../modules/combat.js";
 import { createEnemyBehaviorSystem } from "../modules/enemy-behaviors.js";
 import { createEnemySpawnSystem } from "../modules/enemy-spawning.js";
 import { createEnemySystem } from "../modules/enemies.js";
+import { bindMovementInput } from "../modules/input.js";
 import { createLevelUpSystem } from "../modules/level-up.js";
 import { createRelicSystem } from "../modules/relics.js";
 import { createProgressionSystem } from "../modules/progression.js";
@@ -246,27 +247,7 @@ function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
   return {
     bannerSystem: createBrowserBannerSystem({ globalRef, ui }),
     bindMovementInput({ canvas: targetCanvas = canvas, getGame }) {
-      const setTarget = (event) => {
-        const game = getGame?.();
-        if (!game || !game.running || game.paused) return;
-        const rect = targetCanvas.getBoundingClientRect();
-        const point = event.touches ? event.touches[0] : event;
-        game.player.targetX = ((point.clientX - rect.left) / rect.width) * targetCanvas.width;
-        game.player.targetY = ((point.clientY - rect.top) / rect.height) * targetCanvas.height;
-      };
-      targetCanvas.addEventListener?.("mousedown", setTarget);
-      targetCanvas.addEventListener?.("mousemove", (event) => {
-        if (event.buttons === 1) setTarget(event);
-      });
-      targetCanvas.addEventListener?.("touchstart", (event) => {
-        event.preventDefault?.();
-        setTarget(event);
-      });
-      targetCanvas.addEventListener?.("touchmove", (event) => {
-        event.preventDefault?.();
-        setTarget(event);
-      });
-      return { setTarget };
+      return bindMovementInput({ canvas: targetCanvas, getGame });
     },
     canvas,
     debugSystem: {

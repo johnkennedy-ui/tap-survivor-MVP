@@ -239,6 +239,7 @@ async function main() {
       "TapSurvivorWeaponFire",
       "TapSurvivorLevelUp",
       "TapSurvivorGameRuntime",
+      "TapSurvivorInput",
       "TapSurvivorShellUi",
     ];
     const retiredPublisherReads = Object.fromEntries(

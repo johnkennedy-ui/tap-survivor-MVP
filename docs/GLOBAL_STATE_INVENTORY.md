@@ -11,7 +11,7 @@ The runtime currently uses a script-order global namespace instead of ES module 
 `globalThis.TapSurvivor*` object.
 
 Primary bootstrap coupling:
-- `src/game-dependencies.js` collects the `TapSurvivor*` dependency bag for `src/game.js`, including `TapSurvivorInput.bindMovementInput`.
+- `src/game-dependencies.js` collects the retained `TapSurvivor*` dependency bag for the classic `src/game.js` fallback boundary and supplies `input.bindMovementInput` from `src/modules/input.js` without a publisher lookup.
 - `src/game.js` wires the run from that dependency bag and holds top-level run state.
 - `src/run-lifecycle.js` is the generated classic bridge for run start/end/boss-clear behavior.
 - `src/run-state.js` is the generated classic bridge for run state/player reset construction.
@@ -132,6 +132,10 @@ Generated content globals:
   `TapSurvivorEnemySpawning`; `src/modules/game-dependencies.js` injects their native factory functions, together
   with combat, pickups, and relics, through the existing dependency-bag slots while preserving the
   `src/game.js` API.
+- `src/modules/input.js` owns mouse-drag and touch movement targeting. Its generated `src/input.js` bridge is
+  source-derived and global-free with retired `TapSurvivorInput` provenance; both the classic dependency bag and the
+  production browser adapter receive the same explicit source binding. The retained classic `src/game.js` fallback
+  boundary still receives that binding through `TapSurvivorGameDependencies`.
 
 Runtime module globals:
 - Bootstrap seam: `TapSurvivorGameDependencies`.
@@ -154,15 +158,15 @@ Runtime module globals:
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and
   upgrade content are dependency-injected native factories.
-- Utilities/debug: `TapSurvivorAudio`, `TapSurvivorInput`, and `TapSurvivorDebug`.
+- Utilities/debug: `TapSurvivorAudio` and `TapSurvivorDebug`; input is dependency-injected.
 
 Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 16 (15 allowed expressions and 22 allowed usages); the allowlist does not count bare
-  `globalThis` fallback syntax. The Shell UI publisher retirement leaves only the explicitly listed compatibility
-  boundaries above for the next migration batch.
+  dot-expression global audit is 15 (14 allowed expressions and 21 allowed usages); the allowlist does not count bare
+  `globalThis` fallback syntax. The Shell UI and input publisher retirements leave only the explicitly listed
+  compatibility boundaries above for the next migration batch.
 - `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
   capability from the classic dependency bag.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected

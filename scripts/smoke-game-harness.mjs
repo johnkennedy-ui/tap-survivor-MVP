@@ -297,6 +297,7 @@ export function createGameHarness({
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
+    "TapSurvivorInput",
     "TapSurvivorLevelUpChoices",
     "TapSurvivorMapSystem",
     "TapSurvivorSaveDefaults",

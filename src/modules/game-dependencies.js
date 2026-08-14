@@ -9,6 +9,7 @@ import { createEnemySystem } from "./enemies.js";
 import { createEffects } from "./effects.js";
 import { createGameBannerSystem } from "./game-banners.js";
 import { createGameRuntimeController } from "./game-runtime.js";
+import { bindMovementInput } from "./input.js";
 import { createMapSystem } from "./map-system.js";
 import { createLevelUpSystem } from "./level-up.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
@@ -106,12 +107,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     enemySpawning: { createEnemySpawnSystem },
     gameBanners: { createGameBannerSystem },
     gameRuntime: { createGameRuntimeController },
-    input: {
-      bindMovementInput: requireFunction(
-        globalRef?.TapSurvivorInput?.bindMovementInput,
-        "globalThis.TapSurvivorInput.bindMovementInput"
-      ),
-    },
+    input: { bindMovementInput },
     levelUp,
     levelUpChoices: { choiceId, shopFocusBonus, shuffleChoices, weightedChoices },
     mapSystem: { createMapSystem },

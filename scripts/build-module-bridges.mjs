@@ -202,6 +202,13 @@ const bridges = [
     exports: ["createGameRuntimeController"],
   },
   {
+    source: "src/modules/input.js",
+    target: "src/input.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorInput",
+    exports: ["bindMovementInput", "setTargetFromEvent"],
+  },
+  {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
     globalName: "TapSurvivorGameDependencies",
@@ -271,6 +278,10 @@ const bridges = [
       {
         source: "src/modules/game-runtime.js",
         exports: ["createGameRuntimeController"],
+      },
+      {
+        source: "src/modules/input.js",
+        exports: ["bindMovementInput", "setTargetFromEvent"],
       },
       {
         source: "src/modules/map-system.js",

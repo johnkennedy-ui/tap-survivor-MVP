@@ -109,7 +109,7 @@ check(
   classic.poisonedBannerGlobalReads === 0
 );
 check(
-  "classic dependency bag does not read poisoned retired asset, level-up, game-runtime, or Shell UI globals",
+  "classic dependency bag does not read poisoned retired asset, input, level-up, game-runtime, or Shell UI globals",
   classic.poisonedGlobalReads === 0
 );
 check(
@@ -267,6 +267,7 @@ function createClassicDependencyGlobal(fixture) {
   const retiredPublisherNames = [
     "TapSurvivorAssets",
     "TapSurvivorGameRuntime",
+    "TapSurvivorInput",
     "TapSurvivorLevelUp",
     "TapSurvivorShellUi",
   ];
@@ -301,7 +302,6 @@ function createClassicDependencyGlobal(fixture) {
   globalRef.document = fixture.documentRef;
   globalRef.TapSurvivorBalanceRuntime = { content: () => ({}) };
   globalRef.TapSurvivorContent = {};
-  globalRef.TapSurvivorInput = { bindMovementInput() {} };
   globalRef.TapSurvivorShopPricing = { createShopPricing };
   return globalRef;
 }

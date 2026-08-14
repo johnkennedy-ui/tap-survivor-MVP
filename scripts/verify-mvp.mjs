@@ -66,6 +66,7 @@ const levelUpChoices = readRequired("src/level-up-choices.js");
 const levelUp = readRequired("src/level-up.js");
 const nativeLevelUp = readRequired("src/modules/level-up.js");
 const input = readRequired("src/input.js");
+const nativeInput = readRequired("src/modules/input.js");
 const pickups = readRequired("src/pickups.js");
 const shopPricing = readRequired("src/shop-pricing.js");
 const shop = readRequired("src/shop.js");
@@ -77,6 +78,7 @@ const shellRelicUi = readRequired("src/shell-relic-ui.js");
 const shellUi = readRequired("src/shell-ui.js");
 const productionModuleEntrypoint = readRequired("src/app/production-module-entrypoint.js");
 const productionModuleAutoboot = readRequired("src/app/production-module-autoboot.js");
+const browserDependencyBag = readRequired("src/app/browser-dependency-bag.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
 const agentContext = readRequired("docs/AGENT_CODEBASE_CONTEXT.md");
@@ -139,8 +141,8 @@ check("mute button exists", index.includes('id="muteAudio"') && ui.includes("mut
 check("mobile viewport exists", index.includes('name="viewport"'));
 
 check("tap/click target handler exists", input.includes("setTargetFromEvent"));
-check("mouse movement input exists", input.includes('addEventListener("mousedown"'));
-check("touch movement input exists", input.includes('addEventListener("touchstart"'));
+check("mouse movement input exists", input.includes('addEventListener?.("mousedown"'));
+check("touch movement input exists", input.includes('addEventListener?.("touchstart"'));
 check("enemy chase loop exists", runtime.includes("updateEnemies") && runtime.includes("enemy.speed"));
 check("content source exists", contentSource.includes('"schemaVersion"') && generatedContent.includes("TapSurvivorContent"));
 check("Kenney asset manifest exists", content.assets?.sources?.some((source) => source.id === "kenney_desert_shooter_pack" && source.commercialUse === true && source.attributionRequired === false));
@@ -433,12 +435,22 @@ check(
     !gameDependencies.includes("TapSurvivorLevelUpChoices"),
 );
 check(
-  "shared input helper exists",
-  input.includes("TapSurvivorInput") &&
-    runtimeEntry.includes("TapSurvivorInput") &&
+  "shared input helper is source-derived and explicitly injected",
+  nativeInput.includes("export function setTargetFromEvent") &&
+    nativeInput.includes("export function bindMovementInput") &&
+    !nativeInput.includes("globalThis") &&
+    input.includes("// Retired global: TapSurvivorInput.") &&
+    !input.includes("globalThis.TapSurvivorInput") &&
+    moduleGameDependencies.includes('import { bindMovementInput } from "./input.js"') &&
+    moduleGameDependencies.includes("input: { bindMovementInput }") &&
+    !moduleGameDependencies.includes("TapSurvivorInput") &&
+    !gameDependencies.includes("TapSurvivorInput") &&
+    !runtimeEntry.includes("TapSurvivorInput") &&
     gameDependencies.includes("bindMovementInput") &&
     gameRuntime.includes("bindMovementInput") &&
-    !gameRuntime.includes("globalThis.TapSurvivorInput"),
+    !gameRuntime.includes("globalThis.TapSurvivorInput") &&
+    browserDependencyBag.includes('import { bindMovementInput } from "../modules/input.js"') &&
+    browserDependencyBag.includes("return bindMovementInput({ canvas: targetCanvas, getGame });"),
 );
 check(
   "combat, pickup, and relic helpers are native-injected without classic publishers",
