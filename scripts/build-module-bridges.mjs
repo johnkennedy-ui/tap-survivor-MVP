@@ -209,6 +209,18 @@ const bridges = [
     exports: ["bindMovementInput", "setTargetFromEvent"],
   },
   {
+    source: "src/modules/module-runtime-audio-adapter.js",
+    target: "src/audio.js",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorAudio",
+    exports: [
+      "MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS",
+      "MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS",
+      "MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS",
+      "createModuleRuntimeAudioAdapter",
+    ],
+  },
+  {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
     globalName: "TapSurvivorGameDependencies",
@@ -226,6 +238,15 @@ const bridges = [
       {
         source: "src/modules/balance.js",
         exports: ["floorDifficulty"],
+      },
+      {
+        source: "src/modules/module-runtime-audio-adapter.js",
+        exports: [
+          "MODULE_RUNTIME_AUDIO_ADAPTER_SLOTS",
+          "MODULE_RUNTIME_AUDIO_ADAPTER_PROOF_SLOTS",
+          "MODULE_RUNTIME_AUDIO_ADAPTER_LOW_LEVEL_SLOTS",
+          "createModuleRuntimeAudioAdapter",
+        ],
       },
       {
         source: "src/modules/combat.js",

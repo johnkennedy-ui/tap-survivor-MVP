@@ -95,10 +95,11 @@ Generated content globals:
   instead of reading those globals directly. The generated `src/save.js` no longer publishes `TapSurvivorSave`; the
   classic dependency bag bundles `createSaveSystem` and `src/game.js` supplies its resolved storage through the
   ordinary factory call. Explicit caller `storage` or truthy `storageAdapter` values retain precedence.
-- `src/audio.js` retains the classic `TapSurvivorAudio` publisher and accepts an explicit `audioContextFactory` for
-  procedural cues without reading browser audio globals. `src/modules/game-dependencies.js` configures its default
-  factory from the source-owned `globalRef` boundary; explicit caller factories retain precedence, missing or throwing
-  factories fail procedural cues closed, and later valid configuration recovers on the same publisher object.
+- `src/audio.js` is a generated, global-free artifact from `src/modules/module-runtime-audio-adapter.js` with retired
+  `TapSurvivorAudio` provenance. `src/modules/game-dependencies.js` constructs the source-owned audio provider from
+  explicit `globalRef` AudioContext, Audio, and clock factories; `src/game.js` retains
+  `audio.createAudioSystem({ sfxDefs })`. Missing or throwing platform capabilities fail cues closed without any
+  compatibility-publisher read, while a later dependency bag can receive valid platform factories.
 - `src/modules/game-dependencies.js` now wires the native Shop factory explicitly into the classic dependency bag and
   injects the game banner factory; the factories receive the classic `documentRef` boundary without reading
   `globalThis.TapSurvivorShop` or `globalThis.TapSurvivorGameBanners`.
@@ -158,22 +159,23 @@ Runtime module globals:
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and
   upgrade content are dependency-injected native factories.
-- Utilities/debug: `TapSurvivorAudio` and `TapSurvivorDebug`; input is dependency-injected.
+- Utilities/debug: `TapSurvivorDebug`; audio and input are dependency-injected.
 
 Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 15 (14 allowed expressions and 21 allowed usages); the allowlist does not count bare
-  `globalThis` fallback syntax. The Shell UI and input publisher retirements leave only the explicitly listed
-  compatibility boundaries above for the next migration batch.
+  dot-expression global audit is 14 (13 allowed expressions and 20 allowed usages); the allowlist does not count bare
+  `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Audio, Shell
+  UI, and input are supplied through source-owned providers for the next migration batch.
 - `globalThis.location` is used by dev balance profile selection. Balance profile/override storage receives a private
   capability from the classic dependency bag.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
   `globalRef` through `TapSurvivorStorage.configureDefaultProviders`; the retained publisher has no direct platform-global
   reads and preserves Preferences-first, fallback, and unavailable behavior.
-- Audio context construction is supplied to the classic audio publisher through the `globalRef` boundary in
-  `src/modules/game-dependencies.js`; `src/audio.js` has no browser audio-global reader.
+- `TapSurvivorAudio` is retired. The classic dependency bag supplies its source-owned adapter with explicit
+  `globalRef` AudioContext, Audio, and clock factories; generated `src/audio.js` records only retirement provenance
+  and has no browser audio-global reader or publisher.
 - `TapSurvivorShellRelicUi` is retired. `src/modules/game-dependencies.js` supplies the native shell-relic factory
   with explicit scheduler and image defaults sourced from its `globalRef`; caller-supplied scheduler/image options
   retain precedence and no timer-global reader is introduced.
@@ -201,7 +203,8 @@ Key top-level mutable state currently lives in `src/game.js`:
 
 Other module-level state/caches:
 - `src/sprites.js` owns sprite cache state inside its sprite system factory.
-- `src/audio.js` owns audio context/cache state inside its audio system factory.
+- `src/modules/module-runtime-audio-adapter.js` owns audio context/cache state inside its audio system factory;
+  generated `src/audio.js` is the global-free classic artifact.
 - `src/balance-runtime.js` owns the runtime balance profile/override resolver state through its factory output.
 - `src/weapon-cooldowns.js` and `src/shop-pricing.js` keep registry/config constants at module scope.
 

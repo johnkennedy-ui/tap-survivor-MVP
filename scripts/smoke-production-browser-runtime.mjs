@@ -228,6 +228,7 @@ async function main() {
   const responseStatusByUrl = new Map();
   await page.addInitScript(() => {
     const retiredPublisherNames = [
+      "TapSurvivorAudio",
       "TapSurvivorAssets",
       "TapSurvivorCombat",
       "TapSurvivorEnemies",

@@ -294,6 +294,7 @@ export function createGameHarness({
   });
 
   const retiredGlobalNames = [
+    "TapSurvivorAudio",
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
@@ -462,8 +463,8 @@ export function createGameHarness({
     const AudioContextCtor = context.AudioContext || context.webkitAudioContext;
     return typeof AudioContextCtor === "function" ? new AudioContextCtor() : null;
   };
-  const classicAudioSystem = context.TapSurvivorAudio.createAudioSystem({
-    audioContextFactory: createAudioContext,
+  const classicAudioSystem = sourceGameDependencies.audio.createAudioSystem({
+    sfxDefs: content.assets?.sfx || {},
   });
   let playStartAudio = () => {};
   const startRun = () => lifecycle?.startRun?.();
@@ -521,10 +522,7 @@ export function createGameHarness({
   };
   dependencies = createModuleGameDependencyBag(dependencyBagOptions);
   const { contentRegistry, relics } = dependencies.moduleSystems;
-  playStartAudio = () => {
-    dependencies.audioSystem?.playStartLaugh?.();
-    return classicAudioSystem.playStartLaugh?.();
-  };
+  playStartAudio = () => classicAudioSystem.playStartLaugh?.();
   shellUi = sourceGameDependencies.shellUi.createShellUiController({
     assets: dependencies.assets,
     closeEndScreen: () => {

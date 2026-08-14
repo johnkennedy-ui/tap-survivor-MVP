@@ -103,7 +103,56 @@ function createAudioSystem({ audioContextFactory, audioFactory, clock, onError, 
   }
 
   function playStartLaugh() {
-    return playProceduralCue("start-laugh");
+    if (muted || typeof audioContextFactory !== "function") return false;
+
+    try {
+      const context = audioContextFactory("start-laugh");
+      if (!context) return false;
+      resumeContext(context, "start-laugh");
+      if (!hasStartLaughContext(context)) return false;
+
+      const startAt = context.currentTime;
+      const master = context.createGain();
+      const tone = context.createBiquadFilter();
+      const throat = context.createBiquadFilter();
+      if (!hasStartLaughGain(master) || !hasStartLaughFilter(tone) || !hasStartLaughFilter(throat)) {
+        return false;
+      }
+
+      master.gain.setValueAtTime(0.0001, startAt);
+      master.gain.exponentialRampToValueAtTime(volume * 0.55, startAt + 0.04);
+      master.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.02);
+      tone.type = "lowpass";
+      tone.frequency.setValueAtTime(920, startAt);
+      tone.Q.setValueAtTime(2.2, startAt);
+      throat.type = "bandpass";
+      throat.frequency.setValueAtTime(360, startAt);
+      throat.Q.setValueAtTime(4.6, startAt);
+      tone.connect(throat);
+      throat.connect(master);
+      master.connect(context.destination);
+
+      for (const [index, offset] of [0, 0.23, 0.48].entries()) {
+        const oscillator = context.createOscillator();
+        const syllable = context.createGain();
+        if (!hasStartLaughOscillator(oscillator) || !hasStartLaughGain(syllable)) return false;
+
+        oscillator.type = "sawtooth";
+        oscillator.frequency.setValueAtTime(118 - index * 16, startAt + offset);
+        oscillator.frequency.exponentialRampToValueAtTime(64 - index * 7, startAt + offset + 0.18);
+        syllable.gain.setValueAtTime(0.0001, startAt + offset);
+        syllable.gain.exponentialRampToValueAtTime(0.74, startAt + offset + 0.035);
+        syllable.gain.exponentialRampToValueAtTime(0.0001, startAt + offset + 0.24);
+        oscillator.connect(syllable);
+        syllable.connect(tone);
+        oscillator.start(startAt + offset);
+        oscillator.stop(startAt + offset + 0.26);
+      }
+      return true;
+    } catch (error) {
+      reportError(onError, "start-laugh", error);
+      return false;
+    }
   }
 
   function playShopPurchase() {
@@ -331,6 +380,46 @@ function reportError(onError, operation, error) {
   if (typeof onError === "function") {
     onError({ error, operation });
   }
+}
+
+function hasStartLaughContext(context) {
+  return Boolean(
+    Number.isFinite(context?.currentTime) &&
+      context.destination &&
+      typeof context.createGain === "function" &&
+      typeof context.createBiquadFilter === "function" &&
+      typeof context.createOscillator === "function"
+  );
+}
+
+function hasStartLaughGain(node) {
+  return Boolean(
+    node?.gain &&
+      typeof node.connect === "function" &&
+      typeof node.gain.setValueAtTime === "function" &&
+      typeof node.gain.exponentialRampToValueAtTime === "function"
+  );
+}
+
+function hasStartLaughFilter(node) {
+  return Boolean(
+    node?.frequency &&
+      node?.Q &&
+      typeof node.connect === "function" &&
+      typeof node.frequency.setValueAtTime === "function" &&
+      typeof node.Q.setValueAtTime === "function"
+  );
+}
+
+function hasStartLaughOscillator(node) {
+  return Boolean(
+    node?.frequency &&
+      typeof node.connect === "function" &&
+      typeof node.start === "function" &&
+      typeof node.stop === "function" &&
+      typeof node.frequency.setValueAtTime === "function" &&
+      typeof node.frequency.exponentialRampToValueAtTime === "function"
+  );
 }
 
 function requireObject(value, name) {

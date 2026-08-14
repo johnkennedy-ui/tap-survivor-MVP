@@ -109,7 +109,7 @@ check(
   classic.poisonedBannerGlobalReads === 0
 );
 check(
-  "classic dependency bag does not read poisoned retired asset, input, level-up, game-runtime, or Shell UI globals",
+  "classic dependency bag does not read poisoned retired audio, asset, input, level-up, game-runtime, or Shell UI globals",
   classic.poisonedGlobalReads === 0
 );
 check(
@@ -229,7 +229,6 @@ function createClassicProvider(fixture) {
 
 function createClassicDependencyGlobal(fixture) {
   const names = [
-    "TapSurvivorAudio",
     "TapSurvivorBalance",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
@@ -265,6 +264,7 @@ function createClassicDependencyGlobal(fixture) {
   ];
   const globalRef = Object.fromEntries(names.map((name) => [name, { name }]));
   const retiredPublisherNames = [
+    "TapSurvivorAudio",
     "TapSurvivorAssets",
     "TapSurvivorGameRuntime",
     "TapSurvivorInput",

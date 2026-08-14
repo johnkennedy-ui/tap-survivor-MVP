@@ -14,6 +14,7 @@ import { createMapSystem } from "./map-system.js";
 import { createLevelUpSystem } from "./level-up.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
+import { createModuleRuntimeAudioAdapter } from "./module-runtime-audio-adapter.js";
 import { createPickupSystem } from "./pickups.js";
 import { createProgressionSystem } from "./progression.js";
 import { createQuestSystem, questOpenIds } from "./quests.js";
@@ -74,12 +75,11 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
       platformCapabilities: createStoragePlatformCapabilities(globalRef),
     });
   }
-  const audio = requireGlobal(globalRef, "TapSurvivorAudio");
-  if (typeof audio.configureDefaultProviders === "function") {
-    audio.configureDefaultProviders({
-      audioContextFactory: createAudioContextFactory(globalRef),
-    });
-  }
+  const audio = createModuleRuntimeAudioAdapter({
+    audioContextFactory: createAudioContextFactory(globalRef),
+    audioFactory: createAudioFactory(globalRef),
+    clock: createClock(globalRef),
+  }).audio;
   const shellRelicUi = createShellRelicUiDependency(globalRef);
   const shellUi = {
     createShellUiController(options = {}) {
@@ -175,9 +175,20 @@ function requireGlobal(globalRef, name) {
 
 function createAudioContextFactory(globalRef) {
   return () => {
-    const AudioContextRef = globalRef.AudioContext || globalRef.webkitAudioContext;
+    const AudioContextRef = globalRef?.AudioContext || globalRef?.webkitAudioContext;
     return typeof AudioContextRef === "function" ? new AudioContextRef() : null;
   };
+}
+
+function createAudioFactory(globalRef) {
+  return (src) => {
+    const AudioRef = globalRef?.Audio;
+    return typeof AudioRef === "function" ? new AudioRef(src) : null;
+  };
+}
+
+function createClock(globalRef) {
+  return () => globalRef?.performance?.now?.() || 0;
 }
 
 function createBalanceStorageProvider(globalRef) {

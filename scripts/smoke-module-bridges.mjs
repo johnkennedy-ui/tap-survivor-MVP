@@ -128,6 +128,7 @@ const contentRegistryBridge = loadBridge(
   "src/content-registry.js"
 );
 const assetsBridge = loadBridge("../src/assets.js", "src/assets.js");
+const audioBridge = loadBridge("../src/audio.js", "src/audio.js");
 const effectsBridge = loadBridge("../src/effects.js", "src/effects.js", {
   TapSurvivorContentSchema: contentSchemaFixture,
 });
@@ -211,6 +212,7 @@ const combatDamageBridge = loadBridge("../src/combat-damage.js", "src/combat-dam
 });
 
 const bridgeBalance = balanceBridge.context.TapSurvivorBalance;
+const bridgeAudio = audioBridge.context.TapSurvivorAudio;
 const bridgeContentRegistry = contentRegistryBridge.context.TapSurvivorContentRegistry;
 const bridgeEffects = effectsBridge.context.TapSurvivorEffects;
 const bridgeUpgrades = upgradesBridge.context.TapSurvivorUpgrades;
@@ -1233,6 +1235,22 @@ check(
     !gameDependenciesBridge.source.includes("globalThis.TapSurvivorInput") &&
     !gameDependenciesBridge.source.includes('"TapSurvivorInput"')
 );
+check(
+  "audio bridge is global-free with retired provenance",
+  bridgeAudio === undefined &&
+    !audioBridge.source.includes("globalThis.TapSurvivorAudio") &&
+    audioBridge.source.includes(
+      "// Retired global: TapSurvivorAudio. Exports are supplied through the game dependency bag."
+    )
+);
+check(
+  "native and generated game dependency sources do not look up TapSurvivorAudio",
+  !readFileSync(new URL("../src/modules/game-dependencies.js", import.meta.url), "utf8").includes(
+    "TapSurvivorAudio"
+  ) &&
+    !gameDependenciesBridge.source.includes("globalThis.TapSurvivorAudio") &&
+    !gameDependenciesBridge.source.includes('"TapSurvivorAudio"')
+);
 
 const moduleGameRuntimeErrors = gameRuntimeDependencyErrors(createModuleGameRuntimeController);
 check(
@@ -1291,8 +1309,9 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
 );
 check(
-  "game dependency bridge has no nine retired publisher readers",
+  "game dependency bridge has no ten retired publisher readers",
   [
+    "TapSurvivorAudio",
     "TapSurvivorAssets",
     "TapSurvivorEffects",
     "TapSurvivorLevelUp",
@@ -1426,6 +1445,53 @@ check(
     moduleGameDependenciesSnapshot.absentGameRuntimeError === "" &&
     bridgeGameDependenciesSnapshot.absentGameRuntimeFactory &&
     bridgeGameDependenciesSnapshot.absentGameRuntimeError === ""
+);
+check(
+  "native and generated dependency bags expose source-owned audio while TapSurvivorAudio is absent",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    ({ absentAudioPublisherError, absentAudioPublisherSnapshot }) =>
+      absentAudioPublisherError === "" &&
+      absentAudioPublisherSnapshot.api &&
+      absentAudioPublisherSnapshot.title &&
+      absentAudioPublisherSnapshot.shop &&
+      absentAudioPublisherSnapshot.weapon &&
+      absentAudioPublisherSnapshot.runUpgrade
+  )
+);
+check(
+  "native and generated dependency bags ignore a poisoned TapSurvivorAudio global",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    ({ audioPublisherReads, poisonedAudioPublisherError, poisonedAudioPublisherSnapshot }) =>
+      audioPublisherReads === 0 &&
+      poisonedAudioPublisherError === "" &&
+      poisonedAudioPublisherSnapshot.api &&
+      poisonedAudioPublisherSnapshot.title &&
+      poisonedAudioPublisherSnapshot.shop
+  )
+);
+check(
+  "native and generated dependency bags recover after TapSurvivorAudio descriptor restoration",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    ({ recoveredAudioPublisherError, recoveredAudioPublisherSnapshot }) =>
+      recoveredAudioPublisherError === "" &&
+      recoveredAudioPublisherSnapshot.api &&
+      recoveredAudioPublisherSnapshot.title &&
+      recoveredAudioPublisherSnapshot.shop
+  )
+);
+check(
+  "source-owned dependency-bag audio preserves cue, mute, and no-audio behavior",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    ({ absentAudioPublisherSnapshot, noAudioPublisherError, noAudioPublisherSnapshot }) =>
+      absentAudioPublisherSnapshot.muted &&
+      absentAudioPublisherSnapshot.mutedWeapon === false &&
+      noAudioPublisherError === "" &&
+      noAudioPublisherSnapshot.api &&
+      noAudioPublisherSnapshot.weapon === false &&
+      noAudioPublisherSnapshot.runUpgrade === false &&
+      noAudioPublisherSnapshot.title === false &&
+      noAudioPublisherSnapshot.shop === false
+  )
 );
 check(
   "native and generated dependency bags resolve source input while TapSurvivorInput is absent",
@@ -1702,7 +1768,7 @@ check(
       JSON.stringify({ saveKey: "save-key", legacySaveKey: "legacy-key" })
 );
 check("dependency bag injects native effects", moduleGameDependenciesSnapshot.hasEffects);
-check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorAudio"));
+check("dependency bag reports missing required dependency", moduleGameDependenciesSnapshot.missingError.includes("TapSurvivorDebug"));
 check("module exports createPickupSystem", typeof createModulePickupSystem === "function");
 check(
   "pickup bridge retires globalThis.TapSurvivorPickups",
@@ -2393,7 +2459,6 @@ function createUiDependencyFakeElement(tagName) {
 
 function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
-    "TapSurvivorAudio",
     "TapSurvivorDebug",
     "TapSurvivorProgression",
     "TapSurvivorQuests",
@@ -2425,6 +2490,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   baseGlobalRef.localStorage = { getItem() {}, setItem() {}, removeItem() {} };
   baseGlobalRef.Capacitor = { Plugins: { Preferences: {} } };
   const retiredGlobalNames = [
+    "TapSurvivorAudio",
     "TapSurvivorAssets",
     "TapSurvivorBalance",
     "TapSurvivorCombat",
@@ -2459,6 +2525,57 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   ];
   const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
   const globalRef = baseGlobalRef;
+  const createAudioParam = () => ({
+    exponentialRampToValueAtTime() {},
+    setValueAtTime() {},
+  });
+  globalRef.Audio = function FakeAudio(src) {
+    return {
+      cloneNode() {
+        return new globalRef.Audio(src);
+      },
+      currentTime: 0,
+      play() {
+        return Promise.resolve();
+      },
+      playbackRate: 1,
+      src,
+      volume: 1,
+    };
+  };
+  globalRef.AudioContext = function FakeAudioContext() {
+    return {
+      createBiquadFilter() {
+        return {
+          connect() {},
+          frequency: createAudioParam(),
+          Q: createAudioParam(),
+        };
+      },
+      createGain() {
+        return {
+          connect() {},
+          disconnect() {},
+          gain: createAudioParam(),
+        };
+      },
+      createOscillator() {
+        return {
+          connect() {},
+          disconnect() {},
+          frequency: createAudioParam(),
+          start() {},
+          stop() {},
+        };
+      },
+      currentTime: 0,
+      destination: {},
+      resume() {
+        return Promise.resolve();
+      },
+    };
+  };
+  globalRef.performance = { now: () => 1000 };
   const uiElements = new Map();
   const documentRef = {
     createElement(tagName) {
@@ -2513,6 +2630,53 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.Image = function TapSurvivorShellRelicImage() {
     return createShellRelicFakeImage(shellRelicDefaultImages);
   };
+  const absentAudioPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    globalRef,
+    documentRef
+  );
+  const poisonedAudioPublisherGlobalRef = { ...globalRef };
+  const audioPublisherDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedAudioPublisherGlobalRef,
+    "TapSurvivorAudio"
+  );
+  let audioPublisherReads = 0;
+  Object.defineProperty(poisonedAudioPublisherGlobalRef, "TapSurvivorAudio", {
+    configurable: true,
+    get() {
+      audioPublisherReads += 1;
+      throw new Error("Forbidden TapSurvivorAudio global read");
+    },
+  });
+  const poisonedAudioPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedAudioPublisherGlobalRef,
+    documentRef
+  );
+  if (audioPublisherDescriptor) {
+    Object.defineProperty(
+      poisonedAudioPublisherGlobalRef,
+      "TapSurvivorAudio",
+      audioPublisherDescriptor
+    );
+  } else {
+    Reflect.deleteProperty(poisonedAudioPublisherGlobalRef, "TapSurvivorAudio");
+  }
+  const recoveredAudioPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedAudioPublisherGlobalRef,
+    documentRef
+  );
+  const noAudioPublisherGlobalRef = {
+    ...globalRef,
+    Audio: undefined,
+    AudioContext: undefined,
+  };
+  const noAudioPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    noAudioPublisherGlobalRef,
+    documentRef
+  );
   const missingRetiredPublisherResult = createGameDependencyBagResult(
     createGameDependencyBag,
     globalRef,
@@ -2685,7 +2849,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
 
   const missingGlobalRef = { ...baseGlobalRef };
-  delete missingGlobalRef.TapSurvivorAudio;
+  delete missingGlobalRef.TapSurvivorDebug;
   let missingError = "";
   try {
     createGameDependencyBag({ globalRef: missingGlobalRef });
@@ -2819,6 +2983,15 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
     hasInputBinder: typeof bag.input.bindMovementInput === "function",
     missingError,
+    absentAudioPublisherError: absentAudioPublisherResult.error,
+    absentAudioPublisherSnapshot: audioProviderSnapshot(absentAudioPublisherResult.bag),
+    audioPublisherReads,
+    noAudioPublisherError: noAudioPublisherResult.error,
+    noAudioPublisherSnapshot: audioProviderSnapshot(noAudioPublisherResult.bag),
+    poisonedAudioPublisherError: poisonedAudioPublisherResult.error,
+    poisonedAudioPublisherSnapshot: audioProviderSnapshot(poisonedAudioPublisherResult.bag),
+    recoveredAudioPublisherError: recoveredAudioPublisherResult.error,
+    recoveredAudioPublisherSnapshot: audioProviderSnapshot(recoveredAudioPublisherResult.bag),
     missingRetiredPublisherError: missingRetiredPublisherResult.error,
     absentInputError: absentInputResult.error,
     absentInputBinder: typeof absentInputResult.bag?.input?.bindMovementInput === "function",
@@ -2858,6 +3031,46 @@ function createGameDependencyBagResult(createGameDependencyBag, globalRef, docum
       error: error.message,
     };
   }
+}
+
+function audioProviderSnapshot(bag) {
+  const audio = bag?.audio;
+  if (typeof audio?.createAudioSystem !== "function") {
+    return {
+      api: false,
+      muted: false,
+      mutedWeapon: null,
+      runUpgrade: null,
+      shop: null,
+      title: null,
+      weapon: null,
+    };
+  }
+
+  const audioSystem = audio.createAudioSystem({
+    sfxDefs: {
+      runUpgrades: { quickening: "audio/quickening.ogg" },
+      weapons: { spark_bolt: "audio/spark-bolt.ogg" },
+    },
+  });
+  const api = [
+    "isMuted",
+    "play",
+    "playRunUpgrade",
+    "playShopPurchase",
+    "playStartLaugh",
+    "playWeapon",
+    "setMuted",
+    "toggleMuted",
+  ].every((name) => typeof audioSystem?.[name] === "function");
+  const weapon = audioSystem.playWeapon("spark_bolt", { minGapMs: 0 });
+  const runUpgrade = audioSystem.playRunUpgrade("quickening");
+  const title = audioSystem.playStartLaugh();
+  const shop = audioSystem.playShopPurchase();
+  const muted = audioSystem.setMuted(true);
+  const mutedWeapon = audioSystem.playWeapon("spark_bolt", { minGapMs: 0 });
+
+  return { api, muted, mutedWeapon, runUpgrade, shop, title, weapon };
 }
 
 function movementInputSnapshot(bindMovementInput) {

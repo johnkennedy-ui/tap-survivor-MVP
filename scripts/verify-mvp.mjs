@@ -33,6 +33,7 @@ const spriteSheetRenderer = readRequired("src/sprite-sheet-renderer.js");
 const assets = readRequired("src/assets.js");
 const nativeAssets = readRequired("src/modules/assets.js");
 const audio = readRequired("src/audio.js");
+const nativeAudioAdapter = readRequired("src/modules/module-runtime-audio-adapter.js");
 const quests = readRequired("src/quests.js");
 const storageAdapter = readRequired("src/storage-adapter.js");
 const saveDefaults = readRequired("src/save-defaults.js");
@@ -369,7 +370,20 @@ check(
     shellUi.includes("assets?.createAssetResolver?.(content)") &&
     !shellUi.includes("globalThis.TapSurvivorAssets"),
 );
-check("shared audio helper exists", audio.includes("TapSurvivorAudio") && runtimeEntry.includes("TapSurvivorAudio") && audio.includes("setMuted"));
+check(
+  "shared audio helper is source-owned and globally retired",
+  nativeAudioAdapter.includes("export function createModuleRuntimeAudioAdapter") &&
+    audio.includes(
+      "// Retired global: TapSurvivorAudio. Exports are supplied through the game dependency bag."
+    ) &&
+    !audio.includes("globalThis.TapSurvivorAudio") &&
+    moduleGameDependencies.includes('import { createModuleRuntimeAudioAdapter } from "./module-runtime-audio-adapter.js"') &&
+    gameDependencies.includes("createModuleRuntimeAudioAdapter") &&
+    !gameDependencies.includes("TapSurvivorAudio") &&
+    !runtimeEntry.includes("TapSurvivorAudio") &&
+    game.includes("audioDependencies.createAudioSystem({ sfxDefs })") &&
+    audio.includes("setMuted")
+);
 check("sprite drawing caches rasterized sizes", sprites.includes("spriteCache") && sprites.includes("rasterizedSprite") && sprites.includes("OffscreenCanvas"));
 check("sprite cache trims transparent padding", sprites.includes("trimmedSpriteBounds") && sprites.includes("getImageData") && sprites.includes("spriteBounds"));
 check("sprite atlases support animated frames", sprites.includes("currentFrameIndex") && sprites.includes("transparentColor") && sprites.includes("spriteSourceBounds"));
