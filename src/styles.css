@@ -769,3 +769,10 @@ section + section {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 363px) {
+  .fullscreen-button {
+    top: 56px;
+    right: 12px;
+  }
+}
