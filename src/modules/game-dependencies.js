@@ -20,6 +20,7 @@ import { createPickupSystem } from "./pickups.js";
 import { createProgressionSystem } from "./progression.js";
 import { createQuestSystem, questOpenIds } from "./quests.js";
 import { createRelicSystem } from "./relics.js";
+import { createSkillRailRenderer } from "./render-skill-rail.js";
 import { createSaveLoadHandler } from "./save-corruption.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
 import { isPlainObject, migrateSave } from "./save-migrations.js";
@@ -120,7 +121,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     relics: { createRelicSystem },
     renderEnemies: requireGlobal(globalRef, "TapSurvivorRenderEnemies"),
     renderHud: requireGlobal(globalRef, "TapSurvivorRenderHud"),
-    renderSkillRail: requireGlobal(globalRef, "TapSurvivorRenderSkillRail"),
+    renderSkillRail: { createSkillRailRenderer },
     rendering: requireGlobal(globalRef, "TapSurvivorRendering"),
     runLifecycle: { createRunLifecycle },
     runState: { createRunStateSystem },

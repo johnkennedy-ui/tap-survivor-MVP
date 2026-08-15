@@ -228,6 +228,12 @@ const bridges = [
     ],
   },
   {
+    source: "src/modules/render-skill-rail.js",
+    target: "src/render-skill-rail.js",
+    globalName: "TapSurvivorRenderSkillRail",
+    exports: ["createSkillRailRenderer"],
+  },
+  {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
     globalName: "TapSurvivorGameDependencies",
@@ -371,6 +377,10 @@ const bridges = [
       {
         source: "src/modules/relics.js",
         exports: ["createRelicSystem"],
+      },
+      {
+        source: "src/modules/render-skill-rail.js",
+        exports: ["createSkillRailRenderer"],
       },
       {
         source: "src/modules/shop-pricing.js",
