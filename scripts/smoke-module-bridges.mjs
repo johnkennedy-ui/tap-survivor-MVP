@@ -235,7 +235,6 @@ const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
-const bridgeRenderHud = renderHudBridge.context.TapSurvivorRenderHud;
 const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
 const bridgeCombat = combatBridge.context.TapSurvivorCombat;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
@@ -1335,9 +1334,12 @@ check(
 check("module exports createHudRenderer", typeof createModuleHudRenderer === "function");
 check("render HUD bridge source has generated banner", hasGeneratedBanner(renderHudBridge.source));
 check(
-  "render HUD bridge preserves the TapSurvivorRenderHud compatibility publisher",
-  typeof bridgeRenderHud?.createHudRenderer === "function" &&
-    renderHudBridge.source.includes("globalThis.TapSurvivorRenderHud =")
+  "render HUD bridge is global-free with retired provenance",
+  renderHudBridge.context.TapSurvivorRenderHud === undefined &&
+    !renderHudBridge.source.includes("globalThis.TapSurvivorRenderHud") &&
+    renderHudBridge.source.includes(
+      "// Retired global: TapSurvivorRenderHud. Exports are supplied through the game dependency bag."
+    )
 );
 check(
   "native HUD renderer source owns its factory without ambient global readers",
@@ -1349,10 +1351,10 @@ check(
     )
 );
 const moduleHudSnapshot = hudSnapshot(createModuleHudRenderer);
-const bridgeHudSnapshot = hudSnapshot(bridgeRenderHud.createHudRenderer);
 check(
-  "native and compatibility HUD renderer APIs and output match",
-  JSON.stringify(moduleHudSnapshot) === JSON.stringify(bridgeHudSnapshot)
+  "native HUD renderer exposes its stable API and output",
+  moduleHudSnapshot.api.join(",") ===
+    "drawBossSpawnNotice,drawBossSpecialBar,drawGameHud,drawTowerFloorBadge"
 );
 check(
   "native HUD renderer preserves boss and skill-rail rendering",
@@ -1564,16 +1566,16 @@ check(
   )
 );
 check(
-  "native and generated dependency bags survive missing and poisoned classic HUD publishers and recover",
+  "native and generated dependency bags survive missing and poisoned retired HUD globals and recover",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
     (snapshot) =>
-      snapshot.missingHudClassicPublisherError === "" &&
-      snapshot.missingHudClassicPublisherFactory &&
-      snapshot.poisonedHudClassicPublisherError === "" &&
-      snapshot.poisonedHudClassicPublisherFactory &&
-      snapshot.recoveredHudClassicPublisherError === "" &&
-      snapshot.recoveredHudClassicPublisherFactory &&
-      snapshot.hudClassicPublisherReads === 0
+      snapshot.missingHudRetiredGlobalError === "" &&
+      snapshot.missingHudRetiredGlobalFactory &&
+      snapshot.poisonedHudRetiredGlobalError === "" &&
+      snapshot.poisonedHudRetiredGlobalFactory &&
+      snapshot.recoveredHudRetiredGlobalError === "" &&
+      snapshot.recoveredHudRetiredGlobalFactory &&
+      snapshot.hudRetiredGlobalReads === 0
   )
 );
 const moduleDependencyBagHudSnapshot = hudSnapshot(
@@ -2975,6 +2977,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorInput",
     "TapSurvivorPickups",
     "TapSurvivorRelics",
+    "TapSurvivorRenderHud",
     "TapSurvivorRenderSkillRail",
     "TapSurvivorRunUpdate",
     "TapSurvivorSave",
@@ -3148,43 +3151,43 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     noAudioPublisherGlobalRef,
     documentRef
   );
-  const missingHudClassicPublisherGlobalRef = { ...globalRef };
-  Reflect.deleteProperty(missingHudClassicPublisherGlobalRef, "TapSurvivorRenderHud");
-  const missingHudClassicPublisherResult = createGameDependencyBagResult(
+  const missingHudRetiredGlobalRef = { ...globalRef };
+  Reflect.deleteProperty(missingHudRetiredGlobalRef, "TapSurvivorRenderHud");
+  const missingHudRetiredGlobalResult = createGameDependencyBagResult(
     createGameDependencyBag,
-    missingHudClassicPublisherGlobalRef,
+    missingHudRetiredGlobalRef,
     documentRef
   );
-  const poisonedHudClassicPublisherGlobalRef = { ...globalRef };
-  const hudClassicPublisherDescriptor = Object.getOwnPropertyDescriptor(
-    poisonedHudClassicPublisherGlobalRef,
+  const poisonedHudRetiredGlobalRef = { ...globalRef };
+  const hudRetiredGlobalDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedHudRetiredGlobalRef,
     "TapSurvivorRenderHud"
   );
-  let hudClassicPublisherReads = 0;
-  Object.defineProperty(poisonedHudClassicPublisherGlobalRef, "TapSurvivorRenderHud", {
+  let hudRetiredGlobalReads = 0;
+  Object.defineProperty(poisonedHudRetiredGlobalRef, "TapSurvivorRenderHud", {
     configurable: true,
     get() {
-      hudClassicPublisherReads += 1;
+      hudRetiredGlobalReads += 1;
       throw new Error("Forbidden TapSurvivorRenderHud global read");
     },
   });
-  const poisonedHudClassicPublisherResult = createGameDependencyBagResult(
+  const poisonedHudRetiredGlobalResult = createGameDependencyBagResult(
     createGameDependencyBag,
-    poisonedHudClassicPublisherGlobalRef,
+    poisonedHudRetiredGlobalRef,
     documentRef
   );
-  if (hudClassicPublisherDescriptor) {
+  if (hudRetiredGlobalDescriptor) {
     Object.defineProperty(
-      poisonedHudClassicPublisherGlobalRef,
+      poisonedHudRetiredGlobalRef,
       "TapSurvivorRenderHud",
-      hudClassicPublisherDescriptor
+      hudRetiredGlobalDescriptor
     );
   } else {
-    Reflect.deleteProperty(poisonedHudClassicPublisherGlobalRef, "TapSurvivorRenderHud");
+    Reflect.deleteProperty(poisonedHudRetiredGlobalRef, "TapSurvivorRenderHud");
   }
-  const recoveredHudClassicPublisherResult = createGameDependencyBagResult(
+  const recoveredHudRetiredGlobalResult = createGameDependencyBagResult(
     createGameDependencyBag,
-    poisonedHudClassicPublisherGlobalRef,
+    poisonedHudRetiredGlobalRef,
     documentRef
   );
   const missingSkillRailRetiredGlobalResult = createGameDependencyBagResult(
@@ -3547,16 +3550,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     poisonedAudioPublisherSnapshot: audioProviderSnapshot(poisonedAudioPublisherResult.bag),
     recoveredAudioPublisherError: recoveredAudioPublisherResult.error,
     recoveredAudioPublisherSnapshot: audioProviderSnapshot(recoveredAudioPublisherResult.bag),
-    missingHudClassicPublisherError: missingHudClassicPublisherResult.error,
-    missingHudClassicPublisherFactory:
-      typeof missingHudClassicPublisherResult.bag?.renderHud?.createHudRenderer === "function",
-    poisonedHudClassicPublisherError: poisonedHudClassicPublisherResult.error,
-    poisonedHudClassicPublisherFactory:
-      typeof poisonedHudClassicPublisherResult.bag?.renderHud?.createHudRenderer === "function",
-    recoveredHudClassicPublisherError: recoveredHudClassicPublisherResult.error,
-    recoveredHudClassicPublisherFactory:
-      typeof recoveredHudClassicPublisherResult.bag?.renderHud?.createHudRenderer === "function",
-    hudClassicPublisherReads,
+    missingHudRetiredGlobalError: missingHudRetiredGlobalResult.error,
+    missingHudRetiredGlobalFactory:
+      typeof missingHudRetiredGlobalResult.bag?.renderHud?.createHudRenderer === "function",
+    poisonedHudRetiredGlobalError: poisonedHudRetiredGlobalResult.error,
+    poisonedHudRetiredGlobalFactory:
+      typeof poisonedHudRetiredGlobalResult.bag?.renderHud?.createHudRenderer === "function",
+    recoveredHudRetiredGlobalError: recoveredHudRetiredGlobalResult.error,
+    recoveredHudRetiredGlobalFactory:
+      typeof recoveredHudRetiredGlobalResult.bag?.renderHud?.createHudRenderer === "function",
+    hudRetiredGlobalReads,
     missingSkillRailRetiredGlobalError: missingSkillRailRetiredGlobalResult.error,
     missingSkillRailRetiredGlobalFactory:
       typeof missingSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",

@@ -416,13 +416,16 @@ check(
     game.includes("progression.createProgressionSystem")
 );
 check(
-  "shared HUD renderer is source-owned with retained publisher and direct dependency-bag injection",
+  "shared HUD renderer is source-owned with retired publisher provenance and direct dependency-bag injection",
   nativeRenderHud.includes('import { createSkillRailRenderer } from "./render-skill-rail.js"') &&
     nativeRenderHud.includes("export function createHudRenderer") &&
     !nativeRenderHud.includes("TapSurvivorRenderHud") &&
     !nativeRenderHud.includes("globalThis") &&
     renderHud.includes("// GENERATED FILE.") &&
-    renderHud.includes("globalThis.TapSurvivorRenderHud =") &&
+    renderHud.includes(
+      "// Retired global: TapSurvivorRenderHud. Exports are supplied through the game dependency bag."
+    ) &&
+    !renderHud.includes("globalThis.TapSurvivorRenderHud") &&
     !renderSkillRail.includes("globalThis.TapSurvivorRenderSkillRail") &&
     renderSkillRail.includes(
       "// Retired global: TapSurvivorRenderSkillRail. Exports are supplied through the game dependency bag."

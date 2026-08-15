@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/render-hud.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRenderHud. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -405,8 +406,4 @@
       drawTowerFloorBadge,
     };
   }
-
-  globalThis.TapSurvivorRenderHud = {
-    createHudRenderer,
-  };
 })();

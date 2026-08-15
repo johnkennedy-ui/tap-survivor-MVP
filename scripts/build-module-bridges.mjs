@@ -237,7 +237,8 @@ const bridges = [
   {
     source: "src/modules/render-hud.js",
     target: "src/render-hud.js",
-    globalName: "TapSurvivorRenderHud",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRenderHud",
     exports: ["createHudRenderer"],
     bundledSources: [
       {

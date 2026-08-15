@@ -4,7 +4,6 @@
     "globalThis.TapSurvivorContent",
     "globalThis.TapSurvivorGameDependencies",
     "globalThis.TapSurvivorRenderEnemies",
-    "globalThis.TapSurvivorRenderHud",
     "globalThis.TapSurvivorRendering",
     "globalThis.TapSurvivorSprites",
     "globalThis.TapSurvivorStorage"
@@ -29,7 +28,6 @@
     "src/modules/save-normalize.js": 0,
     "src/modules/save.js": 0,
     "src/render-enemies.js": 1,
-    "src/render-hud.js": 1,
     "src/rendering.js": 1,
     "src/run-lifecycle.js": 0,
     "src/run-state.js": 0,
