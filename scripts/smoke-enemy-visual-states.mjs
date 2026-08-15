@@ -2,12 +2,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 
+import { createEnemyRenderer } from "../src/modules/render-enemies.js";
+
 const root = new URL("..", import.meta.url).pathname;
 const context = { console };
 vm.createContext(context);
-["src/content.generated.js", "src/render-enemies.js"].forEach((path) => {
-  vm.runInContext(readFileSync(join(root, path), "utf8"), context);
-});
+vm.runInContext(readFileSync(join(root, "src/content.generated.js"), "utf8"), context);
 
 let failed = false;
 
@@ -16,7 +16,7 @@ function check(name, pass) {
   if (!pass) failed = true;
 }
 
-const renderer = context.TapSurvivorRenderEnemies.createEnemyRenderer({
+const renderer = createEnemyRenderer({
   ctx: {},
   drawSprite() {
     return false;
