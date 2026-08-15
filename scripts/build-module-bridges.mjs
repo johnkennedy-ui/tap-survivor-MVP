@@ -230,7 +230,8 @@ const bridges = [
   {
     source: "src/modules/render-skill-rail.js",
     target: "src/render-skill-rail.js",
-    globalName: "TapSurvivorRenderSkillRail",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRenderSkillRail",
     exports: ["createSkillRailRenderer"],
   },
   {

@@ -415,10 +415,15 @@ check(
     game.includes("progression.createProgressionSystem")
 );
 check(
-  "shared HUD renderer helper exists",
+  "shared HUD renderer helper and dependency-injected skill rail renderer exist",
   renderHud.includes("TapSurvivorRenderHud") &&
-    renderSkillRail.includes("TapSurvivorRenderSkillRail") &&
+    !renderSkillRail.includes("globalThis.TapSurvivorRenderSkillRail") &&
+    renderSkillRail.includes(
+      "// Retired global: TapSurvivorRenderSkillRail. Exports are supplied through the game dependency bag."
+    ) &&
     runtimeEntry.includes("TapSurvivorRenderHud") &&
+    moduleGameDependencies.includes("renderSkillRail: { createSkillRailRenderer }") &&
+    gameDependencies.includes("renderSkillRail: { createSkillRailRenderer }") &&
     rendering.includes("createHudRenderer") &&
     !rendering.includes("globalThis.TapSurvivorRenderHud"),
 );

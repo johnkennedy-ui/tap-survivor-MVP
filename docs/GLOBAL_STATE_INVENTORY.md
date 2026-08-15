@@ -61,8 +61,9 @@ Generated content globals:
 - `src/render-hud.js` still owns the `TapSurvivorRenderHud` compatibility bridge. `src/rendering.js` now receives
   `createHudRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderHud`; `src/game.js` remains
   the script-order bootstrap reader until the rendering stack can safely become ESM.
-- `src/render-skill-rail.js` still owns the `TapSurvivorRenderSkillRail` compatibility bridge. `src/render-hud.js` now
-  receives `createSkillRailRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderSkillRail`.
+- `src/render-skill-rail.js` is a generated, global-free artifact with retired `TapSurvivorRenderSkillRail` provenance.
+  `src/render-hud.js` and the classic dependency bag receive `createSkillRailRenderer` through factory wiring instead of
+  reading a compatibility publisher.
 - `src/render-enemies.js` still owns the `TapSurvivorRenderEnemies` compatibility bridge. `src/rendering.js` now receives
   `createEnemyRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderEnemies`; `src/game.js`
   remains the script-order bootstrap reader until the rendering stack can safely become ESM.
@@ -153,9 +154,9 @@ Runtime module globals:
 - Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
   supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
-- Rendering/UI: `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`, `TapSurvivorRenderEnemies`,
-  and `TapSurvivorRenderSkillRail`. The former `TapSurvivorShellUi`, `TapSurvivorUi`,
-  `TapSurvivorUiProgression`, and `TapSurvivorShellRelicUi` publishers are dependency-injected.
+- Rendering/UI: `TapSurvivorSprites`, `TapSurvivorRendering`, `TapSurvivorRenderHud`, and `TapSurvivorRenderEnemies`.
+  The former `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`, `TapSurvivorUi`, `TapSurvivorUiProgression`, and
+  `TapSurvivorShellRelicUi` publishers are dependency-injected.
 - Gameplay systems: the native `createRunUpdater` plus the retired combat, pickup, relic, and enemy factories are
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and
@@ -168,7 +169,7 @@ Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 10 actual usages (9 allowed expressions and 16 allowed usages); the allowlist does not count bare
+  dot-expression global audit is 9 actual usages (8 allowed expressions and 15 allowed usages); the allowlist does not count bare
   `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Debug, Audio, Shell
   UI, and input are supplied through source-owned providers for the next migration batch.
 - Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;

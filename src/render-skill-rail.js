@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/render-skill-rail.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRenderSkillRail. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -294,8 +295,4 @@
     }
     return /** @type {NonNullable<T>} */ (value);
   }
-
-  globalThis.TapSurvivorRenderSkillRail = {
-    createSkillRailRenderer,
-  };
 })();

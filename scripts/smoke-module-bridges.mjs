@@ -232,7 +232,6 @@ const bridgeRelics = relicsBridge.context.TapSurvivorRelics;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
-const bridgeSkillRail = skillRailBridge.context.TapSurvivorRenderSkillRail;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
 const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
 const bridgeCombat = combatBridge.context.TapSurvivorCombat;
@@ -1307,12 +1306,14 @@ check(
 );
 check("skill rail bridge source has generated banner", hasGeneratedBanner(skillRailBridge.source));
 check(
-  "skill rail bridge preserves the classic publisher",
-  typeof bridgeSkillRail?.createSkillRailRenderer === "function" &&
-    skillRailBridge.source.includes("globalThis.TapSurvivorRenderSkillRail")
+  "skill rail bridge is global-free with retired provenance",
+  skillRailBridge.context.TapSurvivorRenderSkillRail === undefined &&
+    !skillRailBridge.source.includes("globalThis.TapSurvivorRenderSkillRail") &&
+    skillRailBridge.source.includes(
+      "// Retired global: TapSurvivorRenderSkillRail. Exports are supplied through the game dependency bag."
+    )
 );
 const moduleSkillRailSnapshot = skillRailSnapshot(createModuleSkillRailRenderer);
-const bridgeSkillRailSnapshot = skillRailSnapshot(bridgeSkillRail.createSkillRailRenderer);
 check(
   "native skill rail factory renders equipped weapon and active upgrade rails",
   moduleSkillRailSnapshot.api.join(",") === "drawSkillRail,drawUpgradeRail" &&
@@ -1320,10 +1321,6 @@ check(
     moduleSkillRailSnapshot.spriteIds.join(",") ===
       "weaponIcon:arc_bolt,weapon:arc_bolt,runUpgradeIcon:rapid_fire" &&
     moduleSkillRailSnapshot.textLabels.join(",") === "2"
-);
-check(
-  "generated classic skill rail publisher matches native factory behavior",
-  JSON.stringify(moduleSkillRailSnapshot) === JSON.stringify(bridgeSkillRailSnapshot)
 );
 const skillRailDependencyErrors = skillRailFactoryDependencyErrors(createModuleSkillRailRenderer);
 check(
@@ -1508,16 +1505,16 @@ check(
     createModuleSkillRailRenderer
 );
 check(
-  "native and generated dependency bags survive unavailable skill rail publishers and recover",
+  "native and generated dependency bags survive missing and poisoned retired skill rail globals and recover",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
     (snapshot) =>
-      snapshot.absentSkillRailPublisherError === "" &&
-      snapshot.absentSkillRailPublisherFactory &&
-      snapshot.poisonedSkillRailPublisherError === "" &&
-      snapshot.poisonedSkillRailPublisherFactory &&
-      snapshot.recoveredSkillRailPublisherError === "" &&
-      snapshot.recoveredSkillRailPublisherFactory &&
-      snapshot.skillRailPublisherReads === 0
+      snapshot.missingSkillRailRetiredGlobalError === "" &&
+      snapshot.missingSkillRailRetiredGlobalFactory &&
+      snapshot.poisonedSkillRailRetiredGlobalError === "" &&
+      snapshot.poisonedSkillRailRetiredGlobalFactory &&
+      snapshot.recoveredSkillRailRetiredGlobalError === "" &&
+      snapshot.recoveredSkillRailRetiredGlobalFactory &&
+      snapshot.skillRailRetiredGlobalReads === 0
   )
 );
 const moduleMovementInputSnapshot = movementInputSnapshot(bindModuleMovementInput);
@@ -2839,6 +2836,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorInput",
     "TapSurvivorPickups",
     "TapSurvivorRelics",
+    "TapSurvivorRenderSkillRail",
     "TapSurvivorRunUpdate",
     "TapSurvivorSave",
     "TapSurvivorSaveDefaults",
@@ -3011,41 +3009,41 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     noAudioPublisherGlobalRef,
     documentRef
   );
-  const absentSkillRailPublisherResult = createGameDependencyBagResult(
+  const missingSkillRailRetiredGlobalResult = createGameDependencyBagResult(
     createGameDependencyBag,
     globalRef,
     documentRef
   );
-  const poisonedSkillRailPublisherGlobalRef = { ...globalRef };
-  const skillRailPublisherDescriptor = Object.getOwnPropertyDescriptor(
-    poisonedSkillRailPublisherGlobalRef,
+  const poisonedSkillRailRetiredGlobalRef = { ...globalRef };
+  const skillRailRetiredGlobalDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedSkillRailRetiredGlobalRef,
     "TapSurvivorRenderSkillRail"
   );
-  let skillRailPublisherReads = 0;
-  Object.defineProperty(poisonedSkillRailPublisherGlobalRef, "TapSurvivorRenderSkillRail", {
+  let skillRailRetiredGlobalReads = 0;
+  Object.defineProperty(poisonedSkillRailRetiredGlobalRef, "TapSurvivorRenderSkillRail", {
     configurable: true,
     get() {
-      skillRailPublisherReads += 1;
+      skillRailRetiredGlobalReads += 1;
       throw new Error("Forbidden TapSurvivorRenderSkillRail global read");
     },
   });
-  const poisonedSkillRailPublisherResult = createGameDependencyBagResult(
+  const poisonedSkillRailRetiredGlobalResult = createGameDependencyBagResult(
     createGameDependencyBag,
-    poisonedSkillRailPublisherGlobalRef,
+    poisonedSkillRailRetiredGlobalRef,
     documentRef
   );
-  if (skillRailPublisherDescriptor) {
+  if (skillRailRetiredGlobalDescriptor) {
     Object.defineProperty(
-      poisonedSkillRailPublisherGlobalRef,
+      poisonedSkillRailRetiredGlobalRef,
       "TapSurvivorRenderSkillRail",
-      skillRailPublisherDescriptor
+      skillRailRetiredGlobalDescriptor
     );
   } else {
-    Reflect.deleteProperty(poisonedSkillRailPublisherGlobalRef, "TapSurvivorRenderSkillRail");
+    Reflect.deleteProperty(poisonedSkillRailRetiredGlobalRef, "TapSurvivorRenderSkillRail");
   }
-  const recoveredSkillRailPublisherResult = createGameDependencyBagResult(
+  const recoveredSkillRailRetiredGlobalResult = createGameDependencyBagResult(
     createGameDependencyBag,
-    poisonedSkillRailPublisherGlobalRef,
+    poisonedSkillRailRetiredGlobalRef,
     documentRef
   );
   const missingRetiredPublisherResult = createGameDependencyBagResult(
@@ -3370,16 +3368,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     poisonedAudioPublisherSnapshot: audioProviderSnapshot(poisonedAudioPublisherResult.bag),
     recoveredAudioPublisherError: recoveredAudioPublisherResult.error,
     recoveredAudioPublisherSnapshot: audioProviderSnapshot(recoveredAudioPublisherResult.bag),
-    absentSkillRailPublisherError: absentSkillRailPublisherResult.error,
-    absentSkillRailPublisherFactory:
-      typeof absentSkillRailPublisherResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
-    poisonedSkillRailPublisherError: poisonedSkillRailPublisherResult.error,
-    poisonedSkillRailPublisherFactory:
-      typeof poisonedSkillRailPublisherResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
-    recoveredSkillRailPublisherError: recoveredSkillRailPublisherResult.error,
-    recoveredSkillRailPublisherFactory:
-      typeof recoveredSkillRailPublisherResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
-    skillRailPublisherReads,
+    missingSkillRailRetiredGlobalError: missingSkillRailRetiredGlobalResult.error,
+    missingSkillRailRetiredGlobalFactory:
+      typeof missingSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
+    poisonedSkillRailRetiredGlobalError: poisonedSkillRailRetiredGlobalResult.error,
+    poisonedSkillRailRetiredGlobalFactory:
+      typeof poisonedSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
+    recoveredSkillRailRetiredGlobalError: recoveredSkillRailRetiredGlobalResult.error,
+    recoveredSkillRailRetiredGlobalFactory:
+      typeof recoveredSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
+    skillRailRetiredGlobalReads,
     missingRetiredPublisherError: missingRetiredPublisherResult.error,
     absentInputError: absentInputResult.error,
     absentInputBinder: typeof absentInputResult.bag?.input?.bindMovementInput === "function",
