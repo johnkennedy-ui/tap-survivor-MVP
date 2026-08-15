@@ -464,13 +464,17 @@ check(
     !rendering.includes("globalThis.TapSurvivorRenderEnemies"),
 );
 check(
-  "rendering factory is source-owned with a retained compatibility publisher and direct dependency-bag injection",
+  "rendering factory is source-owned, globally retired, and direct dependency-injected",
   nativeRendering.includes("export function createRenderer") &&
     !nativeRendering.includes("TapSurvivorRendering") &&
     !nativeRendering.includes("globalThis") &&
     rendering.includes("// GENERATED FILE.") &&
     rendering.includes("// Source: src/modules/rendering.js") &&
-    rendering.includes("globalThis.TapSurvivorRendering =") &&
+    rendering.includes(
+      "// Retired global: TapSurvivorRendering. Exports are supplied through the game dependency bag."
+    ) &&
+    !rendering.includes("globalThis.TapSurvivorRendering") &&
+    rendering.includes("function createRenderer") &&
     moduleGameDependencies.includes('import { createRenderer } from "./rendering.js"') &&
     moduleGameDependencies.includes("rendering: { createRenderer }") &&
     !moduleGameDependencies.includes("TapSurvivorRendering") &&

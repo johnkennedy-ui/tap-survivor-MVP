@@ -261,7 +261,8 @@ const bridges = [
   {
     source: "src/modules/rendering.js",
     target: "src/rendering.js",
-    globalName: "TapSurvivorRendering",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRendering",
     exports: ["createRenderer"],
   },
   {

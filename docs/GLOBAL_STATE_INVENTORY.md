@@ -73,11 +73,10 @@ Generated content globals:
   dependency bags inject the factory directly, while `src/rendering.js` receives it through factory wiring instead of
   reading a legacy publisher; `src/game.js` remains the script-order bootstrap reader until the rendering stack can
   safely become ESM.
-- Preparation-only rendering bridge: `src/modules/rendering.js` now owns `createRenderer` without reading
-  `TapSurvivorRendering`; generated `src/rendering.js` remains source-derived and continues to publish
-  `TapSurvivorRendering` for the classic fallback boundary. The native and generated dependency bags inject
-  `rendering.createRenderer` directly, while `src/game.js` and script order remain unchanged. This does not retire
-  the publisher or change the global audit.
+- `src/modules/rendering.js` owns `createRenderer` without reading `TapSurvivorRendering`; generated
+  `src/rendering.js` is source-derived and records retired `TapSurvivorRendering` provenance without a compatibility
+  publisher. The native and generated dependency bags inject `rendering.createRenderer` directly, while `src/game.js`
+  and script order remain unchanged.
 - `src/rendering.js` receives weapon skill-effect sprite metadata through factory wiring instead of reading
   `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
 - `src/render-hud.js` now receives run-upgrade definitions through `src/rendering.js` factory wiring instead of reading
@@ -166,11 +165,11 @@ Runtime module globals:
 - Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
   supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
-- Rendering/UI: `TapSurvivorSprites` and `TapSurvivorRendering`; source-owned renderer and enemy-renderer factories
-  are directly dependency-injected through `TapSurvivorGameDependencies`. `TapSurvivorRendering` remains the
-  unchanged classic compatibility publisher; the former `TapSurvivorRenderEnemies`, `TapSurvivorRenderHud`,
-  `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`, `TapSurvivorUi`, `TapSurvivorUiProgression`, and
-  `TapSurvivorShellRelicUi` publishers are retired and dependency-injected.
+- Rendering/UI: `TapSurvivorSprites`; source-owned renderer and enemy-renderer factories are directly
+  dependency-injected through `TapSurvivorGameDependencies`. `TapSurvivorRendering` is retired alongside
+  `TapSurvivorRenderEnemies`, `TapSurvivorRenderHud`, `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`,
+  `TapSurvivorUi`, `TapSurvivorUiProgression`, and `TapSurvivorShellRelicUi`; their factories remain explicitly
+  injected.
 - Gameplay systems: the native `createRunUpdater` plus the retired combat, pickup, relic, and enemy factories are
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and
@@ -183,7 +182,7 @@ Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 7 actual usages (6 allowed expressions and 13 allowed usages); the allowlist does not count bare
+  dot-expression global audit is 6 actual usages (5 allowed expressions and 12 allowed usages); the allowlist does not count bare
   `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Debug, Audio, Shell
   UI, and input are supplied through source-owned providers for the next migration batch.
 - Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;

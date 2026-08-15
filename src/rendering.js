@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/rendering.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRendering. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -345,8 +346,4 @@
 
     return { draw };
   }
-
-  globalThis.TapSurvivorRendering = {
-    createRenderer,
-  };
 })();

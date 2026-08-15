@@ -248,7 +248,6 @@ const bridgeRunUpdate = runUpdateBridge.context.TapSurvivorRunUpdate;
 const bridgePickups = pickupsBridge.context.TapSurvivorPickups;
 const bridgeCombatDamage = combatDamageBridge.context.TapSurvivorCombatDamage;
 const bridgeShellRelicUi = shellRelicUiBridge.context.TapSurvivorShellRelicUi;
-const bridgeRendering = renderingBridge.context.TapSurvivorRendering;
 const createBridgePickupSystem = createModulePickupSystem;
 const createBridgeRelicSystem = createModuleRelicSystem;
 
@@ -1428,10 +1427,13 @@ check(
 check("module exports createRenderer", typeof createModuleRenderer === "function");
 check("rendering bridge source has generated banner", hasGeneratedBanner(renderingBridge.source));
 check(
-  "rendering bridge retains the classic TapSurvivorRendering publisher",
-  typeof bridgeRendering?.createRenderer === "function" &&
+  "rendering bridge retires the classic TapSurvivorRendering publisher with generated provenance",
+  renderingBridge.context.TapSurvivorRendering === undefined &&
     renderingBridge.source.includes("// Source: src/modules/rendering.js") &&
-    renderingBridge.source.includes("globalThis.TapSurvivorRendering =")
+    renderingBridge.source.includes(
+      "// Retired global: TapSurvivorRendering. Exports are supplied through the game dependency bag."
+    ) &&
+    !renderingBridge.source.includes("globalThis.TapSurvivorRendering")
 );
 check(
   "native rendering source owns its factory without ambient global readers",
@@ -1451,11 +1453,9 @@ check(
     !gameDependenciesBridge.source.includes('"TapSurvivorRendering"')
 );
 const moduleRenderingSnapshot = renderingSnapshot(createModuleRenderer);
-const classicRenderingSnapshot = renderingSnapshot(bridgeRendering.createRenderer);
 check(
-  "source-owned and retained-classic rendering factories preserve menu rendering parity",
-  JSON.stringify(moduleRenderingSnapshot) === JSON.stringify(classicRenderingSnapshot) &&
-    moduleRenderingSnapshot.api.join(",") === "draw" &&
+  "source-owned rendering factory preserves menu rendering behavior",
+  moduleRenderingSnapshot.api.join(",") === "draw" &&
     moduleRenderingSnapshot.floorBadgeCalls === 1 &&
     moduleRenderingSnapshot.textLabels.join(",") ===
       "Tap Survivor,Unlock weapons, then start a run."
@@ -1675,7 +1675,7 @@ check(
   )
 );
 check(
-  "native and generated dependency bags preserve the injected renderer with missing, poisoned, and restored legacy globals without reads",
+  "native and generated dependency bags preserve the injected renderer with absent, poisoned, and restored retired globals without reads",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
     (snapshot) =>
       snapshot.missingRenderingGlobalError === "" &&
@@ -3222,7 +3222,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorProgression",
     "TapSurvivorQuests",
-    "TapSurvivorRendering",
     "TapSurvivorSprites",
     "TapSurvivorStorage",
     "TapSurvivorUi",
@@ -3265,6 +3264,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorInput",
     "TapSurvivorPickups",
     "TapSurvivorRelics",
+    "TapSurvivorRendering",
     "TapSurvivorRenderHud",
     "TapSurvivorRenderSkillRail",
     "TapSurvivorRunUpdate",

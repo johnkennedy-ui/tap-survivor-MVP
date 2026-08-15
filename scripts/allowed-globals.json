@@ -3,7 +3,6 @@
     "globalThis.TapSurvivorBalanceRuntime",
     "globalThis.TapSurvivorContent",
     "globalThis.TapSurvivorGameDependencies",
-    "globalThis.TapSurvivorRendering",
     "globalThis.TapSurvivorSprites",
     "globalThis.TapSurvivorStorage"
   ],
@@ -27,7 +26,6 @@
     "src/modules/save-normalize.js": 0,
     "src/modules/save.js": 0,
     "src/render-enemies.js": 0,
-    "src/rendering.js": 1,
     "src/run-lifecycle.js": 0,
     "src/run-state.js": 0,
     "src/run-ui.js": 0,
