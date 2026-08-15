@@ -37,6 +37,7 @@ const audio = readRequired("src/audio.js");
 const nativeAudioAdapter = readRequired("src/modules/module-runtime-audio-adapter.js");
 const quests = readRequired("src/quests.js");
 const storageAdapter = readRequired("src/storage-adapter.js");
+const nativeStorageAdapter = readRequired("src/modules/storage-adapter.js");
 const saveDefaults = readRequired("src/save-defaults.js");
 const saveMigrations = readRequired("src/save-migrations.js");
 const saveNormalize = readRequired("src/save-normalize.js");
@@ -343,6 +344,23 @@ check(
     gameDependencies.includes("      save,") &&
     game.includes("saveDependencies.createSaveSystem") &&
     storageAdapter.includes("TapSurvivorStorage"),
+);
+check(
+  "storage provider is source-owned while the generated publisher remains a compatibility boundary",
+  nativeStorageAdapter.includes("export function createStorageProvider") &&
+    !nativeStorageAdapter.includes("TapSurvivorStorage") &&
+    !nativeStorageAdapter.includes("globalThis") &&
+    storageAdapter.includes("// GENERATED FILE.") &&
+    storageAdapter.includes("// Source: src/modules/storage-adapter.js") &&
+    storageAdapter.includes("globalThis.TapSurvivorStorage = createStorageProvider();") &&
+    moduleGameDependencies.includes(
+      'import { createStorageProvider } from "./storage-adapter.js";'
+    ) &&
+    moduleGameDependencies.includes("const storage = createStorageProvider({") &&
+    moduleGameDependencies.includes("    storage,") &&
+    !moduleGameDependencies.includes("TapSurvivorStorage") &&
+    gameDependencies.includes("function createStorageProvider") &&
+    !gameDependencies.includes("TapSurvivorStorage"),
 );
 check(
   "shared math helpers exist",

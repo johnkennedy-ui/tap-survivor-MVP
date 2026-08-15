@@ -17,7 +17,10 @@ Tap Survivor uses one shared save API and one shared save schema across GitHub.i
 
 ## Storage Backend Decision
 
-All save reads, writes, resets, corrupt-save backups, and lifecycle flushes go through `src/storage-adapter.js` and `src/save.js`.
+All save reads, writes, resets, corrupt-save backups, and lifecycle flushes use the source-owned
+`src/modules/storage-adapter.js` provider and `src/save.js`. `src/storage-adapter.js` is the generated retained
+`TapSurvivorStorage` compatibility publisher; native and generated dependency bags receive their own source-created
+provider directly.
 
 - GitHub.io/web backend: `localStorage`
 - Android/Capacitor preferred backend: `Capacitor.Plugins.Preferences`
@@ -33,7 +36,10 @@ The save schema and save API stay the same on every platform.
 - `src/save-migrations.js` owns save version migration behavior.
 - `src/save-normalize.js` owns partial-save repair, coercion, clamping, and unknown field preservation.
 - `src/save-corruption.js` owns corrupt JSON fallback and load-warning state.
-- `src/storage-adapter.js` owns browser and Capacitor storage backend access.
+- `src/modules/storage-adapter.js` owns browser and Capacitor storage backend access through explicit platform
+  capability resolvers.
+- `src/storage-adapter.js` is generated from that source module and retains the classic publisher API; do not edit it
+  directly.
 
 ## Load And Migration
 

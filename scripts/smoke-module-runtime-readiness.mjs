@@ -151,8 +151,10 @@ const classicUiProgressionSource = readFileSync(join(root, "src/ui-progression.j
 const classicWeaponBehaviorsSource = readFileSync(join(root, "src/weapon-behaviors.js"), "utf8");
 const classicWeaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "utf8");
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
+const classicStorageSource = readFileSync(join(root, "src/storage-adapter.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
 const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
+const nativeStorageAdapterSource = readFileSync(join(root, "src/modules/storage-adapter.js"), "utf8");
 const classicAssetsSource = readFileSync(join(root, "src/assets.js"), "utf8");
 const classicLevelUpSource = readFileSync(join(root, "src/level-up.js"), "utf8");
 const B1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
@@ -923,6 +925,19 @@ check(
     classicGameDependenciesSource.includes("      save,")
 );
 check(
+  "readiness sees source-owned storage injection without retiring the generated classic publisher",
+  nativeStorageAdapterSource.includes("export function createStorageProvider") &&
+    !nativeStorageAdapterSource.includes("TapSurvivorStorage") &&
+    !nativeStorageAdapterSource.includes("globalThis") &&
+    classicStorageSource.includes("// GENERATED FILE.") &&
+    classicStorageSource.includes("// Source: src/modules/storage-adapter.js") &&
+    classicStorageSource.includes("globalThis.TapSurvivorStorage = createStorageProvider();") &&
+    classicGameDependenciesSource.includes("const storage = createStorageProvider({") &&
+    !classicGameDependenciesSource.includes("TapSurvivorStorage") &&
+    !classicGameDependencyGlobalReads.includes("TapSurvivorStorage") &&
+    !classicEntrypointDependencies.includes("TapSurvivorStorage")
+);
+check(
   "readiness sees every B1 classic publisher retired with a dependency-bag provenance banner",
   B1_RETIRED_CLASSIC_PUBLISHER_NAMES.every((name) => {
     const source = classicB1RetiredPublisherSources[name];
@@ -1372,6 +1387,13 @@ const inventory = {
     remainingClassicOnlySlots: CLASSIC_ONLY_GAME_DEPENDENCY_SLOTS,
     moduleNativeSourceGlobalReads: moduleNativeGameDependencyGlobalReads,
     classicBridgeSourceGlobalReads: classicGameDependencyGlobalReads,
+  },
+  classicStorageProvider: {
+    sourceOwned: nativeStorageAdapterSource.includes("export function createStorageProvider"),
+    generatedPublisher: classicStorageSource.includes("globalThis.TapSurvivorStorage = createStorageProvider();"),
+    classicDependencyBagReadsStoragePublisher: classicGameDependencyGlobalReads.includes(
+      "TapSurvivorStorage"
+    ),
   },
   moduleGameLifecycleOwner: {
     proofSlots: MODULE_GAME_LIFECYCLE_OWNER_PROOF_SLOTS,

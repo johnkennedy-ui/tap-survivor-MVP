@@ -4,9 +4,11 @@ import vm from "node:vm";
 import { content } from "../src/content.generated.mjs";
 import { createSaveNormalizer } from "../src/modules/save-normalize.js";
 import { questOpenIds } from "../src/modules/quests.js";
+import { createStorageProvider } from "../src/modules/storage-adapter.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const questsSource = readFileSync(join(root, "src/quests.js"), "utf8");
+const nativeStorageSource = readFileSync(join(root, "src/modules/storage-adapter.js"), "utf8");
 const storageSource = readFileSync(join(root, "src/storage-adapter.js"), "utf8");
 const saveDefaultsSource = readFileSync(join(root, "src/save-defaults.js"), "utf8");
 const gameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
@@ -539,12 +541,167 @@ check(
   !storageSource.includes("globalThis.Capacitor") && !storageSource.includes("globalThis.localStorage")
 );
 
+const sourceStorageParity = await storageProviderParitySnapshot(createStorageProvider());
+const classicStorageParity = await storageProviderParitySnapshot(storagePublisher);
+check(
+  "source-owned and retained classic storage providers preserve the same public behavior",
+  JSON.stringify(sourceStorageParity) === JSON.stringify(classicStorageParity)
+);
+check(
+  "storage source owns the provider without an ambient classic global read",
+  nativeStorageSource.includes("export function createStorageProvider") &&
+    !nativeStorageSource.includes("TapSurvivorStorage") &&
+    !nativeStorageSource.includes("globalThis")
+);
+
 if (process.exitCode) {
   console.error("\nSave smoke failed.");
   process.exit(process.exitCode);
 }
 
 console.log("\nSave smoke passed.");
+
+async function storageProviderParitySnapshot(storageProvider) {
+  const currentKey = "storage-provider-current";
+  const legacyKey = "storage-provider-legacy";
+  const backupKey = "storage-provider-backup";
+  const localStorage = createStorageBackend();
+  const preferences = createPreferencesBackend();
+  const providerSelfReturn =
+    storageProvider.configureDefaultProviders({
+      platformCapabilities: {
+        getLocalStorage: () => localStorage,
+        getPreferences: () => preferences,
+      },
+    }) === storageProvider;
+  const preferencesAdapter = storageProvider.createStorageAdapter({
+    saveKey: currentKey,
+    legacySaveKey: legacyKey,
+    corruptBackupKey: backupKey,
+  });
+  const preferencesSet = await preferencesAdapter.setSaveRaw("preferences-current");
+  const preferencesCurrent = await preferencesAdapter.getSaveRaw();
+  preferences.values.delete(currentKey);
+  preferences.values.set(legacyKey, "preferences-legacy");
+  const preferencesLegacy = await preferencesAdapter.getSaveRaw();
+  const preferencesBackup = await preferencesAdapter.setCorruptBackupRaw("preferences-backup");
+  localStorage.setItem(currentKey, "local-current");
+  localStorage.setItem(legacyKey, "local-legacy");
+  const preferencesRemove = await preferencesAdapter.removeSaveRaw();
+
+  const fallbackStorage = createStorageBackend();
+  const failingPreferences = {
+    get() {
+      throw new Error("preferences unavailable");
+    },
+    remove() {
+      throw new Error("preferences unavailable");
+    },
+    set() {
+      throw new Error("preferences unavailable");
+    },
+  };
+  storageProvider.configureDefaultProviders({
+    platformCapabilities: {
+      getLocalStorage: () => fallbackStorage,
+      getPreferences: () => failingPreferences,
+    },
+  });
+  const fallbackAdapter = storageProvider.createStorageAdapter({
+    saveKey: currentKey,
+    legacySaveKey: legacyKey,
+    corruptBackupKey: backupKey,
+  });
+  const fallbackSet = await fallbackAdapter.setSaveRaw("fallback-current");
+  const fallbackCurrent = await fallbackAdapter.getSaveRaw();
+  const fallbackBackup = await fallbackAdapter.setCorruptBackupRaw("fallback-backup");
+  const fallbackRemove = await fallbackAdapter.removeSaveRaw();
+
+  let recoveredStorage = null;
+  storageProvider.configureDefaultProviders({
+    platformCapabilities: {
+      getLocalStorage: () => recoveredStorage,
+      getPreferences: () => null,
+    },
+  });
+  const recoveryAdapter = storageProvider.createStorageAdapter({
+    saveKey: currentKey,
+    legacySaveKey: legacyKey,
+  });
+  const unavailableRead = recoveryAdapter.getSaveRaw();
+  const unavailableWrite = recoveryAdapter.setSaveRaw("unavailable-current");
+  recoveredStorage = createStorageBackend();
+  const recoveredWrite = recoveryAdapter.setSaveRaw("recovered-current");
+  const recoveredRead = recoveryAdapter.getSaveRaw();
+
+  const configuredStorage = createStorageBackend();
+  const explicitStorage = createStorageBackend();
+  storageProvider.configureDefaultProviders({
+    platformCapabilities: {
+      getLocalStorage: () => configuredStorage,
+      getPreferences: () => null,
+    },
+  });
+  const explicitAdapter = storageProvider.createStorageAdapter({
+    saveKey: currentKey,
+    legacySaveKey: legacyKey,
+    platformCapabilities: {
+      getLocalStorage: () => explicitStorage,
+      getPreferences: () => null,
+    },
+  });
+  const explicitWrite = explicitAdapter.setSaveRaw("explicit-current");
+  const undefinedOverrideAdapter = storageProvider.createStorageAdapter({
+    saveKey: currentKey,
+    legacySaveKey: legacyKey,
+    platformCapabilities: undefined,
+  });
+  const undefinedOverrideWrite = undefinedOverrideAdapter.setSaveRaw("undefined-current");
+
+  return {
+    explicitCapabilityOverride:
+      explicitWrite === true &&
+      explicitStorage.values.get(currentKey) === "explicit-current" &&
+      !configuredStorage.values.has(currentKey),
+    fallback:
+      fallbackSet === true &&
+      fallbackCurrent === "fallback-current" &&
+      fallbackBackup === true &&
+      fallbackStorage.values.get(backupKey) === "fallback-backup" &&
+      fallbackRemove === true &&
+      !fallbackStorage.values.has(currentKey) &&
+      !fallbackStorage.values.has(legacyKey) &&
+      fallbackAdapter.getStorageBackendName() === "localStorage" &&
+      fallbackAdapter.getLastStorageError()?.operation === "preferences-remove",
+    preferencesFirst:
+      preferencesSet === true &&
+      preferencesCurrent === "preferences-current" &&
+      preferencesLegacy === "preferences-legacy" &&
+      preferencesBackup === true &&
+      preferences.values.get(backupKey) === "preferences-backup" &&
+      preferencesRemove === true &&
+      !preferences.values.has(currentKey) &&
+      !preferences.values.has(legacyKey) &&
+      !localStorage.values.has(currentKey) &&
+      !localStorage.values.has(legacyKey) &&
+      preferencesAdapter.getStorageBackendName() === "capacitor-preferences" &&
+      preferencesAdapter.getLastStorageError() === null,
+    providerMembers:
+      typeof storageProvider.configureDefaultProviders === "function" &&
+      typeof storageProvider.createStorageAdapter === "function" &&
+      providerSelfReturn,
+    unavailableRecovery:
+      unavailableRead === null &&
+      unavailableWrite === false &&
+      recoveredWrite === true &&
+      recoveredRead === "recovered-current" &&
+      recoveryAdapter.getStorageBackendName() === "localStorage",
+    undefinedCapabilityOverride:
+      undefinedOverrideWrite === false &&
+      undefinedOverrideAdapter.getStorageBackendName() === "unavailable" &&
+      !configuredStorage.values.has(currentKey),
+  };
+}
 
 function createPreferencesBackend(values = new Map()) {
   return {

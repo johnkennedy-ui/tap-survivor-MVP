@@ -282,6 +282,14 @@ const bridges = [
     exports: ["createRenderer"],
   },
   {
+    source: "src/modules/storage-adapter.js",
+    target: "src/storage-adapter.js",
+    globalName: "TapSurvivorStorage",
+    exports: ["createStorageProvider"],
+    classicPublisherSource: "globalThis.TapSurvivorStorage = createStorageProvider();",
+    globalMembers: [],
+  },
+  {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
     globalName: "TapSurvivorGameDependencies",
@@ -393,6 +401,10 @@ const bridges = [
       {
         source: "src/modules/save.js",
         exports: ["createSaveSystem"],
+      },
+      {
+        source: "src/modules/storage-adapter.js",
+        exports: ["createStorageProvider"],
       },
       {
         source: "src/modules/level-up-choices.js",

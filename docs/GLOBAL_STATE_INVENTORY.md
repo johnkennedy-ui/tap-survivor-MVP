@@ -166,8 +166,10 @@ Runtime module globals:
 - Core data/systems: progression and quest behavior are supplied as native factories through
   `TapSurvivorGameDependencies`; the former `TapSurvivorProgression` and `TapSurvivorQuests` publishers are retired.
   Effects and map resolution are also supplied as native factories, with their former publishers retired.
-- Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
-  supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
+- Save/storage: `src/modules/storage-adapter.js` owns the provider factory and both dependency bags inject a fresh
+  source-created provider directly. `src/storage-adapter.js` remains the generated retained `TapSurvivorStorage`
+  compatibility publisher; save creation, defaults, migrations, normalization, and corruption handling are supplied
+  through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
 - Rendering/UI: generated `src/sprites.js` is global-free with retired `TapSurvivorSprites` provenance, while the
   native and generated dependency bags inject both sprite factories directly. Source-owned renderer and enemy-renderer
@@ -193,8 +195,9 @@ Browser/platform globals:
 - Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;
   balance runtime has no direct `globalThis.location` read.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
-  `globalRef` through `TapSurvivorStorage.configureDefaultProviders`; the retained publisher has no direct platform-global
-  reads and preserves Preferences-first, fallback, and unavailable behavior.
+  `globalRef` through each source-owned provider. The retained generated `TapSurvivorStorage` publisher exposes the
+  same configure/create API, has no direct platform-global reads, and preserves Preferences-first, fallback, and
+  unavailable behavior. The global audit remains `5/4/11`.
 - `TapSurvivorAudio` is retired. The classic dependency bag supplies its source-owned adapter with explicit
   `globalRef` AudioContext, Audio, and clock factories; generated `src/audio.js` records only retirement provenance
   and has no browser audio-global reader or publisher.

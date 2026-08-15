@@ -47,7 +47,10 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/save-normalize.js`: generated classic compatibility bridge for `TapSurvivorSaveNormalize`; do not hand-edit it.
 - `src/modules/save-corruption.js`: real ES-module implementation for corrupt save fallback and load-warning helper.
 - `src/save-corruption.js`: generated classic compatibility bridge for `TapSurvivorSaveCorruption`; do not hand-edit it.
-- `src/storage-adapter.js`: browser `localStorage` and Capacitor Preferences save backend adapter.
+- `src/modules/storage-adapter.js`: source-owned storage-provider factory for browser `localStorage` and Capacitor
+  Preferences save backend access. It receives explicit platform capability resolvers and is injected directly by both
+  dependency bags.
+- `src/storage-adapter.js`: generated retained `TapSurvivorStorage` compatibility publisher from the source-owned provider; do not hand-edit it.
 - `src/effects.js`: shared runtime effect handlers for run upgrades and shop item bonuses.
 - `src/ui.js`: DOM lookup helper for game UI elements.
 - `src/level-up.js`: level-up choice generation and level-up modal behavior.

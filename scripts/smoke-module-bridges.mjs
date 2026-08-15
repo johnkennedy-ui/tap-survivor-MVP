@@ -1625,6 +1625,10 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
 );
 check(
+  "game dependency bridge does not read the retained storage publisher",
+  !gameDependenciesBridge.source.includes("TapSurvivorStorage")
+);
+check(
   "game dependency bridge has no ten retired publisher readers",
   [
     "TapSurvivorAudio",
@@ -1710,17 +1714,28 @@ check(
   })
 );
 check(
-  "native and generated dependency bags configure injected storage capabilities",
-  moduleGameDependenciesSnapshot.storagePlatformProviderCalls.length > 0 &&
-    JSON.stringify(moduleGameDependenciesSnapshot.storagePlatformProviderCalls) ===
-      JSON.stringify(bridgeGameDependenciesSnapshot.storagePlatformProviderCalls) &&
-    moduleGameDependenciesSnapshot.storagePlatformProviderCalls[0].hasLocalStorageResolver &&
-    moduleGameDependenciesSnapshot.storagePlatformProviderCalls[0].hasPreferencesResolver &&
-    moduleGameDependenciesSnapshot.storagePlatformProviderCalls[0].localStorage &&
-    moduleGameDependenciesSnapshot.storagePlatformProviderCalls.every(
-      ({ hasLocalStorageResolver, hasPreferencesResolver, localStorage, preferences }) =>
-        hasLocalStorageResolver && hasPreferencesResolver && localStorage && preferences
-    )
+  "native and generated dependency bags inject source-owned storage through missing, poisoned, and restored retained publishers",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every((snapshot) => {
+    const recovery = snapshot.storagePublisherRecovery;
+    return (
+      recovery.absent.error === "" &&
+      recovery.absent.hasProviderApi &&
+      recovery.absent.wrote === true &&
+      recovery.absent.value === "storage-injection-absent" &&
+      recovery.absent.backend === "localStorage" &&
+      recovery.poisoned.error === "" &&
+      recovery.poisoned.hasProviderApi &&
+      recovery.poisoned.wrote === true &&
+      recovery.poisoned.value === "storage-injection-poisoned" &&
+      recovery.poisoned.backend === "localStorage" &&
+      recovery.publisherReads === 0 &&
+      recovery.restored.error === "" &&
+      recovery.restored.hasProviderApi &&
+      recovery.restored.wrote === true &&
+      recovery.restored.value === "storage-injection-restored" &&
+      recovery.restored.backend === "localStorage"
+    );
+  })
 );
 check(
   "generated storage dependency bridge has no direct platform global reads",
@@ -2234,9 +2249,14 @@ check(
 );
 check("debug bridge source has generated banner", hasGeneratedBanner(debugBridge.source));
 check(
-  "native and generated dependency bags retain fail-closed required storage handling",
-  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every((snapshot) =>
-    snapshot.missingError.includes("TapSurvivorStorage")
+  "native and generated dependency bags keep caller-owned storage adapter precedence",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    (snapshot) =>
+      snapshot.hasSaveFactory &&
+      snapshot.injectedSaveCoins === 11 &&
+      snapshot.saveProviderCalls.length === 1 &&
+      JSON.stringify(snapshot.saveProviderCalls[0]) ===
+        JSON.stringify({ saveKey: "save-key", legacySaveKey: "legacy-key" })
   )
 );
 check("module exports createPickupSystem", typeof createModulePickupSystem === "function");
@@ -3618,7 +3638,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorProgression",
     "TapSurvivorQuests",
-    "TapSurvivorStorage",
     "TapSurvivorUi",
     "TapSurvivorUiProgression",
     "TapSurvivorWeaponBehaviors",
@@ -3626,19 +3645,26 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   ];
   const baseGlobalRef = Object.fromEntries(requiredNames.map((name) => [name, { name }]));
   const saveProviderCalls = [];
-  const storagePlatformProviderCalls = [];
   const saveStorage = {
-    configureDefaultProviders(options) {
-      storagePlatformProviderCalls.push(options);
-    },
     createStorageAdapter(options) {
       saveProviderCalls.push(options);
       return createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 11 }));
     },
     name: "TapSurvivorStorage",
   };
-  baseGlobalRef.TapSurvivorStorage = saveStorage;
-  baseGlobalRef.localStorage = { getItem() {}, setItem() {}, removeItem() {} };
+  baseGlobalRef.TapSurvivorStorage = { name: "retained-storage-publisher" };
+  const localStorageValues = new Map();
+  baseGlobalRef.localStorage = {
+    getItem(key) {
+      return localStorageValues.get(key) || null;
+    },
+    removeItem(key) {
+      localStorageValues.delete(key);
+    },
+    setItem(key, value) {
+      localStorageValues.set(key, value);
+    },
+  };
   baseGlobalRef.Capacitor = { Plugins: { Preferences: {} } };
   const retiredGlobalNames = [
     "TapSurvivorAudio",
@@ -3790,6 +3816,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     return createShellRelicFakeImage(shellRelicDefaultImages);
   };
   const spritePublisherRecovery = spritePublisherRecoverySnapshot(
+    createGameDependencyBag,
+    globalRef,
+    documentRef
+  );
+  const storagePublisherRecovery = storagePublisherRecoverySnapshot(
     createGameDependencyBag,
     globalRef,
     documentRef
@@ -4171,15 +4202,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   delete fallbackGlobalRef.TapSurvivorBalanceRuntime;
   const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
 
-  const missingGlobalRef = { ...baseGlobalRef };
-  delete missingGlobalRef.TapSurvivorStorage;
-  let missingError = "";
-  try {
-    createGameDependencyBag({ globalRef: missingGlobalRef });
-  } catch (error) {
-    missingError = error.message;
-  }
-
   const assetContentFixture = {
     assets: {
       sprites: {
@@ -4291,12 +4313,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasSaveFactory: typeof bag.save.createSaveSystem === "function",
     injectedSaveCoins: configuredSave.coins,
     saveProviderCalls,
-    storagePlatformProviderCalls: storagePlatformProviderCalls.map(({ platformCapabilities }) => ({
-      hasLocalStorageResolver: typeof platformCapabilities?.getLocalStorage === "function",
-      hasPreferencesResolver: typeof platformCapabilities?.getPreferences === "function",
-      localStorage: platformCapabilities?.getLocalStorage?.() === globalRef.localStorage,
-      preferences: platformCapabilities?.getPreferences?.() === globalRef.Capacitor?.Plugins?.Preferences,
-    })),
     hasShellRelicUi: typeof bag.shellRelicUi.createShellRelicUi === "function",
     hasShellUi: typeof bag.shellUi?.createShellUiController === "function",
     shellRelicCallerTimerCount: callerShellRelicTimers.length,
@@ -4312,8 +4328,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasNativeShop: Boolean(shop),
     hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
     hasInputBinder: typeof bag.input.bindMovementInput === "function",
-    missingError,
     spritePublisherRecovery,
+    storagePublisherRecovery,
     absentAudioPublisherError: absentAudioPublisherResult.error,
     absentAudioPublisherSnapshot: audioProviderSnapshot(absentAudioPublisherResult.bag),
     audioPublisherReads,
@@ -4441,6 +4457,72 @@ function spriteDependencySnapshot(result) {
     hasBothFactories:
       typeof result.bag?.sprites?.createSpriteSystem === "function" &&
       typeof result.bag?.sprites?.createSpriteSheetRenderer === "function",
+  };
+}
+
+function storagePublisherRecoverySnapshot(createGameDependencyBag, globalRef, documentRef) {
+  const testGlobalRef = { ...globalRef };
+  const originalDescriptor = Object.getOwnPropertyDescriptor(testGlobalRef, "TapSurvivorStorage");
+  Reflect.deleteProperty(testGlobalRef, "TapSurvivorStorage");
+  const absent = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+
+  let publisherReads = 0;
+  Object.defineProperty(testGlobalRef, "TapSurvivorStorage", {
+    configurable: true,
+    get() {
+      publisherReads += 1;
+      throw new Error("Forbidden TapSurvivorStorage global read");
+    },
+  });
+  const poisoned = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+
+  if (originalDescriptor) {
+    Object.defineProperty(testGlobalRef, "TapSurvivorStorage", originalDescriptor);
+  } else {
+    Reflect.deleteProperty(testGlobalRef, "TapSurvivorStorage");
+  }
+  const restored = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+
+  return {
+    absent: storageDependencySnapshot(absent, "absent"),
+    poisoned: storageDependencySnapshot(poisoned, "poisoned"),
+    publisherReads,
+    restored: storageDependencySnapshot(restored, "restored"),
+  };
+}
+
+function storageDependencySnapshot(result, phase) {
+  const storage = result.bag?.storage;
+  const saveKey = `storage-injection-${phase}`;
+  const adapter = storage?.createStorageAdapter?.({
+    saveKey,
+    legacySaveKey: `${saveKey}-legacy`,
+  });
+  let wrote = false;
+  let value = null;
+  let backend = "unavailable";
+  let operationError = "";
+  try {
+    wrote = adapter?.setSaveRaw?.(saveKey) || false;
+    value = adapter?.getSaveRaw?.() || null;
+    backend = adapter?.getStorageBackendName?.() || "unavailable";
+  } catch (error) {
+    operationError = error.message;
+  }
+  return {
+    backend,
+    error: result.error || operationError,
+    hasProviderApi:
+      typeof storage?.configureDefaultProviders === "function" &&
+      typeof storage?.createStorageAdapter === "function" &&
+      typeof adapter?.getLastStorageError === "function" &&
+      typeof adapter?.getSaveRaw === "function" &&
+      typeof adapter?.getStorageBackendName === "function" &&
+      typeof adapter?.removeSaveRaw === "function" &&
+      typeof adapter?.setCorruptBackupRaw === "function" &&
+      typeof adapter?.setSaveRaw === "function",
+    value,
+    wrote,
   };
 }
 

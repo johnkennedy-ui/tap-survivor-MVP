@@ -29,6 +29,7 @@ import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
 import { isPlainObject, migrateSave } from "./save-migrations.js";
 import { arrayValue, createSaveNormalizer, objectValue } from "./save-normalize.js";
 import { createSaveSystem } from "./save.js";
+import { createStorageProvider } from "./storage-adapter.js";
 import { createShellRelicUi } from "./shell-relic-ui.js";
 import { createShellUiController } from "./shell-ui-classic-adapter.js";
 import { createShopSystem } from "./shop.js";
@@ -76,12 +77,9 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
   };
   const upgrades = { createUpgradeContent };
   const save = { createSaveSystem };
-  const storage = requireGlobal(globalRef, "TapSurvivorStorage");
-  if (typeof storage.configureDefaultProviders === "function") {
-    storage.configureDefaultProviders({
-      platformCapabilities: createStoragePlatformCapabilities(globalRef),
-    });
-  }
+  const storage = createStorageProvider({
+    platformCapabilities: createStoragePlatformCapabilities(globalRef),
+  });
   const audio = createModuleRuntimeAudioAdapter({
     audioContextFactory: createAudioContextFactory(globalRef),
     audioFactory: createAudioFactory(globalRef),
@@ -176,10 +174,6 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
   };
 }
 
-function requireGlobal(globalRef, name) {
-  return requireValue(globalRef?.[name], name);
-}
-
 function createAudioContextFactory(globalRef) {
   return () => {
     const AudioContextRef = globalRef?.AudioContext || globalRef?.webkitAudioContext;
@@ -240,18 +234,4 @@ function createShellRelicUiDependency(globalRef) {
       });
     },
   };
-}
-
-function requireValue(value, name) {
-  if (!value) {
-    throw new Error(`Missing Tap Survivor runtime dependency: globalThis.${name}`);
-  }
-  return value;
-}
-
-function requireFunction(value, name) {
-  if (typeof value !== "function") {
-    throw new Error(`Missing Tap Survivor runtime dependency: ${name}`);
-  }
-  return value;
 }
