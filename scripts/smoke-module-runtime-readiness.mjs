@@ -925,13 +925,16 @@ check(
     classicGameDependenciesSource.includes("      save,")
 );
 check(
-  "readiness sees source-owned storage injection without retiring the generated classic publisher",
+  "readiness sees source-owned storage injection with a retired generated classic publisher",
   nativeStorageAdapterSource.includes("export function createStorageProvider") &&
     !nativeStorageAdapterSource.includes("TapSurvivorStorage") &&
     !nativeStorageAdapterSource.includes("globalThis") &&
     classicStorageSource.includes("// GENERATED FILE.") &&
     classicStorageSource.includes("// Source: src/modules/storage-adapter.js") &&
-    classicStorageSource.includes("globalThis.TapSurvivorStorage = createStorageProvider();") &&
+    !classicStorageSource.includes("globalThis.TapSurvivorStorage =") &&
+    classicStorageSource.includes(
+      "// Retired global: TapSurvivorStorage. Exports are supplied through the game dependency bag."
+    ) &&
     classicGameDependenciesSource.includes("const storage = createStorageProvider({") &&
     !classicGameDependenciesSource.includes("TapSurvivorStorage") &&
     !classicGameDependencyGlobalReads.includes("TapSurvivorStorage") &&
@@ -1390,7 +1393,10 @@ const inventory = {
   },
   classicStorageProvider: {
     sourceOwned: nativeStorageAdapterSource.includes("export function createStorageProvider"),
-    generatedPublisher: classicStorageSource.includes("globalThis.TapSurvivorStorage = createStorageProvider();"),
+    generatedPublisher: classicStorageSource.includes("globalThis.TapSurvivorStorage ="),
+    retiredGlobalProvenance: classicStorageSource.includes(
+      "// Retired global: TapSurvivorStorage. Exports are supplied through the game dependency bag."
+    ),
     classicDependencyBagReadsStoragePublisher: classicGameDependencyGlobalReads.includes(
       "TapSurvivorStorage"
     ),

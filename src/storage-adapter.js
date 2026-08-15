@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/storage-adapter.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorStorage. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -263,6 +264,4 @@
 
     return storageProvider;
   }
-
-  globalThis.TapSurvivorStorage = createStorageProvider();
 })();

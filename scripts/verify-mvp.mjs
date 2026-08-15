@@ -343,16 +343,19 @@ check(
     gameDependencies.includes("const save = { createSaveSystem };") &&
     gameDependencies.includes("      save,") &&
     game.includes("saveDependencies.createSaveSystem") &&
-    storageAdapter.includes("TapSurvivorStorage"),
+    storageAdapter.includes("// Retired global: TapSurvivorStorage."),
 );
 check(
-  "storage provider is source-owned while the generated publisher remains a compatibility boundary",
+  "storage provider is source-owned while the generated publisher is retired",
   nativeStorageAdapter.includes("export function createStorageProvider") &&
     !nativeStorageAdapter.includes("TapSurvivorStorage") &&
     !nativeStorageAdapter.includes("globalThis") &&
     storageAdapter.includes("// GENERATED FILE.") &&
     storageAdapter.includes("// Source: src/modules/storage-adapter.js") &&
-    storageAdapter.includes("globalThis.TapSurvivorStorage = createStorageProvider();") &&
+    !storageAdapter.includes("globalThis.TapSurvivorStorage =") &&
+    storageAdapter.includes(
+      "// Retired global: TapSurvivorStorage. Exports are supplied through the game dependency bag."
+    ) &&
     moduleGameDependencies.includes(
       'import { createStorageProvider } from "./storage-adapter.js";'
     ) &&

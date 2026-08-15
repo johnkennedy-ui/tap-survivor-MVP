@@ -156,6 +156,9 @@ const saveBridge = loadBridge(
   {},
   ["TapSurvivorSaveNormalize", "TapSurvivorSaveCorruption"]
 );
+const storageBridge = loadBridge("../src/storage-adapter.js", "src/storage-adapter.js", {}, [
+  "TapSurvivorStorage",
+]);
 const pricingBridge = loadBridge("../src/shop-pricing.js", "src/shop-pricing.js");
 const relicsBridge = loadBridge("../src/relics.js", "src/relics.js", {
   Math: {
@@ -759,6 +762,14 @@ check(
     !saveBridge.source.includes("globalThis.TapSurvivorSave") &&
     !saveBridge.source.includes("TapSurvivorStorage")
 );
+check(
+  "storage bridge retires its classic publisher without reading the namespace",
+  !storageBridge.source.includes("globalThis.TapSurvivorStorage =") &&
+    storageBridge.source.includes(
+      "// Retired global: TapSurvivorStorage. Exports are supplied through the game dependency bag."
+    ) &&
+    typeof Object.getOwnPropertyDescriptor(storageBridge.context, "TapSurvivorStorage")?.get === "function"
+);
 const moduleSaveSystemSnapshot = saveSystemSnapshot(createModuleSaveSystem);
 check(
   "defaultSave parity fixture keeps starter quest",
@@ -1046,6 +1057,13 @@ check(
   shellRelicHarness.spriteShimProof.spritePublisherAbsentBeforeShim &&
     shellRelicHarness.spriteShimProof.spritePublisherAbsentAfterShim &&
     shellRelicHarness.spriteShimProof.sourceDependencyBagHasBothSpriteFactories
+);
+check(
+  "classic VM harness boots without the retired storage publisher through direct dependency injection",
+  shellRelicHarness.storagePublisherProof.sourceDependencyBagHasStorageProvider &&
+    shellRelicHarness.storagePublisherProof.storagePublisherPoisonRetained &&
+    shellRelicHarness.storagePublisherProof.storagePublisherReads === 0 &&
+    shellRelicHarness.storagePublisherProof.storagePublisherAbsentAfterBoot
 );
 
 check("shell UI bridge source has generated banner", hasGeneratedBanner(shellUiClassicBridge.source));
@@ -1625,7 +1643,7 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorGameRuntime")
 );
 check(
-  "game dependency bridge does not read the retained storage publisher",
+  "game dependency bridge does not read the retired storage publisher",
   !gameDependenciesBridge.source.includes("TapSurvivorStorage")
 );
 check(
@@ -1714,9 +1732,9 @@ check(
   })
 );
 check(
-  "native and generated dependency bags inject source-owned storage through missing, poisoned, and restored retained publishers",
+  "native and generated dependency bags inject source-owned storage through absent, poisoned, and restored retired publishers",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every((snapshot) => {
-    const recovery = snapshot.storagePublisherRecovery;
+    const recovery = snapshot.retiredStoragePublisherRecovery;
     return (
       recovery.absent.error === "" &&
       recovery.absent.hasProviderApi &&
@@ -3650,9 +3668,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       saveProviderCalls.push(options);
       return createStorageFixture(JSON.stringify({ saveVersion: 3, coins: 11 }));
     },
-    name: "TapSurvivorStorage",
+    name: "caller-owned-storage-override",
   };
-  baseGlobalRef.TapSurvivorStorage = { name: "retained-storage-publisher" };
   const localStorageValues = new Map();
   baseGlobalRef.localStorage = {
     getItem(key) {
@@ -3701,6 +3718,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorShellUi",
     "TapSurvivorShopPricing",
     "TapSurvivorSprites",
+    "TapSurvivorStorage",
     "TapSurvivorUpgrades",
     "TapSurvivorWeaponProjectiles",
     "TapSurvivorWeaponTargeting",
@@ -3820,7 +3838,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     globalRef,
     documentRef
   );
-  const storagePublisherRecovery = storagePublisherRecoverySnapshot(
+  const retiredStoragePublisherRecovery = retiredStoragePublisherRecoverySnapshot(
     createGameDependencyBag,
     globalRef,
     documentRef
@@ -4329,7 +4347,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
     hasInputBinder: typeof bag.input.bindMovementInput === "function",
     spritePublisherRecovery,
-    storagePublisherRecovery,
+    retiredStoragePublisherRecovery,
     absentAudioPublisherError: absentAudioPublisherResult.error,
     absentAudioPublisherSnapshot: audioProviderSnapshot(absentAudioPublisherResult.bag),
     audioPublisherReads,
@@ -4460,7 +4478,7 @@ function spriteDependencySnapshot(result) {
   };
 }
 
-function storagePublisherRecoverySnapshot(createGameDependencyBag, globalRef, documentRef) {
+function retiredStoragePublisherRecoverySnapshot(createGameDependencyBag, globalRef, documentRef) {
   const testGlobalRef = { ...globalRef };
   const originalDescriptor = Object.getOwnPropertyDescriptor(testGlobalRef, "TapSurvivorStorage");
   Reflect.deleteProperty(testGlobalRef, "TapSurvivorStorage");

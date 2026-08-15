@@ -24,6 +24,7 @@ let retiredSaveMigrationsReads = 0;
 let retiredSaveNormalizeReads = 0;
 let retiredSaveCorruptionReads = 0;
 let retiredSavePublisherReads = 0;
+let retiredStoragePublisherReads = 0;
 const context = {
   console,
   localStorage,
@@ -63,6 +64,13 @@ Object.defineProperty(context, "TapSurvivorSave", {
     throw new Error("Forbidden TapSurvivorSave global read");
   },
 });
+Object.defineProperty(context, "TapSurvivorStorage", {
+  configurable: true,
+  get() {
+    retiredStoragePublisherReads += 1;
+    throw new Error("Forbidden TapSurvivorStorage global read");
+  },
+});
 vm.createContext(context);
 vm.runInContext(questsSource, context);
 vm.runInContext(storageSource, context);
@@ -89,6 +97,7 @@ const dependencyBag = context.TapSurvivorGameDependencies.createGameDependencyBa
 });
 const saveDefaults = dependencyBag.saveDefaults;
 const saveMigrations = dependencyBag.saveMigrations;
+const storageProvider = dependencyBag.storage;
 
 const isolatedSaveNormalizer = createSaveNormalizer({
   currentSaveVersion: 3,
@@ -145,14 +154,13 @@ check(
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";
 const corruptBackupKey = `${saveKey}-corrupt-backup`;
-const storagePublisher = context.TapSurvivorStorage;
-storagePublisher.configureDefaultProviders({
+storageProvider.configureDefaultProviders({
   platformCapabilities: {
     getLocalStorage: () => localStorage,
     getPreferences: () => null,
   },
 });
-const storageAdapter = storagePublisher.createStorageAdapter({
+const storageAdapter = storageProvider.createStorageAdapter({
   saveKey,
   legacySaveKey,
   corruptBackupKey,
@@ -181,6 +189,16 @@ function check(name, pass) {
 check(
   "retired quest publisher is absent from save bridge context",
   context.TapSurvivorQuests === undefined && !questsSource.includes("globalThis.TapSurvivorQuests =")
+);
+check(
+  "retired storage publisher is never read while the direct dependency provider remains available",
+  retiredStoragePublisherReads === 0 &&
+    !storageSource.includes("globalThis.TapSurvivorStorage =") &&
+    storageSource.includes(
+      "// Retired global: TapSurvivorStorage. Exports are supplied through the game dependency bag."
+    ) &&
+    typeof storageProvider.configureDefaultProviders === "function" &&
+    typeof storageProvider.createStorageAdapter === "function"
 );
 
 const fresh = await saveSystem.loadSave();
@@ -274,6 +292,7 @@ let throwingRetiredSaveMigrationsReads = 0;
 let throwingRetiredSaveNormalizeReads = 0;
 let throwingRetiredSaveCorruptionReads = 0;
 let throwingRetiredSavePublisherReads = 0;
+let throwingRetiredStoragePublisherReads = 0;
 const throwingContext = {
   console,
   localStorage: {
@@ -323,6 +342,13 @@ Object.defineProperty(throwingContext, "TapSurvivorSave", {
     throw new Error("Forbidden TapSurvivorSave global read");
   },
 });
+Object.defineProperty(throwingContext, "TapSurvivorStorage", {
+  configurable: true,
+  get() {
+    throwingRetiredStoragePublisherReads += 1;
+    throw new Error("Forbidden TapSurvivorStorage global read");
+  },
+});
 vm.createContext(throwingContext);
 vm.runInContext(questsSource, throwingContext);
 vm.runInContext(storageSource, throwingContext);
@@ -346,15 +372,15 @@ const throwingDependencyBag = throwingContext.TapSurvivorGameDependencies.create
   globalRef: throwingDependencyGlobalRef,
   documentRef: {},
 });
+const throwingStorageProvider = throwingDependencyBag.storage;
 
-const throwingStoragePublisher = throwingContext.TapSurvivorStorage;
-throwingStoragePublisher.configureDefaultProviders({
+throwingStorageProvider.configureDefaultProviders({
   platformCapabilities: {
     getLocalStorage: () => throwingContext.localStorage,
     getPreferences: () => null,
   },
 });
-const throwingAdapter = throwingStoragePublisher.createStorageAdapter({
+const throwingAdapter = throwingStorageProvider.createStorageAdapter({
   saveKey,
   legacySaveKey,
 });
@@ -399,7 +425,7 @@ check(
   typeof saveMigrations.isPlainObject === "function" && typeof saveMigrations.migrateSave === "function"
 );
 check(
-  "retired save globals are never read",
+  "retired save and storage globals are never read",
   retiredSaveDefaultsReads === 0 &&
     throwingRetiredSaveDefaultsReads === 0 &&
     retiredSaveMigrationsReads === 0 &&
@@ -409,7 +435,9 @@ check(
     retiredSaveCorruptionReads === 0 &&
     throwingRetiredSaveCorruptionReads === 0 &&
     retiredSavePublisherReads === 0 &&
-    throwingRetiredSavePublisherReads === 0
+    throwingRetiredSavePublisherReads === 0 &&
+    retiredStoragePublisherReads === 0 &&
+    throwingRetiredStoragePublisherReads === 0
 );
 check("storage unavailable load returns default save", unavailableSave.unlockedWeapons.includes("spark_bolt"));
 check("storage unavailable persist reports false", unavailablePersisted === false);
@@ -419,7 +447,7 @@ const guardedStorage = createStorageBackend();
 const guardedPreferences = createPreferencesBackend();
 let retiredCapacitorReads = 0;
 let retiredLocalStorageReads = 0;
-storagePublisher.configureDefaultProviders({
+storageProvider.configureDefaultProviders({
   platformCapabilities: {
     getLocalStorage: () => guardedStorage,
     getPreferences: () => guardedPreferences,
@@ -439,7 +467,7 @@ Object.defineProperty(context, "localStorage", {
     throw new Error("Forbidden direct localStorage global read");
   },
 });
-const guardedAdapter = storagePublisher.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
+const guardedAdapter = storageProvider.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
 const guardedSet = await guardedAdapter.setSaveRaw("preferences-current");
 const guardedCurrent = await guardedAdapter.getSaveRaw();
 guardedPreferences.values.delete(saveKey);
@@ -451,7 +479,7 @@ guardedStorage.setItem(legacySaveKey, "local-legacy");
 const guardedRemove = await guardedAdapter.removeSaveRaw();
 check(
   "preferences-first storage uses injected capabilities only",
-  typeof storagePublisher.configureDefaultProviders === "function" &&
+  typeof storageProvider.configureDefaultProviders === "function" &&
     guardedSet === true &&
     guardedCurrent === "preferences-current" &&
     guardedLegacy === "preferences-legacy" &&
@@ -476,13 +504,13 @@ const failingPreferences = {
   remove() { throw new Error("preferences unavailable"); },
   set() { throw new Error("preferences unavailable"); },
 };
-storagePublisher.configureDefaultProviders({
+storageProvider.configureDefaultProviders({
   platformCapabilities: {
     getLocalStorage: () => fallbackStorage,
     getPreferences: () => failingPreferences,
   },
 });
-const fallbackAdapter = storagePublisher.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
+const fallbackAdapter = storageProvider.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
 const fallbackSet = await fallbackAdapter.setSaveRaw("fallback-current");
 const fallbackCurrent = await fallbackAdapter.getSaveRaw();
 const fallbackBackup = await fallbackAdapter.setCorruptBackupRaw("fallback-backup");
@@ -499,13 +527,13 @@ check(
 );
 
 let recoveredStorage = null;
-storagePublisher.configureDefaultProviders({
+storageProvider.configureDefaultProviders({
   platformCapabilities: {
     getLocalStorage: () => recoveredStorage,
     getPreferences: () => null,
   },
 });
-const recoveringAdapter = storagePublisher.createStorageAdapter({ saveKey, legacySaveKey });
+const recoveringAdapter = storageProvider.createStorageAdapter({ saveKey, legacySaveKey });
 const missingRaw = recoveringAdapter.getSaveRaw();
 const missingPersisted = recoveringAdapter.setSaveRaw("missing-current");
 recoveredStorage = createStorageBackend();
@@ -513,10 +541,10 @@ const recoveredPersisted = recoveringAdapter.setSaveRaw("recovered-current");
 const recoveredRaw = recoveringAdapter.getSaveRaw();
 const configuredStorage = createStorageBackend();
 const explicitStorage = createStorageBackend();
-storagePublisher.configureDefaultProviders({
+storageProvider.configureDefaultProviders({
   platformCapabilities: { getLocalStorage: () => configuredStorage, getPreferences: () => null },
 });
-const explicitAdapter = storagePublisher.createStorageAdapter({
+const explicitAdapter = storageProvider.createStorageAdapter({
   saveKey,
   legacySaveKey,
   platformCapabilities: { getLocalStorage: () => explicitStorage, getPreferences: () => null },
@@ -542,10 +570,10 @@ check(
 );
 
 const sourceStorageParity = await storageProviderParitySnapshot(createStorageProvider());
-const classicStorageParity = await storageProviderParitySnapshot(storagePublisher);
+const directDependencyStorageParity = await storageProviderParitySnapshot(storageProvider);
 check(
-  "source-owned and retained classic storage providers preserve the same public behavior",
-  JSON.stringify(sourceStorageParity) === JSON.stringify(classicStorageParity)
+  "source-owned and direct dependency storage providers preserve the same public behavior",
+  JSON.stringify(sourceStorageParity) === JSON.stringify(directDependencyStorageParity)
 );
 check(
   "storage source owns the provider without an ambient classic global read",

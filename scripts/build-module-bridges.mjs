@@ -284,10 +284,9 @@ const bridges = [
   {
     source: "src/modules/storage-adapter.js",
     target: "src/storage-adapter.js",
-    globalName: "TapSurvivorStorage",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorStorage",
     exports: ["createStorageProvider"],
-    classicPublisherSource: "globalThis.TapSurvivorStorage = createStorageProvider();",
-    globalMembers: [],
   },
   {
     source: "src/modules/game-dependencies.js",

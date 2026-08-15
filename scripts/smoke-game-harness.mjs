@@ -306,6 +306,7 @@ export function createGameHarness({
     "TapSurvivorSaveMigrations",
     "TapSurvivorSaveCorruption",
     "TapSurvivorSaveNormalize",
+    "TapSurvivorStorage",
     "TapSurvivorRunLifecycle",
     "TapSurvivorRunState",
     "TapSurvivorRunUi",
@@ -323,6 +324,10 @@ export function createGameHarness({
       },
     });
   });
+  const storagePublisherPoisonDescriptor = Object.getOwnPropertyDescriptor(
+    context,
+    "TapSurvivorStorage"
+  );
   context.__tapSurvivorRetiredGlobalReads = retiredGlobalReads;
 
   vm.createContext(context);
@@ -456,6 +461,9 @@ export function createGameHarness({
   const sourceDependencyBagHasBothSpriteFactories =
     typeof sourceGameDependencies.sprites?.createSpriteSystem === "function" &&
     typeof sourceGameDependencies.sprites?.createSpriteSheetRenderer === "function";
+  const sourceDependencyBagHasStorageProvider =
+    typeof sourceGameDependencies.storage?.configureDefaultProviders === "function" &&
+    typeof sourceGameDependencies.storage?.createStorageAdapter === "function";
   if (fakeCombat) {
     context.TapSurvivorBalanceRuntime.configureDefaultProviders({
       content: classicContent,
@@ -610,6 +618,12 @@ export function createGameHarness({
     runtime,
   });
   lifecycle.init();
+  const storagePublisherPoisonRetained =
+    Object.getOwnPropertyDescriptor(context, "TapSurvivorStorage")?.get ===
+    storagePublisherPoisonDescriptor?.get;
+  const storagePublisherAbsentAfterBoot =
+    Reflect.deleteProperty(context, "TapSurvivorStorage") &&
+    !Object.prototype.hasOwnProperty.call(context, "TapSurvivorStorage");
   context.__tapSurvivorHarness = {
     getGame: dependencies.getGame,
     getSave: dependencies.getSave,
@@ -642,6 +656,12 @@ export function createGameHarness({
       sourceDependencyBagHasBothSpriteFactories,
       spritePublisherAbsentAfterShim,
       spritePublisherAbsentBeforeShim,
+    },
+    storagePublisherProof: {
+      sourceDependencyBagHasStorageProvider,
+      storagePublisherAbsentAfterBoot,
+      storagePublisherPoisonRetained,
+      storagePublisherReads: retiredGlobalReads.TapSurvivorStorage,
     },
   };
 }

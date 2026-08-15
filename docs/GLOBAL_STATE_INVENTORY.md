@@ -167,8 +167,8 @@ Runtime module globals:
   `TapSurvivorGameDependencies`; the former `TapSurvivorProgression` and `TapSurvivorQuests` publishers are retired.
   Effects and map resolution are also supplied as native factories, with their former publishers retired.
 - Save/storage: `src/modules/storage-adapter.js` owns the provider factory and both dependency bags inject a fresh
-  source-created provider directly. `src/storage-adapter.js` remains the generated retained `TapSurvivorStorage`
-  compatibility publisher; save creation, defaults, migrations, normalization, and corruption handling are supplied
+  source-created provider directly. `src/storage-adapter.js` is a generated global-free artifact with retired
+  `TapSurvivorStorage` provenance; save creation, defaults, migrations, normalization, and corruption handling are supplied
   through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
 - Rendering/UI: generated `src/sprites.js` is global-free with retired `TapSurvivorSprites` provenance, while the
@@ -189,15 +189,15 @@ Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 5 actual usages (4 allowed expressions and 11 allowed usages); the allowlist does not count bare
+  dot-expression global audit is 4 actual usages (3 allowed expressions and 10 allowed usages); the allowlist does not count bare
   `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Debug, Audio, Shell
   UI, and input are supplied through source-owned providers for the next migration batch.
 - Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;
   balance runtime has no direct `globalThis.location` read.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
-  `globalRef` through each source-owned provider. The retained generated `TapSurvivorStorage` publisher exposes the
-  same configure/create API, has no direct platform-global reads, and preserves Preferences-first, fallback, and
-  unavailable behavior. The global audit remains `5/4/11`.
+  `globalRef` through each source-owned provider. The generated global-free `TapSurvivorStorage` retirement artifact
+  has no publisher or direct platform-global reads; the injected providers preserve Preferences-first, fallback, and
+  unavailable behavior. The global audit remains `4/3/10`.
 - `TapSurvivorAudio` is retired. The classic dependency bag supplies its source-owned adapter with explicit
   `globalRef` AudioContext, Audio, and clock factories; generated `src/audio.js` records only retirement provenance
   and has no browser audio-global reader or publisher.

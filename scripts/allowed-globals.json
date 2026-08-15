@@ -2,8 +2,7 @@
   "allowedExpressions": [
     "globalThis.TapSurvivorBalanceRuntime",
     "globalThis.TapSurvivorContent",
-    "globalThis.TapSurvivorGameDependencies",
-    "globalThis.TapSurvivorStorage"
+    "globalThis.TapSurvivorGameDependencies"
   ],
   "allowedFileCounts": {
     "scripts/smoke-production-browser-runtime.mjs": 0,
@@ -34,7 +33,6 @@
     "src/save-normalize.js": 1,
     "src/shop-pricing.js": 0,
     "src/shop.js": 2,
-    "src/storage-adapter.js": 1,
     "src/ui-progression.js": 0,
     "src/ui.js": 0,
     "src/weapon-behaviors.js": 0,
