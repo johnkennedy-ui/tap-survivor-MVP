@@ -250,13 +250,13 @@ const bridges = [
   {
     source: "src/modules/render-enemies.js",
     target: "src/render-enemies.js",
-    globalName: "TapSurvivorRenderEnemies",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorRenderEnemies",
     exports: [
       "MODULE_NATIVE_RENDER_ENEMIES_SLOTS",
       "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
       "createEnemyRenderer",
     ],
-    globalMembers: [{ name: "createEnemyRenderer", value: "createEnemyRenderer" }],
   },
   {
     source: "src/modules/game-dependencies.js",

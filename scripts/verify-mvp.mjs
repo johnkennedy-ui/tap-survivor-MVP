@@ -442,14 +442,17 @@ check(
     !rendering.includes("globalThis.TapSurvivorRenderHud"),
 );
 check(
-  "shared enemy renderer is source-owned, compatibility-published, and direct dependency-injected",
+  "shared enemy renderer is source-owned, globally retired, and direct dependency-injected",
   nativeRenderEnemies.includes("export function createEnemyRenderer") &&
     nativeRenderEnemies.includes("MODULE_NATIVE_RENDER_ENEMIES_SLOTS") &&
     nativeRenderEnemies.includes("MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS") &&
     !nativeRenderEnemies.includes("TapSurvivorRenderEnemies") &&
     !nativeRenderEnemies.includes("globalThis") &&
     renderEnemies.includes("// GENERATED FILE.") &&
-    renderEnemies.includes("globalThis.TapSurvivorRenderEnemies =") &&
+    renderEnemies.includes(
+      "// Retired global: TapSurvivorRenderEnemies. Exports are supplied through the game dependency bag."
+    ) &&
+    !renderEnemies.includes("globalThis.TapSurvivorRenderEnemies") &&
     renderEnemies.includes("createEnemyRenderer") &&
     moduleGameDependencies.includes('import { createEnemyRenderer } from "./render-enemies.js"') &&
     moduleGameDependencies.includes("renderEnemies: { createEnemyRenderer }") &&

@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/render-enemies.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorRenderEnemies. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -189,8 +190,4 @@
       enemyAnimationState,
     };
   }
-
-  globalThis.TapSurvivorRenderEnemies = {
-    createEnemyRenderer,
-  };
 })();

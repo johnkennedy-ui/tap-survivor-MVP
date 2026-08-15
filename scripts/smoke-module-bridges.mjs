@@ -237,7 +237,6 @@ const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
-const bridgeRenderEnemies = renderEnemiesBridge.context.TapSurvivorRenderEnemies;
 const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
 const bridgeCombat = combatBridge.context.TapSurvivorCombat;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
@@ -1387,9 +1386,12 @@ check(
 check("module exports createEnemyRenderer", typeof createModuleEnemyRenderer === "function");
 check("render enemies bridge source has generated banner", hasGeneratedBanner(renderEnemiesBridge.source));
 check(
-  "render enemies bridge retains the classic publisher compatibility contract",
-  typeof bridgeRenderEnemies?.createEnemyRenderer === "function" &&
-    renderEnemiesBridge.source.includes("globalThis.TapSurvivorRenderEnemies =")
+  "render enemies bridge is global-free with retired provenance",
+  renderEnemiesBridge.context.TapSurvivorRenderEnemies === undefined &&
+    !renderEnemiesBridge.source.includes("globalThis.TapSurvivorRenderEnemies") &&
+    renderEnemiesBridge.source.includes(
+      "// Retired global: TapSurvivorRenderEnemies. Exports are supplied through the game dependency bag."
+    )
 );
 check(
   "native enemy renderer source owns its factory without ambient global readers",
@@ -1401,11 +1403,9 @@ check(
     )
 );
 const moduleEnemyRendererSnapshot = enemyRendererSnapshot(createModuleEnemyRenderer);
-const bridgeEnemyRendererSnapshot = enemyRendererSnapshot(bridgeRenderEnemies.createEnemyRenderer);
 check(
-  "native and generated enemy renderer factories preserve the rendering API and output",
-  JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(bridgeEnemyRendererSnapshot) &&
-    moduleEnemyRendererSnapshot.api.join(",") === "drawEnemy,drawEnemyBolt,enemyAnimationState" &&
+  "source-owned enemy renderer preserves the rendering API and output",
+  moduleEnemyRendererSnapshot.api.join(",") === "drawEnemy,drawEnemyBolt,enemyAnimationState" &&
     moduleEnemyRendererSnapshot.animationStates.join(",") ===
       "enemies:skitter:default:true:0,bosses:charger:windup:false:1.5" &&
     moduleEnemyRendererSnapshot.spriteIds.join(",") === "enemy:skitter,enemy:boss" &&
@@ -1604,12 +1604,12 @@ const bridgeDependencyBagEnemyRendererSnapshot = enemyRendererSnapshot(
   bridgeGameDependenciesSnapshot.__bag.renderEnemies.createEnemyRenderer
 );
 check(
-  "native and generated dependency bags inject matching source-owned enemy renderers",
+  "native and generated dependency bags inject matching source-owned enemy renderer output",
   JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(moduleDependencyBagEnemyRendererSnapshot) &&
     JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(bridgeDependencyBagEnemyRendererSnapshot)
 );
 check(
-  "native and generated dependency bags survive missing, poisoned, and restored RenderEnemies publishers",
+  "native and generated dependency bags preserve the injected enemy renderer with missing, poisoned, and restored legacy globals without reads",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
     (snapshot) =>
       snapshot.missingRenderEnemiesGlobalError === "" &&
