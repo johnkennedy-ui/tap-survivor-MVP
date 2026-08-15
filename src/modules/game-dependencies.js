@@ -33,6 +33,7 @@ import { createShellRelicUi } from "./shell-relic-ui.js";
 import { createShellUiController } from "./shell-ui-classic-adapter.js";
 import { createShopSystem } from "./shop.js";
 import { createShopPricing } from "./shop-pricing.js";
+import { createSpriteSheetRenderer, createSpriteSystem } from "./sprites.js";
 import { createUpgradeContent } from "./upgrades.js";
 import { createUi, createUiRenderer } from "./ui.js";
 import { createUiProgressionRenderer } from "./ui-progression.js";
@@ -145,7 +146,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
         }),
     },
     shopPricing: { createShopPricing },
-    sprites: requireGlobal(globalRef, "TapSurvivorSprites"),
+    sprites: { createSpriteSystem, createSpriteSheetRenderer },
     storage,
     ui: {
       createUi: (options = {}) =>

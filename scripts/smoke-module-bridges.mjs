@@ -17,6 +17,10 @@ import { createGameBannerSystem as createModuleGameBannerSystem } from "../src/m
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
 import { bindMovementInput as bindModuleMovementInput } from "../src/modules/input.js";
+import {
+  createSpriteSheetRenderer as createModuleSpriteSheetRenderer,
+  createSpriteSystem as createModuleSpriteSystem,
+} from "../src/modules/sprites.js";
 import { createUpgradeContent as createModuleUpgradeContent } from "../src/modules/upgrades.js";
 import { createCombatSystem as createModuleCombatSystem } from "../src/modules/combat.js";
 import { createCombatDamageSystem as createModuleCombatDamageSystem } from "../src/modules/combat-damage.js";
@@ -173,6 +177,8 @@ const shellUiClassicBridge = loadBridge("../src/shell-ui.js", "src/shell-ui.js",
   },
 }, ["TapSurvivorShellUi"]);
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
+const spriteBridgeRuntime = createSpriteParityRuntime();
+const spritesBridge = loadBridge("../src/sprites.js", "src/sprites.js", spriteBridgeRuntime.globals);
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
@@ -236,6 +242,7 @@ const bridgeSave = saveBridge.context.TapSurvivorSave;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeRelics = relicsBridge.context.TapSurvivorRelics;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
+const bridgeSprites = spritesBridge.context.TapSurvivorSprites;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
@@ -250,6 +257,76 @@ const bridgeCombatDamage = combatDamageBridge.context.TapSurvivorCombatDamage;
 const bridgeShellRelicUi = shellRelicUiBridge.context.TapSurvivorShellRelicUi;
 const createBridgePickupSystem = createModulePickupSystem;
 const createBridgeRelicSystem = createModuleRelicSystem;
+
+const moduleSpriteFactoryRuntime = createSpriteParityRuntime();
+const moduleSpriteFactorySnapshot = withGlobalBindings(
+  moduleSpriteFactoryRuntime.globals,
+  () =>
+    spriteFactorySnapshot(
+      createModuleSpriteSystem,
+      createModuleSpriteSheetRenderer,
+      moduleSpriteFactoryRuntime
+    )
+);
+const bridgeSpriteFactorySnapshot = spriteFactorySnapshot(
+  bridgeSprites?.createSpriteSystem,
+  bridgeSprites?.createSpriteSheetRenderer,
+  spriteBridgeRuntime
+);
+const spriteShimLifecycle = spriteShimLifecycleSnapshot();
+
+check(
+  "sprites bridge retains the generated TapSurvivorSprites publisher with both source-owned factories",
+  hasGeneratedBanner(spritesBridge.source) &&
+    typeof bridgeSprites?.createSpriteSystem === "function" &&
+    typeof bridgeSprites?.createSpriteSheetRenderer === "function"
+);
+check(
+  "native sprites source has no TapSurvivorSprites publisher lookup",
+  !readFileSync(new URL("../src/modules/sprites.js", import.meta.url), "utf8").includes(
+    "TapSurvivorSprites"
+  )
+);
+check(
+  "native and generated sprite factories preserve deterministic system and sheet drawing parity",
+  JSON.stringify(moduleSpriteFactorySnapshot) === JSON.stringify(bridgeSpriteFactorySnapshot) &&
+    moduleSpriteFactorySnapshot.spriteSystemApi.join(",") === "drawImage,drawSprite,loadSprites" &&
+    moduleSpriteFactorySnapshot.spriteSheetApi.join(",") === "drawAnimation" &&
+    moduleSpriteFactorySnapshot.unavailableImage === false &&
+    moduleSpriteFactorySnapshot.loadedImage === true &&
+    moduleSpriteFactorySnapshot.rasterizedSprite === true &&
+    moduleSpriteFactorySnapshot.sheetAnimation === true &&
+    moduleSpriteFactorySnapshot.invalidSheetFrame === false &&
+    moduleSpriteFactorySnapshot.missingSheetImage === false &&
+    moduleSpriteFactorySnapshot.trace.some(
+      (entry) =>
+        entry.op === "raster.drawImage" &&
+        entry.source === "loaded.png" &&
+        entry.args.slice(0, 4).join(",") === "16,0,16,16"
+    ) &&
+    moduleSpriteFactorySnapshot.trace.some(
+      (entry) =>
+        entry.op === "drawImage" &&
+        entry.source === "canvas:8x10" &&
+        entry.alpha === 0.4 &&
+        entry.args.join(",") === "-8,-8,16,16"
+    ) &&
+    moduleSpriteFactorySnapshot.trace.some(
+      (entry) =>
+        entry.op === "drawImage" &&
+        entry.source === "loaded-sheet.png" &&
+        entry.alpha === 0.5 &&
+        entry.args.join(",") === "32,32,16,32,-15,-10,30,20"
+    )
+);
+check(
+  "classic sprite sheet compatibility shim neither reads nor creates a missing or poisoned publisher",
+  spriteShimLifecycle.absentPublisherPresent === false &&
+    spriteShimLifecycle.poisonedError === "" &&
+    spriteShimLifecycle.poisonedPublisherReads === 0 &&
+    spriteShimLifecycle.recoveredPublisherHasBothFactories &&
+    spriteShimLifecycle.recoveredFactoryIdentityRetained
+);
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
 check(
@@ -964,6 +1041,11 @@ check(
   "classic shell UI harness uses injected native shell relic behavior",
   shellRelicHarnessLockPopup?.classList.contains("hidden")
 );
+check(
+  "classic VM harness keeps generated sprite factory identities through the compatibility shim",
+  shellRelicHarness.spriteShimProof.spriteShimPreservesFactoryIdentity &&
+    shellRelicHarness.spriteShimProof.sourceDependencyBagHasBothSpriteFactories
+);
 
 check("shell UI bridge source has generated banner", hasGeneratedBanner(shellUiClassicBridge.source));
 check(
@@ -1476,6 +1558,14 @@ check(
     !gameDependenciesBridge.source.includes("globalThis.TapSurvivorAudio") &&
     !gameDependenciesBridge.source.includes('"TapSurvivorAudio"')
 );
+check(
+  "native and generated game dependency sources do not look up TapSurvivorSprites",
+  !readFileSync(new URL("../src/modules/game-dependencies.js", import.meta.url), "utf8").includes(
+    "TapSurvivorSprites"
+  ) &&
+    !gameDependenciesBridge.source.includes("globalThis.TapSurvivorSprites") &&
+    !gameDependenciesBridge.source.includes('"TapSurvivorSprites"')
+);
 
 const moduleGameRuntimeErrors = gameRuntimeDependencyErrors(createModuleGameRuntimeController);
 check(
@@ -1594,6 +1684,29 @@ const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
 check(
   "module and bridge game dependency bag output match",
   JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
+);
+check(
+  "native and generated dependency bags inject both source-owned sprite factories",
+  moduleGameDependenciesSnapshot.hasSprites &&
+    bridgeGameDependenciesSnapshot.hasSprites &&
+    moduleGameDependenciesSnapshot.__bag.sprites.createSpriteSystem === createModuleSpriteSystem &&
+    moduleGameDependenciesSnapshot.__bag.sprites.createSpriteSheetRenderer ===
+      createModuleSpriteSheetRenderer
+);
+check(
+  "native and generated dependency bags ignore absent poisoned and restored sprites publishers without reads",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every((snapshot) => {
+    const recovery = snapshot.spritePublisherRecovery;
+    return (
+      recovery.absent.error === "" &&
+      recovery.absent.hasBothFactories &&
+      recovery.poisoned.error === "" &&
+      recovery.poisoned.hasBothFactories &&
+      recovery.publisherReads === 0 &&
+      recovery.restored.error === "" &&
+      recovery.restored.hasBothFactories
+    );
+  })
 );
 check(
   "native and generated dependency bags configure injected storage capabilities",
@@ -3218,11 +3331,274 @@ function renderingSnapshot(createRenderer) {
   };
 }
 
+function spriteFactorySnapshot(createSpriteSystem, createSpriteSheetRenderer, runtime) {
+  const ctx = runtime.createDrawContext();
+  const spriteSystem = createSpriteSystem({
+    ctx,
+    spriteDefs: {
+      enemies: {
+        fixture: {
+          fps: 4,
+          frames: [
+            { height: 16, width: 16, x: 0, y: 0 },
+            { height: 16, width: 16, x: 16, y: 0 },
+          ],
+          src: "loaded.png",
+          transparentColor: [0, 0, 0],
+          transparentTolerance: 0,
+        },
+      },
+      player: "missing.png",
+    },
+  });
+  spriteSystem.loadSprites();
+
+  const spriteSheetRenderer = createSpriteSheetRenderer({
+    ctx,
+    spriteSheets: {
+      fixture: {
+        animations: {
+          broken: { frames: [7], row: 0 },
+          walk: { default: { fps: 4, frames: [1, 2], row: 1 } },
+        },
+        columns: 4,
+        id: "fixture-sheet",
+        path: "loaded-sheet.png",
+        rows: 2,
+      },
+      missing: {
+        animations: {
+          idle: { frames: [0], row: 0 },
+        },
+        columns: 1,
+        id: "missing-sheet",
+        path: "missing-sheet.png",
+        rows: 1,
+      },
+    },
+  });
+
+  return {
+    invalidSheetFrame: spriteSheetRenderer.drawAnimation(
+      "fixture",
+      "broken",
+      "default",
+      0,
+      0,
+      10,
+      10
+    ),
+    loadedImage: spriteSystem.drawImage("enemy:fixture", 1, 2, 3, 4),
+    missingSheetImage: spriteSheetRenderer.drawAnimation(
+      "missing",
+      "idle",
+      "default",
+      0,
+      0,
+      10,
+      10
+    ),
+    rasterizedSprite: spriteSystem.drawSprite("enemy:fixture", 20, 30, 16, 0.5, {
+      alpha: 0.4,
+      flipX: true,
+      rasterHeight: 10,
+      rasterWidth: 8,
+    }),
+    sheetAnimation: spriteSheetRenderer.drawAnimation("fixture", "walk", "default", 50, 60, 30, 20, {
+      alpha: 0.5,
+      flipX: true,
+      time: 0.3,
+    }),
+    spriteSheetApi: Object.keys(spriteSheetRenderer).sort(),
+    spriteSystemApi: Object.keys(spriteSystem).sort(),
+    trace: runtime.trace,
+    unavailableImage: spriteSystem.drawImage("player", 1, 2, 3, 4),
+  };
+}
+
+function createSpriteParityRuntime() {
+  const trace = [];
+
+  class SpriteParityImage {
+    constructor() {
+      this.complete = false;
+      this.listeners = new Map();
+      this.naturalHeight = 0;
+      this.naturalWidth = 0;
+      this.source = "";
+    }
+
+    addEventListener(type, callback) {
+      this.listeners.set(type, callback);
+    }
+
+    get src() {
+      return this.source;
+    }
+
+    set src(value) {
+      this.source = value;
+      const loaded = !String(value).includes("missing");
+      this.complete = loaded;
+      this.naturalHeight = loaded ? 64 : 0;
+      this.naturalWidth = loaded ? 64 : 0;
+      if (loaded) this.listeners.get("load")?.();
+    }
+  }
+
+  class SpriteParityCanvas {
+    constructor(width, height) {
+      this.__spriteParityCanvas = true;
+      this.height = height;
+      this.width = width;
+    }
+
+    getContext() {
+      return {
+        clearRect(...args) {
+          trace.push({ args, op: "raster.clearRect" });
+        },
+        drawImage(source, ...args) {
+          trace.push({ args, op: "raster.drawImage", source: spriteParitySourceLabel(source) });
+        },
+        getImageData(...args) {
+          trace.push({ args, op: "raster.getImageData" });
+          return { data: new Uint8ClampedArray(args[2] * args[3] * 4) };
+        },
+        imageSmoothingEnabled: true,
+        putImageData(...args) {
+          trace.push({ args: [args[1], args[2]], op: "raster.putImageData" });
+        },
+      };
+    }
+  }
+
+  return {
+    createDrawContext() {
+      const stack = [];
+      let alpha = 1;
+      let imageSmoothingEnabled = true;
+      return {
+        drawImage(source, ...args) {
+          trace.push({ alpha, args, op: "drawImage", source: spriteParitySourceLabel(source) });
+        },
+        get globalAlpha() {
+          return alpha;
+        },
+        set globalAlpha(value) {
+          alpha = value;
+        },
+        get imageSmoothingEnabled() {
+          return imageSmoothingEnabled;
+        },
+        set imageSmoothingEnabled(value) {
+          imageSmoothingEnabled = value;
+        },
+        restore() {
+          ({ alpha, imageSmoothingEnabled } = stack.pop() || { alpha, imageSmoothingEnabled });
+          trace.push({ op: "restore" });
+        },
+        rotate(value) {
+          trace.push({ op: "rotate", value });
+        },
+        save() {
+          stack.push({ alpha, imageSmoothingEnabled });
+          trace.push({ op: "save" });
+        },
+        scale(x, y) {
+          trace.push({ op: "scale", x, y });
+        },
+        translate(x, y) {
+          trace.push({ op: "translate", x, y });
+        },
+      };
+    },
+    globals: {
+      Image: SpriteParityImage,
+      OffscreenCanvas: SpriteParityCanvas,
+      performance: { now: () => 250 },
+    },
+    trace,
+  };
+}
+
+function spriteParitySourceLabel(source) {
+  if (source?.__spriteParityCanvas) return `canvas:${source.width}x${source.height}`;
+  return source?.src || "unknown";
+}
+
+function withGlobalBindings(bindings, callback) {
+  const target = globalThis;
+  const descriptors = new Map(
+    Object.keys(bindings).map((name) => [name, Object.getOwnPropertyDescriptor(target, name)])
+  );
+  try {
+    Object.entries(bindings).forEach(([name, value]) => {
+      Object.defineProperty(target, name, {
+        configurable: true,
+        enumerable: descriptors.get(name)?.enumerable ?? true,
+        value,
+        writable: true,
+      });
+    });
+    return callback();
+  } finally {
+    descriptors.forEach((descriptor, name) => {
+      if (descriptor) Object.defineProperty(target, name, descriptor);
+      else Reflect.deleteProperty(target, name);
+    });
+  }
+}
+
+function spriteShimLifecycleSnapshot() {
+  const spritesSource = readFileSync(new URL("../src/sprites.js", import.meta.url), "utf8");
+  const shimSource = readFileSync(new URL("../src/sprite-sheet-renderer.js", import.meta.url), "utf8");
+  const absentContext = { console };
+  absentContext.globalThis = absentContext;
+  vm.createContext(absentContext);
+  vm.runInContext(shimSource, absentContext, { filename: "src/sprite-sheet-renderer.js" });
+
+  const poisonedContext = { console };
+  poisonedContext.globalThis = poisonedContext;
+  let poisonedPublisherReads = 0;
+  Object.defineProperty(poisonedContext, "TapSurvivorSprites", {
+    configurable: true,
+    get() {
+      poisonedPublisherReads += 1;
+      throw new Error("Forbidden TapSurvivorSprites global read");
+    },
+  });
+  vm.createContext(poisonedContext);
+  let poisonedError = "";
+  try {
+    vm.runInContext(shimSource, poisonedContext, { filename: "src/sprite-sheet-renderer.js" });
+  } catch (error) {
+    poisonedError = error.message;
+  }
+
+  Reflect.deleteProperty(poisonedContext, "TapSurvivorSprites");
+  vm.runInContext(spritesSource, poisonedContext, { filename: "src/sprites.js" });
+  const publisher = poisonedContext.TapSurvivorSprites;
+  const beforeSpriteSystem = publisher?.createSpriteSystem;
+  const beforeSheetRenderer = publisher?.createSpriteSheetRenderer;
+  vm.runInContext(shimSource, poisonedContext, { filename: "src/sprite-sheet-renderer.js" });
+
+  return {
+    absentPublisherPresent: Object.prototype.hasOwnProperty.call(absentContext, "TapSurvivorSprites"),
+    poisonedError,
+    poisonedPublisherReads,
+    recoveredFactoryIdentityRetained:
+      poisonedContext.TapSurvivorSprites?.createSpriteSystem === beforeSpriteSystem &&
+      poisonedContext.TapSurvivorSprites?.createSpriteSheetRenderer === beforeSheetRenderer,
+    recoveredPublisherHasBothFactories:
+      typeof beforeSpriteSystem === "function" && typeof beforeSheetRenderer === "function",
+  };
+}
+
 function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorProgression",
     "TapSurvivorQuests",
-    "TapSurvivorSprites",
     "TapSurvivorStorage",
     "TapSurvivorUi",
     "TapSurvivorUiProgression",
@@ -3285,6 +3661,14 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   ];
   const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
   const globalRef = baseGlobalRef;
+  globalRef.TapSurvivorSprites = {
+    createSpriteSheetRenderer() {
+      throw new Error("The retained sprites publisher must not supply the dependency bag");
+    },
+    createSpriteSystem() {
+      throw new Error("The retained sprites publisher must not supply the dependency bag");
+    },
+  };
   globalRef.TapSurvivorRenderEnemies = { name: "TapSurvivorRenderEnemies" };
   const createAudioParam = () => ({
     exponentialRampToValueAtTime() {},
@@ -3393,6 +3777,11 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   globalRef.Image = function TapSurvivorShellRelicImage() {
     return createShellRelicFakeImage(shellRelicDefaultImages);
   };
+  const spritePublisherRecovery = spritePublisherRecoverySnapshot(
+    createGameDependencyBag,
+    globalRef,
+    documentRef
+  );
   const absentAudioPublisherResult = createGameDependencyBagResult(
     createGameDependencyBag,
     globalRef,
@@ -3844,6 +4233,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasRenderHud: typeof bag.renderHud?.createHudRenderer === "function",
     hasRenderSkillRail: typeof bag.renderSkillRail?.createSkillRailRenderer === "function",
     hasRendering: typeof bag.rendering?.createRenderer === "function",
+    hasSprites:
+      typeof bag.sprites?.createSpriteSystem === "function" &&
+      typeof bag.sprites?.createSpriteSheetRenderer === "function",
     hasWeaponCooldowns: typeof bag.weaponCooldowns.createWeaponScaling === "function",
     hasProgression: typeof bag.progression?.createProgressionSystem === "function",
     hasQuests:
@@ -3909,6 +4301,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasShopPricing: typeof bag.shopPricing.createShopPricing === "function",
     hasInputBinder: typeof bag.input.bindMovementInput === "function",
     missingError,
+    spritePublisherRecovery,
     absentAudioPublisherError: absentAudioPublisherResult.error,
     absentAudioPublisherSnapshot: audioProviderSnapshot(absentAudioPublisherResult.bag),
     audioPublisherReads,
@@ -3997,6 +4390,46 @@ function createGameDependencyBagResult(createGameDependencyBag, globalRef, docum
       error: error.message,
     };
   }
+}
+
+function spritePublisherRecoverySnapshot(createGameDependencyBag, globalRef, documentRef) {
+  const testGlobalRef = { ...globalRef };
+  const originalDescriptor = Object.getOwnPropertyDescriptor(testGlobalRef, "TapSurvivorSprites");
+  Reflect.deleteProperty(testGlobalRef, "TapSurvivorSprites");
+  const absent = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+
+  let publisherReads = 0;
+  Object.defineProperty(testGlobalRef, "TapSurvivorSprites", {
+    configurable: true,
+    get() {
+      publisherReads += 1;
+      throw new Error("Forbidden TapSurvivorSprites global read");
+    },
+  });
+  const poisoned = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+
+  if (originalDescriptor) {
+    Object.defineProperty(testGlobalRef, "TapSurvivorSprites", originalDescriptor);
+  } else {
+    Reflect.deleteProperty(testGlobalRef, "TapSurvivorSprites");
+  }
+  const restored = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+
+  return {
+    absent: spriteDependencySnapshot(absent),
+    poisoned: spriteDependencySnapshot(poisoned),
+    publisherReads,
+    restored: spriteDependencySnapshot(restored),
+  };
+}
+
+function spriteDependencySnapshot(result) {
+  return {
+    error: result.error,
+    hasBothFactories:
+      typeof result.bag?.sprites?.createSpriteSystem === "function" &&
+      typeof result.bag?.sprites?.createSpriteSheetRenderer === "function",
+  };
 }
 
 function audioProviderSnapshot(bag) {

@@ -29,6 +29,7 @@ const generatedContent = readRequired("src/content.generated.js");
 const effects = readRequired("src/effects.js");
 const math = readRequired("src/math.js");
 const sprites = readRequired("src/sprites.js");
+const nativeSprites = readRequired("src/modules/sprites.js");
 const spriteSheetRenderer = readRequired("src/sprite-sheet-renderer.js");
 const assets = readRequired("src/assets.js");
 const nativeAssets = readRequired("src/modules/assets.js");
@@ -355,7 +356,28 @@ check(
     !rendering.includes("globalThis.TapSurvivorMath") &&
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
-check("shared sprite helpers exist", sprites.includes("TapSurvivorSprites") && runtimeEntry.includes("TapSurvivorSprites"));
+check(
+  "shared sprite helpers are source-owned with a retained generated compatibility publisher",
+  nativeSprites.includes("export function createSpriteSystem") &&
+    nativeSprites.includes("export function createSpriteSheetRenderer") &&
+    !nativeSprites.includes("TapSurvivorSprites") &&
+    !nativeSprites.includes("globalThis") &&
+    sprites.includes("// GENERATED FILE.") &&
+    sprites.includes("// Source: src/modules/sprites.js") &&
+    sprites.includes("globalThis.TapSurvivorSprites =") &&
+    sprites.includes("createSpriteSystem") &&
+    sprites.includes("createSpriteSheetRenderer") &&
+    moduleGameDependencies.includes(
+      'import { createSpriteSheetRenderer, createSpriteSystem } from "./sprites.js";'
+    ) &&
+    moduleGameDependencies.includes("sprites: { createSpriteSystem, createSpriteSheetRenderer }") &&
+    gameDependencies.includes("sprites: { createSpriteSystem, createSpriteSheetRenderer }") &&
+    !moduleGameDependencies.includes("TapSurvivorSprites") &&
+    !gameDependencies.includes("TapSurvivorSprites") &&
+    spriteSheetRenderer.includes("Script-order compatibility shim") &&
+    !spriteSheetRenderer.includes("globalThis") &&
+    !spriteSheetRenderer.includes("function createSpriteSheetRenderer")
+);
 check(
   "effects and upgrade content are explicitly dependency-injected without classic publishers",
   !effects.includes("globalThis.TapSurvivorEffects =") &&
@@ -366,7 +388,12 @@ check(
     game.includes("effects,") &&
     game.includes("upgrades: upgradeContent"),
 );
-check("enemy and boss sprite-sheet renderer is wired", spriteSheetRenderer.includes("createSpriteSheetRenderer") && game.includes("createSpriteSheetRenderer") && renderEnemies.includes("spriteSheetRenderer"));
+check(
+  "enemy and boss sprite-sheet renderer is wired through the source-owned sprite factories",
+  nativeSprites.includes("export function createSpriteSheetRenderer") &&
+    game.includes("createSpriteSheetRenderer") &&
+    renderEnemies.includes("spriteSheetRenderer")
+);
 check(
   "shared asset resolver is explicitly dependency-injected without a classic publisher",
   nativeAssets.includes("function createAssetResolver") &&

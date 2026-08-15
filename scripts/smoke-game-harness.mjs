@@ -326,7 +326,7 @@ export function createGameHarness({
   context.__tapSurvivorRetiredGlobalReads = retiredGlobalReads;
 
   vm.createContext(context);
-  [
+  const classicSourcesBeforeSpriteShim = [
     "src/content.generated.js",
     "src/balance-runtime.js",
     "src/assets.js",
@@ -345,7 +345,22 @@ export function createGameHarness({
     "src/content-registry.js",
     "src/map-system.js",
     "src/progression.js",
-    "src/sprite-sheet-renderer.js",
+  ];
+  classicSourcesBeforeSpriteShim.forEach((path) => vm.runInContext(readSource(path), context));
+
+  const spriteFactoriesBeforeShim = {
+    createSpriteSheetRenderer: context.TapSurvivorSprites?.createSpriteSheetRenderer,
+    createSpriteSystem: context.TapSurvivorSprites?.createSpriteSystem,
+  };
+  vm.runInContext(readSource("src/sprite-sheet-renderer.js"), context);
+  const spriteShimPreservesFactoryIdentity =
+    typeof spriteFactoriesBeforeShim.createSpriteSystem === "function" &&
+    typeof spriteFactoriesBeforeShim.createSpriteSheetRenderer === "function" &&
+    context.TapSurvivorSprites?.createSpriteSystem === spriteFactoriesBeforeShim.createSpriteSystem &&
+    context.TapSurvivorSprites?.createSpriteSheetRenderer ===
+      spriteFactoriesBeforeShim.createSpriteSheetRenderer;
+
+  [
     "src/render-skill-rail.js",
     "src/render-hud.js",
     "src/render-enemies.js",
@@ -440,6 +455,9 @@ export function createGameHarness({
     globalRef: context,
     documentRef: context.document,
   });
+  const sourceDependencyBagHasBothSpriteFactories =
+    typeof sourceGameDependencies.sprites?.createSpriteSystem === "function" &&
+    typeof sourceGameDependencies.sprites?.createSpriteSheetRenderer === "function";
   if (fakeCombat) {
     context.TapSurvivorBalanceRuntime.configureDefaultProviders({
       content: classicContent,
@@ -621,6 +639,10 @@ export function createGameHarness({
     dispatchVisibilityHidden() {
       context.document.visibilityState = "hidden";
       dispatchListeners(documentListeners, "visibilitychange", {});
+    },
+    spriteShimProof: {
+      sourceDependencyBagHasBothSpriteFactories,
+      spriteShimPreservesFactoryIdentity,
     },
   };
 }

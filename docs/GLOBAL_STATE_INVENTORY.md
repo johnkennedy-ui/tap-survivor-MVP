@@ -14,6 +14,10 @@ Primary bootstrap coupling:
 - `src/game-dependencies.js` collects the retained `TapSurvivor*` dependency bag for the classic `src/game.js`
   fallback boundary and supplies `input.bindMovementInput` and `renderEnemies.createEnemyRenderer` from source-owned
   modules, plus `rendering.createRenderer`, without publisher lookups.
+- `src/modules/sprites.js` is the canonical owner of `createSpriteSystem` and `createSpriteSheetRenderer`. Generated
+  `src/sprites.js` retains the `TapSurvivorSprites` publisher for the classic fallback boundary, while
+  `src/modules/game-dependencies.js` and generated `src/game-dependencies.js` inject both factories directly.
+  `src/sprite-sheet-renderer.js` remains only as a non-overwriting script-order compatibility shim.
 - `src/game.js` wires the run from that dependency bag and holds top-level run state.
 - `src/run-lifecycle.js` is the generated classic bridge for run start/end/boss-clear behavior.
 - `src/run-state.js` is the generated classic bridge for run state/player reset construction.
@@ -165,8 +169,9 @@ Runtime module globals:
 - Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
   supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
-- Rendering/UI: `TapSurvivorSprites`; source-owned renderer and enemy-renderer factories are directly
-  dependency-injected through `TapSurvivorGameDependencies`. `TapSurvivorRendering` is retired alongside
+- Rendering/UI: generated `src/sprites.js` retains `TapSurvivorSprites` for the classic fallback boundary, while the
+  native and generated dependency bags inject both sprite factories directly. Source-owned renderer and enemy-renderer
+  factories are also directly dependency-injected through `TapSurvivorGameDependencies`. `TapSurvivorRendering` is retired alongside
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderHud`, `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`,
   `TapSurvivorUi`, `TapSurvivorUiProgression`, and `TapSurvivorShellRelicUi`; their factories remain explicitly
   injected.
@@ -219,7 +224,8 @@ Key top-level mutable state currently lives in `src/game.js`:
 - `gameRuntime`
 
 Other module-level state/caches:
-- `src/sprites.js` owns sprite cache state inside its sprite system factory.
+- `src/modules/sprites.js` owns sprite cache state inside its sprite system factory; generated `src/sprites.js`
+  publishes the retained classic compatibility namespace.
 - `src/modules/module-runtime-audio-adapter.js` owns audio context/cache state inside its audio system factory;
   generated `src/audio.js` is the global-free classic artifact.
 - `src/balance-runtime.js` owns the runtime balance profile/override resolver state through its factory output.

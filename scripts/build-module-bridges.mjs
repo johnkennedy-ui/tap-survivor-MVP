@@ -177,6 +177,21 @@ const bridges = [
     exports: ["clamp", "distance", "formatTime", "randomRange"],
   },
   {
+    source: "src/modules/sprites.js",
+    target: "src/sprites.js",
+    globalName: "TapSurvivorSprites",
+    exports: [
+      "MODULE_NATIVE_SPRITES_SLOTS",
+      "MODULE_NATIVE_SPRITES_PROOF_SLOTS",
+      "createSpriteSystem",
+      "createSpriteSheetRenderer",
+    ],
+    globalMembers: [
+      { name: "createSpriteSystem", value: "createSpriteSystem" },
+      { name: "createSpriteSheetRenderer", value: "createSpriteSheetRenderer" },
+    ],
+  },
+  {
     source: "src/modules/weapon-targeting.js",
     target: "src/weapon-targeting.js",
     globalName: null,
@@ -393,6 +408,15 @@ const bridges = [
       {
         source: "src/modules/math.js",
         exports: ["clamp", "distance", "formatTime", "randomRange"],
+      },
+      {
+        source: "src/modules/sprites.js",
+        exports: [
+          "MODULE_NATIVE_SPRITES_SLOTS",
+          "MODULE_NATIVE_SPRITES_PROOF_SLOTS",
+          "createSpriteSystem",
+          "createSpriteSheetRenderer",
+        ],
       },
       {
         source: "src/modules/pickups.js",
