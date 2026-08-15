@@ -15,9 +15,9 @@ Primary bootstrap coupling:
   fallback boundary and supplies `input.bindMovementInput` and `renderEnemies.createEnemyRenderer` from source-owned
   modules, plus `rendering.createRenderer`, without publisher lookups.
 - `src/modules/sprites.js` is the canonical owner of `createSpriteSystem` and `createSpriteSheetRenderer`. Generated
-  `src/sprites.js` retains the `TapSurvivorSprites` publisher for the classic fallback boundary, while
+  `src/sprites.js` is a global-free classic compatibility bridge with retired `TapSurvivorSprites` provenance, while
   `src/modules/game-dependencies.js` and generated `src/game-dependencies.js` inject both factories directly.
-  `src/sprite-sheet-renderer.js` remains only as a non-overwriting script-order compatibility shim.
+  `src/sprite-sheet-renderer.js` remains only as a no-op script-order compatibility shim.
 - `src/game.js` wires the run from that dependency bag and holds top-level run state.
 - `src/run-lifecycle.js` is the generated classic bridge for run start/end/boss-clear behavior.
 - `src/run-state.js` is the generated classic bridge for run state/player reset construction.
@@ -169,7 +169,7 @@ Runtime module globals:
 - Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
   supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
-- Rendering/UI: generated `src/sprites.js` retains `TapSurvivorSprites` for the classic fallback boundary, while the
+- Rendering/UI: generated `src/sprites.js` is global-free with retired `TapSurvivorSprites` provenance, while the
   native and generated dependency bags inject both sprite factories directly. Source-owned renderer and enemy-renderer
   factories are also directly dependency-injected through `TapSurvivorGameDependencies`. `TapSurvivorRendering` is retired alongside
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderHud`, `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`,
@@ -187,7 +187,7 @@ Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 6 actual usages (5 allowed expressions and 12 allowed usages); the allowlist does not count bare
+  dot-expression global audit is 5 actual usages (4 allowed expressions and 11 allowed usages); the allowlist does not count bare
   `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Debug, Audio, Shell
   UI, and input are supplied through source-owned providers for the next migration batch.
 - Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;
@@ -225,7 +225,7 @@ Key top-level mutable state currently lives in `src/game.js`:
 
 Other module-level state/caches:
 - `src/modules/sprites.js` owns sprite cache state inside its sprite system factory; generated `src/sprites.js`
-  publishes the retained classic compatibility namespace.
+  is global-free and carries retired classic compatibility provenance.
 - `src/modules/module-runtime-audio-adapter.js` owns audio context/cache state inside its audio system factory;
   generated `src/audio.js` is the global-free classic artifact.
 - `src/balance-runtime.js` owns the runtime balance profile/override resolver state through its factory output.

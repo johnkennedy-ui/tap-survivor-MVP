@@ -348,17 +348,15 @@ export function createGameHarness({
   ];
   classicSourcesBeforeSpriteShim.forEach((path) => vm.runInContext(readSource(path), context));
 
-  const spriteFactoriesBeforeShim = {
-    createSpriteSheetRenderer: context.TapSurvivorSprites?.createSpriteSheetRenderer,
-    createSpriteSystem: context.TapSurvivorSprites?.createSpriteSystem,
-  };
+  const spritePublisherAbsentBeforeShim = !Object.prototype.hasOwnProperty.call(
+    context,
+    "TapSurvivorSprites"
+  );
   vm.runInContext(readSource("src/sprite-sheet-renderer.js"), context);
-  const spriteShimPreservesFactoryIdentity =
-    typeof spriteFactoriesBeforeShim.createSpriteSystem === "function" &&
-    typeof spriteFactoriesBeforeShim.createSpriteSheetRenderer === "function" &&
-    context.TapSurvivorSprites?.createSpriteSystem === spriteFactoriesBeforeShim.createSpriteSystem &&
-    context.TapSurvivorSprites?.createSpriteSheetRenderer ===
-      spriteFactoriesBeforeShim.createSpriteSheetRenderer;
+  const spritePublisherAbsentAfterShim = !Object.prototype.hasOwnProperty.call(
+    context,
+    "TapSurvivorSprites"
+  );
 
   [
     "src/render-skill-rail.js",
@@ -642,7 +640,8 @@ export function createGameHarness({
     },
     spriteShimProof: {
       sourceDependencyBagHasBothSpriteFactories,
-      spriteShimPreservesFactoryIdentity,
+      spritePublisherAbsentAfterShim,
+      spritePublisherAbsentBeforeShim,
     },
   };
 }

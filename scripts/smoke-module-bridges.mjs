@@ -177,8 +177,7 @@ const shellUiClassicBridge = loadBridge("../src/shell-ui.js", "src/shell-ui.js",
   },
 }, ["TapSurvivorShellUi"]);
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
-const spriteBridgeRuntime = createSpriteParityRuntime();
-const spritesBridge = loadBridge("../src/sprites.js", "src/sprites.js", spriteBridgeRuntime.globals);
+const spritesBridge = loadBridge("../src/sprites.js", "src/sprites.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
 const cooldownBridge = loadBridge("../src/weapon-cooldowns.js", "src/weapon-cooldowns.js");
 const projectileBridge = loadBridge("../src/weapon-projectiles.js", "src/weapon-projectiles.js");
@@ -242,7 +241,6 @@ const bridgeSave = saveBridge.context.TapSurvivorSave;
 const createBridgeShopPricing = pricingBridge.context.TapSurvivorShopPricing?.createShopPricing;
 const bridgeRelics = relicsBridge.context.TapSurvivorRelics;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
-const bridgeSprites = spritesBridge.context.TapSurvivorSprites;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
@@ -268,18 +266,19 @@ const moduleSpriteFactorySnapshot = withGlobalBindings(
       moduleSpriteFactoryRuntime
     )
 );
-const bridgeSpriteFactorySnapshot = spriteFactorySnapshot(
-  bridgeSprites?.createSpriteSystem,
-  bridgeSprites?.createSpriteSheetRenderer,
-  spriteBridgeRuntime
-);
 const spriteShimLifecycle = spriteShimLifecycleSnapshot();
 
 check(
-  "sprites bridge retains the generated TapSurvivorSprites publisher with both source-owned factories",
+  "sprites bridge is generated global-free with retired TapSurvivorSprites provenance",
   hasGeneratedBanner(spritesBridge.source) &&
-    typeof bridgeSprites?.createSpriteSystem === "function" &&
-    typeof bridgeSprites?.createSpriteSheetRenderer === "function"
+    !Object.prototype.hasOwnProperty.call(spritesBridge.context, "TapSurvivorSprites") &&
+    !spritesBridge.source.includes("globalThis.TapSurvivorSprites") &&
+    !spritesBridge.source.includes("window.TapSurvivorSprites") &&
+    spritesBridge.source.includes(
+      "// Retired global: TapSurvivorSprites. Exports are supplied through the game dependency bag."
+    ) &&
+    spritesBridge.source.includes("function createSpriteSystem") &&
+    spritesBridge.source.includes("function createSpriteSheetRenderer")
 );
 check(
   "native sprites source has no TapSurvivorSprites publisher lookup",
@@ -288,9 +287,8 @@ check(
   )
 );
 check(
-  "native and generated sprite factories preserve deterministic system and sheet drawing parity",
-  JSON.stringify(moduleSpriteFactorySnapshot) === JSON.stringify(bridgeSpriteFactorySnapshot) &&
-    moduleSpriteFactorySnapshot.spriteSystemApi.join(",") === "drawImage,drawSprite,loadSprites" &&
+  "native sprite factories preserve deterministic system and sheet drawing behavior",
+  moduleSpriteFactorySnapshot.spriteSystemApi.join(",") === "drawImage,drawSprite,loadSprites" &&
     moduleSpriteFactorySnapshot.spriteSheetApi.join(",") === "drawAnimation" &&
     moduleSpriteFactorySnapshot.unavailableImage === false &&
     moduleSpriteFactorySnapshot.loadedImage === true &&
@@ -320,12 +318,14 @@ check(
     )
 );
 check(
-  "classic sprite sheet compatibility shim neither reads nor creates a missing or poisoned publisher",
-  spriteShimLifecycle.absentPublisherPresent === false &&
+  "retired sprites bridge and classic shim neither read nor create a missing, poisoned, or restored publisher",
+  spriteShimLifecycle.absentError === "" &&
+    spriteShimLifecycle.absentPublisherPresent === false &&
     spriteShimLifecycle.poisonedError === "" &&
     spriteShimLifecycle.poisonedPublisherReads === 0 &&
-    spriteShimLifecycle.recoveredPublisherHasBothFactories &&
-    spriteShimLifecycle.recoveredFactoryIdentityRetained
+    spriteShimLifecycle.poisonedDescriptorRetained &&
+    spriteShimLifecycle.restoredError === "" &&
+    spriteShimLifecycle.restoredDescriptorRetained
 );
 
 check("module exports floorDifficulty", typeof moduleFloorDifficulty === "function");
@@ -1042,8 +1042,9 @@ check(
   shellRelicHarnessLockPopup?.classList.contains("hidden")
 );
 check(
-  "classic VM harness keeps generated sprite factory identities through the compatibility shim",
-  shellRelicHarness.spriteShimProof.spriteShimPreservesFactoryIdentity &&
+  "classic VM harness boots without the retired sprites publisher through the compatibility shim",
+  shellRelicHarness.spriteShimProof.spritePublisherAbsentBeforeShim &&
+    shellRelicHarness.spriteShimProof.spritePublisherAbsentAfterShim &&
     shellRelicHarness.spriteShimProof.sourceDependencyBagHasBothSpriteFactories
 );
 
@@ -1694,7 +1695,7 @@ check(
       createModuleSpriteSheetRenderer
 );
 check(
-  "native and generated dependency bags ignore absent poisoned and restored sprites publishers without reads",
+  "native and generated dependency bags ignore absent, poisoned, and restored retired sprites globals without reads",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every((snapshot) => {
     const recovery = snapshot.spritePublisherRecovery;
     return (
@@ -3553,10 +3554,25 @@ function withGlobalBindings(bindings, callback) {
 function spriteShimLifecycleSnapshot() {
   const spritesSource = readFileSync(new URL("../src/sprites.js", import.meta.url), "utf8");
   const shimSource = readFileSync(new URL("../src/sprite-sheet-renderer.js", import.meta.url), "utf8");
+  const runArtifacts = (context) => {
+    let error = "";
+    [
+      [spritesSource, "src/sprites.js"],
+      [shimSource, "src/sprite-sheet-renderer.js"],
+    ].forEach(([source, filename]) => {
+      try {
+        vm.runInContext(source, context, { filename });
+      } catch (caught) {
+        error ||= caught.message;
+      }
+    });
+    return error;
+  };
+
   const absentContext = { console };
   absentContext.globalThis = absentContext;
   vm.createContext(absentContext);
-  vm.runInContext(shimSource, absentContext, { filename: "src/sprite-sheet-renderer.js" });
+  const absentError = runArtifacts(absentContext);
 
   const poisonedContext = { console };
   poisonedContext.globalThis = poisonedContext;
@@ -3568,30 +3584,33 @@ function spriteShimLifecycleSnapshot() {
       throw new Error("Forbidden TapSurvivorSprites global read");
     },
   });
+  const poisonedDescriptor = Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorSprites");
   vm.createContext(poisonedContext);
-  let poisonedError = "";
-  try {
-    vm.runInContext(shimSource, poisonedContext, { filename: "src/sprite-sheet-renderer.js" });
-  } catch (error) {
-    poisonedError = error.message;
-  }
+  const poisonedError = runArtifacts(poisonedContext);
 
-  Reflect.deleteProperty(poisonedContext, "TapSurvivorSprites");
-  vm.runInContext(spritesSource, poisonedContext, { filename: "src/sprites.js" });
-  const publisher = poisonedContext.TapSurvivorSprites;
-  const beforeSpriteSystem = publisher?.createSpriteSystem;
-  const beforeSheetRenderer = publisher?.createSpriteSheetRenderer;
-  vm.runInContext(shimSource, poisonedContext, { filename: "src/sprite-sheet-renderer.js" });
+  const restoredContext = { console };
+  restoredContext.globalThis = restoredContext;
+  const restoredPublisher = { marker: "existing-namespace" };
+  Object.defineProperty(restoredContext, "TapSurvivorSprites", {
+    configurable: true,
+    enumerable: true,
+    value: restoredPublisher,
+    writable: true,
+  });
+  const restoredDescriptor = Object.getOwnPropertyDescriptor(restoredContext, "TapSurvivorSprites");
+  vm.createContext(restoredContext);
+  const restoredError = runArtifacts(restoredContext);
 
   return {
+    absentError,
     absentPublisherPresent: Object.prototype.hasOwnProperty.call(absentContext, "TapSurvivorSprites"),
     poisonedError,
     poisonedPublisherReads,
-    recoveredFactoryIdentityRetained:
-      poisonedContext.TapSurvivorSprites?.createSpriteSystem === beforeSpriteSystem &&
-      poisonedContext.TapSurvivorSprites?.createSpriteSheetRenderer === beforeSheetRenderer,
-    recoveredPublisherHasBothFactories:
-      typeof beforeSpriteSystem === "function" && typeof beforeSheetRenderer === "function",
+    poisonedDescriptorRetained:
+      Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorSprites")?.get === poisonedDescriptor?.get,
+    restoredError,
+    restoredDescriptorRetained:
+      Object.getOwnPropertyDescriptor(restoredContext, "TapSurvivorSprites")?.value === restoredDescriptor?.value,
   };
 }
 
@@ -3655,20 +3674,13 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorShellRelicUi",
     "TapSurvivorShellUi",
     "TapSurvivorShopPricing",
+    "TapSurvivorSprites",
     "TapSurvivorUpgrades",
     "TapSurvivorWeaponProjectiles",
     "TapSurvivorWeaponTargeting",
   ];
   const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
   const globalRef = baseGlobalRef;
-  globalRef.TapSurvivorSprites = {
-    createSpriteSheetRenderer() {
-      throw new Error("The retained sprites publisher must not supply the dependency bag");
-    },
-    createSpriteSystem() {
-      throw new Error("The retained sprites publisher must not supply the dependency bag");
-    },
-  };
   globalRef.TapSurvivorRenderEnemies = { name: "TapSurvivorRenderEnemies" };
   const createAudioParam = () => ({
     exponentialRampToValueAtTime() {},

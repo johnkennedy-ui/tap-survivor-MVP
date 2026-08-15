@@ -3,7 +3,6 @@
     "globalThis.TapSurvivorBalanceRuntime",
     "globalThis.TapSurvivorContent",
     "globalThis.TapSurvivorGameDependencies",
-    "globalThis.TapSurvivorSprites",
     "globalThis.TapSurvivorStorage"
   ],
   "allowedFileCounts": {
@@ -35,7 +34,6 @@
     "src/save-normalize.js": 1,
     "src/shop-pricing.js": 0,
     "src/shop.js": 2,
-    "src/sprites.js": 1,
     "src/storage-adapter.js": 1,
     "src/ui-progression.js": 0,
     "src/ui.js": 0,

@@ -179,7 +179,8 @@ const bridges = [
   {
     source: "src/modules/sprites.js",
     target: "src/sprites.js",
-    globalName: "TapSurvivorSprites",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorSprites",
     exports: [
       "MODULE_NATIVE_SPRITES_SLOTS",
       "MODULE_NATIVE_SPRITES_PROOF_SLOTS",

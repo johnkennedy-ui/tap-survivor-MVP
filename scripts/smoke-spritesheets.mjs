@@ -1,15 +1,10 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
-import vm from "node:vm";
+
+import { content } from "../src/content.generated.mjs";
+import { createSpriteSheetRenderer } from "../src/modules/sprites.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const context = { console };
-vm.createContext(context);
-["src/content.generated.js", "src/sprites.js", "src/sprite-sheet-renderer.js"].forEach((path) => {
-  vm.runInContext(readFileSync(join(root, path), "utf8"), context);
-});
-
-const content = context.TapSurvivorContent;
 const spriteSheets = content.assets?.sprites?.spriteSheets || {};
 const enemyIds = ["drifter", "skitter", "bulwark", "hexer", "verdant_skitter", "dusk_crawler", "crimson_hexer", "obsidian_bulwark"];
 const bossIds = ["warden", "charger", "turret"];
@@ -37,7 +32,7 @@ assert(
   }),
 );
 
-const renderer = context.TapSurvivorSprites.createSpriteSheetRenderer({
+const renderer = createSpriteSheetRenderer({
   ctx: {
     save() {},
     restore() {},

@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/sprites.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorSprites. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -289,9 +290,4 @@
       drawAnimation,
     };
   }
-
-  globalThis.TapSurvivorSprites = {
-    createSpriteSystem,
-    createSpriteSheetRenderer,
-  };
 })();

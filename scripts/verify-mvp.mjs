@@ -357,14 +357,18 @@ check(
     !renderHud.includes("globalThis.TapSurvivorMath"),
 );
 check(
-  "shared sprite helpers are source-owned with a retained generated compatibility publisher",
+  "shared sprite helpers are source-owned with a retired generated compatibility publisher",
   nativeSprites.includes("export function createSpriteSystem") &&
     nativeSprites.includes("export function createSpriteSheetRenderer") &&
     !nativeSprites.includes("TapSurvivorSprites") &&
     !nativeSprites.includes("globalThis") &&
     sprites.includes("// GENERATED FILE.") &&
     sprites.includes("// Source: src/modules/sprites.js") &&
-    sprites.includes("globalThis.TapSurvivorSprites =") &&
+    sprites.includes(
+      "// Retired global: TapSurvivorSprites. Exports are supplied through the game dependency bag."
+    ) &&
+    !sprites.includes("globalThis.TapSurvivorSprites") &&
+    !sprites.includes("window.TapSurvivorSprites") &&
     sprites.includes("createSpriteSystem") &&
     sprites.includes("createSpriteSheetRenderer") &&
     moduleGameDependencies.includes(

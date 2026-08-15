@@ -70,8 +70,9 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/weapon-behaviors.js`: non-projectile weapon behavior handlers for beams, cones, radial pulses, chains, target areas, lingering areas, mines, and area/beam/burst updates.
 - `src/modules/math.js`: real ES-module implementation for shared math and formatting helpers.
 - `src/math.js`: generated classic compatibility bridge for `TapSurvivorMath`; do not hand-edit it.
-- `src/sprites.js`: shared sprite loading and canvas draw helper with per-size raster caching for SVG sprite performance.
-- `src/sprite-sheet-renderer.js`: focused animated sprite-sheet drawer for enemy and boss sheet frames; it extends the existing `TapSurvivorSprites` namespace and returns false for fallback rendering.
+- `src/modules/sprites.js`: source-owned sprite loading and canvas draw helpers with per-size raster caching for SVG sprite performance.
+- `src/sprites.js`: generated global-free classic compatibility bridge for those sprite factories; do not hand-edit it.
+- `src/sprite-sheet-renderer.js`: no-op script-order compatibility shim; the injected source-owned sheet renderer returns false when an image is unavailable.
 - `src/assets.js`: shared resolver for effect sprites, clean icons, relic icons, level-up icons, and fallback asset paths.
 - `src/upgrades.js`: generated weapon upgrade definitions plus the small run-upgrade effect interpreter.
 - `src/styles.css`: page, panel, modal, and responsive styling.
