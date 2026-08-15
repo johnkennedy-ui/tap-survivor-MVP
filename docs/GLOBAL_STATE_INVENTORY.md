@@ -13,7 +13,7 @@ The runtime currently uses a script-order global namespace instead of ES module 
 Primary bootstrap coupling:
 - `src/game-dependencies.js` collects the retained `TapSurvivor*` dependency bag for the classic `src/game.js`
   fallback boundary and supplies `input.bindMovementInput` and `renderEnemies.createEnemyRenderer` from source-owned
-  modules without publisher lookups.
+  modules, plus `rendering.createRenderer`, without publisher lookups.
 - `src/game.js` wires the run from that dependency bag and holds top-level run state.
 - `src/run-lifecycle.js` is the generated classic bridge for run start/end/boss-clear behavior.
 - `src/run-state.js` is the generated classic bridge for run state/player reset construction.
@@ -73,7 +73,12 @@ Generated content globals:
   dependency bags inject the factory directly, while `src/rendering.js` receives it through factory wiring instead of
   reading a legacy publisher; `src/game.js` remains the script-order bootstrap reader until the rendering stack can
   safely become ESM.
-- `src/rendering.js` now receives weapon skill-effect sprite metadata through factory wiring instead of reading
+- Preparation-only rendering bridge: `src/modules/rendering.js` now owns `createRenderer` without reading
+  `TapSurvivorRendering`; generated `src/rendering.js` remains source-derived and continues to publish
+  `TapSurvivorRendering` for the classic fallback boundary. The native and generated dependency bags inject
+  `rendering.createRenderer` directly, while `src/game.js` and script order remain unchanged. This does not retire
+  the publisher or change the global audit.
+- `src/rendering.js` receives weapon skill-effect sprite metadata through factory wiring instead of reading
   `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
 - `src/render-hud.js` now receives run-upgrade definitions through `src/rendering.js` factory wiring instead of reading
   `globalThis.TapSurvivorContent` directly; `src/game.js` derives that dependency from the content registry output.
@@ -161,10 +166,11 @@ Runtime module globals:
 - Save/storage: `TapSurvivorStorage`; save creation, defaults, migrations, normalization, and corruption handling are
   supplied through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
-- Rendering/UI: `TapSurvivorSprites` and `TapSurvivorRendering`; the source-owned enemy renderer is directly
-  dependency-injected through `TapSurvivorGameDependencies`, and its former `TapSurvivorRenderEnemies` publisher is
-  retired. The former `TapSurvivorRenderHud`, `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`, `TapSurvivorUi`,
-  `TapSurvivorUiProgression`, and `TapSurvivorShellRelicUi` publishers are dependency-injected.
+- Rendering/UI: `TapSurvivorSprites` and `TapSurvivorRendering`; source-owned renderer and enemy-renderer factories
+  are directly dependency-injected through `TapSurvivorGameDependencies`. `TapSurvivorRendering` remains the
+  unchanged classic compatibility publisher; the former `TapSurvivorRenderEnemies`, `TapSurvivorRenderHud`,
+  `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`, `TapSurvivorUi`, `TapSurvivorUiProgression`, and
+  `TapSurvivorShellRelicUi` publishers are retired and dependency-injected.
 - Gameplay systems: the native `createRunUpdater` plus the retired combat, pickup, relic, and enemy factories are
   injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and

@@ -23,6 +23,7 @@ import { createRelicSystem } from "./relics.js";
 import { createEnemyRenderer } from "./render-enemies.js";
 import { createHudRenderer } from "./render-hud.js";
 import { createSkillRailRenderer } from "./render-skill-rail.js";
+import { createRenderer } from "./rendering.js";
 import { createSaveLoadHandler } from "./save-corruption.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
 import { isPlainObject, migrateSave } from "./save-migrations.js";
@@ -124,7 +125,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     renderEnemies: { createEnemyRenderer },
     renderHud: { createHudRenderer },
     renderSkillRail: { createSkillRailRenderer },
-    rendering: requireGlobal(globalRef, "TapSurvivorRendering"),
+    rendering: { createRenderer },
     runLifecycle: { createRunLifecycle },
     runState: { createRunStateSystem },
     runUi: { createRunUi },

@@ -49,6 +49,7 @@ const nativeRenderHud = readRequired("src/modules/render-hud.js");
 const renderEnemies = readRequired("src/render-enemies.js");
 const nativeRenderEnemies = readRequired("src/modules/render-enemies.js");
 const rendering = readRequired("src/rendering.js");
+const nativeRendering = readRequired("src/modules/rendering.js");
 const balance = readRequired("src/balance.js");
 const weaponProjectiles = readRequired("src/weapon-projectiles.js");
 const weaponTargeting = readRequired("src/weapon-targeting.js");
@@ -461,6 +462,20 @@ check(
     !gameDependencies.includes("TapSurvivorRenderEnemies") &&
     rendering.includes("createEnemyRenderer") &&
     !rendering.includes("globalThis.TapSurvivorRenderEnemies"),
+);
+check(
+  "rendering factory is source-owned with a retained compatibility publisher and direct dependency-bag injection",
+  nativeRendering.includes("export function createRenderer") &&
+    !nativeRendering.includes("TapSurvivorRendering") &&
+    !nativeRendering.includes("globalThis") &&
+    rendering.includes("// GENERATED FILE.") &&
+    rendering.includes("// Source: src/modules/rendering.js") &&
+    rendering.includes("globalThis.TapSurvivorRendering =") &&
+    moduleGameDependencies.includes('import { createRenderer } from "./rendering.js"') &&
+    moduleGameDependencies.includes("rendering: { createRenderer }") &&
+    !moduleGameDependencies.includes("TapSurvivorRendering") &&
+    gameDependencies.includes("rendering: { createRenderer }") &&
+    !gameDependencies.includes("TapSurvivorRendering"),
 );
 check(
   "shared UI helpers are explicitly dependency-injected without classic publishers",

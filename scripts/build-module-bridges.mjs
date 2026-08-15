@@ -259,6 +259,12 @@ const bridges = [
     ],
   },
   {
+    source: "src/modules/rendering.js",
+    target: "src/rendering.js",
+    globalName: "TapSurvivorRendering",
+    exports: ["createRenderer"],
+  },
+  {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
     globalName: "TapSurvivorGameDependencies",
@@ -418,6 +424,10 @@ const bridges = [
           "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
           "createEnemyRenderer",
         ],
+      },
+      {
+        source: "src/modules/rendering.js",
+        exports: ["createRenderer"],
       },
       {
         source: "src/modules/shop-pricing.js",
