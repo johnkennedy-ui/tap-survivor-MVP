@@ -58,9 +58,10 @@ Generated content globals:
   those namespaces.
 - `src/math.js` is now a generated classic bridge for the retired math helper; the native dependency bag injects `clamp`,
   `distance`, `formatTime`, and `randomRange` directly.
-- `src/render-hud.js` still owns the `TapSurvivorRenderHud` compatibility bridge. `src/rendering.js` now receives
-  `createHudRenderer` through factory wiring instead of reading `globalThis.TapSurvivorRenderHud`; `src/game.js` remains
-  the script-order bootstrap reader until the rendering stack can safely become ESM.
+- `src/modules/render-hud.js` owns `createHudRenderer`; generated `src/render-hud.js` retains the
+  `TapSurvivorRenderHud` compatibility publisher. The native and classic dependency bags inject the factory directly,
+  while `src/rendering.js` receives it through factory wiring instead of reading `globalThis.TapSurvivorRenderHud`;
+  `src/game.js` remains the script-order bootstrap reader until the rendering stack can safely become ESM.
 - `src/render-skill-rail.js` is a generated, global-free artifact with retired `TapSurvivorRenderSkillRail` provenance.
   `src/render-hud.js` and the classic dependency bag receive `createSkillRailRenderer` through factory wiring instead of
   reading a compatibility publisher.

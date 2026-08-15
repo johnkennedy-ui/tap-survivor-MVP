@@ -45,6 +45,7 @@ const contentRegistry = readRequired("src/content-registry.js");
 const progression = readRequired("src/progression.js");
 const renderSkillRail = readRequired("src/render-skill-rail.js");
 const renderHud = readRequired("src/render-hud.js");
+const nativeRenderHud = readRequired("src/modules/render-hud.js");
 const renderEnemies = readRequired("src/render-enemies.js");
 const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
@@ -415,13 +416,22 @@ check(
     game.includes("progression.createProgressionSystem")
 );
 check(
-  "shared HUD renderer helper and dependency-injected skill rail renderer exist",
-  renderHud.includes("TapSurvivorRenderHud") &&
+  "shared HUD renderer is source-owned with retained publisher and direct dependency-bag injection",
+  nativeRenderHud.includes('import { createSkillRailRenderer } from "./render-skill-rail.js"') &&
+    nativeRenderHud.includes("export function createHudRenderer") &&
+    !nativeRenderHud.includes("TapSurvivorRenderHud") &&
+    !nativeRenderHud.includes("globalThis") &&
+    renderHud.includes("// GENERATED FILE.") &&
+    renderHud.includes("globalThis.TapSurvivorRenderHud =") &&
     !renderSkillRail.includes("globalThis.TapSurvivorRenderSkillRail") &&
     renderSkillRail.includes(
       "// Retired global: TapSurvivorRenderSkillRail. Exports are supplied through the game dependency bag."
     ) &&
-    runtimeEntry.includes("TapSurvivorRenderHud") &&
+    moduleGameDependencies.includes('import { createHudRenderer } from "./render-hud.js"') &&
+    moduleGameDependencies.includes("renderHud: { createHudRenderer }") &&
+    !moduleGameDependencies.includes("TapSurvivorRenderHud") &&
+    gameDependencies.includes("renderHud: { createHudRenderer }") &&
+    !gameDependencies.includes("TapSurvivorRenderHud") &&
     moduleGameDependencies.includes("renderSkillRail: { createSkillRailRenderer }") &&
     gameDependencies.includes("renderSkillRail: { createSkillRailRenderer }") &&
     rendering.includes("createHudRenderer") &&

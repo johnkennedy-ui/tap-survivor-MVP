@@ -31,6 +31,7 @@ import { createRunStateSystem as createModuleRunStateSystem } from "../src/modul
 import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import { createRelicSystem as createModuleRelicSystem } from "../src/modules/relics.js";
+import { createHudRenderer as createModuleHudRenderer } from "../src/modules/render-hud.js";
 import { createSkillRailRenderer as createModuleSkillRailRenderer } from "../src/modules/render-skill-rail.js";
 import { createShellRelicUi as createModuleShellRelicUi } from "../src/modules/shell-relic-ui.js";
 import { createShellUiController as createModuleClassicShellUiController } from "../src/modules/shell-ui-classic-adapter.js";
@@ -178,6 +179,7 @@ const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime
   "TapSurvivorGameRuntime",
 ]);
 const inputBridge = loadBridge("../src/input.js", "src/input.js", {}, ["TapSurvivorInput"]);
+const renderHudBridge = loadBridge("../src/render-hud.js", "src/render-hud.js");
 const skillRailBridge = loadBridge("../src/render-skill-rail.js", "src/render-skill-rail.js");
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js", {
   setTimeout(callback) {
@@ -233,6 +235,7 @@ const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
+const bridgeRenderHud = renderHudBridge.context.TapSurvivorRenderHud;
 const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
 const bridgeCombat = combatBridge.context.TapSurvivorCombat;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
@@ -1329,6 +1332,37 @@ check(
     error.includes(`Missing Tap Survivor skill rail dependency: ${name}`)
   )
 );
+check("module exports createHudRenderer", typeof createModuleHudRenderer === "function");
+check("render HUD bridge source has generated banner", hasGeneratedBanner(renderHudBridge.source));
+check(
+  "render HUD bridge preserves the TapSurvivorRenderHud compatibility publisher",
+  typeof bridgeRenderHud?.createHudRenderer === "function" &&
+    renderHudBridge.source.includes("globalThis.TapSurvivorRenderHud =")
+);
+check(
+  "native HUD renderer source owns its factory without ambient global readers",
+  !readFileSync(new URL("../src/modules/render-hud.js", import.meta.url), "utf8").includes(
+    "TapSurvivorRenderHud"
+  ) &&
+    !readFileSync(new URL("../src/modules/render-hud.js", import.meta.url), "utf8").includes(
+      "globalThis"
+    )
+);
+const moduleHudSnapshot = hudSnapshot(createModuleHudRenderer);
+const bridgeHudSnapshot = hudSnapshot(bridgeRenderHud.createHudRenderer);
+check(
+  "native and compatibility HUD renderer APIs and output match",
+  JSON.stringify(moduleHudSnapshot) === JSON.stringify(bridgeHudSnapshot)
+);
+check(
+  "native HUD renderer preserves boss and skill-rail rendering",
+  moduleHudSnapshot.api.join(",") ===
+    "drawBossSpawnNotice,drawBossSpecialBar,drawGameHud,drawTowerFloorBadge" &&
+    moduleHudSnapshot.textLabels.includes("Tower Floor 3") &&
+    moduleHudSnapshot.textLabels.includes("CHARGER BOSS 50/100") &&
+    moduleHudSnapshot.textLabels.includes("SPECIAL") &&
+    moduleHudSnapshot.roundedRectCalls > 8
+);
 check(
   "native and generated game dependency sources do not look up TapSurvivorRenderSkillRail",
   !readFileSync(new URL("../src/modules/game-dependencies.js", import.meta.url), "utf8").includes(
@@ -1336,6 +1370,14 @@ check(
   ) &&
     !gameDependenciesBridge.source.includes("globalThis.TapSurvivorRenderSkillRail") &&
     !gameDependenciesBridge.source.includes('"TapSurvivorRenderSkillRail"')
+);
+check(
+  "native and generated game dependency sources do not look up TapSurvivorRenderHud",
+  !readFileSync(new URL("../src/modules/game-dependencies.js", import.meta.url), "utf8").includes(
+    "TapSurvivorRenderHud"
+  ) &&
+    !gameDependenciesBridge.source.includes("globalThis.TapSurvivorRenderHud") &&
+    !gameDependenciesBridge.source.includes('"TapSurvivorRenderHud"')
 );
 check(
   "audio bridge is global-free with retired provenance",
@@ -1505,6 +1547,10 @@ check(
     createModuleSkillRailRenderer
 );
 check(
+  "module dependency bag exposes the statically imported HUD renderer",
+  moduleGameDependenciesSnapshot.__bag.renderHud.createHudRenderer === createModuleHudRenderer
+);
+check(
   "native and generated dependency bags survive missing and poisoned retired skill rail globals and recover",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
     (snapshot) =>
@@ -1516,6 +1562,30 @@ check(
       snapshot.recoveredSkillRailRetiredGlobalFactory &&
       snapshot.skillRailRetiredGlobalReads === 0
   )
+);
+check(
+  "native and generated dependency bags survive missing and poisoned classic HUD publishers and recover",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    (snapshot) =>
+      snapshot.missingHudClassicPublisherError === "" &&
+      snapshot.missingHudClassicPublisherFactory &&
+      snapshot.poisonedHudClassicPublisherError === "" &&
+      snapshot.poisonedHudClassicPublisherFactory &&
+      snapshot.recoveredHudClassicPublisherError === "" &&
+      snapshot.recoveredHudClassicPublisherFactory &&
+      snapshot.hudClassicPublisherReads === 0
+  )
+);
+const moduleDependencyBagHudSnapshot = hudSnapshot(
+  moduleGameDependenciesSnapshot.__bag.renderHud.createHudRenderer
+);
+const bridgeDependencyBagHudSnapshot = hudSnapshot(
+  bridgeGameDependenciesSnapshot.__bag.renderHud.createHudRenderer
+);
+check(
+  "native and generated dependency bags inject matching HUD renderers",
+  JSON.stringify(moduleHudSnapshot) === JSON.stringify(moduleDependencyBagHudSnapshot) &&
+    JSON.stringify(moduleHudSnapshot) === JSON.stringify(bridgeDependencyBagHudSnapshot)
 );
 const moduleMovementInputSnapshot = movementInputSnapshot(bindModuleMovementInput);
 const bridgeMovementInputSnapshot = movementInputSnapshot(
@@ -1788,6 +1858,7 @@ check(
 );
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes native level-up factory", moduleGameDependenciesSnapshot.hasLevelUp);
+check("dependency bag exposes native HUD renderer", moduleGameDependenciesSnapshot.hasRenderHud);
 check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
 check("dependency bag injects native weapon behaviors", moduleGameDependenciesSnapshot.hasWeaponBehaviors);
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
@@ -2761,6 +2832,75 @@ function skillRailSnapshot(createSkillRailRenderer) {
   };
 }
 
+function hudSnapshot(createHudRenderer) {
+  let roundedRectCalls = 0;
+  const spriteIds = [];
+  const textLabels = [];
+  const ctx = {
+    arc() {},
+    beginPath() {},
+    closePath() {},
+    fill() {},
+    fillText(label) {
+      textLabels.push(label);
+    },
+    lineTo() {},
+    moveTo() {},
+    restore() {},
+    save() {},
+    stroke() {},
+  };
+  const renderer = createHudRenderer({
+    canvas: { height: 540, width: 960 },
+    clamp(value, minimum, maximum) {
+      return Math.max(minimum, Math.min(maximum, value));
+    },
+    ctx,
+    drawSprite(spriteId) {
+      spriteIds.push(spriteId);
+      return false;
+    },
+    roundedRectPath() {
+      roundedRectCalls += 1;
+    },
+    runUpgradeDefs: [{ id: "rapid_fire" }],
+    weaponDefs: {
+      arc_bolt: { assetId: "arc_bolt", color: "#7de2d1", kind: "beam" },
+    },
+  });
+  const game = {
+    bossAttackCooldownMax: 4,
+    bossAttackTimer: 1,
+    bossSpawnNotice: { life: 1, maxLife: 2, text: "BOSS INCOMING" },
+    enemies: [
+      {
+        boss: true,
+        bossKind: "charger",
+        dropTimer: 0,
+        hp: 50,
+        maxHp: 100,
+        superBoss: false,
+      },
+    ],
+    player: { equippedWeapons: ["arc_bolt"] },
+    runUpgradeTiers: { rapid_fire: 2 },
+    towerFloor: 3,
+    weaponBursts: [],
+    weaponIconFlashes: { arc_bolt: 0.6 },
+  };
+
+  renderer.drawTowerFloorBadge(game);
+  renderer.drawBossSpawnNotice(game);
+  renderer.drawGameHud(game);
+
+  return {
+    api: Object.keys(renderer).sort(),
+    roundedRectCalls,
+    spriteIds,
+    textLabels,
+  };
+}
+
 function skillRailFactoryDependencyErrors(createSkillRailRenderer) {
   const options = {
     canvas: {},
@@ -2792,7 +2932,6 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     "TapSurvivorProgression",
     "TapSurvivorQuests",
     "TapSurvivorRenderEnemies",
-    "TapSurvivorRenderHud",
     "TapSurvivorRendering",
     "TapSurvivorSprites",
     "TapSurvivorStorage",
@@ -3007,6 +3146,45 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const noAudioPublisherResult = createGameDependencyBagResult(
     createGameDependencyBag,
     noAudioPublisherGlobalRef,
+    documentRef
+  );
+  const missingHudClassicPublisherGlobalRef = { ...globalRef };
+  Reflect.deleteProperty(missingHudClassicPublisherGlobalRef, "TapSurvivorRenderHud");
+  const missingHudClassicPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    missingHudClassicPublisherGlobalRef,
+    documentRef
+  );
+  const poisonedHudClassicPublisherGlobalRef = { ...globalRef };
+  const hudClassicPublisherDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedHudClassicPublisherGlobalRef,
+    "TapSurvivorRenderHud"
+  );
+  let hudClassicPublisherReads = 0;
+  Object.defineProperty(poisonedHudClassicPublisherGlobalRef, "TapSurvivorRenderHud", {
+    configurable: true,
+    get() {
+      hudClassicPublisherReads += 1;
+      throw new Error("Forbidden TapSurvivorRenderHud global read");
+    },
+  });
+  const poisonedHudClassicPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedHudClassicPublisherGlobalRef,
+    documentRef
+  );
+  if (hudClassicPublisherDescriptor) {
+    Object.defineProperty(
+      poisonedHudClassicPublisherGlobalRef,
+      "TapSurvivorRenderHud",
+      hudClassicPublisherDescriptor
+    );
+  } else {
+    Reflect.deleteProperty(poisonedHudClassicPublisherGlobalRef, "TapSurvivorRenderHud");
+  }
+  const recoveredHudClassicPublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedHudClassicPublisherGlobalRef,
     documentRef
   );
   const missingSkillRailRetiredGlobalResult = createGameDependencyBagResult(
@@ -3293,6 +3471,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof bag.math.distance === "function" &&
       typeof bag.math.formatTime === "function" &&
       typeof bag.math.randomRange === "function",
+    hasRenderHud: typeof bag.renderHud?.createHudRenderer === "function",
     hasRenderSkillRail: typeof bag.renderSkillRail?.createSkillRailRenderer === "function",
     hasWeaponCooldowns: typeof bag.weaponCooldowns.createWeaponScaling === "function",
     hasProgression: typeof bag.progression?.createProgressionSystem === "function",
@@ -3368,6 +3547,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     poisonedAudioPublisherSnapshot: audioProviderSnapshot(poisonedAudioPublisherResult.bag),
     recoveredAudioPublisherError: recoveredAudioPublisherResult.error,
     recoveredAudioPublisherSnapshot: audioProviderSnapshot(recoveredAudioPublisherResult.bag),
+    missingHudClassicPublisherError: missingHudClassicPublisherResult.error,
+    missingHudClassicPublisherFactory:
+      typeof missingHudClassicPublisherResult.bag?.renderHud?.createHudRenderer === "function",
+    poisonedHudClassicPublisherError: poisonedHudClassicPublisherResult.error,
+    poisonedHudClassicPublisherFactory:
+      typeof poisonedHudClassicPublisherResult.bag?.renderHud?.createHudRenderer === "function",
+    recoveredHudClassicPublisherError: recoveredHudClassicPublisherResult.error,
+    recoveredHudClassicPublisherFactory:
+      typeof recoveredHudClassicPublisherResult.bag?.renderHud?.createHudRenderer === "function",
+    hudClassicPublisherReads,
     missingSkillRailRetiredGlobalError: missingSkillRailRetiredGlobalResult.error,
     missingSkillRailRetiredGlobalFactory:
       typeof missingSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
