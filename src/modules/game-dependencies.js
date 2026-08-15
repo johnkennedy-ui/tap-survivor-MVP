@@ -20,6 +20,7 @@ import { createPickupSystem } from "./pickups.js";
 import { createProgressionSystem } from "./progression.js";
 import { createQuestSystem, questOpenIds } from "./quests.js";
 import { createRelicSystem } from "./relics.js";
+import { createEnemyRenderer } from "./render-enemies.js";
 import { createHudRenderer } from "./render-hud.js";
 import { createSkillRailRenderer } from "./render-skill-rail.js";
 import { createSaveLoadHandler } from "./save-corruption.js";
@@ -120,7 +121,7 @@ export function createGameDependencyBag({ globalRef, documentRef = globalRef?.do
     progression: { createProgressionSystem },
     quests: { createQuestSystem, questOpenIds },
     relics: { createRelicSystem },
-    renderEnemies: requireGlobal(globalRef, "TapSurvivorRenderEnemies"),
+    renderEnemies: { createEnemyRenderer },
     renderHud: { createHudRenderer },
     renderSkillRail: { createSkillRailRenderer },
     rendering: requireGlobal(globalRef, "TapSurvivorRendering"),

@@ -47,6 +47,7 @@ const renderSkillRail = readRequired("src/render-skill-rail.js");
 const renderHud = readRequired("src/render-hud.js");
 const nativeRenderHud = readRequired("src/modules/render-hud.js");
 const renderEnemies = readRequired("src/render-enemies.js");
+const nativeRenderEnemies = readRequired("src/modules/render-enemies.js");
 const rendering = readRequired("src/rendering.js");
 const balance = readRequired("src/balance.js");
 const weaponProjectiles = readRequired("src/weapon-projectiles.js");
@@ -441,9 +442,20 @@ check(
     !rendering.includes("globalThis.TapSurvivorRenderHud"),
 );
 check(
-  "shared enemy renderer helper exists",
-  renderEnemies.includes("TapSurvivorRenderEnemies") &&
-    runtimeEntry.includes("TapSurvivorRenderEnemies") &&
+  "shared enemy renderer is source-owned, compatibility-published, and direct dependency-injected",
+  nativeRenderEnemies.includes("export function createEnemyRenderer") &&
+    nativeRenderEnemies.includes("MODULE_NATIVE_RENDER_ENEMIES_SLOTS") &&
+    nativeRenderEnemies.includes("MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS") &&
+    !nativeRenderEnemies.includes("TapSurvivorRenderEnemies") &&
+    !nativeRenderEnemies.includes("globalThis") &&
+    renderEnemies.includes("// GENERATED FILE.") &&
+    renderEnemies.includes("globalThis.TapSurvivorRenderEnemies =") &&
+    renderEnemies.includes("createEnemyRenderer") &&
+    moduleGameDependencies.includes('import { createEnemyRenderer } from "./render-enemies.js"') &&
+    moduleGameDependencies.includes("renderEnemies: { createEnemyRenderer }") &&
+    !moduleGameDependencies.includes("TapSurvivorRenderEnemies") &&
+    gameDependencies.includes("renderEnemies: { createEnemyRenderer }") &&
+    !gameDependencies.includes("TapSurvivorRenderEnemies") &&
     rendering.includes("createEnemyRenderer") &&
     !rendering.includes("globalThis.TapSurvivorRenderEnemies"),
 );

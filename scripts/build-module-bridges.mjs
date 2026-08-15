@@ -248,6 +248,17 @@ const bridges = [
     ],
   },
   {
+    source: "src/modules/render-enemies.js",
+    target: "src/render-enemies.js",
+    globalName: "TapSurvivorRenderEnemies",
+    exports: [
+      "MODULE_NATIVE_RENDER_ENEMIES_SLOTS",
+      "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
+      "createEnemyRenderer",
+    ],
+    globalMembers: [{ name: "createEnemyRenderer", value: "createEnemyRenderer" }],
+  },
+  {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
     globalName: "TapSurvivorGameDependencies",
@@ -399,6 +410,14 @@ const bridges = [
       {
         source: "src/modules/render-hud.js",
         exports: ["createHudRenderer"],
+      },
+      {
+        source: "src/modules/render-enemies.js",
+        exports: [
+          "MODULE_NATIVE_RENDER_ENEMIES_SLOTS",
+          "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
+          "createEnemyRenderer",
+        ],
       },
       {
         source: "src/modules/shop-pricing.js",

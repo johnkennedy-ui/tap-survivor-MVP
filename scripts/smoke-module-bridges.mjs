@@ -31,6 +31,7 @@ import { createRunStateSystem as createModuleRunStateSystem } from "../src/modul
 import { createRunUi as createModuleRunUi } from "../src/modules/run-ui.js";
 import { createRunUpdater as createModuleRunUpdater } from "../src/modules/run-update.js";
 import { createRelicSystem as createModuleRelicSystem } from "../src/modules/relics.js";
+import { createEnemyRenderer as createModuleEnemyRenderer } from "../src/modules/render-enemies.js";
 import { createHudRenderer as createModuleHudRenderer } from "../src/modules/render-hud.js";
 import { createSkillRailRenderer as createModuleSkillRailRenderer } from "../src/modules/render-skill-rail.js";
 import { createShellRelicUi as createModuleShellRelicUi } from "../src/modules/shell-relic-ui.js";
@@ -179,6 +180,7 @@ const gameRuntimeBridge = loadBridge("../src/game-runtime.js", "src/game-runtime
   "TapSurvivorGameRuntime",
 ]);
 const inputBridge = loadBridge("../src/input.js", "src/input.js", {}, ["TapSurvivorInput"]);
+const renderEnemiesBridge = loadBridge("../src/render-enemies.js", "src/render-enemies.js");
 const renderHudBridge = loadBridge("../src/render-hud.js", "src/render-hud.js");
 const skillRailBridge = loadBridge("../src/render-skill-rail.js", "src/render-skill-rail.js");
 const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js", {
@@ -235,6 +237,7 @@ const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
 const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
+const bridgeRenderEnemies = renderEnemiesBridge.context.TapSurvivorRenderEnemies;
 const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
 const bridgeCombat = combatBridge.context.TapSurvivorCombat;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
@@ -1381,6 +1384,44 @@ check(
     !gameDependenciesBridge.source.includes("globalThis.TapSurvivorRenderHud") &&
     !gameDependenciesBridge.source.includes('"TapSurvivorRenderHud"')
 );
+check("module exports createEnemyRenderer", typeof createModuleEnemyRenderer === "function");
+check("render enemies bridge source has generated banner", hasGeneratedBanner(renderEnemiesBridge.source));
+check(
+  "render enemies bridge retains the classic publisher compatibility contract",
+  typeof bridgeRenderEnemies?.createEnemyRenderer === "function" &&
+    renderEnemiesBridge.source.includes("globalThis.TapSurvivorRenderEnemies =")
+);
+check(
+  "native enemy renderer source owns its factory without ambient global readers",
+  !readFileSync(new URL("../src/modules/render-enemies.js", import.meta.url), "utf8").includes(
+    "TapSurvivorRenderEnemies"
+  ) &&
+    !readFileSync(new URL("../src/modules/render-enemies.js", import.meta.url), "utf8").includes(
+      "globalThis"
+    )
+);
+const moduleEnemyRendererSnapshot = enemyRendererSnapshot(createModuleEnemyRenderer);
+const bridgeEnemyRendererSnapshot = enemyRendererSnapshot(bridgeRenderEnemies.createEnemyRenderer);
+check(
+  "native and generated enemy renderer factories preserve the rendering API and output",
+  JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(bridgeEnemyRendererSnapshot) &&
+    moduleEnemyRendererSnapshot.api.join(",") === "drawEnemy,drawEnemyBolt,enemyAnimationState" &&
+    moduleEnemyRendererSnapshot.animationStates.join(",") ===
+      "enemies:skitter:default:true:0,bosses:charger:windup:false:1.5" &&
+    moduleEnemyRendererSnapshot.spriteIds.join(",") === "enemy:skitter,enemy:boss" &&
+    moduleEnemyRendererSnapshot.rangedAnimationState === "attack" &&
+    moduleEnemyRendererSnapshot.textLabels.includes("CHARGE") &&
+    moduleEnemyRendererSnapshot.arcCount > 7 &&
+    moduleEnemyRendererSnapshot.strokeCount > 3
+);
+check(
+  "native and generated game dependency sources do not look up TapSurvivorRenderEnemies",
+  !readFileSync(new URL("../src/modules/game-dependencies.js", import.meta.url), "utf8").includes(
+    "TapSurvivorRenderEnemies"
+  ) &&
+    !gameDependenciesBridge.source.includes("globalThis.TapSurvivorRenderEnemies") &&
+    !gameDependenciesBridge.source.includes('"TapSurvivorRenderEnemies"')
+);
 check(
   "audio bridge is global-free with retired provenance",
   bridgeAudio === undefined &&
@@ -1551,6 +1592,34 @@ check(
 check(
   "module dependency bag exposes the statically imported HUD renderer",
   moduleGameDependenciesSnapshot.__bag.renderHud.createHudRenderer === createModuleHudRenderer
+);
+check(
+  "module dependency bag exposes the statically imported enemy renderer",
+  moduleGameDependenciesSnapshot.__bag.renderEnemies.createEnemyRenderer === createModuleEnemyRenderer
+);
+const moduleDependencyBagEnemyRendererSnapshot = enemyRendererSnapshot(
+  moduleGameDependenciesSnapshot.__bag.renderEnemies.createEnemyRenderer
+);
+const bridgeDependencyBagEnemyRendererSnapshot = enemyRendererSnapshot(
+  bridgeGameDependenciesSnapshot.__bag.renderEnemies.createEnemyRenderer
+);
+check(
+  "native and generated dependency bags inject matching source-owned enemy renderers",
+  JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(moduleDependencyBagEnemyRendererSnapshot) &&
+    JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(bridgeDependencyBagEnemyRendererSnapshot)
+);
+check(
+  "native and generated dependency bags survive missing, poisoned, and restored RenderEnemies publishers",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    (snapshot) =>
+      snapshot.missingRenderEnemiesGlobalError === "" &&
+      snapshot.missingRenderEnemiesGlobalFactory &&
+      snapshot.poisonedRenderEnemiesGlobalError === "" &&
+      snapshot.poisonedRenderEnemiesGlobalFactory &&
+      snapshot.recoveredRenderEnemiesGlobalError === "" &&
+      snapshot.recoveredRenderEnemiesGlobalFactory &&
+      snapshot.renderEnemiesGlobalReads === 0
+  )
 );
 check(
   "native and generated dependency bags survive missing and poisoned retired skill rail globals and recover",
@@ -2929,11 +2998,100 @@ function skillRailFactoryError(callback) {
   return "";
 }
 
+function enemyRendererSnapshot(createEnemyRenderer) {
+  const animationStates = [];
+  const spriteIds = [];
+  const textLabels = [];
+  let arcCount = 0;
+  let strokeCount = 0;
+  const ctx = {
+    arc() {
+      arcCount += 1;
+    },
+    beginPath() {},
+    fill() {},
+    fillText(label) {
+      textLabels.push(label);
+    },
+    lineTo() {},
+    moveTo() {},
+    restore() {},
+    save() {},
+    stroke() {
+      strokeCount += 1;
+    },
+  };
+  const renderer = createEnemyRenderer({
+    clamp: (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value)),
+    ctx,
+    drawSprite(spriteId) {
+      spriteIds.push(spriteId);
+      return false;
+    },
+    spriteSheetRenderer: {
+      drawAnimation(kind, id, state, _x, _y, _width, _height, options) {
+        animationStates.push(`${kind}:${id}:${state}:${options.flipX}:${options.time}`);
+        return false;
+      },
+    },
+  });
+
+  renderer.drawEnemy(
+    {
+      assetId: "skitter",
+      color: "#87d9ff",
+      radius: 9,
+      towerFloor: 12,
+      type: "skitter",
+      vx: -2,
+      x: 12,
+      y: 20,
+    },
+    { bossAttacks: [] }
+  );
+  renderer.drawEnemy(
+    {
+      animTime: 1.5,
+      boss: true,
+      bossAbilities: ["charger"],
+      bossKind: "charger",
+      chargeState: "windup",
+      radius: 32,
+      x: 60,
+      y: 70,
+    },
+    { bossAttacks: [] }
+  );
+  renderer.drawEnemyBolt({
+    color: "#b794ff",
+    life: 0.5,
+    maxLife: 1,
+    radius: 5,
+    vx: 3,
+    vy: 4,
+    x: 90,
+    y: 100,
+  });
+
+  return {
+    animationStates,
+    api: Object.keys(renderer).sort(),
+    arcCount,
+    rangedAnimationState: renderer.enemyAnimationState({
+      attackRange: 100,
+      attackVisualTimer: 0.2,
+      projectileCooldown: 1,
+    }),
+    spriteIds,
+    strokeCount,
+    textLabels,
+  };
+}
+
 function gameDependenciesSnapshot(createGameDependencyBag) {
   const requiredNames = [
     "TapSurvivorProgression",
     "TapSurvivorQuests",
-    "TapSurvivorRenderEnemies",
     "TapSurvivorRendering",
     "TapSurvivorSprites",
     "TapSurvivorStorage",
@@ -2997,6 +3155,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   ];
   const retiredGlobalReads = Object.fromEntries(retiredGlobalNames.map((name) => [name, 0]));
   const globalRef = baseGlobalRef;
+  globalRef.TapSurvivorRenderEnemies = { name: "TapSurvivorRenderEnemies" };
   const createAudioParam = () => ({
     exponentialRampToValueAtTime() {},
     setValueAtTime() {},
@@ -3149,6 +3308,45 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const noAudioPublisherResult = createGameDependencyBagResult(
     createGameDependencyBag,
     noAudioPublisherGlobalRef,
+    documentRef
+  );
+  const missingRenderEnemiesGlobalRef = { ...globalRef };
+  Reflect.deleteProperty(missingRenderEnemiesGlobalRef, "TapSurvivorRenderEnemies");
+  const missingRenderEnemiesGlobalResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    missingRenderEnemiesGlobalRef,
+    documentRef
+  );
+  const poisonedRenderEnemiesGlobalRef = { ...globalRef };
+  const renderEnemiesGlobalDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedRenderEnemiesGlobalRef,
+    "TapSurvivorRenderEnemies"
+  );
+  let renderEnemiesGlobalReads = 0;
+  Object.defineProperty(poisonedRenderEnemiesGlobalRef, "TapSurvivorRenderEnemies", {
+    configurable: true,
+    get() {
+      renderEnemiesGlobalReads += 1;
+      throw new Error("Forbidden TapSurvivorRenderEnemies global read");
+    },
+  });
+  const poisonedRenderEnemiesGlobalResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedRenderEnemiesGlobalRef,
+    documentRef
+  );
+  if (renderEnemiesGlobalDescriptor) {
+    Object.defineProperty(
+      poisonedRenderEnemiesGlobalRef,
+      "TapSurvivorRenderEnemies",
+      renderEnemiesGlobalDescriptor
+    );
+  } else {
+    Reflect.deleteProperty(poisonedRenderEnemiesGlobalRef, "TapSurvivorRenderEnemies");
+  }
+  const recoveredRenderEnemiesGlobalResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    poisonedRenderEnemiesGlobalRef,
     documentRef
   );
   const missingHudRetiredGlobalRef = { ...globalRef };
@@ -3550,6 +3748,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     poisonedAudioPublisherSnapshot: audioProviderSnapshot(poisonedAudioPublisherResult.bag),
     recoveredAudioPublisherError: recoveredAudioPublisherResult.error,
     recoveredAudioPublisherSnapshot: audioProviderSnapshot(recoveredAudioPublisherResult.bag),
+    missingRenderEnemiesGlobalError: missingRenderEnemiesGlobalResult.error,
+    missingRenderEnemiesGlobalFactory:
+      typeof missingRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer === "function",
+    poisonedRenderEnemiesGlobalError: poisonedRenderEnemiesGlobalResult.error,
+    poisonedRenderEnemiesGlobalFactory:
+      typeof poisonedRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer === "function",
+    recoveredRenderEnemiesGlobalError: recoveredRenderEnemiesGlobalResult.error,
+    recoveredRenderEnemiesGlobalFactory:
+      typeof recoveredRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer === "function",
+    renderEnemiesGlobalReads,
     missingHudRetiredGlobalError: missingHudRetiredGlobalResult.error,
     missingHudRetiredGlobalFactory:
       typeof missingHudRetiredGlobalResult.bag?.renderHud?.createHudRenderer === "function",
