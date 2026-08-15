@@ -464,12 +464,16 @@ export function createGameHarness({
   const sourceDependencyBagHasStorageProvider =
     typeof sourceGameDependencies.storage?.configureDefaultProviders === "function" &&
     typeof sourceGameDependencies.storage?.createStorageAdapter === "function";
-  if (fakeCombat) {
-    context.TapSurvivorBalanceRuntime.configureDefaultProviders({
-      content: classicContent,
-      profiles: classicContent.balanceProfiles,
-    });
-  }
+  context.TapSurvivorBalanceRuntime.configureDefaultProviders({
+    content: classicContent,
+    profileSearch: () => context.location?.search || "",
+    profiles: classicContent.balanceProfiles,
+    storage: {
+      getItem: (key) => context.localStorage?.getItem?.(key),
+      removeItem: (key) => context.localStorage?.removeItem?.(key),
+      setItem: (key, value) => context.localStorage?.setItem?.(key, value),
+    },
+  });
   const platform = {
     documentRef: context.document,
     runtimeGlobal: context,

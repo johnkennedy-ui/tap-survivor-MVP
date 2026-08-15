@@ -86,6 +86,10 @@ import { nearestEnemy as moduleNearestEnemy } from "../src/modules/weapon-target
 const contentSource = JSON.parse(
   readFileSync(new URL("../content/tap-survivor-content.json", import.meta.url), "utf8")
 );
+const moduleGameDependenciesSource = readFileSync(
+  new URL("../src/modules/game-dependencies.js", import.meta.url),
+  "utf8"
+);
 const contentSchemaFixture = {
   effectRegistries: {
     shopItem: {
@@ -1675,6 +1679,16 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorBalanceProfiles")
 );
 check(
+  "native and generated dependency bags construct the source-owned BalanceRuntime without its publisher",
+  moduleGameDependenciesSource.includes(
+    'import { createRuntimeBalanceProvider } from "./balance-runtime.js";'
+  ) &&
+    moduleGameDependenciesSource.includes("const balanceRuntime = createRuntimeBalanceProvider();") &&
+    !moduleGameDependenciesSource.includes("TapSurvivorBalanceRuntime") &&
+    gameDependenciesBridge.source.includes("function createRuntimeBalanceProvider") &&
+    !gameDependenciesBridge.source.includes("TapSurvivorBalanceRuntime")
+);
+check(
   "game dependency bridge has no retired gameplay publisher readers",
   [
     "TapSurvivorCombat",
@@ -2107,13 +2121,13 @@ check(
   moduleGameDependenciesSnapshot.recoveredRetiredPublisherError === "" &&
     bridgeGameDependenciesSnapshot.recoveredRetiredPublisherError === ""
 );
-check("dependency bag preserves balance content override", moduleGameDependenciesSnapshot.contentId === "override");
+check("dependency bag preserves direct balance content ownership", moduleGameDependenciesSnapshot.contentId === "fallback");
 check(
-  "dependency bag configures balance from the raw producer content and attached profiles",
+  "dependency bag configures source-owned balance from raw producer content and attached profiles",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
     (snapshot) =>
-      snapshot.balanceProviderCalls > 0 &&
-      snapshot.balanceProviderUsesProducerValues &&
+      snapshot.balanceRuntimeConfigured &&
+      snapshot.balanceRuntimeUsesProducerContent &&
       snapshot.balanceProfilesAreNonEnumerable
   )
 );
@@ -2122,6 +2136,34 @@ check(
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
     (snapshot) => snapshot.balanceProfileSearchUsesGlobalRef
   ) && !gameDependenciesBridge.source.includes("globalThis.location")
+);
+check(
+  "native and generated dependency bags ignore missing, poisoned, and restored BalanceRuntime publishers",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every((snapshot) => {
+    const recovery = snapshot.balancePublisherRecovery;
+    return (
+      recovery.absent.error === "" &&
+      recovery.absent.profile === "testing" &&
+      recovery.absent.publisherAbsent &&
+      recovery.poisoned.error === "" &&
+      recovery.poisoned.profile === "testing" &&
+      recovery.poisoned.poisonedDescriptorRetained &&
+      recovery.publisherReads === 0 &&
+      recovery.restored.error === "" &&
+      recovery.restored.profile === "testing" &&
+      recovery.restoredPublisherRetained
+    );
+  })
+);
+check(
+  "dependency bag preserves the safe raw Content fallback when Content or profiles are missing",
+  [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every(
+    (snapshot) =>
+      snapshot.missingBalanceContentError === "" &&
+      snapshot.missingBalanceContentIsEmpty &&
+      snapshot.missingBalanceProfilesError === "" &&
+      snapshot.missingBalanceProfilesContentId === "missing-profiles"
+  )
 );
 check("dependency bag exposes assets", moduleGameDependenciesSnapshot.hasAssets);
 check("dependency bag exposes balance", moduleGameDependenciesSnapshot.hasBalance);
@@ -3806,27 +3848,22 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   });
   globalRef.document = documentRef;
   globalRef.location = { search: "?balance=testing" };
-  const rawContent = { ...upgradeBridgeContentFixture, id: "fallback" };
-  const rawProfiles = [{ overrides: {}, profileId: "default" }];
-  Object.defineProperty(rawContent, "balanceProfiles", {
-    enumerable: false,
-    value: rawProfiles,
-  });
-  let balanceProviderCalls = 0;
-  let balanceProfileSearchUsesGlobalRef = true;
-  let balanceProviderUsesProducerValues = true;
-  const configuredContent = { ...upgradeBridgeContentFixture, id: "override" };
-  globalRef.TapSurvivorBalanceRuntime = {
-    configureDefaultProviders({ content, profileSearch, profiles }) {
-      balanceProviderCalls += 1;
-      balanceProviderUsesProducerValues &&= content === rawContent && profiles === rawProfiles;
-      balanceProfileSearchUsesGlobalRef &&=
-        typeof profileSearch === "function" && profileSearch() === globalRef.location.search;
-    },
-    getActiveProfile: () => "testing",
-    content: () => configuredContent,
+  const rawProfiles = [
+    { overrides: {}, profileId: "default" },
+    { overrides: {}, profileId: "testing" },
+  ];
+  const createBalanceContent = (id = "fallback") => {
+    const balanceContent = { ...upgradeBridgeContentFixture, id };
+    Object.defineProperty(balanceContent, "balanceProfiles", {
+      enumerable: false,
+      value: rawProfiles,
+    });
+    return balanceContent;
   };
+  const rawContent = createBalanceContent();
   globalRef.TapSurvivorContent = rawContent;
+  const rawContentProfilesAreNonEnumerable =
+    Object.getOwnPropertyDescriptor(rawContent, "balanceProfiles")?.enumerable === false;
   const shellRelicSchedulerTimers = [];
   const shellRelicDefaultImages = [];
   globalRef.clearTimeout = (timer) => {
@@ -4223,9 +4260,70 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     ui: {},
   });
 
-  const fallbackGlobalRef = { ...baseGlobalRef };
-  delete fallbackGlobalRef.TapSurvivorBalanceRuntime;
-  const fallbackBag = createGameDependencyBag({ globalRef: fallbackGlobalRef });
+  const balancePublisherRecoveryGlobalRef = {
+    ...globalRef,
+    TapSurvivorContent: createBalanceContent("balance-publisher-recovery"),
+  };
+  Reflect.deleteProperty(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime");
+  const absentBalancePublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    balancePublisherRecoveryGlobalRef,
+    documentRef
+  );
+  const absentBalancePublisher = !Object.hasOwn(
+    balancePublisherRecoveryGlobalRef,
+    "TapSurvivorBalanceRuntime"
+  );
+  let balancePublisherReads = 0;
+  Object.defineProperty(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime", {
+    configurable: true,
+    get() {
+      balancePublisherReads += 1;
+      throw new Error("Forbidden TapSurvivorBalanceRuntime global read");
+    },
+  });
+  const balancePublisherDescriptor = Object.getOwnPropertyDescriptor(
+    balancePublisherRecoveryGlobalRef,
+    "TapSurvivorBalanceRuntime"
+  );
+  const poisonedBalancePublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    balancePublisherRecoveryGlobalRef,
+    documentRef
+  );
+  const poisonedBalancePublisherDescriptorRetained =
+    Object.getOwnPropertyDescriptor(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime")?.get ===
+    balancePublisherDescriptor?.get;
+  const restoredBalancePublisher = { restored: true };
+  Object.defineProperty(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime", {
+    configurable: true,
+    value: restoredBalancePublisher,
+  });
+  const restoredBalancePublisherResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    balancePublisherRecoveryGlobalRef,
+    documentRef
+  );
+  const restoredBalancePublisherRetained =
+    balancePublisherRecoveryGlobalRef.TapSurvivorBalanceRuntime === restoredBalancePublisher;
+
+  const missingBalanceContentGlobalRef = { ...globalRef };
+  Reflect.deleteProperty(missingBalanceContentGlobalRef, "TapSurvivorContent");
+  const missingBalanceContentResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    missingBalanceContentGlobalRef,
+    documentRef
+  );
+  const missingBalanceProfilesContent = { id: "missing-profiles" };
+  const missingBalanceProfilesGlobalRef = {
+    ...globalRef,
+    TapSurvivorContent: missingBalanceProfilesContent,
+  };
+  const missingBalanceProfilesResult = createGameDependencyBagResult(
+    createGameDependencyBag,
+    missingBalanceProfilesGlobalRef,
+    documentRef
+  );
 
   const assetContentFixture = {
     assets: {
@@ -4248,16 +4346,39 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   });
 
   const snapshot = {
-    balanceProfilesAreNonEnumerable:
-      Object.getOwnPropertyDescriptor(rawContent, "balanceProfiles")?.enumerable === false,
-    balanceProviderCalls,
-    balanceProfileSearchUsesGlobalRef,
-    balanceProviderUsesProducerValues,
+    balanceProfilesAreNonEnumerable: rawContentProfilesAreNonEnumerable,
+    balanceProfileSearchUsesGlobalRef: bag.balanceRuntime.getActiveProfile() === "testing",
+    balancePublisherRecovery: {
+      absent: {
+        error: absentBalancePublisherResult.error,
+        profile: absentBalancePublisherResult.bag?.balanceRuntime?.getActiveProfile?.() || "",
+        publisherAbsent: absentBalancePublisher,
+      },
+      poisoned: {
+        error: poisonedBalancePublisherResult.error,
+        profile: poisonedBalancePublisherResult.bag?.balanceRuntime?.getActiveProfile?.() || "",
+        publisherAbsent: !Object.hasOwn(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime"),
+        publisherReads: balancePublisherReads,
+        poisonedDescriptorRetained: poisonedBalancePublisherDescriptorRetained,
+      },
+      publisherReads: balancePublisherReads,
+      restored: {
+        error: restoredBalancePublisherResult.error,
+        profile: restoredBalancePublisherResult.bag?.balanceRuntime?.getActiveProfile?.() || "",
+      },
+      restoredPublisherRetained: restoredBalancePublisherRetained,
+    },
+    balanceRuntimeConfigured: bag.balanceRuntime.content() === bag.content,
+    balanceRuntimeUsesProducerContent: bag.content === rawContent,
     contentId: bag.content.id,
     defaultUpgradeIds: injectedUpgradeContent.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
     defaultRunUpgradeIds: injectedUpgradeContent.runUpgradeDefs.map((upgrade) => upgrade.id),
     runtimeProfile: bag.balanceRuntime.getActiveProfile(),
-    fallbackContentId: fallbackBag.content.id,
+    missingBalanceContentError: missingBalanceContentResult.error,
+    missingBalanceContentIsEmpty:
+      Object.keys(missingBalanceContentResult.bag?.content || {}).length === 0,
+    missingBalanceProfilesContentId: missingBalanceProfilesResult.bag?.content?.id || "",
+    missingBalanceProfilesError: missingBalanceProfilesResult.error,
     assetResolverFallback: assetResolver.choiceIconPath({}),
     assetResolverWeaponIcon: assetResolver.choiceIconPath({ weaponId: "fixture_weapon" }),
     hasAssets: typeof bag.assets.createAssetResolver === "function",

@@ -23,6 +23,8 @@ const runLifecycle = readRequired("src/run-lifecycle.js");
 const gameRuntime = readRequired("src/game-runtime.js");
 const gameDependencies = readRequired("src/game-dependencies.js");
 const moduleGameDependencies = readRequired("src/modules/game-dependencies.js");
+const balanceRuntime = readRequired("src/balance-runtime.js");
+const nativeBalanceRuntime = readRequired("src/modules/balance-runtime.js");
 const styles = readRequired("src/styles.css");
 const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
@@ -378,6 +380,22 @@ check(
     !gameDependencies.includes("window.TapSurvivorGameDependencies =") &&
     game.includes('import { createGameDependencyBag } from "./modules/game-dependencies.js";') &&
     !index.includes('src="src/game-dependencies.js"'),
+);
+check(
+  "BalanceRuntime is source-owned while its generated classic publisher remains compatible",
+  nativeBalanceRuntime.includes("export function createRuntimeBalanceProvider") &&
+    !/\b(?:globalThis|window)\b/u.test(nativeBalanceRuntime) &&
+    !nativeBalanceRuntime.includes("TapSurvivorContent") &&
+    !nativeBalanceRuntime.includes("TapSurvivorBalanceRuntime") &&
+    balanceRuntime.includes("// GENERATED FILE.") &&
+    balanceRuntime.includes("// Source: src/modules/balance-runtime.js") &&
+    balanceRuntime.includes("const runtimeBalance = createRuntimeBalanceProvider") &&
+    balanceRuntime.includes("globalThis.TapSurvivorContent = content") &&
+    balanceRuntime.includes("globalThis.TapSurvivorBalanceRuntime = runtimeBalance") &&
+    moduleGameDependencies.includes('import { createRuntimeBalanceProvider } from "./balance-runtime.js";') &&
+    !moduleGameDependencies.includes("TapSurvivorBalanceRuntime") &&
+    gameDependencies.includes("function createRuntimeBalanceProvider") &&
+    !gameDependencies.includes("TapSurvivorBalanceRuntime"),
 );
 check(
   "shared math helpers exist",

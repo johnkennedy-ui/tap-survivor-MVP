@@ -1,4 +1,5 @@
 import { floorDifficulty } from "./balance.js";
+import { createRuntimeBalanceProvider } from "./balance-runtime.js";
 import { createAssetResolver } from "./assets.js";
 import { createCombatSystem } from "./combat.js";
 import { createCombatDamageSystem } from "./combat-damage.js";
@@ -50,16 +51,19 @@ import { createRunUpdater } from "./run-update.js";
 
 export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
   const rawContent = globalRef.TapSurvivorContent;
-  const balanceRuntime = globalRef.TapSurvivorBalanceRuntime;
-  if (typeof balanceRuntime?.configureDefaultProviders === "function") {
+  const profiles = rawContent?.balanceProfiles;
+  const balanceRuntime = createRuntimeBalanceProvider();
+  if (rawContent && typeof rawContent === "object" && Array.isArray(profiles)) {
     balanceRuntime.configureDefaultProviders({
       content: rawContent,
-      profiles: rawContent?.balanceProfiles,
+      profiles,
       profileSearch: createBalanceProfileSearchProvider(globalRef),
       storage: createBalanceStorageProvider(globalRef),
     });
   }
-  const configuredContent = balanceRuntime?.content?.() || rawContent;
+  const configuredContent = rawContent && typeof rawContent === "object" && Array.isArray(profiles)
+    ? balanceRuntime.content()
+    : rawContent;
   const content = configuredContent || {};
   const assets = {
     createAssetResolver(assetContent) {

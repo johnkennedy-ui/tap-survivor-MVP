@@ -289,6 +289,20 @@ const bridges = [
     exports: ["createStorageProvider"],
   },
   {
+    source: "src/modules/balance-runtime.js",
+    target: "src/balance-runtime.js",
+    globalName: "TapSurvivorBalanceRuntime",
+    exports: ["createRuntimeBalanceProvider"],
+    classicPublisherSource: `const runtimeBalance = createRuntimeBalanceProvider({
+    logger: console,
+    publishContent: (content) => {
+      globalThis.TapSurvivorContent = content;
+    },
+  });
+
+  globalThis.TapSurvivorBalanceRuntime = runtimeBalance;`,
+  },
+  {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
     globalName: null,
@@ -307,6 +321,10 @@ const bridges = [
       {
         source: "src/modules/balance.js",
         exports: ["floorDifficulty"],
+      },
+      {
+        source: "src/modules/balance-runtime.js",
+        exports: ["createRuntimeBalanceProvider"],
       },
       {
         source: "src/modules/module-runtime-audio-adapter.js",

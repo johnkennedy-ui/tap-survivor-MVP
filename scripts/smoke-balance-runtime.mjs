@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
+import { createRuntimeBalanceProvider } from "../src/modules/balance-runtime.js";
 import { createGameHarness } from "./smoke-game-harness.mjs";
 
 function check(name, pass) {
@@ -9,6 +10,10 @@ function check(name, pass) {
 }
 
 const balanceRuntimeSource = readFileSync(new URL("../src/balance-runtime.js", import.meta.url), "utf8");
+const balanceRuntimeModuleSource = readFileSync(
+  new URL("../src/modules/balance-runtime.js", import.meta.url),
+  "utf8"
+);
 
 function balanceProviderErrorSnapshot(callback) {
   try {
@@ -259,7 +264,62 @@ function profileSearchFallbackSnapshot(profileSearch, storageEntries = {}) {
   };
 }
 
+function sourceOwnedProviderSnapshot() {
+  const content = createProviderContent();
+  const publishedContent = [];
+  const loggerCalls = { log: 0, table: 0 };
+  const provider = createRuntimeBalanceProvider({
+    logger: {
+      log() {
+        loggerCalls.log += 1;
+      },
+      table() {
+        loggerCalls.table += 1;
+      },
+    },
+    publishContent: (nextContent) => publishedContent.push(nextContent),
+  });
+  provider.configureDefaultProviders({
+    content,
+    profileSearch: () => "?balance=testing",
+    profiles: createProviderProfiles(),
+    storage: createMapStorage(),
+  });
+  provider.applyOverrides({
+    weapons: {
+      spark_bolt: { damage: 99 },
+    },
+  });
+  const report = provider.printSummary();
+  return {
+    contentIsProvider: provider.content() === content,
+    damage: content.weapons.spark_bolt.damage,
+    loggerCalls,
+    profile: provider.getActiveProfile(),
+    publishedContent,
+    report,
+  };
+}
+
 const providerLifecycle = balanceProviderLifecycleSnapshot();
+const sourceOwnedProvider = sourceOwnedProviderSnapshot();
+check(
+  "source-owned balance provider has no ambient global or classic publisher access",
+  !/\b(?:globalThis|window)\b/u.test(balanceRuntimeModuleSource) &&
+    !balanceRuntimeModuleSource.includes("TapSurvivorContent") &&
+    !balanceRuntimeModuleSource.includes("TapSurvivorBalanceRuntime")
+);
+check(
+  "source-owned balance provider publishes and logs only through explicit dependencies",
+  sourceOwnedProvider.profile === "testing" &&
+    sourceOwnedProvider.contentIsProvider &&
+    sourceOwnedProvider.damage === 99 &&
+    sourceOwnedProvider.publishedContent.length === 2 &&
+    sourceOwnedProvider.publishedContent.every((content) => content === sourceOwnedProvider.publishedContent[0]) &&
+    sourceOwnedProvider.loggerCalls.table === 1 &&
+    sourceOwnedProvider.loggerCalls.log === 1 &&
+    sourceOwnedProvider.report.activeProfile === "testing"
+);
 check(
   "balance runtime rejects unconfigured content and profile APIs with the named provider error",
   [providerLifecycle.unconfiguredContent, providerLifecycle.unconfiguredProfiles].every(

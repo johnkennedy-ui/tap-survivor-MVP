@@ -156,6 +156,8 @@ const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8"
 const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 const nativeStorageAdapterSource = readFileSync(join(root, "src/modules/storage-adapter.js"), "utf8");
 const classicAssetsSource = readFileSync(join(root, "src/assets.js"), "utf8");
+const nativeBalanceRuntimeSource = readFileSync(join(root, "src/modules/balance-runtime.js"), "utf8");
+const classicBalanceRuntimeSource = readFileSync(join(root, "src/balance-runtime.js"), "utf8");
 const classicLevelUpSource = readFileSync(join(root, "src/level-up.js"), "utf8");
 const B1_RETIRED_CLASSIC_PUBLISHER_NAMES = Object.freeze([
   "TapSurvivorEffects",
@@ -939,6 +941,20 @@ check(
     !classicGameDependenciesSource.includes("TapSurvivorStorage") &&
     !classicGameDependencyGlobalReads.includes("TapSurvivorStorage") &&
     !classicEntrypointDependencies.includes("TapSurvivorStorage")
+);
+check(
+  "readiness sees source-owned BalanceRuntime with a retained generated classic publisher",
+  nativeBalanceRuntimeSource.includes("export function createRuntimeBalanceProvider") &&
+    !/\b(?:globalThis|window)\b/u.test(nativeBalanceRuntimeSource) &&
+    !nativeBalanceRuntimeSource.includes("TapSurvivorContent") &&
+    !nativeBalanceRuntimeSource.includes("TapSurvivorBalanceRuntime") &&
+    classicBalanceRuntimeSource.includes("// GENERATED FILE.") &&
+    classicBalanceRuntimeSource.includes("// Source: src/modules/balance-runtime.js") &&
+    classicBalanceRuntimeSource.includes("const runtimeBalance = createRuntimeBalanceProvider") &&
+    classicBalanceRuntimeSource.includes("globalThis.TapSurvivorContent = content") &&
+    classicBalanceRuntimeSource.includes("globalThis.TapSurvivorBalanceRuntime = runtimeBalance") &&
+    !classicGameDependenciesSource.includes("TapSurvivorBalanceRuntime") &&
+    classicGameDependenciesSource.includes("function createRuntimeBalanceProvider")
 );
 check(
   "readiness sees every B1 classic publisher retired with a dependency-bag provenance banner",

@@ -44,13 +44,15 @@ Generated content globals:
   classic boundary. Do not remove the publisher, change the classic fallback, generated content, script order, or the
   global allowlist in a coverage-only cut.
 - `src/content.generated.js` also carries its profile array in the producer-owned, non-enumerable
-  `TapSurvivorContent.balanceProfiles` property. `src/balance-runtime.js` does not read either generated global: it
-  publishes stable `TapSurvivorBalanceRuntime` and `TapSurvivorDebugBalance` objects that fail closed with
-  `TAP_SURVIVOR_BALANCE_PROVIDER_MISSING` until `src/modules/game-dependencies.js` injects the raw content and that
-  attached profiles value. The dependency bag also supplies a private balance-storage capability derived from its
-  explicit `globalRef`; omitted or unavailable storage leaves balance state in memory. Valid same-reference
-  configuration preserves active profile and overrides while the runtime republishes the configured
-  `TapSurvivorContent`.
+  `TapSurvivorContent.balanceProfiles` property. `src/modules/balance-runtime.js` owns the global-free provider and
+  receives Content publishing and logging as explicit dependencies. `src/modules/game-dependencies.js` and its
+  generated classic bridge construct/configure that provider directly from raw Content and attached profiles; neither
+  reads, optional-reads, string-key-reads, nor overwrites `TapSurvivorBalanceRuntime`. Missing Content/profiles keep
+  the dependency bag's safe raw-content fallback, while missing, poisoned, or restored publisher values do not alter
+  direct bag construction. The generated `src/balance-runtime.js` remains the retained compatibility publisher: its
+  explicit publishing callback preserves the stable `TapSurvivorBalanceRuntime` identity, in-place Content rebuild,
+  Content republish, profile search, storage fallback, and override behavior. It fails closed with
+  `TAP_SURVIVOR_BALANCE_PROVIDER_MISSING` until explicitly configured.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
 - `src/effects.js` is a generated, global-free source-derived artifact for run upgrade effects, shop item effects,
@@ -192,8 +194,9 @@ Browser/platform globals:
   dot-expression global audit is 3 actual usages (2 allowed expressions and 9 allowed usages); the allowlist does not count bare
   `globalThis` fallback syntax. `TapSurvivorGameDependencies` is retired while Debug, Audio, Shell UI, and input remain
   supplied through source-owned providers.
-- Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;
-  balance runtime has no direct `globalThis.location` read.
+- Balance profile/override storage and profile-search receive private capabilities from the explicit dependency-bag
+  `globalRef`; the source-owned balance provider has no browser-global reads. The retained classic publisher receives
+  its Content republish hook explicitly, and direct dependency bags do not depend on its publisher value.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
   `globalRef` through each source-owned provider. The generated global-free `TapSurvivorStorage` retirement artifact
   has no publisher or direct platform-global reads; the injected providers preserve Preferences-first, fallback, and
