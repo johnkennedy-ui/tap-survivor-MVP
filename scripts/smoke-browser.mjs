@@ -11,8 +11,6 @@ const browserTimeoutMs = Number.isFinite(configuredBrowserTimeoutMs) && configur
   ? configuredBrowserTimeoutMs
   : 15000;
 const fixture = resolveFixture(process.env.SMOKE_BROWSER_FIXTURE || "scripts/browser-smoke.html");
-const successToken = process.env.SMOKE_BROWSER_SUCCESS_TOKEN || "SMOKE_BROWSER_PASS";
-const failureToken = process.env.SMOKE_BROWSER_FAILURE_TOKEN || successToken.replace(/PASS$/, "FAIL");
 const reportFile = process.env.SMOKE_BROWSER_REPORT_FILE || "";
 const snapChromiumPath = "/snap/bin/chromium";
 const defaultSnapRuntimeParent = "/home/logix/snap/chromium/common";
@@ -21,9 +19,11 @@ const contentTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".md": "text/markdown; charset=utf-8",
   ".png": "image/png",
+  ".svg": "image/svg+xml",
 };
 
 function resolvePath(url) {
@@ -249,6 +249,53 @@ function addRunnerMetadata(report, metadata) {
   };
 }
 
+function validateBrowserReport(report) {
+  if (!report || typeof report !== "object" || Array.isArray(report)) {
+    return "browser fixture report must be a JSON object";
+  }
+  if (!["pass", "fail"].includes(report.outcome)) {
+    return "browser fixture report must declare outcome as pass or fail";
+  }
+  if (!Array.isArray(report.checks)) {
+    return "browser fixture report must include a checks array";
+  }
+  if (!report.readiness || typeof report.readiness !== "object") {
+    return "browser fixture report must include readiness state";
+  }
+  if (typeof report.readiness.ready !== "boolean" || typeof report.readiness.timedOut !== "boolean") {
+    return "browser fixture report readiness must include boolean ready and timedOut values";
+  }
+  if (!report.diagnostics || typeof report.diagnostics !== "object") {
+    return "browser fixture report must include diagnostics";
+  }
+  for (const key of ["pageErrors", "resourceErrors", "unhandledRejections"]) {
+    if (!Array.isArray(report.diagnostics[key])) {
+      return `browser fixture report diagnostics.${key} must be an array`;
+    }
+  }
+  return "";
+}
+
+function reportIndicatesPass(report) {
+  const diagnostics = report.diagnostics;
+  return (
+    report.outcome === "pass" &&
+    report.readiness.ready &&
+    !report.readiness.timedOut &&
+    report.checks.length > 0 &&
+    report.checks.every((check) => check?.pass === true) &&
+    diagnostics.pageErrors.length === 0 &&
+    diagnostics.resourceErrors.length === 0 &&
+    diagnostics.unhandledRejections.length === 0
+  );
+}
+
+function printReportChecks(report) {
+  report.checks.forEach((check) => {
+    console.log(`${check.pass ? "PASS" : "FAIL"} ${check.name}`);
+  });
+}
+
 function skipOrFail(reason) {
   if (!required) {
     console.log(`# Browser Smoke\nSKIP ${reason} Set SMOKE_BROWSER_REQUIRED=1 to fail instead.`);
@@ -296,42 +343,52 @@ async function runSmoke() {
     for (const browser of candidateBrowsers()) {
       const result = await runBrowser(browser, url);
       if (result.error?.code === "ENOENT") continue;
-      if (result.timedOut) {
-        lastError = `Browser ${browser} timed out after ${browserTimeoutMs}ms.`;
-        continue;
-      }
       const output = `${result.stdout || ""}\n${result.stderr || ""}`;
-      if (result.status === 0 && output.includes(successToken)) {
-        if (!result.metadata.privateRuntime.cleanup.success) {
-          lastError = `Browser ${browser} completed but private runtime cleanup failed.`;
-          continue;
+      if (result.timedOut) {
+        skipOrFail(`Browser ${browser} timed out after ${browserTimeoutMs}ms.`);
+        return;
+      }
+      if (result.error) {
+        skipOrFail(`Browser ${browser} failed to launch: ${result.error.message || result.error}.`);
+        return;
+      }
+
+      const parsed = extractBrowserReport(output);
+      if (parsed.error) {
+        skipOrFail(`Browser ${browser} did not emit a usable smoke report: ${parsed.error}.\n${output}`);
+        return;
+      }
+
+      const report = addRunnerMetadata(parsed.report, result.metadata);
+      if (reportFile) {
+        try {
+          writeBrowserReport(report);
+        } catch (error) {
+          skipOrFail(`Browser ${browser} completed but could not write its report: ${error.message}.\n${output}`);
+          return;
         }
-        if (reportFile) {
-          const parsed = extractBrowserReport(output);
-          if (parsed.error) {
-            lastError = `Browser ${browser} returned ${successToken} but ${parsed.error}.\n${output}`;
-            continue;
-          }
-          try {
-            writeBrowserReport(addRunnerMetadata(parsed.report, result.metadata));
-          } catch (error) {
-            lastError = `Browser ${browser} completed but could not write its report: ${error.message}.\n${output}`;
-            continue;
-          }
-        }
+      }
+
+      const reportError = validateBrowserReport(report);
+      if (reportError) {
+        skipOrFail(`Browser ${browser} emitted an invalid smoke report: ${reportError}.\n${output}`);
+        return;
+      }
+      if (result.status !== 0) {
+        skipOrFail(`Browser ${browser} exited with status ${result.status}.\n${output}`);
+        return;
+      }
+      if (!result.metadata.privateRuntime.cleanup.success) {
+        skipOrFail(`Browser ${browser} completed but private runtime cleanup failed.`);
+        return;
+      }
+      if (reportIndicatesPass(report)) {
         console.log(`# Browser Smoke\nPASS ${browser}`);
-        output
-          .split("\n")
-          .filter((line) => line.startsWith("PASS ") || line.startsWith("FAIL "))
-          .forEach((line) => console.log(line));
+        printReportChecks(report);
         return;
       }
-      if (output.includes(failureToken) || output.includes("SMOKE_BROWSER_FAIL")) {
-        console.error(`Browser ${browser} found an app smoke failure.\n${output}`);
-        process.exitCode = 1;
-        return;
-      }
-      lastError = `Browser ${browser} failed.\n${output}`;
+      skipOrFail(`Browser ${browser} reported a smoke failure.\n${output}`);
+      return;
     }
 
     if (!lastError) {
