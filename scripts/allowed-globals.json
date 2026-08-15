@@ -1,8 +1,7 @@
 {
   "allowedExpressions": [
     "globalThis.TapSurvivorBalanceRuntime",
-    "globalThis.TapSurvivorContent",
-    "globalThis.TapSurvivorGameDependencies"
+    "globalThis.TapSurvivorContent"
   ],
   "allowedFileCounts": {
     "scripts/smoke-production-browser-runtime.mjs": 0,
@@ -14,7 +13,6 @@
     "src/content.generated.js": 1,
     "src/debug.js": 0,
     "src/game-banners.js": 0,
-    "src/game-dependencies.js": 1,
     "src/game.js": 1,
     "src/level-up-choices.js": 0,
     "src/map-system.js": 0,

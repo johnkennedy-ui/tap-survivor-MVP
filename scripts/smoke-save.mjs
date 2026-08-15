@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 import { content } from "../src/content.generated.mjs";
+import { createGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createSaveNormalizer } from "../src/modules/save-normalize.js";
 import { questOpenIds } from "../src/modules/quests.js";
 import { createStorageProvider } from "../src/modules/storage-adapter.js";
@@ -25,6 +26,7 @@ let retiredSaveNormalizeReads = 0;
 let retiredSaveCorruptionReads = 0;
 let retiredSavePublisherReads = 0;
 let retiredStoragePublisherReads = 0;
+let retiredGameDependenciesPublisherReads = 0;
 const context = {
   console,
   localStorage,
@@ -71,6 +73,13 @@ Object.defineProperty(context, "TapSurvivorStorage", {
     throw new Error("Forbidden TapSurvivorStorage global read");
   },
 });
+Object.defineProperty(context, "TapSurvivorGameDependencies", {
+  configurable: true,
+  get() {
+    retiredGameDependenciesPublisherReads += 1;
+    throw new Error("Forbidden TapSurvivorGameDependencies global read");
+  },
+});
 vm.createContext(context);
 vm.runInContext(questsSource, context);
 vm.runInContext(storageSource, context);
@@ -91,7 +100,7 @@ const dependencyGlobalRef = new Proxy(
     },
   }
 );
-const dependencyBag = context.TapSurvivorGameDependencies.createGameDependencyBag({
+const dependencyBag = createGameDependencyBag({
   globalRef: dependencyGlobalRef,
   documentRef: {},
 });
@@ -200,6 +209,15 @@ check(
     typeof storageProvider.configureDefaultProviders === "function" &&
     typeof storageProvider.createStorageAdapter === "function"
 );
+check(
+  "retired GameDependencies publisher is never read while the direct source factory remains available",
+  retiredGameDependenciesPublisherReads === 0 &&
+    !gameDependenciesSource.includes("globalThis.TapSurvivorGameDependencies =") &&
+    gameDependenciesSource.includes(
+      "// Retired global: TapSurvivorGameDependencies. Exports are supplied through the game dependency bag."
+    ) &&
+    typeof createGameDependencyBag === "function"
+);
 
 const fresh = await saveSystem.loadSave();
 check("fresh save starts with Spark Bolt", fresh.unlockedWeapons.includes("spark_bolt"));
@@ -293,6 +311,7 @@ let throwingRetiredSaveNormalizeReads = 0;
 let throwingRetiredSaveCorruptionReads = 0;
 let throwingRetiredSavePublisherReads = 0;
 let throwingRetiredStoragePublisherReads = 0;
+let throwingRetiredGameDependenciesPublisherReads = 0;
 const throwingContext = {
   console,
   localStorage: {
@@ -349,6 +368,13 @@ Object.defineProperty(throwingContext, "TapSurvivorStorage", {
     throw new Error("Forbidden TapSurvivorStorage global read");
   },
 });
+Object.defineProperty(throwingContext, "TapSurvivorGameDependencies", {
+  configurable: true,
+  get() {
+    throwingRetiredGameDependenciesPublisherReads += 1;
+    throw new Error("Forbidden TapSurvivorGameDependencies global read");
+  },
+});
 vm.createContext(throwingContext);
 vm.runInContext(questsSource, throwingContext);
 vm.runInContext(storageSource, throwingContext);
@@ -368,7 +394,7 @@ const throwingDependencyGlobalRef = new Proxy(
     },
   }
 );
-const throwingDependencyBag = throwingContext.TapSurvivorGameDependencies.createGameDependencyBag({
+const throwingDependencyBag = createGameDependencyBag({
   globalRef: throwingDependencyGlobalRef,
   documentRef: {},
 });
@@ -425,7 +451,7 @@ check(
   typeof saveMigrations.isPlainObject === "function" && typeof saveMigrations.migrateSave === "function"
 );
 check(
-  "retired save and storage globals are never read",
+  "retired save, storage, and GameDependencies globals are never read",
   retiredSaveDefaultsReads === 0 &&
     throwingRetiredSaveDefaultsReads === 0 &&
     retiredSaveMigrationsReads === 0 &&
@@ -437,7 +463,9 @@ check(
     retiredSavePublisherReads === 0 &&
     throwingRetiredSavePublisherReads === 0 &&
     retiredStoragePublisherReads === 0 &&
-    throwingRetiredStoragePublisherReads === 0
+    throwingRetiredStoragePublisherReads === 0 &&
+    retiredGameDependenciesPublisherReads === 0 &&
+    throwingRetiredGameDependenciesPublisherReads === 0
 );
 check("storage unavailable load returns default save", unavailableSave.unlockedWeapons.includes("spark_bolt"));
 check("storage unavailable persist reports false", unavailablePersisted === false);

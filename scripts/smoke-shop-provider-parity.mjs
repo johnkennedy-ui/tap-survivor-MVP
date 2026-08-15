@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 import { createBrowserDependencyBagOptions } from "../src/app/browser-dependency-bag.js";
+import { createGameDependencyBag as createClassicGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createModuleGameDependencyBag } from "../src/modules/module-game-dependencies.js";
 import { createShopSystem } from "../src/modules/shop.js";
 import { createShopPricing } from "../src/modules/shop-pricing.js";
@@ -68,6 +69,15 @@ check(
   "generated classic dependency bridge has no retired MapSystem global publisher or reader",
   !generatedClassicGameDependenciesSource.includes("globalThis.TapSurvivorMapSystem") &&
     !generatedClassicGameDependenciesSource.includes('"TapSurvivorMapSystem"')
+);
+check(
+  "generated classic dependency bridge retires its GameDependencies publisher without reading a poisoned namespace",
+  !generatedClassicGameDependenciesSource.includes("globalThis.TapSurvivorGameDependencies =") &&
+    generatedClassicGameDependenciesSource.includes(
+      "// Retired global: TapSurvivorGameDependencies. Exports are supplied through the game dependency bag."
+    ) &&
+    classic.retiredGameDependenciesPublisherReads === 0 &&
+    classic.retiredGameDependenciesPublisherRetained
 );
 check(
   "generated classic Shop artifact has no retired global publisher",
@@ -170,6 +180,9 @@ function runParityScenario(kind, initialSave = baseSave()) {
     boundAdapterIdentityPreserved: providerSetup.boundAdapterIdentityPreserved,
     poisonedBannerGlobalReads: providerSetup.poisonedBannerGlobalReads,
     poisonedGlobalReads: providerSetup.poisonedGlobalReads,
+    retiredGameDependenciesPublisherReads: providerSetup.retiredGameDependenciesPublisherReads ?? 0,
+    retiredGameDependenciesPublisherRetained:
+      providerSetup.retiredGameDependenciesPublisherRetained ?? true,
     snapshot: {
       afterClose,
       afterOpen,
@@ -189,6 +202,8 @@ function createProvider(kind, fixture) {
       boundAdapterIdentityPreserved: true,
       poisonedBannerGlobalReads: 0,
       poisonedGlobalReads: 0,
+      retiredGameDependenciesPublisherReads: 0,
+      retiredGameDependenciesPublisherRetained: true,
       provider: createShopSystem(fixture.nativeOptions),
       unboundAdapterFailedClosed: true,
     };
@@ -199,6 +214,9 @@ function createProvider(kind, fixture) {
       boundAdapterIdentityPreserved: true,
       poisonedBannerGlobalReads: classicProvider.poisonedBannerGlobalReads,
       poisonedGlobalReads: classicProvider.poisonedRetiredPublisherGlobalReads,
+      retiredGameDependenciesPublisherReads: classicProvider.retiredGameDependenciesPublisherReads,
+      retiredGameDependenciesPublisherRetained:
+        classicProvider.retiredGameDependenciesPublisherRetained,
       provider: classicProvider.provider,
       unboundAdapterFailedClosed: true,
     };
@@ -212,10 +230,22 @@ function createProvider(kind, fixture) {
 
 function createClassicProvider(fixture) {
   const context = vm.createContext({ document: fixture.documentRef });
+  let retiredGameDependenciesPublisherReads = 0;
+  Object.defineProperty(context, "TapSurvivorGameDependencies", {
+    configurable: true,
+    get() {
+      retiredGameDependenciesPublisherReads += 1;
+      throw new Error("Forbidden TapSurvivorGameDependencies global read");
+    },
+  });
+  const retiredGameDependenciesPublisherDescriptor = Object.getOwnPropertyDescriptor(
+    context,
+    "TapSurvivorGameDependencies"
+  );
   context.globalThis = context;
   vm.runInContext(generatedClassicGameDependenciesSource, context, { filename: "src/game-dependencies.js" });
   const globalRef = createClassicDependencyGlobal(fixture);
-  const dependencies = context.TapSurvivorGameDependencies.createGameDependencyBag({
+  const dependencies = createClassicGameDependencyBag({
     documentRef: fixture.documentRef,
     globalRef,
   });
@@ -223,6 +253,10 @@ function createClassicProvider(fixture) {
     provider: dependencies.shop.createShopSystem(withoutDocumentRef(fixture.nativeOptions)),
     poisonedBannerGlobalReads: globalRef.__bannerGlobalReads(),
     poisonedRetiredPublisherGlobalReads: globalRef.__retiredPublisherGlobalReads(),
+    retiredGameDependenciesPublisherReads,
+    retiredGameDependenciesPublisherRetained:
+      Object.getOwnPropertyDescriptor(context, "TapSurvivorGameDependencies")?.get ===
+      retiredGameDependenciesPublisherDescriptor?.get,
   };
 }
 

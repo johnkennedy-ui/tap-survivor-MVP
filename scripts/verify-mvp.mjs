@@ -366,6 +366,20 @@ check(
     !gameDependencies.includes("TapSurvivorStorage"),
 );
 check(
+  "game dependency bag is source-owned while the generated publisher is retired",
+  moduleGameDependencies.includes("export function createGameDependencyBag") &&
+    !moduleGameDependencies.includes("TapSurvivorGameDependencies") &&
+    gameDependencies.includes("// GENERATED FILE.") &&
+    gameDependencies.includes("// Source: src/modules/game-dependencies.js") &&
+    gameDependencies.includes(
+      "// Retired global: TapSurvivorGameDependencies. Exports are supplied through the game dependency bag."
+    ) &&
+    !gameDependencies.includes("globalThis.TapSurvivorGameDependencies =") &&
+    !gameDependencies.includes("window.TapSurvivorGameDependencies =") &&
+    game.includes('import { createGameDependencyBag } from "./modules/game-dependencies.js";') &&
+    !index.includes('src="src/game-dependencies.js"'),
+);
+check(
   "shared math helpers exist",
   math.includes("function clamp") &&
     gameDependencies.includes("math: { clamp, distance, formatTime, randomRange }") &&

@@ -193,12 +193,7 @@ const renderEnemiesBridge = loadBridge("../src/render-enemies.js", "src/render-e
 const renderHudBridge = loadBridge("../src/render-hud.js", "src/render-hud.js");
 const skillRailBridge = loadBridge("../src/render-skill-rail.js", "src/render-skill-rail.js");
 const renderingBridge = loadBridge("../src/rendering.js", "src/rendering.js");
-const gameDependenciesBridge = loadBridge("../src/game-dependencies.js", "src/game-dependencies.js", {
-  setTimeout(callback) {
-    callback();
-    return null;
-  },
-});
+const gameDependenciesBridge = loadRetiredGameDependenciesBridge();
 const progressionBridge = loadBridge("../src/progression.js", "src/progression.js");
 const questsBridge = loadBridge("../src/quests.js", "src/quests.js");
 const uiBridge = loadBridge("../src/ui.js", "src/ui.js");
@@ -246,8 +241,7 @@ const bridgeRelics = relicsBridge.context.TapSurvivorRelics;
 const bridgeMath = mathBridge.context.TapSurvivorMath;
 const bridgeTargeting = targetingBridge.context.TapSurvivorWeaponTargeting;
 const bridgeProjectiles = projectileBridge.context.TapSurvivorWeaponProjectiles;
-const bridgeGameDependencies = gameDependenciesBridge.context.TapSurvivorGameDependencies;
-const gameDependenciesBridgeMath = vm.runInContext("Math", gameDependenciesBridge.context);
+const gameDependenciesBridgeMath = Math;
 const bridgeCombat = combatBridge.context.TapSurvivorCombat;
 const bridgeRunLifecycle = runLifecycleBridge.context.TapSurvivorRunLifecycle;
 const bridgeRunState = runStateBridge.context.TapSurvivorRunState;
@@ -1611,16 +1605,27 @@ check("game runtime schedules loop", moduleGameRuntimeSnapshot.rafCount === 1);
 check("module exports createGameDependencyBag", typeof createModuleGameDependencyBag === "function");
 check("module exports createGameBannerSystem", typeof createModuleGameBannerSystem === "function");
 check(
-  "bridge assigns globalThis.TapSurvivorGameDependencies",
-  Boolean(bridgeGameDependencies)
+  "game dependencies bridge is global-free with retired provenance and preserves absent, poisoned, and restored namespaces",
+  !gameDependenciesBridge.source.includes("globalThis.TapSurvivorGameDependencies =") &&
+    !gameDependenciesBridge.source.includes("window.TapSurvivorGameDependencies =") &&
+    gameDependenciesBridge.source.includes(
+      "// Retired global: TapSurvivorGameDependencies. Exports are supplied through the game dependency bag."
+    ) &&
+    gameDependenciesBridge.retirementProof.absentError === "" &&
+    !gameDependenciesBridge.retirementProof.absentPublisherPresent &&
+    gameDependenciesBridge.retirementProof.poisonedError === "" &&
+    gameDependenciesBridge.retirementProof.poisonedReads === 0 &&
+    gameDependenciesBridge.retirementProof.poisonedDescriptorRetained &&
+    gameDependenciesBridge.retirementProof.restoredError === "" &&
+    gameDependenciesBridge.retirementProof.restoredPublisherRetained
 );
 check(
   "game dependencies bridge source has generated banner",
   hasGeneratedBanner(gameDependenciesBridge.source)
 );
 check(
-  "bridge exposes createGameDependencyBag",
-  typeof bridgeGameDependencies?.createGameDependencyBag === "function"
+  "source-owned dependency bag factory remains directly callable after publisher retirement",
+  typeof createModuleGameDependencyBag === "function"
 );
 check("module UI factories are callable", typeof createModuleUi === "function" && typeof createModuleUiRenderer === "function");
 check("module UI progression factory is callable", typeof createModuleUiProgressionRenderer === "function");
@@ -1701,8 +1706,10 @@ check(
   )
 );
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
+// The retired generated bridge intentionally does not expose a factory. Its execution is
+// asserted above; behavioral/recovery coverage uses the canonical source-owned factory.
 const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
-  bridgeGameDependencies.createGameDependencyBag
+  createModuleGameDependencyBag
 );
 check(
   "module and bridge game dependency bag output match",
@@ -6878,6 +6885,64 @@ function findShellRelicElement(element, predicate) {
  * @param {Record<string, unknown>} [globals]
  * @returns {{ source: string, context: Record<string, unknown> }}
  */
+function loadRetiredGameDependenciesBridge() {
+  const source = readFileSync(new URL("../src/game-dependencies.js", import.meta.url), "utf8");
+  const run = (context) => {
+    context.globalThis = context;
+    vm.createContext(context);
+    try {
+      vm.runInContext(source, context, { filename: "src/game-dependencies.js" });
+      return "";
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  };
+
+  const absentContext = {
+    setTimeout(callback) {
+      callback();
+      return null;
+    },
+  };
+  const absentError = run(absentContext);
+
+  let poisonedReads = 0;
+  const poisonedContext = {};
+  Object.defineProperty(poisonedContext, "TapSurvivorGameDependencies", {
+    configurable: true,
+    get() {
+      poisonedReads += 1;
+      throw new Error("Forbidden TapSurvivorGameDependencies global read");
+    },
+  });
+  const poisonedDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedContext,
+    "TapSurvivorGameDependencies"
+  );
+  const poisonedError = run(poisonedContext);
+
+  const restoredPublisher = { restored: true };
+  const restoredContext = { TapSurvivorGameDependencies: restoredPublisher };
+  const restoredError = run(restoredContext);
+
+  return {
+    source,
+    context: absentContext,
+    retirementProof: {
+      absentError,
+      absentPublisherPresent: Object.hasOwn(absentContext, "TapSurvivorGameDependencies"),
+      poisonedDescriptorRetained:
+        Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorGameDependencies")?.get ===
+        poisonedDescriptor?.get,
+      poisonedError,
+      poisonedReads,
+      restoredError,
+      restoredPublisherRetained:
+        restoredContext.TapSurvivorGameDependencies === restoredPublisher,
+    },
+  };
+}
+
 function loadBridge(path, filename, globals = {}, poisonedGlobalNames = []) {
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   const context = { console, ...globals };

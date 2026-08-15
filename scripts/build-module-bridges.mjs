@@ -291,7 +291,8 @@ const bridges = [
   {
     source: "src/modules/game-dependencies.js",
     target: "src/game-dependencies.js",
-    globalName: "TapSurvivorGameDependencies",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorGameDependencies",
     exports: ["createGameDependencyBag"],
     bundledSources: [
       {

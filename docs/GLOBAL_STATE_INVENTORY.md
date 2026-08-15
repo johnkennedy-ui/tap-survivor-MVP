@@ -150,12 +150,13 @@ Generated content globals:
   with combat, pickups, and relics, through the existing dependency-bag slots while preserving the
   `src/game.js` API.
 - `src/modules/input.js` owns mouse-drag and touch movement targeting. Its generated `src/input.js` bridge is
-  source-derived and global-free with retired `TapSurvivorInput` provenance; both the classic dependency bag and the
-  production browser adapter receive the same explicit source binding. The retained classic `src/game.js` fallback
-  boundary still receives that binding through `TapSurvivorGameDependencies`.
+  source-derived and global-free with retired `TapSurvivorInput` provenance; both the direct source-owned dependency
+  bag used by the classic `src/game.js` fallback and the production browser adapter receive the same explicit binding.
 
 Runtime module globals:
-- Bootstrap seam: `TapSurvivorGameDependencies`.
+- `src/modules/game-dependencies.js` is the canonical source-owned dependency-bag factory. Generated
+  `src/game-dependencies.js` is global-free with retired `TapSurvivorGameDependencies` provenance; classic fallback
+  composition imports the source factory directly.
 - Native dependency bag injection now imports the asset resolver, balance, content registry, level-up factory,
   math, level-up choices, shop pricing, weapon targeting, combat damage, the combat/pickup/relic factories, the three
   enemy factories, the enemy renderer, and `createGameRuntimeController` directly; those helpers no longer appear as
@@ -163,41 +164,40 @@ Runtime module globals:
 - `src/game-runtime.js` is a source-derived, global-free generated artifact. `src/game.js`,
   `src/app/compose-runtime.js`, and `src/modules/game-dependencies.js` import `createGameRuntimeController` directly;
   the dependency bag supplies that native factory without reading or publishing `TapSurvivorGameRuntime`.
-- Core data/systems: progression and quest behavior are supplied as native factories through
-  `TapSurvivorGameDependencies`; the former `TapSurvivorProgression` and `TapSurvivorQuests` publishers are retired.
+- Core data/systems: progression and quest behavior are supplied as native factories through the source-owned dependency
+  bag; the former `TapSurvivorProgression` and `TapSurvivorQuests` publishers are retired.
   Effects and map resolution are also supplied as native factories, with their former publishers retired.
 - Save/storage: `src/modules/storage-adapter.js` owns the provider factory and both dependency bags inject a fresh
   source-created provider directly. `src/storage-adapter.js` is a generated global-free artifact with retired
   `TapSurvivorStorage` provenance; save creation, defaults, migrations, normalization, and corruption handling are supplied
-  through `TapSurvivorGameDependencies`. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
+  through the source-owned dependency bag. `TapSurvivorSave`, `TapSurvivorSaveNormalize`, and
   `TapSurvivorSaveCorruption` have no global publishers; explicit caller-owned storage/adapters still take precedence.
 - Rendering/UI: generated `src/sprites.js` is global-free with retired `TapSurvivorSprites` provenance, while the
   native and generated dependency bags inject both sprite factories directly. Source-owned renderer and enemy-renderer
-  factories are also directly dependency-injected through `TapSurvivorGameDependencies`. `TapSurvivorRendering` is retired alongside
+  factories are also directly dependency-injected through the dependency bag. `TapSurvivorRendering` is retired alongside
   `TapSurvivorRenderEnemies`, `TapSurvivorRenderHud`, `TapSurvivorRenderSkillRail`, `TapSurvivorShellUi`,
   `TapSurvivorUi`, `TapSurvivorUiProgression`, and `TapSurvivorShellRelicUi`; their factories remain explicitly
   injected.
 - Gameplay systems: the native `createRunUpdater` plus the retired combat, pickup, relic, and enemy factories are
-  injected through `TapSurvivorGameDependencies` rather than published as classic namespaces.
+  injected through the source-owned dependency bag rather than published as classic namespaces.
 - Weapon systems: `TapSurvivorWeaponCooldowns`; level-up, weapon behaviors, weapon fire, projectile helpers, and
   upgrade content are dependency-injected native factories.
-- Utilities/debug: `TapSurvivorDebug` is retired. `src/modules/debug.js` owns `createDebugSystem`, and the retained
-  `TapSurvivorGameDependencies` rollback boundary supplies it explicitly through the dependency bag; audio and input
-  are likewise dependency-injected.
+- Utilities/debug: `TapSurvivorDebug` is retired. `src/modules/debug.js` owns `createDebugSystem`, and the source-owned
+  dependency bag supplies it explicitly; audio and input are likewise dependency-injected.
 
 Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 4 actual usages (3 allowed expressions and 10 allowed usages); the allowlist does not count bare
-  `globalThis` fallback syntax. The classic `TapSurvivorGameDependencies` rollback boundary remains while Debug, Audio, Shell
-  UI, and input are supplied through source-owned providers for the next migration batch.
+  dot-expression global audit is 3 actual usages (2 allowed expressions and 9 allowed usages); the allowlist does not count bare
+  `globalThis` fallback syntax. `TapSurvivorGameDependencies` is retired while Debug, Audio, Shell UI, and input remain
+  supplied through source-owned providers.
 - Balance profile/override storage and profile-search receive private capabilities from the classic dependency bag;
   balance runtime has no direct `globalThis.location` read.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
   `globalRef` through each source-owned provider. The generated global-free `TapSurvivorStorage` retirement artifact
   has no publisher or direct platform-global reads; the injected providers preserve Preferences-first, fallback, and
-  unavailable behavior. The global audit remains `4/3/10`.
+  unavailable behavior. The global audit remains `3/2/9`.
 - `TapSurvivorAudio` is retired. The classic dependency bag supplies its source-owned adapter with explicit
   `globalRef` AudioContext, Audio, and clock factories; generated `src/audio.js` records only retirement provenance
   and has no browser audio-global reader or publisher.
