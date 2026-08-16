@@ -29,13 +29,16 @@ Before editing this repo:
 23. Content tooling type contracts live under `types/` and are JSDoc-checked with `npm run typecheck`.
     Keep those contracts scoped to `scripts/content/*.mjs`, the barrel, and `src/content-registry.js` unless a separate task broadens them.
     Do not convert runtime files to TypeScript without a separate migration task.
-24. Do not add new `window.*` or `globalThis.*` runtime coupling. Run `npm run check:globals`; update `docs/GLOBAL_STATE_INVENTORY.md` and `scripts/allowed-globals.json` only for deliberate global migration/removal work.
-25. New math helper consumers should receive/import math helpers explicitly instead of reading `globalThis.TapSurvivorMath`; keep the existing compatibility bridge only until the script-order runtime is migrated.
-26. New HUD renderer consumers should receive/import `createHudRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderHud`; keep the existing compatibility bridge only until the rendering stack is migrated.
-27. New enemy renderer consumers should receive/import `createEnemyRenderer` explicitly instead of reading `globalThis.TapSurvivorRenderEnemies`; keep the existing compatibility bridge only until the rendering stack is migrated.
+24. Do not add direct `window` or `globalThis` runtime coupling. Browser capabilities enter only through the explicit
+    `globalRef` boundary; run `npm run check:globals` after changes. Update `docs/GLOBAL_STATE_INVENTORY.md` and
+    `scripts/allowed-globals.json` only when a reviewed platform boundary or test fixture changes, never to revive a
+    retired publisher.
+25. New math helper consumers must receive/import math helpers explicitly. The old publisher namespace is retired.
+26. New HUD renderer consumers must receive/import `createHudRenderer` explicitly. The old publisher namespace is retired.
+27. New enemy renderer consumers must receive/import `createEnemyRenderer` explicitly. The old publisher namespace is retired.
 28. Enemy/boss sprite-sheet work belongs in `assets.sprites.spriteSheets` metadata plus `src/sprite-sheet-renderer.js`; preserve fallback order: sheet frame, existing single sprite/SVG, then shape rendering.
-29. For ES-module migration slices, keep the real implementation in `src/modules/` and generate the classic bridge with `npm run build:bridges`.
-    Do not hand-edit generated bridge files such as `src/shop-pricing.js`, and do not remove script-order/global contracts until a separate runtime-entry migration.
+29. For ES-module migration slices, keep the real implementation in `src/modules/` and generate the global-free compatibility artifact with `npm run build:bridges`.
+    Do not hand-edit generated bridge files such as `src/shop-pricing.js`. New dependencies must be passed through the source-owned dependency bag; do not add or restore `TapSurvivor*` publishers.
     `src/modules/balance.js` owns floor difficulty implementation; `src/balance.js` is a generated compatibility bridge.
     `src/modules/level-up-choices.js` owns level-up choice helper implementation; `src/level-up-choices.js` is a generated compatibility bridge.
     `src/modules/map-system.js` owns map/floor resolver implementation; `src/map-system.js` is a generated compatibility bridge.
@@ -53,8 +56,8 @@ Before editing this repo:
     `src/modules/run-state.js` owns run state/player reset construction; `src/run-state.js` is a generated compatibility bridge.
     `src/modules/run-ui.js` owns run HUD/end-screen rendering; `src/run-ui.js` is a generated compatibility bridge.
     `src/modules/run-update.js` owns run ticking/player movement/XP updates; `src/run-update.js` is a generated compatibility bridge.
-    Keep save consumers on `globalThis.TapSurvivorSaveMigrations` and `globalThis.TapSurvivorSaveNormalize` for now.
-    Keep `game.js` as the classic side-effectful runtime composer until a separate runtime-entry migration.
+    Save consumers receive save helpers through the dependency bag; retired save namespaces must not be read or restored.
+    `src/game.js` is a retained explicit platform-injection composition boundary, not a publisher contract.
     Do not hand-edit generated save bridges or change save defaults, migrations, normalization semantics, corrupt-save backup, storage behavior, persistence semantics, or runtime initialization while moving these bridges.
     `src/modules/weapon-cooldowns.js` owns weapon cooldown/stat-scaling implementation; `src/weapon-cooldowns.js` is a generated compatibility bridge.
     `src/modules/weapon-projectiles.js` owns projectile weapon implementation; `src/weapon-projectiles.js` is a generated compatibility bridge.

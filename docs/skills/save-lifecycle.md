@@ -18,11 +18,10 @@ Inspect or patch save lifecycle behavior while preserving public APIs, save keys
 
 ## Allowed Files
 
-- `src/save.js`
-- `src/save-defaults.js`
-- `src/save-migrations.js`
-- `src/save-normalize.js`
-- `src/storage-adapter.js`
+- Source-owned save modules under `src/modules/`, including `save.js`, `save-defaults.js`,
+  `save-migrations.js`, `save-normalize.js`, `save-corruption.js`, and `storage-adapter.js`
+- Generated save compatibility artifacts under `src/` for inspection only; regenerate them with
+  `npm run build:bridges` and never hand-edit them
 - Save smoke scripts under `scripts/`
 - Save lifecycle docs
 - `docs/CURRENT_TASK.md`
@@ -31,6 +30,7 @@ Inspect or patch save lifecycle behavior while preserving public APIs, save keys
 
 - `content/tap-survivor-content.json` unless required by a save fixture
 - `src/content.generated.js`
+- Generated save compatibility artifacts under `src/`
 - `www/`
 - Android signing or package config
 
@@ -39,18 +39,19 @@ Inspect or patch save lifecycle behavior while preserving public APIs, save keys
 1. Inspect existing save helpers before editing.
 2. Identify the save version, keys, and public API touched.
 3. Make the smallest change needed.
-4. Preserve `globalThis.TapSurvivorSave.createSaveSystem(...)`.
+4. Preserve the explicit `createSaveSystem(...)` factory and dependency-bag contract; do not restore
+   a retired browser publisher.
 5. Run syntax and save smoke checks.
 6. Run broader agent checks if source changed.
 
 ## Commands
 
 ```sh
-node --check src/storage-adapter.js
-node --check src/save-defaults.js
-node --check src/save-migrations.js
-node --check src/save-normalize.js
-node --check src/save.js
+node --check src/modules/storage-adapter.js
+node --check src/modules/save-defaults.js
+node --check src/modules/save-migrations.js
+node --check src/modules/save-normalize.js
+node --check src/modules/save.js
 npm run smoke:save
 npm run agent:check
 git diff --check

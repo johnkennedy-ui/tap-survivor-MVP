@@ -6,6 +6,8 @@ www/
 .agent/frank-capture/
 .agent/runs/
 tmp/browser-smoke/
+# Durable local audit/review reports only; other tmp/ paths remain visible to git status.
+tmp/final-reports/
 
 .env
 .env.*

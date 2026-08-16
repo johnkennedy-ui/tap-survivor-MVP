@@ -1,13 +1,17 @@
-# Global retirement execution plan
+# Historical: Global retirement execution plan
 
-**Run mode:** solo-project fast migration (authorized 2026-07-21). Retire production `TapSurvivor*`
+> **Completed historical record — not current maintenance instructions.** The migration described
+> below is complete. Do not execute its cuts or restore any publisher from its examples; use
+> `docs/AGENT_CODEBASE_CONTEXT.md` and `docs/GLOBAL_STATE_INVENTORY.md` for current architecture.
+
+**Historical run mode:** solo-project fast migration (authorized 2026-07-21). Retire production `TapSurvivor*`
 globals and script-order bridge use before preserving classic fallback parity. No deployment or
 production configuration changes are in scope.
 
 **Baseline:** `f276455747fc7d8eabb3e38413565e647a1e977f` (`main`; tracked tree clean when
 inventoried; untracked `tmp/` excluded).
 
-## Acceptance
+## Historical Acceptance Target
 
 - Production sources no longer publish or consume `globalThis.TapSurvivor*` / classic bridge
   namespaces.
@@ -19,7 +23,7 @@ inventoried; untracked `tmp/` excluded).
 - Refresh `docs/GLOBAL_STATE_INVENTORY.md` and `scripts/allowed-globals.json` only as a consequence
   of an implemented cut; do not conceal violations with allowlist changes.
 
-## Ordered cuts
+## Historical Ordered Cuts
 
 1. **Bootstrap seam / runtime dependency bag** — move `game.js`, `game-dependencies.js`, and
    `game-runtime.js` to explicit injection via the app composition modules. This unlocks removal of
@@ -35,7 +39,7 @@ inventoried; untracked `tmp/` excluded).
 6. **Final classic boundary removal** — remove remaining script tags/bridge publishers and audit
    browser/platform globals separately; update the inventory to zero production namespace globals.
 
-## First contract: bootstrap seam
+## Historical First Contract: Bootstrap Seam
 
 **Base:** `f276455747fc7d8eabb3e38413565e647a1e977f`
 
@@ -60,7 +64,7 @@ this cut.
 the cut exposes an invalid classic fallback, favor a native-module correction or remove the fallback
 rather than restoring a production global.
 
-## Inventory notes
+## Historical Inventory Notes
 
 At plan creation, `window` direct hits in `src/` were zero. Remaining production namespace groups
 were: bootstrap/runtime dependency bag; presentation/UI; gameplay leaf bridges; persistence; and

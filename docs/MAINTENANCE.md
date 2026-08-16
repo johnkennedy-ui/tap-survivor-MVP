@@ -85,22 +85,25 @@ Expected local outputs:
 
 This repo does not include Play upload, signing keys, keystores, service account JSON, billing, ads, analytics, Firebase, login, or backend services.
 
-## Before Reporting
+## Before Local Handoff
 
 ```bash
-npm run agent:finish -- --message "<commit message>" --push --deploy
-npm run agent:ship -- --message "<commit message>" --deploy
-npm run agent:release -- --message "<commit message>"
 npm run agent:handoff
 npm run agent:evidence -- --task "<short task name>"
 git status --short
 ```
 
-`npm run agent:prepush` runs `npm run cache:bump` automatically before validation and forces the full agent check.
-`npm run agent:finish` runs prepush, archives the current task, commits, optionally pushes, and optionally runs deploy verification.
-`npm run agent:ship` is the streamlined finish-and-push path: it runs `agent:finish -- --push`, so no push happens unless prepush validation passes.
-`npm run agent:release` is the live-release path: it runs `agent:ship -- --deploy`, so the push is followed by deploy verification.
 Report the commit, changed files, validation commands, and any remaining caveats.
+
+## Explicit Release Operations
+
+Push and deploy operations are outside routine reporting. Use them only when the current request
+explicitly authorizes a release and the required validation has passed.
+
+`npm run agent:prepush` runs `npm run cache:bump` automatically before validation and forces the
+full agent check. `npm run agent:finish` can commit and optionally push; `npm run agent:ship` adds a
+push; and `npm run agent:release` adds deployment verification. Do not run any of them merely to
+report a local change.
 
 ## Deployment
 
@@ -108,7 +111,7 @@ Pushes to `main` publish the GitHub Pages site via `.github/workflows/tap-surviv
 The Pages workflow builds `www/`, checks runtime parity, and publishes only `www/` to `gh-pages`.
 Pushes and pull requests run `npm run agent:check` via `.github/workflows/agent-check.yml`.
 
-Use `npm run agent:release -- --message "<commit message>"` for changes that should be live-verified immediately after push.
+With explicit release authority, use `npm run agent:release -- --message "<commit message>"` for changes that should be live-verified immediately after push.
 Use `npm run check:deploy` for a read-only live Pages deployment check.
 It expects the latest Pages workflow for the local commit to complete successfully and the live page/cache keys,
 `build-info.json`, and `runtime-manifest.json` to match local `www/`.

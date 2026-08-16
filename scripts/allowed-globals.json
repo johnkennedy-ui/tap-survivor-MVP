@@ -1,4 +1,30 @@
 {
-  "allowedExpressions": [],
-  "allowedFileCounts": {}
+  "scanRoots": ["src", "tests/fixtures"],
+  "scanFiles": ["index.html"],
+  "allowedUsages": [
+    {
+      "category": "production-platform-boundary",
+      "file": "src/app/production-module-autoboot.js",
+      "access": "bare",
+      "expression": "globalThis",
+      "count": 1,
+      "reason": "The production module autoboot transfers the browser root into the explicit globalRef capability."
+    },
+    {
+      "category": "production-platform-boundary",
+      "file": "src/game.js",
+      "access": "bare",
+      "expression": "globalThis",
+      "count": 2,
+      "reason": "The retained game composition boundary injects the browser root into its dependency and runtime capabilities."
+    },
+    {
+      "category": "test-fixture",
+      "file": "tests/fixtures/module-runtime-test-entrypoint.html",
+      "access": "direct",
+      "expression": "globalThis.__tapSurvivorModuleRuntimeTestEntrypoint",
+      "count": 1,
+      "reason": "The deterministic module-runtime fixture exposes its test entrypoint to the browser smoke harness."
+    }
+  ]
 }

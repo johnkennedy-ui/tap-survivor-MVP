@@ -245,8 +245,8 @@ npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/gen
 - `npm run build:content` passes.
 - `npm run validate:content` passes.
 - `npm run balance:check` passes after editing `content/balance/*.json`.
-- Runtime profile selection is dev-only through `?balance=<profile>`, `localStorage.tapSurvivor.balanceProfile`, or `window.TapSurvivorDebugBalance.setProfile("<profile>")`.
-- Local overrides use `window.TapSurvivorDebugBalance.applyOverrides(overrides)`, are rejected for unknown IDs/fields, and stay in memory unless `saveOverrides()` is called.
+- Runtime profile selection is dev-only through `?balance=<profile>` or `localStorage.tapSurvivor.balanceProfile`. Code-level debug selection uses the injected `balanceRuntime` capability, never a browser publisher.
+- Local overrides use the injected `balanceRuntime.applyOverrides(overrides)` capability, are rejected for unknown IDs/fields, and stay in memory unless that configured provider persists them.
 - `npm run content:summary`, `npm run balance:summary`, and `npm run balance:diff -- <profile>` show expected values after structural or balance work.
 - `npm run verify:script-order` passes after `index.html` or `src/*.js` script dependency changes.
 - `npm run audit:quests` passes if quests or unlock gates changed.

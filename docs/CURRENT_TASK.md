@@ -1,47 +1,17 @@
 # Current Agent Task
 
-This file is an optional repo-local checkpoint for a Tap Survivor task. It is housekeeping only and may be stale; use the conversation and current git diff as the source of truth.
+This optional repo-local checkpoint is idle as of 2026-08-16. It is housekeeping only: use the
+current conversation, task queue, and `git status --short` to identify active work.
 
-## Active Goal
+## Current State
 
-Add Prettier before commit skill
+- State: idle
+- Owner: unassigned
+- Active goal: none
+- Last reconciled: 2026-08-16
 
-## Status
+## When Starting A Checkpoint
 
-- State: in progress
-- Started: 2026-06-19T00:00:00.060Z
-- Owner: Frank / OpenClaw
-
-## Files Likely Involved
-
-- `docs/CURRENT_TASK.md`
-- `docs/AGENT_CODEBASE_CONTEXT.md`
-- `docs/CONTENT_EXTENSION_GUIDE.md`
-
-## Files Changed
-
-- Pending.
-
-## Validation Plan
-
-Run the smallest command that proves the change:
-
-```bash
-npm run agent:check
-```
-
-Result:
-
-- Pending.
-
-## Evidence Required
-
-- Files inspected.
-- Files changed.
-- Validation commands and results.
-- Evidence stub when useful.
-- Remaining risks or follow-up tasks.
-
-## Stop Condition
-
-Stop after the requested single change is implemented, validated, documented, and reported.
+Record the bounded goal, owner, affected files, validation plan, and evidence location. Clear or
+archive the checkpoint when the work is complete or blocked; do not leave completed work marked as
+active.

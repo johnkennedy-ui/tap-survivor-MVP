@@ -1,6 +1,10 @@
-# Maintainability Refactor Notes
+# Historical Maintainability Refactor Notes
 
-This document records small structure changes made to keep future agent edits readable and low-risk.
+> **Historical change record — not current maintenance instructions.** Earlier sections may retain
+> retired API examples to explain their original migration context. Do not follow those examples;
+> use `docs/AGENT_CODEBASE_CONTEXT.md`, `docs/MAINTENANCE.md`, and the global guard policy instead.
+
+This document records completed structure changes made to keep future agent edits readable and low-risk.
 
 ## 2026-06-16 Save Helper Split And Format Hygiene
 
