@@ -943,16 +943,18 @@ check(
     !classicEntrypointDependencies.includes("TapSurvivorStorage")
 );
 check(
-  "readiness sees source-owned BalanceRuntime with a retained generated classic publisher",
+  "readiness sees source-owned BalanceRuntime with a retired global-free generated bridge",
   nativeBalanceRuntimeSource.includes("export function createRuntimeBalanceProvider") &&
     !/\b(?:globalThis|window)\b/u.test(nativeBalanceRuntimeSource) &&
     !nativeBalanceRuntimeSource.includes("TapSurvivorContent") &&
     !nativeBalanceRuntimeSource.includes("TapSurvivorBalanceRuntime") &&
     classicBalanceRuntimeSource.includes("// GENERATED FILE.") &&
     classicBalanceRuntimeSource.includes("// Source: src/modules/balance-runtime.js") &&
-    classicBalanceRuntimeSource.includes("const runtimeBalance = createRuntimeBalanceProvider") &&
-    classicBalanceRuntimeSource.includes("globalThis.TapSurvivorContent = content") &&
-    classicBalanceRuntimeSource.includes("globalThis.TapSurvivorBalanceRuntime = runtimeBalance") &&
+    classicBalanceRuntimeSource.includes(
+      "// Retired global: TapSurvivorBalanceRuntime. Exports are supplied through the game dependency bag."
+    ) &&
+    !classicBalanceRuntimeSource.includes("globalThis.TapSurvivorContent") &&
+    !classicBalanceRuntimeSource.includes("globalThis.TapSurvivorBalanceRuntime") &&
     !classicGameDependenciesSource.includes("TapSurvivorBalanceRuntime") &&
     classicGameDependenciesSource.includes("function createRuntimeBalanceProvider")
 );
@@ -1854,7 +1856,6 @@ function isApprovedCompatibilityBoundary(file) {
     generatedBridgeFiles.includes(file) ||
     [
       "src/assets.js",
-      "src/balance-runtime.js",
       "src/game.js",
       "src/upgrades.js",
     ].includes(file)

@@ -291,16 +291,9 @@ const bridges = [
   {
     source: "src/modules/balance-runtime.js",
     target: "src/balance-runtime.js",
-    globalName: "TapSurvivorBalanceRuntime",
+    globalName: null,
+    retiredGlobalName: "TapSurvivorBalanceRuntime",
     exports: ["createRuntimeBalanceProvider"],
-    classicPublisherSource: `const runtimeBalance = createRuntimeBalanceProvider({
-    logger: console,
-    publishContent: (content) => {
-      globalThis.TapSurvivorContent = content;
-    },
-  });
-
-  globalThis.TapSurvivorBalanceRuntime = runtimeBalance;`,
   },
   {
     source: "src/modules/game-dependencies.js",

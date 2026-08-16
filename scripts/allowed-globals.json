@@ -1,12 +1,8 @@
 {
-  "allowedExpressions": [
-    "globalThis.TapSurvivorBalanceRuntime",
-    "globalThis.TapSurvivorContent"
-  ],
+  "allowedExpressions": ["globalThis.TapSurvivorContent"],
   "allowedFileCounts": {
     "scripts/smoke-production-browser-runtime.mjs": 0,
     "scripts/smoke-shop-provider-parity.mjs": 0,
-    "src/balance-runtime.js": 2,
     "src/balance.js": 0,
     "src/combat-damage.js": 0,
     "src/content-registry.js": 0,

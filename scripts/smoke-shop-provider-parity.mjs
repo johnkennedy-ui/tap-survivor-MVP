@@ -334,7 +334,6 @@ function createClassicDependencyGlobal(fixture) {
     value: () => Object.values(retiredPublisherReads).reduce((total, reads) => total + reads, 0),
   });
   globalRef.document = fixture.documentRef;
-  globalRef.TapSurvivorBalanceRuntime = { content: () => ({}) };
   globalRef.TapSurvivorContent = {};
   globalRef.TapSurvivorShopPricing = { createShopPricing };
   return globalRef;

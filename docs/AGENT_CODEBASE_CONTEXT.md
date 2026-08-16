@@ -18,7 +18,7 @@ Tap Survivor is a small browser MVP for a survival auto-attacker. The player mov
 - `src/modules/game-dependencies.js`: real ES-module implementation for collecting the runtime dependency bag consumed by `src/game.js`, including the input binder passed into the runtime controller.
 - `src/game-dependencies.js`: generated global-free artifact with retired `TapSurvivorGameDependencies` provenance; do not hand-edit it.
 - `src/modules/balance-runtime.js`: source-owned BalanceRuntime provider; it receives Content publishing and logging through explicit dependencies and has no ambient browser-global access.
-- `src/balance-runtime.js`: generated classic BalanceRuntime compatibility publisher that retains the existing public identity and Content republish behavior; do not hand-edit it.
+- `src/balance-runtime.js`: generated global-free BalanceRuntime bridge with retired `TapSurvivorBalanceRuntime` provenance; do not hand-edit it.
 - `src/modules/module-runtime-audio-adapter.js`: source-owned audio implementation with explicit Audio, AudioContext, and clock factories.
 - `src/audio.js`: generated global-free artifact for the retired `TapSurvivorAudio` publisher; do not hand-edit it.
 - `src/modules/shell-ui-classic-adapter.js`: real ES-module classic Shell UI adapter; it receives browser DOM access through explicit factory options.
@@ -179,7 +179,7 @@ The project is mixed but mostly registry-driven:
 - Supported content tooling templates/defaults, shop item field rules, effect stats, and validation command groups are described in `content/tap-survivor-schema.json`.
 - Supported runtime behavior IDs for weapon kinds and boss ability kinds are also listed in `content/tap-survivor-schema.json`; content validation rejects unsupported IDs before runtime.
 - `src/content.generated.js` exposes the content registry as `globalThis.TapSurvivorContent` and the content schema as `globalThis.TapSurvivorContentSchema`.
-- `src/content.generated.js` also exposes safe profile metadata as `globalThis.TapSurvivorBalanceProfiles`; runtime dev selection is handled by `src/balance-runtime.js`.
+- `src/content.generated.js` also exposes safe profile metadata as `globalThis.TapSurvivorBalanceProfiles`; runtime dev selection is handled by the source-owned BalanceRuntime provider through the dependency bag.
 - Weapon behavior dispatch lives in `src/weapon-fire.js`; enemy spawn orchestration lives in `src/enemies.js`; enemy movement/attack behavior lives in `src/enemy-behaviors.js`.
 - Weapon damage upgrades are generated from weapon definitions in `src/upgrades.js`.
 - Run-upgrade one-shot effects and shop item stat bonuses use shared handlers in `src/effects.js`; shop bonus stats come from the generated schema at runtime, and combat-scaling run upgrades are read by tier ID in `src/weapon-fire.js`.

@@ -297,6 +297,7 @@ export function createGameHarness({
   const retiredGlobalNames = [
     "TapSurvivorAudio",
     "TapSurvivorBalance",
+    "TapSurvivorBalanceRuntime",
     "TapSurvivorCombatDamage",
     "TapSurvivorContentRegistry",
     "TapSurvivorInput",
@@ -328,12 +329,15 @@ export function createGameHarness({
     context,
     "TapSurvivorStorage"
   );
+  const balanceRuntimePublisherPoisonDescriptor = Object.getOwnPropertyDescriptor(
+    context,
+    "TapSurvivorBalanceRuntime"
+  );
   context.__tapSurvivorRetiredGlobalReads = retiredGlobalReads;
 
   vm.createContext(context);
   const classicSourcesBeforeSpriteShim = [
     "src/content.generated.js",
-    "src/balance-runtime.js",
     "src/assets.js",
     "src/math.js",
     "src/sprites.js",
@@ -453,7 +457,6 @@ export function createGameHarness({
   vm.runInContext(readSource("src/shell-ui.js"), context);
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
-  const classicContent = context.TapSurvivorContent;
   const sourceGameDependencies = createGameDependencyBag({
     globalRef: context,
     documentRef: context.document,
@@ -464,16 +467,6 @@ export function createGameHarness({
   const sourceDependencyBagHasStorageProvider =
     typeof sourceGameDependencies.storage?.configureDefaultProviders === "function" &&
     typeof sourceGameDependencies.storage?.createStorageAdapter === "function";
-  context.TapSurvivorBalanceRuntime.configureDefaultProviders({
-    content: classicContent,
-    profileSearch: () => context.location?.search || "",
-    profiles: classicContent.balanceProfiles,
-    storage: {
-      getItem: (key) => context.localStorage?.getItem?.(key),
-      removeItem: (key) => context.localStorage?.removeItem?.(key),
-      setItem: (key, value) => context.localStorage?.setItem?.(key, value),
-    },
-  });
   const platform = {
     documentRef: context.document,
     runtimeGlobal: context,
@@ -520,7 +513,7 @@ export function createGameHarness({
   const browserBannerSystem = browserPlatformAdapters.bannerSystem;
   const debugSystem = createDebugSystem({
     floorDifficulty: (floor) => dependencies?.moduleSystems?.balance?.floorDifficulty?.(floor),
-    getActiveProfile: () => context.TapSurvivorBalanceRuntime?.getActiveProfile?.() || "default",
+    getActiveProfile: () => sourceGameDependencies.balanceRuntime.getActiveProfile(),
     getGame: () => dependencies?.getGame?.(),
     getRelicSpecialEffects: () => dependencies?.moduleSystems?.relics?.specialEffects?.(dependencies?.getSave?.()),
     getRunUpgradeTier: (id) => dependencies?.getGame?.()?.runUpgradeTiers?.[id] || 0,
@@ -622,6 +615,12 @@ export function createGameHarness({
     runtime,
   });
   lifecycle.init();
+  const balanceRuntimePublisherPoisonRetained =
+    Object.getOwnPropertyDescriptor(context, "TapSurvivorBalanceRuntime")?.get ===
+    balanceRuntimePublisherPoisonDescriptor?.get;
+  const balanceRuntimePublisherAbsentAfterBoot =
+    Reflect.deleteProperty(context, "TapSurvivorBalanceRuntime") &&
+    !Object.prototype.hasOwnProperty.call(context, "TapSurvivorBalanceRuntime");
   const storagePublisherPoisonRetained =
     Object.getOwnPropertyDescriptor(context, "TapSurvivorStorage")?.get ===
     storagePublisherPoisonDescriptor?.get;
@@ -629,6 +628,7 @@ export function createGameHarness({
     Reflect.deleteProperty(context, "TapSurvivorStorage") &&
     !Object.prototype.hasOwnProperty.call(context, "TapSurvivorStorage");
   context.__tapSurvivorHarness = {
+    getActiveBalanceProfile: () => sourceGameDependencies.balanceRuntime.getActiveProfile(),
     getGame: dependencies.getGame,
     getSave: dependencies.getSave,
   };
@@ -637,6 +637,7 @@ export function createGameHarness({
     context,
     dependencies,
     elements,
+    sourceGameDependencies,
     speedButtons,
     frame(now) {
       rafCallback?.(now);
@@ -660,6 +661,14 @@ export function createGameHarness({
       sourceDependencyBagHasBothSpriteFactories,
       spritePublisherAbsentAfterShim,
       spritePublisherAbsentBeforeShim,
+    },
+    balanceRuntimePublisherProof: {
+      balanceRuntimePublisherAbsentAfterBoot,
+      balanceRuntimePublisherPoisonRetained,
+      balanceRuntimePublisherReads: retiredGlobalReads.TapSurvivorBalanceRuntime,
+      sourceDependencyBagHasBalanceRuntime:
+        typeof sourceGameDependencies.balanceRuntime?.configureDefaultProviders === "function" &&
+        typeof sourceGameDependencies.balanceRuntime?.getActiveProfile === "function",
     },
     storagePublisherProof: {
       sourceDependencyBagHasStorageProvider,

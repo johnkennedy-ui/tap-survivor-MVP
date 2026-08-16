@@ -382,16 +382,18 @@ check(
     !index.includes('src="src/game-dependencies.js"'),
 );
 check(
-  "BalanceRuntime is source-owned while its generated classic publisher remains compatible",
+  "BalanceRuntime is source-owned with a retired global-free generated bridge",
   nativeBalanceRuntime.includes("export function createRuntimeBalanceProvider") &&
     !/\b(?:globalThis|window)\b/u.test(nativeBalanceRuntime) &&
     !nativeBalanceRuntime.includes("TapSurvivorContent") &&
     !nativeBalanceRuntime.includes("TapSurvivorBalanceRuntime") &&
     balanceRuntime.includes("// GENERATED FILE.") &&
     balanceRuntime.includes("// Source: src/modules/balance-runtime.js") &&
-    balanceRuntime.includes("const runtimeBalance = createRuntimeBalanceProvider") &&
-    balanceRuntime.includes("globalThis.TapSurvivorContent = content") &&
-    balanceRuntime.includes("globalThis.TapSurvivorBalanceRuntime = runtimeBalance") &&
+    balanceRuntime.includes(
+      "// Retired global: TapSurvivorBalanceRuntime. Exports are supplied through the game dependency bag."
+    ) &&
+    !balanceRuntime.includes("globalThis.TapSurvivorContent") &&
+    !balanceRuntime.includes("globalThis.TapSurvivorBalanceRuntime") &&
     moduleGameDependencies.includes('import { createRuntimeBalanceProvider } from "./balance-runtime.js";') &&
     !moduleGameDependencies.includes("TapSurvivorBalanceRuntime") &&
     gameDependencies.includes("function createRuntimeBalanceProvider") &&

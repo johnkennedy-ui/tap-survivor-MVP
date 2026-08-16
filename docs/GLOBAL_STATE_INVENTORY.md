@@ -49,10 +49,10 @@ Generated content globals:
   generated classic bridge construct/configure that provider directly from raw Content and attached profiles; neither
   reads, optional-reads, string-key-reads, nor overwrites `TapSurvivorBalanceRuntime`. Missing Content/profiles keep
   the dependency bag's safe raw-content fallback, while missing, poisoned, or restored publisher values do not alter
-  direct bag construction. The generated `src/balance-runtime.js` remains the retained compatibility publisher: its
-  explicit publishing callback preserves the stable `TapSurvivorBalanceRuntime` identity, in-place Content rebuild,
-  Content republish, profile search, storage fallback, and override behavior. It fails closed with
-  `TAP_SURVIVOR_BALANCE_PROVIDER_MISSING` until explicitly configured.
+  direct bag construction. The generated `src/balance-runtime.js` is a global-free source-derived bridge with retired
+  `TapSurvivorBalanceRuntime` provenance; it neither republishes Content nor creates a compatibility provider. The
+  source-owned provider retains profile search, storage fallback, override behavior, and the
+  `TAP_SURVIVOR_BALANCE_PROVIDER_MISSING` failure until explicitly configured through the dependency bag.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
   `src/modules/content-registry.js`.
 - `src/effects.js` is a generated, global-free source-derived artifact for run upgrade effects, shop item effects,

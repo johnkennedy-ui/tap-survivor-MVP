@@ -197,6 +197,7 @@ const renderEnemiesBridge = loadBridge("../src/render-enemies.js", "src/render-e
 const renderHudBridge = loadBridge("../src/render-hud.js", "src/render-hud.js");
 const skillRailBridge = loadBridge("../src/render-skill-rail.js", "src/render-skill-rail.js");
 const renderingBridge = loadBridge("../src/rendering.js", "src/rendering.js");
+const balanceRuntimeBridge = loadRetiredBalanceRuntimeBridge();
 const gameDependenciesBridge = loadRetiredGameDependenciesBridge();
 const progressionBridge = loadBridge("../src/progression.js", "src/progression.js");
 const questsBridge = loadBridge("../src/quests.js", "src/quests.js");
@@ -1679,6 +1680,23 @@ check(
   !gameDependenciesBridge.source.includes("TapSurvivorBalanceProfiles")
 );
 check(
+  "BalanceRuntime bridge is retired, global-free, and does not republish Content",
+  balanceRuntimeBridge.source.includes("// GENERATED FILE.") &&
+    balanceRuntimeBridge.source.includes("// Source: src/modules/balance-runtime.js") &&
+    balanceRuntimeBridge.source.includes(
+      "// Retired global: TapSurvivorBalanceRuntime. Exports are supplied through the game dependency bag."
+    ) &&
+    !balanceRuntimeBridge.source.includes("globalThis.TapSurvivorBalanceRuntime") &&
+    !balanceRuntimeBridge.source.includes("globalThis.TapSurvivorContent") &&
+    balanceRuntimeBridge.retirementProof.absentError === "" &&
+    balanceRuntimeBridge.retirementProof.absentPublishersAbsent &&
+    balanceRuntimeBridge.retirementProof.poisonedError === "" &&
+    balanceRuntimeBridge.retirementProof.poisonedDescriptorsRetained &&
+    balanceRuntimeBridge.retirementProof.poisonedReads === 0 &&
+    balanceRuntimeBridge.retirementProof.restoredError === "" &&
+    balanceRuntimeBridge.retirementProof.restoredPublishersRetained
+);
+check(
   "native and generated dependency bags construct the source-owned BalanceRuntime without its publisher",
   moduleGameDependenciesSource.includes(
     'import { createRuntimeBalanceProvider } from "./balance-runtime.js";'
@@ -2138,7 +2156,7 @@ check(
   ) && !gameDependenciesBridge.source.includes("globalThis.location")
 );
 check(
-  "native and generated dependency bags ignore missing, poisoned, and restored BalanceRuntime publishers",
+  "native and generated dependency bags ignore missing, poisoned, and restored retired BalanceRuntime namespaces",
   [moduleGameDependenciesSnapshot, bridgeGameDependenciesSnapshot].every((snapshot) => {
     const recovery = snapshot.balancePublisherRecovery;
     return (
@@ -7000,12 +7018,76 @@ function findShellRelicElement(element, predicate) {
   return null;
 }
 
-/**
- * @param {string} path
- * @param {string} filename
- * @param {Record<string, unknown>} [globals]
- * @returns {{ source: string, context: Record<string, unknown> }}
- */
+/** Evaluates the retired bridge against absent, poisoned, and restored legacy globals. */
+function loadRetiredBalanceRuntimeBridge() {
+  const source = readFileSync(new URL("../src/balance-runtime.js", import.meta.url), "utf8");
+  const run = (context) => {
+    context.globalThis = context;
+    vm.createContext(context);
+    try {
+      vm.runInContext(source, context, { filename: "src/balance-runtime.js" });
+      return "";
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  };
+
+  const absentContext = {};
+  const absentError = run(absentContext);
+
+  let poisonedReads = 0;
+  const poisonedContext = {};
+  const poison = (name) => {
+    Object.defineProperty(poisonedContext, name, {
+      configurable: true,
+      get() {
+        poisonedReads += 1;
+        throw new Error(`Forbidden ${name} global read`);
+      },
+    });
+  };
+  poison("TapSurvivorBalanceRuntime");
+  poison("TapSurvivorContent");
+  const poisonedBalanceRuntimeDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedContext,
+    "TapSurvivorBalanceRuntime"
+  );
+  const poisonedContentDescriptor = Object.getOwnPropertyDescriptor(
+    poisonedContext,
+    "TapSurvivorContent"
+  );
+  const poisonedError = run(poisonedContext);
+
+  const restoredBalanceRuntime = { restored: "balance-runtime" };
+  const restoredContent = { restored: "content" };
+  const restoredContext = {
+    TapSurvivorBalanceRuntime: restoredBalanceRuntime,
+    TapSurvivorContent: restoredContent,
+  };
+  const restoredError = run(restoredContext);
+
+  return {
+    source,
+    retirementProof: {
+      absentError,
+      absentPublishersAbsent:
+        !Object.hasOwn(absentContext, "TapSurvivorBalanceRuntime") &&
+        !Object.hasOwn(absentContext, "TapSurvivorContent"),
+      poisonedDescriptorsRetained:
+        Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorBalanceRuntime")?.get ===
+          poisonedBalanceRuntimeDescriptor?.get &&
+        Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorContent")?.get ===
+          poisonedContentDescriptor?.get,
+      poisonedError,
+      poisonedReads,
+      restoredError,
+      restoredPublishersRetained:
+        restoredContext.TapSurvivorBalanceRuntime === restoredBalanceRuntime &&
+        restoredContext.TapSurvivorContent === restoredContent,
+    },
+  };
+}
+
 function loadRetiredGameDependenciesBridge() {
   const source = readFileSync(new URL("../src/game-dependencies.js", import.meta.url), "utf8");
   const run = (context) => {
@@ -7064,6 +7146,12 @@ function loadRetiredGameDependenciesBridge() {
   };
 }
 
+/**
+ * @param {string} path
+ * @param {string} filename
+ * @param {Record<string, unknown>} [globals]
+ * @returns {{ source: string, context: Record<string, unknown> }}
+ */
 function loadBridge(path, filename, globals = {}, poisonedGlobalNames = []) {
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   const context = { console, ...globals };

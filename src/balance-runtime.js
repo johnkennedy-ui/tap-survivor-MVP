@@ -1,6 +1,7 @@
 // GENERATED FILE. Do not edit directly.
 // Source: src/modules/balance-runtime.js
 // Run: npm run build:bridges
+// Retired global: TapSurvivorBalanceRuntime. Exports are supplied through the game dependency bag.
 (() => {
   "use strict";
 
@@ -553,13 +554,4 @@
 
     return runtimeBalance;
   }
-
-  const runtimeBalance = createRuntimeBalanceProvider({
-    logger: console,
-    publishContent: (content) => {
-      globalThis.TapSurvivorContent = content;
-    },
-  });
-
-  globalThis.TapSurvivorBalanceRuntime = runtimeBalance;
 })();
