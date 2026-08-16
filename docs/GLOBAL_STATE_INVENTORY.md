@@ -28,31 +28,29 @@ Primary bootstrap coupling:
 - `index.html` script order remains the dependency graph until runtime modules are migrated.
 - `scripts/check-script-order.mjs` verifies the current script-order contract.
 
-Generated content globals:
-- `src/content.generated.js` publishes `TapSurvivorContent` and `TapSurvivorBalanceProfiles`; the generated ESM
-  `src/content.generated.mjs` exports `content`, `contentSchema`, and `balanceProfiles` without publishing globals.
+Generated content route:
+- `src/content.generated.js` is a deterministic, generated, global-free compatibility artifact that records retired
+  `TapSurvivorContent` provenance but contains no content or balance-profile payload. The generated ESM
+  `src/content.generated.mjs` is the content route and exports `content`, `contentSchema`, and `balanceProfiles`.
 - Production ESM content proof: `src/app/production-module-entrypoint.js` imports the generated named `content` export.
   `scripts/smoke-module-production-entrypoint.mjs` boots the production path with throwing
   `TapSurvivorContent` accessors on both its injected browser `globalRef` and autoboot `globalThis`; any direct,
   optional-chain, bracket, or other evaluated dynamic lookup of that publisher fails the smoke. The same smoke and
   `scripts/smoke-module-runtime-readiness.mjs` reject direct and string-key `TapSurvivorContent` namespace syntax in
   the production ESM boot sources.
-- Retirement gate: `src/content.generated.js` must continue to publish `TapSurvivorContent` for the preserved classic
-  fallback boundary; the production smoke explicitly fails if that publisher disappears. The fallback now imports the
-  generated ESM `content` and `balanceProfiles` values in `src/game.js` and injects them into its dependency bag, so
-  `src/modules/game-dependencies.js` and generated `src/game-dependencies.js` do not read that publisher. A future
-  publisher-retirement contract must first inventory and resolve the remaining classic fallback consumers (including
-  `src/upgrades.js`) and separately prove rollback policy no longer requires the classic boundary. Do not remove the
-  publisher, change generated content or script order, or alter the global allowlist in this preparatory cut.
-- `src/content.generated.js` also carries its profile array in the producer-owned, non-enumerable
-  `TapSurvivorContent.balanceProfiles` property. `src/modules/balance-runtime.js` owns the global-free provider and
-  receives Content publishing and logging as explicit dependencies. `src/modules/game-dependencies.js` and its
-  generated classic bridge construct/configure that provider only from injected Content and profile inputs; neither
-  reads, optional-reads, string-key-reads, descriptor-reads, or fallback-looks-up `TapSurvivorContent`, nor does either
-  overwrite `TapSurvivorBalanceRuntime`. Missing injected Content/profiles keep the dependency bag's safe raw-content
-  fallback, while absent, poisoned, or restored publisher values do not alter direct bag construction. The generated
+- Retirement result: both production ESM and the preserved `src/game.js` fallback import generated ESM content and
+  profiles and inject them into their dependency bags. `src/modules/game-dependencies.js` and generated
+  `src/game-dependencies.js` have no Content reader. The content artifact, dependency-bag, harness, and browser-parity
+  smokes retain absent, poisoned, and restored legacy-property proofs with zero reads; the historical classic parity
+  baseline remains data-bearing while the current ESM route does not republish that namespace.
+- `src/modules/balance-runtime.js` owns the global-free provider and receives content, profiles, publishing hooks, and
+  logging through explicit dependencies. `src/modules/game-dependencies.js` and its generated classic bridge configure
+  the provider only from injected content/profile inputs; neither reads, optional-reads, string-key-reads,
+  descriptor-reads, nor fallback-looks-up `TapSurvivorContent`, nor does either overwrite
+  `TapSurvivorBalanceRuntime`. Missing injected content/profiles keep the dependency bag's safe raw-content fallback,
+  while absent, poisoned, or restored legacy values do not alter direct bag construction. The generated
   `src/balance-runtime.js` is a global-free source-derived bridge with retired `TapSurvivorBalanceRuntime` provenance;
-  it neither republishes Content nor creates a compatibility provider. The source-owned provider retains profile search,
+  it neither republishes content nor creates a compatibility provider. The source-owned provider retains profile search,
   storage fallback, override behavior, and the `TAP_SURVIVOR_BALANCE_PROVIDER_MISSING` failure until explicitly
   configured through the dependency bag.
 - `src/content-registry.js` is the generated classic bridge for content registry extraction from
@@ -193,16 +191,16 @@ Browser/platform globals:
 - `src/app/production-module-autoboot.js` is the sole production-ESM browser-global acquisition boundary: it passes
   `globalThis` explicitly into the module boot path. `production-module-entrypoint`, `browser-dependency-bag`, and
   `compose-runtime` require injected platform capabilities rather than capturing the host global. The current
-  dot-expression global audit is 3 actual usages (2 allowed expressions and 9 allowed usages); the allowlist does not count bare
+  dot-expression global audit is 0 actual usages, 0 allowed expressions, and 0 allowed usages; the allowlist does not count bare
   `globalThis` fallback syntax. `TapSurvivorGameDependencies` is retired while Debug, Audio, Shell UI, and input remain
   supplied through source-owned providers.
 - Balance profile/override storage and profile-search receive private capabilities from the explicit dependency-bag
-  `globalRef`; the source-owned balance provider has no browser-global reads. The retained classic publisher receives
-  its Content republish hook explicitly, and direct dependency bags do not depend on its publisher value.
+  `globalRef`; the source-owned balance provider has no browser-global reads. Both dependency bags receive generated
+  ESM content/profile inputs explicitly and do not depend on a Content publisher value.
 - Storage platform selection receives per-operation Preferences and browser-storage resolvers from the injected
   `globalRef` through each source-owned provider. The generated global-free `TapSurvivorStorage` retirement artifact
   has no publisher or direct platform-global reads; the injected providers preserve Preferences-first, fallback, and
-  unavailable behavior. The global audit remains `3/2/9`.
+  unavailable behavior. The global audit remains `0/0/0`.
 - `TapSurvivorAudio` is retired. The classic dependency bag supplies its source-owned adapter with explicit
   `globalRef` AudioContext, Audio, and clock factories; generated `src/audio.js` records only retirement provenance
   and has no browser audio-global reader or publisher.
@@ -216,10 +214,9 @@ Browser-smoke diagnostics:
   It does not publish diagnostics on `globalThis`, and is not a production runtime dependency or a revival of a
   retired publisher.
 
-Node tooling generated-global strings:
-- `scripts/build-content.mjs` and `scripts/content-check.mjs` generate/check the content globals as strings. The globals
-  guard ignores strings/comments, so those generated strings are documented here rather than counted as live script
-  accesses.
+Node tooling generated-content artifacts:
+- `scripts/build-content.mjs` and `scripts/content-check.mjs` generate/check the global-free compatibility artifact
+  and the ESM content exports deterministically. The global guard reports no live content publisher usage.
 
 ## Module-Level Mutable State
 

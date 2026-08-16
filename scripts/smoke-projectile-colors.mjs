@@ -8,7 +8,7 @@ function check(name, pass) {
 
 function createBehaviorShot(enemy) {
   const harness = createGameHarness();
-  const content = harness.context.TapSurvivorContent;
+  const content = harness.fallbackContent;
   const game = {
     player: { x: 0, y: 0, radius: 12, projectileBlockReady: false, projectileBlockCharge: 0 },
     enemies: [{ ...enemy, x: 120, y: 0, touchTimer: 999, touchCooldown: 999 }],
@@ -33,8 +33,9 @@ function createBehaviorShot(enemy) {
   };
 }
 
+const hexerContent = createGameHarness().fallbackContent;
 const hexerShot = createBehaviorShot({
-  ...createGameHarness().context.TapSurvivorContent.enemyTypes.find((enemy) => enemy.id === "hexer"),
+  ...hexerContent.enemyTypes.find((enemy) => enemy.id === "hexer"),
   projectileCooldown: 0.1,
   shootTimer: 0,
   speed: 0,

@@ -90,9 +90,9 @@ import {
   MODULE_RUNTIME_UI_ADAPTER_PROOF_SLOTS,
   MODULE_RUNTIME_UI_ADAPTER_SLOTS,
 } from "../src/modules/module-runtime-ui-adapters.js";
+import { content } from "../src/content.generated.mjs";
 
 const root = new URL("..", import.meta.url).pathname;
-const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const indexHtml = readFileSync(join(root, "index.html"), "utf8");
 const productionModuleEntrypointSource = readFileSync(
   join(root, "src/app/production-module-entrypoint.js"),
@@ -153,6 +153,7 @@ const classicWeaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicStorageSource = readFileSync(join(root, "src/storage-adapter.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
+const classicContentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
 const classicGameSource = readFileSync(join(root, "src/game.js"), "utf8");
 const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 const nativeStorageAdapterSource = readFileSync(join(root, "src/modules/storage-adapter.js"), "utf8");
@@ -837,6 +838,15 @@ check(
     ) &&
     classicGameSource.includes("content: generatedContent") &&
     classicGameSource.includes("profiles: balanceProfiles")
+);
+check(
+  "readiness sees the retired classic content artifact as provenance-only without payload or globals",
+  classicContentSource.includes(
+    "// Retired global: TapSurvivorContent. Content is supplied through src/content.generated.mjs."
+  ) &&
+    !/\b(?:globalThis|window)\b/u.test(classicContentSource) &&
+    !classicContentSource.includes("const content") &&
+    !classicContentSource.includes("balanceProfiles")
 );
 check(
   "readiness rejects direct, string-key, and dynamic TapSurvivorRelics reads in the production ESM browser path",

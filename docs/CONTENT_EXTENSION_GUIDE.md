@@ -15,7 +15,8 @@
   Do not edit the mirror for routine content work.
 - Machine-readable content schema: `content/tap-survivor-schema.json`.
 - Balance profiles: `content/balance/*.json`.
-- Generated content and schema globals: `src/content.generated.js`.
+- Generated content, schema, and balance-profile ESM exports: `src/content.generated.mjs`.
+  `src/content.generated.js` is a generated global-free compatibility artifact only.
 - Dev-only runtime balance bridge: `src/balance-runtime.js`.
 - Sprites and licenses: `assets/<source>/<pack>/`.
 - Agent docs: `docs/`.
@@ -26,7 +27,8 @@
 - Update schema `templates` before changing repeated CLI defaults for weapons, quests, or shop items.
 - Update schema `fieldRules` before changing repeated validator rules for shop item fields, kinds, costs, or effects.
 - Run `npm run smoke:add-content` after changing `scripts/add-content.mjs`, schema templates, or content-tool path handling.
-- `src/content.generated.js` exposes `globalThis.TapSurvivorContentSchema`; runtime modules can use generated schema constants when they need supported content lists.
+- `src/content.generated.mjs` exports `contentSchema`; runtime modules import the generated schema constants when they
+  need supported content lists.
 
 ## Content Domains
 
@@ -44,8 +46,9 @@
 - Audio/SFX paths: `content/registry/audio.json`.
 - Numeric tuning such as shop and loot rates: `content/registry/tuning.json`.
 
-Use `npm run build:content` to assemble these domains into `src/content.generated.js`.
-The generated file also embeds `globalThis.TapSurvivorBalanceProfiles` so dev tools can select a safe local profile without remote loading.
+Use `npm run build:content` to assemble these domains into `src/content.generated.mjs` and regenerate the
+provenance-only `src/content.generated.js` compatibility artifact. The ESM module exports balance profiles for the
+explicit runtime dependency bag; no content or profile global is published.
 Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` remains the compatibility export surface. Future agents should edit the focused file that owns the relevant responsibility.
 Type contracts live under `types/` and are checked with `npm run typecheck`.
 The check is no-emit and currently scoped to `scripts/content/*.mjs`, the compatibility barrel, and `src/content-registry.js`.
@@ -248,6 +251,6 @@ npm run sprites:extract -- assets/generated/tower/raw-sheet.png --out assets/gen
 - `npm run verify:script-order` passes after `index.html` or `src/*.js` script dependency changes.
 - `npm run audit:quests` passes if quests or unlock gates changed.
 - `npm test` passes if gameplay code, combat, rendering, upgrades, or script load order changed.
-- Generated `src/content.generated.js` is updated after registry edits.
-- Generated `src/content.generated.js` is updated after schema edits.
+- Generated `src/content.generated.mjs` and `src/content.generated.js` are updated after registry edits.
+- Generated `src/content.generated.mjs` and `src/content.generated.js` are updated after schema edits.
 - `npm run smoke:save` passes after save defaults, migrations, shop purchases, or persistence fields change.

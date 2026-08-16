@@ -300,6 +300,7 @@ function createClassicDependencyGlobal(fixture) {
   const retiredPublisherNames = [
     "TapSurvivorAudio",
     "TapSurvivorAssets",
+    "TapSurvivorContent",
     "TapSurvivorGameRuntime",
     "TapSurvivorInput",
     "TapSurvivorLevelUp",
@@ -334,7 +335,6 @@ function createClassicDependencyGlobal(fixture) {
     value: () => Object.values(retiredPublisherReads).reduce((total, reads) => total + reads, 0),
   });
   globalRef.document = fixture.documentRef;
-  globalRef.TapSurvivorContent = {};
   globalRef.TapSurvivorShopPricing = { createShopPricing };
   return globalRef;
 }

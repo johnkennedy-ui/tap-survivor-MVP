@@ -28,6 +28,7 @@ const nativeBalanceRuntime = readRequired("src/modules/balance-runtime.js");
 const styles = readRequired("src/styles.css");
 const contentSource = readRequired("content/tap-survivor-content.json");
 const generatedContent = readRequired("src/content.generated.js");
+const generatedModuleContent = readRequired("src/content.generated.mjs");
 const effects = readRequired("src/effects.js");
 const math = readRequired("src/math.js");
 const sprites = readRequired("src/sprites.js");
@@ -108,8 +109,8 @@ const smokeAudioScaling = readRequired("scripts/smoke-audio-scaling.mjs");
 const contentTools = readRequired("scripts/content-tools.mjs");
 const contentSchemaTools = readRequired("scripts/content/content-schema.mjs");
 const content = contentSource ? JSON.parse(contentSource) : {};
-const contentText = `${contentSource}\n${generatedContent}`;
-const staleText = `${index}\n${contentSource}\n${generatedContent}\n${agentContext}`;
+const contentText = `${contentSource}\n${generatedModuleContent}`;
+const staleText = `${index}\n${contentSource}\n${generatedModuleContent}\n${agentContext}`;
 const runtime = [
   game,
   gameBanners,
@@ -153,7 +154,19 @@ check("tap/click target handler exists", input.includes("setTargetFromEvent"));
 check("mouse movement input exists", input.includes('addEventListener?.("mousedown"'));
 check("touch movement input exists", input.includes('addEventListener?.("touchstart"'));
 check("enemy chase loop exists", runtime.includes("updateEnemies") && runtime.includes("enemy.speed"));
-check("content source exists", contentSource.includes('"schemaVersion"') && generatedContent.includes("TapSurvivorContent"));
+check(
+  "content source exists through generated ESM exports with a retired classic compatibility artifact",
+  contentSource.includes('"schemaVersion"') &&
+    generatedModuleContent.includes("export const content =") &&
+    generatedModuleContent.includes("export const contentSchema =") &&
+    generatedModuleContent.includes("export const balanceProfiles =") &&
+    generatedContent.includes(
+      "// Retired global: TapSurvivorContent. Content is supplied through src/content.generated.mjs."
+    ) &&
+    !/\b(?:globalThis|window)\b/u.test(generatedContent) &&
+    !generatedContent.includes("const content") &&
+    !generatedContent.includes("balanceProfiles")
+);
 check("Kenney asset manifest exists", content.assets?.sources?.some((source) => source.id === "kenney_desert_shooter_pack" && source.commercialUse === true && source.attributionRequired === false));
 check("Kenney sprites are wired", ["player", "drifter", "skitter", "bulwark", "spark_bolt", "prism_beam"].every((id) => contentText.includes(id)) && sprites.includes("drawSprite"));
 check("generated tower background asset exists", content.assets?.sources?.some((source) => source.id === "generated_tower_floor" && source.commercialUse === true && source.attributionRequired === false) && content.assets?.sprites?.backgrounds?.tower_floor);

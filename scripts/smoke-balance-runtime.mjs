@@ -331,19 +331,18 @@ check(
 const defaultHarness = createGameHarness({ fakeCombat: true });
 const defaultBalance = defaultHarness.sourceGameDependencies.balanceRuntime;
 check("default runtime uses the source-owned default balance profile", defaultBalance.getActiveProfile() === "default");
-const producerProfiles = Object.getOwnPropertyDescriptor(
-  defaultHarness.context.TapSurvivorContent,
-  "balanceProfiles"
-);
 check(
-  "classic content producer carries the exact profiles value on a non-enumerable property",
-  producerProfiles?.enumerable === false &&
-    producerProfiles.value === defaultHarness.context.TapSurvivorContent.balanceProfiles
-);
-check(
-  "classic harness receives configured runtime content through explicit fallback injection",
+  "classic harness receives configured runtime content and profiles through explicit fallback injection",
   defaultBalance.content() === defaultHarness.fallbackContent &&
-    defaultBalance.content() !== defaultHarness.context.TapSurvivorContent
+    Array.isArray(defaultHarness.fallbackProfiles) &&
+    !Object.hasOwn(defaultHarness.fallbackContent, "balanceProfiles")
+);
+check(
+  "classic harness ignores the retired Content publisher while the injected fallback remains available",
+  defaultHarness.contentPublisherProof.contentPublisherPoisonRetained &&
+    defaultHarness.contentPublisherProof.contentPublisherAbsentAfterBoot &&
+    defaultHarness.contentPublisherProof.contentPublisherReads === 0 &&
+    !Object.hasOwn(defaultHarness.context, "TapSurvivorContent")
 );
 defaultHarness.elements.get("toggleDebug").click();
 check(
@@ -452,8 +451,9 @@ check("local override changes shop value", resolved.shopItems.find((item) => ite
 check("local override changes loot tuning", resolved.tuning.loot.normalCoinBaseValue === 5);
 check("local override exports without persistence", !overrideHarness.context.localStorage.store.has("tapSurvivor.balanceOverrides"));
 check(
-  "classic content publisher stays unchanged while injected content receives overrides",
-  overrideHarness.context.TapSurvivorContent.weapons.spark_bolt.damage === 12
+  "legacy Content publisher stays absent while injected content receives overrides",
+  !Object.hasOwn(overrideHarness.context, "TapSurvivorContent") &&
+    overrideHarness.contentPublisherProof.contentPublisherReads === 0
 );
 
 let unknownTargetFailed = false;

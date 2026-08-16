@@ -1,13 +1,5 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import vm from "node:vm";
-
+import { content } from "../src/content.generated.mjs";
 import { createEnemyRenderer } from "../src/modules/render-enemies.js";
-
-const root = new URL("..", import.meta.url).pathname;
-const context = { console };
-vm.createContext(context);
-vm.runInContext(readFileSync(join(root, "src/content.generated.js"), "utf8"), context);
 
 let failed = false;
 
@@ -25,7 +17,6 @@ const renderer = createEnemyRenderer({
   clamp: (value, min, max) => Math.max(min, Math.min(max, value)),
 });
 
-const content = context.TapSurvivorContent;
 const sheetAnimations = content.assets?.sprites?.spriteSheets?.enemies?.animations || {};
 const hexer = content.enemyTypes.find((enemy) => enemy.id === "hexer");
 const crimsonHexer = content.enemyTypes.find((enemy) => enemy.id === "crimson_hexer");

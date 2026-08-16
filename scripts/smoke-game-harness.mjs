@@ -301,6 +301,7 @@ export function createGameHarness({
     "TapSurvivorBalance",
     "TapSurvivorBalanceRuntime",
     "TapSurvivorCombatDamage",
+    "TapSurvivorContent",
     "TapSurvivorContentRegistry",
     "TapSurvivorInput",
     "TapSurvivorLevelUpChoices",
@@ -334,6 +335,10 @@ export function createGameHarness({
   const balanceRuntimePublisherPoisonDescriptor = Object.getOwnPropertyDescriptor(
     context,
     "TapSurvivorBalanceRuntime"
+  );
+  const contentPublisherPoisonDescriptor = Object.getOwnPropertyDescriptor(
+    context,
+    "TapSurvivorContent"
   );
   context.__tapSurvivorRetiredGlobalReads = retiredGlobalReads;
 
@@ -625,6 +630,12 @@ export function createGameHarness({
   const balanceRuntimePublisherAbsentAfterBoot =
     Reflect.deleteProperty(context, "TapSurvivorBalanceRuntime") &&
     !Object.prototype.hasOwnProperty.call(context, "TapSurvivorBalanceRuntime");
+  const contentPublisherPoisonRetained =
+    Object.getOwnPropertyDescriptor(context, "TapSurvivorContent")?.get ===
+    contentPublisherPoisonDescriptor?.get;
+  const contentPublisherAbsentAfterBoot =
+    Reflect.deleteProperty(context, "TapSurvivorContent") &&
+    !Object.prototype.hasOwnProperty.call(context, "TapSurvivorContent");
   const storagePublisherPoisonRetained =
     Object.getOwnPropertyDescriptor(context, "TapSurvivorStorage")?.get ===
     storagePublisherPoisonDescriptor?.get;
@@ -643,6 +654,7 @@ export function createGameHarness({
     elements,
     sourceGameDependencies,
     fallbackContent,
+    fallbackProfiles,
     speedButtons,
     frame(now) {
       rafCallback?.(now);
@@ -674,6 +686,11 @@ export function createGameHarness({
       sourceDependencyBagHasBalanceRuntime:
         typeof sourceGameDependencies.balanceRuntime?.configureDefaultProviders === "function" &&
         typeof sourceGameDependencies.balanceRuntime?.getActiveProfile === "function",
+    },
+    contentPublisherProof: {
+      contentPublisherAbsentAfterBoot,
+      contentPublisherPoisonRetained,
+      contentPublisherReads: retiredGlobalReads.TapSurvivorContent,
     },
     storagePublisherProof: {
       sourceDependencyBagHasStorageProvider,

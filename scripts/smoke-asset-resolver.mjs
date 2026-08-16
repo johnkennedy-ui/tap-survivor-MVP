@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 
+import { content } from "../src/content.generated.mjs";
 import { createAssetResolver } from "../src/modules/assets.js";
 
 function assert(name, condition) {
@@ -18,11 +19,14 @@ const assetsSource = readFileSync(join(root, "src/assets.js"), "utf8");
 const contentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
 const gameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 
-function createAssetContext({ loadContent = false } = {}) {
+function createAssetContext() {
   const context = { console };
   vm.createContext(context);
-  if (loadContent) vm.runInContext(contentSource, context);
   return context;
+}
+
+function runGeneratedContentCompatibilityArtifact(context) {
+  vm.runInContext(contentSource, context, { filename: "src/content.generated.js" });
 }
 
 function createResolverSafely(content) {
@@ -82,15 +86,52 @@ function withPoisonedContent(context, callback) {
   };
 }
 
-const context = createAssetContext({ loadContent: true });
-const content = context.TapSurvivorContent;
+const context = createAssetContext();
+runGeneratedContentCompatibilityArtifact(context);
 const presentContentScenario = withPoisonedContent(context, (getPoisonReads) => {
+  runGeneratedContentCompatibilityArtifact(context);
+  const poisonReadsAfterCompatibilityArtifact = getPoisonReads();
   const explicit = createResolverSafely(content);
   const poisonReadsAfterExplicitCreation = getPoisonReads();
   const empty = createResolverSafely();
-  return { empty, explicit, poisonReadsAfterExplicitCreation };
+  return { empty, explicit, poisonReadsAfterCompatibilityArtifact, poisonReadsAfterExplicitCreation };
 });
+const restoredContent = { restored: true };
+const restoredContentContext = createAssetContext();
+Object.defineProperty(restoredContentContext, "TapSurvivorContent", {
+  configurable: true,
+  enumerable: true,
+  value: restoredContent,
+  writable: true,
+});
+const restoredContentDescriptor = Object.getOwnPropertyDescriptor(
+  restoredContentContext,
+  "TapSurvivorContent"
+);
+runGeneratedContentCompatibilityArtifact(restoredContentContext);
 
+assert(
+  "generated content compatibility artifact is global-free with retired provenance",
+  !contentSource.includes("globalThis") &&
+    !contentSource.includes("window") &&
+    !contentSource.includes("const content") &&
+    !contentSource.includes("balanceProfiles") &&
+    contentSource.includes(
+      "// Retired global: TapSurvivorContent. Content is supplied through src/content.generated.mjs."
+    ) &&
+    !Object.hasOwn(context, "TapSurvivorContent")
+);
+assert(
+  "generated content compatibility artifact ignores poisoned and restored legacy Content properties",
+  presentContentScenario.error === undefined &&
+    presentContentScenario.result?.poisonReadsAfterCompatibilityArtifact === 0 &&
+    presentContentScenario.poisonReads === 0 &&
+    descriptorsMatch(
+      Object.getOwnPropertyDescriptor(restoredContentContext, "TapSurvivorContent"),
+      restoredContentDescriptor
+    ) &&
+    restoredContentContext.TapSurvivorContent === restoredContent
+);
 assert(
   "generated asset bridge is global-free with retired provenance",
   !assetsSource.includes("globalThis.TapSurvivorAssets =") &&

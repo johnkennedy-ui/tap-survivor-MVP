@@ -989,7 +989,13 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       const menuShopTab = document.getElementById("menuShopTab");
       const menuProgressTab = document.getElementById("menuProgressTab");
       const menuInventoryTab = document.getElementById("menuInventoryTab");
-      const content = root.TapSurvivorContent || {};
+      const content = isClassic
+        ? root.TapSurvivorContent || {}
+        : parity.esmApi?.dependencies?.moduleSystems?.content || {};
+      const legacyContentPublisherPresent = Object.prototype.hasOwnProperty.call(
+        root,
+        "TapSurvivorContent"
+      );
       const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
       const retiredPublisherNames = [
         "TapSurvivorEffects",
@@ -1006,7 +1012,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       const spriteSnapshot = snapshotSpriteIndex(content.assets?.sprites || {}, diagnostics.drawCalls);
       return {
         assetsLoaded: Boolean(content.assets),
-        contentLoaded: Boolean(root.TapSurvivorContent),
+        contentLoaded: Boolean(content.assets),
         canvas: canvas instanceof HTMLCanvasElement ? { backing: { height: canvas.height, width: canvas.width }, css: rectSize(canvas.getBoundingClientRect()) } : null,
         controls: {
           fullscreenButton: Boolean(fullscreenButton),
@@ -1018,6 +1024,7 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           speedButtons,
         },
         game: snapshotGame(game),
+        legacyContentPublisherPresent,
         retiredPublisherPresence,
         registeredSpriteGroupCounts: spriteSnapshot.counts,
         registeredSpriteGroupDefs: spriteSnapshot.definitions,
@@ -1572,6 +1579,11 @@ function compareSnapshots(classic, esm) {
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
+  if (!classic.contentLoaded) strictFailures.push("classic runtime did not load its historical content fixture");
+  if (!esm.contentLoaded) strictFailures.push("ESM runtime did not expose injected generated content");
+  if (esm.snapshot?.legacyContentPublisherPresent) {
+    strictFailures.push("ESM runtime published the retired TapSurvivorContent namespace");
+  }
   if (classicConsoleErrorCount > 0) {
     strictFailures.push(`classic runtime emitted ${classicConsoleErrorCount} console error(s)`);
   }

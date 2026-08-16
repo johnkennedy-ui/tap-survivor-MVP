@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 
+import { content } from "../src/content.generated.mjs";
 import {
   bootProductionModuleEntrypoint,
   bootProductionModuleRuntime,
@@ -21,7 +22,6 @@ import {
 import { createBrowserPlatform } from "../src/app/compose-runtime.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
 const indexHtmlBefore = readFileSync(join(root, "index.html"), "utf8");
 const candidateSource = readFileSync(join(root, "src/app/production-module-entrypoint.js"), "utf8");
 const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
@@ -33,16 +33,7 @@ const moduleGameDependenciesSource = readFileSync(
 const composeRuntimeSource = readFileSync(join(root, "src/app/compose-runtime.js"), "utf8");
 const classicContentSource = readFileSync(join(root, "src/content.generated.js"), "utf8");
 const moduleContentSource = readFileSync(join(root, "src/content.generated.mjs"), "utf8");
-const classicContentContext = {};
-classicContentContext.globalThis = classicContentContext;
-vm.createContext(classicContentContext);
-vm.runInContext(classicContentSource, classicContentContext, {
-  filename: "src/content.generated.js",
-});
-const classicProfilesDescriptor = Object.getOwnPropertyDescriptor(
-  classicContentContext.TapSurvivorContent,
-  "balanceProfiles"
-);
+const classicContentArtifactProof = classicContentArtifactLifecycleProof(classicContentSource);
 const classicCombatSource = readFileSync(join(root, "src/combat.js"), "utf8");
 const classicPickupsSource = readFileSync(join(root, "src/pickups.js"), "utf8");
 const classicRelicsSource = readFileSync(join(root, "src/relics.js"), "utf8");
@@ -163,19 +154,23 @@ check(
   )
 );
 check(
-  "classic generated content publishes content but not balanceProfiles global",
-  classicContentSource.includes("globalThis.TapSurvivorContent =") &&
-    !classicContentSource.includes("globalThis.TapSurvivorBalanceProfiles =") &&
-    !classicContentSource.includes("TapSurvivorContentSchema")
+  "classic generated content is a global-free compatibility artifact with ESM provenance",
+  classicContentSource.includes(
+    "// Retired global: TapSurvivorContent. Content is supplied through src/content.generated.mjs."
+  ) &&
+    !/\b(?:globalThis|window)\b/u.test(classicContentSource) &&
+    !classicContentSource.includes("const content") &&
+    !classicContentSource.includes("balanceProfiles")
 );
 check(
-  "classic generated content carries profiles on a non-enumerable producer property",
-  classicProfilesDescriptor?.enumerable === false &&
-    classicProfilesDescriptor.value === classicContentContext.TapSurvivorContent.balanceProfiles
-);
-check(
-  "classic fallback preserves TapSurvivorContent publisher pending separate dependency retirement",
-  classicContentSource.includes("globalThis.TapSurvivorContent =")
+  "classic generated content preserves absent, poisoned, and restored legacy Content properties without reads",
+  classicContentArtifactProof.absentError === "" &&
+    classicContentArtifactProof.absentPublisherPresent === false &&
+    classicContentArtifactProof.poisonedError === "" &&
+    classicContentArtifactProof.poisonedReads === 0 &&
+    classicContentArtifactProof.poisonedDescriptorRetained &&
+    classicContentArtifactProof.restoredError === "" &&
+    classicContentArtifactProof.restoredPublisherRetained
 );
 check(
   "classic generated B2 bridges retire the selected publishers with provenance",
@@ -1686,6 +1681,48 @@ function hasTapSurvivorContentGlobalRead(source) {
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorContent\b/u.test(source) ||
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorContent["']\s*\]/u.test(source)
   );
+}
+
+function classicContentArtifactLifecycleProof(source) {
+  const run = (context) => {
+    context.globalThis = context;
+    vm.createContext(context);
+    try {
+      vm.runInContext(source, context, { filename: "src/content.generated.js" });
+      return "";
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+  };
+
+  const absentContext = {};
+  const absentError = run(absentContext);
+  let poisonedReads = 0;
+  const poisonedContext = {};
+  Object.defineProperty(poisonedContext, "TapSurvivorContent", {
+    configurable: true,
+    get() {
+      poisonedReads += 1;
+      throw new Error("Forbidden TapSurvivorContent global read");
+    },
+  });
+  const poisonedDescriptor = Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorContent");
+  const poisonedError = run(poisonedContext);
+  const restoredPublisher = { restored: true };
+  const restoredContext = { TapSurvivorContent: restoredPublisher };
+  const restoredError = run(restoredContext);
+
+  return {
+    absentError,
+    absentPublisherPresent: Object.hasOwn(absentContext, "TapSurvivorContent"),
+    poisonedDescriptorRetained:
+      Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorContent")?.get ===
+      poisonedDescriptor?.get,
+    poisonedError,
+    poisonedReads,
+    restoredError,
+    restoredPublisherRetained: restoredContext.TapSurvivorContent === restoredPublisher,
+  };
 }
 
 function hasTapSurvivorRelicsGlobalRead(source) {
