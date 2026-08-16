@@ -49,9 +49,12 @@ import { createRunStateSystem } from "./run-state.js";
 import { createRunUi } from "./run-ui.js";
 import { createRunUpdater } from "./run-update.js";
 
-export function createGameDependencyBag({ globalRef, documentRef = globalRef?.document }) {
-  const rawContent = globalRef.TapSurvivorContent;
-  const profiles = rawContent?.balanceProfiles;
+export function createGameDependencyBag({
+  content: rawContent,
+  profiles,
+  globalRef,
+  documentRef = globalRef?.document,
+}) {
   const balanceRuntime = createRuntimeBalanceProvider();
   if (rawContent && typeof rawContent === "object" && Array.isArray(profiles)) {
     balanceRuntime.configureDefaultProviders({

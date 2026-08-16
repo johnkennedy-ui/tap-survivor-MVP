@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
 
-import { content, contentSchema } from "../src/content.generated.mjs";
+import { balanceProfiles, content, contentSchema } from "../src/content.generated.mjs";
 import { createBrowserDependencyBagOptions } from "../src/app/browser-dependency-bag.js";
 import { composeRuntime } from "../src/app/compose-runtime.js";
 import { createDebugSystem } from "../src/modules/debug.js";
@@ -114,6 +114,8 @@ export function createGameHarness({
   search = "",
   storageEntries = {},
 } = {}) {
+  const fallbackContent = JSON.parse(JSON.stringify(content));
+  const fallbackProfiles = JSON.parse(JSON.stringify(balanceProfiles));
   const elements = new Map();
   const ids = [
     "game",
@@ -458,8 +460,10 @@ export function createGameHarness({
   vm.runInContext(readSource("src/game-banners.js"), context);
   vm.runInContext(readSource("src/run-lifecycle.js"), context);
   const sourceGameDependencies = createGameDependencyBag({
+    content: fallbackContent,
     globalRef: context,
     documentRef: context.document,
+    profiles: fallbackProfiles,
   });
   const sourceDependencyBagHasBothSpriteFactories =
     typeof sourceGameDependencies.sprites?.createSpriteSystem === "function" &&
@@ -638,6 +642,7 @@ export function createGameHarness({
     dependencies,
     elements,
     sourceGameDependencies,
+    fallbackContent,
     speedButtons,
     frame(now) {
       rafCallback?.(now);

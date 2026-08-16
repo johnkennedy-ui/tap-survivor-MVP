@@ -341,8 +341,9 @@ check(
     producerProfiles.value === defaultHarness.context.TapSurvivorContent.balanceProfiles
 );
 check(
-  "classic harness receives configured runtime content through the producer seam",
-  defaultBalance.content() === defaultHarness.context.TapSurvivorContent
+  "classic harness receives configured runtime content through explicit fallback injection",
+  defaultBalance.content() === defaultHarness.fallbackContent &&
+    defaultBalance.content() !== defaultHarness.context.TapSurvivorContent
 );
 defaultHarness.elements.get("toggleDebug").click();
 check(
@@ -368,7 +369,10 @@ check(
   "query balance profile is selected before next run",
   queryHarness.sourceGameDependencies.balanceRuntime.getActiveProfile() === "dev-fast"
 );
-check("query profile is visible on next run state", queryGame.activeBalanceProfile === undefined || queryHarness.context.TapSurvivorContent.activeBalanceProfile === "dev-fast");
+check(
+  "query profile is visible on next run state",
+  queryGame.activeBalanceProfile === undefined || queryHarness.fallbackContent.activeBalanceProfile === "dev-fast"
+);
 
 const storageHarness = createGameHarness({
   storageEntries: {
@@ -441,12 +445,16 @@ debugBalance.applyOverrides({
   },
 });
 
-const resolved = overrideHarness.context.TapSurvivorContent;
+const resolved = overrideHarness.fallbackContent;
 check("local override changes weapon value", resolved.weapons.spark_bolt.damage === 99);
 check("local override changes enemy value", resolved.enemyTypes.find((enemy) => enemy.id === "drifter")?.hp === 77);
 check("local override changes shop value", resolved.shopItems.find((item) => item.id === "training_boots")?.cost === 11);
 check("local override changes loot tuning", resolved.tuning.loot.normalCoinBaseValue === 5);
 check("local override exports without persistence", !overrideHarness.context.localStorage.store.has("tapSurvivor.balanceOverrides"));
+check(
+  "classic content publisher stays unchanged while injected content receives overrides",
+  overrideHarness.context.TapSurvivorContent.weapons.spark_bolt.damage === 12
+);
 
 let unknownTargetFailed = false;
 try {
@@ -463,7 +471,7 @@ try {
 check("unknown override target fails safely", unknownTargetFailed);
 
 debugBalance.clearOverrides();
-check("clear overrides restores default weapon value", overrideHarness.context.TapSurvivorContent.weapons.spark_bolt.damage === 12);
+check("clear overrides restores default weapon value", overrideHarness.fallbackContent.weapons.spark_bolt.damage === 12);
 
 if (process.exitCode) {
   console.error("\nBalance runtime smoke failed.");

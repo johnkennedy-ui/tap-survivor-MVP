@@ -153,6 +153,7 @@ const classicWeaponFireSource = readFileSync(join(root, "src/weapon-fire.js"), "
 const classicSaveSource = readFileSync(join(root, "src/save.js"), "utf8");
 const classicStorageSource = readFileSync(join(root, "src/storage-adapter.js"), "utf8");
 const classicUpgradesSource = readFileSync(join(root, "src/upgrades.js"), "utf8");
+const classicGameSource = readFileSync(join(root, "src/game.js"), "utf8");
 const classicGameDependenciesSource = readFileSync(join(root, "src/game-dependencies.js"), "utf8");
 const nativeStorageAdapterSource = readFileSync(join(root, "src/modules/storage-adapter.js"), "utf8");
 const classicAssetsSource = readFileSync(join(root, "src/assets.js"), "utf8");
@@ -825,6 +826,17 @@ check(
   [productionModuleEntrypointSource, productionModuleAutobootSource, browserDependencyBagSource].every(
     (source) => !hasTapSurvivorContentGlobalRead(source)
   )
+);
+check(
+  "readiness rejects every TapSurvivorContent reader in the preserved fallback and requires generated ESM injection",
+  [classicGameSource, classicGameDependenciesSource].every(
+    (source) => !hasTapSurvivorContentGlobalRead(source) && !source.includes("TapSurvivorContent")
+  ) &&
+    classicGameSource.includes(
+      'import { balanceProfiles, content as generatedContent } from "./content.generated.mjs";'
+    ) &&
+    classicGameSource.includes("content: generatedContent") &&
+    classicGameSource.includes("profiles: balanceProfiles")
 );
 check(
   "readiness rejects direct, string-key, and dynamic TapSurvivorRelics reads in the production ESM browser path",

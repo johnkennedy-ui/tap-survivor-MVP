@@ -382,6 +382,16 @@ check(
     !index.includes('src="src/game-dependencies.js"'),
 );
 check(
+  "classic fallback injects generated ESM content and profiles without a Content global reader",
+  game.includes(
+    'import { balanceProfiles, content as generatedContent } from "./content.generated.mjs";'
+  ) &&
+    game.includes("content: generatedContent") &&
+    game.includes("profiles: balanceProfiles") &&
+    !moduleGameDependencies.includes("TapSurvivorContent") &&
+    !gameDependencies.includes("TapSurvivorContent"),
+);
+check(
   "BalanceRuntime is source-owned with a retired global-free generated bridge",
   nativeBalanceRuntime.includes("export function createRuntimeBalanceProvider") &&
     !/\b(?:globalThis|window)\b/u.test(nativeBalanceRuntime) &&

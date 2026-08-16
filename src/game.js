@@ -1,8 +1,11 @@
 import { createGameDependencyBag } from "./modules/game-dependencies.js";
 import { createGameRuntimeController } from "./modules/game-runtime.js";
+import { balanceProfiles, content as generatedContent } from "./content.generated.mjs";
 
 const dependencies = createGameDependencyBag({
+  content: generatedContent,
   globalRef: globalThis,
+  profiles: balanceProfiles,
 });
 const {
   audio: audioDependencies,
