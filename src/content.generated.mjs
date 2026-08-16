@@ -452,7 +452,21 @@ export const content = {
       "name": "Fire Rate",
       "description": "Reduce weapon cooldowns for this run.",
       "maxTier": 8,
-      "family": "attack_speed"
+      "family": "attack_speed",
+      "levelUpTierGains": [
+        {
+          "amount": 1,
+          "weight": 70
+        },
+        {
+          "amount": 2,
+          "weight": 25
+        },
+        {
+          "amount": 3,
+          "weight": 5
+        }
+      ]
     },
     {
       "id": "run_flat_damage",
@@ -465,7 +479,21 @@ export const content = {
       "name": "Percent Damage",
       "description": "Multiply all weapon damage this run.",
       "maxTier": 8,
-      "family": "damage"
+      "family": "damage",
+      "levelUpTierGains": [
+        {
+          "amount": 1,
+          "weight": 70
+        },
+        {
+          "amount": 2,
+          "weight": 25
+        },
+        {
+          "amount": 3,
+          "weight": 5
+        }
+      ]
     },
     {
       "id": "run_haste_projectiles",
@@ -473,6 +501,7 @@ export const content = {
       "description": "Projectile weapons fly faster and fire faster, but each hit deals less damage.",
       "maxTier": 1,
       "family": "projectile",
+      "exclusiveGroup": "projectile_profile",
       "projectileSpeedMultiplier": 1.65,
       "projectileCooldownMultiplier": 0.65,
       "projectileDamageMultiplier": 0.7
@@ -483,6 +512,7 @@ export const content = {
       "description": "Projectile weapons fly slower and fire slower, but each hit deals triple base damage.",
       "maxTier": 1,
       "family": "projectile",
+      "exclusiveGroup": "projectile_profile",
       "projectileSpeedMultiplier": 0.55,
       "projectileCooldownMultiplier": 1.45,
       "projectileDamageMultiplier": 3

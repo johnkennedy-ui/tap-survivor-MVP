@@ -20,6 +20,7 @@
  * }} RelicSpecialEffects
  * @typedef {{
  *   id: string,
+ *   exclusiveGroup?: string,
  *   [key: string]: number | string | undefined
  * }} RunUpgradeDef
  * @typedef {{ playbackRate: number, minGapMs: number }} WeaponSfxOptions
@@ -101,13 +102,12 @@ export function createWeaponScaling({
   function projectileRadius(weapon) {
     const shopBonuses = getShopBonuses?.() || {};
     const relicEffects = getRelicSpecialEffects?.() || {};
+    const projectileSizeBonus = relicEffects.projectileSizeBonus || 0;
     const radiusTier =
       getUpgradeTier("attack_radius") +
       getRunUpgradeTier("run_attack_radius") +
       (shopBonuses.attackRadius || 0);
-    return (
-      (weapon.radius || 0) * (1 + radiusTier * 0.12 + (relicEffects.projectileSizeBonus || 0))
-    );
+    return (weapon.radius || 0) * (1 + radiusTier * 0.12 + projectileSizeBonus);
   }
 
   function weaponDamage(weaponId) {
@@ -130,12 +130,41 @@ export function createWeaponScaling({
 
   function projectileSkillModifier(weapon, field) {
     if (weapon?.kind !== "projectile") return 1;
-    return (content?.runUpgrades || []).reduce((multiplier, upgrade) => {
-      const tier = getRunUpgradeTier(upgrade.id);
+    return activeProjectileSkillUpgrades().reduce((multiplier, { tier, upgrade }) => {
       const value = upgrade[field];
       if (!tier || typeof value !== "number" || !Number.isFinite(value)) return multiplier;
       return multiplier * value ** tier;
     }, 1);
+  }
+
+  function activeProjectileSkillUpgrades() {
+    const selectedByExclusiveGroup = new Map();
+    const activeUpgrades = (Array.isArray(content?.runUpgrades) ? content.runUpgrades : [])
+      .map((upgrade, registryIndex) => {
+        const tier = Number(getRunUpgradeTier(upgrade.id));
+        return {
+          exclusiveGroup:
+            typeof upgrade.exclusiveGroup === "string" && upgrade.exclusiveGroup
+              ? upgrade.exclusiveGroup
+              : "",
+          registryIndex,
+          tier,
+          upgrade,
+        };
+      })
+      .filter(({ tier }) => Number.isFinite(tier) && tier > 0);
+    activeUpgrades.forEach((candidate) => {
+      if (!candidate.exclusiveGroup) return;
+      const selected = selectedByExclusiveGroup.get(candidate.exclusiveGroup);
+      if (!selected || candidate.tier > selected.tier) {
+        selectedByExclusiveGroup.set(candidate.exclusiveGroup, candidate);
+      }
+    });
+    return activeUpgrades.filter(
+      (candidate) =>
+        !candidate.exclusiveGroup ||
+        selectedByExclusiveGroup.get(candidate.exclusiveGroup) === candidate
+    );
   }
 
   return {

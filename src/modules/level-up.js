@@ -11,6 +11,7 @@ export function createLevelUpSystem({
   assets,
   content,
   levelUpChoices,
+  random,
   weaponDefs,
   runUpgradeDefs,
   relicDefs,
@@ -26,15 +27,67 @@ export function createLevelUpSystem({
   }
   const { choiceId, shopFocusBonus, weightedChoices } = levelUpChoices;
   const fallbackIcon =
-    content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+    content?.assets?.sprites?.ui?.quest ||
+    "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
   const assetResolver = assets?.createAssetResolver?.(content) || {
     fallbackSkillIcon: fallbackIcon,
     choiceIconDefinition: () => fallbackIcon,
     choiceIconPath: () => fallbackIcon,
     spriteSource: (definition) =>
-      typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
+      typeof definition === "string"
+        ? definition
+        : definition?.src || definition?.path || definition?.iconSrc || "",
   };
   const fallbackSkillIcon = assetResolver.fallbackSkillIcon;
+
+  function exclusiveGroupFor(upgrade) {
+    return typeof upgrade?.exclusiveGroup === "string" && upgrade.exclusiveGroup
+      ? upgrade.exclusiveGroup
+      : "";
+  }
+
+  function levelUpTierGainFor(upgrade) {
+    const tierGains = upgrade?.levelUpTierGains;
+    if (!Array.isArray(tierGains) || !tierGains.length) return 1;
+    let totalWeight = 0;
+    for (const gain of tierGains) {
+      if (
+        !gain ||
+        !Number.isInteger(gain.amount) ||
+        gain.amount < 1 ||
+        typeof gain.weight !== "number" ||
+        !Number.isFinite(gain.weight) ||
+        gain.weight <= 0
+      ) {
+        return 1;
+      }
+      totalWeight += gain.weight;
+    }
+    if (!Number.isFinite(totalWeight) || totalWeight <= 0) return 1;
+    const randomValue = typeof random === "function" ? random() : Math.random();
+    const roll = Math.max(
+      0,
+      Math.min(1 - Number.EPSILON, Number.isFinite(randomValue) ? randomValue : 0)
+    );
+    let remainingWeight = roll * totalWeight;
+    for (const gain of tierGains) {
+      if (remainingWeight < gain.weight) return gain.amount;
+      remainingWeight -= gain.weight;
+    }
+    return tierGains[tierGains.length - 1].amount;
+  }
+
+  function uniqueExclusiveGroupChoices(choices) {
+    const selectedGroups = new Set();
+    return choices.filter((choice) => {
+      const exclusiveGroup = exclusiveGroupFor(choice);
+      if (!exclusiveGroup || !selectedGroups.has(exclusiveGroup)) {
+        if (exclusiveGroup) selectedGroups.add(exclusiveGroup);
+        return true;
+      }
+      return false;
+    });
+  }
 
   function showLevelUp() {
     const game = getGame();
@@ -56,8 +109,12 @@ export function createLevelUpSystem({
           }))
       : [];
     const questWeaponIds = activeQuestWeaponIds();
-    const questWeaponChoices = weaponChoices.filter((choice) => questWeaponIds.includes(choice.weaponId));
-    const otherWeaponChoices = weaponChoices.filter((choice) => !questWeaponChoices.includes(choice));
+    const questWeaponChoices = weaponChoices.filter((choice) =>
+      questWeaponIds.includes(choice.weaponId)
+    );
+    const otherWeaponChoices = weaponChoices.filter(
+      (choice) => !questWeaponChoices.includes(choice)
+    );
     const activeRelics = (save.equippedRelics || [])
       .map((id) => (relicDefs || []).find((relic) => relic.id === id))
       .filter(Boolean);
@@ -69,25 +126,40 @@ export function createLevelUpSystem({
     function relicSpawnRateMultiplierFor(upgradeId) {
       return activeRelics
         .filter((relic) => relic.targetUpgradeId === upgradeId)
-        .reduce((multiplier, relic) => multiplier * Math.max(1, relic.selectionWeightBonus || 1), 1);
+        .reduce(
+          (multiplier, relic) => multiplier * Math.max(1, relic.selectionWeightBonus || 1),
+          1
+        );
     }
     const runUpgradeChoices = runUpgradeDefs
       .filter(
         (upgrade) =>
-          getRunUpgradeTier(upgrade.id) < upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus")
+          getRunUpgradeTier(upgrade.id) <
+            upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus") &&
+          !runUpgradeDefs.some(
+            (otherUpgrade) =>
+              otherUpgrade.id !== upgrade.id &&
+              exclusiveGroupFor(otherUpgrade) === exclusiveGroupFor(upgrade) &&
+              Boolean(exclusiveGroupFor(upgrade)) &&
+              getRunUpgradeTier(otherUpgrade.id) > 0
+          )
       )
       .map((upgrade) => {
         const tier = getRunUpgradeTier(upgrade.id);
         const maxTier = upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus");
+        const tierGain = Math.min(levelUpTierGainFor(upgrade), Math.max(0, maxTier - tier));
         return {
-          name: `${upgrade.name} ${tier + 1}`,
-          description: `${upgrade.description} Tier ${tier + 1}/${maxTier}.`,
+          name: `${upgrade.name} +${tierGain}`,
+          description: `${upgrade.description} Tier ${tier + tierGain}/${maxTier}.`,
+          exclusiveGroup: exclusiveGroupFor(upgrade),
           family: upgrade.family || upgrade.id,
           relicSpawnRateMultiplier: relicSpawnRateMultiplierFor(upgrade.id),
           runUpgradeId: upgrade.id,
           apply: () => {
-            game.runUpgradeTiers[upgrade.id] = tier + 1;
-            upgrade.apply?.(game);
+            game.runUpgradeTiers[upgrade.id] = tier + tierGain;
+            for (let appliedTier = 0; appliedTier < tierGain; appliedTier += 1) {
+              upgrade.apply?.(game);
+            }
           },
         };
       });
@@ -114,7 +186,10 @@ export function createLevelUpSystem({
         shopFocus;
       return baseWeight * choice.relicSpawnRateMultiplier;
     }
-    const choices = [...questWeaponChoices, ...otherChoices].slice(0, 3);
+    const choices = uniqueExclusiveGroupChoices([...questWeaponChoices, ...otherChoices]).slice(
+      0,
+      3
+    );
 
     if (!choices.length) {
       choices.push({

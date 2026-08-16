@@ -218,7 +218,8 @@ export function createModuleGameDependencyBag({
     spriteDefs: contentRegistry.spriteDefs,
   });
   const getUpgradeTier = (id) => {
-    const tier = saveSystem.getSave?.().upgradeTiers?.[id] || stateStore.getSave().upgradeTiers?.[id] || 0;
+    const tier =
+      saveSystem.getSave?.().upgradeTiers?.[id] || stateStore.getSave().upgradeTiers?.[id] || 0;
     const upgrade = contentRegistry.upgradeDefs.find((entry) => entry.id === id);
     return Math.min(upgrade?.maxTier || tier, tier);
   };
@@ -240,7 +241,8 @@ export function createModuleGameDependencyBag({
       getSave: stateStore.getSave,
       persist: stateStore.persist,
       renderMeta: stateStore.renderMeta,
-      onQuestComplete: (quest, reward) => platformAdapters.bannerSystem.showQuestBanner?.(quest, reward),
+      onQuestComplete: (quest, reward) =>
+        platformAdapters.bannerSystem.showQuestBanner?.(quest, reward),
     })
   );
   const progressionSystem = progressionAdapters.progression.createProgressionSystem({
@@ -355,6 +357,7 @@ export function createModuleGameDependencyBag({
       if (choice?.runUpgradeId) audioSystem.playRunUpgrade(choice.runUpgradeId);
     },
     relicDefs: contentRegistry.relicDefs,
+    random,
     runUpgradeDefs: contentRegistry.runUpgradeDefs,
     ui: uiAdapters.ui,
     weaponDefs: contentRegistry.weaponDefs,
@@ -595,23 +598,51 @@ function hasCombatRuntime(combatSystem) {
   ].every((name) => typeof combatSystem?.[name] === "function");
 }
 
-function applyRelicStartingRunUpgrades({ effects, relics, run, runUpgradeDefs, save }) {
-  const startingTiers = relics.startingRunUpgradeTiers(save);
-  Object.entries(startingTiers).forEach(([upgradeId, tier]) => {
-    const upgrade = runUpgradeDefs.find((item) => item.id === upgradeId);
-    if (!upgrade) return;
-    const maxTier = upgrade.maxTier + relics.relicBonusFor(save, upgradeId, "maxTierBonus");
-    const appliedTier = Math.min(Math.max(0, Math.floor(tier)), maxTier);
-    if (appliedTier <= 0) return;
-    run.runUpgradeTiers[upgradeId] = Math.max(run.runUpgradeTiers[upgradeId] || 0, appliedTier);
-    for (let index = 0; index < appliedTier; index += 1) {
-      if (typeof upgrade.apply === "function") {
-        upgrade.apply(run);
-      } else {
-        effects.applyRunUpgradeEffects(run, upgrade.effects || []);
-      }
+export function applyRelicStartingRunUpgrades({ effects, relics, run, runUpgradeDefs, save }) {
+  const startingTiers = relics.startingRunUpgradeTiers(save) || {};
+  const candidates = runUpgradeDefs
+    .map((upgrade, registryIndex) => {
+      const requestedTier = Number(startingTiers[upgrade.id]);
+      const maxTier = upgrade.maxTier + relics.relicBonusFor(save, upgrade.id, "maxTierBonus");
+      const appliedTier = Number.isFinite(requestedTier)
+        ? Math.min(Math.max(0, Math.floor(requestedTier)), maxTier)
+        : 0;
+      return {
+        appliedTier,
+        exclusiveGroup:
+          typeof upgrade.exclusiveGroup === "string" && upgrade.exclusiveGroup
+            ? upgrade.exclusiveGroup
+            : "",
+        registryIndex,
+        upgrade,
+      };
+    })
+    .filter((candidate) => candidate.appliedTier > 0);
+  const selectedByExclusiveGroup = new Map();
+  candidates.forEach((candidate) => {
+    if (!candidate.exclusiveGroup) return;
+    const selected = selectedByExclusiveGroup.get(candidate.exclusiveGroup);
+    if (!selected || candidate.appliedTier > selected.appliedTier) {
+      selectedByExclusiveGroup.set(candidate.exclusiveGroup, candidate);
     }
   });
+  candidates
+    .filter(
+      (candidate) =>
+        !candidate.exclusiveGroup ||
+        selectedByExclusiveGroup.get(candidate.exclusiveGroup) === candidate
+    )
+    .sort((left, right) => left.registryIndex - right.registryIndex)
+    .forEach(({ appliedTier, upgrade }) => {
+      run.runUpgradeTiers[upgrade.id] = Math.max(run.runUpgradeTiers[upgrade.id] || 0, appliedTier);
+      for (let index = 0; index < appliedTier; index += 1) {
+        if (typeof upgrade.apply === "function") {
+          upgrade.apply(run);
+        } else {
+          effects.applyRunUpgradeEffects(run, upgrade.effects || []);
+        }
+      }
+    });
 }
 
 function showLevelUp(uiAdapters, stateStore) {
