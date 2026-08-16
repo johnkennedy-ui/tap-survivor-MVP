@@ -106,6 +106,45 @@ const browserDependencyBagSource = readFileSync(
   join(root, "src/app/browser-dependency-bag.js"),
   "utf8"
 );
+const browserPlatformAdaptersSource = readFileSync(
+  join(root, "src/app/browser-platform-adapters.js"),
+  "utf8"
+);
+const browserGameplayAdaptersSource = readFileSync(
+  join(root, "src/app/browser-gameplay-adapters.js"),
+  "utf8"
+);
+const browserProgressionAdaptersSource = readFileSync(
+  join(root, "src/app/browser-progression-adapters.js"),
+  "utf8"
+);
+const browserAudioAdaptersSource = readFileSync(
+  join(root, "src/app/browser-audio-adapters.js"),
+  "utf8"
+);
+const browserRenderingAdaptersSource = readFileSync(
+  join(root, "src/app/browser-rendering-adapters.js"),
+  "utf8"
+);
+const browserSpriteSystemSource = readFileSync(
+  join(root, "src/app/browser-sprite-system.js"),
+  "utf8"
+);
+const browserUiAdaptersSource = readFileSync(
+  join(root, "src/app/browser-ui-adapters.js"),
+  "utf8"
+);
+const browserDependencyAdapterSources = Object.freeze([
+  browserDependencyBagSource,
+  browserPlatformAdaptersSource,
+  browserGameplayAdaptersSource,
+  browserProgressionAdaptersSource,
+  browserAudioAdaptersSource,
+  browserRenderingAdaptersSource,
+  browserSpriteSystemSource,
+  browserUiAdaptersSource,
+]);
+const browserDependencyAdapterSource = browserDependencyAdapterSources.join("\n");
 const moduleGameDependenciesSource = readFileSync(
   join(root, "src/modules/module-game-dependencies.js"),
   "utf8"
@@ -124,6 +163,13 @@ const RETIRED_BROWSER_NAMESPACE_NAMES = Object.freeze([
 ]);
 const retiredBrowserNamespaceSourceFiles = Object.freeze([
   "src/app/browser-dependency-bag.js",
+  "src/app/browser-platform-adapters.js",
+  "src/app/browser-gameplay-adapters.js",
+  "src/app/browser-progression-adapters.js",
+  "src/app/browser-audio-adapters.js",
+  "src/app/browser-rendering-adapters.js",
+  "src/app/browser-sprite-system.js",
+  "src/app/browser-ui-adapters.js",
   "src/app/production-module-entrypoint.js",
   "src/modules/assets.js",
   "src/modules/module-game-dependencies.js",
@@ -232,6 +278,16 @@ const productionModuleEntrypointGlobalReads = collectTapSurvivorGlobalReads(
 const browserDependencyBagGlobalReads = collectTapSurvivorGlobalReads(
   "src/app/browser-dependency-bag.js"
 );
+const browserDependencyAdapterGlobalReads = [
+  ...browserDependencyBagGlobalReads,
+  ...collectTapSurvivorGlobalReads("src/app/browser-platform-adapters.js"),
+  ...collectTapSurvivorGlobalReads("src/app/browser-gameplay-adapters.js"),
+  ...collectTapSurvivorGlobalReads("src/app/browser-progression-adapters.js"),
+  ...collectTapSurvivorGlobalReads("src/app/browser-audio-adapters.js"),
+  ...collectTapSurvivorGlobalReads("src/app/browser-rendering-adapters.js"),
+  ...collectTapSurvivorGlobalReads("src/app/browser-sprite-system.js"),
+  ...collectTapSurvivorGlobalReads("src/app/browser-ui-adapters.js"),
+];
 const moduleNativeStateStoreGlobalReads = collectTapSurvivorGlobalReads(
   "src/modules/game-state-store.js"
 );
@@ -824,7 +880,7 @@ check(
 );
 check(
   "readiness rejects direct or string-key TapSurvivorContent reads in the production ESM boot path",
-  [productionModuleEntrypointSource, productionModuleAutobootSource, browserDependencyBagSource].every(
+  [productionModuleEntrypointSource, productionModuleAutobootSource, ...browserDependencyAdapterSources].every(
     (source) => !hasTapSurvivorContentGlobalRead(source)
   )
 );
@@ -849,47 +905,51 @@ check(
     !classicContentSource.includes("balanceProfiles")
 );
 check(
-  "readiness rejects direct, string-key, and dynamic TapSurvivorRelics reads in the production ESM browser path",
-  !hasTapSurvivorRelicsGlobalRead(browserDependencyBagSource) &&
-    !browserDependencyBagSource.includes("TapSurvivorRelics")
+  "readiness rejects direct, string-key, and dynamic TapSurvivorRelics reads in the production ESM browser adapter group",
+  browserDependencyAdapterSources.every((source) => !hasTapSurvivorRelicsGlobalRead(source)) &&
+    !browserDependencyAdapterSource.includes("TapSurvivorRelics")
 );
 check(
-  "readiness rejects direct, string-key, and dynamic TapSurvivorUiProgression reads in the production ESM browser path",
-  browserDependencyBagSource.includes(
-    'import { createUiProgressionRenderer } from "../modules/ui-progression.js";'
-  ) &&
-    !hasTapSurvivorUiProgressionGlobalRead(browserDependencyBagSource) &&
-    !browserDependencyBagSource.includes("TapSurvivorUiProgression")
+  "readiness rejects direct, string-key, and dynamic TapSurvivorUiProgression reads in the production ESM browser adapter group",
+  browserDependencyBagSource.includes('from "./browser-progression-adapters.js"') &&
+    browserProgressionAdaptersSource.includes(
+      'import { createUiProgressionRenderer } from "../modules/ui-progression.js";'
+    ) &&
+    browserDependencyAdapterSources.every((source) => !hasTapSurvivorUiProgressionGlobalRead(source)) &&
+    !browserDependencyAdapterSource.includes("TapSurvivorUiProgression")
 );
 check(
-  "readiness rejects direct, string-key, and dynamic TapSurvivorProgression reads in the production ESM browser path",
-  browserDependencyBagSource.includes(
-    'import { createProgressionSystem } from "../modules/progression.js";'
-  ) && !browserDependencyBagSource.includes("TapSurvivorProgression")
+  "readiness rejects direct, string-key, and dynamic TapSurvivorProgression reads in the production ESM browser adapter group",
+  browserDependencyBagSource.includes('from "./browser-progression-adapters.js"') &&
+    browserProgressionAdaptersSource.includes(
+      'import { createProgressionSystem } from "../modules/progression.js";'
+    ) &&
+    !browserDependencyAdapterSource.includes("TapSurvivorProgression")
 );
 check(
-  "readiness rejects direct, string-key, and dynamic TapSurvivorUpgrades reads in the production ESM browser path",
-  browserDependencyBagSource.includes('import { createUpgradeContent } from "../modules/upgrades.js";') &&
-    browserDependencyBagSource.includes("upgrades: { createUpgradeContent }") &&
-    !browserDependencyBagSource.includes("TapSurvivorUpgrades")
+  "readiness rejects direct, string-key, and dynamic TapSurvivorUpgrades reads in the production ESM browser adapter group",
+  browserDependencyBagSource.includes('from "./browser-progression-adapters.js"') &&
+    browserProgressionAdaptersSource.includes('import { createUpgradeContent } from "../modules/upgrades.js";') &&
+    browserProgressionAdaptersSource.includes("upgrades: { createUpgradeContent }") &&
+    !browserDependencyAdapterSource.includes("TapSurvivorUpgrades")
 );
 check(
   "readiness rejects every direct, optional, bracket, proxy, and string-key form of all ten retired publishers from the selected production ESM graph",
   [
-    [browserDependencyBagSource, "../modules/combat.js", "createCombatSystem"],
-    [browserDependencyBagSource, "../modules/enemies.js", "createEnemySystem"],
-    [browserDependencyBagSource, "../modules/enemy-behaviors.js", "createEnemyBehaviorSystem"],
-    [browserDependencyBagSource, "../modules/enemy-spawning.js", "createEnemySpawnSystem"],
-    [browserDependencyBagSource, "../modules/level-up.js", "createLevelUpSystem"],
+    [browserGameplayAdaptersSource, "../modules/combat.js", "createCombatSystem"],
+    [browserGameplayAdaptersSource, "../modules/enemies.js", "createEnemySystem"],
+    [browserGameplayAdaptersSource, "../modules/enemy-behaviors.js", "createEnemyBehaviorSystem"],
+    [browserGameplayAdaptersSource, "../modules/enemy-spawning.js", "createEnemySpawnSystem"],
+    [browserProgressionAdaptersSource, "../modules/level-up.js", "createLevelUpSystem"],
     [moduleGameDependenciesSource, "./pickups.js", "createPickupSystem"],
-    [browserDependencyBagSource, "../modules/relics.js", "createRelicSystem"],
+    [browserUiAdaptersSource, "../modules/relics.js", "createRelicSystem"],
     [moduleGameDependenciesSource, "./relics.js", "createRelicSystem"],
-    [browserDependencyBagSource, "../modules/weapon-behaviors.js", "createWeaponBehaviorSystem"],
-    [browserDependencyBagSource, "../modules/weapon-fire.js", "createWeaponFireSystem"],
+    [browserGameplayAdaptersSource, "../modules/weapon-behaviors.js", "createWeaponBehaviorSystem"],
+    [browserGameplayAdaptersSource, "../modules/weapon-fire.js", "createWeaponFireSystem"],
   ].every(([source, modulePath, factoryName]) =>
     source.includes(`import { ${factoryName} } from "${modulePath}";`)
   ) &&
-    !browserDependencyBagSource.includes("createBrowserNamespaceBridge") &&
+    !browserDependencyAdapterSource.includes("createBrowserNamespaceBridge") &&
     !/import\s+["']\.\.\/(?:combat|enemies|enemy-behaviors|enemy-spawning|level-up|pickups|relics|weapon-behaviors|weapon-fire)\.js["'];/u.test(
       productionModuleEntrypointSource
     ) &&
@@ -1354,22 +1414,27 @@ check(
   productionModuleEntrypointGlobalReads.length === 0
 );
 check(
-  "readiness sees browser dependency bag factory without TapSurvivor global reads",
-  browserDependencyBagGlobalReads.length === 0
+  "readiness sees browser dependency adapter group without TapSurvivor global reads",
+  browserDependencyAdapterGlobalReads.length === 0
 );
 check(
-  "readiness sees browser dependency bag default path contains no namespace bridge or empty gameplay fallback",
+  "readiness sees browser dependency facade and leaves contain no namespace bridge or empty gameplay fallback",
   [
-    "createBrowserGameplaySystems",
-    "createBrowserProgressionSystems",
-    "createBrowserUiAdapters",
+    'from "./browser-gameplay-adapters.js"',
+    'from "./browser-progression-adapters.js"',
+    'from "./browser-ui-adapters.js"',
+  ].every((token) => browserDependencyBagSource.includes(token)) &&
+    [
+      "createBrowserGameplaySystems",
+      "createBrowserProgressionSystems",
+      "createBrowserUiAdapters",
     "createBrowserRunUiAdapter",
     "createBrowserShellUiAdapter",
     "createBrowserShopSystemAdapter",
-  ].every((name) => browserDependencyBagSource.includes(name)) &&
-    !browserDependencyBagSource.includes("createBrowserNamespaceBridge") &&
-    !browserDependencyBagSource.includes("createNoopGameplayAdapters") &&
-    !browserDependencyBagSource.includes("createNoopProgressionAdapters")
+    ].every((name) => browserDependencyAdapterSource.includes(name)) &&
+    !browserDependencyAdapterSource.includes("createBrowserNamespaceBridge") &&
+    !browserDependencyAdapterSource.includes("createNoopGameplayAdapters") &&
+    !browserDependencyAdapterSource.includes("createNoopProgressionAdapters")
 );
 check(
   "readiness reports module-native browser adapter subsystem files present",
@@ -1485,7 +1550,7 @@ const inventory = {
     renderingProofSlots: BROWSER_RENDERING_ADAPTER_PROOF_SLOTS,
     spriteProofSlots: BROWSER_SPRITE_ADAPTER_PROOF_SLOTS,
     missingProductionBrowserAdapterModuleFiles,
-    moduleNativeSourceGlobalReads: browserDependencyBagGlobalReads,
+    moduleNativeSourceGlobalReads: browserDependencyAdapterGlobalReads,
   },
   moduleRuntimePlatformAdapter: {
     proofSlots: MODULE_RUNTIME_PLATFORM_ADAPTER_PROOF_SLOTS,

@@ -89,6 +89,7 @@ const shellUi = readRequired("src/shell-ui.js");
 const productionModuleEntrypoint = readRequired("src/app/production-module-entrypoint.js");
 const productionModuleAutoboot = readRequired("src/app/production-module-autoboot.js");
 const browserDependencyBag = readRequired("src/app/browser-dependency-bag.js");
+const browserPlatformAdapters = readRequired("src/app/browser-platform-adapters.js");
 const plan = readRequired("MVP_GAME_PLAN.md");
 const pipeline = readRequired("PHONE_TEST_PIPELINE.md");
 const agentContext = readRequired("docs/AGENT_CODEBASE_CONTEXT.md");
@@ -635,8 +636,9 @@ check(
     gameDependencies.includes("bindMovementInput") &&
     gameRuntime.includes("bindMovementInput") &&
     !gameRuntime.includes("globalThis.TapSurvivorInput") &&
-    browserDependencyBag.includes('import { bindMovementInput } from "../modules/input.js"') &&
-    browserDependencyBag.includes("return bindMovementInput({ canvas: targetCanvas, getGame });"),
+    browserDependencyBag.includes('from "./browser-platform-adapters.js"') &&
+    browserPlatformAdapters.includes('import { bindMovementInput } from "../modules/input.js"') &&
+    browserPlatformAdapters.includes("return bindMovementInput({ canvas: targetCanvas, getGame });"),
 );
 check(
   "combat, pickup, and relic helpers are native-injected without classic publishers",
