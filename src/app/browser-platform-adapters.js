@@ -27,43 +27,6 @@ export function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
   };
 }
 
-function createBrowserGameplaySystems() {
-  return {
-    combat: { createCombatSystem },
-    enemies: { createEnemySystem },
-    enemyBehaviors: { createEnemyBehaviorSystem },
-    enemySpawning: { createEnemySpawnSystem },
-    weaponBehaviors: { createWeaponBehaviorSystem },
-    weaponFire: { createWeaponFireSystem },
-  };
-}
-
-function createBrowserProgressionSystems({ documentRef, ui }) {
-  return {
-    levelUp: {
-      createLevelUpSystem: (options = {}) =>
-        createLevelUpSystem({
-          ...options,
-          documentRef: options.documentRef || documentRef,
-          ui: options.ui || ui,
-        }),
-    },
-    progression: { createProgressionSystem },
-    quests: { createQuestSystem, questOpenIds },
-    shop: {
-      createShopSystem: (options = {}) => createShopSystem({ documentRef, ...options }),
-    },
-    uiProgression: {
-      createUiProgressionRenderer: (options = {}) =>
-        createUiProgressionRenderer({
-          ...options,
-          documentRef,
-        }),
-    },
-    upgrades: { createUpgradeContent },
-  };
-}
-
 function createBrowserBannerSystem({ globalRef, ui }) {
   let bannerTimer = 0;
   const clearTimer = () => globalRef.clearTimeout?.(bannerTimer);
