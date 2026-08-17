@@ -197,6 +197,7 @@ const uiRenderer = uiDependencies.createUiRenderer({
   weaponUnlocks,
   upgradeDefs,
   questDefs,
+  progressionConfig: tuningDefs.progression,
   getSave: () => save,
   getUpgradeTier,
   hasNode,

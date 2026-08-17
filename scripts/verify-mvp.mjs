@@ -304,6 +304,12 @@ check(
     moduleRuntimeGameDependencies.includes("progressionConfig: contentRegistry.tuningDefs.progression") &&
     ui.includes("progressionConfig")
 );
+check(
+  "classic UI renderer receives tuned progression configuration",
+  /const uiRenderer = uiDependencies\.createUiRenderer\(\{([^}]*)\}\);/.exec(game)?.[1]?.includes(
+    "progressionConfig: tuningDefs.progression"
+  )
+);
 check("relics have inventory icons", (content.relics || []).every((relic) => relic.iconPath) && assets.includes("relicIcon") && shellRelicUi.includes("assetResolver.relicIcon"));
 check("weapon slot relics exist", (content.relics || []).some((relic) => relic.weaponSlotBonus > 0) && (content.relics || []).some((relic) => relic.weaponSlotBonus < 0 && relic.weaponDamageMultiplier === 2) && relics.includes("getWeaponDamageMultiplier"));
 check("run move speed spreads over five tiers", content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.maxTier === 5 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.effects?.some((effect) => effect.stat === "speed" && effect.value === 20));
