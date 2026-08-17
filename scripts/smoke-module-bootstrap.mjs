@@ -16,6 +16,7 @@ import {
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
 import { createModuleRuntimeStorageAdapter } from "../src/modules/module-runtime-storage-adapter.js";
+import { createShellRelicUi as createClassicShellRelicUi } from "../src/modules/shell-relic-ui.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const content = JSON.parse(readFileSync(join(root, "content/tap-survivor-content.json"), "utf8"));
@@ -400,7 +401,7 @@ check(
 );
 check(
   "module bootstrap computes relic progression through module path",
-  relicProgression.progression.maxEquippedRelics(relicSave) === 2 &&
+  relicProgression.progression.maxEquippedRelics(relicSave) === 3 &&
     relicProgression.progression.relicBonusFor(relicSave, "run_move_speed", "maxTierBonus") === 1
 );
 const specialRelicSave = {
@@ -433,7 +434,7 @@ const shellRelicViewModel = shellRelicPresentation.createInventoryViewModel({
 });
 check(
   "module bootstrap builds shell relic presentation model",
-  shellRelicViewModel.maxEquippedSlots === 3 &&
+  shellRelicViewModel.maxEquippedSlots === 4 &&
     shellRelicViewModel.equippedRelics.some((relic) => relic.id === "move_speed_focus_relic") &&
     shellRelicViewModel.availableRelics.some((relic) => relic.id === "pickup_radius_focus_relic")
 );
@@ -451,7 +452,20 @@ check(
 );
 check(
   "module bootstrap shell relic model is serializable and stable",
-  JSON.parse(JSON.stringify(shellRelicViewModel)).summaryRows[0].value === "3/5"
+  JSON.parse(JSON.stringify(shellRelicViewModel)).summaryRows[0].value === "4/6"
+);
+const sixSlotRelicIds = relicProgression.relicDefs.slice(0, 6).map((relic) => relic.id);
+const sixSlotRelicViewModel = shellRelicPresentation.createInventoryViewModel({
+  towerFloor: 50,
+  unlockedRelics: sixSlotRelicIds,
+  equippedRelics: sixSlotRelicIds,
+});
+check(
+  "module bootstrap presents six relic slots at level 50",
+  sixSlotRelicViewModel.maxEquippedSlots === 6 &&
+    sixSlotRelicViewModel.slots.length === 6 &&
+    sixSlotRelicViewModel.slots[5].unlockLevel === 50 &&
+    sixSlotRelicViewModel.summaryRows[0].value === "6/6"
 );
 const fakeShellRelicRoot = createFakeElement("div");
 const shellRelicUiSelections = [];
@@ -544,8 +558,8 @@ unequipMoveSpeedButton?.eventListeners?.click?.[0]?.();
 shellRelicUiAdapter.dispose();
 check(
   "module bootstrap renders shell relic UI adapter summary",
-  shellRelicUiModel.maxEquippedSlots === 4 &&
-    shellRelicUiText.includes("Relic slots: 4/5") &&
+  shellRelicUiModel.maxEquippedSlots === 5 &&
+    shellRelicUiText.includes("Relic slots: 5/6") &&
     shellRelicUiText.includes("Next slot: Tower level 50") &&
     shellRelicUiText.includes("Can equip more: Yes")
 );
@@ -605,6 +619,99 @@ check(
     !shellRelicUiSave.equippedRelics.includes("move_speed_focus_relic") &&
     shellRelicUiPersists.length === 2 &&
     shellRelicUiMetaRenders.length === 2
+);
+const nativeQuestCacheRoot = createFakeElement("div");
+const nativeQuestCacheSave = {
+  coins: 3,
+  equippedRelics: [],
+  questPoints: 1,
+  towerFloor: 5,
+  unlockedRelics: [],
+};
+const nativeQuestCachePersists = [];
+const nativeQuestCacheMetaRenders = [];
+const nativeQuestCacheAdapter = composeShellRelicUiAdapter({
+  presenter: shellRelicPresentation,
+  documentRef: createFakeDocument(),
+  root: nativeQuestCacheRoot,
+  getSave: () => nativeQuestCacheSave,
+  relicSystem: relicProgression.progression,
+  persist: (save) => nativeQuestCachePersists.push(save.questPoints),
+  renderMeta: (save) => nativeQuestCacheMetaRenders.push(save.coins),
+});
+nativeQuestCacheAdapter.renderShellRelics(nativeQuestCacheSave);
+const nativeQuestCacheButton = findByDataset(nativeQuestCacheRoot, "action", "claim-quest-cache");
+nativeQuestCacheButton?.eventListeners?.click?.[0]?.();
+const nativeQuestCacheDisabledButton = findByDataset(nativeQuestCacheRoot, "action", "claim-quest-cache");
+nativeQuestCacheAdapter.dispose();
+check(
+  "module bootstrap renders and invokes the native Quest Cache action",
+  collectText(nativeQuestCacheRoot).includes("Quest Cache") &&
+    nativeQuestCacheButton?.dataset.cost === "1" &&
+    nativeQuestCacheButton?.disabled === false &&
+    nativeQuestCacheSave.questPoints === 0 &&
+    nativeQuestCacheSave.unlockedRelics.length === 1 &&
+    nativeQuestCacheSave.equippedRelics.length === 1 &&
+    nativeQuestCachePersists.length === 1 &&
+    nativeQuestCacheMetaRenders.length === 1 &&
+    nativeQuestCacheDisabledButton?.disabled === true
+);
+const classicQuestCacheUi = {
+  menuRelicInventory: createFakeElement("div"),
+  menuRelicSlots: createFakeElement("div"),
+};
+const classicQuestCacheSave = {
+  coins: 3,
+  equippedRelics: [],
+  questPoints: 1,
+  towerFloor: 5,
+  unlockedRelics: [],
+};
+let classicQuestCachePersists = 0;
+let classicQuestCacheMetaRenders = 0;
+const classicQuestCacheController = createClassicShellRelicUi({
+  assetResolver: {
+    relicIcon: (relic) => relic.iconPath || relic.id,
+    runUpgradeSprite: () => null,
+    spriteSource: () => "",
+  },
+  content,
+  documentRef: createFakeDocument(),
+  getSave: () => classicQuestCacheSave,
+  imageFactory: () => null,
+  persist: () => {
+    classicQuestCachePersists += 1;
+  },
+  relicDefs: relicProgression.relicDefs,
+  relicSystem: relicProgression.progression,
+  renderMeta: () => {
+    classicQuestCacheMetaRenders += 1;
+  },
+  ui: classicQuestCacheUi,
+});
+classicQuestCacheController.renderInventory();
+const classicQuestCacheButton = findByDataset(
+  classicQuestCacheUi.menuRelicInventory,
+  "action",
+  "claim-quest-cache"
+);
+classicQuestCacheButton?.eventListeners?.click?.[0]?.();
+const classicQuestCacheDisabledButton = findByDataset(
+  classicQuestCacheUi.menuRelicInventory.children.at(-2),
+  "action",
+  "claim-quest-cache"
+);
+check(
+  "module bootstrap renders and invokes the classic Quest Cache action",
+  collectText(classicQuestCacheUi.menuRelicInventory).includes("Quest Cache") &&
+    classicQuestCacheButton?.dataset.cost === "1" &&
+    classicQuestCacheButton?.disabled === false &&
+    classicQuestCacheSave.questPoints === 0 &&
+    classicQuestCacheSave.unlockedRelics.length === 1 &&
+    classicQuestCacheSave.equippedRelics.length === 1 &&
+    classicQuestCachePersists === 1 &&
+    classicQuestCacheMetaRenders === 1 &&
+    classicQuestCacheDisabledButton?.disabled === true
 );
 const fakeShellRelicOwnerRoot = createFakeElement("div");
 const shellRelicOwnerScheduler = createFakeScheduler();
@@ -684,8 +791,8 @@ shellRelicOwner.selectRelic("pickup_radius_focus_relic");
 shellRelicOwner.dispose();
 check(
   "module bootstrap composes shell relic owner through module path",
-  shellRelicOwnerInitialModel.maxEquippedSlots === 4 &&
-    shellRelicOwnerInitialText.includes("Relic slots: 4/5") &&
+  shellRelicOwnerInitialModel.maxEquippedSlots === 5 &&
+    shellRelicOwnerInitialText.includes("Relic slots: 5/6") &&
     typeof shellRelicOwner.render === "function" &&
     typeof shellRelicOwner.update === "function" &&
     typeof shellRelicOwner.selectRelic === "function" &&
@@ -695,7 +802,7 @@ check(
   "module bootstrap shell relic owner renders and updates deterministically",
   shellRelicOwnerSelectedText.includes("Selected relic") &&
     shellRelicOwnerSelectedText.includes("Pickup Radius Focus") &&
-    shellRelicOwnerUpdatedModel.maxEquippedSlots === 5
+    shellRelicOwnerUpdatedModel.maxEquippedSlots === 6
 );
 check(
   "module bootstrap shell relic owner forwards adapter actions",
@@ -981,7 +1088,7 @@ shellUiDelegatedOwner.startRun();
 shellUiDelegatedOwner.dispose();
 check(
   "module bootstrap shell UI owner drives real relic controller path",
-  collectText(shellUiDelegatedRelicRoot).includes("Relic slots: 4/5") &&
+  collectText(shellUiDelegatedRelicRoot).includes("Relic slots: 5/6") &&
     shellUiDelegatedPreviewCanvases[0]?.width === 112 &&
     shellUiDelegatedCallbacks.includes("select:pickup_radius_focus_relic") &&
     shellUiDelegatedCallbacks.includes("equip:pickup_radius_focus_relic") &&

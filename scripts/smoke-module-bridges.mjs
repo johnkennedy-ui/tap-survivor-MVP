@@ -728,7 +728,7 @@ check(
 check(
   "equippedRelics dedupe filter and cap",
   JSON.stringify(moduleNormalizeSnapshot.complex.equippedRelics) ===
-    JSON.stringify(["r1", "r2", "r3", "r4", "r5"])
+    JSON.stringify(["r1", "r2", "r3", "r4", "r5", "r6"])
 );
 check(
   "shopPurchases clamp tiers and drop unknown items",
@@ -894,7 +894,7 @@ const moduleRelicSnapshot = relicSystemSnapshot(
   relicFixtureSave,
   specialRelicFixtureSave
 );
-check("relic bridge max equipped slots fixture is unchanged", moduleRelicSnapshot.maxEquippedRelics === 2);
+check("relic bridge max equipped slots follows the six-level schedule", moduleRelicSnapshot.maxEquippedRelics === 3);
 check(
   "relic bridge run-start tiers fixture is unchanged",
   moduleRelicSnapshot.startingRunUpgradeTiers.run_move_speed === 1 &&
@@ -986,7 +986,7 @@ const shellRelicUiModuleSnapshot = shellRelicUiSnapshot(createModuleShellRelicUi
 check(
   "shell relic UI native factory preserves classic inventory API",
   shellRelicUiModuleSnapshot.initialSlotText ===
-    "Relic slots: 2/5 unlocked. Next slot at tower level 30." &&
+    "Relic slots: 3/6 unlocked. Next slot at tower level 30." &&
     shellRelicUiModuleSnapshot.inventoryClasses.includes("relic-loadout") &&
     shellRelicUiModuleSnapshot.inventoryClasses.includes("relic-icon-grid")
 );
@@ -1110,7 +1110,7 @@ check(
 );
 check(
   "classic shell UI adapter keeps injected native relic behavior through the frame and panel path",
-  shellUiClassicSnapshot.relicSlotsText.includes("Relic slots: 2/5") &&
+  shellUiClassicSnapshot.relicSlotsText.includes("Relic slots: 3/6") &&
     shellUiClassicSnapshot.inventoryClasses.some((className) => className.includes("relic-loadout")) &&
     shellUiClassicSnapshot.progressHidden === true &&
     shellUiClassicSnapshot.inventoryHidden === false

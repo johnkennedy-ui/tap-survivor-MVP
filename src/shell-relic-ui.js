@@ -5,6 +5,8 @@
 (() => {
   "use strict";
 
+  const DEFAULT_RELIC_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
+
   /**
    * @param {any} [options]
    */
@@ -49,6 +51,7 @@
       clearRoot(root);
       root.appendChild(createCharacterPanel(model));
       root.appendChild(createSummary(model));
+      root.appendChild(createQuestCacheAction(model));
       root.appendChild(createSlotList(model));
       root.appendChild(createAvailableList(model, selectedRelicId));
       if (selectedRelic) root.appendChild(createDetail(model, selectedRelic));
@@ -79,6 +82,37 @@
       appendBonusRows(documentRef, summary, "Max-tier bonuses", model.bonuses?.maxTierBonuses);
       appendModifierRows(documentRef, summary, model.specialModifiers);
       return summary;
+    }
+
+    function createQuestCacheAction(model) {
+      const reward = model.questReward || {};
+      const cost = Number.isInteger(reward.cost) ? reward.cost : 1;
+      const action = documentRef.createElement("section");
+      action.className = "quest-cache-action";
+      appendText(documentRef, action, "strong", reward.label || "Quest Cache");
+      appendText(
+        documentRef,
+        action,
+        "span",
+        reward.description || "Spend 1 QP for a random locked relic, or 25 coins when all relics are owned."
+      );
+      const button = documentRef.createElement("button");
+      button.type = "button";
+      button.textContent = `Claim Quest Cache (${cost} QP)`;
+      button.dataset.action = "claim-quest-cache";
+      button.dataset.cost = String(cost);
+      button.disabled = reward.canClaim !== true;
+      button.addEventListener("click", () => {
+        if (button.disabled) return;
+        const save = getSave?.();
+        const result = relicSystem?.claimQuestReward?.(save);
+        if (!result) return;
+        persist?.(save);
+        renderShellRelics(save);
+        renderMeta?.(save);
+      });
+      action.appendChild(button);
+      return action;
     }
 
     function createSlotList(model) {
@@ -328,6 +362,9 @@
       },
       imageFactory = () => (typeof Image === "undefined" ? null : new Image()),
     } = options;
+    const relicSlotLevels = Array.isArray(relicSystem?.relicSlotLevels)
+      ? relicSystem.relicSlotLevels
+      : DEFAULT_RELIC_SLOT_LEVELS;
 
     function renderInventory() {
       if (!ui.menuRelicSlots || !ui.menuRelicInventory || !relicSystem) return;
@@ -336,18 +373,19 @@
       const equippedRelics = relicSystem.equippedRelics(save);
       const equipped = new Set(equippedRelics.map((relic) => relic.id));
       const unlocked = new Set(save.unlockedRelics || []);
-      const nextLevel = slots >= 5 ? null : (slots + 1) * 10;
-      ui.menuRelicSlots.textContent = `Relic slots: ${slots}/5 unlocked. ${
+      const nextLevel = slots >= relicSlotLevels.length ? null : relicSlotLevels[slots];
+      ui.menuRelicSlots.textContent = `Relic slots: ${slots}/${relicSlotLevels.length} unlocked. ${
         nextLevel ? `Next slot at tower level ${nextLevel}.` : "Maximum slots unlocked."
       }`;
       ui.menuRelicInventory.innerHTML = "";
       const loadout = documentRef.createElement("div");
       loadout.className = "relic-loadout";
       loadout.appendChild(createCharacterPanel(save));
+      loadout.appendChild(createQuestCacheAction(save));
 
       const slotGrid = documentRef.createElement("div");
       slotGrid.className = "relic-slots";
-      for (let index = 0; index < 5; index += 1) {
+      for (let index = 0; index < relicSlotLevels.length; index += 1) {
         slotGrid.appendChild(createRelicSlot(index, slots, equippedRelics[index]));
       }
       loadout.appendChild(slotGrid);
@@ -368,6 +406,39 @@
         list.appendChild(createRelicIconButton(relic, unlocked.has(relic.id)));
       });
       ui.menuRelicInventory.appendChild(list);
+    }
+
+    function createQuestCacheAction(save) {
+      const cost = relicSystem.questCacheCost || 1;
+      const fallbackCoins = relicSystem.questCacheFallbackCoins || 25;
+      const lockedRelicCount = relicDefs.filter((relic) => !save.unlockedRelics?.includes(relic.id)).length;
+      const action = documentRef.createElement("div");
+      action.className = "quest-cache-action";
+      const label = documentRef.createElement("strong");
+      label.textContent = "Quest Cache";
+      action.appendChild(label);
+      const description = documentRef.createElement("span");
+      description.textContent = lockedRelicCount
+        ? "Spend 1 QP for a random locked relic."
+        : `All relics owned: spend 1 QP for ${fallbackCoins} coins.`;
+      action.appendChild(description);
+      const button = documentRef.createElement("button");
+      button.type = "button";
+      button.textContent = `Claim Quest Cache (${cost} QP)`;
+      button.dataset.action = "claim-quest-cache";
+      button.dataset.cost = String(cost);
+      button.disabled = !Number.isInteger(save.questPoints) || save.questPoints < cost;
+      button.addEventListener("click", () => {
+        if (button.disabled) return;
+        const currentSave = getSave();
+        const result = relicSystem.claimQuestReward?.(currentSave);
+        if (!result) return;
+        persist?.();
+        renderInventory();
+        renderMeta();
+      });
+      action.appendChild(button);
+      return action;
     }
 
     function createRelicIconButton(relic, isUnlocked = true) {
@@ -533,7 +604,7 @@
 
     function createRelicSlot(index, unlockedSlots, relic) {
       const slot = documentRef.createElement("div");
-      const unlockLevel = (index + 1) * 10;
+      const unlockLevel = relicSlotLevels[index] || (index + 1) * 10;
       const unlocked = index < unlockedSlots;
       slot.className = `relic-slot ${unlocked ? (relic ? "equipped" : "empty") : "locked"} ${relic?.rarity === "green" ? "green-relic" : ""}`;
       setRelicBackground(slot, relic);

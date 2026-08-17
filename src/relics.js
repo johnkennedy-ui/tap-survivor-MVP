@@ -5,6 +5,10 @@
 (() => {
   "use strict";
 
+  const RELIC_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
+  const QUEST_CACHE_COST = 1;
+  const QUEST_CACHE_FALLBACK_COINS = 25;
+
   function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random }) {
     function equippedRelics(save) {
       const equipped = new Set(save.equippedRelics || []);
@@ -12,7 +16,8 @@
     }
 
     function maxEquippedRelics(save) {
-      return Math.min(5, Math.floor(Math.max(0, save.towerFloor || 1) / 10));
+      const towerFloor = Math.max(0, Math.floor(Number(save?.towerFloor) || 0));
+      return RELIC_SLOT_LEVELS.filter((unlockLevel) => towerFloor >= unlockLevel).length;
     }
 
     function relicNumber(save, field) {
@@ -89,6 +94,48 @@
       return grantRelic(save, relic);
     }
 
+    function claimQuestReward(save) {
+      if (!hasValidQuestRewardState(save)) return null;
+      const unlocked = new Set(save.unlockedRelics);
+      const locked = (relicDefs || []).filter((relic) => relic?.id && !unlocked.has(relic.id));
+      if (locked.length) {
+        const relic = locked[Math.floor(random() * locked.length)];
+        if (!relic) return null;
+        const granted = grantRelic(save, relic);
+        if (!granted) return null;
+        save.questPoints -= QUEST_CACHE_COST;
+        return {
+          coins: 0,
+          questPointsSpent: QUEST_CACHE_COST,
+          relic: granted,
+          type: "relic",
+        };
+      }
+
+      save.questPoints -= QUEST_CACHE_COST;
+      save.coins += QUEST_CACHE_FALLBACK_COINS;
+      return {
+        coins: QUEST_CACHE_FALLBACK_COINS,
+        questPointsSpent: QUEST_CACHE_COST,
+        relic: null,
+        type: "coins",
+      };
+    }
+
+    function hasValidQuestRewardState(save) {
+      return Boolean(
+        save &&
+          typeof save === "object" &&
+          !Array.isArray(save) &&
+          Array.isArray(save.unlockedRelics) &&
+          Array.isArray(save.equippedRelics) &&
+          Number.isInteger(save.coins) &&
+          save.coins >= 0 &&
+          Number.isInteger(save.questPoints) &&
+          save.questPoints >= QUEST_CACHE_COST
+      );
+    }
+
     function relicChoices(save, equippedWeaponIds, count = 3) {
       const unlocked = new Set(save.unlockedRelics || []);
       const locked = (relicDefs || []).filter((relic) => !unlocked.has(relic.id));
@@ -126,6 +173,10 @@
       relicBonusFor,
       grantRelic,
       grantRandomRelic,
+      claimQuestReward,
+      questCacheCost: QUEST_CACHE_COST,
+      questCacheFallbackCoins: QUEST_CACHE_FALLBACK_COINS,
+      relicSlotLevels: RELIC_SLOT_LEVELS,
       relicChoices,
       setRelicEquipped,
       startingRunUpgradeTiers,

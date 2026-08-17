@@ -275,7 +275,22 @@ check("relic content exists for run skills", (content.relics || []).length >= 24
 check("relics affect level-up choices and run starts", levelUp.includes("relicSpawnRateMultiplier") && levelUp.includes("maxTierBonus") && levelUp.includes("equippedRelics") && levelUpChoices.includes("relic_compass") && relics.includes("startingRunUpgradeTiers") && game.includes("applyRelicStartingRunUpgrades") && game.includes("upgrade.apply?.(run)") && (content.relics || []).filter((relic) => relic.id.includes("_focus_relic")).every((relic) => relic.startingTierBonus === 1 && relic.maxTierBonus === 1 && relic.selectionWeightBonus === 2) && (content.relics || []).filter((relic) => /^random_.*_obsessed_relic$/.test(relic.id)).every((relic) => relic.startingTierBonus === 2 && relic.maxTierBonus === 2 && relic.selectionWeightBonus === 3) && (content.relics || []).filter((relic) => /^random_.*_mastery_relic$/.test(relic.id)).every((relic) => relic.startingTierBonus === 3 && relic.maxTierBonus === 3 && relic.selectionWeightBonus === 5) && (content.relics || []).filter((relic) => !relic.id.startsWith("random_") && relic.id.includes("_mastery_relic")).every((relic) => relic.startingTierBonus === 2 && relic.maxTierBonus === 2 && relic.selectionWeightBonus === 3));
 check("boss relics are choice based", index.includes('id="relicChoice"') && runLifecycle.includes("showRelicChoice") && runLifecycle.includes("relicSystem.relicChoices") && relics.includes("relevantRunUpgradeIds"));
 check("relic inventory menu exists", index.includes('id="menuInventoryTab"') && index.includes('id="menuRelicInventory"') && ui.includes("menuRelicInventory") && shellUi.includes("renderInventory") && shellRelicUi.includes("createCharacterPanel") && shellRelicUi.includes("createRelicSlot") && shellRelicUi.includes("openRelicDetail") && shellRelicUi.includes("createRelicSkillPreview") && shellRelicUi.includes("showRelicLockedMessage") && shellRelicUi.includes("Locked, play more to unlock this skill.") && shellRelicUi.includes("assetResolver.relicIcon") && shellRelicUi.includes("relic-lock-badge") && shellRelicUi.includes("Equip relic") && styles.includes(".relic-loadout") && styles.includes(".relic-slot.locked") && styles.includes(".relic-icon-grid") && styles.includes(".relic-icon-button.locked") && styles.includes(".relic-lock-badge") && styles.includes(".relic-lock-popup") && styles.includes(".relic-detail-screen"));
-check("relic slots unlock by tower floor", saveDefaults.includes("towerFloor: 1") && !save.includes("maxPlayerLevel") && !runUpdate.includes("recordPlayerLevel") && relics.includes("maxEquippedRelics") && relics.includes("Math.floor(Math.max(0, save.towerFloor || 1) / 10)") && shellRelicUi.includes("tower level ${nextLevel}") && shellRelicUi.includes("Unlocked at tower level ${unlockLevel}") && relics.includes("Math.min(5"));
+check(
+  "relic slots use the six-level schedule and Quest Cache reward route",
+  saveDefaults.includes("towerFloor: 1") &&
+    !save.includes("maxPlayerLevel") &&
+    !runUpdate.includes("recordPlayerLevel") &&
+    relics.includes("maxEquippedRelics") &&
+    relics.includes("[5, 10, 20, 30, 40, 50]") &&
+    relics.includes("claimQuestReward") &&
+    relics.includes("QUEST_CACHE_FALLBACK_COINS = 25") &&
+    saveNormalize.includes(".slice(0, 6)") &&
+    shellRelicUi.includes("Claim Quest Cache (${cost} QP)") &&
+    shellRelicUi.includes("claim-quest-cache") &&
+    shellRelicUi.includes("tower level ${nextLevel}") &&
+    shellRelicUi.includes("Unlocked at tower level ${unlockLevel}") &&
+    uiProgression.includes("Open Inventory to claim a Quest Cache for 1 QP.")
+);
 check("relics have inventory icons", (content.relics || []).every((relic) => relic.iconPath) && assets.includes("relicIcon") && shellRelicUi.includes("assetResolver.relicIcon"));
 check("weapon slot relics exist", (content.relics || []).some((relic) => relic.weaponSlotBonus > 0) && (content.relics || []).some((relic) => relic.weaponSlotBonus < 0 && relic.weaponDamageMultiplier === 2) && relics.includes("getWeaponDamageMultiplier"));
 check("run move speed spreads over five tiers", content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.maxTier === 5 && content.runUpgrades?.find((upgrade) => upgrade.id === "run_move_speed")?.effects?.some((effect) => effect.stat === "speed" && effect.value === 20));

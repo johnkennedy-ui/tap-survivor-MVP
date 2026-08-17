@@ -159,6 +159,16 @@ check(
   "save normalizer clamps negative QP values",
   nonNegativeQuestState.questPoints === 0 && nonNegativeQuestState.totalQuestPoints === 0,
 );
+const sixRelicIds = content.relics.slice(0, 6).map((relic) => relic.id);
+const normalizedSixRelicLoadout = isolatedSaveNormalizer.normalizeSave({
+  equippedRelics: sixRelicIds,
+  towerFloor: 50,
+  unlockedRelics: sixRelicIds,
+});
+check(
+  "save normalizer preserves six valid equipped relic IDs",
+  JSON.stringify(normalizedSixRelicLoadout.equippedRelics) === JSON.stringify(sixRelicIds),
+);
 
 const saveKey = "tap-survivor-mvp-save-v2";
 const legacySaveKey = "tap-survivor-mvp-save-v1";

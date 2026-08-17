@@ -45,6 +45,7 @@ export function createUiProgressionRenderer({
 } = {}) {
   const resolvedUi = requireObject(ui, "ui");
   const assetResolver = assets?.createAssetResolver?.();
+  const hasQuestContent = Object.keys(questDefs || {}).length > 0;
 
   function renderMeta() {
     const save = getSave();
@@ -75,7 +76,9 @@ export function createUiProgressionRenderer({
     if (!availableWeaponUnlocks.length && !availableUpgrades.length) {
       const empty = doc.createElement("div");
       empty.className = "node";
-      empty.textContent = "No available skill nodes. Complete active quests to reveal the next branch.";
+      empty.textContent = hasQuestContent
+        ? "No available skill nodes. Open Inventory to claim a Quest Cache for 1 QP."
+        : "No available skill nodes. Complete active quests to reveal the next branch.";
       container.appendChild(empty);
       return;
     }
@@ -138,7 +141,9 @@ export function createUiProgressionRenderer({
     if (!activeQuestIds.length) {
       const empty = doc.createElement("div");
       empty.className = "quest";
-      empty.textContent = "No active quests. Unlock the next available skill node to reveal one.";
+      empty.textContent = hasQuestContent
+        ? "No active quests. Open Inventory to spend Quest Points on a Quest Cache."
+        : "No active quests. Unlock the next available skill node to reveal one.";
       container.appendChild(empty);
       return;
     }

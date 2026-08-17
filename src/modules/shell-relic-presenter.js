@@ -1,3 +1,5 @@
+const DEFAULT_RELIC_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
+
 /**
  * @param {any} [options]
  */
@@ -13,6 +15,9 @@ export function createShellRelicPresenter(options = {}) {
   }
 
   const runUpgradeDefs = Array.isArray(content.runUpgrades) ? content.runUpgrades : [];
+  const relicSlotLevels = Array.isArray(relicSystem.relicSlotLevels)
+    ? relicSystem.relicSlotLevels
+    : DEFAULT_RELIC_SLOT_LEVELS;
 
   function relicIcon(relic) {
     return assetResolver.relicIcon?.(relic) || relic?.iconPath || content?.assets?.sprites?.ui?.quest || "";
@@ -59,19 +64,23 @@ export function createShellRelicPresenter(options = {}) {
   }
 
   function createInventoryViewModel(save = {}) {
-    const maxEquippedSlots = relicSystem.maxEquippedRelics(save);
+    const maxEquippedSlots = Math.min(relicSlotLevels.length, relicSystem.maxEquippedRelics(save));
     const equippedRelics = relicSystem.equippedRelics(save);
     const equippedIds = new Set(equippedRelics.map((relic) => relic.id));
     const unlockedIds = new Set(save.unlockedRelics || []);
-    const nextSlotTowerLevel = maxEquippedSlots >= 5 ? null : (maxEquippedSlots + 1) * 10;
+    const nextSlotTowerLevel = maxEquippedSlots >= relicSlotLevels.length ? null : relicSlotLevels[maxEquippedSlots];
+    const questCacheCost = relicSystem.questCacheCost || 1;
+    const questCacheFallbackCoins = relicSystem.questCacheFallbackCoins || 25;
+    const questPoints = Number.isInteger(save.questPoints) ? Math.max(0, save.questPoints) : 0;
+    const lockedRelicCount = relicDefs.filter((relic) => !unlockedIds.has(relic.id)).length;
 
-    const slots = Array.from({ length: 5 }, (_, index) => {
+    const slots = relicSlotLevels.map((unlockLevel, index) => {
       const relic = equippedRelics[index] || null;
       const unlocked = index < maxEquippedSlots;
       return {
         index,
         label: `Slot ${index + 1}`,
-        unlockLevel: (index + 1) * 10,
+        unlockLevel,
         unlocked,
         empty: unlocked && !relic,
         relic: relic ? relicSummary(relic, { equipped: true, unlocked: true }) : null,
@@ -97,6 +106,15 @@ export function createShellRelicPresenter(options = {}) {
       slots,
       equippedRelics: equippedRelics.map((relic) => relicSummary(relic, { equipped: true, unlocked: true })),
       availableRelics,
+      questReward: {
+        canClaim: questPoints >= questCacheCost,
+        cost: questCacheCost,
+        description: lockedRelicCount
+          ? "Spend 1 QP for a random locked relic."
+          : `All relics owned: spend 1 QP for ${questCacheFallbackCoins} coins.`,
+        fallbackCoins: questCacheFallbackCoins,
+        label: "Quest Cache",
+      },
       bonuses: {
         startingRunUpgradeTiers,
         maxTierBonuses: Object.fromEntries(
@@ -112,7 +130,7 @@ export function createShellRelicPresenter(options = {}) {
       summaryRows: [
         {
           label: "Relic slots",
-          value: `${maxEquippedSlots}/5`,
+          value: `${maxEquippedSlots}/${relicSlotLevels.length}`,
         },
         {
           label: "Next slot",

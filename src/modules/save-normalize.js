@@ -102,7 +102,7 @@ export function createSaveNormalizer({
       ),
     ]
       .filter((id) => normalized.unlockedRelics.includes(id))
-      .slice(0, 5);
+      .slice(0, 6);
     normalized.questPoints = nonNegativeInteger(normalized.questPoints);
     normalized.totalQuestPoints = Math.max(
       normalized.questPoints,
