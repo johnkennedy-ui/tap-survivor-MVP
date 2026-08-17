@@ -280,6 +280,38 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
       return null;
     }
 
+    const canDrawDirectly =
+      Number(rotation) === 0 &&
+      Number.isFinite(Number(x)) &&
+      Number.isFinite(Number(y)) &&
+      !options.flipX &&
+      !options.flipY &&
+      !Number.isFinite(Number(options.alpha));
+    if (canDrawDirectly) {
+      const previousImageSmoothingEnabled = context.imageSmoothingEnabled;
+      let drawn = false;
+      try {
+        context.imageSmoothingEnabled = false;
+        context.drawImage(
+          image,
+          frame * frameWidth,
+          row * frameHeight,
+          frameWidth,
+          frameHeight,
+          Number(x) - width / 2,
+          Number(y) - height / 2,
+          width,
+          height
+        );
+        drawn = true;
+      } catch {
+        drawn = false;
+      } finally {
+        context.imageSmoothingEnabled = previousImageSmoothingEnabled;
+      }
+      return { drawn, frame, image, row };
+    }
+
     const previousAlpha = context.globalAlpha;
     let drawn = false;
     try {
