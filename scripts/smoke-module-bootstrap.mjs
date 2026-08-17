@@ -667,7 +667,7 @@ const classicQuestCacheSave = {
   towerFloor: 5,
   unlockedRelics: [],
 };
-let classicQuestCachePersists = 0;
+const classicQuestCachePersists = [];
 let classicQuestCacheMetaRenders = 0;
 const classicQuestCacheController = createClassicShellRelicUi({
   assetResolver: {
@@ -679,8 +679,8 @@ const classicQuestCacheController = createClassicShellRelicUi({
   documentRef: createFakeDocument(),
   getSave: () => classicQuestCacheSave,
   imageFactory: () => null,
-  persist: () => {
-    classicQuestCachePersists += 1;
+  persist: (save) => {
+    classicQuestCachePersists.push(save);
   },
   relicDefs: relicProgression.relicDefs,
   relicSystem: relicProgression.progression,
@@ -696,6 +696,7 @@ const classicQuestCacheButton = findByDataset(
   "claim-quest-cache"
 );
 classicQuestCacheButton?.eventListeners?.click?.[0]?.();
+const classicQuestCachePersisted = classicQuestCachePersists.at(-1);
 const classicQuestCacheDisabledButton = findByDataset(
   classicQuestCacheUi.menuRelicInventory.children.at(-2),
   "action",
@@ -709,7 +710,11 @@ check(
     classicQuestCacheSave.questPoints === 0 &&
     classicQuestCacheSave.unlockedRelics.length === 1 &&
     classicQuestCacheSave.equippedRelics.length === 1 &&
-    classicQuestCachePersists === 1 &&
+    classicQuestCachePersists.length === 1 &&
+    classicQuestCachePersisted === classicQuestCacheSave &&
+    classicQuestCachePersisted?.questPoints === 0 &&
+    classicQuestCachePersisted?.unlockedRelics.length === 1 &&
+    classicQuestCachePersisted?.equippedRelics.length === 1 &&
     classicQuestCacheMetaRenders === 1 &&
     classicQuestCacheDisabledButton?.disabled === true
 );

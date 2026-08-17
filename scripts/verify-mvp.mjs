@@ -287,6 +287,7 @@ check(
     saveNormalize.includes(".slice(0, 6)") &&
     shellRelicUi.includes("Claim Quest Cache (${cost} QP)") &&
     shellRelicUi.includes("claim-quest-cache") &&
+    shellRelicUi.includes("persist?.(currentSave)") &&
     shellRelicUi.includes("tower level ${nextLevel}") &&
     shellRelicUi.includes("Unlocked at tower level ${unlockLevel}") &&
     uiProgression.includes("Open Inventory to claim a Quest Cache for 1 QP.")

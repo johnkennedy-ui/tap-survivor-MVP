@@ -426,7 +426,7 @@ export function createShellRelicUi(options = {}) {
       const currentSave = getSave();
       const result = relicSystem.claimQuestReward?.(currentSave);
       if (!result) return;
-      persist?.();
+      persist?.(currentSave);
       renderInventory();
       renderMeta();
     });
