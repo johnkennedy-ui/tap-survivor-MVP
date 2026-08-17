@@ -254,7 +254,10 @@ check("upgrade tiers are tracked", progression.includes("upgradeTiers") && uiPro
 check("progression tier cap follows upgrade max tiers", progression.includes("maxTierByUpgradeId") && progression.includes("Math.min(maxTier || tier, tier)") && game.includes("upgradeDefs,"));
 check("skill tree gates by prerequisite and quest", progression.includes("requiresNode") && progression.includes("requiresQuest") && progression.includes("nodeGateStatus"));
 check("completed quests disappear from quest list", uiProgression.includes("activeQuestIds") && !uiProgression.includes("Status: ${complete"));
-check("level-up choices are limited to 3 random options", levelUpChoices.includes("shuffleChoices") && levelUp.includes(".slice(0, 3)"));
+check(
+  "level-up choices are limited to 3 random options",
+  levelUpChoices.includes("shuffleChoices") && /\.slice\(\s*0,\s*3\s*\)/.test(levelUp)
+);
 check("level-up choices avoid immediate repeats", levelUp.includes("lastLevelUpChoiceIds") && levelUp.includes("freshChoices") && levelUp.includes("repeatChoices"));
 check("level-up choices have icons and click guard", levelUp.includes("level-choice-icon") && levelUp.includes("button.disabled = true") && levelUp.includes("}, 500)") && styles.includes("#levelUp .modal-box") && styles.includes("grid-template-columns: repeat(3"));
 check("level-up skill select uses static icons", levelUp.includes("createChoiceIcon") && levelUp.includes("assetResolver.choiceIconPath") && !levelUp.includes("renderChoiceSprite") && !levelUp.includes("requestAnimationFrame(drawFrame)") && Object.keys(content.weapons || {}).every((id) => content.assets?.sprites?.weapons?.[id]?.iconSrc?.includes("assets/generated/tower/sprites/")) && (content.runUpgrades || []).every((upgrade) => content.assets?.sprites?.runUpgrades?.[upgrade.id]?.iconSrc?.includes("assets/generated/tower/sprites/")));
