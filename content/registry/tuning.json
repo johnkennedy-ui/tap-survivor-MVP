@@ -8,6 +8,18 @@
       "coinFloorRewardRate": 0.06,
       "normalCoinBaseValue": 1,
       "bossCoinBaseValue": 12
+    },
+    "progression": {
+      "relicSlotLevels": [
+        5,
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "questCacheCost": 1,
+      "questCacheFallbackCoins": 25
     }
   }
 }

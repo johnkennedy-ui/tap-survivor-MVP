@@ -86,6 +86,9 @@ const debugBridge = readRequired("src/debug.js");
 const nativeDebug = readRequired("src/modules/debug.js");
 const shellRelicUi = readRequired("src/shell-relic-ui.js");
 const shellUi = readRequired("src/shell-ui.js");
+const composeRuntime = readRequired("src/app/compose-runtime.js");
+const browserUiAdapters = readRequired("src/app/browser-ui-adapters.js");
+const moduleRuntimeGameDependencies = readRequired("src/modules/module-game-dependencies.js");
 const productionModuleEntrypoint = readRequired("src/app/production-module-entrypoint.js");
 const productionModuleAutoboot = readRequired("src/app/production-module-autoboot.js");
 const browserDependencyBag = readRequired("src/app/browser-dependency-bag.js");
@@ -281,16 +284,25 @@ check(
     !save.includes("maxPlayerLevel") &&
     !runUpdate.includes("recordPlayerLevel") &&
     relics.includes("maxEquippedRelics") &&
-    relics.includes("[5, 10, 20, 30, 40, 50]") &&
+    content.tuning?.progression?.questCacheCost === 1 &&
+    content.tuning?.progression?.questCacheFallbackCoins === 25 &&
+    JSON.stringify(content.tuning?.progression?.relicSlotLevels) === JSON.stringify([5, 10, 20, 30, 40, 50]) &&
+    relics.includes("DEFAULT_RELIC_SYSTEM_SLOT_LEVELS") &&
+    relics.includes("progressionConfig") &&
     relics.includes("claimQuestReward") &&
-    relics.includes("QUEST_CACHE_FALLBACK_COINS = 25") &&
     saveNormalize.includes(".slice(0, 6)") &&
     shellRelicUi.includes("Claim Quest Cache (${cost} QP)") &&
+    shellRelicUi.includes("Spend ${cost} QP for a random locked relic.") &&
     shellRelicUi.includes("claim-quest-cache") &&
     shellRelicUi.includes("persist?.(currentSave)") &&
     shellRelicUi.includes("tower level ${nextLevel}") &&
     shellRelicUi.includes("Unlocked at tower level ${unlockLevel}") &&
-    uiProgression.includes("Open Inventory to claim a Quest Cache for 1 QP.")
+    uiProgression.includes("Open Inventory to claim a Quest Cache for ${questCacheCost} QP.") &&
+    game.includes("progressionConfig: tuningDefs.progression") &&
+    composeRuntime.includes("progressionConfig") &&
+    browserUiAdapters.includes("progressionConfig: content.tuning?.progression") &&
+    moduleRuntimeGameDependencies.includes("progressionConfig: contentRegistry.tuningDefs.progression") &&
+    ui.includes("progressionConfig")
 );
 check("relics have inventory icons", (content.relics || []).every((relic) => relic.iconPath) && assets.includes("relicIcon") && shellRelicUi.includes("assetResolver.relicIcon"));
 check("weapon slot relics exist", (content.relics || []).some((relic) => relic.weaponSlotBonus > 0) && (content.relics || []).some((relic) => relic.weaponSlotBonus < 0 && relic.weaponDamageMultiplier === 2) && relics.includes("getWeaponDamageMultiplier"));

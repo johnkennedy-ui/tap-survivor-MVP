@@ -84,6 +84,39 @@
       "range": 280,
       "color": "#f6f871"
     },
+    "lightning_staff": {
+      "name": "Lightning Staff",
+      "description": "A staff focus that arcs lightning through nearby enemies.",
+      "upgradeId": "lightning_damage",
+      "cooldown": 1.15,
+      "damage": 20,
+      "kind": "chain",
+      "jumps": 3,
+      "range": 300,
+      "color": "#8f7dff"
+    },
+    "fire_staff": {
+      "name": "Fire Staff",
+      "description": "A staff focus that launches compact fire bolts.",
+      "upgradeId": "fire_staff_damage",
+      "cooldown": 0.9,
+      "damage": 24,
+      "kind": "projectile",
+      "speed": 360,
+      "radius": 7,
+      "color": "#ff4f2f"
+    },
+    "water_staff": {
+      "name": "Water Staff",
+      "description": "A staff focus that sends slow blue orbs through enemies.",
+      "upgradeId": "water_staff_damage",
+      "cooldown": 1,
+      "damage": 22,
+      "kind": "projectile",
+      "speed": 270,
+      "radius": 10,
+      "color": "#4ddcff"
+    },
     "moon_glaive": {
       "name": "Moon Glaive",
       "description": "Large piercing blade projectile.",
@@ -174,6 +207,33 @@
       "requiresNode": "unlock_laser",
       "requiresQuest": "use_laser_run",
       "opensQuest": "chain_spark_mastery"
+    },
+    {
+      "id": "unlock_lightning_staff",
+      "weaponId": "lightning_staff",
+      "cost": 2,
+      "branch": "Arc",
+      "requiresNode": "unlock_chain_spark",
+      "requiresQuest": "chain_spark_mastery",
+      "opensQuest": "lightning_staff_mastery"
+    },
+    {
+      "id": "unlock_fire_staff",
+      "weaponId": "fire_staff",
+      "cost": 2,
+      "branch": "Area",
+      "requiresNode": "unlock_flame_wave",
+      "requiresQuest": "flame_wave_mastery",
+      "opensQuest": "fire_staff_mastery"
+    },
+    {
+      "id": "unlock_water_staff",
+      "weaponId": "water_staff",
+      "cost": 2,
+      "branch": "Control",
+      "requiresNode": "unlock_frost_orb",
+      "requiresQuest": "frost_orb_mastery",
+      "opensQuest": "water_staff_mastery"
     },
     {
       "id": "unlock_void_mine",
@@ -391,7 +451,21 @@
       "name": "Fire Rate",
       "description": "Reduce weapon cooldowns for this run.",
       "maxTier": 8,
-      "family": "attack_speed"
+      "family": "attack_speed",
+      "levelUpTierGains": [
+        {
+          "amount": 1,
+          "weight": 70
+        },
+        {
+          "amount": 2,
+          "weight": 25
+        },
+        {
+          "amount": 3,
+          "weight": 5
+        }
+      ]
     },
     {
       "id": "run_flat_damage",
@@ -404,7 +478,21 @@
       "name": "Percent Damage",
       "description": "Multiply all weapon damage this run.",
       "maxTier": 8,
-      "family": "damage"
+      "family": "damage",
+      "levelUpTierGains": [
+        {
+          "amount": 1,
+          "weight": 70
+        },
+        {
+          "amount": 2,
+          "weight": 25
+        },
+        {
+          "amount": 3,
+          "weight": 5
+        }
+      ]
     },
     {
       "id": "run_haste_projectiles",
@@ -412,6 +500,7 @@
       "description": "Projectile weapons fly faster and fire faster, but each hit deals less damage.",
       "maxTier": 1,
       "family": "projectile",
+      "exclusiveGroup": "projectile_profile",
       "projectileSpeedMultiplier": 1.65,
       "projectileCooldownMultiplier": 0.65,
       "projectileDamageMultiplier": 0.7
@@ -422,6 +511,7 @@
       "description": "Projectile weapons fly slower and fire slower, but each hit deals triple base damage.",
       "maxTier": 1,
       "family": "projectile",
+      "exclusiveGroup": "projectile_profile",
       "projectileSpeedMultiplier": 0.55,
       "projectileCooldownMultiplier": 1.45,
       "projectileDamageMultiplier": 3
@@ -796,6 +886,75 @@
       "target": 8000,
       "rewardQp": 5
     },
+    "lightning_staff_mastery": {
+      "name": "Staff Current",
+      "description": "Deal 400 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "lightning_staff_expert"
+    },
+    "lightning_staff_expert": {
+      "name": "Staff Conduit",
+      "description": "Deal 2,200 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "lightning_staff_master"
+    },
+    "lightning_staff_master": {
+      "name": "Storm Channel",
+      "description": "Deal 8,500 damage with Lightning Staff.",
+      "weaponId": "lightning_staff",
+      "target": 8500,
+      "rewardQp": 5
+    },
+    "fire_staff_mastery": {
+      "name": "Staff Ember",
+      "description": "Deal 400 damage with Fire Staff.",
+      "weaponId": "fire_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "fire_staff_expert"
+    },
+    "fire_staff_expert": {
+      "name": "Staff Pyre",
+      "description": "Deal 2,200 damage with Fire Staff.",
+      "weaponId": "fire_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "fire_staff_master"
+    },
+    "fire_staff_master": {
+      "name": "Flame Channel",
+      "description": "Deal 8,500 damage with Fire Staff.",
+      "weaponId": "fire_staff",
+      "target": 8500,
+      "rewardQp": 5
+    },
+    "water_staff_mastery": {
+      "name": "Staff Current",
+      "description": "Deal 400 damage with Water Staff.",
+      "weaponId": "water_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "water_staff_expert"
+    },
+    "water_staff_expert": {
+      "name": "Staff Tide",
+      "description": "Deal 2,200 damage with Water Staff.",
+      "weaponId": "water_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "water_staff_master"
+    },
+    "water_staff_master": {
+      "name": "Tide Channel",
+      "description": "Deal 8,500 damage with Water Staff.",
+      "weaponId": "water_staff",
+      "target": 8500,
+      "rewardQp": 5
+    },
     "void_mine_mastery": {
       "name": "Trap Field",
       "description": "Deal 500 damage with Void Mine.",
@@ -997,7 +1156,8 @@
       "spark_bolt_mastery",
       "first_blood",
       "gatherer",
-      "survivor_60"
+      "survivor_60",
+      "boss_hunter"
     ],
     "kill": [
       "first_blood",
@@ -1260,7 +1420,8 @@
       "projectileSpeed": 280,
       "projectileDamage": 15,
       "superProjectileDamage": 20,
-      "initialShootTimer": 0.8
+      "initialShootTimer": 0.8,
+      "projectileColor": "#b794ff"
     }
   },
   "characters": [
@@ -3403,6 +3564,15 @@
         "localLicense": "assets/generated/tower/sheet-20260614/README.md"
       },
       {
+        "id": "user_enemy_boss_sprite_sheets_20260621",
+        "name": "User Provided Enemy and Boss Sprite Sheets",
+        "license": "User provided for this project",
+        "commercialUse": true,
+        "attributionRequired": false,
+        "url": "telegram",
+        "localLicense": "assets/generated/tower/spritesheets/README.md"
+      },
+      {
         "id": "user_skill_sfx_20260615",
         "name": "User Provided Skill Sound Effects",
         "license": "User provided for this project",
@@ -3479,6 +3649,236 @@
         "crimson_hexer": "assets/generated/tower/sheet-20260614/spider-red.png?v=sheet-20260614",
         "obsidian_bulwark": "assets/generated/tower/sheet-20260614/crystal-golem.png?v=sheet-20260614",
         "boss": "assets/generated/tower/sheet-20260614/demon-boss.png?v=sheet-20260614"
+      },
+      "spriteSheets": {
+        "enemies": {
+          "id": "enemy_sheet_tower_pack",
+          "path": "assets/generated/tower/spritesheets/enemies-tower-pack.png?v=spritesheets-20260621",
+          "kind": "spritesheet",
+          "columns": 6,
+          "rows": 8,
+          "animations": {
+            "drifter": {
+              "row": 0,
+              "frames": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "fps": 8,
+              "loop": true
+            },
+            "skitter": {
+              "row": 1,
+              "frames": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "fps": 12,
+              "loop": true
+            },
+            "bulwark": {
+              "row": 2,
+              "frames": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "fps": 7,
+              "loop": true
+            },
+            "hexer": {
+              "row": 3,
+              "default": {
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 8,
+                "loop": true
+              },
+              "attack": {
+                "frames": [
+                  3,
+                  4,
+                  5
+                ],
+                "fps": 10,
+                "loop": false
+              }
+            },
+            "verdant_skitter": {
+              "row": 4,
+              "frames": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "fps": 13,
+              "loop": true
+            },
+            "dusk_crawler": {
+              "row": 5,
+              "frames": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "fps": 9,
+              "loop": true
+            },
+            "crimson_hexer": {
+              "row": 6,
+              "default": {
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 9,
+                "loop": true
+              },
+              "attack": {
+                "frames": [
+                  3,
+                  4,
+                  5
+                ],
+                "fps": 11,
+                "loop": false
+              }
+            },
+            "obsidian_bulwark": {
+              "row": 7,
+              "frames": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "fps": 7,
+              "loop": true
+            }
+          }
+        },
+        "bosses": {
+          "id": "boss_sheet_tower_pack",
+          "path": "assets/generated/tower/spritesheets/bosses-tower-pack.png?v=spritesheets-20260621",
+          "kind": "spritesheet",
+          "columns": 9,
+          "rows": 3,
+          "animations": {
+            "warden": {
+              "row": 0,
+              "idle": {
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 5,
+                "loop": true
+              },
+              "windup": {
+                "frames": [
+                  3,
+                  4,
+                  5
+                ],
+                "fps": 8,
+                "loop": false
+              },
+              "release": {
+                "frames": [
+                  6,
+                  7,
+                  8
+                ],
+                "fps": 10,
+                "loop": false
+              }
+            },
+            "charger": {
+              "row": 1,
+              "idle": {
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 6,
+                "loop": true
+              },
+              "windup": {
+                "frames": [
+                  3,
+                  4,
+                  5
+                ],
+                "fps": 9,
+                "loop": false
+              },
+              "release": {
+                "frames": [
+                  6,
+                  7,
+                  8
+                ],
+                "fps": 12,
+                "loop": false
+              }
+            },
+            "turret": {
+              "row": 2,
+              "idle": {
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 5,
+                "loop": true
+              },
+              "windup": {
+                "frames": [
+                  3,
+                  4,
+                  5
+                ],
+                "fps": 8,
+                "loop": false
+              },
+              "release": {
+                "frames": [
+                  6,
+                  7,
+                  8
+                ],
+                "fps": 10,
+                "loop": false
+              }
+            }
+          }
+        }
       },
       "weapons": {
         "spark_bolt": {
@@ -3881,6 +4281,177 @@
           "effectAlpha": 0.78,
           "animatedIcon": false,
           "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
+        },
+        "lightning_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-07-chain_spark.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 0,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 181,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 362,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 543,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 724,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 905,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1086,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            },
+            {
+              "x": 1267,
+              "y": 0,
+              "width": 181,
+              "height": 217
+            }
+          ],
+          "iconScale": 1,
+          "effectScale": 1.08,
+          "effectAlpha": 0.86,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-chain-spark.svg?v=generated-20260614-weapons"
+        },
+        "fire_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-04-flame_wave.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 44,
+              "y": 55,
+              "width": 105,
+              "height": 105
+            },
+            {
+              "x": 175,
+              "y": 20,
+              "width": 190,
+              "height": 150
+            },
+            {
+              "x": 342,
+              "y": 5,
+              "width": 220,
+              "height": 165
+            },
+            {
+              "x": 588,
+              "y": 0,
+              "width": 295,
+              "height": 170
+            },
+            {
+              "x": 765,
+              "y": 0,
+              "width": 400,
+              "height": 170
+            },
+            {
+              "x": 1110,
+              "y": 55,
+              "width": 430,
+              "height": 105
+            }
+          ],
+          "iconScale": 1,
+          "effectScale": 1.08,
+          "effectAlpha": 0.86,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-flame-wave.svg?v=generated-20260614-weapons"
+        },
+        "water_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 52,
+              "y": 26,
+              "width": 175,
+              "height": 130
+            },
+            {
+              "x": 285,
+              "y": 16,
+              "width": 140,
+              "height": 130
+            },
+            {
+              "x": 520,
+              "y": 31,
+              "width": 205,
+              "height": 105
+            },
+            {
+              "x": 788,
+              "y": 31,
+              "width": 200,
+              "height": 105
+            },
+            {
+              "x": 1088,
+              "y": 31,
+              "width": 210,
+              "height": 105
+            },
+            {
+              "x": 1382,
+              "y": 26,
+              "width": 150,
+              "height": 110
+            }
+          ],
+          "iconScale": 1.08,
+          "effectScale": 1.18,
+          "effectAlpha": 0.88,
+          "animatedIcon": true,
+          "iconSrc": "assets/generated/tower/sprites/weapon-frost-orb.svg?v=generated-20260614-weapons"
         },
         "moon_glaive": {
           "src": "assets/generated/tower/skill-effects/split/skill-08-moon_glaive.png?v=skill-effects-20260615-split",
@@ -5144,6 +5715,9 @@
     },
     "sfx": {
       "weapons": {
+        "lightning_staff": "assets/generated/tower/sfx/chain_spark.wav?v=sfx-20260615",
+        "fire_staff": "assets/generated/tower/sfx/flame_wave.wav?v=sfx-20260615",
+        "water_staff": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615",
         "spark_bolt": "assets/generated/tower/sfx/spark_bolt.wav?v=sfx-20260615",
         "prism_beam": "assets/generated/tower/sfx/prism_beam.wav?v=sfx-20260615",
         "frost_orb": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615",
@@ -6761,6 +7335,18 @@
       "coinFloorRewardRate": 0.06,
       "normalCoinBaseValue": 1,
       "bossCoinBaseValue": 12
+    },
+    "progression": {
+      "relicSlotLevels": [
+        5,
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "questCacheCost": 1,
+      "questCacheFallbackCoins": 25
     }
   }
 }

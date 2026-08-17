@@ -69,6 +69,7 @@
    * @property {*} [weaponUnlocks]
    * @property {*} [upgradeDefs]
    * @property {*} [questDefs]
+   * @property {*} [progressionConfig]
    * @property {() => *} [getSave]
    * @property {(upgradeId: string) => number} [getUpgradeTier]
    * @property {(nodeId: string) => boolean} [hasNode]
@@ -146,6 +147,7 @@
     weaponUnlocks,
     upgradeDefs,
     questDefs,
+    progressionConfig,
     getSave,
     getUpgradeTier,
     hasNode,
@@ -168,6 +170,7 @@
       weaponUnlocks,
       upgradeDefs,
       questDefs,
+      progressionConfig,
       getSave,
       documentRef,
       getUpgradeTier,

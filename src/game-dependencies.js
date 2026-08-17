@@ -4212,11 +4212,13 @@
     };
   }
 
-  const RELIC_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
-  const QUEST_CACHE_COST = 1;
-  const QUEST_CACHE_FALLBACK_COINS = 25;
+  const DEFAULT_RELIC_SYSTEM_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
+  const DEFAULT_QUEST_CACHE_COST = 1;
+  const DEFAULT_QUEST_CACHE_FALLBACK_COINS = 25;
 
-  function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random }) {
+  function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random, progressionConfig = {} }) {
+    const { relicSlotLevels, questCacheCost, questCacheFallbackCoins } = resolveProgressionConfig(progressionConfig);
+
     function equippedRelics(save) {
       const equipped = new Set(save.equippedRelics || []);
       return (relicDefs || []).filter((relic) => equipped.has(relic.id)).slice(0, maxEquippedRelics(save));
@@ -4224,7 +4226,7 @@
 
     function maxEquippedRelics(save) {
       const towerFloor = Math.max(0, Math.floor(Number(save?.towerFloor) || 0));
-      return RELIC_SLOT_LEVELS.filter((unlockLevel) => towerFloor >= unlockLevel).length;
+      return relicSlotLevels.filter((unlockLevel) => towerFloor >= unlockLevel).length;
     }
 
     function relicNumber(save, field) {
@@ -4310,20 +4312,20 @@
         if (!relic) return null;
         const granted = grantRelic(save, relic);
         if (!granted) return null;
-        save.questPoints -= QUEST_CACHE_COST;
+        save.questPoints -= questCacheCost;
         return {
           coins: 0,
-          questPointsSpent: QUEST_CACHE_COST,
+          questPointsSpent: questCacheCost,
           relic: granted,
           type: "relic",
         };
       }
 
-      save.questPoints -= QUEST_CACHE_COST;
-      save.coins += QUEST_CACHE_FALLBACK_COINS;
+      save.questPoints -= questCacheCost;
+      save.coins += questCacheFallbackCoins;
       return {
-        coins: QUEST_CACHE_FALLBACK_COINS,
-        questPointsSpent: QUEST_CACHE_COST,
+        coins: questCacheFallbackCoins,
+        questPointsSpent: questCacheCost,
         relic: null,
         type: "coins",
       };
@@ -4339,7 +4341,7 @@
           Number.isInteger(save.coins) &&
           save.coins >= 0 &&
           Number.isInteger(save.questPoints) &&
-          save.questPoints >= QUEST_CACHE_COST
+          save.questPoints >= questCacheCost
       );
     }
 
@@ -4381,13 +4383,41 @@
       grantRelic,
       grantRandomRelic,
       claimQuestReward,
-      questCacheCost: QUEST_CACHE_COST,
-      questCacheFallbackCoins: QUEST_CACHE_FALLBACK_COINS,
-      relicSlotLevels: RELIC_SLOT_LEVELS,
+      questCacheCost,
+      questCacheFallbackCoins,
+      relicSlotLevels,
       relicChoices,
       setRelicEquipped,
       startingRunUpgradeTiers,
     };
+  }
+
+  function resolveProgressionConfig(progressionConfig = {}) {
+    const relicSlotLevels = validRelicSlotLevels(progressionConfig?.relicSlotLevels)
+      ? Object.freeze([...progressionConfig.relicSlotLevels])
+      : DEFAULT_RELIC_SYSTEM_SLOT_LEVELS;
+    return {
+      relicSlotLevels,
+      questCacheCost: positiveIntegerOrDefault(progressionConfig?.questCacheCost, DEFAULT_QUEST_CACHE_COST),
+      questCacheFallbackCoins: positiveIntegerOrDefault(
+        progressionConfig?.questCacheFallbackCoins,
+        DEFAULT_QUEST_CACHE_FALLBACK_COINS
+      ),
+    };
+  }
+
+  function validRelicSlotLevels(levels) {
+    return (
+      Array.isArray(levels) &&
+      levels.length > 0 &&
+      levels.every(
+        (level, index) => Number.isInteger(level) && level > 0 && (index === 0 || level > levels[index - 1])
+      )
+    );
+  }
+
+  function positiveIntegerOrDefault(value, fallback) {
+    return Number.isInteger(value) && value > 0 ? value : fallback;
   }
 
   /**
@@ -6036,8 +6066,8 @@
       action.appendChild(label);
       const description = documentRef.createElement("span");
       description.textContent = lockedRelicCount
-        ? "Spend 1 QP for a random locked relic."
-        : `All relics owned: spend 1 QP for ${fallbackCoins} coins.`;
+        ? `Spend ${cost} QP for a random locked relic.`
+        : `All relics owned: spend ${cost} QP for ${fallbackCoins} coins.`;
       action.appendChild(description);
       const button = documentRef.createElement("button");
       button.type = "button";
@@ -7250,6 +7280,7 @@
    * @property {*} [weaponUnlocks]
    * @property {*} [upgradeDefs]
    * @property {*} [questDefs]
+   * @property {*} [progressionConfig]
    * @property {() => *} [getSave]
    * @property {(upgradeId: string) => number} [getUpgradeTier]
    * @property {(nodeId: string) => boolean} [hasNode]
@@ -7327,6 +7358,7 @@
     weaponUnlocks,
     upgradeDefs,
     questDefs,
+    progressionConfig,
     getSave,
     getUpgradeTier,
     hasNode,
@@ -7349,6 +7381,7 @@
       weaponUnlocks,
       upgradeDefs,
       questDefs,
+      progressionConfig,
       getSave,
       documentRef,
       getUpgradeTier,
@@ -7375,6 +7408,7 @@
    * @property {*} [weaponUnlocks]
    * @property {*} [upgradeDefs]
    * @property {*} [questDefs]
+   * @property {*} [progressionConfig]
    * @property {() => *} [getSave]
    * @property {(upgradeId: string) => number} [getUpgradeTier]
    * @property {(nodeId: string) => boolean} [hasNode]
@@ -7396,6 +7430,7 @@
     weaponUnlocks,
     upgradeDefs,
     questDefs,
+    progressionConfig,
     getSave,
     getUpgradeTier,
     hasNode,
@@ -7409,6 +7444,7 @@
     const resolvedUi = requireObject(ui, "ui");
     const assetResolver = assets?.createAssetResolver?.();
     const hasQuestContent = Object.keys(questDefs || {}).length > 0;
+    const questCacheCost = positiveIntegerOrDefault(progressionConfig?.questCacheCost, 1);
 
     function renderMeta() {
       const save = getSave();
@@ -7440,7 +7476,7 @@
         const empty = doc.createElement("div");
         empty.className = "node";
         empty.textContent = hasQuestContent
-          ? "No available skill nodes. Open Inventory to claim a Quest Cache for 1 QP."
+          ? `No available skill nodes. Open Inventory to claim a Quest Cache for ${questCacheCost} QP.`
           : "No available skill nodes. Complete active quests to reveal the next branch.";
         container.appendChild(empty);
         return;
@@ -7505,7 +7541,7 @@
         const empty = doc.createElement("div");
         empty.className = "quest";
         empty.textContent = hasQuestContent
-          ? "No active quests. Open Inventory to spend Quest Points on a Quest Cache."
+          ? `No active quests. Open Inventory to spend ${questCacheCost} QP on a Quest Cache.`
           : "No active quests. Unlock the next available skill node to reveal one.";
         container.appendChild(empty);
         return;
@@ -7546,6 +7582,10 @@
       throw new Error("Missing Tap Survivor module UI progression dependency: documentRef");
     }
     return documentRef;
+  }
+
+  function positiveIntegerOrDefault(value, fallback) {
+    return Number.isInteger(value) && value > 0 ? value : fallback;
   }
 
   const MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS = Object.freeze(["weaponBehaviors"]);

@@ -119,6 +119,10 @@ export function validateContent(content) {
     if (!Number.isFinite(value) || value < min) fail(`${owner} must be a number >= ${min}`);
   }
 
+  function requirePositiveInteger(value, owner, min = 1) {
+    if (!Number.isInteger(value) || value < min) fail(`${owner} must be an integer >= ${min}`);
+  }
+
   function requireString(value, owner) {
     if (!value || typeof value !== "string") fail(`${owner} must be a non-empty string`);
   }
@@ -461,6 +465,33 @@ export function validateContent(content) {
     ["coinFloorRewardRate", "normalCoinBaseValue", "bossCoinBaseValue"].forEach((field) => {
       if (tuning.loot[field] !== undefined) requireNumber(tuning.loot[field], `tuning.loot.${field}`, 0);
     });
+  }
+  if (tuning.progression !== undefined) {
+    const progression = tuning.progression;
+    requireObject(progression, "tuning.progression");
+    if (progression && typeof progression === "object" && !Array.isArray(progression)) {
+      const progressionRules = schema.fieldRules?.tuning?.progression || {};
+      const slotLevelRules = progressionRules.relicSlotLevels || {};
+      const relicSlotLevels = progression.relicSlotLevels;
+      if (!Array.isArray(relicSlotLevels) || relicSlotLevels.length === 0) {
+        fail("tuning.progression.relicSlotLevels must be a non-empty array");
+      } else {
+        relicSlotLevels.forEach((level, index) => {
+          requirePositiveInteger(
+            level,
+            `tuning.progression.relicSlotLevels[${index}]`,
+            slotLevelRules.min ?? 1
+          );
+          if (slotLevelRules.strictlyAscending && index > 0 && level <= relicSlotLevels[index - 1]) {
+            fail("tuning.progression.relicSlotLevels must be strictly ascending");
+          }
+        });
+      }
+      ["questCacheCost", "questCacheFallbackCoins"].forEach((field) => {
+        const fieldRules = progressionRules[field] || {};
+        requirePositiveInteger(progression[field], `tuning.progression.${field}`, fieldRules.min ?? 1);
+      });
+    }
   }
 
   return errors;

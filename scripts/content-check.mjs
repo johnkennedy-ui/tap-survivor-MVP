@@ -22,6 +22,8 @@ const expectedModule = [
 ].join("\n");
 const classicActual = readFileSync(classicGeneratedPath, "utf8");
 const moduleActual = readFileSync(moduleGeneratedPath, "utf8");
+const compatibilityMirrorPath = join(root, "content/tap-survivor-content.json");
+const expectedCompatibilityMirror = `${JSON.stringify(content, null, 2)}\n`;
 
 console.log("# Tap Survivor Content Check");
 
@@ -30,6 +32,17 @@ if (errors.length) {
   process.exit(1);
 }
 console.log("PASS content registry validates");
+
+if (!process.env.TAP_SURVIVOR_CONTENT_PATH) {
+  const compatibilityMirrorActual = readFileSync(compatibilityMirrorPath, "utf8");
+  if (compatibilityMirrorActual !== expectedCompatibilityMirror) {
+    console.error("FAIL content/tap-survivor-content.json is stale. Run `npm run build:content`.");
+    process.exit(1);
+  }
+  console.log("PASS compatibility mirror matches assembled registry content");
+} else {
+  console.log("SKIP compatibility mirror check for TAP_SURVIVOR_CONTENT_PATH override");
+}
 
 if (
   /\b(?:globalThis|window)\b/u.test(classicActual) ||

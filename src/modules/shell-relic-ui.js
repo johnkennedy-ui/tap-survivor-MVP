@@ -412,8 +412,8 @@ export function createShellRelicUi(options = {}) {
     action.appendChild(label);
     const description = documentRef.createElement("span");
     description.textContent = lockedRelicCount
-      ? "Spend 1 QP for a random locked relic."
-      : `All relics owned: spend 1 QP for ${fallbackCoins} coins.`;
+      ? `Spend ${cost} QP for a random locked relic.`
+      : `All relics owned: spend ${cost} QP for ${fallbackCoins} coins.`;
     action.appendChild(description);
     const button = documentRef.createElement("button");
     button.type = "button";

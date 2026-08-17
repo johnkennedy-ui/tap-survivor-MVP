@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
+import { assembleRegistryContent } from "./content-tools.mjs";
 
 function run(command, args, options = {}) {
   try {
@@ -101,7 +102,7 @@ function readLatestFrankRun() {
 }
 
 const pkg = readJson("package.json");
-const content = readJson("content/tap-survivor-content.json");
+const content = assembleRegistryContent();
 const branch = run("git", ["branch", "--show-current"]) || "unknown";
 const commit = run("git", ["rev-parse", "--short", "HEAD"]) || "unknown";
 const status = run("git", ["status", "--short"]);

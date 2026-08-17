@@ -1,8 +1,10 @@
-const RELIC_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
-const QUEST_CACHE_COST = 1;
-const QUEST_CACHE_FALLBACK_COINS = 25;
+const DEFAULT_RELIC_SYSTEM_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
+const DEFAULT_QUEST_CACHE_COST = 1;
+const DEFAULT_QUEST_CACHE_FALLBACK_COINS = 25;
 
-export function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random }) {
+export function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.random, progressionConfig = {} }) {
+  const { relicSlotLevels, questCacheCost, questCacheFallbackCoins } = resolveProgressionConfig(progressionConfig);
+
   function equippedRelics(save) {
     const equipped = new Set(save.equippedRelics || []);
     return (relicDefs || []).filter((relic) => equipped.has(relic.id)).slice(0, maxEquippedRelics(save));
@@ -10,7 +12,7 @@ export function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.ra
 
   function maxEquippedRelics(save) {
     const towerFloor = Math.max(0, Math.floor(Number(save?.towerFloor) || 0));
-    return RELIC_SLOT_LEVELS.filter((unlockLevel) => towerFloor >= unlockLevel).length;
+    return relicSlotLevels.filter((unlockLevel) => towerFloor >= unlockLevel).length;
   }
 
   function relicNumber(save, field) {
@@ -96,20 +98,20 @@ export function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.ra
       if (!relic) return null;
       const granted = grantRelic(save, relic);
       if (!granted) return null;
-      save.questPoints -= QUEST_CACHE_COST;
+      save.questPoints -= questCacheCost;
       return {
         coins: 0,
-        questPointsSpent: QUEST_CACHE_COST,
+        questPointsSpent: questCacheCost,
         relic: granted,
         type: "relic",
       };
     }
 
-    save.questPoints -= QUEST_CACHE_COST;
-    save.coins += QUEST_CACHE_FALLBACK_COINS;
+    save.questPoints -= questCacheCost;
+    save.coins += questCacheFallbackCoins;
     return {
-      coins: QUEST_CACHE_FALLBACK_COINS,
-      questPointsSpent: QUEST_CACHE_COST,
+      coins: questCacheFallbackCoins,
+      questPointsSpent: questCacheCost,
       relic: null,
       type: "coins",
     };
@@ -125,7 +127,7 @@ export function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.ra
         Number.isInteger(save.coins) &&
         save.coins >= 0 &&
         Number.isInteger(save.questPoints) &&
-        save.questPoints >= QUEST_CACHE_COST
+        save.questPoints >= questCacheCost
     );
   }
 
@@ -167,11 +169,39 @@ export function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.ra
     grantRelic,
     grantRandomRelic,
     claimQuestReward,
-    questCacheCost: QUEST_CACHE_COST,
-    questCacheFallbackCoins: QUEST_CACHE_FALLBACK_COINS,
-    relicSlotLevels: RELIC_SLOT_LEVELS,
+    questCacheCost,
+    questCacheFallbackCoins,
+    relicSlotLevels,
     relicChoices,
     setRelicEquipped,
     startingRunUpgradeTiers,
   };
+}
+
+function resolveProgressionConfig(progressionConfig = {}) {
+  const relicSlotLevels = validRelicSlotLevels(progressionConfig?.relicSlotLevels)
+    ? Object.freeze([...progressionConfig.relicSlotLevels])
+    : DEFAULT_RELIC_SYSTEM_SLOT_LEVELS;
+  return {
+    relicSlotLevels,
+    questCacheCost: positiveIntegerOrDefault(progressionConfig?.questCacheCost, DEFAULT_QUEST_CACHE_COST),
+    questCacheFallbackCoins: positiveIntegerOrDefault(
+      progressionConfig?.questCacheFallbackCoins,
+      DEFAULT_QUEST_CACHE_FALLBACK_COINS
+    ),
+  };
+}
+
+function validRelicSlotLevels(levels) {
+  return (
+    Array.isArray(levels) &&
+    levels.length > 0 &&
+    levels.every(
+      (level, index) => Number.isInteger(level) && level > 0 && (index === 0 || level > levels[index - 1])
+    )
+  );
+}
+
+function positiveIntegerOrDefault(value, fallback) {
+  return Number.isInteger(value) && value > 0 ? value : fallback;
 }

@@ -1,6 +1,8 @@
 import { createRelicSystem } from "../src/modules/relics.js";
 import { createSaveNormalizer } from "../src/modules/save-normalize.js";
 import { createShellRelicPresenter } from "../src/modules/shell-relic-presenter.js";
+import { createUiProgressionRenderer } from "../src/modules/ui-progression.js";
+import { composeRelicProgression } from "../src/app/compose-runtime.js";
 
 const relicDefs = Array.from({ length: 8 }, (_, index) => ({
   id: `relic_${index + 1}`,
@@ -169,6 +171,104 @@ check(
     JSON.stringify(sixSlotView.slots.map((slot) => slot.unlockLevel)) ===
       JSON.stringify(relicSystem.relicSlotLevels) &&
     sixSlotView.summaryRows[0].value === "6/6"
+);
+
+const customProgressionConfig = {
+  relicSlotLevels: [3, 8, 15],
+  questCacheCost: 3,
+  questCacheFallbackCoins: 40,
+};
+const customRelicSystem = createRelicSystem({
+  relicDefs,
+  progressionConfig: customProgressionConfig,
+  random: () => 0,
+});
+const customProgressionSave = createSave({ questPoints: 3, towerFloor: 3 });
+const customProgressionClaim = customRelicSystem.claimQuestReward(customProgressionSave);
+check(
+  "custom progression config controls relic slots and Quest Cache costs",
+  JSON.stringify(customRelicSystem.relicSlotLevels) === JSON.stringify(customProgressionConfig.relicSlotLevels) &&
+    customRelicSystem.questCacheCost === 3 &&
+    customProgressionClaim?.questPointsSpent === 3 &&
+    customProgressionSave.questPoints === 0 &&
+    customProgressionSave.equippedRelics.length === 1
+);
+
+const customFallbackSave = createSave({
+  coins: 5,
+  equippedRelics: relicIds.slice(0, 3),
+  questPoints: 3,
+  towerFloor: 15,
+  unlockedRelics: relicIds,
+});
+const customFallbackClaim = customRelicSystem.claimQuestReward(customFallbackSave);
+check(
+  "custom progression config controls Quest Cache fallback coins",
+  customFallbackClaim?.coins === 40 && customFallbackSave.coins === 45 && customFallbackSave.questPoints === 0
+);
+
+const customRelicPresenter = createShellRelicPresenter({
+  relicDefs,
+  relicSystem: customRelicSystem,
+});
+const customRelicView = customRelicPresenter.createInventoryViewModel(customFallbackSave);
+check(
+  "custom progression configuration reaches relic presentation",
+  customRelicView.slots.length === 3 &&
+    customRelicView.questReward.description === "All relics owned: spend 3 QP for 40 coins."
+);
+
+const composedRelicProgression = composeRelicProgression({
+  effects: {},
+  progressionConfig: customProgressionConfig,
+  random: () => 0,
+  relicDefs,
+});
+check(
+  "custom progression configuration reaches runtime composition",
+  composedRelicProgression.progression.questCacheCost === 3 &&
+    JSON.stringify(composedRelicProgression.progression.relicSlotLevels) ===
+      JSON.stringify(customProgressionConfig.relicSlotLevels)
+);
+
+const progressionMessageDocument = {
+  createElement() {
+    return {
+      className: "",
+      textContent: "",
+    };
+  },
+};
+const progressionMessageContainer = {
+  children: [],
+  innerHTML: "",
+  appendChild(child) {
+    this.children.push(child);
+    return child;
+  },
+};
+const progressionMessageRenderer = createUiProgressionRenderer({
+  buyUpgrade: () => {},
+  buyWeaponUnlock: () => {},
+  documentRef: progressionMessageDocument,
+  getSave: () => ({ activeQuests: [], unlockedWeapons: [] }),
+  getUpgradeTier: () => 0,
+  hasNode: () => false,
+  isNodeVisible: () => false,
+  isQuestComplete: () => false,
+  nodeGateStatus: () => null,
+  progressionConfig: customProgressionConfig,
+  questDefs: { custom_quest: {} },
+  ui: {},
+  upgradeDefs: [],
+  weaponDefs: {},
+  weaponUnlocks: [],
+});
+progressionMessageRenderer.renderTree(progressionMessageContainer);
+check(
+  "custom progression configuration reaches progression UI messaging",
+  progressionMessageContainer.children[0]?.textContent ===
+    "No available skill nodes. Open Inventory to claim a Quest Cache for 3 QP."
 );
 
 if (process.exitCode) {

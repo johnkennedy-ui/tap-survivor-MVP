@@ -150,6 +150,7 @@ export function composeShopEconomy({
 export function composeRelicProgression({
   relicDefs = [],
   weaponDefs = {},
+  progressionConfig = {},
   effects,
   random,
 }) {
@@ -161,6 +162,7 @@ export function composeRelicProgression({
     progression: createRelicSystem({
       relicDefs,
       weaponDefs,
+      progressionConfig,
       random,
     }),
     effects,

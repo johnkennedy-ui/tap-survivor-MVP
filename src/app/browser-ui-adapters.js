@@ -125,7 +125,11 @@ function createBrowserRuntimeUiActionBinding() {
 function createBrowserInventoryRenderer({ content = {}, documentRef, globalRef, saveConfig = {}, ui }) {
   const relicDefs = Array.isArray(content.relics) ? content.relics : [];
   const weaponDefs = content.weapons || content.weaponDefs || {};
-  const relicSystem = createRelicSystem({ relicDefs, weaponDefs });
+  const relicSystem = createRelicSystem({
+    relicDefs,
+    weaponDefs,
+    progressionConfig: content.tuning?.progression,
+  });
   const relicUi = createShellRelicUi({
     ui,
     content,

@@ -62,6 +62,7 @@ export const MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS = Object.freeze([
  * @property {*} [weaponUnlocks]
  * @property {*} [upgradeDefs]
  * @property {*} [questDefs]
+ * @property {*} [progressionConfig]
  * @property {() => *} [getSave]
  * @property {(upgradeId: string) => number} [getUpgradeTier]
  * @property {(nodeId: string) => boolean} [hasNode]
@@ -139,6 +140,7 @@ export function createUiRenderer({
   weaponUnlocks,
   upgradeDefs,
   questDefs,
+  progressionConfig,
   getSave,
   getUpgradeTier,
   hasNode,
@@ -161,6 +163,7 @@ export function createUiRenderer({
     weaponUnlocks,
     upgradeDefs,
     questDefs,
+    progressionConfig,
     getSave,
     documentRef,
     getUpgradeTier,

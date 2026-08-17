@@ -148,6 +148,23 @@
     }
   },
   "fieldRules": {
+    "tuning": {
+      "progression": {
+        "relicSlotLevels": {
+          "integer": true,
+          "min": 1,
+          "strictlyAscending": true
+        },
+        "questCacheCost": {
+          "integer": true,
+          "min": 1
+        },
+        "questCacheFallbackCoins": {
+          "integer": true,
+          "min": 1
+        }
+      }
+    },
     "shopItem": {
       "required": [
         "id",

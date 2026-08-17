@@ -1,4 +1,14 @@
-import { linkQuestAfter, readContentSchema, validateContent } from "./content-tools.mjs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import {
+  assembleRegistryContent,
+  linkQuestAfter,
+  readContentSchema,
+  root,
+  validateContent,
+} from "./content-tools.mjs";
 
 function check(name, pass) {
   if (!pass) {
@@ -106,3 +116,82 @@ check(
   "schema-backed boss ability rejects unsupported kind",
   validateContent(badBossAbilityContent).some((error) => error.includes("unsupported boss ability blink")),
 );
+
+const progressionContent = {
+  ...schemaBackedContent,
+  tuning: {
+    progression: {
+      relicSlotLevels: [3, 8, 15],
+      questCacheCost: 3,
+      questCacheFallbackCoins: 40,
+    },
+  },
+};
+check("schema-backed progression tuning validates", validateContent(progressionContent).length === 0);
+
+const invalidProgressionLevels = JSON.parse(JSON.stringify(progressionContent));
+invalidProgressionLevels.tuning.progression.relicSlotLevels = [3, 3, 15];
+check(
+  "progression slot levels reject repeated thresholds",
+  validateContent(invalidProgressionLevels).some((error) => error.includes("must be strictly ascending")),
+);
+
+const invalidProgressionCost = JSON.parse(JSON.stringify(progressionContent));
+invalidProgressionCost.tuning.progression.questCacheCost = 0;
+check(
+  "progression Quest Cache cost rejects unsafe values",
+  validateContent(invalidProgressionCost).some((error) => error.includes("questCacheCost must be an integer >= 1")),
+);
+
+const canonicalContent = assembleRegistryContent();
+const compatibilityMirrorPath = join(root, "content/tap-survivor-content.json");
+check(
+  "compatibility mirror matches canonical assembled registry content",
+  readFileSync(compatibilityMirrorPath, "utf8") === `${JSON.stringify(canonicalContent, null, 2)}\n`,
+);
+
+const temporaryContentDir = mkdtempSync(join(tmpdir(), "tap-survivor-content-"));
+const overridePath = join(temporaryContentDir, "override-content.json");
+const overrideContent = {
+  ...canonicalContent,
+  relics: [],
+};
+const overrideSource = `${JSON.stringify(overrideContent, null, 2)}\n`;
+writeFileSync(overridePath, overrideSource);
+
+try {
+  const statusOutput = execFileSync(process.execPath, ["scripts/agent-status.mjs"], {
+    cwd: root,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      TAP_SURVIVOR_CONTENT_PATH: overridePath,
+    },
+  });
+  check(
+    "agent status reads canonical registry content despite an external content override",
+    statusOutput.includes(`- relics: ${canonicalContent.relics.length}`) && !statusOutput.includes("- relics: 0"),
+  );
+
+  execFileSync(process.execPath, ["scripts/build-content.mjs"], {
+    cwd: root,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      TAP_SURVIVOR_CONTENT_PATH: overridePath,
+    },
+  });
+  check(
+    "content build preserves an external TAP_SURVIVOR_CONTENT_PATH override",
+    readFileSync(overridePath, "utf8") === overrideSource,
+  );
+} finally {
+  try {
+    execFileSync(process.execPath, ["scripts/build-content.mjs"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+  } finally {
+    rmSync(temporaryContentDir, { force: true, recursive: true });
+  }
+}

@@ -110,8 +110,8 @@ export function createShellRelicPresenter(options = {}) {
         canClaim: questPoints >= questCacheCost,
         cost: questCacheCost,
         description: lockedRelicCount
-          ? "Spend 1 QP for a random locked relic."
-          : `All relics owned: spend 1 QP for ${questCacheFallbackCoins} coins.`,
+          ? `Spend ${questCacheCost} QP for a random locked relic.`
+          : `All relics owned: spend ${questCacheCost} QP for ${questCacheFallbackCoins} coins.`,
         fallbackCoins: questCacheFallbackCoins,
         label: "Quest Cache",
       },

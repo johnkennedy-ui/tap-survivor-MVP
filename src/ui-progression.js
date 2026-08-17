@@ -19,6 +19,7 @@
    * @property {*} [weaponUnlocks]
    * @property {*} [upgradeDefs]
    * @property {*} [questDefs]
+   * @property {*} [progressionConfig]
    * @property {() => *} [getSave]
    * @property {(upgradeId: string) => number} [getUpgradeTier]
    * @property {(nodeId: string) => boolean} [hasNode]
@@ -40,6 +41,7 @@
     weaponUnlocks,
     upgradeDefs,
     questDefs,
+    progressionConfig,
     getSave,
     getUpgradeTier,
     hasNode,
@@ -53,6 +55,7 @@
     const resolvedUi = requireObject(ui, "ui");
     const assetResolver = assets?.createAssetResolver?.();
     const hasQuestContent = Object.keys(questDefs || {}).length > 0;
+    const questCacheCost = positiveIntegerOrDefault(progressionConfig?.questCacheCost, 1);
 
     function renderMeta() {
       const save = getSave();
@@ -84,7 +87,7 @@
         const empty = doc.createElement("div");
         empty.className = "node";
         empty.textContent = hasQuestContent
-          ? "No available skill nodes. Open Inventory to claim a Quest Cache for 1 QP."
+          ? `No available skill nodes. Open Inventory to claim a Quest Cache for ${questCacheCost} QP.`
           : "No available skill nodes. Complete active quests to reveal the next branch.";
         container.appendChild(empty);
         return;
@@ -149,7 +152,7 @@
         const empty = doc.createElement("div");
         empty.className = "quest";
         empty.textContent = hasQuestContent
-          ? "No active quests. Open Inventory to spend Quest Points on a Quest Cache."
+          ? `No active quests. Open Inventory to spend ${questCacheCost} QP on a Quest Cache.`
           : "No active quests. Unlock the next available skill node to reveal one.";
         container.appendChild(empty);
         return;
@@ -190,5 +193,9 @@
       throw new Error("Missing Tap Survivor module UI progression dependency: documentRef");
     }
     return documentRef;
+  }
+
+  function positiveIntegerOrDefault(value, fallback) {
+    return Number.isInteger(value) && value > 0 ? value : fallback;
   }
 })();

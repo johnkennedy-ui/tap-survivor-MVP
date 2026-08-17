@@ -6,6 +6,7 @@ const content = readContent();
 const schema = readContentSchema();
 const balanceProfiles = readBalanceProfiles();
 const errors = validateContent(content);
+const compatibilityMirror = `${JSON.stringify(content, null, 2)}\n`;
 
 if (errors.length) {
   console.error("# Tap Survivor Content Build");
@@ -29,6 +30,12 @@ const moduleGenerated = [
 
 writeFileSync(join(root, "src/content.generated.js"), classicGenerated);
 writeFileSync(join(root, "src/content.generated.mjs"), moduleGenerated);
+if (!process.env.TAP_SURVIVOR_CONTENT_PATH) {
+  writeFileSync(join(root, "content/tap-survivor-content.json"), compatibilityMirror);
+  console.log("PASS wrote content/tap-survivor-content.json");
+} else {
+  console.log("SKIP content/tap-survivor-content.json for TAP_SURVIVOR_CONTENT_PATH override");
+}
 
 console.log("# Tap Survivor Content Build");
 console.log("PASS wrote src/content.generated.js");

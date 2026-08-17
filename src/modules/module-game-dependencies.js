@@ -170,6 +170,7 @@ export function createModuleGameDependencyBag({
   const relics = createRelicSystem({
     relicDefs: contentRegistry.relicDefs,
     weaponDefs: contentRegistry.weaponDefs,
+    progressionConfig: contentRegistry.tuningDefs.progression,
     random,
   });
   const uiAdapters = createModuleRuntimeUiAdapters({
@@ -267,6 +268,7 @@ export function createModuleGameDependencyBag({
     isNodeVisible: progressionSystem.isNodeVisible,
     isQuestComplete: progressionSystem.isQuestComplete,
     nodeGateStatus: progressionSystem.nodeGateStatus,
+    progressionConfig: contentRegistry.tuningDefs.progression,
     questDefs: contentRegistry.questDefs,
     ui: uiAdapters.ui,
     upgradeDefs: contentRegistry.upgradeDefs,

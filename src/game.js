@@ -173,6 +173,7 @@ const progressionSystem = progression.createProgressionSystem({
   weaponUnlocks,
   upgradeDefs,
   questDefs,
+  progressionConfig: tuningDefs.progression,
   getSave: () => save,
   openQuest: (id) => questSystem.openQuest(id),
   persist,
@@ -224,6 +225,7 @@ const shopSystem = shop.createShopSystem({
 const relicSystem = relics.createRelicSystem({
   relicDefs,
   weaponDefs,
+  progressionConfig: tuningDefs.progression,
 });
 
 const runStateSystem = runState.createRunStateSystem({

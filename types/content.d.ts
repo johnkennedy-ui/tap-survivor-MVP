@@ -177,6 +177,13 @@ export interface AssetDefs {
 export interface TuningDefs extends ContentEntry {
   shop?: Record<string, number>;
   loot?: Record<string, number>;
+  progression?: ProgressionTuning;
+}
+
+export interface ProgressionTuning extends ContentEntry {
+  relicSlotLevels?: number[];
+  questCacheCost?: number;
+  questCacheFallbackCoins?: number;
 }
 
 export interface ContentSchema {

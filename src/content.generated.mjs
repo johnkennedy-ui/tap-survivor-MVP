@@ -7336,6 +7336,18 @@ export const content = {
       "coinFloorRewardRate": 0.06,
       "normalCoinBaseValue": 1,
       "bossCoinBaseValue": 12
+    },
+    "progression": {
+      "relicSlotLevels": [
+        5,
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "questCacheCost": 1,
+      "questCacheFallbackCoins": 25
     }
   }
 };
@@ -7489,6 +7501,23 @@ export const contentSchema = {
     }
   },
   "fieldRules": {
+    "tuning": {
+      "progression": {
+        "relicSlotLevels": {
+          "integer": true,
+          "min": 1,
+          "strictlyAscending": true
+        },
+        "questCacheCost": {
+          "integer": true,
+          "min": 1
+        },
+        "questCacheFallbackCoins": {
+          "integer": true,
+          "min": 1
+        }
+      }
+    },
     "shopItem": {
       "required": [
         "id",
