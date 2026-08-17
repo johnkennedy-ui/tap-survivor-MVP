@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tap Survivor Sprite Draw Performance</title>
+  </head>
+  <body>
+    <canvas id="sprite-performance-canvas" width="960" height="540"></canvas>
+    <pre id="result">SMOKE_SPRITE_DRAW_PERFORMANCE_RUNNING</pre>
+    <script id="smoke-browser-report" type="application/json"></script>
+    <script type="module">
+      import { createBrowserSpriteSystem } from "/src/app/browser-sprite-system.js";
+
+      const canvas = document.getElementById("sprite-performance-canvas");
+      const context = canvas.getContext("2d");
+      const result = document.getElementById("result");
+      const reportElement = document.getElementById("smoke-browser-report");
+      const checks = [];
+      const diagnostics = {
+        pageErrors: [],
+        resourceErrors: [],
+        unhandledRejections: [],
+      };
+      const readiness = {
+        ready: false,
+        timedOut: false,
+        timeoutMs: 4000,
+      };
+      const denseSpriteCount = 360;
+      const framesPerSample = 24;
+      const sampleCount = 11;
+
+      function check(name, pass, detail = "") {
+        checks.push({ detail, name, pass: Boolean(pass) });
+      }
+
+      function describeError(error) {
+        if (typeof error === "string") return error;
+        return error?.stack || error?.message || String(error || "unknown error");
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function median(values) {
+        const ordered = [...values].sort((left, right) => left - right);
+        const middle = Math.floor(ordered.length / 2);
+        return ordered.length % 2 ? ordered[middle] : (ordered[middle - 1] + ordered[middle]) / 2;
+      }
+
+      function rounded(value) {
+        return Number(Number(value).toFixed(6));
+      }
+
+      function publish(outcome, performance = {}) {
+        const report = {
+          checks,
+          diagnostics,
+          fixture: "sprite-draw-performance/v1",
+          outcome,
+          performance,
+          readiness,
+        };
+        reportElement.textContent = JSON.stringify(report);
+        result.textContent = [
+          outcome === "pass" ? "SMOKE_SPRITE_DRAW_PERFORMANCE_PASS" : "SMOKE_SPRITE_DRAW_PERFORMANCE_FAIL",
+          ...checks.map((item) => `${item.pass ? "PASS" : "FAIL"} ${item.name}${item.detail ? `: ${item.detail}` : ""}`),
+        ].join("\n");
+      }
+
+      window.addEventListener("error", (event) => {
+        diagnostics.pageErrors.push({
+          message: event.message || describeError(event.error),
+          source: event.filename || "",
+        });
+      });
+      window.addEventListener("unhandledrejection", (event) => {
+        diagnostics.unhandledRejections.push({ message: describeError(event.reason) });
+      });
+      document.addEventListener(
+        "error",
+        (event) => {
+          if (event.target && event.target !== document) {
+            diagnostics.resourceErrors.push({
+              tagName: event.target.tagName || "unknown",
+              url: event.target.currentSrc || event.target.src || event.target.href || "",
+            });
+          }
+        },
+        true,
+      );
+
+      const sheetSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="384" height="512" viewBox="0 0 384 512">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+              <stop stop-color="#dff6ff" offset="0" />
+              <stop stop-color="#4aa3ff" offset="1" />
+            </linearGradient>
+          </defs>
+          <rect width="384" height="512" fill="#17202c" />
+          ${Array.from({ length: 48 }, (_, index) => {
+            const x = (index % 6) * 64;
+            const y = Math.floor(index / 6) * 64;
+            return `<rect x="${x + 5}" y="${y + 5}" width="54" height="54" rx="12" fill="url(#g)" /><circle cx="${x + 32}" cy="${y + 32}" r="12" fill="#ff74c8" />`;
+          }).join("")}
+        </svg>`;
+      const sheetPath = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(sheetSvg)}`;
+      const spriteSystem = createBrowserSpriteSystem({
+        assetDefs: {
+          sprites: {
+            spriteSheets: {
+              enemies: {
+                animations: {
+                  fixture: { frames: [0, 1, 2, 3, 4, 5], fps: 8, loop: true, row: 0 },
+                },
+                columns: 6,
+                id: "sprite-draw-performance-sheet",
+                path: sheetPath,
+                rows: 8,
+              },
+            },
+          },
+        },
+        canvas,
+        globalRef: window,
+      });
+      spriteSystem.loadSprites();
+
+      function drawDenseFrame(frame) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        let successes = 0;
+        for (let index = 0; index < denseSpriteCount; index += 1) {
+          const column = index % 24;
+          const row = Math.floor(index / 24);
+          const drawn = spriteSystem.drawSprite("enemy:fixture", column * 40 + 20, row * 36 + 18, 34, 0, {
+            animationId: "fixture",
+            animationState: "default",
+            flipX: false,
+            sheetId: "enemies",
+            time: frame / 60,
+          });
+          if (drawn) successes += 1;
+        }
+        return successes;
+      }
+
+      async function waitForDrawable() {
+        const deadline = performance.now() + readiness.timeoutMs;
+        while (performance.now() < deadline) {
+          if (drawDenseFrame(0) === denseSpriteCount) return true;
+          await sleep(20);
+        }
+        readiness.timedOut = true;
+        return false;
+      }
+
+      try {
+        check("Canvas 2D context is available", Boolean(context));
+        const drawable = context ? await waitForDrawable() : false;
+        readiness.ready = drawable;
+        check("sprite-sheet source becomes drawable", drawable);
+        if (!drawable) {
+          publish("fail");
+        } else {
+          for (let warmup = 0; warmup < 8; warmup += 1) drawDenseFrame(warmup);
+          const samples = [];
+          let totalDraws = 0;
+          let successfulDraws = 0;
+          for (let sample = 0; sample < sampleCount; sample += 1) {
+            const startedAt = performance.now();
+            for (let frame = 0; frame < framesPerSample; frame += 1) {
+              successfulDraws += drawDenseFrame(sample * framesPerSample + frame);
+            }
+            const elapsedMs = performance.now() - startedAt;
+            samples.push(elapsedMs);
+            totalDraws += denseSpriteCount * framesPerSample;
+          }
+          const medianMs = median(samples);
+          const medianUsPerDraw = (medianMs * 1000) / (denseSpriteCount * framesPerSample);
+          const allDrawsSucceeded = successfulDraws === totalDraws;
+          const finiteTiming = Number.isFinite(medianMs) && medianMs > 0 && Number.isFinite(medianUsPerDraw) && medianUsPerDraw > 0;
+          check("dense sprite-sheet draws all succeed", allDrawsSucceeded, `${successfulDraws}/${totalDraws}`);
+          check("dense draw timing is finite", finiteTiming, `${rounded(medianUsPerDraw)}us/draw`);
+          const diagnosticsClear = Object.values(diagnostics).every((entries) => entries.length === 0);
+          check("fixture has no browser diagnostics", diagnosticsClear);
+          publish(
+            checks.every((item) => item.pass) ? "pass" : "fail",
+            {
+              denseSpriteCount,
+              framesPerSample,
+              medianMs: rounded(medianMs),
+              medianUsPerDraw: rounded(medianUsPerDraw),
+              sampleCount,
+              samplesMs: samples.map(rounded),
+              totalDraws,
+            },
+          );
+        }
+      } catch (error) {
+        diagnostics.pageErrors.push({ message: describeError(error), source: "fixture" });
+        check("fixture execution completes", false, describeError(error));
+        publish("fail");
+      }
+    </script>
+  </body>
+</html>
