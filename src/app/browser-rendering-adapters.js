@@ -128,24 +128,29 @@ export function createBrowserRenderingAdapters({ canvas, content = {} }) {
     call("fillRect", 0, 0, width, height);
     set("strokeStyle", backgroundDrawn ? "rgba(223, 246, 255, 0.08)" : "#243244");
     set("lineWidth", 1);
-    let gridPathStarted = false;
+    let verticalGridPathStarted = false;
     for (let x = 0; x < width; x += 48) {
-      if (!gridPathStarted) {
+      if (!verticalGridPathStarted) {
         call("beginPath");
-        gridPathStarted = true;
+        verticalGridPathStarted = true;
       }
       call("moveTo", x, 0);
       call("lineTo", x, height);
     }
+    if (verticalGridPathStarted) {
+      call("stroke");
+    }
+
+    let horizontalGridPathStarted = false;
     for (let y = 0; y < height; y += 48) {
-      if (!gridPathStarted) {
+      if (!horizontalGridPathStarted) {
         call("beginPath");
-        gridPathStarted = true;
+        horizontalGridPathStarted = true;
       }
       call("moveTo", 0, y);
       call("lineTo", width, y);
     }
-    if (gridPathStarted) {
+    if (horizontalGridPathStarted) {
       call("stroke");
     }
     if (game) drawTowerFloorBadge(game);
