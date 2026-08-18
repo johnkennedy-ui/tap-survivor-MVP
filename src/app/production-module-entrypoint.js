@@ -1,6 +1,7 @@
 import { content, contentSchema } from "../content.generated.mjs";
 import { createBrowserDependencyBagOptions } from "./browser-dependency-bag.js";
 import { composeRuntime, createBrowserPlatform } from "./compose-runtime.js";
+import { createBrowserPerformanceTrace, isPerformanceTraceEnabled } from "./performance-trace.js";
 import { createModuleGameDependencyBag } from "../modules/module-game-dependencies.js";
 import { createModuleGameLifecycleOwner } from "../modules/module-game-lifecycle.js";
 
@@ -55,6 +56,15 @@ export function createProductionModuleEntrypoint(options = {}) {
   const resolvedDependencies =
     dependencies ||
     createModuleGameDependencyBag(resolvedDependencyBagOptions);
+  const performanceTrace =
+    isPerformanceTraceEnabled({ globalRef: resolvedGlobalRef })
+      ? resolvedDependencyBagOptions.performanceTrace ||
+        createBrowserPerformanceTrace({
+          canvas: resolvedDependencies.canvas,
+          documentRef: resolvedPlatform.documentRef,
+          globalRef: resolvedGlobalRef,
+        })
+      : null;
   const runtime = composeRuntime({
     dependencies: resolvedDependencies,
     platform: resolvedPlatform,
@@ -88,6 +98,7 @@ export function createProductionModuleEntrypoint(options = {}) {
   lifecycle = createModuleGameLifecycleOwner({
     dependencies: resolvedDependencies,
     lifecycleHooks: audioLifecycleHooks,
+    performanceTrace,
     platform: resolvedPlatform,
     runtime,
   });

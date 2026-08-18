@@ -1,24 +1,46 @@
-export function createBrowserRenderingAdapters({ canvas, content = {} }) {
+export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, content = {} }) {
   const context = canvas.getContext?.("2d");
   const diagnostics = canvas?.ownerDocument?.__TapSurvivorBrowserSmoke?.diagnostics;
   const weaponDefs = content.weapons || content.weaponDefs || {};
   const runUpgradeDefs = Array.isArray(content.runUpgrades) ? content.runUpgrades : [];
   const skillEffectSprites = content.assets?.sprites?.weapons || {};
 
-  const call = (method, ...args) => {
+  const invokeCanvas = (method, ...args) => {
     try {
       return typeof context?.[method] === "function" ? context[method](...args) : undefined;
     } catch {
       return undefined;
     }
   };
-  const set = (property, value) => {
+  const assignCanvasProperty = (property, value) => {
     try {
       if (context) context[property] = value;
     } catch {
       // Canvas properties are optional in deterministic fixtures.
     }
   };
+  const call =
+    typeof canvasCommandSink === "function"
+      ? (method, ...args) => {
+          try {
+            canvasCommandSink(method);
+          } catch {
+            // Diagnostic instrumentation must never interrupt rendering.
+          }
+          return invokeCanvas(method, ...args);
+        }
+      : invokeCanvas;
+  const set =
+    typeof canvasCommandSink === "function"
+      ? (property, value) => {
+          try {
+            canvasCommandSink(`set:${property}`);
+          } catch {
+            // Diagnostic instrumentation must never interrupt rendering.
+          }
+          assignCanvasProperty(property, value);
+        }
+      : assignCanvasProperty;
   const number = (value, fallback = 0) => {
     const resolved = Number(value);
     return Number.isFinite(resolved) ? resolved : fallback;

@@ -5,6 +5,7 @@ import { createBrowserProgressionSystems } from "./browser-progression-adapters.
 import { createBrowserRenderingAdapters } from "./browser-rendering-adapters.js";
 import { createBrowserSpriteSystem } from "./browser-sprite-system.js";
 import { createBrowserUi, createBrowserUiAdapters } from "./browser-ui-adapters.js";
+import { createBrowserPerformanceTrace } from "./performance-trace.js";
 
 export const BROWSER_DEPENDENCY_BAG_PROOF_SLOTS = Object.freeze([
   "assetAdapters",
@@ -73,10 +74,16 @@ export function createBrowserDependencyBagOptions(options = {}) {
   const canvas = options.canvas || documentRef?.getElementById?.("game") || createCanvasFallback();
   const ui = options.ui || createBrowserUi({ documentRef, canvas });
   const storage = options.storage || globalRef.localStorage || createMemoryStorage();
+  const performanceTrace = createBrowserPerformanceTrace({
+    canvas,
+    documentRef,
+    globalRef,
+  });
 
   return {
     content,
     contentSchema: options.contentSchema || {},
+    performanceTrace,
     random: options.random,
     saveConfig: {
       legacySaveKey: "tap-survivor-mvp-save-v1",
@@ -122,6 +129,7 @@ export function createBrowserDependencyBagOptions(options = {}) {
         options.renderingAdapters ||
         createBrowserRenderingAdapters({
           canvas,
+          canvasCommandSink: performanceTrace?.recordCanvasCommand,
           content,
           globalRef,
         }),

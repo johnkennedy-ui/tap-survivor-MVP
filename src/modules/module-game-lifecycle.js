@@ -48,6 +48,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
     dependencyBagOptions,
     dependencies,
     lifecycleHooks = {},
+    performanceTrace = null,
     platform,
     runtime,
   } = options;
@@ -72,18 +73,38 @@ export function createModuleGameLifecycleOwner(options = {}) {
   let disposed = false;
 
   if (typeof runtimeDependencies.loop?.attachFrameHandler === "function") {
-    runtimeDependencies.loop.attachFrameHandler((now) => {
-      if (disposed || stopped) return;
-      const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
-      const dt = Math.min(0.05, (timestamp - lastFrame) / 1000);
-      lastFrame = timestamp;
-      const game = runtimeDependencies.getGame?.();
-      if (game?.running && !game.paused) {
-        tick(dt * (resolvedRuntime.getGameSpeed?.() || 1));
-      }
-      render({ now: timestamp });
-      runtimeDependencies.runUi.updateRunHud?.();
-    });
+    const handleFrame =
+      performanceTrace &&
+      typeof performanceTrace.beginFrame === "function" &&
+      typeof performanceTrace.endFrame === "function"
+        ? createTracedFrameHandler({
+            getDisposed: () => disposed,
+            getStopped: () => stopped,
+            getLastFrame: () => lastFrame,
+            performanceTrace,
+            renderTraced,
+            runtimeDependencies,
+            resolvedPlatform,
+            resolvedRuntime,
+            setLastFrame: (timestamp) => {
+              lastFrame = timestamp;
+            },
+            tick,
+          })
+        : createNormalFrameHandler({
+            getDisposed: () => disposed,
+            getStopped: () => stopped,
+            getLastFrame: () => lastFrame,
+            render,
+            runtimeDependencies,
+            resolvedPlatform,
+            resolvedRuntime,
+            setLastFrame: (timestamp) => {
+              lastFrame = timestamp;
+            },
+            tick,
+          });
+    runtimeDependencies.loop.attachFrameHandler(handleFrame);
   }
 
   function ensureActive(name) {
@@ -151,6 +172,29 @@ export function createModuleGameLifecycleOwner(options = {}) {
     return true;
   }
 
+  function renderTraced(frame = {}, traceFrame) {
+    const game = runtimeDependencies.getGame();
+    performanceTrace.measureRenderPass(traceFrame, "clearFrame", () =>
+      runtimeDependencies.rendering.clearFrame(frame)
+    );
+    performanceTrace.measureRenderPass(traceFrame, "renderFrame", () =>
+      runtimeDependencies.rendering.renderFrame(game, frame)
+    );
+    performanceTrace.measureRenderPass(traceFrame, "renderEnemies", () =>
+      runtimeDependencies.renderEnemies.renderEnemies(game?.enemies || [], frame)
+    );
+    performanceTrace.measureRenderPass(traceFrame, "renderPlayer", () =>
+      runtimeDependencies.renderPlayer.renderPlayer(game, frame)
+    );
+    performanceTrace.measureRenderPass(traceFrame, "renderHud", () =>
+      runtimeDependencies.renderHud.renderHud(game, frame)
+    );
+    performanceTrace.measureRenderPass(traceFrame, "renderSkillRail", () =>
+      runtimeDependencies.renderSkillRail.renderSkillRail(game, frame)
+    );
+    return true;
+  }
+
   function persist() {
     ensureActive("persist");
     return runtimeDependencies.persist();
@@ -186,6 +230,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
         runtime,
       });
     }
+    performanceTrace?.dispose?.();
     return true;
   }
 
@@ -213,6 +258,86 @@ export function createModuleGameLifecycleOwner(options = {}) {
   };
 
   return api;
+}
+
+function createNormalFrameHandler({
+  getDisposed,
+  getLastFrame,
+  getStopped,
+  render,
+  runtimeDependencies,
+  resolvedPlatform,
+  resolvedRuntime,
+  setLastFrame,
+  tick,
+}) {
+  return (now) => {
+    if (getDisposed() || getStopped()) return;
+    const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
+    const dt = Math.min(0.05, (timestamp - getLastFrame()) / 1000);
+    setLastFrame(timestamp);
+    const game = runtimeDependencies.getGame?.();
+    if (game?.running && !game.paused) {
+      tick(dt * (resolvedRuntime.getGameSpeed?.() || 1));
+    }
+    render({ now: timestamp });
+    runtimeDependencies.runUi.updateRunHud?.();
+  };
+}
+
+function createTracedFrameHandler({
+  getDisposed,
+  getLastFrame,
+  getStopped,
+  performanceTrace,
+  renderTraced,
+  runtimeDependencies,
+  resolvedPlatform,
+  resolvedRuntime,
+  setLastFrame,
+  tick,
+}) {
+  return (now) => {
+    if (getDisposed() || getStopped()) return;
+    const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
+    const traceFrame = performanceTrace.beginFrame(timestamp);
+    const dt = Math.min(0.05, (timestamp - getLastFrame()) / 1000);
+    setLastFrame(timestamp);
+    const game = runtimeDependencies.getGame?.();
+    if (game?.running && !game.paused) {
+      performanceTrace.measureStage(traceFrame, "update", () =>
+        tick(dt * (resolvedRuntime.getGameSpeed?.() || 1))
+      );
+    }
+    performanceTrace.measureStage(traceFrame, "render", () => renderTraced({ now: timestamp }, traceFrame));
+    performanceTrace.measureStage(traceFrame, "hud", () =>
+      runtimeDependencies.runUi.updateRunHud?.()
+    );
+    performanceTrace.endFrame(traceFrame, {
+      pressure: collectPressure(game),
+    });
+  };
+}
+
+function collectPressure(game) {
+  const pickups = countEntries(game?.xpDrops) + countEntries(game?.lootDrops);
+  const projectiles = countEntries(game?.bolts) + countEntries(game?.enemyBolts);
+  const effects =
+    countEntries(game?.areas) +
+    countEntries(game?.beams) +
+    countEntries(game?.bossAttacks) +
+    countEntries(game?.pickupTexts) +
+    countEntries(game?.weaponBursts);
+  return {
+    effects,
+    enemies: countEntries(game?.enemies),
+    pickups,
+    projectiles,
+  };
+}
+
+function countEntries(value) {
+  return Array.isArray(value) ? value.length : 0;
 }
 
 function createLifecycle({ dependencies, documentRef, lifecycleHooks }) {
