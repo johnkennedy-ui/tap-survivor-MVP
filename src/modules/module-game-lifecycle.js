@@ -1,6 +1,11 @@
 import { createModuleGameDependencyBag } from "./module-game-dependencies.js";
 import { createRunLifecycle } from "./run-lifecycle.js";
 
+const EMPTY_RENDER_STRESS = Object.freeze({
+  enemies: Object.freeze([]),
+  projectiles: Object.freeze([]),
+});
+
 export const MODULE_GAME_LIFECYCLE_OWNER_SLOTS = Object.freeze([
   "bind",
   "dispose",
@@ -309,17 +314,41 @@ function createTracedFrameHandler({
         tick(dt * (resolvedRuntime.getGameSpeed?.() || 1))
       );
     }
-    performanceTrace.measureStage(traceFrame, "render", () => renderTraced({ now: timestamp }, traceFrame));
+    const renderStress = getRenderStress(performanceTrace, game);
+    performanceTrace.measureStage(traceFrame, "render", () =>
+      renderTraced(
+        {
+          now: timestamp,
+          stressEnemies: renderStress.enemies,
+          stressProjectiles: renderStress.projectiles,
+        },
+        traceFrame
+      )
+    );
     performanceTrace.measureStage(traceFrame, "hud", () =>
       runtimeDependencies.runUi.updateRunHud?.()
     );
     performanceTrace.endFrame(traceFrame, {
-      pressure: collectPressure(game),
+      pressure: collectPressure(game, renderStress),
     });
   };
 }
 
-function collectPressure(game) {
+function getRenderStress(performanceTrace, game) {
+  if (!game || typeof performanceTrace?.getRenderStress !== "function") {
+    return EMPTY_RENDER_STRESS;
+  }
+  const stress = performanceTrace.getRenderStress();
+  if (!stress || typeof stress !== "object") return EMPTY_RENDER_STRESS;
+  return {
+    enemies: Array.isArray(stress.enemies) ? stress.enemies : EMPTY_RENDER_STRESS.enemies,
+    projectiles: Array.isArray(stress.projectiles)
+      ? stress.projectiles
+      : EMPTY_RENDER_STRESS.projectiles,
+  };
+}
+
+function collectPressure(game, renderStress = EMPTY_RENDER_STRESS) {
   const pickups = countEntries(game?.xpDrops) + countEntries(game?.lootDrops);
   const projectiles = countEntries(game?.bolts) + countEntries(game?.enemyBolts);
   const effects =
@@ -333,6 +362,8 @@ function collectPressure(game) {
     enemies: countEntries(game?.enemies),
     pickups,
     projectiles,
+    syntheticEnemies: countEntries(renderStress.enemies),
+    syntheticProjectiles: countEntries(renderStress.projectiles),
   };
 }
 

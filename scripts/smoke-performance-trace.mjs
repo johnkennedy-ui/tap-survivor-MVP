@@ -261,12 +261,14 @@ function makeLifecycleDependencies({ advanceClock, canvas, renderers }) {
     weaponBursts: [],
     xpDrops: [{ radius: 4, x: 95, y: 80 }],
   };
+  const spriteDraws = [];
   const spriteAdapters = {
     spriteSystem: {
       drawImage() {
         return false;
       },
-      drawSprite() {
+      drawSprite(id) {
+        spriteDraws.push(id);
         return false;
       },
     },
@@ -292,7 +294,7 @@ function makeLifecycleDependencies({ advanceClock, canvas, renderers }) {
       renderEnemies(enemies, frame) {
         order.push("renderEnemies");
         return time(
-          () => renderers.renderEnemies({ enemies, frame, spriteAdapters }),
+          () => renderers.renderEnemies({ ...frame, enemies, spriteAdapters }),
           1
         );
       },
@@ -330,7 +332,7 @@ function makeLifecycleDependencies({ advanceClock, canvas, renderers }) {
       renderFrame(currentGame, frame) {
         order.push("renderFrame");
         return time(
-          () => renderers.renderFrame({ game: currentGame, frame, spriteAdapters }),
+          () => renderers.renderFrame({ ...frame, game: currentGame, spriteAdapters }),
           2
         );
       },
@@ -369,11 +371,13 @@ function makeLifecycleDependencies({ advanceClock, canvas, renderers }) {
   return {
     canvas,
     dependencies,
+    game,
     invokeFrame(timestamp) {
       assert.equal(typeof frameHandler, "function", "frame handler should be attached");
       frameHandler(timestamp);
     },
     order,
+    spriteDraws,
   };
 }
 
@@ -388,13 +392,14 @@ function findAction(root, action) {
 }
 
 const disabledDocument = createDocument();
-const disabledPlatform = createGlobalRef(disabledDocument, "?perfTrace=0");
+const disabledPlatform = createGlobalRef(disabledDocument, "");
+const disabledCanvas = createCanvas(disabledDocument);
 const disabledTrace = createBrowserPerformanceTrace({
-  canvas: createCanvas(disabledDocument),
+  canvas: disabledCanvas,
   documentRef: disabledDocument,
   globalRef: disabledPlatform.globalRef,
 });
-assert.equal(disabledTrace, null, "non-matching query must not enable tracing");
+assert.equal(disabledTrace, null, "query-free runtime must not enable tracing");
 assert.equal(disabledDocument.createdTags.length, 0, "disabled trace must not create overlay DOM");
 assert.equal(disabledPlatform.getListenerCount(), 0, "disabled trace must not register page listeners");
 assert.deepEqual(
@@ -409,6 +414,47 @@ assert.deepEqual(
     revokedUrls: 0,
   },
   "disabled trace must not use network, clipboard, download, or persistence"
+);
+const disabledSpriteDraws = [];
+const disabledRendering = createBrowserRenderingAdapters({
+  canvas: disabledCanvas,
+  content: {},
+});
+const disabledSpriteAdapters = {
+  spriteSystem: {
+    drawImage() {
+      return false;
+    },
+    drawSprite(id) {
+      disabledSpriteDraws.push(id);
+      return false;
+    },
+  },
+};
+disabledRendering.renderers.renderFrame({
+  game: {
+    areas: [],
+    beams: [],
+    bolts: [],
+    bossAttacks: [],
+    enemyBolts: [],
+    lootDrops: [],
+    pickupTexts: [],
+    weaponBursts: [],
+    xpDrops: [],
+  },
+  spriteAdapters: disabledSpriteAdapters,
+  stressProjectiles: [{ weaponId: "spark_bolt", x: 10, y: 10 }],
+});
+disabledRendering.renderers.renderEnemies({
+  enemies: [],
+  spriteAdapters: disabledSpriteAdapters,
+  stressEnemies: [{ type: "skitter", x: 10, y: 10 }],
+});
+assert.deepEqual(
+  disabledSpriteDraws,
+  [],
+  "query-free rendering must ignore synthetic stress arrays"
 );
 
 const documentRef = createDocument();
@@ -487,6 +533,15 @@ const activeExport = trace.exportData();
 assert.equal(activeExport.localOnly, true, "trace export must declare local-only operation");
 assert.equal(activeExport.exportedOnlyByManualAction, true, "trace export must declare manual export only");
 assert.match(activeExport.canvas.label, /not GPU time/u, "canvas label must avoid GPU-time claims");
+assert.deepEqual(
+  activeExport.stress,
+  {
+    label: "Off",
+    profile: "off",
+    synthetic: { enemies: 0, projectiles: 0 },
+  },
+  "trace export must start with synthetic render stress disabled"
+);
 assert.equal(activeExport.framePacing.recentFrames.length, 2, "two lifecycle frames should be captured");
 assert.equal(activeExport.framePacing.frameGapMs.count, 1, "RAF gap distribution should capture later frames");
 assert.equal(activeExport.framePacing.frameGapMs.p95Ms, 50, "RAF gap distribution should be deterministic");
@@ -516,6 +571,86 @@ assert.equal(platform.calls.fetch, 0, "trace must not fetch automatically");
 assert.equal(platform.calls.beacon, 0, "trace must not beacon automatically");
 assert.equal(platform.calls.persistence, 0, "trace must not persist automatically");
 
+const overlay = documentRef.body.children[0];
+const stressButton = findAction(overlay, "stress");
+assert.ok(stressButton, "enabled overlay must expose an accessible manual render-stress control");
+assert.match(stressButton.textContent, /Render stress: Off/u, "stress control must visibly start disabled");
+const realBoltCount = fixture.game.bolts.length;
+const realEnemyCount = fixture.game.enemies.length;
+const stressStates = [
+  { enemies: 0, label: "Projectiles x750", profile: "projectiles", projectiles: 750 },
+  { enemies: 500, label: "Sprites x500", profile: "sprites", projectiles: 0 },
+  { enemies: 500, label: "Both x1250", profile: "both", projectiles: 750 },
+  { enemies: 0, label: "Off", profile: "off", projectiles: 0 },
+];
+for (const [index, expected] of stressStates.entries()) {
+  stressButton.click();
+  const renderStress = trace.getRenderStress();
+  assert.equal(renderStress.profile, expected.profile, "manual stress control must cycle profiles");
+  assert.equal(renderStress.syntheticEnemies, expected.enemies, "stress fixture must use the declared sprite count");
+  assert.equal(
+    renderStress.syntheticProjectiles,
+    expected.projectiles,
+    "stress fixture must use the declared projectile count"
+  );
+  assert.equal(trace.getRenderStress(), renderStress, "active synthetic fixtures must stay cached");
+  assert.match(
+    stressButton.textContent,
+    new RegExp(`Render stress: ${expected.label}`),
+    "manual stress control must visibly report the selected profile"
+  );
+  const beforeSpriteDraws = fixture.spriteDraws.length;
+  fixture.invokeFrame(100 + index * 40);
+  const stressExport = trace.exportData();
+  const latestFrame = stressExport.framePacing.recentFrames.at(-1);
+  assert.deepEqual(
+    stressExport.stress,
+    {
+      label: expected.label,
+      profile: expected.profile,
+      synthetic: { enemies: expected.enemies, projectiles: expected.projectiles },
+    },
+    "trace export must identify the selected synthetic profile and counts"
+  );
+  assert.equal(
+    latestFrame.pressure.syntheticEnemies,
+    expected.enemies,
+    "per-frame pressure must preserve synthetic sprite counts separately"
+  );
+  assert.equal(
+    latestFrame.pressure.syntheticProjectiles,
+    expected.projectiles,
+    "per-frame pressure must preserve synthetic projectile counts separately"
+  );
+  assert.equal(latestFrame.pressure.enemies, realEnemyCount, "real enemy pressure must remain separate");
+  assert.equal(
+    latestFrame.pressure.projectiles,
+    realBoltCount + fixture.game.enemyBolts.length,
+    "real projectile pressure must remain separate"
+  );
+  assert.equal(latestFrame.pressure.totalEnemies, realEnemyCount + expected.enemies);
+  assert.equal(
+    latestFrame.pressure.totalProjectiles,
+    realBoltCount + fixture.game.enemyBolts.length + expected.projectiles
+  );
+  const stressSpriteIds = fixture.spriteDraws.slice(beforeSpriteDraws);
+  assert.equal(
+    stressSpriteIds.filter((id) => String(id).startsWith("weapon:")).length,
+    realBoltCount + expected.projectiles,
+    "synthetic projectiles must reuse the existing bolt sprite path"
+  );
+  assert.equal(
+    stressSpriteIds.filter((id) => String(id).startsWith("enemy:")).length,
+    realEnemyCount + expected.enemies,
+    "synthetic sprites must reuse the existing enemy sprite path"
+  );
+  assert.equal(fixture.game.bolts.length, realBoltCount, "synthetic fixtures must stay outside game bolts");
+  assert.equal(fixture.game.enemies.length, realEnemyCount, "synthetic fixtures must stay outside game enemies");
+}
+assert.equal(platform.calls.fetch, 0, "stress cycling must remain network-free");
+assert.equal(platform.calls.beacon, 0, "stress cycling must remain beacon-free");
+assert.equal(platform.calls.persistence, 0, "stress cycling must remain persistence-free");
+
 for (let index = 0; index < 4; index += 1) {
   const frame = trace.beginFrame(100 + index * 10);
   trace.recordCanvasCommand("fixtureCommand");
@@ -525,7 +660,6 @@ const boundedExport = trace.exportData();
 assert.equal(boundedExport.framePacing.recentFrames.length, 3, "recent frame export must be bounded");
 assert.equal(boundedExport.framePacing.worstFrames.length, 2, "worst frame export must be bounded");
 
-const overlay = documentRef.body.children[0];
 const copyButton = findAction(overlay, "copy");
 const downloadButton = findAction(overlay, "download");
 assert.ok(copyButton && downloadButton, "enabled overlay must expose manual Copy and Download controls");

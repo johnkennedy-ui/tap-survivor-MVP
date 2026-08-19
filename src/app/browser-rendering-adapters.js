@@ -1,5 +1,6 @@
 export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, content = {} }) {
   const context = canvas.getContext?.("2d");
+  const renderStressEnabled = typeof canvasCommandSink === "function";
   const diagnostics = canvas?.ownerDocument?.__TapSurvivorBrowserSmoke?.diagnostics;
   const weaponDefs = content.weapons || content.weaponDefs || {};
   const runUpgradeDefs = Array.isArray(content.runUpgrades) ? content.runUpgrades : [];
@@ -54,11 +55,14 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
         call("clearRect", 0, 0, canvas.width || 0, canvas.height || 0);
         return true;
       },
-      renderEnemies({ enemies = [], spriteAdapters }) {
+      renderEnemies({ enemies = [], spriteAdapters, stressEnemies = [] }) {
         list(enemies).forEach((enemy) => drawEnemy(enemy, spriteAdapters));
+        if (renderStressEnabled) {
+          list(stressEnemies).forEach((enemy) => drawEnemy(enemy, spriteAdapters));
+        }
         return true;
       },
-      renderFrame({ game, spriteAdapters }) {
+      renderFrame({ game, spriteAdapters, stressProjectiles = [] }) {
         const width = canvas.width || 0;
         const height = canvas.height || 0;
         drawArena(game, spriteAdapters, width, height);
@@ -72,6 +76,9 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
         list(game.xpDrops).forEach(drawXp);
         list(game.lootDrops).forEach((drop) => drawLoot(drop, spriteAdapters));
         list(game.bolts).forEach((bolt) => drawBolt(bolt, spriteAdapters));
+        if (renderStressEnabled) {
+          list(stressProjectiles).forEach((bolt) => drawBolt(bolt, spriteAdapters));
+        }
         list(game.enemyBolts).forEach(drawEnemyBolt);
         list(game.beams).forEach((beam) => drawBeam(beam, spriteAdapters));
         list(game.pickupTexts).forEach(drawPickupText);

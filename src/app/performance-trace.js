@@ -1,5 +1,43 @@
 export const PERFORMANCE_TRACE_QUERY = "perfTrace=1";
 
+const EMPTY_RENDER_STRESS = Object.freeze({
+  enemies: Object.freeze([]),
+  profile: "off",
+  projectiles: Object.freeze([]),
+  syntheticEnemies: 0,
+  syntheticProjectiles: 0,
+});
+
+const RENDER_STRESS_PROFILES = Object.freeze([
+  Object.freeze({
+    enemies: 0,
+    id: "off",
+    label: "Off",
+    projectiles: 0,
+  }),
+  Object.freeze({
+    enemies: 0,
+    id: "projectiles",
+    label: "Projectiles x750",
+    projectiles: 750,
+  }),
+  Object.freeze({
+    enemies: 500,
+    id: "sprites",
+    label: "Sprites x500",
+    projectiles: 0,
+  }),
+  Object.freeze({
+    enemies: 500,
+    id: "both",
+    label: "Both x1250",
+    projectiles: 750,
+  }),
+]);
+
+const STRESS_ENEMY_TYPES = Object.freeze(["skitter", "drifter", "bulwark", "hexer"]);
+const STRESS_PROJECTILE_COLORS = Object.freeze(["#ffd166", "#8de7ff", "#ff74c8", "#78e08f"]);
+
 const DEFAULT_LIMITS = Object.freeze({
   eventLimit: 40,
   frameLimit: 180,
@@ -48,6 +86,8 @@ export function createBrowserPerformanceTrace(options = {}) {
     overlay: null,
     observer: null,
     removers: [],
+    stressFixture: EMPTY_RENDER_STRESS,
+    stressProfileIndex: 0,
   };
 
   const api = {
@@ -55,6 +95,7 @@ export function createBrowserPerformanceTrace(options = {}) {
     dispose,
     endFrame,
     exportData,
+    getRenderStress,
     measureRenderPass,
     measureStage,
     now,
@@ -65,6 +106,7 @@ export function createBrowserPerformanceTrace(options = {}) {
     documentRef,
     onCopy: copyExport,
     onDownload: downloadExport,
+    onStressToggle: cycleRenderStress,
   });
   observePageSignals();
   updateOverlay();
@@ -174,7 +216,37 @@ export function createBrowserPerformanceTrace(options = {}) {
       },
       pageErrors: state.pageErrors.map((entry) => ({ ...entry })),
       schemaVersion: 1,
+      stress: summarizeRenderStress(),
       visibilityChanges: state.visibilityChanges.map((entry) => ({ ...entry })),
+    };
+  }
+
+  function getRenderStress() {
+    return state.stressFixture;
+  }
+
+  function cycleRenderStress() {
+    state.stressProfileIndex =
+      (state.stressProfileIndex + 1) % RENDER_STRESS_PROFILES.length;
+    state.stressFixture = createRenderStressFixture(selectedRenderStressProfile(), canvas);
+    updateOverlay();
+    return summarizeRenderStress();
+  }
+
+  function selectedRenderStressProfile() {
+    return RENDER_STRESS_PROFILES[state.stressProfileIndex] || RENDER_STRESS_PROFILES[0];
+  }
+
+  function summarizeRenderStress() {
+    const profile = selectedRenderStressProfile();
+    const fixture = state.stressFixture;
+    return {
+      label: profile.label,
+      profile: profile.id,
+      synthetic: {
+        enemies: fixture.syntheticEnemies,
+        projectiles: fixture.syntheticProjectiles,
+      },
     };
   }
 
@@ -300,14 +372,24 @@ export function createBrowserPerformanceTrace(options = {}) {
   }
 
   function updateOverlay() {
+    const stress = summarizeRenderStress();
+    state.overlay?.setStressProfile(stress);
     const latest = state.frames[state.frames.length - 1];
     if (!latest) {
       state.overlay?.setSummary("Waiting for animation frames…");
       return;
     }
     const gap = latest.gapMs === null ? "first frame" : `${latest.gapMs.toFixed(1)} ms gap`;
+    const summary = [
+      `${gap} • update ${latest.stagesMs.update.toFixed(1)} ms`,
+      `render ${latest.stagesMs.render.toFixed(1)} ms`,
+      `HUD ${latest.stagesMs.hud.toFixed(1)} ms`,
+      stress.label,
+      `bolts ${latest.pressure.projectiles} + ${latest.pressure.syntheticProjectiles}`,
+      `sprites ${latest.pressure.enemies} + ${latest.pressure.syntheticEnemies}`,
+    ].join(" • ");
     state.overlay?.setSummary(
-      `${gap} • update ${latest.stagesMs.update.toFixed(1)} ms • render ${latest.stagesMs.render.toFixed(1)} ms • HUD ${latest.stagesMs.hud.toFixed(1)} ms • enemies ${latest.pressure.enemies}`
+      summary
     );
   }
 
@@ -328,7 +410,7 @@ function createClock(globalRef) {
   return () => Math.max(0, finiteNumber(globalRef?.performance?.now?.(), 0));
 }
 
-function createOverlay({ documentRef, onCopy, onDownload }) {
+function createOverlay({ documentRef, onCopy, onDownload, onStressToggle }) {
   const host = documentRef?.body || documentRef?.documentElement;
   if (!host?.appendChild || typeof documentRef?.createElement !== "function") return null;
   const root = documentRef.createElement("section");
@@ -338,6 +420,7 @@ function createOverlay({ documentRef, onCopy, onDownload }) {
   const actions = documentRef.createElement("div");
   const copy = documentRef.createElement("button");
   const download = documentRef.createElement("button");
+  const stress = documentRef.createElement("button");
   const status = documentRef.createElement("div");
 
   root.setAttribute?.("aria-label", "Tap Survivor performance trace");
@@ -359,19 +442,24 @@ function createOverlay({ documentRef, onCopy, onDownload }) {
   });
   title.textContent = "Performance trace — diagnostic only";
   detail.textContent =
-    "Local, bounded capture. Canvas values are submitted-command counts, not GPU time.";
+    "Local, bounded capture. Synthetic render pressure is not gameplay; Canvas values are not GPU time.";
   summary.textContent = "Waiting for animation frames…";
   copy.dataset ||= {};
   download.dataset ||= {};
+  stress.dataset ||= {};
   copy.dataset.perfTraceAction = "copy";
   download.dataset.perfTraceAction = "download";
+  stress.dataset.perfTraceAction = "stress";
   copy.textContent = "Copy JSON";
   download.textContent = "Download JSON";
+  stress.textContent = "Render stress: Off";
+  stress.setAttribute?.("aria-label", "Cycle synthetic render stress. Current profile: Off.");
+  stress.setAttribute?.("aria-pressed", "false");
   status.setAttribute?.("aria-live", "polite");
   applyStyles(detail, { color: "#bdd7e8", marginTop: "4px" });
   applyStyles(summary, { color: "#8ef0c0", marginTop: "6px" });
   applyStyles(actions, { display: "flex", gap: "8px", marginTop: "8px" });
-  [copy, download].forEach((button) => {
+  [copy, download, stress].forEach((button) => {
     button.type = "button";
     applyStyles(button, {
       background: "#1f5f86",
@@ -383,6 +471,7 @@ function createOverlay({ documentRef, onCopy, onDownload }) {
       padding: "6px 10px",
     });
   });
+  applyStyles(stress, { marginTop: "8px", width: "100%" });
   applyStyles(status, { color: "#cbd8e5", marginTop: "6px", minHeight: "16px" });
   copy.addEventListener?.("click", () => {
     void onCopy();
@@ -390,11 +479,15 @@ function createOverlay({ documentRef, onCopy, onDownload }) {
   download.addEventListener?.("click", () => {
     onDownload();
   });
+  stress.addEventListener?.("click", () => {
+    onStressToggle();
+  });
   actions.appendChild(copy);
   actions.appendChild(download);
   root.appendChild(title);
   root.appendChild(detail);
   root.appendChild(summary);
+  root.appendChild(stress);
   root.appendChild(actions);
   root.appendChild(status);
   host.appendChild(root);
@@ -403,6 +496,18 @@ function createOverlay({ documentRef, onCopy, onDownload }) {
     dispose: () => removeElement(root),
     setStatus: (message) => {
       status.textContent = message;
+    },
+    setStressProfile: (profile) => {
+      const synthetic = profile?.synthetic || {};
+      const projectiles = Math.max(0, finiteNumber(synthetic.projectiles, 0));
+      const enemies = Math.max(0, finiteNumber(synthetic.enemies, 0));
+      const label = boundedText(profile?.label || "Off", 64);
+      stress.textContent = `Render stress: ${label}`;
+      stress.setAttribute?.(
+        "aria-label",
+        `Cycle synthetic render stress. Current profile: ${label}; ${projectiles} projectiles and ${enemies} enemy sprites.`
+      );
+      stress.setAttribute?.("aria-pressed", profile?.profile === "off" ? "false" : "true");
     },
     setSummary: (message) => {
       summary.textContent = message;
@@ -443,12 +548,86 @@ function normalizeLimits(limits = {}) {
 }
 
 function normalizePressure(pressure) {
+  const enemies = Math.max(0, finiteNumber(pressure.enemies, 0));
+  const projectiles = Math.max(0, finiteNumber(pressure.projectiles, 0));
+  const syntheticEnemies = Math.max(0, finiteNumber(pressure.syntheticEnemies, 0));
+  const syntheticProjectiles = Math.max(0, finiteNumber(pressure.syntheticProjectiles, 0));
   return {
     effects: Math.max(0, finiteNumber(pressure.effects, 0)),
-    enemies: Math.max(0, finiteNumber(pressure.enemies, 0)),
+    enemies,
     pickups: Math.max(0, finiteNumber(pressure.pickups, 0)),
-    projectiles: Math.max(0, finiteNumber(pressure.projectiles, 0)),
+    projectiles,
+    syntheticEnemies,
+    syntheticProjectiles,
+    totalEnemies: enemies + syntheticEnemies,
+    totalProjectiles: projectiles + syntheticProjectiles,
   };
+}
+
+function createRenderStressFixture(profile, canvas) {
+  if (!profile || profile.id === "off") return EMPTY_RENDER_STRESS;
+  const width = Math.max(1, finiteNumber(canvas?.width, 320));
+  const height = Math.max(1, finiteNumber(canvas?.height, 180));
+  const projectiles = createStressProjectiles(profile.projectiles, width, height);
+  const enemies = createStressEnemies(profile.enemies, width, height);
+  return Object.freeze({
+    enemies,
+    profile: profile.id,
+    projectiles,
+    syntheticEnemies: enemies.length,
+    syntheticProjectiles: projectiles.length,
+  });
+}
+
+function createStressProjectiles(count, width, height) {
+  const total = Math.max(0, Math.floor(finiteNumber(count, 0)));
+  if (!total) return EMPTY_RENDER_STRESS.projectiles;
+  const columns = Math.max(1, Math.ceil(Math.sqrt((total * width) / height)));
+  const rows = Math.max(1, Math.ceil(total / columns));
+  const projectiles = [];
+  for (let index = 0; index < total; index += 1) {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const angle = ((index % 16) / 16) * Math.PI * 2;
+    projectiles.push(
+      Object.freeze({
+        color: STRESS_PROJECTILE_COLORS[index % STRESS_PROJECTILE_COLORS.length],
+        radius: 3 + (index % 3),
+        vx: Math.cos(angle),
+        vy: Math.sin(angle),
+        weaponId: "spark_bolt",
+        x: ((column + 0.5) / columns) * width,
+        y: ((row + 0.5) / rows) * height,
+      })
+    );
+  }
+  return Object.freeze(projectiles);
+}
+
+function createStressEnemies(count, width, height) {
+  const total = Math.max(0, Math.floor(finiteNumber(count, 0)));
+  if (!total) return EMPTY_RENDER_STRESS.enemies;
+  const columns = Math.max(1, Math.ceil(Math.sqrt((total * width) / height)));
+  const rows = Math.max(1, Math.ceil(total / columns));
+  const enemies = [];
+  for (let index = 0; index < total; index += 1) {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const type = STRESS_ENEMY_TYPES[index % STRESS_ENEMY_TYPES.length];
+    enemies.push(
+      Object.freeze({
+        hp: 1,
+        maxHp: 1,
+        radius: 9 + (index % 4),
+        towerFloor: 1 + (index % 25),
+        type,
+        vx: index % 2 === 0 ? 1 : -1,
+        x: ((column + 0.5) / columns) * width,
+        y: ((row + 0.5) / rows) * height,
+      })
+    );
+  }
+  return Object.freeze(enemies);
 }
 
 function browserMetadata(globalRef) {
