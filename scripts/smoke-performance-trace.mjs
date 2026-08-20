@@ -457,6 +457,53 @@ assert.deepEqual(
   "query-free rendering must ignore synthetic stress arrays"
 );
 
+const fullHealthStressCanvas = createCanvas(disabledDocument);
+const wrappedAdapterCalls = [];
+const successfulSpriteRequests = [];
+const fullHealthStressRendering = createBrowserRenderingAdapters({
+  canvas: fullHealthStressCanvas,
+  canvasCommandSink: (name) => wrappedAdapterCalls.push(name),
+  content: {},
+});
+const stressEnemyTypes = ["skitter", "drifter", "bulwark", "hexer"];
+const fullHealthStressEnemies = Array.from({ length: 500 }, (_, index) => {
+  const columns = Math.ceil(Math.sqrt((500 * fullHealthStressCanvas.width) / fullHealthStressCanvas.height));
+  const column = index % columns;
+  const row = Math.floor(index / columns);
+  return {
+    hp: 1,
+    maxHp: 1,
+    radius: 9 + (index % 4),
+    towerFloor: 1 + (index % 25),
+    type: stressEnemyTypes[index % stressEnemyTypes.length],
+    vx: index % 2 === 0 ? 1 : -1,
+    x: ((column + 0.5) / columns) * fullHealthStressCanvas.width,
+    y: ((row + 0.5) / Math.ceil(500 / columns)) * fullHealthStressCanvas.height,
+  };
+});
+fullHealthStressRendering.renderers.renderEnemies({
+  enemies: [],
+  spriteAdapters: {
+    spriteSystem: {
+      drawSprite(id) {
+        successfulSpriteRequests.push(id);
+        return true;
+      },
+    },
+  },
+  stressEnemies: fullHealthStressEnemies,
+});
+assert.equal(
+  wrappedAdapterCalls.length,
+  15_625,
+  "500 successful full-health stress enemies must submit 15,625 wrapped adapter Canvas calls"
+);
+assert.equal(
+  successfulSpriteRequests.length,
+  500,
+  "500 full-health stress enemies must request exactly 500 sprites"
+);
+
 const documentRef = createDocument();
 const platform = createGlobalRef(documentRef, "?perfTrace=1");
 const canvas = createCanvas(documentRef);

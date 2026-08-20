@@ -633,15 +633,21 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
   }
 
   function drawBar(x, y, width, height, progress, colors) {
-    roundedRectPath(x, y, width, height, Math.min(7, height / 2));
+    const clampedProgress = clamp(progress, 0, 1);
+    const radius = Math.min(7, height / 2);
+    roundedRectPath(x, y, width, height, radius);
     set("fillStyle", "rgba(10, 14, 20, 0.84)");
     call("fill");
-    if (progress > 0) {
-      roundedRectPath(x, y, width * clamp(progress, 0, 1), height, Math.min(7, height / 2));
+    if (clampedProgress > 0) {
+      if (clampedProgress < 1) {
+        roundedRectPath(x, y, width * clampedProgress, height, radius);
+      }
       set("fillStyle", colors.fill);
       call("fill");
     }
-    roundedRectPath(x, y, width, height, Math.min(7, height / 2));
+    if (clampedProgress > 0 && clampedProgress < 1) {
+      roundedRectPath(x, y, width, height, radius);
+    }
     set("strokeStyle", colors.border);
     set("lineWidth", height > 5 ? 2 : 1);
     call("stroke");
