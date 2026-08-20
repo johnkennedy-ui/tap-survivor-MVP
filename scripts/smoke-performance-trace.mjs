@@ -204,6 +204,7 @@ function createCanvas(documentRef) {
 function makeLifecycleDependencies({ advanceClock, canvas, renderers }) {
   let frameHandler = null;
   const order = [];
+  const updateDts = [];
   const game = {
     areas: [],
     beams: [],
@@ -349,6 +350,7 @@ function makeLifecycleDependencies({ advanceClock, canvas, renderers }) {
     runUpdater: {
       update(dt) {
         order.push("tick");
+        updateDts.push(dt);
         game.elapsed += dt;
         advanceClock(2);
       },
@@ -378,6 +380,7 @@ function makeLifecycleDependencies({ advanceClock, canvas, renderers }) {
     },
     order,
     spriteDraws,
+    updateDts,
   };
 }
 
@@ -503,6 +506,89 @@ assert.equal(
   500,
   "500 full-health stress enemies must request exactly 500 sprites"
 );
+
+const catchupDocument = createDocument();
+const catchupPlatform = createGlobalRef(catchupDocument, "");
+const catchupCanvas = createCanvas(catchupDocument);
+const catchupRendering = createBrowserRenderingAdapters({
+  canvas: catchupCanvas,
+  content: {},
+});
+const catchupFixture = makeLifecycleDependencies({
+  advanceClock: catchupPlatform.advanceClock,
+  canvas: catchupCanvas,
+  renderers: catchupRendering.renderers,
+});
+createModuleGameLifecycleOwner({
+  dependencies: catchupFixture.dependencies,
+  platform: {
+    documentRef: catchupDocument,
+    runtimeGlobal: catchupPlatform.globalRef,
+  },
+  runtime: {
+    getGameSpeed: () => 1,
+    initializeRuntime() {},
+  },
+});
+const frameRenderOrder = [
+  "clearFrame",
+  "renderFrame",
+  "renderEnemies",
+  "renderPlayer",
+  "renderHud",
+  "renderSkillRail",
+  "updateRunHud",
+];
+function assertBoundedFrameCatchup({ expectedTotal, expectedUpdateCount, label, timestamp }) {
+  const elapsedBefore = catchupFixture.game.elapsed;
+  const orderStart = catchupFixture.order.length;
+  const updateStart = catchupFixture.updateDts.length;
+  catchupFixture.invokeFrame(timestamp);
+  const updateDts = catchupFixture.updateDts.slice(updateStart);
+  const total = updateDts.reduce((sum, dt) => sum + dt, 0);
+  assert.equal(updateDts.length, expectedUpdateCount, `${label} must use the expected update count`);
+  assert.ok(
+    updateDts.every((dt) => dt <= 0.05),
+    `${label} must keep every raw update step at or below 50 ms`
+  );
+  assert.ok(
+    Math.abs(total - expectedTotal) < 1e-12,
+    `${label} must advance the bounded raw elapsed time`
+  );
+  assert.ok(
+    Math.abs(catchupFixture.game.elapsed - elapsedBefore - expectedTotal) < 1e-12,
+    `${label} must retain the equivalent simulation time at 1x`
+  );
+  assert.deepEqual(
+    catchupFixture.order.slice(orderStart),
+    [...Array(expectedUpdateCount).fill("tick"), ...frameRenderOrder],
+    `${label} must finish all updates before the unchanged render and HUD order`
+  );
+}
+assertBoundedFrameCatchup({
+  expectedTotal: 0.0167,
+  expectedUpdateCount: 1,
+  label: "16.7-ms normal frame",
+  timestamp: 16.7,
+});
+assertBoundedFrameCatchup({
+  expectedTotal: 0.0666,
+  expectedUpdateCount: 2,
+  label: "66.6-ms delayed frame",
+  timestamp: 83.3,
+});
+assertBoundedFrameCatchup({
+  expectedTotal: 0.1,
+  expectedUpdateCount: 2,
+  label: "100-ms delayed frame",
+  timestamp: 183.3,
+});
+assertBoundedFrameCatchup({
+  expectedTotal: 0.1,
+  expectedUpdateCount: 2,
+  label: "283-ms recovery frame",
+  timestamp: 466.3,
+});
 
 const documentRef = createDocument();
 const platform = createGlobalRef(documentRef, "?perfTrace=1");

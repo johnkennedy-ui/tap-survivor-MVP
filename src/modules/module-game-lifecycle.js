@@ -5,6 +5,8 @@ const EMPTY_RENDER_STRESS = Object.freeze({
   enemies: Object.freeze([]),
   projectiles: Object.freeze([]),
 });
+const MAX_RAW_FRAME_CATCH_UP_SECONDS = 0.1;
+const MAX_RAW_FRAME_STEP_SECONDS = 0.05;
 
 export const MODULE_GAME_LIFECYCLE_OWNER_SLOTS = Object.freeze([
   "bind",
@@ -279,11 +281,11 @@ function createNormalFrameHandler({
   return (now) => {
     if (getDisposed() || getStopped()) return;
     const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
-    const dt = Math.min(0.05, (timestamp - getLastFrame()) / 1000);
+    const elapsed = (timestamp - getLastFrame()) / 1000;
     setLastFrame(timestamp);
     const game = runtimeDependencies.getGame?.();
     if (game?.running && !game.paused) {
-      tick(dt * (resolvedRuntime.getGameSpeed?.() || 1));
+      runBoundedFrameUpdates(elapsed, resolvedRuntime.getGameSpeed?.() || 1, tick);
     }
     render({ now: timestamp });
     runtimeDependencies.runUi.updateRunHud?.();
@@ -306,12 +308,12 @@ function createTracedFrameHandler({
     if (getDisposed() || getStopped()) return;
     const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
     const traceFrame = performanceTrace.beginFrame(timestamp);
-    const dt = Math.min(0.05, (timestamp - getLastFrame()) / 1000);
+    const elapsed = (timestamp - getLastFrame()) / 1000;
     setLastFrame(timestamp);
     const game = runtimeDependencies.getGame?.();
     if (game?.running && !game.paused) {
       performanceTrace.measureStage(traceFrame, "update", () =>
-        tick(dt * (resolvedRuntime.getGameSpeed?.() || 1))
+        runBoundedFrameUpdates(elapsed, resolvedRuntime.getGameSpeed?.() || 1, tick)
       );
     }
     const renderStress = getRenderStress(performanceTrace, game);
@@ -332,6 +334,15 @@ function createTracedFrameHandler({
       pressure: collectPressure(game, renderStress),
     });
   };
+}
+
+function runBoundedFrameUpdates(elapsed, gameSpeed, tick) {
+  let remaining = Math.max(0, Math.min(MAX_RAW_FRAME_CATCH_UP_SECONDS, elapsed));
+  do {
+    const rawStep = Math.min(MAX_RAW_FRAME_STEP_SECONDS, remaining);
+    tick(rawStep * gameSpeed);
+    remaining = Math.max(0, remaining - rawStep);
+  } while (remaining > 0);
 }
 
 function getRenderStress(performanceTrace, game) {
