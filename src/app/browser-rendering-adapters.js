@@ -892,6 +892,9 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
   }
 
   function enemyFacesLeft(enemy) {
+    const chargerIsActive =
+      enemy?.bossKind === "charger" && (enemy?.chargeState === "windup" || enemy?.chargeState === "charging");
+    if (chargerIsActive && Number.isFinite(Number(enemy?.chargeDirX))) return number(enemy.chargeDirX) < -0.1;
     if (Number.isFinite(Number(enemy?.vx))) return number(enemy.vx) < -1;
     if (Number.isFinite(Number(enemy?.chargeDirX))) return number(enemy.chargeDirX) < -0.1;
     return false;

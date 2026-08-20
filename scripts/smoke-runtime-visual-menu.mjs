@@ -1,6 +1,7 @@
 import { createBrowserDependencyBagOptions } from "../src/app/browser-dependency-bag.js";
 
 const drawCalls = [];
+const scaleCalls = [];
 const canvasContext = {
   globalAlpha: 1,
   drawImage(...args) {
@@ -9,7 +10,9 @@ const canvasContext = {
   restore() {},
   rotate() {},
   save() {},
-  scale() {},
+  scale(...args) {
+    scaleCalls.push(args);
+  },
   translate() {},
 };
 const canvas = {
@@ -109,7 +112,7 @@ assert(
     sheetId: "enemies",
     time: 0.35,
   }) === true &&
-    drawCallMatches(drawCalls.at(-1), "enemy-sheet", [300, 200, 100, 100, -24, -24, 48, 48])
+    drawCallMatches(drawCalls.at(-1), "enemy-sheet", [300, 200, 100, 100, 76, 76, 48, 48])
 );
 drawCalls.length = 0;
 assert(
@@ -118,7 +121,7 @@ assert(
     enemies: [{ animTime: 0.35, radius: 14, type: "drifter", x: 100, y: 100 }],
     spriteAdapters: spriteOptions.adapters.spriteAdapters,
   }) === true &&
-    drawCallMatches(drawCalls.at(-1), "enemy-sheet", [300, 200, 100, 100, -28, -28, 56, 56])
+    drawCallMatches(drawCalls.at(-1), "enemy-sheet", [300, 200, 100, 100, 72, 72, 56, 56])
 );
 assert(
   "boss release inherits its configured animation row and selects the authored release frame",
@@ -128,7 +131,76 @@ assert(
     sheetId: "bosses",
     time: 0.15,
   }) === true &&
-    drawCallMatches(drawCalls.at(-1), "boss-sheet", [700, 100, 100, 100, -30, -30, 60, 60])
+    drawCallMatches(drawCalls.at(-1), "boss-sheet", [700, 100, 100, 100, 170, 70, 60, 60])
+);
+drawCalls.length = 0;
+scaleCalls.length = 0;
+assert(
+  "production charger windup uses its authored row and frame while preserving captured left charge facing",
+  spriteOptions.adapters.renderingAdapters.renderers.renderEnemies({
+    enemies: [
+      {
+        animTime: 0.15,
+        boss: true,
+        bossKind: "charger",
+        chargeDirX: -1,
+        chargeState: "windup",
+        radius: 20,
+        vx: 0,
+        x: 200,
+        y: 100,
+      },
+    ],
+    spriteAdapters: spriteOptions.adapters.spriteAdapters,
+  }) === true &&
+    drawCallMatches(drawCalls.at(-1), "boss-sheet", [400, 100, 100, 100, -58, -58, 116, 116]) &&
+    JSON.stringify(scaleCalls) === JSON.stringify([[-1, 1]])
+);
+drawCalls.length = 0;
+scaleCalls.length = 0;
+assert(
+  "production charger release keeps a positive captured charge direction while stationary",
+  spriteOptions.adapters.renderingAdapters.renderers.renderEnemies({
+    enemies: [
+      {
+        animTime: 0.15,
+        boss: true,
+        bossKind: "charger",
+        chargeDirX: 1,
+        chargeState: "charging",
+        radius: 20,
+        vx: 0,
+        x: 200,
+        y: 100,
+      },
+    ],
+    spriteAdapters: spriteOptions.adapters.spriteAdapters,
+  }) === true &&
+    drawCallMatches(drawCalls.at(-1), "boss-sheet", [700, 100, 100, 100, 142, 42, 116, 116]) &&
+    scaleCalls.length === 0
+);
+drawCalls.length = 0;
+scaleCalls.length = 0;
+assert(
+  "production inactive charger returns to velocity-first facing despite stale charge direction",
+  spriteOptions.adapters.renderingAdapters.renderers.renderEnemies({
+    enemies: [
+      {
+        animTime: 0.15,
+        boss: true,
+        bossKind: "charger",
+        chargeDirX: -1,
+        chargeState: "",
+        radius: 20,
+        vx: 2,
+        x: 200,
+        y: 100,
+      },
+    ],
+    spriteAdapters: spriteOptions.adapters.spriteAdapters,
+  }) === true &&
+    drawCallMatches(drawCalls.at(-1), "boss-sheet", [0, 100, 100, 100, 142, 42, 116, 116]) &&
+    scaleCalls.length === 0
 );
 assert(
   "static sprite remains the explicit fallback when its configured sheet cannot draw",
