@@ -386,13 +386,41 @@ function eligibleFloor(descriptor) {
 }
 
 async function runInvalidInputChecks(page) {
-  const unknown = await invoke(page, "__debug_runner_unknown_command__", { id: "not-a-registered-entry" });
-  if (unknown.ok || unknown.error?.code !== "UNKNOWN_COMMAND") {
-    throw new Error("Unknown command did not return UNKNOWN_COMMAND");
+  const unknownCommandPassed = await runExpectedRejectionScenario(page, {
+    args: { id: "not-a-registered-entry" },
+    command: "__debug_runner_unknown_command__",
+    expectedErrorCode: "UNKNOWN_COMMAND",
+    name: "unknown-command-rejection",
+  });
+  const malformedArgumentsPassed = await runExpectedRejectionScenario(page, {
+    args: { unexpected: true },
+    command: "catalog",
+    expectedErrorCode: "MALFORMED_ARGS",
+    name: "malformed-arguments-rejection",
+  });
+  if (!unknownCommandPassed || !malformedArgumentsPassed) {
+    throw new Error("One or more invalid-input rejection scenarios did not return their expected error code");
   }
-  const malformed = await invoke(page, "catalog", { unexpected: true });
-  if (malformed.ok || malformed.error?.code !== "MALFORMED_ARGS") {
-    throw new Error("Malformed catalog arguments did not return MALFORMED_ARGS");
+}
+
+async function runExpectedRejectionScenario(page, { args, command, expectedErrorCode, name }) {
+  const scenario = beginScenario(name);
+  let observedErrorCode = null;
+  let responseOk = null;
+  try {
+    const response = await invoke(page, command, args);
+    observedErrorCode = typeof response?.error?.code === "string" ? response.error.code : null;
+    responseOk = response?.ok === true;
+    scenario.details = { command, expectedErrorCode, observedErrorCode, responseOk };
+    if (responseOk || observedErrorCode !== expectedErrorCode) {
+      throw new Error(`${name} returned ${observedErrorCode || "no error code"} instead of ${expectedErrorCode}`);
+    }
+    passScenario(scenario, scenario.details);
+    return true;
+  } catch (error) {
+    scenario.details ||= { command, expectedErrorCode, observedErrorCode, responseOk };
+    failScenario(scenario, error);
+    return false;
   }
 }
 
