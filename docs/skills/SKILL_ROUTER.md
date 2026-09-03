@@ -29,6 +29,9 @@ Use this router before repository work that can be handled by one bounded routin
   split large files into small helper files while preserving public APIs.
 - `content-patch.md`:
   patch game content through the content JSON pipeline.
+- `content-creation-blueprint.md`:
+  add a new content asset or feature definition through any registry domain,
+  with its generation, validation, and debug/QA route defined up front.
 - `mechanics-extension.md`:
   add a small gameplay mechanic or runtime behavior.
 - `play-release-aab.md`:
@@ -49,6 +52,11 @@ Use this router before repository work that can be handled by one bounded routin
 ## Selection Guide
 
 Prefer the narrowest skill that fully covers the request.
+
+Use `content-creation-blueprint.md` when adding a new content entry, extending
+a content family, or coordinating cross-domain content such as a weapon with
+its unlock, quest, assets, and debug coverage. Use `content-patch.md` only for
+a narrow edit to an already-established content path.
 
 If a request names multiple outcomes, choose the first required skill and stop after its report unless the human explicitly asked for a multi-skill sequence.
 

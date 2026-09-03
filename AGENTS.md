@@ -12,32 +12,36 @@ Before editing this repo:
 8. Treat `docs/CURRENT_TASK.md` as optional housekeeping only. Do not use it as the source of truth for the active request; the conversation and current git diff are authoritative.
 9. Inspect only the files relevant to the requested change.
 10. Prefer content edits in `content/registry/*.json` via `npm run add:content -- <type> <id> ...`, then run `npm run build:content`.
-11. Do not edit `src/content.generated.js` by hand.
-12. Do not rewrite the game loop, renderer, or combat system unless the task specifically requires it.
-13. Use `npm run agent:handoff` when handing the repo to another agent or resuming later.
+11. Before adding a new content asset, feature definition, or progression entry,
+    use `docs/skills/content-creation-blueprint.md`. It covers every registry
+    domain and requires an explicit debug-catalog, deterministic-validation, or
+    manual/UI QA disposition for each changed domain.
+12. Do not edit `src/content.generated.js` by hand.
+13. Do not rewrite the game loop, renderer, or combat system unless the task specifically requires it.
+14. Use `npm run agent:handoff` when handing the repo to another agent or resuming later.
     Use `npm run task:list` at session start when `.agent/tasks.json` exists, and mark the active task complete or blocked before handoff when the task queue is being used.
     For the task queue operating pattern, see `docs/AGENT_TASK_QUEUE.md`.
-14. Run `npm run agent:check` before reporting code or structure changes.
-15. Use `npm run agent:evidence -- --task "<short task name>"` to create a replayable evidence stub.
-16. For Android/GitHub.io runtime changes, read `docs/RUNTIME_PARITY.md`.
-17. For Android packaging/release prep, read `docs/PLAY_STORE_ANDROID_PREP.md`.
-18. Do not hand-edit `www/`, fork gameplay between GitHub.io and Android, or commit signing secrets.
-19. Before committing, if the task changed Prettier-supported files, run `docs/skills/prettier-before-commit.md`.
-20. For balance-only experiments, use `content/balance/*.json` and validate with `npm run balance:check`; do not change runtime code for numeric tuning-only work.
-21. Dev-only balance runtime selection lives in `src/balance-runtime.js`; keep production default behaviour on the `default` profile.
-22. Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` is only the compatibility export surface.
-23. Content tooling type contracts live under `types/` and are JSDoc-checked with `npm run typecheck`.
+15. Run `npm run agent:check` before reporting code or structure changes.
+16. Use `npm run agent:evidence -- --task "<short task name>"` to create a replayable evidence stub.
+17. For Android/GitHub.io runtime changes, read `docs/RUNTIME_PARITY.md`.
+18. For Android packaging/release prep, read `docs/PLAY_STORE_ANDROID_PREP.md`.
+19. Do not hand-edit `www/`, fork gameplay between GitHub.io and Android, or commit signing secrets.
+20. Before committing, if the task changed Prettier-supported files, run `docs/skills/prettier-before-commit.md`.
+21. For balance-only experiments, use `content/balance/*.json` and validate with `npm run balance:check`; do not change runtime code for numeric tuning-only work.
+22. Dev-only balance runtime selection lives in `src/balance-runtime.js`; keep production default behaviour on the `default` profile.
+23. Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` is only the compatibility export surface.
+24. Content tooling type contracts live under `types/` and are JSDoc-checked with `npm run typecheck`.
     Keep those contracts scoped to `scripts/content/*.mjs`, the barrel, and `src/content-registry.js` unless a separate task broadens them.
     Do not convert runtime files to TypeScript without a separate migration task.
-24. Do not add direct `window` or `globalThis` runtime coupling. Browser capabilities enter only through the explicit
+25. Do not add direct `window` or `globalThis` runtime coupling. Browser capabilities enter only through the explicit
     `globalRef` boundary; run `npm run check:globals` after changes. Update `docs/GLOBAL_STATE_INVENTORY.md` and
     `scripts/allowed-globals.json` only when a reviewed platform boundary or test fixture changes, never to revive a
     retired publisher.
-25. New math helper consumers must receive/import math helpers explicitly. The old publisher namespace is retired.
-26. New HUD renderer consumers must receive/import `createHudRenderer` explicitly. The old publisher namespace is retired.
-27. New enemy renderer consumers must receive/import `createEnemyRenderer` explicitly. The old publisher namespace is retired.
-28. Enemy/boss sprite-sheet work belongs in `assets.sprites.spriteSheets` metadata plus `src/sprite-sheet-renderer.js`; preserve fallback order: sheet frame, existing single sprite/SVG, then shape rendering.
-29. For ES-module migration slices, keep the real implementation in `src/modules/` and generate the global-free compatibility artifact with `npm run build:bridges`.
+26. New math helper consumers must receive/import math helpers explicitly. The old publisher namespace is retired.
+27. New HUD renderer consumers must receive/import `createHudRenderer` explicitly. The old publisher namespace is retired.
+28. New enemy renderer consumers must receive/import `createEnemyRenderer` explicitly. The old publisher namespace is retired.
+29. Enemy/boss sprite-sheet work belongs in `assets.sprites.spriteSheets` metadata plus `src/sprite-sheet-renderer.js`; preserve fallback order: sheet frame, existing single sprite/SVG, then shape rendering.
+30. For ES-module migration slices, keep the real implementation in `src/modules/` and generate the global-free compatibility artifact with `npm run build:bridges`.
     Do not hand-edit generated bridge files such as `src/shop-pricing.js`. New dependencies must be passed through the source-owned dependency bag; do not add or restore `TapSurvivor*` publishers.
     `src/modules/balance.js` owns floor difficulty implementation; `src/balance.js` is a generated compatibility bridge.
     `src/modules/level-up-choices.js` owns level-up choice helper implementation; `src/level-up-choices.js` is a generated compatibility bridge.
