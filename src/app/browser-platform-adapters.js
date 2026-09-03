@@ -2,6 +2,8 @@ import { bindMovementInput } from "../modules/input.js";
 
 export function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
   let frameHandler = null;
+  let debugRuntime = null;
+  let debugBound = false;
 
   function loop(now) {
     frameHandler?.(now);
@@ -20,8 +22,15 @@ export function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
     },
     canvas,
     debugSystem: {
-      bind() {},
+      bind() {
+        debugBound = true;
+        return debugRuntime?.bind?.(globalRef) || false;
+      },
       render() {},
+      setRuntime(runtime) {
+        debugRuntime = runtime;
+        return debugBound ? debugRuntime?.bind?.(globalRef) || false : true;
+      },
     },
     loop,
   };

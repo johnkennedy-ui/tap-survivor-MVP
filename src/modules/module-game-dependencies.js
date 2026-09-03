@@ -13,6 +13,7 @@ import { createModuleRuntimeRenderingAdapter } from "./module-runtime-rendering-
 import { createModuleRuntimeSpriteAdapter } from "./module-runtime-sprite-adapter.js";
 import { createModuleRuntimeStorageAdapter } from "./module-runtime-storage-adapter.js";
 import { createModuleRuntimeUiAdapters } from "./module-runtime-ui-adapters.js";
+import { createDebugRuntimeHarness } from "../debug-runtime-harness.js";
 import { choiceId, shopFocusBonus, shuffleChoices, weightedChoices } from "./level-up-choices.js";
 import { createMapSystem } from "./map-system.js";
 import { clamp, distance, formatTime, randomRange } from "./math.js";
@@ -442,6 +443,15 @@ export function createModuleGameDependencyBag({
     return run;
   };
 
+  const debugRuntime = createDebugRuntimeHarness({
+    combat: combatSystem,
+    contentRegistry,
+    effects,
+    getGame: stateStore.getGame,
+    pickupSystem,
+  });
+  platformAdapters.debugSystem.setRuntime?.(debugRuntime);
+
   const moduleSystems = {
     balance: { floorDifficulty },
     combatDamage: { createCombatDamageSystem },
@@ -501,6 +511,7 @@ export function createModuleGameDependencyBag({
     canvas: platformAdapters.canvas,
     combat: gameplayAdapters.combat,
     debugSystem: platformAdapters.debugSystem,
+    debugRuntime,
     enemies: gameplayAdapters.enemies,
     enemyBehaviors: gameplayAdapters.enemyBehaviors,
     enemySpawning: gameplayAdapters.enemySpawning,

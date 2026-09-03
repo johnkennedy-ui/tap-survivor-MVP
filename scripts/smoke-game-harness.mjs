@@ -520,6 +520,7 @@ export function createGameHarness({
   dependencyBagOptions.adapters.uiAdapters.ui.openShop = elements.get("openShop");
   const browserPlatformAdapters = dependencyBagOptions.adapters.platformAdapters;
   const browserBannerSystem = browserPlatformAdapters.bannerSystem;
+  let debugRuntime = null;
   const debugSystem = createDebugSystem({
     floorDifficulty: (floor) => dependencies?.moduleSystems?.balance?.floorDifficulty?.(floor),
     getActiveProfile: () => sourceGameDependencies.balanceRuntime.getActiveProfile(),
@@ -548,7 +549,19 @@ export function createGameHarness({
         return true;
       },
     },
-    debugSystem,
+    debugSystem: {
+      bind() {
+        debugSystem.bind?.();
+        return debugRuntime?.bind?.(context) || false;
+      },
+      render() {
+        return debugSystem.render?.();
+      },
+      setRuntime(runtime) {
+        debugRuntime = runtime;
+        return true;
+      },
+    },
   };
   dependencies = createModuleGameDependencyBag(dependencyBagOptions);
   const { contentRegistry, relics } = dependencies.moduleSystems;
