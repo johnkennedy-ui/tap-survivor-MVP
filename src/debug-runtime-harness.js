@@ -49,6 +49,18 @@ export function createDebugRuntimeHarness({
       "effect.apply",
       "pickup.collect",
     ]),
+    // This is the authoritative mapping between descriptor arrays in this
+    // catalog and their invocation command. Browser QA must never infer a
+    // command from an array name, since future families may use a different
+    // naming convention.
+    families: Object.freeze([
+      Object.freeze({ key: "weapons", command: "weapon.fire" }),
+      Object.freeze({ key: "enemies", command: "enemy.spawn" }),
+      Object.freeze({ key: "bosses", command: "boss.spawn" }),
+      Object.freeze({ key: "runUpgrades", command: "runUpgrade.apply" }),
+      Object.freeze({ key: "effects", command: "effect.apply" }),
+      Object.freeze({ key: "pickups", command: "pickup.collect" }),
+    ]),
     weapons: Object.freeze(
       Object.entries(weaponDefs).map(([id, weapon]) =>
         Object.freeze({ id, name: weapon.name, kind: weapon.kind })

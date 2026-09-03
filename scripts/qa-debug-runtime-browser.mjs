@@ -1,8 +1,9 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { execFile } from "node:child_process";
-import { extname, join, normalize, relative, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { dirname, extname, join, normalize, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 
@@ -59,6 +60,11 @@ process.exitCode = exitCode;
 
 async function run() {
   report.candidateSha = await git("rev-parse", "HEAD");
+  report.baseSha = await git("rev-parse", "HEAD^");
+  report.frozenBundle = await verifyFrozenBundle(cli.frozenBundlePath, {
+    baseSha: report.baseSha,
+    candidateSha: report.candidateSha,
+  });
   report.startedAt = new Date().toISOString();
   server = await startServer(root);
   report.server = { host: "127.0.0.1", port: server.port, origin: server.origin };
@@ -104,13 +110,15 @@ async function run() {
 function createReport() {
   return {
     browser: { executable: null, profile: null },
+    baseSha: null,
     candidateClean: null,
     candidateSha: null,
     cleanupFailures: [],
-    coverage: { families: [], invocations: 0 },
+    coverage: { families: [], invocations: 0, invokedDescriptors: [] },
     decision: "REVISE",
     diagnostics: [],
     finishedAt: null,
+    frozenBundle: null,
     infrastructureFailure: null,
     manualInspection: { enabled: cli.headed, timeoutMs: cli.manualTimeoutMs },
     mimePreflight: [],
@@ -129,6 +137,7 @@ function parseCli(args) {
     launchTimeoutMs: DEFAULT_TIMEOUT_MS,
     manualTimeoutMs: DEFAULT_MANUAL_TIMEOUT_MS,
     pageTimeoutMs: DEFAULT_TIMEOUT_MS,
+    frozenBundlePath: "",
     reportPath: "tmp/debug-runtime-browser-qa/report.json",
   };
   for (let index = 0; index < args.length; index += 1) {
@@ -141,6 +150,11 @@ function parseCli(args) {
     const value = inlineValue ?? args[index + 1];
     if (name === "--report") {
       parsed.reportPath = value || parsed.reportPath;
+      if (inlineValue === undefined) index += 1;
+      continue;
+    }
+    if (name === "--frozen-bundle") {
+      parsed.frozenBundlePath = value || "";
       if (inlineValue === undefined) index += 1;
       continue;
     }
@@ -313,6 +327,7 @@ async function runOptInCatalogAudit(page, origin) {
         requireSuccess(await invoke(page, family.command, { id: descriptor.id }), `${family.command}:${descriptor.id}`);
         coverage.passed += 1;
         report.coverage.invocations += 1;
+        report.coverage.invokedDescriptors.push({ command: family.command, family: family.key, id: descriptor.id });
       }
       report.coverage.families.push(coverage);
     }
@@ -326,26 +341,44 @@ async function runOptInCatalogAudit(page, origin) {
 }
 
 function catalogFamilies(catalog) {
-  const commands = Array.isArray(catalog?.commands) ? catalog.commands : [];
-  return Object.entries(catalog || {})
-    .filter(([, entries]) => Array.isArray(entries) && entries.every(isDescriptor))
-    .map(([key, entries]) => ({ command: commandForFamily(key, commands), entries, key }))
-    .filter((family) => family.command && family.entries.length);
+  if (!catalog || typeof catalog !== "object") throw new Error("Debug catalog is not an object");
+  if (!Array.isArray(catalog.commands) || !catalog.commands.every((command) => typeof command === "string")) {
+    throw new Error("Debug catalog commands are invalid");
+  }
+  if (!Array.isArray(catalog.families)) throw new Error("Debug catalog is missing explicit family metadata");
+
+  const mappings = new Map();
+  for (const mapping of catalog.families) {
+    if (!mapping || typeof mapping !== "object" || typeof mapping.key !== "string" || !mapping.key || typeof mapping.command !== "string" || !mapping.command) {
+      throw new Error("Debug catalog family metadata is invalid");
+    }
+    if (mappings.has(mapping.key)) throw new Error(`Debug catalog repeats family metadata for ${mapping.key}`);
+    if (!catalog.commands.includes(mapping.command)) {
+      throw new Error(`Debug catalog family ${mapping.key} maps to unregistered command ${mapping.command}`);
+    }
+    mappings.set(mapping.key, mapping.command);
+  }
+
+  const descriptorFamilies = Object.entries(catalog)
+    .filter(([key, value]) => Array.isArray(value) && key !== "commands" && key !== "families")
+    .map(([key, entries]) => {
+      if (!entries.every(isDescriptor)) throw new Error(`Catalog array ${key} is not a descriptor family`);
+      const command = mappings.get(key);
+      if (!command) throw new Error(`Catalog descriptor family ${key} has no explicit invocation command`);
+      return { command, entries, key };
+    });
+
+  if (!descriptorFamilies.length) throw new Error("Debug catalog exposed no descriptor families");
+  for (const key of mappings.keys()) {
+    if (!Object.hasOwn(catalog, key) || !Array.isArray(catalog[key])) {
+      throw new Error(`Debug catalog family metadata references missing descriptor array ${key}`);
+    }
+  }
+  return descriptorFamilies;
 }
 
 function isDescriptor(value) {
   return Boolean(value) && typeof value === "object" && typeof value.id === "string" && value.id.length > 0;
-}
-
-function commandForFamily(key, commands) {
-  const prefix = singularize(key);
-  return commands.find((command) => command.startsWith(`${prefix}.`)) || "";
-}
-
-function singularize(key) {
-  if (key.endsWith("ies")) return `${key.slice(0, -3)}y`;
-  if (key.endsWith("ses")) return key.slice(0, -2);
-  return key.endsWith("s") ? key.slice(0, -1) : key;
 }
 
 function eligibleFloor(descriptor) {
@@ -564,9 +597,116 @@ function validateReport(candidate) {
   if (!Array.isArray(candidate.diagnostics) || !Array.isArray(candidate.scenarios)) throw new Error("Report arrays are missing");
   if (!candidate.finishedAt || !candidate.startedAt) throw new Error("Report timestamps are missing");
   if (!candidate.server || !Number.isInteger(candidate.server.port)) throw new Error("Report server metadata is missing");
+  if (typeof candidate.baseSha !== "string" || !candidate.baseSha) throw new Error("Report base SHA is missing");
+  if (!candidate.coverage || !Array.isArray(candidate.coverage.families) || !Array.isArray(candidate.coverage.invokedDescriptors)) {
+    throw new Error("Report coverage metadata is invalid");
+  }
+  if (candidate.coverage.invocations !== candidate.coverage.invokedDescriptors.length) {
+    throw new Error("Report invocation count does not match invoked descriptor IDs");
+  }
+  if (!candidate.coverage.invokedDescriptors.every((entry) =>
+    entry && typeof entry.command === "string" && typeof entry.family === "string" && typeof entry.id === "string"
+  )) {
+    throw new Error("Report invoked descriptor IDs are invalid");
+  }
+  if (candidate.frozenBundle !== null) validateFrozenBundleBinding(candidate.frozenBundle);
   if (!candidate.mimePreflight.every((entry) => typeof entry.path === "string" && typeof entry.pass === "boolean")) {
     throw new Error("MIME report entries are invalid");
   }
+}
+
+async function verifyFrozenBundle(metadataPath, current) {
+  if (!metadataPath) return null;
+  const resolvedMetadataPath = resolve(metadataPath);
+  let metadata;
+  try {
+    metadata = JSON.parse(await readFile(resolvedMetadataPath, "utf8"));
+  } catch (error) {
+    throw new Error(`Frozen-bundle metadata is unreadable: ${messageFor(error)}`);
+  }
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
+    throw new Error("Frozen-bundle metadata must be an object");
+  }
+  const baseSha = requiredSha(metadata.baseSha, "baseSha");
+  const candidateSha = requiredSha(metadata.candidateSha, "candidateSha");
+  if (baseSha !== current.baseSha) throw new Error(`Frozen bundle base SHA does not match HEAD^: ${baseSha}`);
+  if (candidateSha !== current.candidateSha) throw new Error(`Frozen bundle candidate SHA does not match HEAD: ${candidateSha}`);
+
+  const bundle = await verifyBoundFile(metadata.bundle, "bundle", resolvedMetadataPath);
+  const fixture = await verifyBoundFile(metadata.fixture, "fixture", resolvedMetadataPath);
+  const bundleIdentity = parseCandidateBundle(bundle.contents);
+  if (bundleIdentity.baseSha !== baseSha) {
+    throw new Error(`Frozen candidate bundle base SHA does not match metadata: ${bundleIdentity.baseSha}`);
+  }
+  if (bundleIdentity.candidateSha !== candidateSha) {
+    throw new Error(`Frozen candidate bundle SHA does not match metadata: ${bundleIdentity.candidateSha}`);
+  }
+  return {
+    baseSha,
+    bundleSha: bundle.sha256,
+    candidateSha,
+    fixtureSha: fixture.sha256,
+    metadataPath: resolvedMetadataPath,
+  };
+}
+
+async function verifyBoundFile(binding, label, metadataPath) {
+  if (!binding || typeof binding !== "object" || Array.isArray(binding)) {
+    throw new Error(`Frozen-bundle ${label} binding is missing`);
+  }
+  if (typeof binding.path !== "string" || !binding.path) {
+    throw new Error(`Frozen-bundle ${label} path is missing`);
+  }
+  const expectedSha = requiredSha(binding.sha256, `${label}.sha256`);
+  const resolvedPath = resolve(dirname(metadataPath), binding.path);
+  let contents;
+  let actualSha;
+  try {
+    contents = await readFile(resolvedPath);
+    actualSha = sha256(contents);
+  } catch (error) {
+    throw new Error(`Frozen-bundle ${label} file is unreadable: ${messageFor(error)}`);
+  }
+  if (actualSha !== expectedSha) throw new Error(`Frozen-bundle ${label} SHA does not match ${binding.path}`);
+  return { contents, sha256: actualSha };
+}
+
+function parseCandidateBundle(contents) {
+  let bundle;
+  try {
+    bundle = JSON.parse(contents.toString("utf8"));
+  } catch (error) {
+    throw new Error(`Frozen candidate bundle is not valid JSON: ${messageFor(error)}`);
+  }
+  if (!bundle || typeof bundle !== "object" || Array.isArray(bundle)) {
+    throw new Error("Frozen candidate bundle must be an object");
+  }
+  return {
+    baseSha: requiredSha(
+      bundle.parent_candidate_sha ?? bundle.parentCandidateSha ?? bundle.base_sha ?? bundle.baseSha,
+      "candidate-bundle base SHA"
+    ),
+    candidateSha: requiredSha(bundle.candidate_sha ?? bundle.candidateSha, "candidate-bundle candidate SHA"),
+  };
+}
+
+function requiredSha(value, label) {
+  if (typeof value !== "string" || !/^[a-f0-9]{40,64}$/i.test(value)) {
+    throw new Error(`Frozen-bundle ${label} must be a Git or SHA-256 hash`);
+  }
+  return value;
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function validateFrozenBundleBinding(binding) {
+  if (!binding || typeof binding !== "object") throw new Error("Frozen-bundle report binding is invalid");
+  requiredSha(binding.baseSha, "report.baseSha");
+  requiredSha(binding.candidateSha, "report.candidateSha");
+  requiredSha(binding.bundleSha, "report.bundleSha");
+  requiredSha(binding.fixtureSha, "report.fixtureSha");
 }
 
 async function writeValidatedReport() {

@@ -30,6 +30,24 @@ assert.ok(catalog.enemies.length >= 8);
 assert.ok(catalog.bosses.length >= 3);
 assert.ok(catalog.runUpgrades.length >= 14);
 
+const expectedFamilies = [
+  ["weapons", "weapon.fire"],
+  ["enemies", "enemy.spawn"],
+  ["bosses", "boss.spawn"],
+  ["runUpgrades", "runUpgrade.apply"],
+  ["effects", "effect.apply"],
+  ["pickups", "pickup.collect"],
+];
+assert.deepEqual(
+  catalog.families.map(({ key, command }) => [key, command]),
+  expectedFamilies,
+  "every descriptor family declares its exact invocation command"
+);
+for (const [key, command] of expectedFamilies) {
+  assert.ok(Array.isArray(catalog[key]), `${key} remains a descriptor array`);
+  assert.ok(catalog.commands.includes(command), `${command} remains registered`);
+}
+
 const start = harness.elements.get("titleStartGame");
 start.click();
 assert.equal(harness.dependencies.getGame().running, true, "owner commands require a real active run");

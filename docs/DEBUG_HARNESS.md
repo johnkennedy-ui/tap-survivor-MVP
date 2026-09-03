@@ -30,10 +30,11 @@ npm run smoke:debug-runtime:browser
 It starts its own loopback server on an ephemeral port, verifies JavaScript
 MIME types, uses a disposable Playwright browser profile, and writes a JSON
 report to `tmp/debug-runtime-browser-qa/report.json`. The report includes the
-candidate SHA, ordered browser diagnostics, scenario outcomes, and every
-registered command invocation. It reads `catalog()` at runtime: when content
-adds a compatible registered command family or entry, the runner includes it
-without a hand-maintained content-ID list.
+base/candidate SHA, ordered browser diagnostics, scenario outcomes, and every
+invoked descriptor ID. It reads `catalog()` at runtime and follows the
+catalog's explicit `families` metadata. Adding a descriptor family requires
+registering its `{ key, command }` mapping in the debug harness; an unmapped
+or malformed descriptor array fails QA instead of being silently skipped.
 
 For a visible, bounded manual session (five minutes by default), run:
 
@@ -48,6 +49,31 @@ the inspection window when needed, for example:
 
 ```bash
 npm run smoke:debug-runtime:browser -- --headed --manual-timeout-ms 900000
+```
+
+Headed mode first runs the same catalog-driven audit as headless mode, then
+holds the opted-in browser open for manual inspection. It does not use a
+separate, reduced manual path.
+
+For immutable QA evidence, pass a frozen-binding metadata file:
+
+```bash
+npm run smoke:debug-runtime:browser -- --frozen-bundle /path/to/qa-binding.json --report /path/to/report.json
+```
+
+The binding must contain the exact candidate parent and candidate SHA plus
+hash-bound bundle and fixture files. The bundle must be the frozen candidate
+bundle JSON and name the same parent/candidate pair. The runner verifies all
+four identities before opening the browser and records them in `frozenBundle`
+in the report.
+
+```json
+{
+  "baseSha": "<candidate parent Git SHA>",
+  "candidateSha": "<candidate Git SHA>",
+  "bundle": { "path": "candidate-bundle.json", "sha256": "<SHA-256>" },
+  "fixture": { "path": "index.html", "sha256": "<SHA-256>" }
+}
 ```
 
 The normal browser runtime stays inert: neither the automated runner nor
