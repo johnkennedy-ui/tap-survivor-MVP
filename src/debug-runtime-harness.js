@@ -16,6 +16,7 @@ export function createDebugRuntimeHarness({
   effects,
   getGame,
   pickupSystem,
+  resetRun,
 } = /** @type {any} */ ({})) {
   const registry = contentRegistry || {};
   const weaponDefs = registry.weaponDefs || {};
@@ -40,6 +41,7 @@ export function createDebugRuntimeHarness({
     version: DEBUG_RUNTIME_API_VERSION,
     commands: Object.freeze([
       "catalog",
+      "run.reset",
       "weapon.fire",
       "enemy.spawn",
       "boss.spawn",
@@ -53,7 +55,9 @@ export function createDebugRuntimeHarness({
       )
     ),
     enemies: Object.freeze(
-      enemyTypes.map((enemy) => Object.freeze({ id: enemy.id, name: enemy.name }))
+      enemyTypes.map((enemy) =>
+        Object.freeze({ id: enemy.id, name: enemy.name, minTowerFloor: enemy.minTowerFloor || 1 })
+      )
     ),
     bosses: Object.freeze(
       bossIds.map((id) => Object.freeze({ id, name: bossAbilities[id]?.name || id }))
@@ -121,6 +125,20 @@ export function createDebugRuntimeHarness({
     return { id: args.id };
   }
 
+  function resetArguments(command, args) {
+    const malformed = argumentObject(command, args);
+    if (malformed) return { error: malformed };
+    const keys = Object.keys(args);
+    if (keys.some((key) => key !== "towerFloor")) {
+      return { error: failure(command, "MALFORMED_ARGS", "run.reset accepts only towerFloor") };
+    }
+    if (args.towerFloor === undefined) return { towerFloor: 1 };
+    if (!Number.isInteger(args.towerFloor) || args.towerFloor < 1) {
+      return { error: failure(command, "MALFORMED_ARGS", "towerFloor must be a positive integer") };
+    }
+    return { towerFloor: args.towerFloor };
+  }
+
   function invoke(command, args = {}) {
     if (command === "catalog") {
       if (args !== undefined && (typeof args !== "object" || Array.isArray(args) || Object.keys(args).length)) {
@@ -130,6 +148,19 @@ export function createDebugRuntimeHarness({
     }
     if (typeof command !== "string") {
       return failure(command, "UNKNOWN_COMMAND", "Unknown debug command");
+    }
+
+    if (command === "run.reset") {
+      const parsedReset = resetArguments(command, args);
+      if (parsedReset.error) return parsedReset.error;
+      if (typeof resetRun !== "function") {
+        return failure(command, "OWNER_UNAVAILABLE", "Run-state owner is unavailable");
+      }
+      const game = resetRun(parsedReset);
+      if (!game?.running || !game.player) {
+        return failure(command, "OWNER_REJECTED", "Run-state owner did not create an active run");
+      }
+      return result(command, { towerFloor: game.towerFloor });
     }
 
     const parsed = idArgument(command, args);

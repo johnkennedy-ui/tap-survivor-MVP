@@ -442,6 +442,13 @@ export function createModuleGameDependencyBag({
     });
     return run;
   };
+  const resetDebugRun = ({ towerFloor = 1 } = {}) => {
+    const run = resetGameState();
+    run.towerFloor = towerFloor;
+    mapSystemInstance.applyToGame(run);
+    stateStore.setGame(run);
+    return run;
+  };
 
   const debugRuntime = createDebugRuntimeHarness({
     combat: combatSystem,
@@ -449,6 +456,7 @@ export function createModuleGameDependencyBag({
     effects,
     getGame: stateStore.getGame,
     pickupSystem,
+    resetRun: resetDebugRun,
   });
   platformAdapters.debugSystem.setRuntime?.(debugRuntime);
 

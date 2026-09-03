@@ -32,27 +32,49 @@ assert.ok(catalog.runUpgrades.length >= 14);
 
 const start = harness.elements.get("titleStartGame");
 start.click();
-const game = harness.dependencies.getGame();
-assert.equal(game.running, true, "owner commands require a real active run");
+assert.equal(harness.dependencies.getGame().running, true, "owner commands require a real active run");
 
+function resetRun(towerFloor = 1) {
+  const response = api.invoke("run.reset", { towerFloor });
+  assert.equal(response.ok, true, `reset floor ${towerFloor}`);
+  const game = harness.dependencies.getGame();
+  assert.equal(game.running, true, "debug reset creates a real active run");
+  assert.equal(game.towerFloor, towerFloor, "debug reset uses the requested floor");
+  return game;
+}
+
+for (const { id } of catalog.weapons) {
+  resetRun();
+  assert.equal(api.invoke("weapon.fire", { id }).ok, true, `weapon ${id}`);
+}
+for (const { id, minTowerFloor } of catalog.enemies) {
+  resetRun(minTowerFloor);
+  assert.equal(api.invoke("enemy.spawn", { id }).ok, true, `enemy ${id}`);
+}
+for (const { id } of catalog.bosses) {
+  resetRun();
+  assert.equal(api.invoke("boss.spawn", { id }).ok, true, `boss ${id}`);
+}
+for (const { id } of catalog.runUpgrades) {
+  resetRun();
+  assert.equal(api.invoke("runUpgrade.apply", { id }).ok, true, `upgrade ${id}`);
+}
+for (const { id } of catalog.effects) {
+  resetRun();
+  assert.equal(api.invoke("effect.apply", { id }).ok, true, `effect ${id}`);
+}
+for (const { id } of catalog.pickups) {
+  resetRun();
+  assert.equal(api.invoke("pickup.collect", { id }).ok, true, `pickup ${id}`);
+}
+
+const game = resetRun();
 const weaponId = first(catalog, "weapons");
-assert.equal(api.invoke("weapon.fire", { id: weaponId }).ok, true);
-const enemyId = first(catalog, "enemies");
-assert.equal(api.invoke("enemy.spawn", { id: enemyId }).ok, true);
-const bossId = first(catalog, "bosses");
-assert.equal(api.invoke("boss.spawn", { id: bossId }).ok, true);
-const upgradeId = first(catalog, "runUpgrades");
-assert.equal(api.invoke("runUpgrade.apply", { id: upgradeId }).ok, true);
-const effectId = first(catalog, "effects");
-assert.equal(api.invoke("effect.apply", { id: effectId }).ok, true);
-assert.equal(api.invoke("pickup.collect", { id: "xp" }).ok, true);
-assert.equal(api.invoke("pickup.collect", { id: "coin" }).ok, true);
-assert.equal(api.invoke("pickup.collect", { id: "heart" }).ok, true);
-
 const beforeInvalid = JSON.stringify(game);
 assert.equal(api.invoke("weapon.fire", { id: "not-registered" }).error.code, "UNKNOWN_ID");
 assert.equal(api.invoke("weapon.fire", { id: weaponId, extra: true }).error.code, "MALFORMED_ARGS");
 assert.equal(api.invoke("weapon.fire").error.code, "MALFORMED_ARGS");
+assert.equal(api.invoke("run.reset", { towerFloor: 0 }).error.code, "MALFORMED_ARGS");
 assert.equal(JSON.stringify(game), beforeInvalid, "invalid commands do not mutate an active run");
 
 game.running = false;
