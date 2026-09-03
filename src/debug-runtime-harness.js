@@ -7,6 +7,8 @@ export const DEBUG_RUNTIME_GLOBAL_NAME = "TapSurvivorDebugRuntime";
  * browser side effects; the platform adapter calls bind() after the runtime is
  * composed.  This keeps the harness useful in node fixtures and keeps the
  * browser globalRef boundary in one place.
+ *
+ * @param {any} dependencies
  */
 export function createDebugRuntimeHarness({
   combat,
@@ -14,7 +16,7 @@ export function createDebugRuntimeHarness({
   effects,
   getGame,
   pickupSystem,
-} = {}) {
+} = /** @type {any} */ ({})) {
   const registry = contentRegistry || {};
   const weaponDefs = registry.weaponDefs || {};
   const enemyTypes = Array.isArray(registry.enemyTypes) ? registry.enemyTypes : [];
