@@ -67,9 +67,7 @@
     function weaponCooldown(weapon) {
       const shopBonuses = getShopBonuses?.() || {};
       const relicEffects = getRelicSpecialEffects?.() || {};
-      const rateTier =
-        getRunUpgradeTier("run_fire_rate") +
-        (shopBonuses.fireRate || 0);
+      const rateTier = getRunUpgradeTier("run_fire_rate") + (shopBonuses.fireRate || 0);
       return (
         (weapon.cooldown / (1 + rateTier * 0.12 + (relicEffects.cooldownReduction || 0))) *
         projectileSkillModifier(weapon, "projectileCooldownMultiplier")
@@ -87,18 +85,14 @@
     function weaponReach(weapon) {
       const shopBonuses = getShopBonuses?.() || {};
       const relicEffects = getRelicSpecialEffects?.() || {};
-      const radiusTier =
-        getRunUpgradeTier("run_attack_radius") +
-        (shopBonuses.attackRadius || 0);
+      const radiusTier = getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
       return (weapon.range || 0) * (1 + radiusTier * 0.12 + (relicEffects.areaRadiusBonus || 0));
     }
 
     function weaponWidth(weapon) {
       const shopBonuses = getShopBonuses?.() || {};
       const relicEffects = getRelicSpecialEffects?.() || {};
-      const radiusTier =
-        getRunUpgradeTier("run_attack_radius") +
-        (shopBonuses.attackRadius || 0);
+      const radiusTier = getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
       return (weapon.width || 0) * (1 + radiusTier * 0.1 + (relicEffects.beamWidthBonus || 0));
     }
 
@@ -106,9 +100,7 @@
       const shopBonuses = getShopBonuses?.() || {};
       const relicEffects = getRelicSpecialEffects?.() || {};
       const projectileSizeBonus = relicEffects.projectileSizeBonus || 0;
-      const radiusTier =
-        getRunUpgradeTier("run_attack_radius") +
-        (shopBonuses.attackRadius || 0);
+      const radiusTier = getRunUpgradeTier("run_attack_radius") + (shopBonuses.attackRadius || 0);
       return (weapon.radius || 0) * (1 + radiusTier * 0.12 + projectileSizeBonus);
     }
 
