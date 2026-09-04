@@ -76,6 +76,8 @@
         bossSpawnNotice: null,
         weaponTimers: {},
         runUpgradeTiers: {},
+        // Tracks only tiers selected through this run's level-up flow; it is never saved.
+        levelUpRunUpgradeTiers: {},
         spawnTimer: 0,
         bossAttackTimer: 3.8,
         bossAttackCooldownMax: 3.8,

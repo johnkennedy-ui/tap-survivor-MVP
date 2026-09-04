@@ -165,6 +165,9 @@
             runUpgradeId: upgrade.id,
             apply: () => {
               game.runUpgradeTiers[upgrade.id] = tier + tierGain;
+              game.levelUpRunUpgradeTiers ??= {};
+              game.levelUpRunUpgradeTiers[upgrade.id] =
+                (game.levelUpRunUpgradeTiers[upgrade.id] || 0) + tierGain;
               for (let appliedTier = 0; appliedTier < tierGain; appliedTier += 1) {
                 upgrade.apply?.(game);
               }

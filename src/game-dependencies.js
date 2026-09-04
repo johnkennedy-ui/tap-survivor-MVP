@@ -3524,6 +3524,9 @@
             runUpgradeId: upgrade.id,
             apply: () => {
               game.runUpgradeTiers[upgrade.id] = tier + tierGain;
+              game.levelUpRunUpgradeTiers ??= {};
+              game.levelUpRunUpgradeTiers[upgrade.id] =
+                (game.levelUpRunUpgradeTiers[upgrade.id] || 0) + tierGain;
               for (let appliedTier = 0; appliedTier < tierGain; appliedTier += 1) {
                 upgrade.apply?.(game);
               }
@@ -7744,7 +7747,11 @@
         : playerFacingVector(p);
       const splitTier = getRunUpgradeTier?.("run_split_shot") || 0;
       const directions = beamDirections(dirX, dirY, splitTier);
-      const bounces = getRunUpgradeTier?.("run_wall_bounce") || 0;
+      const activeRicochetTier = getRunUpgradeTier?.("run_wall_bounce") || 0;
+      const bounces =
+        weaponId === "laser_staff" && !(game.levelUpRunUpgradeTiers?.run_wall_bounce > 0)
+          ? 0
+          : activeRicochetTier;
       const reach = weaponReach(weapon);
       const width = weaponWidth(weapon);
       const branch = { bounces, player: p, reach, weapon, weaponId, width };
@@ -8893,6 +8900,8 @@
         bossSpawnNotice: null,
         weaponTimers: {},
         runUpgradeTiers: {},
+        // Tracks only tiers selected through this run's level-up flow; it is never saved.
+        levelUpRunUpgradeTiers: {},
         spawnTimer: 0,
         bossAttackTimer: 3.8,
         bossAttackCooldownMax: 3.8,

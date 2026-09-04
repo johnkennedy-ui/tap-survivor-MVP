@@ -36,7 +36,11 @@
         : playerFacingVector(p);
       const splitTier = getRunUpgradeTier?.("run_split_shot") || 0;
       const directions = beamDirections(dirX, dirY, splitTier);
-      const bounces = getRunUpgradeTier?.("run_wall_bounce") || 0;
+      const activeRicochetTier = getRunUpgradeTier?.("run_wall_bounce") || 0;
+      const bounces =
+        weaponId === "laser_staff" && !(game.levelUpRunUpgradeTiers?.run_wall_bounce > 0)
+          ? 0
+          : activeRicochetTier;
       const reach = weaponReach(weapon);
       const width = weaponWidth(weapon);
       const branch = { bounces, player: p, reach, weapon, weaponId, width };
