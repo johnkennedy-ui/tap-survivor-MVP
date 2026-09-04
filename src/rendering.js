@@ -5,6 +5,29 @@
 (() => {
   "use strict";
 
+  const DIRECTIONAL_HEADINGS = Object.freeze(["nw", "n", "ne", "w", "e", "sw", "s", "se"]);
+
+  /** Resolve a vector to the nearest 45-degree sector in screen coordinates. */
+  function resolveHeading(x, y, fallback = "s") {
+    const dx = Number(x);
+    const dy = Number(y);
+    if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) < 0.0001) {
+      return DIRECTIONAL_HEADINGS.includes(fallback) ? fallback : "s";
+    }
+    const sector = Math.round((Math.atan2(-dy, dx) / (Math.PI / 4) + 8) % 8) % 8;
+    return ["e", "ne", "n", "nw", "w", "sw", "s", "se"][sector];
+  }
+
+  function headingForEntity(entity, fallback = "s") {
+    const chargeX = Number(entity?.chargeDirX);
+    const chargeY = Number(entity?.chargeDirY);
+    if (entity?.chargeState && Math.hypot(chargeX, chargeY) >= 0.0001) return resolveHeading(chargeX, chargeY, fallback);
+    const velocityX = Number(entity?.vx);
+    const velocityY = Number(entity?.vy);
+    if (Math.hypot(velocityX, velocityY) >= 0.0001) return resolveHeading(velocityX, velocityY, fallback);
+    return resolveHeading(entity?.facingX, entity?.facingY, fallback);
+  }
+
   const BEAM_SPRITE_RASTER_WIDTH = 256;
 
   function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, createSkillRailRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
@@ -110,11 +133,15 @@
       const previousAlpha = ctx.globalAlpha;
       if (p.blinkTimer > 0) ctx.globalAlpha = 0.35 + Math.abs(Math.sin(p.blinkTimer * 24)) * 0.65;
       const spriteId = playerSpriteId(p);
-      const playerDrawn = drawSprite(spriteId, p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
-        flipX: playerFacesLeft(p),
-      }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
-        flipX: playerFacesLeft(p),
-      }));
+      const size = Math.max(70, p.radius * 3.8);
+      const playerDrawn = p.actionTimer > 0 && p.actionSprite
+        ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
+        : drawSprite("player", p.x, p.y, size, 0, {
+            sheetId: "directional_player",
+            animationId: "move",
+            animationState: headingForEntity(p),
+            time: p.animTime,
+          }) || drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
       if (!playerDrawn) {
         ctx.fillStyle = "#69d2ff";
         ctx.beginPath();
@@ -141,14 +168,14 @@
       ctx.stroke();
     }
 
-    function playerFacesLeft(p) {
-      return p.targetX < p.x - 2;
-    }
-
     function playerSpriteId(p) {
       if (p.actionTimer > 0 && p.actionSprite) return `player:${p.actionSprite}`;
       if (p.moving) return "player:walk";
       return "player";
+    }
+
+    function playerFacesLeft(p) {
+      return p.targetX < p.x - 2;
     }
 
     function drawPlayerHpBar(p) {

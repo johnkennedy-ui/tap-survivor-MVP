@@ -3931,6 +3931,906 @@ export const content = {
               }
             }
           }
+        },
+        "directional_player": {
+          "id": "directional_player",
+          "path": "assets/generated/tower/sheet-20260614/wizard-eight-way-run-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_drifter": {
+          "id": "directional_drifter",
+          "path": "assets/generated/tower/directional-v1/drifter-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_skitter": {
+          "id": "directional_skitter",
+          "path": "assets/generated/tower/directional-v1/skitter-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_bulwark": {
+          "id": "directional_bulwark",
+          "path": "assets/generated/tower/directional-v1/bulwark-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_hexer": {
+          "id": "directional_hexer",
+          "path": "assets/generated/tower/directional-v1/hexer-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_verdant_skitter": {
+          "id": "directional_verdant_skitter",
+          "path": "assets/generated/tower/directional-v1/verdant-skitter-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_dusk_crawler": {
+          "id": "directional_dusk_crawler",
+          "path": "assets/generated/tower/directional-v1/dusk-crawler-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_crimson_hexer": {
+          "id": "directional_crimson_hexer",
+          "path": "assets/generated/tower/directional-v1/crimson-hexer-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_obsidian_bulwark": {
+          "id": "directional_obsidian_bulwark",
+          "path": "assets/generated/tower/directional-v1/obsidian-bulwark-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_warden": {
+          "id": "directional_warden",
+          "path": "assets/generated/tower/directional-v1/warden-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_charger": {
+          "id": "directional_charger",
+          "path": "assets/generated/tower/directional-v1/charger-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
+        },
+        "directional_turret": {
+          "id": "directional_turret",
+          "path": "assets/generated/tower/directional-v1/turret-eight-way-v1.png?v=directional-v1",
+          "kind": "spritesheet",
+          "columns": 3,
+          "rows": 3,
+          "animations": {
+            "move": {
+              "nw": {
+                "row": 0,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "n": {
+                "row": 0,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "ne": {
+                "row": 0,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "w": {
+                "row": 1,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "e": {
+                "row": 1,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "sw": {
+                "row": 2,
+                "frames": [
+                  0
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "s": {
+                "row": 2,
+                "frames": [
+                  1
+                ],
+                "fps": 1,
+                "loop": false
+              },
+              "se": {
+                "row": 2,
+                "frames": [
+                  2
+                ],
+                "fps": 1,
+                "loop": false
+              }
+            }
+          }
         }
       },
       "weapons": {

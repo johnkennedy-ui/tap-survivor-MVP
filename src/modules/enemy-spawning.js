@@ -142,6 +142,8 @@ export function createEnemySpawnSystem({
       attackVisualTimer: 0,
       vx: 0,
       vy: 0,
+      facingX: game.player.x - position.x,
+      facingY: game.player.y - position.y,
     });
   }
 

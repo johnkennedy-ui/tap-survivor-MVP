@@ -1,3 +1,5 @@
+import { headingForEntity } from "./directional-facing.js";
+
 const BEAM_SPRITE_RASTER_WIDTH = 256;
 
 export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, createSkillRailRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
@@ -103,11 +105,15 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     const previousAlpha = ctx.globalAlpha;
     if (p.blinkTimer > 0) ctx.globalAlpha = 0.35 + Math.abs(Math.sin(p.blinkTimer * 24)) * 0.65;
     const spriteId = playerSpriteId(p);
-    const playerDrawn = drawSprite(spriteId, p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
-      flipX: playerFacesLeft(p),
-    }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
-      flipX: playerFacesLeft(p),
-    }));
+    const size = Math.max(70, p.radius * 3.8);
+    const playerDrawn = p.actionTimer > 0 && p.actionSprite
+      ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
+      : drawSprite("player", p.x, p.y, size, 0, {
+          sheetId: "directional_player",
+          animationId: "move",
+          animationState: headingForEntity(p),
+          time: p.animTime,
+        }) || drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
     if (!playerDrawn) {
       ctx.fillStyle = "#69d2ff";
       ctx.beginPath();
@@ -134,14 +140,14 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     ctx.stroke();
   }
 
-  function playerFacesLeft(p) {
-    return p.targetX < p.x - 2;
-  }
-
   function playerSpriteId(p) {
     if (p.actionTimer > 0 && p.actionSprite) return `player:${p.actionSprite}`;
     if (p.moving) return "player:walk";
     return "player";
+  }
+
+  function playerFacesLeft(p) {
+    return p.targetX < p.x - 2;
   }
 
   function drawPlayerHpBar(p) {

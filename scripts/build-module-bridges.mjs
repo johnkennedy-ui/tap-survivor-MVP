@@ -273,6 +273,7 @@ const bridges = [
       "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
       "createEnemyRenderer",
     ],
+    bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
   },
   {
     source: "src/modules/rendering.js",
@@ -280,6 +281,7 @@ const bridges = [
     globalName: null,
     retiredGlobalName: "TapSurvivorRendering",
     exports: ["createRenderer"],
+    bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
   },
   {
     source: "src/modules/storage-adapter.js",
@@ -473,10 +475,12 @@ const bridges = [
           "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
           "createEnemyRenderer",
         ],
+        bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
       },
       {
         source: "src/modules/rendering.js",
         exports: ["createRenderer"],
+        bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
       },
       {
         source: "src/modules/shop-pricing.js",

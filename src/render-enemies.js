@@ -5,6 +5,29 @@
 (() => {
   "use strict";
 
+  const DIRECTIONAL_HEADINGS = Object.freeze(["nw", "n", "ne", "w", "e", "sw", "s", "se"]);
+
+  /** Resolve a vector to the nearest 45-degree sector in screen coordinates. */
+  function resolveHeading(x, y, fallback = "s") {
+    const dx = Number(x);
+    const dy = Number(y);
+    if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) < 0.0001) {
+      return DIRECTIONAL_HEADINGS.includes(fallback) ? fallback : "s";
+    }
+    const sector = Math.round((Math.atan2(-dy, dx) / (Math.PI / 4) + 8) % 8) % 8;
+    return ["e", "ne", "n", "nw", "w", "sw", "s", "se"][sector];
+  }
+
+  function headingForEntity(entity, fallback = "s") {
+    const chargeX = Number(entity?.chargeDirX);
+    const chargeY = Number(entity?.chargeDirY);
+    if (entity?.chargeState && Math.hypot(chargeX, chargeY) >= 0.0001) return resolveHeading(chargeX, chargeY, fallback);
+    const velocityX = Number(entity?.vx);
+    const velocityY = Number(entity?.vy);
+    if (Math.hypot(velocityX, velocityY) >= 0.0001) return resolveHeading(velocityX, velocityY, fallback);
+    return resolveHeading(entity?.facingX, entity?.facingY, fallback);
+  }
+
   const MODULE_NATIVE_RENDER_ENEMIES_SLOTS = Object.freeze(["renderEnemies"]);
 
   const MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS = Object.freeze(["createEnemyRenderer"]);
@@ -46,6 +69,23 @@
     function drawEnemySpriteSheet(enemy, game, spriteSize) {
       if (!spriteSheetRenderer?.drawAnimation) return false;
       const animationTime = Number(enemy.animTime || 0);
+      const directionalId = Number.isFinite(enemy.facingX) && Number.isFinite(enemy.facingY) && (enemy.boss
+        ? enemy.bossKind || enemy.bossAbilities?.[0]
+        : enemy.assetId || enemy.type);
+      const state = enemy.boss ? bossAnimationState(enemy, game, bossAnimationIdFor(enemy)) : enemyAnimationState(enemy);
+      if (directionalId && (state === "idle" || state === "default")) {
+        const directionalDrawn = spriteSheetRenderer.drawAnimation(
+          `directional_${directionalId}`,
+          "move",
+          headingForEntity(enemy),
+          enemy.x,
+          enemy.y,
+          spriteSize,
+          spriteSize,
+          { time: animationTime },
+        );
+        if (directionalDrawn) return true;
+      }
       if (enemy.boss) {
         const bossAnimationId = bossAnimationIdFor(enemy);
         return spriteSheetRenderer.drawAnimation(
@@ -70,6 +110,7 @@
         { flipX: enemyFacesLeft(enemy), time: animationTime },
       );
     }
+
 
     function enemyAnimationState(enemy) {
       if (isRangedEnemy(enemy) && (enemy.attackVisualTimer || 0) > 0) return "attack";
@@ -104,12 +145,6 @@
 
     function activeBossAttack(game, type, enemy) {
       return game?.bossAttacks?.find((attack) => attack.type === type && Math.hypot(attack.x - enemy.x, attack.y - enemy.y) <= Math.max(190, enemy.radius * 5));
-    }
-
-    function enemyFacesLeft(enemy) {
-      if (Number.isFinite(enemy.vx)) return enemy.vx < -1;
-      if (Number.isFinite(enemy.chargeDirX)) return enemy.chargeDirX < -0.1;
-      return false;
     }
 
     function drawEnemyFloorTint(enemy, spriteSize) {
@@ -172,6 +207,12 @@
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.restore();
+    }
+
+    function enemyFacesLeft(enemy) {
+      if (enemy.bossKind === "charger" && enemy.chargeState && Number.isFinite(enemy.chargeDirX)) return enemy.chargeDirX < -0.1;
+      if (Number.isFinite(enemy.vx)) return enemy.vx < -1;
+      return false;
     }
 
     function withAlpha(color, alpha) {
