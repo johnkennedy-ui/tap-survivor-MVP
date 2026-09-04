@@ -264,6 +264,29 @@
       "target": 45000,
       "rewardQp": 7
     },
+    "laser_staff_mastery": {
+      "name": "Laser Focus",
+      "description": "Deal 400 damage with Laser Staff.",
+      "weaponId": "laser_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "laser_staff_expert"
+    },
+    "laser_staff_expert": {
+      "name": "Laser Conduit",
+      "description": "Deal 2,200 damage with Laser Staff.",
+      "weaponId": "laser_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "laser_staff_master"
+    },
+    "laser_staff_master": {
+      "name": "Laser Channel",
+      "description": "Deal 8,500 damage with Laser Staff.",
+      "weaponId": "laser_staff",
+      "target": 8500,
+      "rewardQp": 5
+    },
     "frost_orb_mastery": {
       "name": "Frost Control",
       "description": "Deal 350 damage with Frost Orb.",

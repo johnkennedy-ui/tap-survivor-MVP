@@ -13,8 +13,10 @@
    * @param {any} [options]
    */
   function createWeaponBehaviorSystem({
+    canvas,
     weaponDefs,
     getGame,
+    getRunUpgradeTier,
     nearestEnemy,
     weaponDamage,
     weaponReach,
@@ -32,36 +34,104 @@
       const { x: dirX, y: dirY } = target
         ? normalizeVector(target.x - p.x, target.y - p.y)
         : playerFacingVector(p);
-      let dealt = 0;
-
-      game.enemies.forEach((enemy) => {
-        const toEnemyX = enemy.x - p.x;
-        const toEnemyY = enemy.y - p.y;
-        const along = toEnemyX * dirX + toEnemyY * dirY;
-        const reach = weaponReach(weapon);
-        if (along < 0 || along > reach) return;
-        const side = Math.abs(toEnemyX * dirY - toEnemyY * dirX);
-        if (side <= weaponWidth(weapon) + enemy.radius) {
-          dealt += damageEnemy(enemy, weaponDamage(weaponId), weaponId);
-        }
-      });
+      const splitTier = getRunUpgradeTier?.("run_split_shot") || 0;
+      const directions = beamDirections(dirX, dirY, splitTier);
+      const bounces = getRunUpgradeTier?.("run_wall_bounce") || 0;
+      const reach = weaponReach(weapon);
+      const width = weaponWidth(weapon);
+      const branch = { bounces, player: p, reach, weapon, weaponId, width };
+      const dealt = directions.reduce((total, direction) => total + fireBranch(direction), 0);
 
       if (dealt > 0 && weaponId === "prism_beam") {
         game.laserDamage += dealt;
         addQuestProgress("use_laser_run", 1);
       }
-
-      game.beams.push({
-        weaponId,
-        x: p.x,
-        y: p.y,
-        endX: p.x + dirX * weaponReach(weapon),
-        endY: p.y + dirY * weaponReach(weapon),
-        width: weaponWidth(weapon),
-        color: weapon.color,
-        life: 0.16,
-      });
       reapEnemies();
+
+      function fireBranch(direction) {
+        return fireBeamBranch(branch, direction);
+      }
+    }
+
+    function fireBeamBranch({ bounces, player, reach, weapon, weaponId, width }, direction) {
+      const game = getGame();
+      const hitEnemies = new Set();
+      let dealt = 0;
+      let remaining = reach;
+      let remainingBounces = Math.max(0, bounces);
+      let startX = player.x;
+      let startY = player.y;
+      let dirX = direction.x;
+      let dirY = direction.y;
+
+      while (remaining > 0) {
+        const wall = nextBeamWall(startX, startY, dirX, dirY);
+        const segmentLength = Math.min(remaining, wall.distance);
+        const endX = startX + dirX * segmentLength;
+        const endY = startY + dirY * segmentLength;
+        if (segmentLength > 0) {
+          game.enemies.forEach((enemy) => {
+            if (hitEnemies.has(enemy)) return;
+            const toEnemyX = enemy.x - startX;
+            const toEnemyY = enemy.y - startY;
+            const along = toEnemyX * dirX + toEnemyY * dirY;
+            if (along < 0 || along > segmentLength) return;
+            const side = Math.abs(toEnemyX * dirY - toEnemyY * dirX);
+            if (side <= width + enemy.radius) {
+              dealt += damageEnemy(enemy, weaponDamage(weaponId), weaponId);
+              hitEnemies.add(enemy);
+            }
+          });
+          game.beams.push({
+            weaponId,
+            x: startX,
+            y: startY,
+            endX,
+            endY,
+            width,
+            color: weapon.color,
+            life: 0.16,
+          });
+        }
+        remaining -= segmentLength;
+        if (!wall.hit || remaining <= 0 || remainingBounces <= 0) break;
+        if (wall.hitX) dirX *= -1;
+        if (wall.hitY) dirY *= -1;
+        remainingBounces -= 1;
+        startX = endX + dirX * 0.001;
+        startY = endY + dirY * 0.001;
+      }
+      return dealt;
+    }
+
+    function beamDirections(dirX, dirY, splitTier) {
+      const spread = 0.26;
+      const angles = [0];
+      if (splitTier >= 1) angles.push(-spread, spread);
+      if (splitTier >= 2) angles.push(-spread * 2, spread * 2);
+      return angles.map((angle) => rotateDirection(dirX, dirY, angle));
+    }
+
+    function rotateDirection(x, y, angle) {
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      return { x: x * cos - y * sin, y: x * sin + y * cos };
+    }
+
+    function nextBeamWall(x, y, dirX, dirY) {
+      if (!Number.isFinite(canvas?.width) || !Number.isFinite(canvas?.height)) {
+        return { distance: Infinity, hit: false, hitX: false, hitY: false };
+      }
+      const xDistance = dirX > 0 ? (canvas.width - x) / dirX : dirX < 0 ? -x / dirX : Infinity;
+      const yDistance = dirY > 0 ? (canvas.height - y) / dirY : dirY < 0 ? -y / dirY : Infinity;
+      const distance = Math.min(xDistance, yDistance);
+      const epsilon = 0.000001;
+      return {
+        distance,
+        hit: Number.isFinite(distance),
+        hitX: Math.abs(xDistance - distance) <= epsilon,
+        hitY: Math.abs(yDistance - distance) <= epsilon,
+      };
     }
 
     function fireCone(weaponId) {

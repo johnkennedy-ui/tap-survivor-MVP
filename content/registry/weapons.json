@@ -25,6 +25,19 @@
       "opensQuest": "use_laser_run",
       "assetId": "prism_beam"
     },
+    "laser_staff": {
+      "name": "Laser Staff",
+      "description": "Piercing beam staff that ricochets and splits with run upgrades.",
+      "upgradeId": "laser_staff_damage",
+      "cooldown": 1.3,
+      "damage": 30,
+      "kind": "beam",
+      "range": 410,
+      "width": 20,
+      "color": "#7de7ff",
+      "opensQuest": "laser_staff_mastery",
+      "assetId": "laser_staff"
+    },
     "frost_orb": {
       "name": "Frost Orb",
       "description": "Slow projectile with heavier impact.",
@@ -179,6 +192,15 @@
       "branch": "Core",
       "requiresQuest": "spark_bolt_mastery",
       "opensQuest": "use_laser_run"
+    },
+    {
+      "id": "unlock_laser_staff",
+      "weaponId": "laser_staff",
+      "cost": 2,
+      "branch": "Core",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "laser_staff_mastery"
     },
     {
       "id": "unlock_frost_orb",

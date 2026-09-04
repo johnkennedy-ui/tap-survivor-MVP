@@ -285,6 +285,59 @@
           "animatedIcon": false,
           "iconSrc": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260614-weapons"
         },
+        "laser_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-02-prism_beam.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 52,
+              "y": 27,
+              "width": 160,
+              "height": 145
+            },
+            {
+              "x": 262,
+              "y": 14,
+              "width": 255,
+              "height": 150
+            },
+            {
+              "x": 540,
+              "y": 32,
+              "width": 555,
+              "height": 105
+            },
+            {
+              "x": 805,
+              "y": 32,
+              "width": 300,
+              "height": 105
+            },
+            {
+              "x": 1138,
+              "y": 59,
+              "width": 215,
+              "height": 55
+            },
+            {
+              "x": 1405,
+              "y": 54,
+              "width": 150,
+              "height": 65
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 1.05,
+          "effectAlpha": 0.76,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260614-weapons"
+        },
         "frost_orb": {
           "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
           "fps": 10,
@@ -2013,6 +2066,7 @@
     },
     "sfx": {
       "weapons": {
+        "laser_staff": "assets/generated/tower/sfx/prism_beam.wav?v=sfx-20260615",
         "lightning_staff": "assets/generated/tower/sfx/chain_spark.wav?v=sfx-20260615",
         "fire_staff": "assets/generated/tower/sfx/flame_wave.wav?v=sfx-20260615",
         "water_staff": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615"

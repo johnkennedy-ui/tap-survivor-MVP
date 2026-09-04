@@ -4,6 +4,7 @@
       "weapons": {
         "spark_bolt": "assets/generated/tower/sfx/spark_bolt.wav?v=sfx-20260615",
         "prism_beam": "assets/generated/tower/sfx/prism_beam.wav?v=sfx-20260615",
+        "laser_staff": "assets/generated/tower/sfx/prism_beam.wav?v=sfx-20260615",
         "frost_orb": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615",
         "flame_wave": "assets/generated/tower/sfx/flame_wave.wav?v=sfx-20260615",
         "saw_drone": "assets/generated/tower/sfx/saw_drone.wav?v=sfx-20260615",

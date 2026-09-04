@@ -144,7 +144,10 @@ export function createRelicSystem({ relicDefs, weaponDefs = {}, random = Math.ra
     const ids = new Set(["run_fire_rate", "run_flat_damage", "run_percent_damage"]);
     const kinds = new Set((equippedWeaponIds || []).map((id) => weaponDefs[id]?.kind).filter(Boolean));
     if (kinds.has("projectile")) {
-      ["run_projectile_pierce", "run_wall_bounce", "run_split_shot", "run_split_on_hit"].forEach((id) => ids.add(id));
+      ["run_projectile_pierce", "run_split_on_hit"].forEach((id) => ids.add(id));
+    }
+    if (kinds.has("projectile") || kinds.has("beam")) {
+      ["run_wall_bounce", "run_split_shot"].forEach((id) => ids.add(id));
     }
     if (["beam", "cone", "radial", "target_area", "lingering_area", "mine"].some((kind) => kinds.has(kind))) {
       ids.add("run_attack_radius");

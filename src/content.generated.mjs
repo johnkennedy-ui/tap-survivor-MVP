@@ -27,6 +27,19 @@ export const content = {
       "opensQuest": "use_laser_run",
       "assetId": "prism_beam"
     },
+    "laser_staff": {
+      "name": "Laser Staff",
+      "description": "Piercing beam staff that ricochets and splits with run upgrades.",
+      "upgradeId": "laser_staff_damage",
+      "cooldown": 1.3,
+      "damage": 30,
+      "kind": "beam",
+      "range": 410,
+      "width": 20,
+      "color": "#7de7ff",
+      "opensQuest": "laser_staff_mastery",
+      "assetId": "laser_staff"
+    },
     "frost_orb": {
       "name": "Frost Orb",
       "description": "Slow projectile with heavier impact.",
@@ -181,6 +194,15 @@ export const content = {
       "branch": "Core",
       "requiresQuest": "spark_bolt_mastery",
       "opensQuest": "use_laser_run"
+    },
+    {
+      "id": "unlock_laser_staff",
+      "weaponId": "laser_staff",
+      "cost": 2,
+      "branch": "Core",
+      "requiresNode": "unlock_laser",
+      "requiresQuest": "use_laser_run",
+      "opensQuest": "laser_staff_mastery"
     },
     {
       "id": "unlock_frost_orb",
@@ -527,14 +549,14 @@ export const content = {
     {
       "id": "run_wall_bounce",
       "name": "Ricochet Shots",
-      "description": "Projectiles bounce off arena walls.",
+      "description": "Projectiles and beams bounce off arena walls.",
       "maxTier": 2,
       "family": "projectile"
     },
     {
       "id": "run_split_shot",
       "name": "Split Fire",
-      "description": "Projectile weapons fire extra angled shots.",
+      "description": "Projectile and beam weapons fire extra angled shots.",
       "maxTier": 2,
       "family": "projectile"
     },
@@ -817,6 +839,29 @@ export const content = {
       "weaponId": "prism_beam",
       "target": 45000,
       "rewardQp": 7
+    },
+    "laser_staff_mastery": {
+      "name": "Laser Focus",
+      "description": "Deal 400 damage with Laser Staff.",
+      "weaponId": "laser_staff",
+      "target": 400,
+      "rewardQp": 2,
+      "opensQuest": "laser_staff_expert"
+    },
+    "laser_staff_expert": {
+      "name": "Laser Conduit",
+      "description": "Deal 2,200 damage with Laser Staff.",
+      "weaponId": "laser_staff",
+      "target": 2200,
+      "rewardQp": 3,
+      "opensQuest": "laser_staff_master"
+    },
+    "laser_staff_master": {
+      "name": "Laser Channel",
+      "description": "Deal 8,500 damage with Laser Staff.",
+      "weaponId": "laser_staff",
+      "target": 8500,
+      "rewardQp": 5
     },
     "frost_orb_mastery": {
       "name": "Frost Control",
@@ -3988,6 +4033,59 @@ export const content = {
           "animatedIcon": false,
           "iconSrc": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260614-weapons"
         },
+        "laser_staff": {
+          "src": "assets/generated/tower/skill-effects/split/skill-02-prism_beam.png?v=skill-effects-20260615-split",
+          "fps": 10,
+          "transparentColor": [
+            181,
+            180,
+            176
+          ],
+          "transparentTolerance": 58,
+          "frames": [
+            {
+              "x": 52,
+              "y": 27,
+              "width": 160,
+              "height": 145
+            },
+            {
+              "x": 262,
+              "y": 14,
+              "width": 255,
+              "height": 150
+            },
+            {
+              "x": 540,
+              "y": 32,
+              "width": 555,
+              "height": 105
+            },
+            {
+              "x": 805,
+              "y": 32,
+              "width": 300,
+              "height": 105
+            },
+            {
+              "x": 1138,
+              "y": 59,
+              "width": 215,
+              "height": 55
+            },
+            {
+              "x": 1405,
+              "y": 54,
+              "width": 150,
+              "height": 65
+            }
+          ],
+          "iconScale": 0.9,
+          "effectScale": 1.05,
+          "effectAlpha": 0.76,
+          "animatedIcon": false,
+          "iconSrc": "assets/generated/tower/sprites/weapon-prism-rune.svg?v=generated-20260614-weapons"
+        },
         "frost_orb": {
           "src": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png?v=skill-effects-20260615-split",
           "fps": 10,
@@ -5716,6 +5814,7 @@ export const content = {
     },
     "sfx": {
       "weapons": {
+        "laser_staff": "assets/generated/tower/sfx/prism_beam.wav?v=sfx-20260615",
         "lightning_staff": "assets/generated/tower/sfx/chain_spark.wav?v=sfx-20260615",
         "fire_staff": "assets/generated/tower/sfx/flame_wave.wav?v=sfx-20260615",
         "water_staff": "assets/generated/tower/sfx/frost_orb.wav?v=sfx-20260615",

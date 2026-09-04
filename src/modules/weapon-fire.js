@@ -53,8 +53,10 @@ export function createWeaponFireSystem({
     clamp,
   });
   const behaviorSystem = weaponBehaviors.createWeaponBehaviorSystem({
+    canvas,
     weaponDefs,
     getGame,
+    getRunUpgradeTier,
     nearestEnemy,
     weaponDamage: scaling.weaponDamage,
     weaponReach: scaling.weaponReach,

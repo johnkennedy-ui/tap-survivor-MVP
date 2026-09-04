@@ -129,14 +129,14 @@
     {
       "id": "run_wall_bounce",
       "name": "Ricochet Shots",
-      "description": "Projectiles bounce off arena walls.",
+      "description": "Projectiles and beams bounce off arena walls.",
       "maxTier": 2,
       "family": "projectile"
     },
     {
       "id": "run_split_shot",
       "name": "Split Fire",
-      "description": "Projectile weapons fire extra angled shots.",
+      "description": "Projectile and beam weapons fire extra angled shots.",
       "maxTier": 2,
       "family": "projectile"
     },
