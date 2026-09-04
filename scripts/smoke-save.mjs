@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { content } from "../src/content.generated.mjs";
 import { createGameDependencyBag } from "../src/modules/game-dependencies.js";
 import { createSaveNormalizer } from "../src/modules/save-normalize.js";
+import { migrateSave } from "../src/modules/save-migrations.js";
 import { questOpenIds } from "../src/modules/quests.js";
 import { createStorageProvider } from "../src/modules/storage-adapter.js";
 
@@ -109,7 +110,7 @@ const saveMigrations = dependencyBag.saveMigrations;
 const storageProvider = dependencyBag.storage;
 
 const isolatedSaveNormalizer = createSaveNormalizer({
-  currentSaveVersion: 3,
+  currentSaveVersion: 4,
   defaultSave: () => saveDefaults.createDefaultSave({ starterQuestIds: [] }),
   questDefs: content.quests,
   weaponUnlocks: content.weaponUnlocks,
@@ -234,6 +235,18 @@ check("fresh save starts with Spark Bolt", fresh.unlockedWeapons.includes("spark
 check("fresh save opens starter quests", content.questGroups.starter.every((id) => fresh.activeQuests.includes(id)));
 check("web save backend is localStorage", storageAdapter.getStorageBackendName() === "localStorage");
 
+check(
+  "legacy refund uses the exact recorded tiers and costs",
+  migrateSave(
+    {
+      questPoints: 0,
+      unlockedUpgrades: ["laser_damage"],
+      upgradeTiers: { fire_rate: 3, spark_damage: 4 },
+    },
+    { currentSaveVersion: 4 },
+  ).questPoints === 17,
+);
+
 storage.set(legacySaveKey, JSON.stringify({
   coins: 12.8,
   unlockedWeapons: [],
@@ -249,18 +262,18 @@ storage.set(legacySaveKey, JSON.stringify({
 const migrated = await saveSystem.loadSave();
 const trainingBoots = content.shopItems.find((item) => item.id === "training_boots");
 check("legacy save is normalized", migrated.coins === 12 && migrated.unlockedWeapons.includes("spark_bolt"));
-check("save version is current", migrated.saveVersion === 3);
+check("save version is current", migrated.saveVersion === 4);
 check("seen banners normalize", Array.isArray(migrated.seenBanners));
 check("shop purchases clamp to content tiers", migrated.shopPurchases.training_boots === trainingBoots.maxTier);
 check("missing shop purchases are removed", migrated.shopPurchases.missing_item === undefined);
 check("completed quest follow-ups reopen", migrated.activeQuests.includes("rapid_growth") && migrated.activeQuests.includes("gem_hoarder"));
 check("unlock-opened quests reopen", migrated.activeQuests.includes("use_laser_run"));
-check("legacy unlocked upgrades become tiers", migrated.upgradeTiers.laser_damage === 1);
-check("upgrade-opened quests reopen", migrated.activeQuests.includes("laser_damage_5000"));
+check("legacy upgrades are retired and refunded", migrated.upgradeTiers.laser_damage === undefined && migrated.questPoints === 1);
+check("retired upgrades do not reopen follow-up quests", !migrated.activeQuests.includes("laser_damage_5000"));
 
 await saveSystem.persist(migrated);
 const persisted = JSON.parse(storage.get(saveKey));
-check("persist writes current save key", persisted.unlockedUpgrades.includes("laser_damage"));
+check("persist writes no permanent upgrades", persisted.unlockedUpgrades.length === 0);
 
 await saveSystem.removeSave();
 check("reset removes current save key", !storage.has(saveKey));
@@ -273,7 +286,7 @@ check("corrupt save warning is exposed", saveSystem.getLastLoadWarning() === "co
 check("corrupt save raw is backed up", storage.get(corruptBackupKey) === "{broken json");
 
 storage.set(saveKey, JSON.stringify({
-  saveVersion: 3,
+  saveVersion: 4,
   coins: -10,
   towerFloor: 0,
   unlockedWeapons: "laser",
@@ -302,9 +315,15 @@ storage.set(saveKey, JSON.stringify({
   unlockedUpgrades: ["laser_damage"],
 }));
 const oldVersion = await saveSystem.loadSave();
-check("old save migrates to current version", oldVersion.saveVersion === 3);
+check("old save migrates to current version", oldVersion.saveVersion === 4);
 check("old save migration adds shop purchases", oldVersion.shopPurchases && typeof oldVersion.shopPurchases === "object");
 check("old save migration adds seen banners", Array.isArray(oldVersion.seenBanners));
+const refundedQuestPoints = oldVersion.questPoints;
+const migratedAgain = saveSystem.normalizeSave(oldVersion);
+check(
+  "legacy permanent refund is one-time after migration",
+  migratedAgain.questPoints === refundedQuestPoints && migratedAgain.legacyPermanentUpgradeRefundVersion === 4,
+);
 
 storage.set(saveKey, JSON.stringify({
   saveVersion: 99,
@@ -312,7 +331,7 @@ storage.set(saveKey, JSON.stringify({
   futureField: { keep: true },
 }));
 const future = await saveSystem.loadSave();
-check("future save version is normalized current", future.saveVersion === 3);
+check("future save version is normalized current", future.saveVersion === 4);
 check("future unknown fields are preserved", future.futureField?.keep === true);
 
 let throwingRetiredSaveDefaultsReads = 0;
@@ -439,7 +458,7 @@ const throwingSaveSystem = throwingDependencyBag.save.createSaveSystem({
 const unavailableSave = await throwingSaveSystem.loadSave();
 const unavailablePersisted = await throwingSaveSystem.persist(unavailableSave);
 check("save defaults bridge publishes no retired global", !saveDefaultsSource.includes("globalThis.TapSurvivorSaveDefaults"));
-check("save defaults are supplied by dependency bag", saveDefaults.CURRENT_SAVE_VERSION === 3);
+check("save defaults are supplied by dependency bag", saveDefaults.CURRENT_SAVE_VERSION === 4);
 check("save migrations bridge publishes no retired global", !saveMigrationsSource.includes("globalThis.TapSurvivorSaveMigrations"));
 check(
   "save normalize bridge publishes no retired global",

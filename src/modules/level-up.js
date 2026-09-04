@@ -134,6 +134,7 @@ export function createLevelUpSystem({
     const runUpgradeChoices = runUpgradeDefs
       .filter(
         (upgrade) =>
+          (!upgrade.requiresWeapon || game.player.equippedWeapons.includes(upgrade.requiresWeapon)) &&
           getRunUpgradeTier(upgrade.id) <
             upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus") &&
           !runUpgradeDefs.some(

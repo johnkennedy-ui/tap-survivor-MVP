@@ -1,4 +1,4 @@
-export const CURRENT_SAVE_VERSION = 3;
+export const CURRENT_SAVE_VERSION = 4;
 
 export function createDefaultSave({ starterQuestIds }) {
   return {

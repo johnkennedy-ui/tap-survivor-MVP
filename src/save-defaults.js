@@ -5,7 +5,7 @@
 (() => {
   "use strict";
 
-  const CURRENT_SAVE_VERSION = 3;
+  const CURRENT_SAVE_VERSION = 4;
 
   function createDefaultSave({ starterQuestIds }) {
     return {

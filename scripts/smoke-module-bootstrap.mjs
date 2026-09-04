@@ -1124,14 +1124,15 @@ check(
 );
 
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
-check("module bootstrap migrates save to current version", currentSave.saveVersion === 3);
+check("module bootstrap migrates save to current version", currentSave.saveVersion === 4);
+check("module bootstrap refunds legacy permanent upgrades", currentSave.questPoints === 1);
 check("module bootstrap clamps save shop purchases", currentSave.shopPurchases.training_boots === 3);
 check("module bootstrap removes unknown shop purchases", currentSave.shopPurchases.missing_item === undefined);
 check("module bootstrap opens starter quest", currentSave.activeQuests.includes("starter_quest"));
 check("module bootstrap reopens completed quest follow-up", currentSave.activeQuests.includes("rapid_growth"));
 check("module bootstrap reopens unlock quest", currentSave.activeQuests.includes("use_laser_run"));
-check("module bootstrap converts unlocked upgrades to tiers", currentSave.upgradeTiers.laser_damage === 1);
-check("module bootstrap reopens upgrade quest", currentSave.activeQuests.includes("laser_damage_5000"));
+check("module bootstrap retires legacy upgrade tiers", Object.keys(currentSave.upgradeTiers).length === 0);
+check("module bootstrap retires legacy unlocked upgrades", currentSave.unlockedUpgrades.length === 0);
 check(
   "module bootstrap binds shell/debug/input",
   calls.includes("shell:bind") && calls.includes("debug:bind") && calls.includes("input:bind")
@@ -1169,7 +1170,7 @@ check(
 );
 const persisted = JSON.parse(saveStorage.store.get(saveKey));
 check("module bootstrap persists through in-memory storage", persisted.coins === 12);
-check("module bootstrap persistence keeps upgrade list", persisted.unlockedUpgrades.includes("laser_damage"));
+check("module bootstrap persistence keeps retired upgrade list empty", persisted.unlockedUpgrades.length === 0);
 
 saveStorage.store.set(saveKey, "{broken json");
 const corruptSave = saveSystem.loadSave();

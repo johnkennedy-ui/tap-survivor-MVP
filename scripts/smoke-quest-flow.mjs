@@ -134,7 +134,7 @@ let progressionRenderCount = 0;
 const progressionSystem = createProgressionSystem({
   weaponDefs: content.weapons,
   weaponUnlocks: content.weaponUnlocks,
-  upgradeDefs: content.metaUpgrades,
+  upgradeDefs: [],
   questDefs: content.quests,
   getSave: () => progressionSave,
   openQuest: (id) => {
@@ -152,9 +152,8 @@ progressionSystem.buyWeaponUnlock(content.weaponUnlocks[0]);
 check("weapon unlock spends quest points", progressionSave.questPoints === 1);
 check("weapon unlock persists", progressionPersistCount === 1);
 check("weapon unlock opens follow-up quest", progressionSave.activeQuests.includes("use_laser_run"));
-progressionSystem.buyUpgrade(content.metaUpgrades.find((upgrade) => upgrade.id === "move_speed"));
-check("meta upgrade spend persists", progressionPersistCount === 2 && progressionRenderCount === 2);
-check("meta upgrade tier is saved", progressionSave.upgradeTiers.move_speed === 1);
+check("legacy permanent upgrade metadata is retired from purchase", content.metaUpgrades.every((upgrade) => upgrade.retired));
+check("only weapon unlock spend is persisted", progressionPersistCount === 1 && progressionRenderCount === 1);
 
 if (process.exitCode) {
   console.error("\nQuest flow smoke failed.");

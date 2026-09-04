@@ -15,21 +15,18 @@
     weaponDefs = {},
   }) {
     function createPlayer() {
-      const moveTier = getUpgradeTier("move_speed");
-      const pickupTier = getUpgradeTier("pickup_radius");
-      const hpTier = getUpgradeTier("max_hp");
       const shopBonuses = getShopBonuses();
-      const maxHp = 100 + hpTier * 20 + shopBonuses.maxHp;
+      const maxHp = 100 + shopBonuses.maxHp;
       return {
         x: canvas.width / 2,
         y: canvas.height / 2,
         targetX: canvas.width / 2,
         targetY: canvas.height / 2,
         radius: 16,
-        speed: 185 + moveTier * 24 + shopBonuses.speed,
+        speed: 185 + shopBonuses.speed,
         hp: maxHp,
         maxHp,
-        pickupRadius: 54 + pickupTier * 18 + shopBonuses.pickupRadius,
+        pickupRadius: 54 + shopBonuses.pickupRadius,
         projectileBlockCharge: 0,
         projectileBlockNeeded: 5,
         projectileBlockReady: false,
@@ -94,15 +91,8 @@
     }
 
     function applyRunMetaUpgrades(game) {
-      if (!game?.player) return;
-      const p = game.player;
-      p.speed = Math.max(p.speed, 185 + getUpgradeTier("move_speed") * 24);
-      p.pickupRadius = Math.max(p.pickupRadius, 54 + getUpgradeTier("pickup_radius") * 18);
-      const newMaxHp = 100 + getUpgradeTier("max_hp") * 20;
-      if (newMaxHp > p.maxHp) {
-        p.hp += newMaxHp - p.maxHp;
-        p.maxHp = newMaxHp;
-      }
+      // Retained as a no-op compatibility seam after permanent upgrades moved in-run.
+      void game;
     }
 
     return {

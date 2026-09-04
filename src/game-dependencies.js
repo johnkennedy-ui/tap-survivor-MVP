@@ -2553,7 +2553,7 @@
     };
   }
 
-  const CURRENT_SAVE_VERSION = 3;
+  const CURRENT_SAVE_VERSION = 4;
 
   function createDefaultSave({ starterQuestIds }) {
     return {
@@ -2577,7 +2577,62 @@
     };
   }
 
-  const DEFAULT_CURRENT_SAVE_VERSION = 3;
+  const DEFAULT_CURRENT_SAVE_VERSION = 4;
+
+  const LEGACY_META_UPGRADE_COSTS = {
+    attack_radius: [1, 2, 3],
+    fire_rate: [1, 2, 3, 4, 5],
+    flat_damage: [1, 2, 3],
+    max_hp: [1, 2, 3],
+    move_speed: [1, 2, 3],
+    percent_damage: [1, 2, 3, 4, 5],
+    pickup_radius: [1, 2, 3],
+  };
+
+  const LEGACY_WEAPON_DAMAGE_UPGRADE_IDS = [
+    "acid_damage",
+    "chain_damage",
+    "fire_staff_damage",
+    "flame_damage",
+    "frost_damage",
+    "glaive_damage",
+    "laser_damage",
+    "laser_staff_damage",
+    "lightning_damage",
+    "meteor_damage",
+    "nova_damage",
+    "saw_damage",
+    "shield_damage",
+    "spark_damage",
+    "void_damage",
+    "water_staff_damage",
+  ];
+
+  const LEGACY_PERMANENT_UPGRADE_COSTS = Object.freeze({
+    ...LEGACY_META_UPGRADE_COSTS,
+    ...Object.fromEntries(LEGACY_WEAPON_DAMAGE_UPGRADE_IDS.map((id) => [id, [1, 2, 3, 4, 5]])),
+  });
+
+  function positiveTier(value, maxTier) {
+    const tier = Number(value);
+    if (!Number.isFinite(tier)) return 0;
+    return Math.min(maxTier, Math.max(0, Math.floor(tier)));
+  }
+
+  /**
+   * Returns the QP actually spent on legacy permanent upgrade tiers.
+   * Unknown IDs never receive a refund because they have no verifiable cost.
+   *
+   * @param {MigratingSave} save
+   */
+  function legacyPermanentUpgradeRefund(save) {
+    const storedTiers = isPlainObject(save?.upgradeTiers) ? save.upgradeTiers : {};
+    const unlocked = new Set(Array.isArray(save?.unlockedUpgrades) ? save.unlockedUpgrades : []);
+    return Object.entries(LEGACY_PERMANENT_UPGRADE_COSTS).reduce((refund, [id, costs]) => {
+      const tier = Math.max(positiveTier(storedTiers[id], costs.length), unlocked.has(id) ? 1 : 0);
+      return refund + costs.slice(0, tier).reduce((total, cost) => total + cost, 0);
+    }, 0);
+  }
 
   /**
    * Minimal persisted save shape used while stepping old saves forward.
@@ -2601,6 +2656,16 @@
       return {
         ...save,
         seenBanners: save.seenBanners || [],
+      };
+    },
+    4(save) {
+      const refund = legacyPermanentUpgradeRefund(save);
+      return {
+        ...save,
+        questPoints: Math.max(0, Math.floor(Number(save.questPoints) || 0)) + refund,
+        upgradeTiers: {},
+        unlockedUpgrades: [],
+        legacyPermanentUpgradeRefundVersion: 4,
       };
     },
   };
@@ -3420,6 +3485,7 @@
       const runUpgradeChoices = runUpgradeDefs
         .filter(
           (upgrade) =>
+            (!upgrade.requiresWeapon || game.player.equippedWeapons.includes(upgrade.requiresWeapon)) &&
             getRunUpgradeTier(upgrade.id) <
               upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus") &&
             !runUpgradeDefs.some(
@@ -7186,32 +7252,51 @@
 
   /** @param {CreateUpgradeContentOptions} [options] */
   function createUpgradeContent({ content = {}, effects } = {}) {
-    const metaUpgradeDefs = content.metaUpgrades || [];
-    /** @param {WeaponDefs} weaponDefs @returns {ContentEntry[]} */
+    /** @returns {ContentEntry[]} */
     function createUpgradeDefs(weaponDefs) {
+      // QP progression is intentionally weapon-only. The production registry
+      // marks retired entries explicitly; unmarked fixture content keeps the
+      // generic helper contract used by module integration tests.
+      const metaUpgradeDefs = content.metaUpgrades || [];
+      if (metaUpgradeDefs.length && metaUpgradeDefs.every((upgrade) => upgrade.retired)) return [];
       return [
-        ...Object.values(weaponDefs).map((weapon) => {
-          const weaponId = weaponIdForDef(weaponDefs, weapon);
-          return {
-            id: weapon.upgradeId,
-            name: `${weapon.name} Damage`,
-            description: `Increase ${weapon.name} damage.`,
-            cost: [1, 2, 3, 4, 5],
-            maxTier: 5,
-            requiresWeapon: weaponId,
-            requiresQuest: weapon.upgradeId === "laser_damage" ? "use_laser_run" : `${weaponId}_mastery`,
-            opensQuest: weapon.upgradeId === "laser_damage" ? "laser_damage_5000" : null,
-          };
-        }),
-        ...metaUpgradeDefs,
+        ...Object.values(weaponDefs).map((weapon) => ({
+          id: weapon.upgradeId,
+          name: `${weapon.name} Damage`,
+          description: `Increase ${weapon.name} damage.`,
+          cost: [1, 2, 3, 4, 5],
+          maxTier: 5,
+          requiresWeapon: weaponIdForDef(weaponDefs, weapon),
+        })),
+        ...metaUpgradeDefs.filter((upgrade) => !upgrade.retired),
       ];
     }
 
+    /** @param {WeaponDefs} weaponDefs @returns {RunUpgradeDef[]} */
+    function weaponDamageRunUpgrades(weaponDefs) {
+      // Weapon IDs generate their own run upgrade IDs (for example laser_damage).
+      return Object.values(weaponDefs).map((weapon) => {
+        const weaponId = weaponIdForDef(weaponDefs, weapon);
+        return {
+          id: weapon.upgradeId,
+          name: `${weapon.name} Damage`,
+          description: `Increase ${weapon.name} damage.`,
+          maxTier: 5,
+          requiresWeapon: weaponId,
+        };
+      });
+    }
+
     /** @type {RunUpgradeDef[]} */
-    const runUpgradeDefs = (content.runUpgrades || []).map((upgrade) => ({
-      ...upgrade,
-      apply: upgrade.effects?.length ? (game) => effects.applyRunUpgradeEffects(game, upgrade.effects) : undefined,
-    }));
+    const runUpgradeDefs = [
+      ...(content.runUpgrades || []).map((upgrade) => ({
+        ...upgrade,
+        apply: upgrade.effects?.length
+          ? (game) => effects.applyRunUpgradeEffects(game, upgrade.effects)
+          : undefined,
+      })),
+      ...weaponDamageRunUpgrades(content.weapons || {}),
+    ];
 
     return {
       createUpgradeDefs,
@@ -8059,7 +8144,6 @@
       const shopBonuses = getShopBonuses?.() || {};
       const relicEffects = getRelicSpecialEffects?.() || {};
       const rateTier =
-        getUpgradeTier("fire_rate") +
         getRunUpgradeTier("run_fire_rate") +
         (shopBonuses.fireRate || 0);
       return (
@@ -8080,7 +8164,6 @@
       const shopBonuses = getShopBonuses?.() || {};
       const relicEffects = getRelicSpecialEffects?.() || {};
       const radiusTier =
-        getUpgradeTier("attack_radius") +
         getRunUpgradeTier("run_attack_radius") +
         (shopBonuses.attackRadius || 0);
       return (weapon.range || 0) * (1 + radiusTier * 0.12 + (relicEffects.areaRadiusBonus || 0));
@@ -8090,7 +8173,6 @@
       const shopBonuses = getShopBonuses?.() || {};
       const relicEffects = getRelicSpecialEffects?.() || {};
       const radiusTier =
-        getUpgradeTier("attack_radius") +
         getRunUpgradeTier("run_attack_radius") +
         (shopBonuses.attackRadius || 0);
       return (weapon.width || 0) * (1 + radiusTier * 0.1 + (relicEffects.beamWidthBonus || 0));
@@ -8101,7 +8183,6 @@
       const relicEffects = getRelicSpecialEffects?.() || {};
       const projectileSizeBonus = relicEffects.projectileSizeBonus || 0;
       const radiusTier =
-        getUpgradeTier("attack_radius") +
         getRunUpgradeTier("run_attack_radius") +
         (shopBonuses.attackRadius || 0);
       return (weapon.radius || 0) * (1 + radiusTier * 0.12 + projectileSizeBonus);
@@ -8109,12 +8190,11 @@
 
     function weaponDamage(weaponId) {
       const weapon = weaponDefs[weaponId];
-      const flatTier = getUpgradeTier("flat_damage") + getRunUpgradeTier("run_flat_damage");
+      const flatTier = getRunUpgradeTier("run_flat_damage");
       const shopBonuses = getShopBonuses?.() || {};
       const percentTier =
-        getUpgradeTier("percent_damage") +
         getRunUpgradeTier("run_percent_damage") +
-        getUpgradeTier(weapon.upgradeId) * 2 +
+        getRunUpgradeTier(weapon.upgradeId) * 2 +
         (shopBonuses.percentDamage || 0);
       const relicEffects = getRelicSpecialEffects?.() || {};
       return (
@@ -8723,21 +8803,18 @@
     weaponDefs = {},
   }) {
     function createPlayer() {
-      const moveTier = getUpgradeTier("move_speed");
-      const pickupTier = getUpgradeTier("pickup_radius");
-      const hpTier = getUpgradeTier("max_hp");
       const shopBonuses = getShopBonuses();
-      const maxHp = 100 + hpTier * 20 + shopBonuses.maxHp;
+      const maxHp = 100 + shopBonuses.maxHp;
       return {
         x: canvas.width / 2,
         y: canvas.height / 2,
         targetX: canvas.width / 2,
         targetY: canvas.height / 2,
         radius: 16,
-        speed: 185 + moveTier * 24 + shopBonuses.speed,
+        speed: 185 + shopBonuses.speed,
         hp: maxHp,
         maxHp,
-        pickupRadius: 54 + pickupTier * 18 + shopBonuses.pickupRadius,
+        pickupRadius: 54 + shopBonuses.pickupRadius,
         projectileBlockCharge: 0,
         projectileBlockNeeded: 5,
         projectileBlockReady: false,
@@ -8802,15 +8879,8 @@
     }
 
     function applyRunMetaUpgrades(game) {
-      if (!game?.player) return;
-      const p = game.player;
-      p.speed = Math.max(p.speed, 185 + getUpgradeTier("move_speed") * 24);
-      p.pickupRadius = Math.max(p.pickupRadius, 54 + getUpgradeTier("pickup_radius") * 18);
-      const newMaxHp = 100 + getUpgradeTier("max_hp") * 20;
-      if (newMaxHp > p.maxHp) {
-        p.hp += newMaxHp - p.maxHp;
-        p.maxHp = newMaxHp;
-      }
+      // Retained as a no-op compatibility seam after permanent upgrades moved in-run.
+      void game;
     }
 
     return {

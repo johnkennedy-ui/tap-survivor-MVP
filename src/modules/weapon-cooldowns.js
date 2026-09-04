@@ -62,7 +62,6 @@ export function createWeaponScaling({
     const shopBonuses = getShopBonuses?.() || {};
     const relicEffects = getRelicSpecialEffects?.() || {};
     const rateTier =
-      getUpgradeTier("fire_rate") +
       getRunUpgradeTier("run_fire_rate") +
       (shopBonuses.fireRate || 0);
     return (
@@ -83,7 +82,6 @@ export function createWeaponScaling({
     const shopBonuses = getShopBonuses?.() || {};
     const relicEffects = getRelicSpecialEffects?.() || {};
     const radiusTier =
-      getUpgradeTier("attack_radius") +
       getRunUpgradeTier("run_attack_radius") +
       (shopBonuses.attackRadius || 0);
     return (weapon.range || 0) * (1 + radiusTier * 0.12 + (relicEffects.areaRadiusBonus || 0));
@@ -93,7 +91,6 @@ export function createWeaponScaling({
     const shopBonuses = getShopBonuses?.() || {};
     const relicEffects = getRelicSpecialEffects?.() || {};
     const radiusTier =
-      getUpgradeTier("attack_radius") +
       getRunUpgradeTier("run_attack_radius") +
       (shopBonuses.attackRadius || 0);
     return (weapon.width || 0) * (1 + radiusTier * 0.1 + (relicEffects.beamWidthBonus || 0));
@@ -104,7 +101,6 @@ export function createWeaponScaling({
     const relicEffects = getRelicSpecialEffects?.() || {};
     const projectileSizeBonus = relicEffects.projectileSizeBonus || 0;
     const radiusTier =
-      getUpgradeTier("attack_radius") +
       getRunUpgradeTier("run_attack_radius") +
       (shopBonuses.attackRadius || 0);
     return (weapon.radius || 0) * (1 + radiusTier * 0.12 + projectileSizeBonus);
@@ -112,12 +108,11 @@ export function createWeaponScaling({
 
   function weaponDamage(weaponId) {
     const weapon = weaponDefs[weaponId];
-    const flatTier = getUpgradeTier("flat_damage") + getRunUpgradeTier("run_flat_damage");
+    const flatTier = getRunUpgradeTier("run_flat_damage");
     const shopBonuses = getShopBonuses?.() || {};
     const percentTier =
-      getUpgradeTier("percent_damage") +
       getRunUpgradeTier("run_percent_damage") +
-      getUpgradeTier(weapon.upgradeId) * 2 +
+      getRunUpgradeTier(weapon.upgradeId) * 2 +
       (shopBonuses.percentDamage || 0);
     const relicEffects = getRelicSpecialEffects?.() || {};
     return (

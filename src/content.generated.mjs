@@ -334,7 +334,8 @@ export const content = {
       ],
       "maxTier": 3,
       "requiresNode": "unlock_laser",
-      "requiresQuest": "first_blood"
+      "requiresQuest": "first_blood",
+      "retired": true
     },
     {
       "id": "pickup_radius",
@@ -347,7 +348,8 @@ export const content = {
       ],
       "maxTier": 3,
       "requiresNode": "unlock_frost_orb",
-      "requiresQuest": "gatherer"
+      "requiresQuest": "gatherer",
+      "retired": true
     },
     {
       "id": "max_hp",
@@ -360,7 +362,8 @@ export const content = {
       ],
       "maxTier": 3,
       "requiresNode": "unlock_shield_pulse",
-      "requiresQuest": "survivor_60"
+      "requiresQuest": "survivor_60",
+      "retired": true
     },
     {
       "id": "attack_radius",
@@ -373,7 +376,8 @@ export const content = {
       ],
       "maxTier": 3,
       "requiresNode": "unlock_flame_wave",
-      "requiresQuest": "crowd_control"
+      "requiresQuest": "crowd_control",
+      "retired": true
     },
     {
       "id": "fire_rate",
@@ -388,7 +392,8 @@ export const content = {
       ],
       "maxTier": 5,
       "requiresNode": "unlock_chain_spark",
-      "requiresQuest": "rapid_growth"
+      "requiresQuest": "rapid_growth",
+      "retired": true
     },
     {
       "id": "flat_damage",
@@ -401,7 +406,8 @@ export const content = {
       ],
       "maxTier": 3,
       "requiresNode": "unlock_saw_drone",
-      "requiresQuest": "heavy_hits"
+      "requiresQuest": "heavy_hits",
+      "retired": true
     },
     {
       "id": "percent_damage",
@@ -416,7 +422,8 @@ export const content = {
       ],
       "maxTier": 5,
       "requiresNode": "unlock_meteor_pin",
-      "requiresQuest": "boss_hunter"
+      "requiresQuest": "boss_hunter",
+      "retired": true
     }
   ],
   "runUpgrades": [

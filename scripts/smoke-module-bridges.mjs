@@ -115,6 +115,7 @@ const upgradeBridgeContentFixture = {
       id: "meta_focus",
       maxTier: 1,
       name: "Meta Focus",
+      retired: true,
     },
   ],
   runUpgrades: [
@@ -453,14 +454,14 @@ check(
 );
 const moduleUpgradeSnapshot = upgradeContentSnapshot(createModuleUpgradeContent);
 check(
-  "native upgrade factory preserves weapon and meta upgrade definitions",
-  moduleUpgradeSnapshot.upgradeIds.join(",") === "arc_damage,laser_damage,meta_focus" &&
-    moduleUpgradeSnapshot.laserQuest === "use_laser_run" &&
-    moduleUpgradeSnapshot.arcQuest === "arc_bolt_mastery"
+  "native upgrade factory retires QP definitions and supplies weapon run upgrades",
+  moduleUpgradeSnapshot.upgradeIds.join(",") === "" &&
+    moduleUpgradeSnapshot.runUpgradeIds.includes("arc_damage") &&
+    moduleUpgradeSnapshot.runUpgradeIds.includes("laser_damage")
 );
 check(
   "native upgrade factory preserves run-upgrade effect application",
-  moduleUpgradeSnapshot.runUpgradeApplyFlags.join(",") === "true,false" &&
+  moduleUpgradeSnapshot.runUpgradeApplyFlags.join(",") === "true,false,false,false" &&
     moduleUpgradeSnapshot.effectCalls.join(",") === "fireRate:12"
 );
 
@@ -633,7 +634,7 @@ check(
   moduleSaveLoadSnapshot.storageFailed.warning === "storage-read-failed"
 );
 
-check("module exports CURRENT_SAVE_VERSION", moduleCurrentSaveVersion === 3);
+check("module exports CURRENT_SAVE_VERSION", moduleCurrentSaveVersion === 4);
 check("module exports createDefaultSave", typeof createModuleDefaultSave === "function");
 check(
   "save defaults bridge retires global publisher",
@@ -664,7 +665,7 @@ const saveMigrationFixtures = [
   { saveVersion: 1, shopPurchases: { boots: 2 }, seenBanners: ["floor_2"] },
 ];
 const moduleMigrationResults = saveMigrationFixtures.map(moduleMigrateSave);
-check("migrateSave version one fixture ends at current version", moduleMigrationResults[0].saveVersion === 3);
+check("migrateSave version one fixture ends at current version", moduleMigrationResults[0].saveVersion === 4);
 check(
   "migrateSave version one fixture applies version two shop purchases",
   JSON.stringify(moduleMigrationResults[0].shopPurchases) === JSON.stringify({})
@@ -683,7 +684,7 @@ check(
 );
 check(
   "migrateSave invalid fixture returns current version object",
-  moduleMigrationResults[5].saveVersion === 3 && moduleIsPlainObject(moduleMigrationResults[5])
+  moduleMigrationResults[5].saveVersion === 4 && moduleIsPlainObject(moduleMigrationResults[5])
 );
 check(
   "migrateSave preserves existing migration fields",
@@ -2345,8 +2346,9 @@ check(
 check(
   "dependency bag injects native upgrade content",
   typeof moduleGameDependenciesSnapshot.__bag.upgrades.createUpgradeContent === "function" &&
-    moduleGameDependenciesSnapshot.defaultUpgradeIds.join(",") === "arc_damage,laser_damage,meta_focus" &&
-    moduleGameDependenciesSnapshot.defaultRunUpgradeIds.join(",") === "rapid_fire,steady_aim"
+    moduleGameDependenciesSnapshot.defaultUpgradeIds.length === 0 &&
+    moduleGameDependenciesSnapshot.defaultRunUpgradeIds.includes("rapid_fire") &&
+    moduleGameDependenciesSnapshot.defaultRunUpgradeIds.includes("laser_damage")
 );
 check(
   "dependency bag injects native save creation with caller-owned storage",
@@ -2530,17 +2532,17 @@ check("run state reset centers player y", moduleRunStateSnapshot.reset.playerY =
 check("run state reset centers target x", moduleRunStateSnapshot.reset.targetX === 480);
 check("run state reset centers target y", moduleRunStateSnapshot.reset.targetY === 270);
 check("run state reset equips spark bolt", moduleRunStateSnapshot.reset.equippedWeapons.includes("spark_bolt"));
-check("run state reset applies shop and meta speed", moduleRunStateSnapshot.reset.playerSpeed === 241);
-check("run state reset applies shop and meta pickup radius", moduleRunStateSnapshot.reset.pickupRadius === 97);
-check("run state reset applies shop and meta max hp", moduleRunStateSnapshot.reset.maxHp === 170);
+check("run state reset applies shop-only speed", moduleRunStateSnapshot.reset.playerSpeed === 217);
+check("run state reset applies shop-only pickup radius", moduleRunStateSnapshot.reset.pickupRadius === 61);
+check("run state reset applies shop-only max hp", moduleRunStateSnapshot.reset.maxHp === 130);
 check("run state reset calls map apply", moduleRunStateSnapshot.reset.mapApplied === 1);
 check("run state reset initializes combat collections", moduleRunStateSnapshot.reset.emptyCollections);
 check("run state reset initializes state maps", moduleRunStateSnapshot.reset.emptyStateMaps);
 check("run state meta upgrades leave null game unchanged", moduleRunStateSnapshot.meta.nullSafe);
-check("run state meta upgrades raise speed", moduleRunStateSnapshot.meta.speed === 257);
-check("run state meta upgrades raise pickup radius", moduleRunStateSnapshot.meta.pickupRadius === 108);
-check("run state meta upgrades raise max hp", moduleRunStateSnapshot.meta.maxHp === 180);
-check("run state meta upgrades heal hp delta", moduleRunStateSnapshot.meta.hp === 120);
+check("run state meta upgrades leave speed unchanged", moduleRunStateSnapshot.meta.speed === 100);
+check("run state meta upgrades leave pickup radius unchanged", moduleRunStateSnapshot.meta.pickupRadius === 40);
+check("run state meta upgrades leave max hp unchanged", moduleRunStateSnapshot.meta.maxHp === 120);
+check("run state meta upgrades leave hp unchanged", moduleRunStateSnapshot.meta.hp === 60);
 
 check("module exports createRunUi", typeof createModuleRunUi === "function");
 check(
@@ -4275,7 +4277,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   });
   const configuredSave = configuredSaveSystem.loadSave();
   const injectedUpgradeContent = bag.upgrades.createUpgradeContent({
-    content: upgradeBridgeContentFixture,
+    content: { ...upgradeBridgeContentFixture, weapons: upgradeWeaponDefs },
     effects: upgradeBridgeEffectsFixture,
   });
   const defaultShellRelicTiming = exerciseShellRelicTiming(
@@ -5026,7 +5028,7 @@ function propertyDescriptorsMatch(left, right) {
 function upgradeContentSnapshot(createUpgradeContent) {
   const effectCalls = [];
   const upgradeContent = createUpgradeContent({
-    content: upgradeBridgeContentFixture,
+    content: { ...upgradeBridgeContentFixture, weapons: upgradeWeaponDefs },
     effects: {
       applyRunUpgradeEffects(game, effects) {
         const appliedEffects = effects.map((effect) => [effect.stat, effect.value].join(":"));
