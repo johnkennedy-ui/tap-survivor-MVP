@@ -61,6 +61,13 @@ export function createEnemyBehaviorSystem({
       const dx = p.x - enemy.x;
       const dy = p.y - enemy.y;
       const dist = Math.max(1, Math.hypot(dx, dy));
+      if (hasBossAbility(enemy, "charger") && enemy.chargeState) {
+        enemy.facingX = enemy.chargeDirX;
+        enemy.facingY = enemy.chargeDirY;
+      } else if (enemy.attackRange && enemy.projectileCooldown && dist <= enemy.attackRange) {
+        enemy.facingX = dx / dist;
+        enemy.facingY = dy / dist;
+      }
       if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
         updateEnemyVelocity(enemy, previousX, previousY, dt);
         applyEnemyTouch(enemy, dt);
@@ -199,6 +206,10 @@ export function createEnemyBehaviorSystem({
     const divisor = Math.max(dt, 0.0001);
     enemy.vx = (enemy.x - previousX) / divisor;
     enemy.vy = (enemy.y - previousY) / divisor;
+    if (Math.hypot(enemy.vx, enemy.vy) > 0.01) {
+      enemy.facingX = enemy.vx / Math.hypot(enemy.vx, enemy.vy);
+      enemy.facingY = enemy.vy / Math.hypot(enemy.vx, enemy.vy);
+    }
   }
 
   function updateEnemyBolts(dt) {

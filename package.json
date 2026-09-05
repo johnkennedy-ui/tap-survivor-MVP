@@ -87,6 +87,8 @@
     "smoke:projectile-colors": "node scripts/smoke-projectile-colors.mjs",
     "smoke:enemy-visual-states": "node scripts/smoke-enemy-visual-states.mjs",
     "smoke:spritesheets": "node scripts/smoke-spritesheets.mjs",
+    "smoke:directional-atlases": "node scripts/smoke-directional-atlases.mjs",
+    "smoke:eight-way-rendering": "node scripts/smoke-eight-way-rendering.mjs",
     "smoke:audio": "node scripts/smoke-audio-scaling.mjs",
     "smoke:quest-flow": "node scripts/smoke-quest-flow.mjs",
     "smoke:progression-classification": "node scripts/smoke-progression-classification.mjs",
@@ -97,7 +99,7 @@
     "smoke:sprite-extract": "node scripts/smoke-extract-sprites.mjs",
     "audit:quests": "npm run build:content && npm run validate:content && node scripts/audit-quests.mjs",
     "test:speed": "node scripts/verify-speed-controls.mjs",
-    "test": "npm run audit:quests && node scripts/verify-mvp.mjs && npm run smoke:module-bootstrap && npm run test:speed",
+    "test": "npm run audit:quests && node scripts/verify-mvp.mjs && npm run smoke:module-bootstrap && npm run test:speed && npm run smoke:directional-atlases && npm run smoke:eight-way-rendering",
     "serve": "node scripts/serve-local.mjs",
     "serve:apk": "node scripts/serve-debug-apk.mjs"
   },

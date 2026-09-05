@@ -1680,6 +1680,8 @@
         attackVisualTimer: 0,
         vx: 0,
         vy: 0,
+        facingX: game.player.x - startX,
+        facingY: game.player.y - startY,
       };
       const cooldown = nextBossAttackCooldown(boss);
       game.bossAttackTimer = cooldown;
@@ -1855,6 +1857,13 @@
         const dx = p.x - enemy.x;
         const dy = p.y - enemy.y;
         const dist = Math.max(1, Math.hypot(dx, dy));
+        if (hasBossAbility(enemy, "charger") && enemy.chargeState) {
+          enemy.facingX = enemy.chargeDirX;
+          enemy.facingY = enemy.chargeDirY;
+        } else if (enemy.attackRange && enemy.projectileCooldown && dist <= enemy.attackRange) {
+          enemy.facingX = dx / dist;
+          enemy.facingY = dy / dist;
+        }
         if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           applyEnemyTouch(enemy, dt);
@@ -1993,6 +2002,10 @@
       const divisor = Math.max(dt, 0.0001);
       enemy.vx = (enemy.x - previousX) / divisor;
       enemy.vy = (enemy.y - previousY) / divisor;
+      if (Math.hypot(enemy.vx, enemy.vy) > 0.01) {
+        enemy.facingX = enemy.vx / Math.hypot(enemy.vx, enemy.vy);
+        enemy.facingY = enemy.vy / Math.hypot(enemy.vx, enemy.vy);
+      }
     }
 
     function updateEnemyBolts(dt) {
@@ -2180,6 +2193,8 @@
         attackVisualTimer: 0,
         vx: 0,
         vy: 0,
+        facingX: game.player.x - position.x,
+        facingY: game.player.y - position.y,
       });
     }
 
@@ -4932,6 +4947,23 @@
     function drawEnemySpriteSheet(enemy, game, spriteSize) {
       if (!spriteSheetRenderer?.drawAnimation) return false;
       const animationTime = Number(enemy.animTime || 0);
+      const directionalId = Number.isFinite(enemy.facingX) && Number.isFinite(enemy.facingY) && (enemy.boss
+        ? enemy.bossKind || enemy.bossAbilities?.[0]
+        : enemy.assetId || enemy.type);
+      const state = enemy.boss ? bossAnimationState(enemy, game, bossAnimationIdFor(enemy)) : enemyAnimationState(enemy);
+      if (directionalId && (state === "idle" || state === "default")) {
+        const directionalDrawn = spriteSheetRenderer.drawAnimation(
+          `directional_${directionalId}`,
+          "move",
+          headingForEntity(enemy),
+          enemy.x,
+          enemy.y,
+          spriteSize,
+          spriteSize,
+          { time: animationTime },
+        );
+        if (directionalDrawn) return true;
+      }
       if (enemy.boss) {
         const bossAnimationId = bossAnimationIdFor(enemy);
         return spriteSheetRenderer.drawAnimation(
@@ -4956,6 +4988,7 @@
         { flipX: enemyFacesLeft(enemy), time: animationTime },
       );
     }
+
 
     function enemyAnimationState(enemy) {
       if (isRangedEnemy(enemy) && (enemy.attackVisualTimer || 0) > 0) return "attack";
@@ -4990,12 +5023,6 @@
 
     function activeBossAttack(game, type, enemy) {
       return game?.bossAttacks?.find((attack) => attack.type === type && Math.hypot(attack.x - enemy.x, attack.y - enemy.y) <= Math.max(190, enemy.radius * 5));
-    }
-
-    function enemyFacesLeft(enemy) {
-      if (Number.isFinite(enemy.vx)) return enemy.vx < -1;
-      if (Number.isFinite(enemy.chargeDirX)) return enemy.chargeDirX < -0.1;
-      return false;
     }
 
     function drawEnemyFloorTint(enemy, spriteSize) {
@@ -5058,6 +5085,12 @@
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.restore();
+    }
+
+    function enemyFacesLeft(enemy) {
+      if (enemy.bossKind === "charger" && enemy.chargeState && Number.isFinite(enemy.chargeDirX)) return enemy.chargeDirX < -0.1;
+      if (Number.isFinite(enemy.vx)) return enemy.vx < -1;
+      return false;
     }
 
     function withAlpha(color, alpha) {
@@ -5182,11 +5215,15 @@
       const previousAlpha = ctx.globalAlpha;
       if (p.blinkTimer > 0) ctx.globalAlpha = 0.35 + Math.abs(Math.sin(p.blinkTimer * 24)) * 0.65;
       const spriteId = playerSpriteId(p);
-      const playerDrawn = drawSprite(spriteId, p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
-        flipX: playerFacesLeft(p),
-      }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, Math.max(70, p.radius * 3.8), 0, {
-        flipX: playerFacesLeft(p),
-      }));
+      const size = Math.max(70, p.radius * 3.8);
+      const playerDrawn = p.actionTimer > 0 && p.actionSprite
+        ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
+        : drawSprite("player", p.x, p.y, size, 0, {
+            sheetId: "directional_player",
+            animationId: "move",
+            animationState: headingForEntity(p),
+            time: p.animTime,
+          }) || drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
       if (!playerDrawn) {
         ctx.fillStyle = "#69d2ff";
         ctx.beginPath();
@@ -5213,14 +5250,14 @@
       ctx.stroke();
     }
 
-    function playerFacesLeft(p) {
-      return p.targetX < p.x - 2;
-    }
-
     function playerSpriteId(p) {
       if (p.actionTimer > 0 && p.actionSprite) return `player:${p.actionSprite}`;
       if (p.moving) return "player:walk";
       return "player";
+    }
+
+    function playerFacesLeft(p) {
+      return p.targetX < p.x - 2;
     }
 
     function drawPlayerHpBar(p) {

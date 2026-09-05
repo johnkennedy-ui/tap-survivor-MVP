@@ -129,6 +129,8 @@ export function createEnemySystem({
       attackVisualTimer: 0,
       vx: 0,
       vy: 0,
+      facingX: game.player.x - startX,
+      facingY: game.player.y - startY,
     };
     const cooldown = nextBossAttackCooldown(boss);
     game.bossAttackTimer = cooldown;

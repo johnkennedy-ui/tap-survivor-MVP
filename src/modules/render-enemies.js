@@ -1,3 +1,5 @@
+import { headingForEntity } from "./directional-facing.js";
+
 export const MODULE_NATIVE_RENDER_ENEMIES_SLOTS = Object.freeze(["renderEnemies"]);
 
 export const MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS = Object.freeze([
@@ -41,6 +43,23 @@ export function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clam
   function drawEnemySpriteSheet(enemy, game, spriteSize) {
     if (!spriteSheetRenderer?.drawAnimation) return false;
     const animationTime = Number(enemy.animTime || 0);
+    const directionalId = Number.isFinite(enemy.facingX) && Number.isFinite(enemy.facingY) && (enemy.boss
+      ? enemy.bossKind || enemy.bossAbilities?.[0]
+      : enemy.assetId || enemy.type);
+    const state = enemy.boss ? bossAnimationState(enemy, game, bossAnimationIdFor(enemy)) : enemyAnimationState(enemy);
+    if (directionalId && (state === "idle" || state === "default")) {
+      const directionalDrawn = spriteSheetRenderer.drawAnimation(
+        `directional_${directionalId}`,
+        "move",
+        headingForEntity(enemy),
+        enemy.x,
+        enemy.y,
+        spriteSize,
+        spriteSize,
+        { time: animationTime },
+      );
+      if (directionalDrawn) return true;
+    }
     if (enemy.boss) {
       const bossAnimationId = bossAnimationIdFor(enemy);
       return spriteSheetRenderer.drawAnimation(
@@ -65,6 +84,7 @@ export function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clam
       { flipX: enemyFacesLeft(enemy), time: animationTime },
     );
   }
+
 
   function enemyAnimationState(enemy) {
     if (isRangedEnemy(enemy) && (enemy.attackVisualTimer || 0) > 0) return "attack";
@@ -99,12 +119,6 @@ export function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clam
 
   function activeBossAttack(game, type, enemy) {
     return game?.bossAttacks?.find((attack) => attack.type === type && Math.hypot(attack.x - enemy.x, attack.y - enemy.y) <= Math.max(190, enemy.radius * 5));
-  }
-
-  function enemyFacesLeft(enemy) {
-    if (Number.isFinite(enemy.vx)) return enemy.vx < -1;
-    if (Number.isFinite(enemy.chargeDirX)) return enemy.chargeDirX < -0.1;
-    return false;
   }
 
   function drawEnemyFloorTint(enemy, spriteSize) {
@@ -167,6 +181,12 @@ export function createEnemyRenderer({ ctx, drawSprite, spriteSheetRenderer, clam
     ctx.lineWidth = 3;
     ctx.stroke();
     ctx.restore();
+  }
+
+  function enemyFacesLeft(enemy) {
+    if (enemy.bossKind === "charger" && enemy.chargeState && Number.isFinite(enemy.chargeDirX)) return enemy.chargeDirX < -0.1;
+    if (Number.isFinite(enemy.vx)) return enemy.vx < -1;
+    return false;
   }
 
   function withAlpha(color, alpha) {

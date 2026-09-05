@@ -72,11 +72,23 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
 
   function registerSpriteSheet(id, definition) {
     const src = spriteSource(definition);
-    if (!id || !src || typeof ImageCtor !== "function") return false;
+    if (!id || !src) return false;
     const config = definition && typeof definition === "object" && !Array.isArray(definition)
       ? definition
       : {};
+    spriteSheets.set(id, { config, image: null, src });
+    diagnostics?.spriteRegistrations?.push?.({
+      id: `spriteSheet:${id}`,
+      src,
+    });
+    return true;
+  }
+
+  function requestSpriteSheetImage(id, sheet) {
+    if (!sheet || sheet.image || typeof ImageCtor !== "function") return sheet?.image || null;
+    const { src } = sheet;
     const image = new ImageCtor();
+    sheet.image = image;
     image.addEventListener?.("load", () => {
       diagnostics?.spriteLoads?.push?.({
         id: `spriteSheet:${id}`,
@@ -96,12 +108,7 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
       });
     });
     image.src = src;
-    spriteSheets.set(id, { config, image });
-    diagnostics?.spriteRegistrations?.push?.({
-      id: `spriteSheet:${id}`,
-      src,
-    });
-    return true;
+    return image;
   }
 
   function loadSprites(spriteDefs = assetDefs.sprites || assetDefs || {}) {
@@ -261,13 +268,14 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
   function drawSpriteSheet({ height, options, rotation, width, x, y }) {
     const sheetId = options.sheetId;
     const sheet = spriteSheets.get(sheetId);
-    const image = sheet?.image;
     const animation = resolveSpriteSheetAnimation(
       sheet?.config,
       options.animationId,
       options.animationState
     );
-    if (!context || !isDrawableImage(image) || !animation) return null;
+    if (!context || !animation) return null;
+    const image = requestSpriteSheetImage(sheetId, sheet);
+    if (!isDrawableImage(image)) return null;
     const columns = Math.max(1, Math.floor(numberValue(sheet.config?.columns, 1)));
     const rows = Math.max(1, Math.floor(numberValue(sheet.config?.rows, 1)));
     const frame = selectedSpriteSheetFrame(animation, options.time);

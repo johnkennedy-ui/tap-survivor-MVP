@@ -1,3 +1,5 @@
+import { headingForEntity } from "../modules/directional-facing.js";
+
 export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, content = {} }) {
   const context = canvas.getContext?.("2d");
   const renderStressEnabled = typeof canvasCommandSink === "function";
@@ -100,14 +102,15 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
         }
         const spriteId = playerSpriteId(player);
         const size = Math.max(70, (player.radius || 16) * 3.8);
-        const drawn =
-          spriteAdapters?.spriteSystem?.drawSprite?.(spriteId, player.x || 0, player.y || 0, size, 0, {
-            flipX: playerFacesLeft(player),
-          }) ||
-          (spriteId !== "player" &&
-            spriteAdapters?.spriteSystem?.drawSprite?.("player", player.x || 0, player.y || 0, size, 0, {
-              flipX: playerFacesLeft(player),
-            }));
+        const draw = spriteAdapters?.spriteSystem?.drawSprite;
+        const drawn = player.actionTimer > 0 && player.actionSprite
+          ? draw?.(spriteId, player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) }) || draw?.("player", player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) })
+          : draw?.("player", player.x || 0, player.y || 0, size, 0, {
+              sheetId: "directional_player",
+              animationId: "move",
+              animationState: headingForEntity(player),
+              time: number(player.animTime),
+            }) || draw?.(spriteId, player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) }) || (spriteId !== "player" && draw?.("player", player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) }));
         if (!drawn) drawPlayerFallback(player);
         set("globalAlpha", previousAlpha);
         if (number(player.invincibleTimer) > 0) {
@@ -192,7 +195,20 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     const animationState = boss
       ? bossAnimationState(enemy)
       : enemyAnimationState(enemy);
-    const drawn = spriteAdapters?.spriteSystem?.drawSprite?.(
+    const draw = spriteAdapters?.spriteSystem?.drawSprite;
+    const directionalId = Number.isFinite(Number(enemy?.facingX)) && Number.isFinite(Number(enemy?.facingY))
+      ? (boss ? enemy?.bossKind || enemy?.bossAbilities?.[0] : id)
+      : null;
+    const activeState = boss ? animationState !== "idle" : animationState === "attack";
+    const directionalDrawn = !activeState && directionalId
+      ? draw?.(`enemy:${directionalId}`, number(enemy?.x), number(enemy?.y), spriteSize, 0, {
+          animationId: "move",
+          animationState: headingForEntity(enemy),
+          sheetId: `directional_${directionalId}`,
+          time: number(enemy?.animTime),
+        })
+      : false;
+    const drawn = directionalDrawn || draw?.(
       spriteId,
       number(enemy?.x),
       number(enemy?.y),
@@ -892,22 +908,19 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
   }
 
   function enemyFacesLeft(enemy) {
-    const chargerIsActive =
-      enemy?.bossKind === "charger" && (enemy?.chargeState === "windup" || enemy?.chargeState === "charging");
-    if (chargerIsActive && Number.isFinite(Number(enemy?.chargeDirX))) return number(enemy.chargeDirX) < -0.1;
+    if (enemy?.bossKind === "charger" && enemy?.chargeState && Number.isFinite(Number(enemy?.chargeDirX))) return number(enemy.chargeDirX) < -0.1;
     if (Number.isFinite(Number(enemy?.vx))) return number(enemy.vx) < -1;
-    if (Number.isFinite(Number(enemy?.chargeDirX))) return number(enemy.chargeDirX) < -0.1;
     return false;
-  }
-
-  function playerFacesLeft(player) {
-    return Number.isFinite(Number(player?.targetX)) && Number.isFinite(Number(player?.x)) && number(player.targetX) < number(player.x) - 2;
   }
 
   function playerSpriteId(player) {
     if (number(player?.actionTimer) > 0 && player?.actionSprite) return `player:${player.actionSprite}`;
     if (player?.moving) return "player:walk";
     return "player";
+  }
+
+  function playerFacesLeft(player) {
+    return Number.isFinite(Number(player?.targetX)) && Number.isFinite(Number(player?.x)) && number(player.targetX) < number(player.x) - 2;
   }
 
   function withAlpha(color, alpha) {
