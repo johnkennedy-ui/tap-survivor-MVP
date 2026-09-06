@@ -1,0 +1,7 @@
+Generated original tower-floor background asset.
+
+Source: OpenAI image generation, created for this project on 2026-06-11.
+Commercial use: allowed by project owner request for generated commercially safe artwork.
+Attribution required: false.
+
+Prompt summary: top-down stylized fantasy tower floor background for a 16:9 browser canvas survival game.

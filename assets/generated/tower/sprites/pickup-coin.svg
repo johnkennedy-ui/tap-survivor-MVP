@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Coin pickup">
+  <defs>
+    <radialGradient id="coinGlow" cx="38%" cy="30%" r="68%">
+      <stop offset="0" stop-color="#fff6a5"/>
+      <stop offset="0.45" stop-color="#ffd166"/>
+      <stop offset="1" stop-color="#d8891f"/>
+    </radialGradient>
+    <linearGradient id="coinRim" x1="18" y1="18" x2="110" y2="112">
+      <stop offset="0" stop-color="#fff7b8"/>
+      <stop offset="1" stop-color="#a96013"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="52" fill="url(#coinRim)"/>
+  <circle cx="64" cy="64" r="43" fill="url(#coinGlow)"/>
+  <path d="M64 29v70" stroke="#9e6415" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+  <path d="M43 44c9-9 33-9 42 0M42 84c10 9 34 9 44 0" fill="none" stroke="#fff2a1" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="47" cy="41" r="8" fill="#fff9c9" opacity="0.8"/>
+</svg>

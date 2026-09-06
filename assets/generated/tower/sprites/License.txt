@@ -1,0 +1,7 @@
+Generated original tower-themed sprite assets.
+
+Source: Project-local SVG artwork created for this game on 2026-06-11.
+Commercial use: allowed.
+Attribution required: false.
+
+Includes: tower mage player, tower shades/crawler/guardian enemies, tower boss guardian, spark bolt, and prism beam icons.

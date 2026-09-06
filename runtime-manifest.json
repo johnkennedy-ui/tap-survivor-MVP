@@ -1,0 +1,2060 @@
+{
+  "source": "shared-www",
+  "appName": "Tap Survivor",
+  "fileCount": 513,
+  "runtimeHash": "819d90f9cc1b5a98cc8a32f8c6bdfa210386c0402a0c3ab1926d0abcc1ec81b5",
+  "files": [
+    {
+      "path": ".nojekyll",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/bulwark-eight-way-v1.png",
+      "sha256": "8242a4e6a2243158e8ee0b1e712c9406807c998c1694048c49c8fa28557d1772"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/charger-eight-way-v1.png",
+      "sha256": "082360d6ca21d93a3dd475fa4586741df6ef89ed0e2ad5594dee04c8db43631d"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/crimson-hexer-eight-way-v1.png",
+      "sha256": "ca1050afe0d4873219d293fba3b3391004168a42ce6c254868bcbd3e946e77ee"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/drifter-eight-way-v1.png",
+      "sha256": "fb349027c15af401dc5cc25470843826f40c66d8800dc764ed1a4f74010af5c4"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/dusk-crawler-eight-way-v1.png",
+      "sha256": "71f0ee27ea6cab131bf340f942e2c212c0388364056ae034473191da5a3d1163"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/hexer-eight-way-v1.png",
+      "sha256": "0e841b9ae1f7229b79fc0846275e855467a5108064c9f2cdb94fe0c41163d1bf"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/obsidian-bulwark-eight-way-v1.png",
+      "sha256": "5e78b6da6c4ff4c6fb6d5a002f647ec0e7a706ed2fee63d3b3c640db659bb58e"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/skitter-eight-way-v1.png",
+      "sha256": "3bd5f2e10f1c6cb08e10bbd43e07d9869a8a0aba576dd6e972c4618c26b2bcc6"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/turret-eight-way-v1.png",
+      "sha256": "efec576a2709a8141d8e2578c18ead926c612a6be03d444124f9c0a0fd2b8add"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/verdant-skitter-eight-way-v1.png",
+      "sha256": "0cb58e806a00ad0c8e04f989615146a7b4f471dc5eded9a4d2c82a81268f9a80"
+    },
+    {
+      "path": "assets/generated/tower/directional-v1/warden-eight-way-v1.png",
+      "sha256": "6679612c6de3142c731581edb9513b86714bf54dfa9c1d6b692c2aced2b31d72"
+    },
+    {
+      "path": "assets/generated/tower/License.txt",
+      "sha256": "66bee37bbcef6a438dff7817c786f37842675688597de00b27d5ad7ff500a033"
+    },
+    {
+      "path": "assets/generated/tower/sfx/acid_pool.wav",
+      "sha256": "54d9ed8629db4f22e3e6a6a1b695fc3e75ec9675ca73d9bcf79d4132f5599175"
+    },
+    {
+      "path": "assets/generated/tower/sfx/chain_spark.wav",
+      "sha256": "0999f3628a7e7615d363975bf2252b1b75d2327d523e24f2bbd327c5357b2b28"
+    },
+    {
+      "path": "assets/generated/tower/sfx/flame_wave.wav",
+      "sha256": "c8efb4a9fb1a681d870c82b597878db82de97486953c36ce9221bb0ed5ecf41d"
+    },
+    {
+      "path": "assets/generated/tower/sfx/frost_orb.wav",
+      "sha256": "19e0c1c72752b47429c6bbb3956f7605ed97668449657945640557f4bc8bd693"
+    },
+    {
+      "path": "assets/generated/tower/sfx/License.txt",
+      "sha256": "6b0669cd2b4936f1bd390f41f0201cc6bd878e1ae0dadc9528057490dc26f3ec"
+    },
+    {
+      "path": "assets/generated/tower/sfx/meteor_pin.wav",
+      "sha256": "76d1037b20b5a212d7db19a6c57f2b574ac679e286cc8a77b6f330d5edcdaff3"
+    },
+    {
+      "path": "assets/generated/tower/sfx/moon_glaive.wav",
+      "sha256": "27e73d11a171d75121dbe7a4e31d5fb068eb386812221b66015c73ed78a2d26c"
+    },
+    {
+      "path": "assets/generated/tower/sfx/nova_burst.wav",
+      "sha256": "f3a49dbd73f08f854456f1c6b892be17a15ab84c86f1b00aa8d68d7a4931e389"
+    },
+    {
+      "path": "assets/generated/tower/sfx/prism_beam.wav",
+      "sha256": "c2b87d074b5357675360040e836b0fd73cc466a0790b1e3d4f9a5ccaf62c4350"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_attack_radius.wav",
+      "sha256": "9b4562e396628c77cebfb43e84f6cdfaf7222cdc0bf3dc4363ebe25cbfaad86e"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_explosive_hit.wav",
+      "sha256": "99e1d2bea96fbc1da57c9995c957dfaa5f7a1fe673b75230036d624b051a1942"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_fire_rate.wav",
+      "sha256": "83adb7ab80d39801972400ed85141235a029635e94c2d9524f84343a549c1e58"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_flat_damage.wav",
+      "sha256": "3f9da2ca9781628fe22f2f4f03f9e5e061de069fc675c4c1186df9b23223b6ce"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_max_hp.wav",
+      "sha256": "409aab947fd47b7d1ead3d1296fd271824a2d1708841a7e76fe7673fee28fa02"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_move_speed.wav",
+      "sha256": "7fb772ce709653f0b1194ee49b3feb21107752956e3e9d9c21b3f8823a58a54b"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_percent_damage.wav",
+      "sha256": "12efec7a22ab3def8f74844c4c6e86f707c204b04420383221d5d294a047aefd"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_pickup_radius.wav",
+      "sha256": "cc00f5cbb8c22ba0eee267aa66230d5315c96cb2e6535762c189c8a168fbfb60"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_projectile_pierce.wav",
+      "sha256": "7c19423d1d946c483b0f750e0265f5a2c4014a0826ed37a54d3f88a826dd34ad"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_split_on_hit.wav",
+      "sha256": "0be4555af6babc3f8ed8a7b9610856a736506ea0190fe1bedf1ca108d1fb7f0a"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_split_shot.wav",
+      "sha256": "0c46da5c1adde239514781d617ccd0939ed40d03cc8bb5f4c34d572d50860117"
+    },
+    {
+      "path": "assets/generated/tower/sfx/run_wall_bounce.wav",
+      "sha256": "725ca20b760a1bb5804c2b555e2eacc6571e1575d29b6339a714ab3996ec602f"
+    },
+    {
+      "path": "assets/generated/tower/sfx/saw_drone.wav",
+      "sha256": "c4eee0ec58dee89b355695b519f05b4cd8bbbf17b13808dcb692e352e76884e9"
+    },
+    {
+      "path": "assets/generated/tower/sfx/shield_pulse.wav",
+      "sha256": "6ea715e1b2a16806561eca0aa23cf771d84f4726c08c155e83f6346e9794f4b6"
+    },
+    {
+      "path": "assets/generated/tower/sfx/spark_bolt.wav",
+      "sha256": "5a35a44d710026f2160e9c7a1a0b4f7c2dbf74480381122f949f24534b15ea15"
+    },
+    {
+      "path": "assets/generated/tower/sfx/void_mine.wav",
+      "sha256": "8503a5a6f4b23175863f9f3c4dd29af94d25fd99c1bdc4d2886c4515cfda3ce2"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/boss-spider-queen.png",
+      "sha256": "db4f79e1e2ff677ea26f2ad1ac03b8a5d26fd154fbbe68949c2d831dd92f00a4"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/crystal-golem.png",
+      "sha256": "ab205292a6e4bf356fec632ffa22bb90d2b85ec3374eba8916d6b2115682e06f"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/demon-boss.png",
+      "sha256": "da047eda8ace4396aa727956bb569ed96d47db33758c9c029ef8bcc688ec8436"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/necromancer-hexer.png",
+      "sha256": "477781e94e3487ebc3df961d3fd07daab83c881ee6b36789987d6f4fc32697aa"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/spider-black.png",
+      "sha256": "3c2b0ba0a4d9c8a7ea6110e3cb652e4ac6402bdab5525901185c2e15ed7b515c"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/spider-brown.png",
+      "sha256": "2b4ad951481e1d9cb5353adeb2dbc3955b6785e11bf16ac6b3a64ca97cedd223"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/spider-green.png",
+      "sha256": "0484dd4acce77a5bac39409b1968611abbcaf403f8b3b5124f1e04292d8319ea"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/spider-red.png",
+      "sha256": "08b684a5b2636893f1ee9eea8385162a104280dbedff3155aeac72400e0cb530"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/spider-web.png",
+      "sha256": "5fe2c0e9f7faef7402d89d41dd68842b92cf1a9a5aa92999fe2fd2667e7ccf5d"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-cast-beam.png",
+      "sha256": "708310cdbfea3b43ce280de5b97f210137199e9076f5116111dc09255a01f2b9"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-cast-orb.png",
+      "sha256": "6f41f3dd04184cd9675677dadd187984e7923a9bb2b86b2b5fafb2c783954170"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-dead.png",
+      "sha256": "97066696b81aa1cb41273939bfce2e6ab54dfc6e3fc75240b672ee466683f6c4"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-eight-way-run-v1.png",
+      "sha256": "c98787ae34890228b37f0e1f75af64c32db986a7f1c890530d88c290d89af656"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-hit.png",
+      "sha256": "2be98c5a0e23fbfd359294b73f4e4ec4bd9a2587176363fb1f46de63c4a7095e"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-idle-staff.png",
+      "sha256": "6a30c1aa21a4abcdd555cc0a34fe9c3bddb43e7f98a5f3d98480109db5c37905"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-ready.png",
+      "sha256": "1428be1e8de465a2d5f0b8aa2b96ec3b6db417c0f95774c6bbe12ef29631276e"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-sweep.png",
+      "sha256": "99ab9b865c12450743e1d07747c75f65d8169b0e23486ec41a43199ff687fbce"
+    },
+    {
+      "path": "assets/generated/tower/sheet-20260614/wizard-walk-staff.png",
+      "sha256": "ea5755e1b395f5313ae1bdb0e6c6e8c08b40f87bb4abc8b2fcc05c141060e9f2"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/batch-01.jpg",
+      "sha256": "00ae7881d0356323340895fd833f7a1d57e1e03c37138253bacbf6c7aa01642e"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/batch-02.jpg",
+      "sha256": "7d91706813efef5964292df5dc585ed434241df6cc9abebbf5418b743af7b9e3"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/batch-03.jpg",
+      "sha256": "c6682a936d6e94b6f9fac0793d4ea93d0e8c5c783b2d8a8777347a75a7e7fd78"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/batch-04.jpg",
+      "sha256": "4eb3a629c660605a6bbd554396269c19919f6e17c2ce3c7f6dc59535675e9502"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/batch-05.jpg",
+      "sha256": "1974297cfc4deda5e80bed9b7373c0ca38314d4038907f04987219572ed67faa"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-01-spark_bolt.png",
+      "sha256": "0f745968fb9e3b572bf16a9c94efae0b7ade4bb17e4c47529cb28f4aa40868d8"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-02-prism_beam.png",
+      "sha256": "0263a1a54ef5a62eefcb7ed314447bca19392d43b251796c34f3a3bd99499f44"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-03-frost_orb.png",
+      "sha256": "39f15289218f1b95191eda34965ed25f4b65fd6842b5e945f1edbf98179ab800"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-04-flame_wave.png",
+      "sha256": "dbb072361c014ed139c105d91d710f2c7adcf5b4830402a67e2d11958416a449"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-05-saw_drone.png",
+      "sha256": "ae036c065af86ec6585517adca328db5ec1dd14a9ca61af35dfb3ee2aa66c855"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-06-void_mine.png",
+      "sha256": "de3aec14a07ab8c21ae10b7b6cfac5651f1fb430ec49fa1e5e84228d7ffa810c"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-07-chain_spark.png",
+      "sha256": "b8c28f2dbfd5965d4697e15fb399247992c54eefe02b71045c8ad8479de88ffc"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-08-moon_glaive.png",
+      "sha256": "c35129053ced5637d9f84dd08c7decad15932e1c0d924e5fb7ec9af2c1c4a106"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-09-meteor_pin.png",
+      "sha256": "ce9959201ce319201641e905e85b6a2c6afb49cf09f2418eb0f46ac6855ade4a"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-10-acid_pool.png",
+      "sha256": "d4e09c05ecdfa7e96acdbcd131c59cd030c973de1bd40900b92f9021877a4c3f"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-11-shield_pulse.png",
+      "sha256": "77814031a29549ba03ae59294d5ae0e05536942ff37ed864acd3649619f74587"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-12-nova_burst.png",
+      "sha256": "ea06e4e52f98bc3010cfd434e777c32c3c09afae1756341cb7384a1a8c7af1af"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-13-run_move_speed.png",
+      "sha256": "6875aec55541736efe8d9d2c30dd60d36a20e9d5ef6ca4f1bf85f910bfc95ea0"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-14-run_pickup_radius.png",
+      "sha256": "3be7ea6c9a26343b3d0c55d00407427ffd8b9d3180271760a4b580d796b59618"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-15-run_max_hp.png",
+      "sha256": "03828799750ee2bd394091209f746658674b810b199533e13fdf1de0d60313e4"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-16-run_attack_radius.png",
+      "sha256": "37ccab286b2c70773d4ea51e643ce6d05084fb886a7d65758bc794b6a8baee02"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-17-run_fire_rate.png",
+      "sha256": "4e0974ed46cea6d5b7ed332030676c11e1d5fe488bbec973269a05a1dd4ae745"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-18-run_flat_damage.png",
+      "sha256": "267580c23049324c32aae2a3ee3c33cfaad61522e8a9642107f4536edfd39016"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-19-run_percent_damage.png",
+      "sha256": "a5a4a4bed9656c196753f02070af345833a4f67d3ba577ba41ede28aeb7ba4fc"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-20-run_projectile_pierce.png",
+      "sha256": "9c95b24bbe30d8e66fd3e985820e880951ac9ed9867d6d407dc4dd5156d3e307"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-21-run_wall_bounce.png",
+      "sha256": "b2028e1e7bead44345558227aed5c05d01ca7d2db3a72fb34866854a25234587"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-22-run_split_shot.png",
+      "sha256": "3b17ac85ecb6eb3947d76a59d8d846912b3fa3ffe9fc1a224199ff29dfa5fa3a"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-23-run_explosive_hit.png",
+      "sha256": "14218211a4b698cc93c5bb583350c552ca016ae8b7db6e24fcbb3efb565de151"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-24-run_split_on_hit.png",
+      "sha256": "d742213c5ccf348ce2001907b16eda10e1ada5209f7619de5b7e42f8cf3afc9c"
+    },
+    {
+      "path": "assets/generated/tower/skill-effects/split/skill-25-unused_25.png",
+      "sha256": "fc12bb25a149209648557f789cd3f1f4272a2a21836310e952c037e548d377fb"
+    },
+    {
+      "path": "assets/generated/tower/sprites/enemy-boss-tower-warden.svg",
+      "sha256": "7c8ee985fb8ef5c05e80d5ebfe08e611fca749fb5b77b78c63c50d98ba3501b3"
+    },
+    {
+      "path": "assets/generated/tower/sprites/enemy-bulwark-guardian.svg",
+      "sha256": "1b08dc95266c54e146740220347e9461484140b0b79b4b266dc13bfa2f9c9cfd"
+    },
+    {
+      "path": "assets/generated/tower/sprites/enemy-drifter-shade.svg",
+      "sha256": "82a6f3fd277ed19c95757f166b3cffc15f740cdd5a77512ac5b613ffcbdc882e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/enemy-hexer-ranged.svg",
+      "sha256": "f9fb000a4b87c24115eef9a019fa915baf3b2c6327aa9293bc3cb53adb51c31a"
+    },
+    {
+      "path": "assets/generated/tower/sprites/enemy-skitter-rune.svg",
+      "sha256": "8d30aad61bbb2a64b39d6158968e291c20de31023c9fb0dc0fdcadf6245f7c07"
+    },
+    {
+      "path": "assets/generated/tower/sprites/License.txt",
+      "sha256": "a58fe3c3a088acd969421bf9949c5b0321242e7966b299d1299972a11f88826c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/pickup-coin.svg",
+      "sha256": "b8a815c7ae7ad731e320b47c55d99e22de49696d477de71ea13b7291742a7fa8"
+    },
+    {
+      "path": "assets/generated/tower/sprites/pickup-heart.svg",
+      "sha256": "64f47cc36985c78904f6ca91e0a97413fe66ea99593797dd43f5fe367580db17"
+    },
+    {
+      "path": "assets/generated/tower/sprites/player-tower-mage.svg",
+      "sha256": "923f05441bbdd278a4d2e597cb53b973c4a919756c82f3e6bad57efff6fce65e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/attack_radius_focus_relic.svg",
+      "sha256": "709b66c487523a19348c150e4cb4f360ab3d4afee66c19031cf6a4b959136403"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/attack_radius_mastery_relic.svg",
+      "sha256": "9f567856cf4308a4ca0e5ef87cb0f5a5132d6039a66d8a3d385f8d260b7469e2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/explosive_hit_focus_relic.svg",
+      "sha256": "6587cbd0fa379b89cd7ba2e9d1441012ff52577ea52514a2ae98048eecbf6739"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/explosive_hit_mastery_relic.svg",
+      "sha256": "9dbcfd2be7030b076f3e0bb97c44600e91ef55cbc8e5489cf0c733364839e947"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/fire_rate_focus_relic.svg",
+      "sha256": "6ed7ffdb1d97effefa16578e75b7c991334c58bcf1c5bdb37fa40a3c3eb3b032"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/fire_rate_mastery_relic.svg",
+      "sha256": "e15b754893066891aa1008b62a42749ed7733e256fbdca78f1fdd9c40806a475"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/flat_damage_focus_relic.svg",
+      "sha256": "bb25b5e47e87a2a05769d74603189958701c5ff666e2de426672a9d3ae527e75"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/flat_damage_mastery_relic.svg",
+      "sha256": "2b85fe3e31ac0e30a4854b526d7855bf847dba2c99ef1ead4f1705816d48ef06"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/focused_channel_relic.svg",
+      "sha256": "048f77f61e7e9179c817255b3ce0479c8f69852852f1f7d56b9d134ed8edac87"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/haste_projectiles_focus_relic.svg",
+      "sha256": "8b382e7fde62dc0c94dc26583c537e405d3edfae7a6153034503320d2eea9db2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/haste_projectiles_mastery_relic.svg",
+      "sha256": "e81907a1c477bc077a3edd21e7ae80385acbdf44278c3f25d6cf449537cde154"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/heavy_projectiles_focus_relic.svg",
+      "sha256": "f3322344e5d2871a8961d89e269a55084f879db407992a2403003e8869e11bfe"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/heavy_projectiles_mastery_relic.svg",
+      "sha256": "62fe8612da5a9a08449667c949cb2a5569de975531efe0e6297456e0371ae260"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/max_hp_focus_relic.svg",
+      "sha256": "22d97fb5848fcbae076d47e2e1f8a684a55643c3bdc3a215d0167caeb9d783d5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/max_hp_mastery_relic.svg",
+      "sha256": "c6b3dfdf1d1359109ad589f9c053d539aa445332eb7b0ed55e596d298481d1eb"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/move_speed_focus_relic.svg",
+      "sha256": "1eda5a27aa3b4fdac8dbe492845f5272c231353dde79ab138b2c0951c42686a2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/move_speed_mastery_relic.svg",
+      "sha256": "1f2ed14e94debd4f160af82666e1cb0c9d3235766a5d336882146e3324b69a84"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/percent_damage_focus_relic.svg",
+      "sha256": "f331b4172f2d4a1ef9d03f573f6cd178db874954876403126e2953a150a9b7f6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/percent_damage_mastery_relic.svg",
+      "sha256": "69a2886d5e5c5e7258146da94a62cfdbef7168380f715792ef7c841d6d14dd15"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/pickup_radius_focus_relic.svg",
+      "sha256": "5f722f6af4f16ed2e6bb21e38727c544dcab3baafa4ea80ccbcafb92b1178cee"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/pickup_radius_mastery_relic.svg",
+      "sha256": "72ddeb8d5782a9b52fa945b479b7722e0c22b5149b1e4434ee88f1bd0f069392"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/projectile_pierce_focus_relic.svg",
+      "sha256": "bc87a3675a778c74a9c18cccd3a5088ff0535fea423a1b372376a9fb74a005c1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/projectile_pierce_mastery_relic.svg",
+      "sha256": "e56a61542c38e66e8fa9a28c563d484945cf134284b2b80ef817f5132640d4ed"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_focus_relic.svg",
+      "sha256": "c974bb66bc6c18fa146da2be60e187802c4fa4bde3e78df3d8898dae047543a2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_mastery_relic.svg",
+      "sha256": "33f56dcc4fed38ff7e5f43fb9417ff846f7cf4eb2de0e68875b736d7a06f2be5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_aether_split_on_hit_obsessed_relic.svg",
+      "sha256": "e8b93be05913e686d978f9b175c0ffab029670064a03857a5c747d1965d4f96c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_arcane_move_speed_focus_relic.svg",
+      "sha256": "018f52fee0c9c5690ab410c50035b4e4e27036dffb9ff73721ab5eda92f26b10"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_arcane_move_speed_mastery_relic.svg",
+      "sha256": "63e7382b536aa46ec8250ee04f0678cc174a8dfc1fd3530c2b3fa3b4e811f172"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_arcane_move_speed_obsessed_relic.svg",
+      "sha256": "847f547c6c5345613878cea01e4df5a3426a17b127fb2d1d5f425c7fe3239357"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_focus_relic.svg",
+      "sha256": "b6414787508c7913b297166ef9e0af0e8adf1a6275a2259cb7408b955bd6cdff"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_mastery_relic.svg",
+      "sha256": "f7a3e0ec41af228fc1f7606d54efecc9039f21ea539b3ebb274067a6427ae5a7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ashen_fire_rate_obsessed_relic.svg",
+      "sha256": "9c20ea4cf21293aac9f81d0327ef287bd0ccf18c5cf75898bc9ec0c082d36777"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_azure_percent_damage_focus_relic.svg",
+      "sha256": "041cec2edbadcb0d8479d2a5336e3b5539b66f267f7004121b66b592aa1108ac"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_azure_percent_damage_mastery_relic.svg",
+      "sha256": "a2aefe9e834458535c7748fe8bb3b2c11f84d4d798ad2c71246eca2593c7784c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_azure_percent_damage_obsessed_relic.svg",
+      "sha256": "5764e1a92ba30c8427e417272a5299ff3abde2f7eba3b8bbe5052762db7f128c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_focus_relic.svg",
+      "sha256": "0dc56d584556750157b45e4108a86b3e7789cd719bcb4d83ac11fed7ed2b8f4d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_mastery_relic.svg",
+      "sha256": "f5b23f613ec7d30eb8a816d7fa2ebfa8166ba3c3da23dcf18c1cd4c84aa9b9b9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_celestial_explosive_hit_obsessed_relic.svg",
+      "sha256": "9b807fce50408a0d85f1ca457d30493006ecbb28241b5d21c6b664a7f8c7ad81"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_focus_relic.svg",
+      "sha256": "f06b2f5f41da528709f6e51bfa1ce5757f600f3865c79edf5960319a5fcedbc7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_mastery_relic.svg",
+      "sha256": "2ef9de92c67db11f6bd7d888473fa9b456073996fc0785b339501b3dc99e5d3d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_clockwork_max_hp_obsessed_relic.svg",
+      "sha256": "35c2f0dad1536ad168a49d2fb80653d60500118ba3e9363c0bce9ed6ae2b3bed"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_focus_relic.svg",
+      "sha256": "a3709dcbd66703ed0c52c583594cb0286d9cc7c86d41c0d83d728deeb0cdbce1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_mastery_relic.svg",
+      "sha256": "2e5a10017722546870032fe18071bb39e6692ce069744ee0ecd59541933f9b3e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_crystal_projectile_pierce_obsessed_relic.svg",
+      "sha256": "fc2995ce0aadbe8e26c83fa82b8272cc688d523c3a81a531a24819cfaab32f82"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_echo_split_shot_focus_relic.svg",
+      "sha256": "411767fe59a5d2485b2357b0dedc0208b4ea0ab0dc2c5b204eb1684d611e7825"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_echo_split_shot_mastery_relic.svg",
+      "sha256": "b8b1d2332b54384068c6fe4841c28e076152847a0fb492bc3c33505dff4ddf02"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_echo_split_shot_obsessed_relic.svg",
+      "sha256": "ac3c40f066d41f3d29a4488c5c2096a93dad4ef1049ed2977123d7ef50fea8aa"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ember_move_speed_focus_relic.svg",
+      "sha256": "9cf2c4479a45b2f0dadecbc070cb725accb1c79ace90dffc41c7227f191ed162"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ember_move_speed_mastery_relic.svg",
+      "sha256": "fc9a30e288ce600087872cecb8af81a6a6f25c549a8693655336945b9e3d5ea6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ember_move_speed_obsessed_relic.svg",
+      "sha256": "aa3f74a828b2cb1881480cb88829d1e55f83a2c65d937b919ce7dcd0dece2b5f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_focus_relic.svg",
+      "sha256": "2dc6959830f011d869606d216ed92340ea544d3ad62e14b8ef26202d9d759021"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_mastery_relic.svg",
+      "sha256": "7e17db5c57c79bcd1e9a346e9043d014a7e93a4ac5d3a756226e8c144b37bd66"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_frost_pickup_radius_obsessed_relic.svg",
+      "sha256": "aa5987c88c750942d149a335c9b69f5d0f420131f86f07b39f91b818cd19b3af"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_focus_relic.svg",
+      "sha256": "7888983d822fc9549cf6a89a5447d8dad8b7033852289ea4a8bbd0524b099633"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_mastery_relic.svg",
+      "sha256": "abca07bd3779d791b237ae46fd908e883f511b3aff64a624335026ef1ab4b5d9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_gilded_attack_radius_obsessed_relic.svg",
+      "sha256": "c5b5fbfbc019377fad30a1de1bf1e227acceeb6b1806856098ac9fe9ac1da084"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_gold_max_hp_focus_relic.svg",
+      "sha256": "125a37fa4712c0636d167b1d14ee34f1f8fa168d4bd80bd2d4b1cd088f5f9018"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_gold_max_hp_mastery_relic.svg",
+      "sha256": "a692763bb719c7062ffc5b7f53c97dc2be512c31942e12ab40835e0771452cfa"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_gold_max_hp_obsessed_relic.svg",
+      "sha256": "31d83de42b7733418785d52bed1c16f09f91aaf40155c806dcaf9a28e8355e43"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_iron_percent_damage_focus_relic.svg",
+      "sha256": "80729bf764511eb0b55b988b163324d26a302415fafc2c3bc6456d9505e6d703"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_iron_percent_damage_mastery_relic.svg",
+      "sha256": "36d60662d33bc365ec4f5c47bb958e588a37bceacd035e3a5507bc80f678fcc4"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_iron_percent_damage_obsessed_relic.svg",
+      "sha256": "4617d463845c8d9f07789ad0d01186f616e1a2731655023417551bc647a3f04d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_focus_relic.svg",
+      "sha256": "5bd34e37355ea493e47d093a2e8ae031e06c30a2f9481203910ac4426a72cd57"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_mastery_relic.svg",
+      "sha256": "e59cd85158ded8085c4c2592ebfb84e4339c96057f40c499403023e6fbd32e82"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_ivory_wall_bounce_obsessed_relic.svg",
+      "sha256": "e14d4d54ad6bc4a24bcc47821981d1d4b83b4533c3e200184f25053a03b58fb3"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_focus_relic.svg",
+      "sha256": "419b590cd2d1417920b4616e233a6ca9e33ec920a56b2722d4ad51fe9988b597"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_mastery_relic.svg",
+      "sha256": "43b4675f0f3240e34a29c9785427a8b21c22844e0490f46f103d4e739d27bea0"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_meteor_flat_damage_obsessed_relic.svg",
+      "sha256": "8f43593e21f1fc514c83abea1eba5ee84e9967ee51d6dc4c313d23f18ca9d0f4"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_moon_attack_radius_focus_relic.svg",
+      "sha256": "6e3e070f4fb92661e5af747f540835406ccbcc3b3a8673522e2db6953f7e0b9d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_moon_attack_radius_mastery_relic.svg",
+      "sha256": "ac9e62d975db73977adb1b6711dc32505e7aa0e8bad71d27c44c56e357744db0"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_moon_attack_radius_obsessed_relic.svg",
+      "sha256": "c77a469561c63812504eef305a98b64e834a9d069f8ae541427c7ec08a65b0fa"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_nova_percent_damage_focus_relic.svg",
+      "sha256": "15087918635f6543cb10ab09a973bd67221c5dfbab2b2f231c9cd24e7f7dab6c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_nova_percent_damage_mastery_relic.svg",
+      "sha256": "3ea1881228037fa01699e7d3436615a62959da7df42181206a393ba18e4f71a1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_nova_percent_damage_obsessed_relic.svg",
+      "sha256": "3d79f26567f14693624c5ca5b71602fdd512221d28a3fdb64c42bafa4fe031f1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_focus_relic.svg",
+      "sha256": "0ff1fe9133fb072ac6613bd255bce6f03d11c63f38f03ace5ad44d3bbbf16222"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_mastery_relic.svg",
+      "sha256": "e7088aa5a6b45f33313eafcf4b077ad29d1db10b43f045996071c4eeee7e0fc1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_obsidian_split_shot_obsessed_relic.svg",
+      "sha256": "2370a4ff27b6e77707a252af93256e1639d31a5e453cc347fad73e00ae71ca4d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_onyx_move_speed_focus_relic.svg",
+      "sha256": "0255c013e568d550984936dcf25f902f7d4930fcfbdf04664d0794a07ee78a27"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_onyx_move_speed_mastery_relic.svg",
+      "sha256": "3adb17ba28d7678da6a686f049ffd28f8942fa48643b0f1d46ca9d10026df011"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_onyx_move_speed_obsessed_relic.svg",
+      "sha256": "9a1e7ea984b2c450e1c005b9b8e67b7ffaeca8a0f49b3a7964a633c0bb30f44b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_prism_attack_radius_focus_relic.svg",
+      "sha256": "900132b6cf14be6ec76f7b00861a8fecf87532c9ea85640059026b58186b536a"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_prism_attack_radius_mastery_relic.svg",
+      "sha256": "702bfd648f87ad4da236e97904563ab947319abf51a4374bac6cae3bdf105fc1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_prism_attack_radius_obsessed_relic.svg",
+      "sha256": "73084d22bebca13679b7449dd1bb8e53a15d182d015d473a0f611cddf03b36ee"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_focus_relic.svg",
+      "sha256": "d57ff3c2b87a09b5e4720d04541e9adfad99ca7cb3cec7cb702e4793c8721ee9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_mastery_relic.svg",
+      "sha256": "e2e55caac42b8184398907e0ab0594ffd7794ef1eebd00cb1c24f5ce81df7fbe"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_rune_explosive_hit_obsessed_relic.svg",
+      "sha256": "bb91dfd38c7d5eddd985a6435b71ec560b94456b352322b9eb432e9bc280b82f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_focus_relic.svg",
+      "sha256": "41efa58fe02950a7384d81a4e91bcf2a810647a01f962d5b22d6b45e8b84927a"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_mastery_relic.svg",
+      "sha256": "962a167798ebb04d9734ef78965d92302f011b21c6003c3cb1927408287e8584"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_scarlet_projectile_pierce_obsessed_relic.svg",
+      "sha256": "6a3f49fe38134a45f78d45245f20d6e901eb92d040b2ea2ec940fa134dd17076"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_focus_relic.svg",
+      "sha256": "2bd7f58f54cb6c4bdd2a0c133ecaa5f50ac956f2423ed7bb1cb6a7e1dd33a113"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_mastery_relic.svg",
+      "sha256": "713b977e8933bb24fb6b4831d13769f2552de6475a322d5f75fd66ce879f0bea"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_silver_pickup_radius_obsessed_relic.svg",
+      "sha256": "f0df2c96b8bc2beb7f7dc4a4f158a3927cc347f6fc685af5e99f79a47af95b5f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_soul_fire_rate_focus_relic.svg",
+      "sha256": "ceed60e8fb0ef7548050f392b32b1aec4ea37d707c58331802415892bdf10958"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_soul_fire_rate_mastery_relic.svg",
+      "sha256": "3df6445f0b9118f3641ad6f5ca1f00a51f0d6b8e0ecee227db5f4864a293f4b7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_soul_fire_rate_obsessed_relic.svg",
+      "sha256": "b9f1fef6ba0b71b592c6d6357ac2e82c2688bbb78fc50ce9b23edbd2184231cf"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_focus_relic.svg",
+      "sha256": "e4329ee786687ac56177638c22c8ccc3e8dc57387adb45e72a7b6e56519e27d7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_mastery_relic.svg",
+      "sha256": "fad52480af15246a3a165a138d55c9be2fb29211b1376af36d4de80ba1fc4482"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_spectral_split_on_hit_obsessed_relic.svg",
+      "sha256": "4964f65424ce1b2e2582d0a6587cc5bfd835239c21d52723b219522d5db340df"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_storm_max_hp_focus_relic.svg",
+      "sha256": "28423741f6c4bbcf4294cb9c462a1539c8fe7c9dd473df2d08dc60e0c165aedd"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_storm_max_hp_mastery_relic.svg",
+      "sha256": "215286dedcc5f8d79e15d54cb65c08ee76aca0ba909795217ca4d5edf1b351cf"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_storm_max_hp_obsessed_relic.svg",
+      "sha256": "dc32b6c9af12aa16bdbeedd625b2221570739900b80dc77b227d4829c0c26fee"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_sun_fire_rate_focus_relic.svg",
+      "sha256": "8e3f05bcbdf51b18c48b5edda0d1a956855176c07353a72f38aa36e5e128d9d2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_sun_fire_rate_mastery_relic.svg",
+      "sha256": "b9541b49369f91298c58a96260523c81be63536d82ae564acd3babf27436d9ce"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_sun_fire_rate_obsessed_relic.svg",
+      "sha256": "1a668297155e5a33d60ee44767f977fc3ace39f1dbb656f061bd2f97f6f3650d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_focus_relic.svg",
+      "sha256": "4be360234b44ccd7514dbf1ed1a3a990e25017a854ef5efff9469bef4c4aec61"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_mastery_relic.svg",
+      "sha256": "5ce50efee5d440a44a92f7cda2cb92581f06cf4852b1c3043a62e39628cac47b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_thorn_wall_bounce_obsessed_relic.svg",
+      "sha256": "4aacb0174db9d16495fef8494ce804d5f320b2a7fe412a9e3ff39ff64254ed4e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_focus_relic.svg",
+      "sha256": "d0de58c2f5810ff6640b920546c579d76f42ed2080c01a681dfc0de5aed31c93"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_mastery_relic.svg",
+      "sha256": "254161be0f448a29b0417fa84adce69147c687eb12f15ba4a1b84929af26e5ab"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_tower_projectile_pierce_obsessed_relic.svg",
+      "sha256": "c1babe35d3e2c970bdfa36e0fb4bcce9b038395694bb7bd4baf956df40901049"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_focus_relic.svg",
+      "sha256": "1cef81dcf188b0495fd96c57bccf32df6cce4a653e7ed52301d9bc31cabac8aa"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_mastery_relic.svg",
+      "sha256": "614748bce9bc08a17b8543a7902b6817263b8ef29e0d11ef3ce378931778d8c0"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_verdant_flat_damage_obsessed_relic.svg",
+      "sha256": "31475488eabfe7cf17f5c83e2b88ca4b3f5ee4c950a53f6f7b54cc496dc0ecf2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_void_flat_damage_focus_relic.svg",
+      "sha256": "44ab3b269946a161096c6b589f49e3ff212c0ed1f7dbb341aad336a94b7dd9fb"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_void_flat_damage_mastery_relic.svg",
+      "sha256": "c80a233c78db02c1598f774d0b8e16a668b83307ee8ef7afd31de1bcf85cb0cc"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_void_flat_damage_obsessed_relic.svg",
+      "sha256": "d788f6d852c1bda53759e19e2ccb96db52dd37da01f6644d4cb00c5648d27000"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_focus_relic.svg",
+      "sha256": "02a422f8cc936cf11f0953912c73059a4bc19190cb0a88151a95bb378c2935d0"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_mastery_relic.svg",
+      "sha256": "4e51e5d505f049268b7b04dbf7d30c3f32eeb0edc1dbafd90f4fcb67da5b1360"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/random_wild_pickup_radius_obsessed_relic.svg",
+      "sha256": "45a282a6002408ccc49d10d684e87f1fb3d9f17462472672d4e59fe11b688398"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/split_on_hit_focus_relic.svg",
+      "sha256": "af0f8c7b9f0377407d581cbb15b698c1f7a5b0795e7832dbd016c13fa9cb12b6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/split_on_hit_mastery_relic.svg",
+      "sha256": "6e604b5ac43b52c61cfe54d1a2ddbd4adceb80f063a49095120bdc0ab68a4ae7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/split_shot_focus_relic.svg",
+      "sha256": "8f872b9905d6f8249fbe5fbfea2c5952b6024a5c3bf983bb8ebd64628500d882"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/split_shot_mastery_relic.svg",
+      "sha256": "baedf44b5ef91dd8696d2ba7db9047c49bd0fd10e42abc0883e9c9e75af76eac"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/super_boss_aether_gravity_relic.svg",
+      "sha256": "cd516e4360dfc8fbae7847baeff71e01bbd1edd282a98b1fc906e658cb4004b1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/super_boss_arsenal_cache_relic.svg",
+      "sha256": "125a35ccae13c9fe099c9140d972e1eefeefe9498da7597a3ed3746f8ab3d775"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/super_boss_focused_channel_relic.svg",
+      "sha256": "8514f48006c310c8f0b975b3c21d386e9079bfc82823fe7068dd9458411b8e6e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/super_boss_quickening_core_relic.svg",
+      "sha256": "93ca07c2839019550228ccd624376d2e22f61e4a14ebd06e2aa089fef48ebdfd"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/tower_arsenal_relic.svg",
+      "sha256": "f77e0259dae78dc126e98e1c13dd2e921ccc17380dd5d15a488190dfa5c873d1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/wall_bounce_focus_relic.svg",
+      "sha256": "91d150464086987c964eb8acb08608dc9b7ec68d52c5d77438f454b5c42a2a83"
+    },
+    {
+      "path": "assets/generated/tower/sprites/relics/wall_bounce_mastery_relic.svg",
+      "sha256": "8af60dae5fbad0703837b66573fd36a215eeac0ff7c15252abf9c7381a300fb2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-aether-soles.svg",
+      "sha256": "5bb4b95255fa6afc74c26f410f8fa0c44821d8250ebafb72105e270ebd8917d8"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-arcane-lens.svg",
+      "sha256": "a1c3b19c55707322dc6194adec07321b1e9b0ea8fcfa2a4e3e1842efa2cbebc5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-chrono-spring.svg",
+      "sha256": "f92e9354dc65f41c3ad6be84faacb1533403d1c7b8cd1d5488b3d3db0b02a8e3"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-clockwork-trigger.svg",
+      "sha256": "e4a0c098f92e9e08ca7a6f6445681109975fe499dd3e6b9bc9efa14f290bc2b9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-coin-magnet.svg",
+      "sha256": "5680decd7d7da7f5cd42051e599e41f9cb1f49727144a46c7f64666a998a17e6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-ember-whetstone.svg",
+      "sha256": "1085a41fdde18a0854b62c6af48af63c9bdb415ee788b1d83b797f545e11b03d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/001_fleetfoot_initiate_boots.png",
+      "sha256": "f147f74153234b1915b8969ab733f49d10c66d1fb46184650c84a7771fa037c4"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/002_glimmerpull_lodestone.png",
+      "sha256": "88612fa5b06155d00dbd262e14b21b7e6625547badd362624498c80e7ac982eb"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/003_ironleaf_guard_vest.png",
+      "sha256": "7d8e21e68f2938b5fe17dacbd02dee735027e102e5026ee0660ae39d167408d0"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/004_razor_sheen_oil.png",
+      "sha256": "a85b807315d99fb8baedc397a006df53f7d856cdc4c094117939150522fa592c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/005_farstrike_moonlens.png",
+      "sha256": "ecea850d4db2586ad0c59d28d13ca5b00719eef4bab7efd1354927f975cab196"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/006_ratchetfire_trigger.png",
+      "sha256": "04895be3b57256f74a7577c2e578209216725d9dba9cc00fa746850a76481334"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/007_runesurge_grimoire.png",
+      "sha256": "d6791c8bda74e46213a06110abb90c71d4a0aa8d39d16c00c490cac90a581dde"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/008_relic_seeker_compass.png",
+      "sha256": "195bbaaf0f7d9b6f51857d168057d8f06fe109e8e12625fcb933d39c05fa49a9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/009_skythread_aether_soles.png",
+      "sha256": "89a11d12a8e14af8e98f1ea1a67d149dbd7b5636d101a676aae07ac5c449bf13"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/010_graveglow_soul_satchel.png",
+      "sha256": "c2822462b79601f7e74ffa4a6c9f49fa37a38279ad52d916395016ecfa320e58"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/011_cinderbite_whetstone.png",
+      "sha256": "8dca03000fd0dbf30b83e5b037ad04016c8e2686cad05a1244375f6ecc92379b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/012_ticklash_chrono_spring.png",
+      "sha256": "17eb596a55f3951a8259346108b0ede2a34dca21ee7e34c6fe92347f62ad499f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/013_ashen_strider_boots.png",
+      "sha256": "0b80e80d4266acbaea726f427da7533707d037911de0c053a6277cd28edcadfc"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/014_ashen_lure_charm.png",
+      "sha256": "8cbaa33c7a4db343b06ce4d16c3b7d487416fdb55890fa4e508cfc29c176ac28"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/015_ashen_bastion_guard.png",
+      "sha256": "598590858fbe5b417ef3b5204c4e38de4d1d943ebb96678509b41eebbd036675"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/016_ashen_fang_edge.png",
+      "sha256": "78d4a213ebc2cdcd6c9036d2922988854d05262a08603d10f5b528e85de5c7a2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/017_ashen_horizon_lens.png",
+      "sha256": "26d5ce8fff559a1f6a208ecd94ce8553a72f7b2953711a9294cf34eeb47b9977"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/018_ashen_quickcoil_spring.png",
+      "sha256": "d9a8faff8bedca1240fc986f829c9bcc2f8b95b3848612830bbaee5dcdcbea75"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/019_ashen_surge_rune.png",
+      "sha256": "02385b4ac1fd61ec36b2b81104d15c8eb42e9f1e002f20a45283b8e8f6bc20dd"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/020_ashen_fate_compass.png",
+      "sha256": "6f3c4091aa126fb7d462a0820faa02b8e1ec625120c8cc50085069ffca392afe"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/021_copper_strider_boots.png",
+      "sha256": "aa6c04549fb7e0b4da03e0910af0b6e050c86ef06ff6fe2814a6506ec8343c5e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/022_copper_lure_charm.png",
+      "sha256": "6e91330a9d6520a4d808b9d2476ba55021f14f60c1b46b84181c2e00572b7b32"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/023_copper_bastion_guard.png",
+      "sha256": "64e933611e7844186fc33de965efde8087878278052fbf5f1b0ffeb146fd07c7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/024_copper_fang_edge.png",
+      "sha256": "ab971f9b7d9d257ddf8ea00c122b0969719ea7e1c753019d3a6a35aea77b344a"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/025_copper_horizon_lens.png",
+      "sha256": "2da225cb6b7b39f5fd0ee4d4323c09f390c062e13fec27be0d4c5db646da3768"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/026_copper_quickcoil_spring.png",
+      "sha256": "f56d645f1e12609004e6d048820169c2fb1a913c85bc261e5a8b3cacf4e63926"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/027_copper_surge_rune.png",
+      "sha256": "dacbb2742f4f81bedb1f9664c3d328a25a78a28d98547bab5dc51992eb82dabd"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/028_copper_fate_compass.png",
+      "sha256": "054a75bf46900532f91a5451e232978fb2d550e10cdbe3ebd4eadf71212fb6b8"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/029_brass_strider_boots.png",
+      "sha256": "803aec1dce05050cef605dcd2ea665fc46b1094e81d77f60861f2bf8e79ed64b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/030_brass_lure_charm.png",
+      "sha256": "20f4eef9a542022489e7706631aefb40012c31e7268c0df881d070d5eaa92410"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/031_brass_bastion_guard.png",
+      "sha256": "056e4c583d692b72481dff3d43e13e866df90e5322268aa62f39baa7415588de"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/032_brass_fang_edge.png",
+      "sha256": "7f9af03100684ce13d898fa078aa7c95f0c1c8e2caefd535bdeda5d016492dee"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/033_brass_horizon_lens.png",
+      "sha256": "46ae02521ab4af9a6722c97c54a6f47a4a15afd79d63176b021194926761f9ef"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/034_brass_quickcoil_spring.png",
+      "sha256": "a75c0035438cc2138ca747ab297fc8669ffb74d24c5dc1c858a4dd9002785b84"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/035_brass_surge_rune.png",
+      "sha256": "86f32cc59c86bf795d6e223e675bf0685f55ca58602fcded28ecfe30704a5918"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/036_brass_fate_compass.png",
+      "sha256": "d6d063b49ba8320d98e05a16b7a2bf657049fe62b12d91ecacdf76ee4d5417a5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/037_sable_strider_boots.png",
+      "sha256": "19a057f7cd713c89c964d32311265bd42d408a7d88b7d581c759227a87ecb971"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/038_sable_lure_charm.png",
+      "sha256": "36c7648e4946a27fd7144ec459a1ef2a58132436c4eddb0ff17934b4b92ce1aa"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/039_sable_bastion_guard.png",
+      "sha256": "67aeeb8eb3e16ab646b818cbb841b3b04101a25892630321af2df2fb0c08644b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/040_sable_fang_edge.png",
+      "sha256": "a95fc199bb4e7e2ab206b6c4f1b464cd7806637972cca8ee6262a4d9185e707f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/041_sable_horizon_lens.png",
+      "sha256": "368727bd368c9834de17167d7bd548603f95ce5aa96a032a4fd881625a85b878"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/042_sable_quickcoil_spring.png",
+      "sha256": "f955327ea451a98bcb9989196c52dad22490638b1b9d11009afa6f301b9974ee"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/043_sable_surge_rune.png",
+      "sha256": "20ed5505a8547e030af75e74044665ef7bbe4722f38a6eff93d6488c17c837b0"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/044_sable_fate_compass.png",
+      "sha256": "774b290d23e5d0796b13d6dfd3ee882cda6660fe31b0eb29781203c29ad71080"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/045_ivory_strider_boots.png",
+      "sha256": "65ecc067e812e9cc7e922389786c649dd106d9a5d859896a65e4118ec8a2f7f9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/046_ivory_lure_charm.png",
+      "sha256": "02c14e5b4a15b91928b331605aa4be99b9387d775141af2d90850cb116c619d6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/047_ivory_bastion_guard.png",
+      "sha256": "fcbe2b1686fb71e1f842830d66f29db42765dbf2998f463cb5149fc2ebd2646e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/048_ivory_fang_edge.png",
+      "sha256": "710651eeb29fe4a39670c941d4cb24f0275b9755ac3cf573d3b20a22acad640f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/049_ivory_horizon_lens.png",
+      "sha256": "6445a29072381e6ae60f02ad6bef09d179882c7ee5e179bb09296046a31924bf"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/050_ivory_quickcoil_spring.png",
+      "sha256": "fd40ed56395ea8f02315f31a5744e3071977c2d05ccc6ba8871be3e02d3ee67c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/051_ivory_surge_rune.png",
+      "sha256": "1a548a42daa6ae8320e8fff6ef653be14e2ec9a1de5ed1a097e1886d462c1236"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/052_ivory_fate_compass.png",
+      "sha256": "82b2a67d8070a092c1d52bc4abc88dd201ce327e99fda657a1269cd3f878bf3d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/053_verdant_strider_boots.png",
+      "sha256": "c6cadd6fa0e0c8041d42b2fe7718c1e481769fd0d6282bfb7d47919756de9442"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/054_verdant_lure_charm.png",
+      "sha256": "ee0df5ab78722724e7fc76a353a89dcb3e74972075504fc5ce0356cf60fed3d9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/055_verdant_bastion_guard.png",
+      "sha256": "dbcf23cb47e736b2dfc98bc36662ff39b25fcf3a1b43e2bdc16ebcb04d06213b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/056_verdant_fang_edge.png",
+      "sha256": "40b46e7586956f46c46f8410584cbc847fd1b80c1e67f23105ed0d5b0e99e3a7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/057_verdant_horizon_lens.png",
+      "sha256": "9b052c3ace6f9b061809a92830530677dca4d2d68fb26e86dc35ff1c08378483"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/058_verdant_quickcoil_spring.png",
+      "sha256": "ecc412a60fdcdb70296e86ee302c310488a87ffa5bba194355d649e076390782"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/059_verdant_surge_rune.png",
+      "sha256": "99a5fe5ccba549024a8b2704966dce577bdf6ea621ad7d34527bdcb8346ab0c3"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/060_verdant_fate_compass.png",
+      "sha256": "3a6df24d220ba670c5e0b6622eff590b1e5cfeeecfa4e053553f035a72d4c026"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/061_azure_strider_boots.png",
+      "sha256": "c7ef326be3faf3c11551e150b9f6dc056ad0c4a7b5fe70d42b55b9ebe54e5241"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/062_azure_lure_charm.png",
+      "sha256": "dbac1965d16cb36cafe179e1bb1887c1f49f8db4a5673d490f4083090e21c458"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/063_azure_bastion_guard.png",
+      "sha256": "313315a815ba5a0ce3eabfe5fa575f7c658a01410d72733c9c92bf59f160309f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/064_azure_fang_edge.png",
+      "sha256": "70dd16d2628bb67f2fb3fddd967f2d9b5b5d7d454a749b80659b52fee969033d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/065_azure_horizon_lens.png",
+      "sha256": "5ba3cb68f0a00f29a25953b6ad0fe1a2c925c583f6ca25848b0de1ce274b0bac"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/066_azure_quickcoil_spring.png",
+      "sha256": "869e5c1896dabc3d2d0159addc2d91f85d794dfbee14e720579737989e26dbf3"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/067_azure_surge_rune.png",
+      "sha256": "68d13a7bd757266bb4731c7306c6a816fa5afe9eaffecc429a34e50f5027a2d9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/068_azure_fate_compass.png",
+      "sha256": "5ded5ca281ea36490b48979a71efbb792c10e90d8ff84afa26679d642cf79ab5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/069_crimson_strider_boots.png",
+      "sha256": "6a1a0fafcda0d479458fa6fd72ee48c10cd2f22087c97de2c961ecd559d8f2cc"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/070_crimson_lure_charm.png",
+      "sha256": "994f037796c8b768eacb73a1e7ad854cebf98b38ae8efb8e694af4fb6532cea4"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/071_crimson_bastion_guard.png",
+      "sha256": "b37f34aeefe975c0864f3e42322d11a2384ce0a86a3f713851b0909d38aedb5e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/072_crimson_fang_edge.png",
+      "sha256": "999cd98a8e761ef56a42249d4233c03112208d013a86aa25acd9fa453eeea37b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/073_crimson_horizon_lens.png",
+      "sha256": "09449aa4f27ca2751d24c6e214310af5431ea196debdc3d05eba491f1f88cf4f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/074_crimson_quickcoil_spring.png",
+      "sha256": "8a5dc96572a33253e363a69d285f4df80ce37d9cfa9e67367efbc1a82e2d3a3f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/075_crimson_surge_rune.png",
+      "sha256": "ffdc914f49233044f7549b421500592a05db0730f998084f947566909ff217b2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/076_crimson_fate_compass.png",
+      "sha256": "dcbcf2a50de09af0d4c91c1368a0335692f3e3bc0b1558a51040040dbdc257e7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/077_amber_strider_boots.png",
+      "sha256": "15d5ff9855a6d423f45219620f2ed7332546a7fd7914ab210f043918ad8fcc73"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/078_amber_lure_charm.png",
+      "sha256": "313c15399e586aa45fa3448ccedebc90bf53929ae1ae94610192e56cfa4a4ac6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/079_amber_bastion_guard.png",
+      "sha256": "1d1befb8691c780d8783b1a8579afd3466ed134c969c5e2e89e4c6e8e90d40a6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/080_amber_fang_edge.png",
+      "sha256": "882316ff513cfaf73972a181950821b71ff48defe1504b0f0bfbfccbdf3c9ee5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/081_amber_horizon_lens.png",
+      "sha256": "495ef795315a3a4fa644f44ff8491c791ff45d7540fafed5d4bba82269a3f5f0"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/082_amber_quickcoil_spring.png",
+      "sha256": "a0c1121a9d71301ae15ca3a2e190c9a8f2e3e6e4ab1cd7ff19e193d0f0d6a948"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/083_amber_surge_rune.png",
+      "sha256": "a15b2dbd2be04f57ad2ebe5ea8b8e002143be29172eb3cf877c51df607e0ca1c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/084_amber_fate_compass.png",
+      "sha256": "4a5bb8e61f78b62f0d92caca1bc6f676cf22bdbdf54bebc883cf9e38012a3705"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/085_violet_strider_boots.png",
+      "sha256": "bdfea24046fd50120f119d38e27f1b92dc730e3dfd331f51f61f82f0ab485456"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/086_violet_lure_charm.png",
+      "sha256": "97fb67f8150d9082ea767b4b58764cfb393daf576c67767997ae83bf3047b0a7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/087_violet_bastion_guard.png",
+      "sha256": "c812dd8b6773168e1eb4fadb89d45f1422c080978fce79d5c84d5807f949fe71"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/088_violet_fang_edge.png",
+      "sha256": "7647afde8afdaa801588e95c4d946cbfaa9b2b428df9d820e4083f10126b2325"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/089_violet_horizon_lens.png",
+      "sha256": "80b1f0b7f148008b01ff81c93efc1158234f025c84aceef414c77562ce3465d1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/090_violet_quickcoil_spring.png",
+      "sha256": "5ce6c10e7c31d530f0590a0f3079ebc51be2016034c2952d33b8ee7fb4a54fb5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/091_violet_surge_rune.png",
+      "sha256": "b764a0b4097ad1238d96727ee5eca2a2b98b56eb2955a55aa3bc931cf65a68c5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/092_violet_fate_compass.png",
+      "sha256": "abcb1ee77ea7df3b607c2c498254ce91fb1d8269ce44bfb831a155ea82dd081e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/093_obsidian_strider_boots.png",
+      "sha256": "1940201bbfc3915697b12da8e26dbd2ef014dc723015378c02266c0c64dbf51e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/094_obsidian_lure_charm.png",
+      "sha256": "a925fcb9326fb59fa498a7bee48c710da4e49c8e8869517bae1c0af269dba1f2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/095_obsidian_bastion_guard.png",
+      "sha256": "6113b9ec46389ba27e14dd8ad83d1181d30c979047ae166a8d3c5cc5103a792b"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/096_obsidian_fang_edge.png",
+      "sha256": "07979729000d433b42280ec42933ed5e6993f55b8001c5af100685f14d055cc4"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/097_obsidian_horizon_lens.png",
+      "sha256": "45f0bc9b205906dc70ca77cbe0325d951f43a862ebfac4d24c9a8a0ecea66b05"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/098_obsidian_quickcoil_spring.png",
+      "sha256": "41cff83e222f86a0a9550b835fbc47baba845a30293bf19dc3be13cfab41ac7a"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/099_obsidian_surge_rune.png",
+      "sha256": "750f4cf48d482d4ea423c5ce68802d02b7e521b297ae4dd957695d915db40696"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/100_obsidian_fate_compass.png",
+      "sha256": "2aa85bf430f0cb855a5943eb7ae84c8ef5fc87c746fd89d7d004979ade70eeb1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/101_silver_strider_boots.png",
+      "sha256": "2e2b701d1177aa688c22446c80f385a673655dd36603aadc6cc13e930e31bbc3"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/102_silver_lure_charm.png",
+      "sha256": "e00c3b5ea0f225ace67149bbd864c3451e94a3bf9962e07f591c0f9ba42a006d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/103_silver_bastion_guard.png",
+      "sha256": "6e4adacde30f273b3433a9a9eb49467cc41f55455b148a45010aa9508532bf1e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/104_silver_fang_edge.png",
+      "sha256": "3cfb280da8fcde01d57ae0fc7ab3b526ce82b10bdcc656d4e4906e7225475e9a"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/105_silver_horizon_lens.png",
+      "sha256": "5417d730e79d08fe4c1d53276551c372aaa8eee9511435a4aae0c080fe56c882"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/106_silver_quickcoil_spring.png",
+      "sha256": "f810a7939e1fa3ab87098b0f2a215ec48cb2748ed586c113876e784ad686a601"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/107_silver_surge_rune.png",
+      "sha256": "de8195237a1f57383471ed3c31def0101602f8f81ead5e46538ecc0df71daa8d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/108_silver_fate_compass.png",
+      "sha256": "99b91073084cd3a6698537257385a198df39f5594e35330cdfb2c263023dcdb9"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/109_golden_strider_boots.png",
+      "sha256": "85e2787116632d95ae9480fb73d05b5026aad3640a48e868b6893c48602311d1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/110_golden_lure_charm.png",
+      "sha256": "098b356c6e12cf96af247476666becd39e0fdb573b823cb89b7b61769654b330"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/111_golden_bastion_guard.png",
+      "sha256": "b62e67b94a34286b31e92184836aac3249a0110a1b63b418780fc796141044e5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-items/112_golden_fang_edge.png",
+      "sha256": "4634276cce4ee1f95fdd773c2b2586edfce2d2019b9ace879a1309f370ad26c5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-reinforced-vest.svg",
+      "sha256": "2323032bb63cca24d82564822c092f8d35bb725b6d46faa411f9ec143da0c854"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-relic-compass.svg",
+      "sha256": "9d8359bb3d64829fef6fcb97cd8dd56672442067cc06bf8d11e76169896a556c"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-soul-satchel.svg",
+      "sha256": "7f21efdcdd14cc1ad2eb7d30d92a78a1e19163f057123bd721366fbe3b460627"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-tower-grimoire.svg",
+      "sha256": "24bac2a860f144e365cb10c14ee508ad3f1cd130d56cc0f95987a8348d3b9237"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-training-boots.svg",
+      "sha256": "e488a15b793086bf82388755c47deb62f9dc160b2f74485f87b274c9528c78ad"
+    },
+    {
+      "path": "assets/generated/tower/sprites/shop-weapon-polish.svg",
+      "sha256": "49c37520d2839d0edeec7d46bdc5cfe878118d16c698762e968ad18a8bc864d2"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-acid-pool.svg",
+      "sha256": "08974c96fb15f94ee9563006a950574127b42a5b47cd11f4575bd8c3e853bb2d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-chain-spark.svg",
+      "sha256": "be810a1f4ca833b4c5fe2af1df940457cc81cc604bc7ed402fe6d49d0b5b59e4"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-flame-wave.svg",
+      "sha256": "e091c2c8b2a46cd1fb630a5bf15c86388cf8c381c929d910f3c2e4964484dca1"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-frost-orb.svg",
+      "sha256": "57c0b8e9e9c1e040bbcd7d0e3ea68c712dde18d3f247a485f8556e4a3244ec5d"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-meteor-pin.svg",
+      "sha256": "e4eee9c0eb06398dc502ee87cddc93e439f7e5512c61d577d246e69bbdb091f6"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-moon-glaive.svg",
+      "sha256": "597c5b5e42ff887768f107d99743b78b42604898146261c4cf87f9ebead9065f"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-nova-burst.svg",
+      "sha256": "2d7668ed40c5bb7b8aa936f657410df233342376d477d94b37cf0191b0572d3e"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-prism-rune.svg",
+      "sha256": "85173722530f3dfd8232d2c3146889d7133b4a8bc3eba491daba147478d00fa7"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-saw-drone.svg",
+      "sha256": "81c2057469d1075a98206f6fa80683b984619776c61c39fa76189f8710ca3738"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-shield-pulse.svg",
+      "sha256": "d467c605574e740edda707e711988509929e8984197950ba73ac3c24c4c26fe4"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-spark-rune.svg",
+      "sha256": "7df20e537ad08e91aaf270c9234c2171ee779f3a905a9f39f416366d818d2ea5"
+    },
+    {
+      "path": "assets/generated/tower/sprites/weapon-void-mine.svg",
+      "sha256": "dc87980690dc8db1d60fbd0e97de28d5edea98238c675c8fbaefb467ebb9378c"
+    },
+    {
+      "path": "assets/generated/tower/spritesheets/bosses-tower-pack.png",
+      "sha256": "f275ac1ea699ac7f15ae6253b2d5f94b9181a0ba13672f068260358ca4b1bbc1"
+    },
+    {
+      "path": "assets/generated/tower/spritesheets/enemies-tower-pack.png",
+      "sha256": "f3825ffec1b326008cd7d8f6afc3cc168437863568e9662c5b03ccf22dfc0259"
+    },
+    {
+      "path": "assets/generated/tower/tower-floor-bg.png",
+      "sha256": "772d1d7f50dcbd76c3f6b61f9669149fbffe367fcbaa667fb8c9b1952a84d02c"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/enemy-bulwark.png",
+      "sha256": "6189e581da7082727404a4052ba512491ca65194bc332298a316360127c1419e"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/enemy-drifter.png",
+      "sha256": "bfe4289abaa0a24cb2921094ae58f58bc075c81de8f11214518134f88aa1527f"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/enemy-skitter.png",
+      "sha256": "5ada0b215313a22bb70237f601ae1b398c8651745a263917871ef82ce4393afd"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/License.txt",
+      "sha256": "689f5ea270f44eda852ce8ab9dbf324f509c481404b41c67685dfe2b3a2f6fb1"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/player.png",
+      "sha256": "01d0c2cf4acc042e87d196bf261f57f4bffbc2f251a38657ca1bbc03da1e8279"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/ui-quest.png",
+      "sha256": "05c4eeb3180e04681057863bb141abacaa3a121ebea2d66ea4a837f8a38dc09d"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/weapon-prism.png",
+      "sha256": "4edcaabd689ca6257b7f231fe5b13d0bfe64a0535b4f7fbbd1aeaa6039fed73c"
+    },
+    {
+      "path": "assets/kenney/desert-shooter/weapon-spark.png",
+      "sha256": "cf0b03f15e70eae66d0e4b3612dfe83d1d725b63bb271a198eab8d3b35c14c4b"
+    },
+    {
+      "path": "build-info.json",
+      "sha256": "ce38c23d35d409b3a59dd7ff7ddf6a698fd2a1518a81b7f36bee93424204300a"
+    },
+    {
+      "path": "index.html",
+      "sha256": "cf6028420e3df45c943f4ca5e4365aeb7b8c3c3d1ce8add029d85d0a81359621"
+    },
+    {
+      "path": "src/app/browser-audio-adapters.js",
+      "sha256": "1ebbc2a284458c76e7bef8d8fc486c305b1d870a4524ea23af5c1148255448ee"
+    },
+    {
+      "path": "src/app/browser-dependency-bag.js",
+      "sha256": "ff62464e2dec32ccf685c63db970df300b34005464483c8efcb6dd552d0652ff"
+    },
+    {
+      "path": "src/app/browser-gameplay-adapters.js",
+      "sha256": "5919cbbc6848dcbe8289df536d8f8d5f0c009e0aaf3182c88042803155951d9e"
+    },
+    {
+      "path": "src/app/browser-platform-adapters.js",
+      "sha256": "2db6329fc0ffbaeceb806c6ca67fe9247d7c303bdf087400801db9f87e638e2e"
+    },
+    {
+      "path": "src/app/browser-progression-adapters.js",
+      "sha256": "2094b92c065970a3d641cb146847fa0bddd3e01952d3c835d9371cf2c70856d4"
+    },
+    {
+      "path": "src/app/browser-rendering-adapters.js",
+      "sha256": "6c517844897cde4982ae8533bdde1c1abd792f325ac64007297c736db07d0fcf"
+    },
+    {
+      "path": "src/app/browser-sprite-system.js",
+      "sha256": "a6920dbea27ad23cd72819038159d90c6f3d5e1bfbd86a0d657b3a68499413df"
+    },
+    {
+      "path": "src/app/browser-ui-adapters.js",
+      "sha256": "d24ff1bc5c690d99b197a468abeaeef69bda29eb4c628fd5d11c3b750903d601"
+    },
+    {
+      "path": "src/app/compose-runtime.js",
+      "sha256": "a31b96420531b46d7033fe5311afea1812e4c86777b073eef7949eb8b82698cd"
+    },
+    {
+      "path": "src/app/module-runtime-test-entrypoint.js",
+      "sha256": "1897499508a268b2973e36a769ecac02da7c433d541a98ed7a7812f7715a6ed5"
+    },
+    {
+      "path": "src/app/performance-trace.js",
+      "sha256": "2a5f67109e3b471507e712ec98e0ee387338295b667677a9b5deef13a70174b5"
+    },
+    {
+      "path": "src/app/production-module-autoboot.js",
+      "sha256": "970debd260a894086b3bf1e1273a1eeed89f5fe1962a8cc42c2bf3ddea6020e5"
+    },
+    {
+      "path": "src/app/production-module-entrypoint.js",
+      "sha256": "3aa9a9ca759cd62242bde171e1d834be64e2110fda4259a719faeb600ddd0990"
+    },
+    {
+      "path": "src/assets.js",
+      "sha256": "fd3a49900c2077fa42a4b5f4de8e429a79173848f5418346ce3bec6f39ccb85f"
+    },
+    {
+      "path": "src/audio.js",
+      "sha256": "403a91a129b3cace3d3eb7b038be1f18fa38824cdc8a46f6b1bf5a7693b0c74b"
+    },
+    {
+      "path": "src/balance-runtime.js",
+      "sha256": "1db75bb16a79a736d318f357133f0c171d23f4240846b72ef8fa1f5395f4b70f"
+    },
+    {
+      "path": "src/balance.js",
+      "sha256": "69066d35b5e2a075d95628796dacc14fe9af6514ac53b1f5d35b7d7cbfb9fa2f"
+    },
+    {
+      "path": "src/combat-damage.js",
+      "sha256": "3527edcec21a0ae13472b828e29a1330681d0306bc3397d5883f38b2cfcf7626"
+    },
+    {
+      "path": "src/combat.js",
+      "sha256": "0968bb76f1a0ccf1cf44928353dd63434865c9d5ae36a640f3e982b0a1332e79"
+    },
+    {
+      "path": "src/content-registry.js",
+      "sha256": "ce344639615d419eaa57ae40acb713e2c5020e10a230f1091ccb5e2abec1d8eb"
+    },
+    {
+      "path": "src/content.generated.js",
+      "sha256": "8498b8329c9c79efbf48fe82d308068269486030b698b94798a5426cb599ac45"
+    },
+    {
+      "path": "src/content.generated.mjs",
+      "sha256": "07cdc64bf4d4a874fea11bcc0c7c2b63224080064cfcce5347a401b7e98a55b6"
+    },
+    {
+      "path": "src/debug-runtime-harness.js",
+      "sha256": "cc20d26b8719491d6c4962e15c3f6d1cfe33b3f4b3210f2257f25399c6a55a04"
+    },
+    {
+      "path": "src/debug.js",
+      "sha256": "2f701dce3cc29a1c819a08814635b46fadaf79450c5cd2325e5a175280d5a1d2"
+    },
+    {
+      "path": "src/effects.js",
+      "sha256": "aaf76ff6d9baddd777866134dbe8ccec1a55e38247ea5111829f8df562dcdda1"
+    },
+    {
+      "path": "src/enemies.js",
+      "sha256": "d2c3c01d599d45146f3773eb92e5b4c40ad8cf5cefa160e464c7a407c9c90ef7"
+    },
+    {
+      "path": "src/enemy-behaviors.js",
+      "sha256": "a9a8d3a5fb5478a8a1e9ea35dc78a2105269d94f8aa67c67bb15befd6c1e35f5"
+    },
+    {
+      "path": "src/enemy-spawning.js",
+      "sha256": "3c81ae4de5280789dfdde8e49c65577175d2983d96dab4615cf848b0e0ebad71"
+    },
+    {
+      "path": "src/game-banners.js",
+      "sha256": "499dc7beddcbf8552f5b30184d52d28fa0ce70eae11cc540aa15a6eaeee8b968"
+    },
+    {
+      "path": "src/game-dependencies.js",
+      "sha256": "5a9097a8fe6ca949b2a07474de4d6439cd6a3212e24ebbce0cda6ccda07c2689"
+    },
+    {
+      "path": "src/game-runtime.js",
+      "sha256": "d13261e662c9578ef47b237a26d4affbc1b131144e122b2468f4971a9394429e"
+    },
+    {
+      "path": "src/game.js",
+      "sha256": "c86420c5a8fe62968997cbb420973adab09a61cfa06b7dcd40c385de8ffec5a8"
+    },
+    {
+      "path": "src/input.js",
+      "sha256": "90cfd040155aab44c5683b0111fd2c15a6412a8d6d18828972f01f37036af1ec"
+    },
+    {
+      "path": "src/level-up-choices.js",
+      "sha256": "a5d72ac9218fc0b076bea7a800797fdc80451cbf592052485df1437b7487aab4"
+    },
+    {
+      "path": "src/level-up.js",
+      "sha256": "dc3940e55c4f8b4bd3b30bdac5688e9f9bdd55f69a11b2e5a438788e1de40b31"
+    },
+    {
+      "path": "src/map-system.js",
+      "sha256": "c050909b64a2fe99589744a5262e35690492c41a967601dcc6c79e909934698f"
+    },
+    {
+      "path": "src/math.js",
+      "sha256": "ac0593aa1461b2bd5ac0a960c69fac4b7f09cec4cf3beb9bc9271ff0a7858ed7"
+    },
+    {
+      "path": "src/modules/assets.js",
+      "sha256": "010878e500630ea4ac9364ed0aa98b88ebd02b4c3297f2ed5c6f196778b9fcbf"
+    },
+    {
+      "path": "src/modules/balance-runtime.js",
+      "sha256": "c17a521b2c517725819ce0c472751434c6adc16bcf0eb2b54ba7f08c521da25c"
+    },
+    {
+      "path": "src/modules/balance.js",
+      "sha256": "365dba4ec0f1f1af9f170d71c6fdf84d4b4f4ca402bb7a679e1ba886de0a07e4"
+    },
+    {
+      "path": "src/modules/combat-damage.js",
+      "sha256": "110327f1f12b8b51307cd2d6d64b583cf2d7fac3613632f581f35a38829b6b94"
+    },
+    {
+      "path": "src/modules/combat.js",
+      "sha256": "21f0a3825ed59b2fc787ee3ecd8190c8ac4301a316a25b7546f6d6f66f869dad"
+    },
+    {
+      "path": "src/modules/content-registry.js",
+      "sha256": "4c60836c841852cab44af51b61a152901e1efcfa1e985234265a9911da5ad13e"
+    },
+    {
+      "path": "src/modules/debug.js",
+      "sha256": "f2eecf2bce9047a0c064e6ce6847afa2080a948065321df5c2f54fcd33df58c9"
+    },
+    {
+      "path": "src/modules/directional-facing.js",
+      "sha256": "46ea1d117333fc7c141384b375e7985344834898a2278b325d8d1d1f9d5a2a51"
+    },
+    {
+      "path": "src/modules/effects.js",
+      "sha256": "891048cd541529f567bbd228d30aef060ef12a9302c1836b45ca885be0d6be1e"
+    },
+    {
+      "path": "src/modules/enemies.js",
+      "sha256": "c631b4738485816de0e40e3ad6215cf90fe20ba368c21937f7b3226a9bd7ab11"
+    },
+    {
+      "path": "src/modules/enemy-behaviors.js",
+      "sha256": "70ee40798e039885e3b946538b52aa558938c6fd108e97107c3a0bf8ed06d222"
+    },
+    {
+      "path": "src/modules/enemy-spawning.js",
+      "sha256": "3153ec02cb6b322e572b9893b96c348c23983b3d05924a47742c824d798bb5c2"
+    },
+    {
+      "path": "src/modules/game-banners.js",
+      "sha256": "3afb2c6e78c2f024e984ff285e373d80d94dd8f565d4762a1a8be5116de0c10a"
+    },
+    {
+      "path": "src/modules/game-dependencies.js",
+      "sha256": "25b229bcc03ca34c3d697bb8999c076f34f5e124aabbc0af1300524bb3c14fde"
+    },
+    {
+      "path": "src/modules/game-runtime.js",
+      "sha256": "6b038f0bb2442421490430382a3d8919259060668185ec35f61e60c58776f841"
+    },
+    {
+      "path": "src/modules/game-state-store.js",
+      "sha256": "3bb5a113c8b693378e2dbea50bac86503f24abb6f17bcb3311c6a2a01093127c"
+    },
+    {
+      "path": "src/modules/input.js",
+      "sha256": "1043de06885a18293be7ecbbb171942e08b8f4cece9b5c28bd5460efa43bc6e1"
+    },
+    {
+      "path": "src/modules/level-up-choices.js",
+      "sha256": "a538d83b61215cb9d7757261d09094b45cb07d86679864b16d06506f5aa7601e"
+    },
+    {
+      "path": "src/modules/level-up.js",
+      "sha256": "aa0cfd4b1d756f7966e53388caf3bde644110f630cb88859b69f13c31cbcdeef"
+    },
+    {
+      "path": "src/modules/map-system.js",
+      "sha256": "b231a9c926470ee0ffbdd5004cfef3433f978fdebf310c6af60447b41a35b67a"
+    },
+    {
+      "path": "src/modules/math.js",
+      "sha256": "822326da997f95d001afa261e16e52b97e45d7e10d35adaa1d9b606f3520a90c"
+    },
+    {
+      "path": "src/modules/module-game-dependencies.js",
+      "sha256": "27b0f7687c68e4e4ef35d257ce28bb1d3ab02d75a98f6c81696d9b76e0f88723"
+    },
+    {
+      "path": "src/modules/module-game-lifecycle.js",
+      "sha256": "b9b532677ef42778a169fe6d375f435466cb8c87636dc666f9fd8faee10c26a2"
+    },
+    {
+      "path": "src/modules/module-runtime-assets-adapter.js",
+      "sha256": "3a1b70bbaad5dc64d416d4fad77803d422b47f051058800fe79eefa7dcfb70cc"
+    },
+    {
+      "path": "src/modules/module-runtime-audio-adapter.js",
+      "sha256": "659ecfd6038d31063f51f1a5c28808c4e526a7c2df94f177da8e45539e81e212"
+    },
+    {
+      "path": "src/modules/module-runtime-gameplay-adapter.js",
+      "sha256": "ce2c08c460ddf48b6669dceb0778b291b07c7087fbefcf53af27cdc0077df635"
+    },
+    {
+      "path": "src/modules/module-runtime-platform-adapter.js",
+      "sha256": "6fb99ec8b3ee713cec39d34adba76dbeec22fd2b00bf4735ff1312e5f2b0204d"
+    },
+    {
+      "path": "src/modules/module-runtime-progression-adapter.js",
+      "sha256": "71104e8db97b7dcaa780a276661d4771fab71e481941c5e4639d7798fb42623a"
+    },
+    {
+      "path": "src/modules/module-runtime-rendering-adapter.js",
+      "sha256": "dd11382f0f7754fb78fde34f2638824f087a0dd99e53445d6247fe8440440372"
+    },
+    {
+      "path": "src/modules/module-runtime-sprite-adapter.js",
+      "sha256": "fbcef2d5b69565ff1f7cd226f61da5f20cda94016db274614fb399f942db414d"
+    },
+    {
+      "path": "src/modules/module-runtime-storage-adapter.js",
+      "sha256": "f01e76ae4ef5b0925a952c131697bdc6323fc83e321b619ce5f4edc6b40e771e"
+    },
+    {
+      "path": "src/modules/module-runtime-ui-adapters.js",
+      "sha256": "6c9f974851189e71b510225b461c7abdc41118b4d987446ffb8538fdd4961b55"
+    },
+    {
+      "path": "src/modules/pickups.js",
+      "sha256": "ae2e271f8b86ad6c003eb1fbb7c6b101a7efe21fab1193b8f8eda409b758c2ed"
+    },
+    {
+      "path": "src/modules/progression.js",
+      "sha256": "000d8b32d43562986f394e4a9f7b618d73e54fe2eb629d7a783d156b450e8c8a"
+    },
+    {
+      "path": "src/modules/quests.js",
+      "sha256": "6ecefcb17a2aed21d1bf841aaadc2ae7096ddaed4a83cfe250dae033bc7811e7"
+    },
+    {
+      "path": "src/modules/relic-progression.js",
+      "sha256": "a1909c1720fe83f7da9e05d2a4e379a881f2c9dd79e9cb2ceffa803094cec24b"
+    },
+    {
+      "path": "src/modules/relics.js",
+      "sha256": "025d75208457da243af30228ef64a7b0de04b108a0499b34f9b82d29b3b26757"
+    },
+    {
+      "path": "src/modules/render-enemies.js",
+      "sha256": "ce0a7bbb55f94974a8b9b04f303c87fb0e4bdd96b061e5dddb5d349bce129abb"
+    },
+    {
+      "path": "src/modules/render-hud.js",
+      "sha256": "df7d6334ba12544dd6c7c966124a6d07d66737c66e2771357f3aeda6fe7bbab2"
+    },
+    {
+      "path": "src/modules/render-skill-rail.js",
+      "sha256": "47d22b8d1a2cf010b55739024c5519e8927af9f56cc3df05e00b5e6a34b81ea3"
+    },
+    {
+      "path": "src/modules/rendering.js",
+      "sha256": "3c9d12819c506da8b813afb5a4bfbf2990a14b54cffea0e132446bd171b6db9d"
+    },
+    {
+      "path": "src/modules/run-lifecycle.js",
+      "sha256": "815a6c1261d0a3ece5184fcb6d6766b5b7c4d2e666661d9015f43ce119e6bb81"
+    },
+    {
+      "path": "src/modules/run-state.js",
+      "sha256": "4b2b6028c6fb6d4523cf11010bc38b615375e1826493b5fb06c90529f0bcaaa9"
+    },
+    {
+      "path": "src/modules/run-ui.js",
+      "sha256": "d375c3529f84ecca7f95f60cc1d7e11201f1443db16cb6b059d4134f7bcea351"
+    },
+    {
+      "path": "src/modules/run-update.js",
+      "sha256": "abdeee3fff2f81dd3da0145eacc924dd70feb5cd4d7c8da7ae62d31e278a0714"
+    },
+    {
+      "path": "src/modules/save-corruption.js",
+      "sha256": "2065bc4f894ce28a0485281e52a725e5ccddd9fdbc34f2bd8fc3fd49ebe3e92a"
+    },
+    {
+      "path": "src/modules/save-defaults.js",
+      "sha256": "861c7e488c0b8ef9e0e3eb060c52c841c7821f51b044e6008f17c5bd7ada1b7d"
+    },
+    {
+      "path": "src/modules/save-migrations.js",
+      "sha256": "34426fc82a3139c7cfe6b51f3838662d25f01d365aa38825c33bbfb33ae5ac66"
+    },
+    {
+      "path": "src/modules/save-normalize.js",
+      "sha256": "2a484280bed392a8786f57d90fb425d0a9cb07b49b9c09217b0cb26c2af593eb"
+    },
+    {
+      "path": "src/modules/save.js",
+      "sha256": "a62a35375907f1af3be301493e981f14c3da9d03fe724cde981547019d49a47a"
+    },
+    {
+      "path": "src/modules/shell-relic-controller.js",
+      "sha256": "77cb049dafc73f51889d367ac3bc17d1efe89648ae31c217ab8af6c4144a1f59"
+    },
+    {
+      "path": "src/modules/shell-relic-presenter.js",
+      "sha256": "4d2afcdb68b5e55037bed7bcc6aa109175238479f7278ed94f2aa45c7e112ba9"
+    },
+    {
+      "path": "src/modules/shell-relic-ui.js",
+      "sha256": "629641aec1407646765ec188e6856fb09b2305727d62877cd582bd4448b81311"
+    },
+    {
+      "path": "src/modules/shell-ui-classic-adapter.js",
+      "sha256": "0fb14932ae1d3a1d04f0d9c3859a8c7236b8e25b96a4b8d7ac5cc080f60a4636"
+    },
+    {
+      "path": "src/modules/shell-ui-controller.js",
+      "sha256": "7b07a38d3868d9b3002024fdf4f92effbce3c06ee96ee8809dfe64e7c5febb18"
+    },
+    {
+      "path": "src/modules/shell-ui-dom-adapter.js",
+      "sha256": "1f5ffac159065683491e05b5bb7ebab4d761092b8ba02e9b4c1755f46c566994"
+    },
+    {
+      "path": "src/modules/shell-ui-presenter.js",
+      "sha256": "b1fa32e9f94553ff5f9717d74bbaf6a122f0a31cc7b8a33c46222dbe91104307"
+    },
+    {
+      "path": "src/modules/shop-pricing.js",
+      "sha256": "fd07ac20b829e985bc9b4743f3a05e9309a5999c6909d8efa7833ae3c67e2931"
+    },
+    {
+      "path": "src/modules/shop.js",
+      "sha256": "ae9cf1f46c489c9aff01df90c0f38f9e12ff8612d3db1e69a643f0a0cad1ea07"
+    },
+    {
+      "path": "src/modules/sprites.js",
+      "sha256": "896016d17b4d85315f01841b4cf2b39ec83a3d3aaa0b715c0ba408073e66d288"
+    },
+    {
+      "path": "src/modules/storage-adapter.js",
+      "sha256": "c781b545c0e7bdfc851ed8b71b8f4cfb77aa55522bab2914d2702d49866da403"
+    },
+    {
+      "path": "src/modules/ui-progression.js",
+      "sha256": "f1732d87a8bd00160d2d665e7819e628c451b7ce1e33b825c45a43b6df713bfd"
+    },
+    {
+      "path": "src/modules/ui.js",
+      "sha256": "6489756ba03ab530ee6057a6d0f2f0811e75a9bc59fb9377b511405d02133499"
+    },
+    {
+      "path": "src/modules/upgrades.js",
+      "sha256": "d8848f04e5442aaa5ffe2385816b7ab6819cdb38fc298102e5e5cbcd78ccb659"
+    },
+    {
+      "path": "src/modules/weapon-behaviors.js",
+      "sha256": "c0c876ca0a9923508de0558dda31d5a0f30bc08568db2e803aaeab0dd31a7175"
+    },
+    {
+      "path": "src/modules/weapon-cooldowns.js",
+      "sha256": "e43482069cdb77baf2d592489ac7c620fb9c6b6e20d833bc678437bc6e773ee3"
+    },
+    {
+      "path": "src/modules/weapon-fire.js",
+      "sha256": "0367a1995b2bf10c33fb6901a1cf6450a98f81c66722f130b25ffebc950def0a"
+    },
+    {
+      "path": "src/modules/weapon-projectiles.js",
+      "sha256": "393b9f66ae010a96069bd71e1f33ae7c7c95b48b4e2f3451a6597a1d3cf0a292"
+    },
+    {
+      "path": "src/modules/weapon-targeting.js",
+      "sha256": "7032dec6f25913d89206a7f9f6e713b68f7091fddcd3dc226612217e0362012c"
+    },
+    {
+      "path": "src/pickups.js",
+      "sha256": "87cf1eb265f998eee5de29ebde9c772b45f0b0780847ef32f8865f0e7b200185"
+    },
+    {
+      "path": "src/progression.js",
+      "sha256": "33f5bc61387c7382abdc80c2a4e1f7a0b5c1b53220ab2988151f322a50e3d77f"
+    },
+    {
+      "path": "src/quests.js",
+      "sha256": "874eb2588d93ab7e51a519b4fb734e8d8a242b80ef7963fd123b828e66f2cb23"
+    },
+    {
+      "path": "src/relics.js",
+      "sha256": "57d54a378c4e84b5207db1f5df371f94121285018b222870cb852d6466a17f3e"
+    },
+    {
+      "path": "src/render-enemies.js",
+      "sha256": "08343084c5883c39b47877706fa14313d2fec1e6d9dad9ef98902d762bf3f6dc"
+    },
+    {
+      "path": "src/render-hud.js",
+      "sha256": "46b5c8fe69dc0a2a799c376dfe98e07691349a03fd793d3f4c355af73afd3239"
+    },
+    {
+      "path": "src/render-skill-rail.js",
+      "sha256": "8ffd9f3682c02f054360231732ef46ae1df16bde1e35eb8ecfd74188f02357e7"
+    },
+    {
+      "path": "src/rendering.js",
+      "sha256": "d1c8c7dd405bb6a2de31a349bb636b95cfbb78042f3589b739ce9bccffbe1833"
+    },
+    {
+      "path": "src/run-lifecycle.js",
+      "sha256": "7ef4668f598e6e76658f78ab8f69fe19e0a1b57d5478ea3d47ca3a7170e02f6f"
+    },
+    {
+      "path": "src/run-state.js",
+      "sha256": "274385b88afcd465fa73307273680e126c2e1e4a3c9136cd9519fc5d7d0710bd"
+    },
+    {
+      "path": "src/run-ui.js",
+      "sha256": "24d87cba14813550ff1968afff735554574650faa495779afd4ce9682e5b6cd7"
+    },
+    {
+      "path": "src/run-update.js",
+      "sha256": "da754212a3534ba75e3a493d870f412cf371db381fda8a9a09f0d45f7281880b"
+    },
+    {
+      "path": "src/save-corruption.js",
+      "sha256": "f2930048abedb684ef009c2ca313edb481917b96834a06752674cdb38b680db6"
+    },
+    {
+      "path": "src/save-defaults.js",
+      "sha256": "75a7ef4a1c32cce54cb921a31465dfc82aca50d2ce57697a734e18577afa2982"
+    },
+    {
+      "path": "src/save-migrations.js",
+      "sha256": "867ec08a931fe1ac134608a6e512d260dc850981ad1fdadd4324d157fe51fccd"
+    },
+    {
+      "path": "src/save-normalize.js",
+      "sha256": "3f8d4cfb80cb48ef2a537e4848e4290630e2ba2ce538ab2a38295647cb3194cf"
+    },
+    {
+      "path": "src/save.js",
+      "sha256": "f7a141eab694d5ddcf0c6eab5354084983acdea769e76f3c58bf0bf928dfb676"
+    },
+    {
+      "path": "src/shell-relic-ui.js",
+      "sha256": "8767b3d1503dc1a97e7f21950ee6ea1fc963870a5062385992f346a8b09d7ca8"
+    },
+    {
+      "path": "src/shell-ui.js",
+      "sha256": "3a9bcd2f8e8bdc044dc641aac9c6610e0bfe23ab397ea6bda011e345d93d9297"
+    },
+    {
+      "path": "src/shop-pricing.js",
+      "sha256": "20b36c673d2b7e5a5d9392524a559f8759cbd2468d22e6b5fa87e700ac5c7107"
+    },
+    {
+      "path": "src/shop.js",
+      "sha256": "1beb82d4d0da87a5e199d03c91f773d35e335066cfd0bca655cae922840e1bab"
+    },
+    {
+      "path": "src/sprite-sheet-renderer.js",
+      "sha256": "426a4d81eba2e4e69eda15f490fa1a7955c7dabba7638322264d68074c89646a"
+    },
+    {
+      "path": "src/sprites.js",
+      "sha256": "1304533547ad82a71371ad9d46b8c330dd816b6d8ff54a4c312a260e7fdced15"
+    },
+    {
+      "path": "src/storage-adapter.js",
+      "sha256": "4c7c7a9afd535d4ffc025ffc7d575571395d508a4df33eb8dc5417b6182dbe49"
+    },
+    {
+      "path": "src/styles.css",
+      "sha256": "3522ad42425db66e43cbc32d31cdda7c59a890151b665e6ee01f20e86d04247c"
+    },
+    {
+      "path": "src/ui-progression.js",
+      "sha256": "5de14be170172c13abb9987d7b55ed320a7a8c077405828112d811a8e84cb36e"
+    },
+    {
+      "path": "src/ui.js",
+      "sha256": "6f79b29fb8e5aeb84b672303b55f146b1ea9c5416ff72c009648c40a18277535"
+    },
+    {
+      "path": "src/upgrades.js",
+      "sha256": "ba19812e909ea7122949a2c841f6e06160b84a86a132406d74791b582bbabde4"
+    },
+    {
+      "path": "src/weapon-behaviors.js",
+      "sha256": "7f96ed7ea76a57e72dfa5f1cb0422037097ce43b5a3eafed3fc04c143711afb5"
+    },
+    {
+      "path": "src/weapon-cooldowns.js",
+      "sha256": "351ee0c50c9d44d65f67cb33b11cdded15104a0beb599149da97cac14eb28cbc"
+    },
+    {
+      "path": "src/weapon-fire.js",
+      "sha256": "c980f1b0aae39291fd0d2acaef6f671a498949b2ce629d345913522d64587d05"
+    },
+    {
+      "path": "src/weapon-projectiles.js",
+      "sha256": "7d88d2594ff490a5d67d85223fdb5b976ee9fb2fb9fcef9bea4ad655f91b0bf3"
+    },
+    {
+      "path": "src/weapon-targeting.js",
+      "sha256": "a7e52221f820b9dd21622a3c171812cb0e62ff38de5793861b613df8027f0cc5"
+    }
+  ]
+}

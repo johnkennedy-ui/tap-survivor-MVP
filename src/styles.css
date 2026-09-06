@@ -1,0 +1,778 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: #10141d;
+  color: #f3f6fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 30% 15%, rgba(66, 124, 180, 0.22), transparent 32%),
+    linear-gradient(135deg, #10141d 0%, #171e28 48%, #1a1518 100%);
+}
+
+button {
+  border: 1px solid #536173;
+  border-radius: 6px;
+  background: #253142;
+  color: #f3f6fb;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+button:hover:not(:disabled) {
+  background: #314158;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.shell {
+  display: grid;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.game-panel {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+
+.menu-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  min-width: 76px;
+}
+
+.fullscreen-button {
+  position: absolute;
+  top: 12px;
+  right: 96px;
+  z-index: 2;
+  min-width: 112px;
+}
+
+.speed-controls {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  pointer-events: auto;
+}
+
+.speed-button {
+  width: 44px;
+  padding: 8px 0;
+}
+
+.mute-button {
+  width: 64px;
+}
+
+.speed-button.active {
+  border-color: #ffd166;
+  background: #4a3f22;
+  color: #fff4c2;
+}
+
+.menu-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.menu-tab {
+  min-width: 0;
+  padding: 9px 8px;
+  font-size: 13px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.menu-tab.active {
+  border-color: #ffd166;
+  background: #4a3f22;
+  color: #fff4c2;
+}
+
+.quest-banner {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  z-index: 3;
+  width: min(520px, calc(100% - 32px));
+  transform: translateX(-50%);
+  border: 2px solid #8d6a2f;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #4f3519, #f0d895 9%, #ffe8a8 50%, #f0d895 91%, #4f3519);
+  color: #24170b;
+  padding: 10px 22px;
+  text-align: center;
+  font-weight: 800;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+}
+
+#game {
+  width: min(100vw, 177.78vh);
+  height: auto;
+  max-height: 100vh;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  border: 1px solid #394556;
+  border-radius: 0;
+  background: #17202c;
+  display: block;
+}
+
+.hud {
+  overflow-y: auto;
+  max-height: calc(100vh - 36px);
+  padding: 18px;
+  border: 1px solid #394556;
+  border-radius: 8px;
+  background: rgba(18, 24, 34, 0.94);
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 15px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  color: #cbd6e4;
+}
+
+h3 {
+  margin: 14px 0 8px;
+  color: #cbd6e4;
+  font-size: 14px;
+}
+
+p,
+li,
+.stats,
+.node,
+.quest {
+  color: #d9e2ef;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+section + section {
+  margin-top: 18px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.debug-panel {
+  border-top: 1px solid #253247;
+  padding-top: 12px;
+}
+
+.debug-panel pre {
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #334052;
+  border-radius: 6px;
+  background: #101722;
+  color: #dff6ff;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tree,
+.quests,
+.choice-list,
+.relic-inventory-list,
+.relic-icon-grid,
+.relic-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.shop-grid {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  max-height: min(64vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 4px 6px 0;
+}
+
+.shop-section {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.shop-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px 6px;
+  border-bottom: 1px solid #46566a;
+}
+
+.shop-section-header h3 {
+  margin: 0;
+  color: #dff6ff;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.shop-section-count {
+  color: #9fb0c5;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.shop-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.node,
+.quest,
+.relic-item,
+.relic-slot,
+.relic-character-panel,
+.shop-item {
+  border: 1px solid #334052;
+  border-radius: 6px;
+  background:
+    linear-gradient(rgba(29, 39, 53, 0.93), rgba(29, 39, 53, 0.93)),
+    url("../assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610") right 10px top 10px / 24px 24px no-repeat;
+  padding: 10px;
+}
+
+.relic-item,
+.relic-slot,
+.shop-item {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.shop-item {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 196px;
+}
+
+.shop-item-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #46566a;
+  border-radius: 6px;
+  background: rgba(10, 15, 22, 0.42);
+}
+
+.relic-icon,
+.relic-character-sprite,
+.shop-item-sprite {
+  width: 38px;
+  height: 38px;
+  image-rendering: pixelated;
+}
+
+.shop-item-sprite {
+  object-fit: cover;
+  object-position: left center;
+}
+
+.shop-item-copy {
+  min-width: 0;
+}
+
+.shop-item-copy span {
+  font-size: 12px;
+  line-height: 1.32;
+}
+
+.relic-loadout {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.55fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.relic-character-panel {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 180px;
+  text-align: center;
+}
+
+.relic-character-sprite {
+  width: 84px;
+  height: 84px;
+}
+
+.relic-slots {
+  display: grid;
+  gap: 8px;
+}
+
+.relic-icon-grid {
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  margin-top: 10px;
+}
+
+.relic-icon-button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 104px;
+  padding: 10px;
+  text-align: center;
+}
+
+.relic-icon-button.locked {
+  border-color: #4f5b69;
+  background: rgba(41, 48, 58, 0.82);
+  color: #a9b4c2;
+}
+
+.relic-lock-badge {
+  border: 1px solid #6a7585;
+  border-radius: 999px;
+  padding: 2px 7px;
+  color: #c9d2df;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.relic-icon-button .relic-icon {
+  width: 52px;
+  height: 52px;
+}
+
+.relic-icon-button span {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.green-relic {
+  --relic-bg: #17633a;
+  border-color: #6ee7a0 !important;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--relic-bg) 86%, #0a1210), rgba(14, 44, 28, 0.94)) !important;
+  box-shadow: inset 0 0 0 1px rgba(198, 255, 213, 0.2), 0 0 20px rgba(55, 214, 112, 0.16);
+}
+
+.green-relic .relic-lock-badge {
+  border-color: rgba(198, 255, 213, 0.55);
+  color: #d8ffe2;
+}
+
+.relic-lock-popup {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  border: 1px solid #748295;
+  border-radius: 6px;
+  background: rgba(18, 25, 34, 0.96);
+  color: #f3f6fa;
+  font-size: 13px;
+  text-align: center;
+}
+
+.relic-detail-screen {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #536173;
+  border-radius: 6px;
+  background: rgba(21, 29, 41, 0.95);
+  padding: 14px;
+}
+
+.relic-detail-preview {
+  width: 112px;
+  height: 112px;
+  justify-self: center;
+  image-rendering: pixelated;
+}
+
+.relic-detail-canvas {
+  display: block;
+}
+
+.relic-detail-copy p {
+  margin-bottom: 8px;
+}
+
+.relic-detail-actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.relic-slot {
+  min-height: 70px;
+}
+
+.relic-slot.empty,
+.relic-slot.locked {
+  grid-template-columns: 1fr;
+}
+
+.relic-slot-index {
+  display: block;
+  color: #9fb0c5;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.node strong,
+.quest strong,
+.relic-item strong,
+.relic-slot strong,
+.relic-character-panel strong,
+.shop-item strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffffff;
+}
+
+.node button,
+.relic-item button,
+.relic-slot button,
+.shop-item button {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.node.available {
+  border-color: #4f9b6d;
+}
+
+.node.locked {
+  border-color: #516174;
+  opacity: 0.78;
+}
+
+.quest.complete {
+  border-color: #4f9b6d;
+}
+
+.quest.active {
+  border-color: #bba24d;
+}
+
+.relic-item.equipped {
+  border-color: #8de7ff;
+}
+
+.relic-slot.equipped {
+  border-color: #8de7ff;
+}
+
+.relic-item.available {
+  border-color: #4f9b6d;
+}
+
+.relic-slot.empty {
+  border-color: #4f9b6d;
+  background: rgba(24, 35, 46, 0.88);
+}
+
+.relic-item.locked {
+  border-color: #516174;
+  opacity: 0.78;
+}
+
+.relic-slot.locked {
+  border-color: #516174;
+  background: rgba(24, 28, 35, 0.72);
+  color: #9daabc;
+  opacity: 0.86;
+}
+
+.shop-item.available {
+  border-color: #4f9b6d;
+}
+
+.shop-item.locked {
+  border-color: #516174;
+}
+
+.shop-notice {
+  min-height: 1.2em;
+  color: #ffd166;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.modal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(7, 10, 15, 0.68);
+}
+
+.hidden {
+  display: none;
+}
+
+.modal-box {
+  width: min(440px, 100%);
+  border: 1px solid #58677c;
+  border-radius: 8px;
+  background: #151d29;
+  padding: 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  max-height: min(86vh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.menu-box {
+  width: min(720px, 100%);
+}
+
+#runMenu .menu-box {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+#menuProgressPanel,
+#menuShopPanel,
+#menuInventoryPanel {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.start-box {
+  width: min(520px, 100%);
+}
+
+.start-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.danger-button {
+  width: 100%;
+  margin-top: 14px;
+  border-color: #b75a5a;
+  background: #3a2026;
+  color: #ffe0e0;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-header h2 {
+  margin-bottom: 0;
+}
+
+.modal-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.choice-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+#levelUp .modal-box {
+  width: min(96vw, 1040px);
+  height: min(80vh, 520px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+#levelUp .choice-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-height: 0;
+}
+
+.level-choice {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: clamp(44px, 10vh, 72px) minmax(0, 1fr);
+  gap: 8px;
+  align-content: start;
+  overflow: hidden;
+}
+
+.level-choice:disabled {
+  cursor: wait;
+  opacity: 1;
+}
+
+.level-choice-icon {
+  width: clamp(44px, 10vh, 72px);
+  height: clamp(44px, 10vh, 72px);
+  justify-self: center;
+  image-rendering: pixelated;
+}
+
+.level-choice-sprite {
+  display: block;
+}
+
+.level-choice-copy {
+  display: block;
+}
+
+.level-choice-copy span {
+  display: block;
+  font-size: clamp(11px, 1.7vh, 13px);
+  line-height: 1.25;
+}
+
+.level-choice-copy strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: clamp(12px, 1.9vh, 15px);
+  line-height: 1.2;
+}
+
+@media (max-width: 920px) {
+  #game {
+    width: 100vw;
+    min-height: 0;
+  }
+
+  #levelUp .modal-box {
+    width: min(98vw, 1040px);
+    height: min(80vh, 500px);
+    padding: 12px;
+  }
+
+  #levelUp .choice-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .relic-loadout {
+    grid-template-columns: 1fr;
+  }
+
+  .relic-detail-screen {
+    grid-template-columns: 1fr;
+  }
+
+  .shop-section-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .shop-item {
+    min-height: 184px;
+    padding: 8px;
+  }
+
+  .shop-item-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .shop-item-sprite {
+    width: 34px;
+    height: 34px;
+  }
+
+  .shop-item-copy span {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 420px) {
+  .speed-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    gap: 6px;
+  }
+
+  .mute-button {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .shop-section-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 363px) {
+  .fullscreen-button {
+    top: 56px;
+    right: 12px;
+  }
+}
