@@ -3933,75 +3933,91 @@
         },
         "directional_player": {
           "id": "directional_player",
-          "path": "assets/generated/tower/sheet-20260614/wizard-eight-way-run-v1.png?v=directional-v1",
+          "path": "assets/generated/tower/directional-v2/player-move-8way-v2.png?v=player-move-v2-d25a8e5f",
           "kind": "spritesheet",
           "columns": 3,
-          "rows": 3,
+          "rows": 8,
           "animations": {
             "move": {
               "nw": {
                 "row": 0,
                 "frames": [
-                  0
+                  0,
+                  1,
+                  2
                 ],
-                "fps": 1,
-                "loop": false
+                "fps": 8,
+                "loop": true
               },
               "n": {
-                "row": 0,
+                "row": 1,
                 "frames": [
-                  1
+                  0,
+                  1,
+                  2
                 ],
-                "fps": 1,
-                "loop": false
+                "fps": 8,
+                "loop": true
               },
               "ne": {
-                "row": 0,
+                "row": 2,
                 "frames": [
+                  0,
+                  1,
                   2
                 ],
-                "fps": 1,
-                "loop": false
+                "fps": 8,
+                "loop": true
               },
               "w": {
-                "row": 1,
+                "row": 3,
                 "frames": [
-                  0
+                  0,
+                  1,
+                  2
                 ],
-                "fps": 1,
-                "loop": false
+                "fps": 8,
+                "loop": true
               },
               "e": {
-                "row": 1,
+                "row": 4,
                 "frames": [
+                  0,
+                  1,
                   2
                 ],
-                "fps": 1,
-                "loop": false
+                "fps": 8,
+                "loop": true
               },
               "sw": {
-                "row": 2,
+                "row": 5,
                 "frames": [
-                  0
-                ],
-                "fps": 1,
-                "loop": false
-              },
-              "s": {
-                "row": 2,
-                "frames": [
-                  1
-                ],
-                "fps": 1,
-                "loop": false
-              },
-              "se": {
-                "row": 2,
-                "frames": [
+                  0,
+                  1,
                   2
                 ],
-                "fps": 1,
-                "loop": false
+                "fps": 8,
+                "loop": true
+              },
+              "s": {
+                "row": 6,
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 8,
+                "loop": true
+              },
+              "se": {
+                "row": 7,
+                "frames": [
+                  0,
+                  1,
+                  2
+                ],
+                "fps": 8,
+                "loop": true
               }
             }
           }

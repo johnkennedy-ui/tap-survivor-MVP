@@ -25,6 +25,8 @@
       const dy = player.targetY - player.y;
       const dist = Math.hypot(dx, dy);
       player.moving = dist > 3;
+      // Presentation only: idle rests on frame zero without changing the last heading.
+      player.animTime = player.moving ? (player.animTime || 0) + dt : 0;
       if (dist > 3) {
         player.facingX = dx / dist;
         player.facingY = dy / dist;
