@@ -437,6 +437,8 @@ function tickDefaultRun(dependencies, dt = 0) {
   const dy = (Number(player.targetY) || 0) - (Number(player.y) || 0);
   const distance = Math.hypot(dx, dy);
   player.moving = distance > 3;
+  // Match the run updater's presentation clock when that provider is absent.
+  player.animTime = player.moving ? (player.animTime || 0) + delta : 0;
   if (distance > 3) {
     player.facingX = dx / distance;
     player.facingY = dy / distance;

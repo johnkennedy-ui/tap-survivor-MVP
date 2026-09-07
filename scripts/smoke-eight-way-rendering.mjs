@@ -101,6 +101,18 @@ function verifyRegistryMappings() {
     const sheet = sheets[`directional_${id}`];
     assert.equal(sheet.id, `directional_${id}`);
     assert.equal(sheet.columns, 3);
+    if (id === "player") {
+      assert.equal(sheet.rows, 8);
+      for (const [row, [, , state]] of sectors.entries()) {
+        assert.deepEqual(sheet.animations.move[state], {
+          row,
+          frames: [0, 1, 2],
+          fps: 8,
+          loop: true,
+        });
+      }
+      continue;
+    }
     assert.equal(sheet.rows, 3);
     for (const [state, [row, frame]] of Object.entries(expectedFrames)) {
       assert.deepEqual(sheet.animations.move[state], {

@@ -1,0 +1,28 @@
+{
+  "sheetId": "directional_player",
+  "path": "assets/generated/tower/directional-v2/player-move-8way-v2.png",
+  "width": 384,
+  "height": 1024,
+  "cellSize": 128,
+  "fps": 8,
+  "headings": [
+    { "id": "nw", "row": 0, "x": -1, "y": -1 },
+    { "id": "n", "row": 1, "x": 0, "y": -1 },
+    { "id": "ne", "row": 2, "x": 1, "y": -1 },
+    { "id": "w", "row": 3, "x": -1, "y": 0 },
+    { "id": "e", "row": 4, "x": 1, "y": 0 },
+    { "id": "sw", "row": 5, "x": -1, "y": 1 },
+    { "id": "s", "row": 6, "x": 0, "y": 1 },
+    { "id": "se", "row": 7, "x": 1, "y": 1 }
+  ],
+  "samples": [
+    { "time": 0, "frame": 0 },
+    { "time": 0.124999, "frame": 0 },
+    { "time": 0.125, "frame": 1 },
+    { "time": 0.249999, "frame": 1 },
+    { "time": 0.25, "frame": 2 },
+    { "time": 0.374999, "frame": 2 },
+    { "time": 0.375, "frame": 0 },
+    { "time": 1.25, "frame": 1 }
+  ]
+}
