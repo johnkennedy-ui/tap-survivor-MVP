@@ -48,6 +48,7 @@ import { createRunLifecycle } from "./run-lifecycle.js";
 import { createRunStateSystem } from "./run-state.js";
 import { createRunUi } from "./run-ui.js";
 import { createRunUpdater } from "./run-update.js";
+import { createWorldSpatialRuntime } from "./world-spatial-runtime.js";
 
 export function createGameDependencyBag({
   content: rawContent,
@@ -134,6 +135,7 @@ export function createGameDependencyBag({
     rendering: { createRenderer },
     runLifecycle: { createRunLifecycle },
     runState: { createRunStateSystem },
+    createWorldSpatialRuntime,
     runUi: { createRunUi },
     runUpdate: { createRunUpdater },
     save,

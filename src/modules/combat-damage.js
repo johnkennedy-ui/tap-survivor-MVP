@@ -1,5 +1,6 @@
 export function createCombatDamageSystem({
   canvas,
+  spatial,
   getGame,
   getRelicSpecialEffects,
   addQuestProgressForWeapon,
@@ -39,15 +40,16 @@ export function createCombatDamageSystem({
       damageEnemy(source.enemy, effects.thornDamage, "relic_thorns");
     }
     if (effects.teleportOnHitCooldown && !(p.teleportCooldown > 0)) {
+      const bounds = spatial?.physicalSize(game) || canvas;
       p.x = clamp(
         p.x + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
         p.radius,
-        canvas.width - p.radius
+        bounds.width - p.radius
       );
       p.y = clamp(
         p.y + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
         p.radius,
-        canvas.height - p.radius
+        bounds.height - p.radius
       );
       p.targetX = p.x;
       p.targetY = p.y;

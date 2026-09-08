@@ -7,6 +7,7 @@ export const MODULE_NATIVE_COMBAT_PROOF_SLOTS = Object.freeze(["createCombatSyst
  */
 export function createCombatSystem({
   canvas,
+  spatial,
   balance,
   combatDamage,
   content,
@@ -45,6 +46,7 @@ export function createCombatSystem({
 } = {}) {
   const damageSystem = combatDamage.createCombatDamageSystem({
     canvas,
+    spatial,
     getGame,
     getRelicSpecialEffects,
     addQuestProgressForWeapon,
@@ -59,6 +61,7 @@ export function createCombatSystem({
   });
   const enemySystem = enemies.createEnemySystem({
     canvas,
+    spatial,
     balance,
     enemyBehaviors,
     enemySpawning,
@@ -75,6 +78,7 @@ export function createCombatSystem({
   });
   const weaponFireSystem = weaponFire.createWeaponFireSystem({
     canvas,
+    spatial,
     content,
     weaponDefs,
     getGame,

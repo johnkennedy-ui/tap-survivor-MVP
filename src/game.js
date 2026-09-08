@@ -37,6 +37,7 @@ const {
   rendering,
   runLifecycle: runLifecycleDependencies,
   runState,
+  createWorldSpatialRuntime,
   runUi: runUiDependencies,
   runUpdate,
   save: saveDependencies,
@@ -62,6 +63,7 @@ const {
 
 const ui = uiDependencies.createUi();
 const canvas = ui.canvas;
+const spatial = createWorldSpatialRuntime({ canvas });
 const ctx = canvas.getContext("2d");
 
 const saveKey = "tap-survivor-mvp-save-v2";
@@ -231,6 +233,7 @@ const relicSystem = relics.createRelicSystem({
 
 const runStateSystem = runState.createRunStateSystem({
   canvas,
+  spatial,
   mapSystem,
   getSave: () => save,
   getShopBonuses: () => shopSystem.getShopBonuses(),
@@ -287,6 +290,7 @@ const pickupSystem = pickups.createPickupSystem({
 
 const combat = combatDependencies.createCombatSystem({
   canvas,
+  spatial,
   balance,
   combatDamage,
   content,
@@ -348,6 +352,7 @@ const levelUpSystem = levelUp.createLevelUpSystem({
 
 runUpdater = runUpdate.createRunUpdater({
   canvas,
+  spatial,
   getGame: () => game,
   combat,
   pickupSystem,

@@ -13,6 +13,7 @@
 
   function createRunStateSystem({
     canvas,
+    spatial,
     mapSystem,
     getSave,
     getShopBonuses,
@@ -62,15 +63,18 @@
     }
 
     /**
-     * @param {{ modeId?: unknown, world?: { width?: number, height?: number } }} [options]
+     * @param {{ modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options]
      */
     function resetGameState({ modeId = DEFAULT_RUN_MODE, world } = {}) {
-      const bounds = {
+      const runMode = normalizeRunMode(modeId);
+      const bounds = spatial?.createRunWorld({ modeId: runMode, world }) || Object.freeze({
+        modeId: runMode,
         width: Number.isFinite(world?.width) && world.width > 0 ? world.width : canvas.width,
         height: Number.isFinite(world?.height) && world.height > 0 ? world.height : canvas.height,
-      };
+        zoom: 1,
+      });
       const run = {
-        modeId: normalizeRunMode(modeId),
+        modeId: runMode,
         world: bounds,
         running: true,
         paused: false,

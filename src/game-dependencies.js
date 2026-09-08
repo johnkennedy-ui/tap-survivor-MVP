@@ -11,6 +11,259 @@
     return value === "farm" ? "farm" : DEFAULT_RUN_MODE;
   }
 
+  /**
+   * Pure spatial seam. All returned records are frozen, with no retained inputs.
+   *
+   * World: { modeId, width, height, zoom } in simulation units; zoom is configured.
+   * Camera: { x, y, zoom, width, height }; x/y are the visible world's top-left,
+   * width/height are visible WORLD dimensions, zoom is effective view/world scale.
+   * Point: { x, y }. Bounds: { left, top, right, bottom }, inclusive world edges.
+   * Ray exit: { x, y, distance, hitX, hitY }; point + direction * distance.
+   * `distance` is a ray parameter (a physical distance only for unit directions).
+   *
+   * Numeric inputs must be finite numbers, not coerced strings. Sizes/scales must
+   * be positive. Invalid or unrepresentable geometry throws RangeError. Callers
+   * handle invalid input before changing movement targets or first-input gates.
+   * No DOM, ambient runtime state, randomness, save access, or input mutation.
+   */
+
+  function finite(value, label) {
+    if (!Number.isFinite(value)) throw new RangeError(`${label} must be finite`);
+    return value === 0 ? 0 : value;
+  }
+
+  function positive(value, label) {
+    finite(value, label);
+    if (value <= 0) throw new RangeError(`${label} must be positive`);
+    return value;
+  }
+
+  function checkPoint(point, label) {
+    finite(point?.x, `${label}.x`);
+    finite(point?.y, `${label}.y`);
+  }
+
+  function checkSize(size, label) {
+    positive(size?.width, `${label}.width`);
+    positive(size?.height, `${label}.height`);
+  }
+
+  function checkCamera(camera) {
+    checkPoint(camera, "camera");
+    checkSize(camera, "camera");
+    positive(camera.zoom, "camera.zoom");
+  }
+
+  function pointRecord(x, y) {
+    return Object.freeze({ x: finite(x, "result.x"), y: finite(y, "result.y") });
+  }
+
+  function boundsRecord(left, top, right, bottom) {
+    finite(left, "bounds.left");
+    finite(top, "bounds.top");
+    finite(right, "bounds.right");
+    finite(bottom, "bounds.bottom");
+    if (right <= left || bottom <= top) throw new RangeError("bounds must have positive area");
+    return Object.freeze({ left: left === 0 ? 0 : left, top: top === 0 ? 0 : top, right, bottom });
+  }
+
+  /**
+   * Logical run-start width/height are required. Only exact modeId === "farm"
+   * selects Farm; absent/unknown modes select Climb. All supplied numeric options
+   * are validated even in Farm, where valid worldScale/zoom are ignored.
+   * @param {{modeId?: unknown, width?: number, height?: number, worldScale?: number, zoom?: number}} [options]
+   */
+  function createWorld({ modeId, width, height, worldScale = 3, zoom = 1.25 } = {}) {
+    checkSize({ width, height }, "viewport");
+    positive(worldScale, "worldScale");
+    positive(zoom, "zoom");
+    const farm = modeId === "farm";
+    return Object.freeze({
+      modeId: farm ? "farm" : "climb",
+      width: positive(farm ? width : width * worldScale, "world.width"),
+      height: positive(farm ? height : height * worldScale, "world.height"),
+      zoom: farm ? 1 : zoom,
+    });
+  }
+
+  /**
+   * Derive a snapshot from the current player, including teleports/outside points.
+   * Climb raises effective zoom for small worlds/large logical viewports without
+   * changing world.zoom. Farm is always identity; an oversized logical Farm
+   * viewport is rejected rather than silently zooming or exposing off-map pixels.
+   * CSS-only resize belongs in clientToView and never changes world dimensions.
+   * @param {{world?: {modeId?: unknown, width: number, height: number, zoom: number}, viewport?: {width: number, height: number}, player?: {x: number, y: number}}} [options]
+   */
+  function cameraFor({ world, viewport, player } = {}) {
+    checkSize(world, "world");
+    positive(world.zoom, "world.zoom");
+    checkSize(viewport, "viewport");
+    checkPoint(player, "player");
+    if (world.modeId === "farm") {
+      if (viewport.width > world.width || viewport.height > world.height) {
+        throw new RangeError("Farm identity viewport must fit the world");
+      }
+      return Object.freeze({ x: 0, y: 0, zoom: 1, width: viewport.width, height: viewport.height });
+    }
+    let zoom = positive(
+      Math.max(world.zoom, viewport.width / world.width, viewport.height / world.height),
+      "effective zoom"
+    );
+    // A rounded-down fit ratio must not leave a sliver of off-map viewport.
+    if (viewport.width / zoom > world.width || viewport.height / zoom > world.height) {
+      zoom = positive(zoom * (1 + Number.EPSILON), "effective zoom");
+    }
+    const width = positive(viewport.width / zoom, "camera.width");
+    const height = positive(viewport.height / zoom, "camera.height");
+    return Object.freeze({
+      x: Math.max(0, Math.min(world.width - width, player.x - width / 2)),
+      y: Math.max(0, Math.min(world.height - height, player.y - height / 2)),
+      zoom,
+      width,
+      height,
+    });
+  }
+
+  /** Convert world units to logical view/backing-canvas units (not CSS pixels). */
+  function worldToView(point, camera) {
+    checkPoint(point, "point");
+    checkCamera(camera);
+    return pointRecord((point.x - camera.x) * camera.zoom, (point.y - camera.y) * camera.zoom);
+  }
+
+  /** Convert logical view units to world units; points are intentionally not clamped. */
+  function viewToWorld(point, camera) {
+    checkPoint(point, "point");
+    checkCamera(camera);
+    return pointRecord(point.x / camera.zoom + camera.x, point.y / camera.zoom + camera.y);
+  }
+
+  /**
+   * point is {x: clientX, y: clientY}; rect is {left, top, width, height} in CSS
+   * pixels and viewport is {width, height} in logical view units. Apply independent
+   * CSS axis scales exactly once. No DPR multiplier, camera offset, or clamp here.
+   * Missing points (including empty touch lists) and zero-sized rects must not be
+   * passed through as targets: they throw. Values outside the rect remain outside.
+   */
+  function clientToView(point, rect, viewport) {
+    checkPoint(point, "client");
+    finite(rect?.left, "rect.left");
+    finite(rect?.top, "rect.top");
+    checkSize(rect, "rect");
+    checkSize(viewport, "viewport");
+    return pointRecord(
+      ((point.x - rect.left) / rect.width) * viewport.width,
+      ((point.y - rect.top) / rect.height) * viewport.height
+    );
+  }
+
+  /** Positive margin expands all edges; negative margin insets. Empty insets throw. */
+  function worldBounds(world, margin = 0) {
+    checkSize(world, "world");
+    finite(margin, "margin");
+    return boundsRecord(-margin, -margin, world.width + margin, world.height + margin);
+  }
+
+  /** Snapshot bounds in world units, not scaled view units. */
+  function visibleWorldBounds(camera) {
+    checkCamera(camera);
+    return boundsRecord(camera.x, camera.y, camera.x + camera.width, camera.y + camera.height);
+  }
+
+  /**
+   * Exit a nonempty inclusive bounds rect from an inside/on-edge point along a
+   * finite nonzero direction. Outside origins throw (this is not an entry cast).
+   * Axis-aligned rays are supported without division by zero. An outward ray on
+   * an edge exits at distance 0; inward/tangent rays reach the next forward edge.
+   * Exact corner ties set both hit flags. Near-corner hits keep the nearest axis.
+   */
+  function rayExit(point, direction, rect) {
+    checkPoint(point, "point");
+    checkPoint(direction, "direction");
+    const { left, top, right, bottom } = boundsRecord(
+      rect?.left,
+      rect?.top,
+      rect?.right,
+      rect?.bottom
+    );
+    if (point.x < left || point.x > right || point.y < top || point.y > bottom) {
+      throw new RangeError("ray origin must be inside bounds");
+    }
+    if (direction.x === 0 && direction.y === 0) throw new RangeError("ray direction must be nonzero");
+    const xEdge = direction.x > 0 ? right : left;
+    const yEdge = direction.y > 0 ? bottom : top;
+    const tx = direction.x === 0 ? Infinity : (xEdge - point.x) / direction.x;
+    const ty = direction.y === 0 ? Infinity : (yEdge - point.y) / direction.y;
+    const distance = finite(Math.min(tx, ty), "ray distance");
+    const hitX = tx === distance;
+    const hitY = ty === distance;
+    // Snap the hit axes exactly to their edges to avoid arithmetic overshoot.
+    const x = hitX ? xEdge : Math.max(left, Math.min(right, point.x + direction.x * distance));
+    const y = hitY ? yEdge : Math.max(top, Math.min(bottom, point.y + direction.y * distance));
+    return Object.freeze({ ...pointRecord(x, y), distance, hitX, hitY });
+  }
+
+  /**
+   * Source-owned simulation capability, injected into native and retained factories.
+   * The viewport is read live for spawn queries only; physical dimensions are fixed
+   * by the run's copied, frozen descriptor. No RNG, save access or global publisher.
+   */
+  function createWorldSpatialRuntime({ canvas, worldScale = 3, zoom = 1.25 }) {
+    /** @param {{ modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options] */
+    function createRunWorld({ modeId, world } = {}) {
+      // A supplied world is already in simulation units (including boss continuation).
+      // Invalid legacy dimensions fall back to a fresh viewport-based descriptor.
+      const supplied =
+        Number.isFinite(world?.width) &&
+        world.width > 0 &&
+        Number.isFinite(world?.height) &&
+        world.height > 0;
+      return createWorld({
+        modeId,
+        width: supplied ? world.width : canvas.width,
+        height: supplied ? world.height : canvas.height,
+        worldScale: supplied ? 1 : worldScale,
+        zoom: supplied ? (world.zoom ?? zoom) : zoom,
+      });
+    }
+
+    function physicalSize(game) {
+      return game?.world || canvas;
+    }
+
+    function visibleBounds(game) {
+      if (game?.world?.modeId !== "climb") return null;
+      return visibleWorldBounds(
+        cameraFor({ world: game.world, viewport: canvas, player: game.player })
+      );
+    }
+
+    function spawnPosition(game, angle, margin) {
+      const visible = visibleBounds(game);
+      if (!visible) return null; // Farm keeps its original arithmetic and RNG mapping.
+      const world = physicalSize(game);
+      // Clip the expanded view to physical bounds, except for a bounded exterior
+      // entry band where the camera actually touches a world edge. Never clamp a
+      // sampled position back into view or substitute the distant world perimeter.
+      const entry = {
+        left: visible.left === 0 ? -margin : Math.max(0, visible.left - margin),
+        top: visible.top === 0 ? -margin : Math.max(0, visible.top - margin),
+        right:
+          visible.right === world.width
+            ? world.width + margin
+            : Math.min(world.width, visible.right + margin),
+        bottom:
+          visible.bottom === world.height
+            ? world.height + margin
+            : Math.min(world.height, visible.bottom + margin),
+      };
+      const hit = rayExit(game.player, { x: Math.cos(angle), y: Math.sin(angle) }, entry);
+      return { x: hit.x, y: hit.y };
+    }
+
+    return Object.freeze({ createRunWorld, physicalSize, visibleBounds, spawnPosition });
+  }
+
   const MODULE_NATIVE_ASSET_RESOLVER_SLOTS = Object.freeze([
     "choiceIconDefinition",
     "choiceIconPath",
@@ -1130,6 +1383,7 @@
    */
   function createCombatSystem({
     canvas,
+    spatial,
     balance,
     combatDamage,
     content,
@@ -1168,6 +1422,7 @@
   } = {}) {
     const damageSystem = combatDamage.createCombatDamageSystem({
       canvas,
+      spatial,
       getGame,
       getRelicSpecialEffects,
       addQuestProgressForWeapon,
@@ -1182,6 +1437,7 @@
     });
     const enemySystem = enemies.createEnemySystem({
       canvas,
+      spatial,
       balance,
       enemyBehaviors,
       enemySpawning,
@@ -1198,6 +1454,7 @@
     });
     const weaponFireSystem = weaponFire.createWeaponFireSystem({
       canvas,
+      spatial,
       content,
       weaponDefs,
       getGame,
@@ -1241,6 +1498,7 @@
 
   function createCombatDamageSystem({
     canvas,
+    spatial,
     getGame,
     getRelicSpecialEffects,
     addQuestProgressForWeapon,
@@ -1280,15 +1538,16 @@
         damageEnemy(source.enemy, effects.thornDamage, "relic_thorns");
       }
       if (effects.teleportOnHitCooldown && !(p.teleportCooldown > 0)) {
+        const bounds = spatial?.physicalSize(game) || canvas;
         p.x = clamp(
           p.x + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
           p.radius,
-          canvas.width - p.radius
+          bounds.width - p.radius
         );
         p.y = clamp(
           p.y + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
           p.radius,
-          canvas.height - p.radius
+          bounds.height - p.radius
         );
         p.targetX = p.x;
         p.targetY = p.y;
@@ -1564,6 +1823,7 @@
    */
   function createEnemySystem({
     canvas,
+    spatial,
     balance,
     enemyBehaviors,
     enemySpawning,
@@ -1598,6 +1858,7 @@
     const floorDifficulty = balance.floorDifficulty;
     const behaviorSystem = enemyBehaviors.createEnemyBehaviorSystem({
       canvas,
+      spatial,
       bossAbilities,
       boltConfig,
       getGame,
@@ -1607,6 +1868,7 @@
     });
     const spawnSystem = enemySpawning.createEnemySpawnSystem({
       canvas,
+      spatial,
       enemyTypes,
       levelDefs,
       getActiveFloorDef,
@@ -1627,11 +1889,19 @@
       const selectedAbilities = chooseBossAbilities(superBoss ? superBossAbilityCount : normalBossAbilityCount);
       const bossKind = selectedAbilities[0] || fallbackAbility;
       const bossHp = (bossBaseHp + game.kills * bossHpPerKill) * difficulty.hp;
-      const landingX = 72 + Math.random() * (canvas.width - 144);
-      const landingY = 90 + Math.random() * (canvas.height - 180);
-      const sideEntry = landingX < sideEntryMargin || landingX > canvas.width - sideEntryMargin;
-      const startX = sideEntry ? (landingX < canvas.width / 2 ? -entryOffsetX : canvas.width + entryOffsetX) : landingX;
-      const startY = sideEntry ? landingY : -entryOffsetY;
+      const visible = spatial?.visibleBounds(game);
+      const region = visible || { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
+      const width = region.right - region.left;
+      const height = region.bottom - region.top;
+      // Small Climb views collapse an overlarge inset to the midpoint, not NaN or
+      // inverted bounds. Normal Farm retains the exact old random mapping.
+      const insetX = visible ? Math.min(72, width / 2) : 72;
+      const insetY = visible ? Math.min(90, height / 2) : 90;
+      const landingX = region.left + insetX + Math.random() * (width - insetX * 2);
+      const landingY = region.top + insetY + Math.random() * (height - insetY * 2);
+      const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
+      const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
+      const startY = sideEntry ? landingY : region.top - entryOffsetY;
       if (!sideEntry) {
         const drop = bossConfig.drop || {};
         game.bossAttacks.push({
@@ -1811,6 +2081,7 @@
    */
   function createEnemyBehaviorSystem({
     canvas,
+    spatial,
     bossAbilities = {},
     boltConfig = {},
     getGame,
@@ -1903,15 +2174,16 @@
         }
         return true;
       }
+      const bounds = spatial?.physicalSize(game) || canvas;
       boss.x = clamp(
         boss.x + boss.chargeDirX * boss.chargeSpeed * dt,
         boss.radius,
-        canvas.width - boss.radius
+        bounds.width - boss.radius
       );
       boss.y = clamp(
         boss.y + boss.chargeDirY * boss.chargeSpeed * dt,
         boss.radius,
-        canvas.height - boss.radius
+        bounds.height - boss.radius
       );
       if (boss.chargeTimer <= 0) {
         const slash = bossAbilities.charger.slash;
@@ -2031,13 +2303,14 @@
           bolt.life = 0;
         }
       });
+      const bounds = spatial?.physicalSize(game) || canvas;
       game.enemyBolts = game.enemyBolts.filter(
         (bolt) =>
           bolt.life > 0 &&
           bolt.x > -24 &&
-          bolt.x < canvas.width + 24 &&
+          bolt.x < bounds.width + 24 &&
           bolt.y > -24 &&
-          bolt.y < canvas.height + 24
+          bolt.y < bounds.height + 24
       );
     }
 
@@ -2064,6 +2337,7 @@
    */
   function createEnemySpawnSystem({
     canvas,
+    spatial,
     enemyTypes,
     levelDefs = [],
     getActiveFloorDef,
@@ -2144,6 +2418,8 @@
     }
 
     function offscreenSpawnPosition(player, angle) {
+      const position = spatial?.spawnPosition(getGame(), angle, spawnEntryMargin);
+      if (position) return position;
       const dirX = Math.cos(angle);
       const dirY = Math.sin(angle);
       const edgeDistance = distanceToExpandedCanvasEdge(player, dirX, dirY);
@@ -7747,6 +8023,7 @@
    */
   function createWeaponBehaviorSystem({
     canvas,
+    spatial,
     weaponDefs,
     getGame,
     getRunUpgradeTier,
@@ -7856,11 +8133,12 @@
     }
 
     function nextBeamWall(x, y, dirX, dirY) {
-      if (!Number.isFinite(canvas?.width) || !Number.isFinite(canvas?.height)) {
+      const bounds = spatial?.physicalSize(getGame()) || canvas;
+      if (!Number.isFinite(bounds?.width) || !Number.isFinite(bounds?.height)) {
         return { distance: Infinity, hit: false, hitX: false, hitY: false };
       }
-      const xDistance = dirX > 0 ? (canvas.width - x) / dirX : dirX < 0 ? -x / dirX : Infinity;
-      const yDistance = dirY > 0 ? (canvas.height - y) / dirY : dirY < 0 ? -y / dirY : Infinity;
+      const xDistance = dirX > 0 ? (bounds.width - x) / dirX : dirX < 0 ? -x / dirX : Infinity;
+      const yDistance = dirY > 0 ? (bounds.height - y) / dirY : dirY < 0 ? -y / dirY : Infinity;
       const distance = Math.min(xDistance, yDistance);
       const epsilon = 0.000001;
       return {
@@ -8322,6 +8600,7 @@
    */
   function createWeaponFireSystem({
     canvas,
+    spatial,
     content,
     weaponDefs,
     getGame,
@@ -8354,6 +8633,7 @@
     });
     const projectileSystem = weaponProjectiles.createWeaponProjectileSystem({
       canvas,
+      spatial,
       weaponDefs,
       getGame,
       getRunUpgradeTier,
@@ -8369,6 +8649,7 @@
     });
     const behaviorSystem = weaponBehaviors.createWeaponBehaviorSystem({
       canvas,
+      spatial,
       weaponDefs,
       getGame,
       getRunUpgradeTier,
@@ -8526,6 +8807,7 @@
   /**
    * @param {{
    *   canvas: ProjectileCanvas,
+   *   spatial?: { physicalSize(game: ProjectileGame): ProjectileCanvas },
    *   weaponDefs: WeaponDefs,
    *   getGame: () => ProjectileGame,
    *   getRunUpgradeTier: (id: string) => number,
@@ -8543,6 +8825,7 @@
    */
   function createWeaponProjectileSystem({
     canvas,
+    spatial,
     weaponDefs,
     getGame,
     getRunUpgradeTier,
@@ -8628,18 +8911,19 @@
 
     function updateBolts(dt) {
       const game = getGame();
+      const bounds = spatial?.physicalSize(game) || canvas;
       game.bolts.forEach((bolt) => {
         bolt.x += bolt.vx * dt;
         bolt.y += bolt.vy * dt;
         bolt.life -= dt;
-        if (bolt.bounces > 0 && (bolt.x < bolt.radius || bolt.x > canvas.width - bolt.radius)) {
+        if (bolt.bounces > 0 && (bolt.x < bolt.radius || bolt.x > bounds.width - bolt.radius)) {
           bolt.vx *= -1;
-          bolt.x = clamp(bolt.x, bolt.radius, canvas.width - bolt.radius);
+          bolt.x = clamp(bolt.x, bolt.radius, bounds.width - bolt.radius);
           bolt.bounces -= 1;
         }
-        if (bolt.bounces > 0 && (bolt.y < bolt.radius || bolt.y > canvas.height - bolt.radius)) {
+        if (bolt.bounces > 0 && (bolt.y < bolt.radius || bolt.y > bounds.height - bolt.radius)) {
           bolt.vy *= -1;
-          bolt.y = clamp(bolt.y, bolt.radius, canvas.height - bolt.radius);
+          bolt.y = clamp(bolt.y, bolt.radius, bounds.height - bolt.radius);
           bolt.bounces -= 1;
         }
         const enemy = game.enemies.find((candidate) => {
@@ -8854,6 +9138,7 @@
 
   function createRunStateSystem({
     canvas,
+    spatial,
     mapSystem,
     getSave,
     getShopBonuses,
@@ -8903,15 +9188,18 @@
     }
 
     /**
-     * @param {{ modeId?: unknown, world?: { width?: number, height?: number } }} [options]
+     * @param {{ modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options]
      */
     function resetGameState({ modeId = DEFAULT_RUN_MODE, world } = {}) {
-      const bounds = {
+      const runMode = normalizeRunMode(modeId);
+      const bounds = spatial?.createRunWorld({ modeId: runMode, world }) || Object.freeze({
+        modeId: runMode,
         width: Number.isFinite(world?.width) && world.width > 0 ? world.width : canvas.width,
         height: Number.isFinite(world?.height) && world.height > 0 ? world.height : canvas.height,
-      };
+        zoom: 1,
+      });
       const run = {
-        modeId: normalizeRunMode(modeId),
+        modeId: runMode,
         world: bounds,
         running: true,
         paused: false,
@@ -9037,6 +9325,7 @@
 
   function createRunUpdater({
     canvas,
+    spatial,
     getGame,
     combat,
     pickupSystem,
@@ -9064,8 +9353,9 @@
         player.x += player.facingX * step;
         player.y += player.facingY * step;
       }
-      player.x = clamp(player.x, 18, canvas.width - 18);
-      player.y = clamp(player.y, 18, canvas.height - 18);
+      const bounds = spatial?.physicalSize(getGame()) || canvas;
+      player.x = clamp(player.x, 18, bounds.width - 18);
+      player.y = clamp(player.y, 18, bounds.height - 18);
     }
 
     function update(dt) {
@@ -9220,6 +9510,7 @@
       rendering: { createRenderer },
       runLifecycle: { createRunLifecycle },
       runState: { createRunStateSystem },
+      createWorldSpatialRuntime,
       runUi: { createRunUi },
       runUpdate: { createRunUpdater },
       save,

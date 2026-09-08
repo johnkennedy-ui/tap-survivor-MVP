@@ -9,6 +9,7 @@ export const MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS = Object.freeze([
  */
 export function createEnemyBehaviorSystem({
   canvas,
+  spatial,
   bossAbilities = {},
   boltConfig = {},
   getGame,
@@ -101,15 +102,16 @@ export function createEnemyBehaviorSystem({
       }
       return true;
     }
+    const bounds = spatial?.physicalSize(game) || canvas;
     boss.x = clamp(
       boss.x + boss.chargeDirX * boss.chargeSpeed * dt,
       boss.radius,
-      canvas.width - boss.radius
+      bounds.width - boss.radius
     );
     boss.y = clamp(
       boss.y + boss.chargeDirY * boss.chargeSpeed * dt,
       boss.radius,
-      canvas.height - boss.radius
+      bounds.height - boss.radius
     );
     if (boss.chargeTimer <= 0) {
       const slash = bossAbilities.charger.slash;
@@ -229,13 +231,14 @@ export function createEnemyBehaviorSystem({
         bolt.life = 0;
       }
     });
+    const bounds = spatial?.physicalSize(game) || canvas;
     game.enemyBolts = game.enemyBolts.filter(
       (bolt) =>
         bolt.life > 0 &&
         bolt.x > -24 &&
-        bolt.x < canvas.width + 24 &&
+        bolt.x < bounds.width + 24 &&
         bolt.y > -24 &&
-        bolt.y < canvas.height + 24
+        bolt.y < bounds.height + 24
     );
   }
 

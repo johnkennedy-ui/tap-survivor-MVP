@@ -1,5 +1,6 @@
 export function createRunUpdater({
   canvas,
+  spatial,
   getGame,
   combat,
   pickupSystem,
@@ -27,8 +28,9 @@ export function createRunUpdater({
       player.x += player.facingX * step;
       player.y += player.facingY * step;
     }
-    player.x = clamp(player.x, 18, canvas.width - 18);
-    player.y = clamp(player.y, 18, canvas.height - 18);
+    const bounds = spatial?.physicalSize(getGame()) || canvas;
+    player.x = clamp(player.x, 18, bounds.width - 18);
+    player.y = clamp(player.y, 18, bounds.height - 18);
   }
 
   function update(dt) {

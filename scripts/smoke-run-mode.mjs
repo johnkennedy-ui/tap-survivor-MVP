@@ -24,7 +24,8 @@ for (const modeId of ["climb", "farm"]) {
   const saveBefore = JSON.stringify(h.dependencies.getSave());
   const world = { width: 1920, height: 1080 };
   const reset = h.dependencies.resetGameState({ modeId, world });
-  assert.deepEqual(reset.world, world);
+  assert.deepEqual(reset.world, { ...world, modeId, zoom: modeId === "farm" ? 1 : 1.25 });
+  assert.ok(Object.isFrozen(reset.world));
   assert.notEqual(reset.world, world);
   world.width = 12;
   assert.equal(reset.world.width, 1920);
@@ -67,4 +68,4 @@ for (const modeId of ["climb", "farm"]) {
   entry.dispose();
   console.log(`PASS real production ${modeId} title forwarding, duplicate guard and durable save exclusion`);
 }
-console.log("Run mode smoke passed; larger Climb geometry/camera remains deferred.");
+console.log("Run mode smoke passed; simulation geometry is covered by smoke-world-simulation; camera rendering/input remains deferred.");

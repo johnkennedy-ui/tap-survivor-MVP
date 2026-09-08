@@ -305,6 +305,14 @@ const bridges = [
     exports: ["createGameDependencyBag"],
     bundledSources: [
       {
+        source: "src/modules/world-camera.js",
+        exports: ["createWorld", "cameraFor", "worldToView", "viewToWorld", "clientToView", "worldBounds", "visibleWorldBounds", "rayExit"],
+      },
+      {
+        source: "src/modules/world-spatial-runtime.js",
+        exports: ["createWorldSpatialRuntime"],
+      },
+      {
         source: "src/modules/assets.js",
         exports: [
           "MODULE_NATIVE_ASSET_RESOLVER_SLOTS",
@@ -625,6 +633,24 @@ const bridges = [
     globalName: null,
     retiredGlobalName: "TapSurvivorUiProgression",
     exports: ["MODULE_NATIVE_UI_PROGRESSION_RENDERER_PROOF_SLOTS", "createUiProgressionRenderer"],
+  },
+  {
+    source: "src/modules/enemies.js",
+    target: "src/enemies.js",
+    globalName: null,
+    exports: ["MODULE_NATIVE_ENEMY_SLOTS", "MODULE_NATIVE_ENEMY_PROOF_SLOTS", "createEnemySystem"],
+  },
+  {
+    source: "src/modules/enemy-behaviors.js",
+    target: "src/enemy-behaviors.js",
+    globalName: null,
+    exports: ["MODULE_NATIVE_ENEMY_BEHAVIOR_SLOTS", "MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS", "createEnemyBehaviorSystem"],
+  },
+  {
+    source: "src/modules/enemy-spawning.js",
+    target: "src/enemy-spawning.js",
+    globalName: null,
+    exports: ["MODULE_NATIVE_ENEMY_SPAWN_SLOTS", "MODULE_NATIVE_ENEMY_SPAWN_PROOF_SLOTS", "createEnemySpawnSystem"],
   },
   {
     source: "src/modules/weapon-behaviors.js",
