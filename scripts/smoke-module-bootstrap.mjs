@@ -926,7 +926,7 @@ const shellUiAdapter = composeShellUiDomAdapter({
   onOpenShop: () => shellUiAdapterCallbacks.push("open-shop"),
   onResetSave: () => shellUiAdapterCallbacks.push("reset"),
   onSetGameSpeed: (speed) => shellUiAdapterCallbacks.push(`speed:${speed}`),
-  onStartRun: (model) => shellUiAdapterCallbacks.push(`start:${model.activePanel}`),
+  onStartRun: (modeId, model) => shellUiAdapterCallbacks.push(`start:${modeId}:${model.activePanel}`),
   onToggleFullscreen: () => shellUiAdapterCallbacks.push("fullscreen"),
 });
 const shellUiAdapterInitialModel = shellUiAdapter.render({
@@ -936,6 +936,8 @@ const shellUiAdapterInitialModel = shellUiAdapter.render({
 });
 const shellUiAdapterStartButton = findByDataset(shellUiAdapterRoot, "action", "start-run");
 shellUiAdapterStartButton?.eventListeners?.click?.[0]?.();
+const shellUiAdapterFarmButton = findByDataset(shellUiAdapterRoot, "action", "start-farm");
+shellUiAdapterFarmButton?.eventListeners?.click?.[0]?.();
 const shellUiAdapterExitRunButton = findByDataset(shellUiAdapterRoot, "action", "exit-run");
 const shellUiAdapterInventoryTab = findByDataset(shellUiAdapterRoot, "panelId", "inventory");
 shellUiAdapterInventoryTab?.eventListeners?.click?.[0]?.();
@@ -964,7 +966,8 @@ check(
 );
 check(
   "module bootstrap shell UI DOM adapter drives callbacks and relic delegation",
-  shellUiAdapterCallbacks.includes("start:progress") &&
+  shellUiAdapterCallbacks.includes("start:climb:progress") &&
+    shellUiAdapterCallbacks.includes("start:farm:progress") &&
     shellUiAdapterCallbacks.includes("open:inventory") &&
     shellUiAdapterCallbacks.includes("open-shop") &&
     shellUiAdapterCallbacks.includes("reset") &&
@@ -984,6 +987,8 @@ check(
 check(
   "module bootstrap shell UI DOM adapter cleans event listeners on rerender and dispose",
   shellUiAdapterInventoryTab?.eventListeners?.click?.length === 0 &&
+    shellUiAdapterStartButton?.eventListeners?.click?.length === 0 &&
+    shellUiAdapterFarmButton?.eventListeners?.click?.length === 0 &&
     shellUiAdapterCurrentStartButton?.eventListeners?.click?.length === 0 &&
     collectText(shellUiAdapterRoot) === ""
 );

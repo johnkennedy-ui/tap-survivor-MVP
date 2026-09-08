@@ -86,13 +86,22 @@ export function createShellUiDomAdapter(options = {}) {
     actions.className = "module-shell-actions";
     const startButton = documentRef.createElement("button");
     startButton.type = "button";
-    startButton.textContent = "Start Run";
+    startButton.textContent = "Climb";
     startButton.dataset.action = "start-run";
     startButton.disabled = !model.actions.canStartRun;
     addListener(startButton, "click", () => {
-      if (!startButton.disabled) onStartRun?.(model);
+      if (!startButton.disabled) onStartRun?.("climb", model);
     });
     actions.appendChild(startButton);
+    const farmButton = documentRef.createElement("button");
+    farmButton.type = "button";
+    farmButton.textContent = "Farm — original arena";
+    farmButton.dataset.action = "start-farm";
+    farmButton.disabled = !model.actions.canStartRun;
+    addListener(farmButton, "click", () => {
+      if (!farmButton.disabled) onStartRun?.("farm", model);
+    });
+    actions.appendChild(farmButton);
 
     const openMenuButton = createActionButton("open-menu", "Menu", () => onOpenPanel?.(model.activePanel, model));
     openMenuButton.setAttribute("aria-expanded", model.actions.openMenuExpanded);

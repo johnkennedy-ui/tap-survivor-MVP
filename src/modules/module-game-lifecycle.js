@@ -138,10 +138,10 @@ export function createModuleGameLifecycleOwner(options = {}) {
     return snapshot();
   }
 
-  function startRun() {
+  function startRun(modeId) {
     ensureActive("startRun");
     stopped = false;
-    runLifecycle.startRun();
+    runLifecycle.startRun(modeId);
     runtimeDependencies.runUi.updateRunHud?.();
     return runtimeDependencies.getGame();
   }
@@ -388,11 +388,11 @@ function createLifecycle({ dependencies, documentRef, lifecycleHooks }) {
     ui: dependencies.ui,
     getGame: dependencies.getGame,
     getSave: dependencies.getSave,
-    resetGameState: () => {
+    resetGameState: (options = {}) => {
       const nextGame =
         typeof lifecycleHooks.resetGameState === "function"
-          ? lifecycleHooks.resetGameState({ dependencies })
-          : dependencies.resetGameState?.() || dependencies.getGame() || createFallbackRun();
+          ? lifecycleHooks.resetGameState({ dependencies, ...options })
+          : dependencies.resetGameState?.(options) || dependencies.getGame() || createFallbackRun();
       dependencies.setGame(nextGame);
       return nextGame;
     },

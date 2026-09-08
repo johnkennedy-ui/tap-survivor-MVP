@@ -430,8 +430,8 @@ export function createModuleGameDependencyBag({
       clamp,
     });
   }
-  const resetGameState = () => {
-    const run = runStateSystem.resetGameState();
+  const resetGameState = (options) => {
+    const run = runStateSystem.resetGameState(options);
     effects.applyRelicSpecialEffects(run, getRelicSpecialEffects());
     applyRelicStartingRunUpgrades({
       effects,
@@ -442,8 +442,11 @@ export function createModuleGameDependencyBag({
     });
     return run;
   };
-  const resetDebugRun = ({ towerFloor = 1 } = {}) => {
-    const run = resetGameState();
+  /**
+   * @param {{ towerFloor?: number, modeId?: unknown, world?: { width?: number, height?: number } }} [options]
+   */
+  const resetDebugRun = ({ towerFloor = 1, modeId, world } = {}) => {
+    const run = resetGameState({ modeId, world });
     run.towerFloor = towerFloor;
     mapSystemInstance.applyToGame(run);
     stateStore.setGame(run);

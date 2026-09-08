@@ -643,6 +643,12 @@ const bridges = [
 ];
 
 for (const bridge of bridges) {
+  if (["src/run-state.js", "src/run-lifecycle.js", "src/game-dependencies.js"].includes(bridge.target)) {
+    bridge.bundledSources = [
+      { source: "src/modules/run-mode.js", exports: ["DEFAULT_RUN_MODE", "normalizeRunMode"] },
+      ...(bridge.bundledSources || []),
+    ];
+  }
   await buildClassicBridge(bridge);
 }
 

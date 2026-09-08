@@ -121,6 +121,7 @@ export function createGameHarness({
     "game",
     "titleScreen",
     "titleStartGame",
+    "titleStartFarm",
     "startTransition",
     "openShop",
     "resetSave",
@@ -497,7 +498,7 @@ export function createGameHarness({
     sfxDefs: content.assets?.sfx || {},
   });
   let playStartAudio = () => {};
-  const startRun = () => lifecycle?.startRun?.();
+  const startRun = (modeId) => lifecycle?.startRun?.(modeId);
   const dependencyBagOptions = createBrowserDependencyBagOptions({
     audioAdapters: {
       audioContextFactory: createAudioContext,

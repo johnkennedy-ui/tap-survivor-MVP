@@ -5,6 +5,12 @@
 (() => {
   "use strict";
 
+  const DEFAULT_RUN_MODE = "climb";
+
+  function normalizeRunMode(value) {
+    return value === "farm" ? "farm" : DEFAULT_RUN_MODE;
+  }
+
   function createRunLifecycle({
     documentRef,
     ui,
@@ -20,13 +26,13 @@
     updateRunHud,
     showMovementGateBanner,
   }) {
-    function startRun() {
+    function startRun(modeId = DEFAULT_RUN_MODE) {
       shellUi.closeStartFlow();
       shopSystem.closeShop();
       runUi.hideEndScreen();
       ui.levelUp.classList.add("hidden");
       shellUi.closeRunMenu(false);
-      const game = resetGameState();
+      const game = resetGameState({ modeId: normalizeRunMode(modeId) });
       game.awaitingFirstMoveInput = true;
       showMovementGateBanner();
     }
@@ -98,7 +104,8 @@
       ui.relicChoice.classList.add("hidden");
       save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
       persist();
-      const game = resetGameState();
+      const clearedRun = getGame();
+      const game = resetGameState({ modeId: clearedRun.modeId, world: clearedRun.world });
       game.lastFloorClear = {
         floor: clearedFloor,
         relicName: awardedRelics.length

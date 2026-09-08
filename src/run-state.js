@@ -5,6 +5,12 @@
 (() => {
   "use strict";
 
+  const DEFAULT_RUN_MODE = "climb";
+
+  function normalizeRunMode(value) {
+    return value === "farm" ? "farm" : DEFAULT_RUN_MODE;
+  }
+
   function createRunStateSystem({
     canvas,
     mapSystem,
@@ -14,14 +20,14 @@
     maxEquippedWeapons,
     weaponDefs = {},
   }) {
-    function createPlayer() {
+    function createPlayer(world) {
       const shopBonuses = getShopBonuses();
       const maxHp = 100 + shopBonuses.maxHp;
       return {
-        x: canvas.width / 2,
-        y: canvas.height / 2,
-        targetX: canvas.width / 2,
-        targetY: canvas.height / 2,
+        x: world.width / 2,
+        y: world.height / 2,
+        targetX: world.width / 2,
+        targetY: world.height / 2,
         facingX: 0,
         facingY: 1,
         moving: false,
@@ -55,8 +61,17 @@
       return "spark_bolt";
     }
 
-    function resetGameState() {
+    /**
+     * @param {{ modeId?: unknown, world?: { width?: number, height?: number } }} [options]
+     */
+    function resetGameState({ modeId = DEFAULT_RUN_MODE, world } = {}) {
+      const bounds = {
+        width: Number.isFinite(world?.width) && world.width > 0 ? world.width : canvas.width,
+        height: Number.isFinite(world?.height) && world.height > 0 ? world.height : canvas.height,
+      };
       const run = {
+        modeId: normalizeRunMode(modeId),
+        world: bounds,
         running: true,
         paused: false,
         pauseReason: "",
@@ -65,7 +80,7 @@
         towerFloor: getSave().towerFloor || 1,
         bossSpawned: false,
         bossDefeated: false,
-        player: createPlayer(),
+        player: createPlayer(bounds),
         enemies: [],
         xpDrops: [],
         lootDrops: [],

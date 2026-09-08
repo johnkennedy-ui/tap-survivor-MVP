@@ -106,6 +106,8 @@ export function createShellUiController({
   }
 
   function showTitleScreen() {
+    if (startTransitionTimer !== null) scheduler.clearTimeout(startTransitionTimer);
+    startTransitionTimer = null;
     moduleController.render({ screen: "title" });
     ui.titleScreen?.classList.remove("hidden");
     ui.startTransition?.classList.add("hidden");
@@ -119,7 +121,7 @@ export function createShellUiController({
     currentScreen = "game";
   }
 
-  function startGameFromTitle() {
+  function startGameFromTitle(modeId = "climb") {
     if (currentScreen !== "title") return;
     playStartLaugh?.();
     moduleController.render({ screen: "startingTransition" });
@@ -129,8 +131,9 @@ export function createShellUiController({
     if (startTransitionTimer) scheduler.clearTimeout(startTransitionTimer);
     startTransitionTimer = scheduler.setTimeout(() => {
       startTransitionTimer = null;
-      moduleController.startRun();
-      startRun();
+      if (currentScreen !== "startingTransition") return;
+      moduleController.startRun(modeId);
+      startRun(modeId);
     }, 450);
   }
 
@@ -242,7 +245,8 @@ export function createShellUiController({
   }
 
   function bind() {
-    ui.titleStartGame?.addEventListener("click", startGameFromTitle);
+    ui.titleStartGame?.addEventListener("click", () => startGameFromTitle("climb"));
+    ui.titleStartFarm?.addEventListener("click", () => startGameFromTitle("farm"));
     ui.openShop?.addEventListener("click", openShopMenu);
     ui.closeShop.addEventListener("click", closeShopMenu);
     ui.closeShopBottom.addEventListener("click", closeShopMenu);

@@ -251,8 +251,8 @@ function renderQuests(container) {
   uiRenderer.renderQuests(container);
 }
 
-function resetGameState() {
-  game = runStateSystem.resetGameState();
+function resetGameState(options) {
+  game = runStateSystem.resetGameState(options);
   effects.applyRelicSpecialEffects(game, getRelicSpecialEffects());
   applyRelicStartingRunUpgrades(game);
   return game;
@@ -425,8 +425,8 @@ runLifecycle = runLifecycleDependencies.createRunLifecycle({
   showMovementGateBanner: bannerSystem.showMovementGateBanner,
 });
 
-function startRun() {
-  runLifecycle.startRun();
+function startRun(modeId) {
+  runLifecycle.startRun(modeId);
 }
 
 function endRun(reason) {

@@ -8,7 +8,7 @@ function check(name, pass) {
 }
 
 function startDefaultRun(testHarness) {
-  testHarness.elements.get("titleStartGame").click();
+  testHarness.elements.get("titleStartFarm").click();
 }
 
 function startAndClearMovementGate(testHarness) {
@@ -28,6 +28,7 @@ harness.frame(1000);
 
 const startedGame = harness.context.__tapSurvivorHarness.getGame();
 check("start game enters running state", startedGame.running === true);
+check("baseline arena explicitly selects Farm", startedGame.modeId === "farm");
 check("movement gate starts frozen", startedGame.awaitingFirstMoveInput === true);
 check("movement gate banner is visible", harness.elements.get("questBanner").textContent === "Click/tap to move");
 check("movement gate blocks timer progression", startedGame.elapsed === 0);

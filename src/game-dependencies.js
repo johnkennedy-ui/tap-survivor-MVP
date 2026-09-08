@@ -5,6 +5,12 @@
 (() => {
   "use strict";
 
+  const DEFAULT_RUN_MODE = "climb";
+
+  function normalizeRunMode(value) {
+    return value === "farm" ? "farm" : DEFAULT_RUN_MODE;
+  }
+
   const MODULE_NATIVE_ASSET_RESOLVER_SLOTS = Object.freeze([
     "choiceIconDefinition",
     "choiceIconPath",
@@ -6659,13 +6665,22 @@
       actions.className = "module-shell-actions";
       const startButton = documentRef.createElement("button");
       startButton.type = "button";
-      startButton.textContent = "Start Run";
+      startButton.textContent = "Climb";
       startButton.dataset.action = "start-run";
       startButton.disabled = !model.actions.canStartRun;
       addListener(startButton, "click", () => {
-        if (!startButton.disabled) onStartRun?.(model);
+        if (!startButton.disabled) onStartRun?.("climb", model);
       });
       actions.appendChild(startButton);
+      const farmButton = documentRef.createElement("button");
+      farmButton.type = "button";
+      farmButton.textContent = "Farm — original arena";
+      farmButton.dataset.action = "start-farm";
+      farmButton.disabled = !model.actions.canStartRun;
+      addListener(farmButton, "click", () => {
+        if (!farmButton.disabled) onStartRun?.("farm", model);
+      });
+      actions.appendChild(farmButton);
 
       const openMenuButton = createActionButton("open-menu", "Menu", () => onOpenPanel?.(model.activePanel, model));
       openMenuButton.setAttribute("aria-expanded", model.actions.openMenuExpanded);
@@ -6823,7 +6838,7 @@
             onOpenShop: () => openShop(),
             onResetSave: () => resetSave(),
             onSetGameSpeed: (speed) => setGameSpeed(speed),
-            onStartRun: () => startRun(),
+            onStartRun: (modeId) => startRun(modeId),
             onToggleFullscreen: () => toggleFullscreen(),
             presenter,
             root,
@@ -6901,8 +6916,9 @@
       return shellRelicController.selectRelic?.(relicId);
     }
 
-    function startRun() {
-      onStartRun?.(snapshot());
+    function startRun(modeId = "climb") {
+      if (state.disposed || state.screen === "game") return snapshot();
+      onStartRun?.(modeId, snapshot());
       state = {
         ...state,
         screen: "game",
@@ -7086,6 +7102,8 @@
     }
 
     function showTitleScreen() {
+      if (startTransitionTimer !== null) scheduler.clearTimeout(startTransitionTimer);
+      startTransitionTimer = null;
       moduleController.render({ screen: "title" });
       ui.titleScreen?.classList.remove("hidden");
       ui.startTransition?.classList.add("hidden");
@@ -7099,7 +7117,7 @@
       currentScreen = "game";
     }
 
-    function startGameFromTitle() {
+    function startGameFromTitle(modeId = "climb") {
       if (currentScreen !== "title") return;
       playStartLaugh?.();
       moduleController.render({ screen: "startingTransition" });
@@ -7109,8 +7127,9 @@
       if (startTransitionTimer) scheduler.clearTimeout(startTransitionTimer);
       startTransitionTimer = scheduler.setTimeout(() => {
         startTransitionTimer = null;
-        moduleController.startRun();
-        startRun();
+        if (currentScreen !== "startingTransition") return;
+        moduleController.startRun(modeId);
+        startRun(modeId);
       }, 450);
     }
 
@@ -7222,7 +7241,8 @@
     }
 
     function bind() {
-      ui.titleStartGame?.addEventListener("click", startGameFromTitle);
+      ui.titleStartGame?.addEventListener("click", () => startGameFromTitle("climb"));
+      ui.titleStartFarm?.addEventListener("click", () => startGameFromTitle("farm"));
       ui.openShop?.addEventListener("click", openShopMenu);
       ui.closeShop.addEventListener("click", closeShopMenu);
       ui.closeShopBottom.addEventListener("click", closeShopMenu);
@@ -7391,6 +7411,7 @@
     "startTransition",
     "titleScreen",
     "titleStartGame",
+    "titleStartFarm",
     "toggleDebug",
   ]);
 
@@ -7471,6 +7492,7 @@
       startTransition: get("startTransition"),
       titleScreen: get("titleScreen"),
       titleStartGame: get("titleStartGame"),
+      titleStartFarm: get("titleStartFarm"),
       toggleDebug: get("toggleDebug"),
     };
   }
@@ -8733,13 +8755,13 @@
     updateRunHud,
     showMovementGateBanner,
   }) {
-    function startRun() {
+    function startRun(modeId = DEFAULT_RUN_MODE) {
       shellUi.closeStartFlow();
       shopSystem.closeShop();
       runUi.hideEndScreen();
       ui.levelUp.classList.add("hidden");
       shellUi.closeRunMenu(false);
-      const game = resetGameState();
+      const game = resetGameState({ modeId: normalizeRunMode(modeId) });
       game.awaitingFirstMoveInput = true;
       showMovementGateBanner();
     }
@@ -8811,7 +8833,8 @@
       ui.relicChoice.classList.add("hidden");
       save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
       persist();
-      const game = resetGameState();
+      const clearedRun = getGame();
+      const game = resetGameState({ modeId: clearedRun.modeId, world: clearedRun.world });
       game.lastFloorClear = {
         floor: clearedFloor,
         relicName: awardedRelics.length
@@ -8838,14 +8861,14 @@
     maxEquippedWeapons,
     weaponDefs = {},
   }) {
-    function createPlayer() {
+    function createPlayer(world) {
       const shopBonuses = getShopBonuses();
       const maxHp = 100 + shopBonuses.maxHp;
       return {
-        x: canvas.width / 2,
-        y: canvas.height / 2,
-        targetX: canvas.width / 2,
-        targetY: canvas.height / 2,
+        x: world.width / 2,
+        y: world.height / 2,
+        targetX: world.width / 2,
+        targetY: world.height / 2,
         facingX: 0,
         facingY: 1,
         moving: false,
@@ -8879,8 +8902,17 @@
       return "spark_bolt";
     }
 
-    function resetGameState() {
+    /**
+     * @param {{ modeId?: unknown, world?: { width?: number, height?: number } }} [options]
+     */
+    function resetGameState({ modeId = DEFAULT_RUN_MODE, world } = {}) {
+      const bounds = {
+        width: Number.isFinite(world?.width) && world.width > 0 ? world.width : canvas.width,
+        height: Number.isFinite(world?.height) && world.height > 0 ? world.height : canvas.height,
+      };
       const run = {
+        modeId: normalizeRunMode(modeId),
+        world: bounds,
         running: true,
         paused: false,
         pauseReason: "",
@@ -8889,7 +8921,7 @@
         towerFloor: getSave().towerFloor || 1,
         bossSpawned: false,
         bossDefeated: false,
-        player: createPlayer(),
+        player: createPlayer(bounds),
         enemies: [],
         xpDrops: [],
         lootDrops: [],
