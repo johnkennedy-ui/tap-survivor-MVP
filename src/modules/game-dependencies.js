@@ -49,6 +49,7 @@ import { createRunStateSystem } from "./run-state.js";
 import { createRunUi } from "./run-ui.js";
 import { createRunUpdater } from "./run-update.js";
 import { createWorldSpatialRuntime } from "./world-spatial-runtime.js";
+import { createWorldViewRuntime } from "./world-view-runtime.js";
 
 export function createGameDependencyBag({
   content: rawContent,
@@ -65,9 +66,10 @@ export function createGameDependencyBag({
       storage: createBalanceStorageProvider(globalRef),
     });
   }
-  const configuredContent = rawContent && typeof rawContent === "object" && Array.isArray(profiles)
-    ? balanceRuntime.content()
-    : rawContent;
+  const configuredContent =
+    rawContent && typeof rawContent === "object" && Array.isArray(profiles)
+      ? balanceRuntime.content()
+      : rawContent;
   const content = configuredContent || {};
   const assets = {
     createAssetResolver(assetContent) {
@@ -136,6 +138,7 @@ export function createGameDependencyBag({
     runLifecycle: { createRunLifecycle },
     runState: { createRunStateSystem },
     createWorldSpatialRuntime,
+    createWorldViewRuntime,
     runUi: { createRunUi },
     runUpdate: { createRunUpdater },
     save,

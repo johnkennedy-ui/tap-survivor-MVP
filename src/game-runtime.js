@@ -27,7 +27,9 @@
     loop,
   }) {
     if (typeof bindMovementInput !== "function") {
-      throw new Error("Missing Tap Survivor runtime dependency: bindMovementInput must be a function");
+      throw new Error(
+        "Missing Tap Survivor runtime dependency: bindMovementInput must be a function"
+      );
     }
 
     let gameSpeed = 1;
@@ -82,27 +84,19 @@
       bindMovementInput({
         canvas,
         getGame,
+        onTarget: clearFirstMoveGate,
       });
-      bindFirstMoveGate();
 
       spriteSystem.loadSprites();
       renderMeta();
       globalRef.requestAnimationFrame(loop);
     }
 
-    function bindFirstMoveGate() {
-      const clearGate = (event) => {
-        const game = getGame();
-        if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
-        const rect = canvas.getBoundingClientRect();
-        const point = event.touches ? event.touches[0] : event;
-        game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
-        game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
-        game.awaitingFirstMoveInput = false;
-        bannerSystem.hideMovementGateBanner();
-      };
-      canvas.addEventListener("mousedown", clearGate);
-      canvas.addEventListener("touchstart", clearGate);
+    function clearFirstMoveGate() {
+      const game = getGame();
+      if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
+      game.awaitingFirstMoveInput = false;
+      bannerSystem.hideMovementGateBanner();
     }
 
     function bindLifecycleFlush() {

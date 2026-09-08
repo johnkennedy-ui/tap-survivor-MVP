@@ -8,6 +8,7 @@ import { content } from "../src/content.generated.mjs";
 import { headingForEntity, resolveHeading } from "../src/modules/directional-facing.js";
 import { createModuleGameLifecycleOwner } from "../src/modules/module-game-lifecycle.js";
 import { createRenderer } from "../src/modules/rendering.js";
+import { createWorldViewRuntime } from "../src/modules/world-view-runtime.js";
 import { createRunStateSystem } from "../src/modules/run-state.js";
 import { createRunUpdater } from "../src/modules/run-update.js";
 
@@ -259,6 +260,7 @@ function renderHarness(path, { ready = () => true, sprites = content.assets.spri
     getContext: () => context,
     ownerDocument: { __TapSurvivorBrowserSmoke: { diagnostics } },
   };
+  const worldView = createWorldViewRuntime({ canvas });
   const spriteSystem = createBrowserSpriteSystem({ canvas, globalRef: { Image: ImageStub } });
   spriteSystem.loadSprites(sprites);
   const draw =
@@ -266,10 +268,12 @@ function renderHarness(path, { ready = () => true, sprites = content.assets.spri
       ? (game) =>
           createBrowserRenderingAdapters({ canvas, content }).renderers.renderPlayer({
             game,
+            spatialView: worldView.snapshot(game),
             spriteAdapters: { spriteSystem },
           })
       : createRenderer({
           canvas,
+          worldView,
           ctx: context,
           clamp,
           createEnemyRenderer: () => ({ drawEnemy: noop, drawEnemyBolt: noop }),

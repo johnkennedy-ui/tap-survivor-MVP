@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { bindMovementInput } from "../src/modules/input.js";
 
 import {
   composeContentBalanceEffects,
@@ -231,11 +232,12 @@ const dependencies = {
   bannerSystem: {
     hideMovementGateBanner: () => calls.push("banner:hideMovementGate"),
   },
-  bindMovementInput: ({ canvas: inputCanvas, getGame }) => {
+  bindMovementInput: ({ canvas: inputCanvas, getGame, onTarget }) => {
     if (inputCanvas !== canvas || getGame() !== currentGame) {
       throw new Error("Module bootstrap passed incorrect movement input dependencies");
     }
     calls.push("input:bind");
+    return bindMovementInput({ canvas: inputCanvas, getGame, onTarget });
   },
   persist: () => {
     calls.push("persist");

@@ -38,6 +38,7 @@ const {
   runLifecycle: runLifecycleDependencies,
   runState,
   createWorldSpatialRuntime,
+  createWorldViewRuntime,
   runUi: runUiDependencies,
   runUpdate,
   save: saveDependencies,
@@ -64,6 +65,7 @@ const {
 const ui = uiDependencies.createUi();
 const canvas = ui.canvas;
 const spatial = createWorldSpatialRuntime({ canvas });
+const worldView = createWorldViewRuntime({ canvas });
 const ctx = canvas.getContext("2d");
 
 const saveKey = "tap-survivor-mvp-save-v2";
@@ -218,7 +220,8 @@ const shopSystem = shop.createShopSystem({
   pricingConfig: tuningDefs.shop,
   getSave: () => save,
   getGame: () => game,
-  onShopVisit: () => bannerSystem.showOnceBanner("first_shop_visit", "Coins buy permanent power upgrades."),
+  onShopVisit: () =>
+    bannerSystem.showOnceBanner("first_shop_visit", "Coins buy permanent power upgrades."),
   onPurchaseNotice: (message) => bannerSystem.showBanner(message),
   playPurchaseSfx: audioSystem.playShopPurchase,
   persist,
@@ -323,7 +326,7 @@ const combat = combatDependencies.createCombatSystem({
       superBoss ? "first_super_boss_fight" : "first_boss_fight",
       superBoss
         ? "Super bosses combine powers. Keep moving, use Menu > Inventory to review relics, and expect two relic picks if you win."
-        : "Boss fight. Watch the top health bar and special meter. Open Menu if you need to pause and check Rewards or Inventory.",
+        : "Boss fight. Watch the top health bar and special meter. Open Menu if you need to pause and check Rewards or Inventory."
     ),
   distance,
   clamp,
@@ -473,6 +476,7 @@ function toggleAudioMute() {
 
 const renderer = rendering.createRenderer({
   canvas,
+  worldView,
   ctx,
   clamp,
   createEnemyRenderer: renderEnemies.createEnemyRenderer,
@@ -555,7 +559,7 @@ gameRuntime = createGameRuntimeController({
   debugSystem,
   spriteSystem,
   bannerSystem,
-  bindMovementInput: input.bindMovementInput,
+  bindMovementInput: (options) => input.bindMovementInput({ ...options, worldView }),
   persist,
   renderMeta,
   loop,

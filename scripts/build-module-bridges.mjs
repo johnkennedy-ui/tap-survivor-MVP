@@ -78,14 +78,23 @@ const bridges = [
     target: "src/progression.js",
     globalName: null,
     retiredGlobalName: "TapSurvivorProgression",
-    exports: ["MODULE_NATIVE_PROGRESSION_SLOTS", "MODULE_NATIVE_PROGRESSION_PROOF_SLOTS", "createProgressionSystem"],
+    exports: [
+      "MODULE_NATIVE_PROGRESSION_SLOTS",
+      "MODULE_NATIVE_PROGRESSION_PROOF_SLOTS",
+      "createProgressionSystem",
+    ],
   },
   {
     source: "src/modules/quests.js",
     target: "src/quests.js",
     globalName: null,
     retiredGlobalName: "TapSurvivorQuests",
-    exports: ["MODULE_NATIVE_QUEST_SLOTS", "MODULE_NATIVE_QUEST_PROOF_SLOTS", "createQuestSystem", "questOpenIds"],
+    exports: [
+      "MODULE_NATIVE_QUEST_SLOTS",
+      "MODULE_NATIVE_QUEST_PROOF_SLOTS",
+      "createQuestSystem",
+      "questOpenIds",
+    ],
   },
   {
     source: "src/modules/save-corruption.js",
@@ -273,7 +282,12 @@ const bridges = [
       "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
       "createEnemyRenderer",
     ],
-    bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
+    bundledSources: [
+      {
+        source: "src/modules/directional-facing.js",
+        exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"],
+      },
+    ],
   },
   {
     source: "src/modules/rendering.js",
@@ -281,7 +295,12 @@ const bridges = [
     globalName: null,
     retiredGlobalName: "TapSurvivorRendering",
     exports: ["createRenderer"],
-    bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
+    bundledSources: [
+      {
+        source: "src/modules/directional-facing.js",
+        exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"],
+      },
+    ],
   },
   {
     source: "src/modules/storage-adapter.js",
@@ -306,11 +325,24 @@ const bridges = [
     bundledSources: [
       {
         source: "src/modules/world-camera.js",
-        exports: ["createWorld", "cameraFor", "worldToView", "viewToWorld", "clientToView", "worldBounds", "visibleWorldBounds", "rayExit"],
+        exports: [
+          "createWorld",
+          "cameraFor",
+          "worldToView",
+          "viewToWorld",
+          "clientToView",
+          "worldBounds",
+          "visibleWorldBounds",
+          "rayExit",
+        ],
       },
       {
         source: "src/modules/world-spatial-runtime.js",
         exports: ["createWorldSpatialRuntime"],
+      },
+      {
+        source: "src/modules/world-view-runtime.js",
+        exports: ["createWorldViewRuntime"],
       },
       {
         source: "src/modules/assets.js",
@@ -458,11 +490,20 @@ const bridges = [
       },
       {
         source: "src/modules/progression.js",
-        exports: ["MODULE_NATIVE_PROGRESSION_SLOTS", "MODULE_NATIVE_PROGRESSION_PROOF_SLOTS", "createProgressionSystem"],
+        exports: [
+          "MODULE_NATIVE_PROGRESSION_SLOTS",
+          "MODULE_NATIVE_PROGRESSION_PROOF_SLOTS",
+          "createProgressionSystem",
+        ],
       },
       {
         source: "src/modules/quests.js",
-        exports: ["MODULE_NATIVE_QUEST_SLOTS", "MODULE_NATIVE_QUEST_PROOF_SLOTS", "createQuestSystem", "questOpenIds"],
+        exports: [
+          "MODULE_NATIVE_QUEST_SLOTS",
+          "MODULE_NATIVE_QUEST_PROOF_SLOTS",
+          "createQuestSystem",
+          "questOpenIds",
+        ],
       },
       {
         source: "src/modules/relics.js",
@@ -483,12 +524,22 @@ const bridges = [
           "MODULE_NATIVE_RENDER_ENEMIES_PROOF_SLOTS",
           "createEnemyRenderer",
         ],
-        bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
+        bundledSources: [
+          {
+            source: "src/modules/directional-facing.js",
+            exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"],
+          },
+        ],
       },
       {
         source: "src/modules/rendering.js",
         exports: ["createRenderer"],
-        bundledSources: [{ source: "src/modules/directional-facing.js", exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"] }],
+        bundledSources: [
+          {
+            source: "src/modules/directional-facing.js",
+            exports: ["DIRECTIONAL_HEADINGS", "resolveHeading", "headingForEntity"],
+          },
+        ],
       },
       {
         source: "src/modules/shop-pricing.js",
@@ -524,15 +575,27 @@ const bridges = [
       },
       {
         source: "src/modules/ui.js",
-        exports: ["MODULE_NATIVE_UI_SLOTS", "MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS", "createUi", "createUiRenderer"],
+        exports: [
+          "MODULE_NATIVE_UI_SLOTS",
+          "MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS",
+          "createUi",
+          "createUiRenderer",
+        ],
       },
       {
         source: "src/modules/ui-progression.js",
-        exports: ["MODULE_NATIVE_UI_PROGRESSION_RENDERER_PROOF_SLOTS", "createUiProgressionRenderer"],
+        exports: [
+          "MODULE_NATIVE_UI_PROGRESSION_RENDERER_PROOF_SLOTS",
+          "createUiProgressionRenderer",
+        ],
       },
       {
         source: "src/modules/weapon-behaviors.js",
-        exports: ["MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS", "MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS", "createWeaponBehaviorSystem"],
+        exports: [
+          "MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS",
+          "MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS",
+          "createWeaponBehaviorSystem",
+        ],
       },
       {
         source: "src/modules/weapon-cooldowns.js",
@@ -540,7 +603,11 @@ const bridges = [
       },
       {
         source: "src/modules/weapon-fire.js",
-        exports: ["MODULE_NATIVE_WEAPON_FIRE_SLOTS", "MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS", "createWeaponFireSystem"],
+        exports: [
+          "MODULE_NATIVE_WEAPON_FIRE_SLOTS",
+          "MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS",
+          "createWeaponFireSystem",
+        ],
       },
       {
         source: "src/modules/weapon-projectiles.js",
@@ -625,7 +692,12 @@ const bridges = [
     target: "src/ui.js",
     globalName: null,
     retiredGlobalName: "TapSurvivorUi",
-    exports: ["MODULE_NATIVE_UI_SLOTS", "MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS", "createUi", "createUiRenderer"],
+    exports: [
+      "MODULE_NATIVE_UI_SLOTS",
+      "MODULE_NATIVE_UI_RENDERER_PROOF_SLOTS",
+      "createUi",
+      "createUiRenderer",
+    ],
   },
   {
     source: "src/modules/ui-progression.js",
@@ -644,32 +716,50 @@ const bridges = [
     source: "src/modules/enemy-behaviors.js",
     target: "src/enemy-behaviors.js",
     globalName: null,
-    exports: ["MODULE_NATIVE_ENEMY_BEHAVIOR_SLOTS", "MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS", "createEnemyBehaviorSystem"],
+    exports: [
+      "MODULE_NATIVE_ENEMY_BEHAVIOR_SLOTS",
+      "MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS",
+      "createEnemyBehaviorSystem",
+    ],
   },
   {
     source: "src/modules/enemy-spawning.js",
     target: "src/enemy-spawning.js",
     globalName: null,
-    exports: ["MODULE_NATIVE_ENEMY_SPAWN_SLOTS", "MODULE_NATIVE_ENEMY_SPAWN_PROOF_SLOTS", "createEnemySpawnSystem"],
+    exports: [
+      "MODULE_NATIVE_ENEMY_SPAWN_SLOTS",
+      "MODULE_NATIVE_ENEMY_SPAWN_PROOF_SLOTS",
+      "createEnemySpawnSystem",
+    ],
   },
   {
     source: "src/modules/weapon-behaviors.js",
     target: "src/weapon-behaviors.js",
     globalName: null,
     retiredGlobalName: "TapSurvivorWeaponBehaviors",
-    exports: ["MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS", "MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS", "createWeaponBehaviorSystem"],
+    exports: [
+      "MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS",
+      "MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS",
+      "createWeaponBehaviorSystem",
+    ],
   },
   {
     source: "src/modules/weapon-fire.js",
     target: "src/weapon-fire.js",
     globalName: null,
     retiredGlobalName: "TapSurvivorWeaponFire",
-    exports: ["MODULE_NATIVE_WEAPON_FIRE_SLOTS", "MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS", "createWeaponFireSystem"],
+    exports: [
+      "MODULE_NATIVE_WEAPON_FIRE_SLOTS",
+      "MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS",
+      "createWeaponFireSystem",
+    ],
   },
 ];
 
 for (const bridge of bridges) {
-  if (["src/run-state.js", "src/run-lifecycle.js", "src/game-dependencies.js"].includes(bridge.target)) {
+  if (
+    ["src/run-state.js", "src/run-lifecycle.js", "src/game-dependencies.js"].includes(bridge.target)
+  ) {
     bridge.bundledSources = [
       { source: "src/modules/run-mode.js", exports: ["DEFAULT_RUN_MODE", "normalizeRunMode"] },
       ...(bridge.bundledSources || []),
@@ -727,18 +817,22 @@ async function buildClassicBridge({
   const classicWrapperSource = Object.values(classicExportWrappers)
     .map((wrapper) => wrapper.source)
     .join("\n\n");
-  const classicBoundary = [classicWrapperSource, classicBoundarySource].filter(Boolean).join("\n\n");
+  const classicBoundary = [classicWrapperSource, classicBoundarySource]
+    .filter(Boolean)
+    .join("\n\n");
   const bundledBody = bundledClassicSources.map((item) => item.trim()).join("\n\n");
   const classicBody = classicBoundary
     ? [bundledBody, classicSource.trim(), classicBoundary].filter(Boolean).join("\n\n")
     : [bundledBody, classicSource.trim()].filter(Boolean).join("\n\n");
-  const resolvedGlobalMembers = globalMembers || exports.map((exportName) => {
-    const wrapper = classicExportWrappers[exportName];
-    return {
-      name: exportName,
-      value: wrapper ? wrapper.name : exportName,
-    };
-  });
+  const resolvedGlobalMembers =
+    globalMembers ||
+    exports.map((exportName) => {
+      const wrapper = classicExportWrappers[exportName];
+      return {
+        name: exportName,
+        value: wrapper ? wrapper.name : exportName,
+      };
+    });
   const globalMemberSource = resolvedGlobalMembers
     .map((exportName) => {
       if (exportName.name === exportName.value) {
@@ -749,9 +843,11 @@ async function buildClassicBridge({
     .join("\n");
   const defaultPublisherSource = `globalThis.${globalName} = {
 ${globalMemberSource}
-  };`
-  const publisherSource = globalName ? `
-  ${classicPublisherSource || defaultPublisherSource}` : "";
+  };`;
+  const publisherSource = globalName
+    ? `
+  ${classicPublisherSource || defaultPublisherSource}`
+    : "";
   const publisherSeparator = publisherSource ? "\n" : "";
   const retirementComment = retiredGlobalName
     ? `// Retired global: ${retiredGlobalName}. Exports are supplied through the game dependency bag.\n`
@@ -795,7 +891,9 @@ async function readClassicModuleSource(source, exports, options = {}) {
     throw new Error(`${source} uses import; this bridge builder supports standalone modules only`);
   }
 
-  let classicSource = options.dropImports ? moduleSource.replace(/^\s*import\s+[^;]+;\s*$/gm, "") : moduleSource;
+  let classicSource = options.dropImports
+    ? moduleSource.replace(/^\s*import\s+[^;]+;\s*$/gm, "")
+    : moduleSource;
   classicSource = relocateJSDocRelativeImportTypes(classicSource, source, options.target);
   for (const exportSpec of exports) {
     const exportName = typeof exportSpec === "string" ? exportSpec : exportSpec.name;
@@ -962,10 +1060,7 @@ function collectJSDocRelativeImportTypeReplacements(
     }
 
     const resolvedSourceSpecifier = path.resolve(sourceDirectory, specifier);
-    assertPathWithinRepository(
-      resolvedSourceSpecifier,
-      `${source} JSDoc type import ${specifier}`
-    );
+    assertPathWithinRepository(resolvedSourceSpecifier, `${source} JSDoc type import ${specifier}`);
     const targetSpecifier = toTargetRelativeSpecifier(targetDirectory, resolvedSourceSpecifier);
     const resolvedTargetSpecifier = path.resolve(targetDirectory, targetSpecifier);
     assertPathWithinRepository(

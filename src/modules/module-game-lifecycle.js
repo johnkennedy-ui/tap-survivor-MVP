@@ -1,5 +1,6 @@
 import { createModuleGameDependencyBag } from "./module-game-dependencies.js";
 import { createRunLifecycle } from "./run-lifecycle.js";
+import { createWorldViewRuntime } from "./world-view-runtime.js";
 
 const EMPTY_RENDER_STRESS = Object.freeze({
   enemies: Object.freeze([]),
@@ -64,9 +65,7 @@ export function createModuleGameLifecycleOwner(options = {}) {
   const runtimeGlobal = requireObject(resolvedPlatform.runtimeGlobal, "platform.runtimeGlobal");
   const runtimeDependencies =
     dependencies ||
-    createModuleGameDependencyBag(
-      requireObject(dependencyBagOptions, "dependencyBagOptions")
-    );
+    createModuleGameDependencyBag(requireObject(dependencyBagOptions, "dependencyBagOptions"));
   const resolvedRuntime = requireObject(runtime, "runtime");
   const runLifecycle = createLifecycle({
     dependencies: runtimeDependencies,
@@ -170,34 +169,36 @@ export function createModuleGameLifecycleOwner(options = {}) {
   function render(frame = {}) {
     if (disposed || stopped) return false;
     const game = runtimeDependencies.getGame();
-    runtimeDependencies.rendering.clearFrame(frame);
-    runtimeDependencies.rendering.renderFrame(game, frame);
-    runtimeDependencies.renderEnemies.renderEnemies(game?.enemies || [], frame);
-    runtimeDependencies.renderPlayer.renderPlayer(game, frame);
-    runtimeDependencies.renderHud.renderHud(game, frame);
-    runtimeDependencies.renderSkillRail.renderSkillRail(game, frame);
+    const spatialFrame = frameWithSpatialView(game, frame, runtimeDependencies.canvas);
+    runtimeDependencies.rendering.clearFrame(spatialFrame);
+    runtimeDependencies.rendering.renderFrame(game, spatialFrame);
+    runtimeDependencies.renderEnemies.renderEnemies(game?.enemies || [], spatialFrame);
+    runtimeDependencies.renderPlayer.renderPlayer(game, spatialFrame);
+    runtimeDependencies.renderHud.renderHud(game, spatialFrame);
+    runtimeDependencies.renderSkillRail.renderSkillRail(game, spatialFrame);
     return true;
   }
 
   function renderTraced(frame = {}, traceFrame) {
     const game = runtimeDependencies.getGame();
+    const spatialFrame = frameWithSpatialView(game, frame, runtimeDependencies.canvas);
     performanceTrace.measureRenderPass(traceFrame, "clearFrame", () =>
-      runtimeDependencies.rendering.clearFrame(frame)
+      runtimeDependencies.rendering.clearFrame(spatialFrame)
     );
     performanceTrace.measureRenderPass(traceFrame, "renderFrame", () =>
-      runtimeDependencies.rendering.renderFrame(game, frame)
+      runtimeDependencies.rendering.renderFrame(game, spatialFrame)
     );
     performanceTrace.measureRenderPass(traceFrame, "renderEnemies", () =>
-      runtimeDependencies.renderEnemies.renderEnemies(game?.enemies || [], frame)
+      runtimeDependencies.renderEnemies.renderEnemies(game?.enemies || [], spatialFrame)
     );
     performanceTrace.measureRenderPass(traceFrame, "renderPlayer", () =>
-      runtimeDependencies.renderPlayer.renderPlayer(game, frame)
+      runtimeDependencies.renderPlayer.renderPlayer(game, spatialFrame)
     );
     performanceTrace.measureRenderPass(traceFrame, "renderHud", () =>
-      runtimeDependencies.renderHud.renderHud(game, frame)
+      runtimeDependencies.renderHud.renderHud(game, spatialFrame)
     );
     performanceTrace.measureRenderPass(traceFrame, "renderSkillRail", () =>
-      runtimeDependencies.renderSkillRail.renderSkillRail(game, frame)
+      runtimeDependencies.renderSkillRail.renderSkillRail(game, spatialFrame)
     );
     return true;
   }
@@ -280,7 +281,9 @@ function createNormalFrameHandler({
 }) {
   return (now) => {
     if (getDisposed() || getStopped()) return;
-    const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
+    const timestamp = Number.isFinite(now)
+      ? now
+      : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
     const elapsed = (timestamp - getLastFrame()) / 1000;
     setLastFrame(timestamp);
     const game = runtimeDependencies.getGame?.();
@@ -306,7 +309,9 @@ function createTracedFrameHandler({
 }) {
   return (now) => {
     if (getDisposed() || getStopped()) return;
-    const timestamp = Number.isFinite(now) ? now : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
+    const timestamp = Number.isFinite(now)
+      ? now
+      : resolvedPlatform.runtimeGlobal.performance?.now?.() || 0;
     const traceFrame = performanceTrace.beginFrame(timestamp);
     const elapsed = (timestamp - getLastFrame()) / 1000;
     setLastFrame(timestamp);
@@ -406,19 +411,32 @@ function createLifecycle({ dependencies, documentRef, lifecycleHooks }) {
         (() => {}),
     },
     runUi: dependencies.runUi,
-    relicSystem:
-      lifecycleHooks.relicSystem ||
+    relicSystem: lifecycleHooks.relicSystem ||
       dependencies.relicSystem ||
       dependencies.moduleSystems?.relics || {
         relicChoices: () => [],
       },
     persist: dependencies.persist,
     renderMeta: dependencies.renderMeta,
-    updateRunHud:
-      lifecycleHooks.updateRunHud || (() => dependencies.runUi.updateRunHud?.()),
+    updateRunHud: lifecycleHooks.updateRunHud || (() => dependencies.runUi.updateRunHud?.()),
     showMovementGateBanner:
       lifecycleHooks.showMovementGateBanner ||
       (() => dependencies.bannerSystem.showMovementGateBanner?.()),
+  });
+}
+
+function frameWithSpatialView(game, frame, canvas) {
+  if (
+    !game?.world ||
+    !game?.player ||
+    !Number.isFinite(canvas?.width) ||
+    !Number.isFinite(canvas?.height)
+  ) {
+    return frame;
+  }
+  return Object.freeze({
+    ...frame,
+    spatialView: createWorldViewRuntime({ canvas }).snapshot(game),
   });
 }
 

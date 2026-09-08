@@ -264,6 +264,34 @@
     return Object.freeze({ createRunWorld, physicalSize, visibleBounds, spawnPosition });
   }
 
+  // Source-owned composition capability: derive, never retain, a run's camera.
+  function createWorldViewRuntime({ canvas }) {
+    function snapshot(game) {
+      if (!game?.world || !game?.player) return null;
+      const viewport = Object.freeze({ width: canvas.width, height: canvas.height });
+      const camera = cameraFor({ world: game.world, viewport, player: game.player });
+      return Object.freeze({
+        camera,
+        viewport,
+        visibleBounds: visibleWorldBounds(camera),
+        worldBounds: worldBounds(game.world),
+      });
+    }
+
+    function targetFromEvent(event, game) {
+      const point = event?.touches ? event.touches[0] : event;
+      const view = clientToView(
+        { x: point?.clientX, y: point?.clientY },
+        canvas.getBoundingClientRect(),
+        canvas
+      );
+      const spatialView = snapshot(game);
+      return spatialView ? viewToWorld(view, spatialView.camera) : view;
+    }
+
+    return Object.freeze({ snapshot, targetFromEvent });
+  }
+
   const MODULE_NATIVE_ASSET_RESOLVER_SLOTS = Object.freeze([
     "choiceIconDefinition",
     "choiceIconPath",
@@ -2570,7 +2598,9 @@
     loop,
   }) {
     if (typeof bindMovementInput !== "function") {
-      throw new Error("Missing Tap Survivor runtime dependency: bindMovementInput must be a function");
+      throw new Error(
+        "Missing Tap Survivor runtime dependency: bindMovementInput must be a function"
+      );
     }
 
     let gameSpeed = 1;
@@ -2625,27 +2655,19 @@
       bindMovementInput({
         canvas,
         getGame,
+        onTarget: clearFirstMoveGate,
       });
-      bindFirstMoveGate();
 
       spriteSystem.loadSprites();
       renderMeta();
       globalRef.requestAnimationFrame(loop);
     }
 
-    function bindFirstMoveGate() {
-      const clearGate = (event) => {
-        const game = getGame();
-        if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
-        const rect = canvas.getBoundingClientRect();
-        const point = event.touches ? event.touches[0] : event;
-        game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
-        game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
-        game.awaitingFirstMoveInput = false;
-        bannerSystem.hideMovementGateBanner();
-      };
-      canvas.addEventListener("mousedown", clearGate);
-      canvas.addEventListener("touchstart", clearGate);
+    function clearFirstMoveGate() {
+      const game = getGame();
+      if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
+      game.awaitingFirstMoveInput = false;
+      bannerSystem.hideMovementGateBanner();
     }
 
     function bindLifecycleFlush() {
@@ -2701,18 +2723,56 @@
     };
   }
 
-  function setTargetFromEvent({ event, canvas, game }) {
-    if (!game || !game.running || game.paused) return;
+  function setTargetFromEvent({ event, canvas, game, worldView }) {
+    if (!game || !game.running || game.paused || !game.player) return false;
+    const point = event?.touches ? event.touches[0] : event;
 
-    const rect = canvas.getBoundingClientRect();
-    const point = event.touches ? event.touches[0] : event;
-    game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
-    game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
+    try {
+      let target;
+      if (worldView) {
+        target = worldView.targetFromEvent(event, game);
+      } else {
+        // Deliberate legacy/Farm seam for standalone injected factories.
+        // A Climb run must never silently receive screen-space coordinates.
+        if (game.world && game.world.modeId !== "farm") return false;
+        const rect = canvas.getBoundingClientRect();
+        if (
+          ![
+            point?.clientX,
+            point?.clientY,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+            canvas.width,
+            canvas.height,
+          ].every(Number.isFinite) ||
+          rect.width <= 0 ||
+          rect.height <= 0 ||
+          canvas.width <= 0 ||
+          canvas.height <= 0
+        )
+          return false;
+        target = {
+          x: ((point.clientX - rect.left) / rect.width) * canvas.width,
+          y: ((point.clientY - rect.top) / rect.height) * canvas.height,
+        };
+      }
+      if (!Number.isFinite(target?.x) || !Number.isFinite(target?.y)) return false;
+      game.player.targetX = target.x;
+      game.player.targetY = target.y;
+      return true;
+    } catch {
+      // Invalid touch/rect geometry must leave the current target and gate intact.
+      return false;
+    }
   }
 
-  function bindMovementInput({ canvas, getGame }) {
+  function bindMovementInput({ canvas, getGame, worldView, onTarget }) {
     function setTarget(event) {
-      setTargetFromEvent({ event, canvas, game: getGame?.() });
+      const converted = setTargetFromEvent({ event, canvas, game: getGame?.(), worldView });
+      if (converted) onTarget?.();
+      return converted;
     }
 
     canvas.addEventListener?.("mousedown", setTarget);
@@ -5397,7 +5457,21 @@
 
   const BEAM_SPRITE_RASTER_WIDTH = 256;
 
-  function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, createSkillRailRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
+  function createRenderer({
+    canvas,
+    ctx,
+    worldView,
+    clamp,
+    createEnemyRenderer,
+    createHudRenderer,
+    createSkillRailRenderer,
+    drawImage,
+    drawSprite,
+    runUpgradeDefs = [],
+    skillEffectSprites = {},
+    spriteSheetRenderer,
+    weaponDefs,
+  }) {
     const hudRenderer = createHudRenderer({
       canvas,
       ctx,
@@ -5417,25 +5491,33 @@
 
     function draw(game) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawArena(game);
       if (!game) {
+        drawArena(game);
+        hudRenderer.drawTowerFloorBadge(game);
         drawMenuHint();
         return;
       }
-
-      game.areas.forEach(drawArea);
-      game.weaponBursts.forEach(drawWeaponBurst);
-      game.bossAttacks.forEach(drawBossAttack);
-      game.xpDrops.forEach(drawXp);
-      game.lootDrops.forEach(drawLoot);
-      game.bolts.forEach(drawBolt);
-      game.enemyBolts.forEach(enemyRenderer.drawEnemyBolt);
-      game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
-      game.beams.forEach(drawBeam);
-      game.pickupTexts.forEach(drawPickupText);
-      drawPlayer(game.player);
+      if (game.world?.modeId === "climb" && !worldView)
+        throw new Error("Climb renderer requires worldView");
+      const spatialView = worldView?.snapshot(game);
+      const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
+      withWorldTransform(spatialView, () => {
+        drawArena(game, bounds.right, bounds.bottom);
+        game.areas.forEach(drawArea);
+        game.weaponBursts.forEach(drawWeaponBurst);
+        game.bossAttacks.forEach(drawBossAttack);
+        game.xpDrops.forEach(drawXp);
+        game.lootDrops.forEach(drawLoot);
+        game.bolts.forEach(drawBolt);
+        game.enemyBolts.forEach(enemyRenderer.drawEnemyBolt);
+        game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
+        game.beams.forEach(drawBeam);
+        game.pickupTexts.forEach(drawPickupText);
+        drawPlayer(game.player);
+      });
       hudRenderer.drawBossSpawnNotice(game);
       hudRenderer.drawGameHud(game);
+      hudRenderer.drawTowerFloorBadge(game);
     }
 
     function roundedRectPath(x, y, width, height, radius) {
@@ -5461,30 +5543,50 @@
       ctx.closePath();
     }
 
-    function drawArena(game) {
+    function drawArena(game, width = canvas.width, height = canvas.height) {
       const backgroundId = game?.background?.spriteId || "background:tower_floor";
-      const backgroundDrawn = drawImage?.(backgroundId, 0, 0, canvas.width, canvas.height);
+      const backgroundDrawn = drawImage?.(backgroundId, 0, 0, width, height);
       if (!backgroundDrawn) {
         ctx.fillStyle = "#17202c";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, width, height);
       }
       ctx.fillStyle = "rgba(10, 14, 20, 0.16)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, width, height);
       ctx.strokeStyle = backgroundDrawn ? "rgba(223, 246, 255, 0.08)" : "#243244";
       ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += 48) {
+      for (let x = 0; x < width; x += 48) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
+        ctx.lineTo(x, height);
         ctx.stroke();
       }
-      for (let y = 0; y < canvas.height; y += 48) {
+      for (let y = 0; y < height; y += 48) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.lineTo(width, y);
         ctx.stroke();
       }
-      hudRenderer.drawTowerFloorBadge(game);
+    }
+
+    function withWorldTransform(spatialView, drawWorld) {
+      const camera = spatialView?.camera;
+      if (!camera) return drawWorld();
+      const translateX = camera.x * camera.zoom;
+      const translateY = camera.y * camera.zoom;
+      ctx.save();
+      try {
+        ctx.transform(
+          camera.zoom,
+          0,
+          0,
+          camera.zoom,
+          translateX ? -translateX : 0,
+          translateY ? -translateY : 0
+        );
+        return drawWorld();
+      } finally {
+        ctx.restore();
+      }
     }
 
     function drawMenuHint() {
@@ -5501,14 +5603,19 @@
       if (p.blinkTimer > 0) ctx.globalAlpha = 0.35 + Math.abs(Math.sin(p.blinkTimer * 24)) * 0.65;
       const spriteId = playerSpriteId(p);
       const size = Math.max(70, p.radius * 3.8);
-      const playerDrawn = p.actionTimer > 0 && p.actionSprite
-        ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
-        : drawSprite("player", p.x, p.y, size, 0, {
-            sheetId: "directional_player",
-            animationId: "move",
-            animationState: headingForEntity(p),
-            time: p.animTime,
-          }) || drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
+      const playerDrawn =
+        p.actionTimer > 0 && p.actionSprite
+          ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) ||
+            drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
+          : drawSprite("player", p.x, p.y, size, 0, {
+              sheetId: "directional_player",
+              animationId: "move",
+              animationState: headingForEntity(p),
+              time: p.animTime,
+            }) ||
+            drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) ||
+            (spriteId !== "player" &&
+              drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
       if (!playerDrawn) {
         ctx.fillStyle = "#69d2ff";
         ctx.beginPath();
@@ -5562,7 +5669,9 @@
     }
 
     function drawProjectileBlockBar(p, x, y, width) {
-      const progress = p.projectileBlockReady ? 1 : clamp((p.projectileBlockCharge || 0) / (p.projectileBlockNeeded || 1), 0, 1);
+      const progress = p.projectileBlockReady
+        ? 1
+        : clamp((p.projectileBlockCharge || 0) / (p.projectileBlockNeeded || 1), 0, 1);
       if (progress <= 0) return;
       ctx.fillStyle = "rgba(10, 14, 20, 0.82)";
       ctx.fillRect(x, y, width, 4);
@@ -5590,11 +5699,27 @@
         return;
       }
 
-      if (drop.type === "heart" && drawSprite("ui:heart", drop.x, drop.y, Math.max(26, drop.radius * 3))) return;
+      if (
+        drop.type === "heart" &&
+        drawSprite("ui:heart", drop.x, drop.y, Math.max(26, drop.radius * 3))
+      )
+        return;
       ctx.fillStyle = "#ff5f7a";
       ctx.beginPath();
-      ctx.arc(drop.x - drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
-      ctx.arc(drop.x + drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
+      ctx.arc(
+        drop.x - drop.radius * 0.34,
+        drop.y - drop.radius * 0.18,
+        drop.radius * 0.5,
+        0,
+        Math.PI * 2
+      );
+      ctx.arc(
+        drop.x + drop.radius * 0.34,
+        drop.y - drop.radius * 0.18,
+        drop.radius * 0.5,
+        0,
+        Math.PI * 2
+      );
       ctx.moveTo(drop.x - drop.radius, drop.y);
       ctx.lineTo(drop.x, drop.y + drop.radius);
       ctx.lineTo(drop.x + drop.radius, drop.y);
@@ -5618,7 +5743,14 @@
       const weapon = weaponDefs[bolt.weaponId];
       const rotation = Math.atan2(bolt.vy || 0, bolt.vx || 1);
       const tuning = skillEffectTuning(bolt.weaponId, weapon);
-      const boltDrawn = drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`, bolt.x, bolt.y, bolt.radius * 2 * tuning.scale, rotation, { alpha: tuning.alpha });
+      const boltDrawn = drawSprite(
+        `weapon:${weapon?.assetId || bolt.weaponId}`,
+        bolt.x,
+        bolt.y,
+        bolt.radius * 2 * tuning.scale,
+        rotation,
+        { alpha: tuning.alpha }
+      );
       if (!boltDrawn) {
         ctx.fillStyle = bolt.color;
         ctx.beginPath();
@@ -5635,13 +5767,16 @@
       const midY = (beam.y + beam.endY) / 2;
       const rotation = Math.atan2(beam.endY - beam.y, beam.endX - beam.x);
       const spriteHeight = Math.max(1, beam.width * tuning.scale);
-      if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, {
-        width: length,
-        height: spriteHeight,
-        rasterWidth: BEAM_SPRITE_RASTER_WIDTH,
-        rasterHeight: spriteHeight,
-        alpha: tuning.alpha,
-      })) {
+      if (
+        weapon &&
+        drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, {
+          width: length,
+          height: spriteHeight,
+          rasterWidth: BEAM_SPRITE_RASTER_WIDTH,
+          rasterHeight: spriteHeight,
+          alpha: tuning.alpha,
+        })
+      ) {
         return;
       }
       ctx.save();
@@ -5659,15 +5794,19 @@
       const weapon = weaponDefs[area.weaponId];
       const tuning = skillEffectTuning(area.weaponId, weapon);
       const spriteSize = area.radius * 2 * tuning.scale;
-      const spriteDrawn = weapon && drawSprite(`weapon:${weapon.assetId || area.weaponId}`, area.x, area.y, spriteSize, 0, {
-        width: spriteSize,
-        height: spriteSize,
-        alpha: Math.max(0.1, Math.min(1, area.life)) * tuning.alpha,
-      });
+      const spriteDrawn =
+        weapon &&
+        drawSprite(`weapon:${weapon.assetId || area.weaponId}`, area.x, area.y, spriteSize, 0, {
+          width: spriteSize,
+          height: spriteSize,
+          alpha: Math.max(0.1, Math.min(1, area.life)) * tuning.alpha,
+        });
       ctx.save();
       ctx.strokeStyle = area.color;
       ctx.fillStyle = area.color;
-      ctx.globalAlpha = spriteDrawn ? 0.12 * tuning.alpha : Math.max(0.1, Math.min(0.32, area.life)) * tuning.alpha;
+      ctx.globalAlpha = spriteDrawn
+        ? 0.12 * tuning.alpha
+        : Math.max(0.1, Math.min(0.32, area.life)) * tuning.alpha;
       ctx.beginPath();
       ctx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -5711,7 +5850,11 @@
       const radius = charging ? attack.radius * progress : attack.radius;
       const drop = attack.type === "boss_drop";
       ctx.strokeStyle = charging ? (drop ? "#8de7ff" : "#ffd166") : "#ff5f7a";
-      ctx.fillStyle = charging ? (drop ? "rgba(141, 231, 255, 0.14)" : "rgba(255, 209, 102, 0.12)") : "rgba(255, 95, 122, 0.2)";
+      ctx.fillStyle = charging
+        ? drop
+          ? "rgba(141, 231, 255, 0.14)"
+          : "rgba(255, 209, 102, 0.12)"
+        : "rgba(255, 95, 122, 0.2)";
       ctx.lineWidth = charging ? 3 : 5;
       ctx.beginPath();
       ctx.arc(attack.x, attack.y, radius, 0, Math.PI * 2);
@@ -9440,9 +9583,10 @@
         storage: createBalanceStorageProvider(globalRef),
       });
     }
-    const configuredContent = rawContent && typeof rawContent === "object" && Array.isArray(profiles)
-      ? balanceRuntime.content()
-      : rawContent;
+    const configuredContent =
+      rawContent && typeof rawContent === "object" && Array.isArray(profiles)
+        ? balanceRuntime.content()
+        : rawContent;
     const content = configuredContent || {};
     const assets = {
       createAssetResolver(assetContent) {
@@ -9511,6 +9655,7 @@
       runLifecycle: { createRunLifecycle },
       runState: { createRunStateSystem },
       createWorldSpatialRuntime,
+      createWorldViewRuntime,
       runUi: { createRunUi },
       runUpdate: { createRunUpdater },
       save,

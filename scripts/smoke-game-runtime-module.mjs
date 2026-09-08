@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 import { createGameRuntimeController as createModuleGameRuntimeController } from "../src/modules/game-runtime.js";
+import { bindMovementInput } from "../src/modules/input.js";
 
 function check(name, pass) {
   console.log(`${pass ? "PASS" : "FAIL"} ${name}`);
@@ -229,8 +230,9 @@ function makeRuntimeFixture(createGameRuntimeController) {
 
   controller = createGameRuntimeController({
     bannerSystem,
-    bindMovementInput({ canvas: boundCanvas, getGame }) {
+    bindMovementInput({ canvas: boundCanvas, getGame, onTarget }) {
       inputBinding = { canvas: boundCanvas, getGame };
+      return bindMovementInput({ canvas: boundCanvas, getGame, onTarget });
     },
     canvas,
     debugSystem,

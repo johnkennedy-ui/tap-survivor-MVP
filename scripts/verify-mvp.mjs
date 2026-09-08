@@ -177,9 +177,9 @@ check("generated tower background asset exists", content.assets?.sources?.some((
 check("player uses wizard sprite", content.assets?.sprites?.player?.includes("wizard-idle-staff") && rendering.includes("Math.max(70"));
 check("wizard sprite flips by facing", sprites.includes("flipX") && rendering.includes("playerFacesLeft") && rendering.includes("flipX: playerFacesLeft(p)"));
 check("wizard uses movement and attack animation sprites", content.assets?.sprites?.playerAnimations?.walk && content.assets?.sprites?.playerAnimations?.cast_orb && sprites.includes("playerAnimations") && rendering.includes("playerSpriteId") && nativeWeaponFire.includes("setPlayerAttackAnimation") && runUpdate.includes("updatePlayerAnimation"));
-check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && rendering.includes("drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`") && rendering.includes("rotation"));
+check("projectile sprites rotate toward travel direction", rendering.includes("Math.atan2(bolt.vy || 0, bolt.vx || 1)") && /drawSprite\(\s*`weapon:\$\{weapon\?\.assetId \|\| bolt\.weaponId\}`/.test(rendering) && rendering.includes("rotation"));
 check("enemy floor tint steps every five floors to 100", enemySpawning.includes("towerFloor: game.towerFloor") && renderEnemies.includes("function drawEnemyFloorTint") && renderEnemies.includes("Math.floor((floor - 1) / 5)") && renderEnemies.includes("clamp(Math.floor(enemy.towerFloor || 1), 1, 100)"));
-check("beam and cone effects can use weapon sprites", nativeWeaponFire.includes("weaponId,") && rendering.includes("drawSprite(`weapon:${weapon.assetId || beam.weaponId}`") && rendering.includes("spriteHeight"));
+check("beam and cone effects can use weapon sprites", nativeWeaponFire.includes("weaponId,") && /drawSprite\(\s*`weapon:\$\{weapon\.assetId \|\| beam\.weaponId\}`/.test(rendering) && rendering.includes("spriteHeight"));
 const drawAreaBody = rendering.match(/function drawArea\(area\) \{[\s\S]*?\n  \}/)?.[0] || "";
 check("large AoE effects stay unflipped", drawAreaBody.includes("ctx.arc(area.x, area.y, area.radius") && !drawAreaBody.includes("flipX"));
 check("weapon sound effects are wired", Object.keys(content.weapons || {}).every((id) => content.assets?.sfx?.weapons?.[id]) && audio.includes("createAudioSystem") && audio.includes("playbackRate") && nativeWeaponFire.includes("weaponSfxOptions") && nativeWeaponFire.includes("playWeaponSfx?.(weaponId, weaponSfxOptions(weapon))") && combat.includes("playWeaponSfx") && game.includes("audioSystem.playWeapon"));
@@ -336,7 +336,7 @@ check("title Climb/Farm forwards chosen mode after transition", index.includes('
 check("title Start Game plays procedural laugh once", audio.includes("function playStartLaugh") && audio.includes("createOscillator") && shellUi.includes("if (currentScreen !== \"title\") return") && shellUi.includes("playStartLaugh?.()") && game.includes("playStartLaugh: audioSystem.playStartLaugh"));
 check("title Start Game runs one brief transition", index.includes('id="startTransition" class="modal hidden"') && ui.includes("startTransition") && shellUi.includes('currentScreen = "startingTransition"') && shellUi.includes("startTransitionTimer") && shellUi.includes("setTimeout") && shellUi.includes("}, 450);"));
 check("pre-game movement gate blocks gameplay update", runLifecycle.includes("game.awaitingFirstMoveInput = true") && runUpdate.includes("if (game.awaitingFirstMoveInput) return;") && gameBanners.includes('showBanner("Click/tap to move", 0)'));
-check("pre-game movement gate clears on first arena input", gameRuntime.includes("function bindFirstMoveGate") && gameRuntime.includes("game.awaitingFirstMoveInput = false") && gameRuntime.includes("hideMovementGateBanner") && input.includes("game.player.targetX"));
+check("pre-game movement gate clears on first arena input", gameRuntime.includes("function clearFirstMoveGate") && gameRuntime.includes("onTarget: clearFirstMoveGate") && gameRuntime.includes("game.awaitingFirstMoveInput = false") && gameRuntime.includes("hideMovementGateBanner") && input.includes("game.player.targetX") && input.includes("if (converted) onTarget?.()"));
 check("intermediate start run screen is absent", !index.includes('id="startMenu"') && !index.includes('id="startMenuStartRun"') && !index.includes('id="startMenuOpenShop"'));
 check("shop has reliable close controls", index.includes('id="closeShop"') && index.includes('id="closeShopBottom"') && shellUi.includes("function closeShopMenu"));
 check("modal boxes scroll", styles.includes(".modal-box") && styles.includes("overflow-y: auto") && styles.includes("overscroll-behavior: contain"));
@@ -675,7 +675,7 @@ check(
     !gameRuntime.includes("globalThis.TapSurvivorInput") &&
     browserDependencyBag.includes('from "./browser-platform-adapters.js"') &&
     browserPlatformAdapters.includes('import { bindMovementInput } from "../modules/input.js"') &&
-    browserPlatformAdapters.includes("return bindMovementInput({ canvas: targetCanvas, getGame });"),
+    /return bindMovementInput\(\{\s*canvas: targetCanvas,\s*getGame,\s*onTarget,\s*worldView: createWorldViewRuntime\(\{ canvas: targetCanvas \}\)/.test(browserPlatformAdapters),
 );
 check(
   "combat, pickup, and relic helpers are native-injected without classic publishers",
