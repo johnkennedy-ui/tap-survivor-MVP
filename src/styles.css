@@ -129,6 +129,7 @@ button:disabled {
   text-align: center;
   font-weight: 800;
   box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
 }
 
 #game {

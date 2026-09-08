@@ -6,6 +6,9 @@ import {
   worldBounds,
 } from "./world-camera.js";
 
+const playerVisualInset = (player) =>
+  Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
+
 // Source-owned composition capability: derive, never retain, a run's camera.
 export function createWorldViewRuntime({ canvas }) {
   function snapshot(game) {
@@ -28,7 +31,13 @@ export function createWorldViewRuntime({ canvas }) {
       canvas
     );
     const spatialView = snapshot(game);
-    return spatialView ? viewToWorld(view, spatialView.camera) : view;
+    if (!spatialView) return view;
+    const pointInWorld = viewToWorld(view, spatialView.camera);
+    const inset = playerVisualInset(game.player);
+    return Object.freeze({
+      x: Math.max(inset, Math.min(spatialView.worldBounds.right - inset, pointInWorld.x)),
+      y: Math.max(inset, Math.min(spatialView.worldBounds.bottom - inset, pointInWorld.y)),
+    });
   }
 
   return Object.freeze({ snapshot, targetFromEvent });

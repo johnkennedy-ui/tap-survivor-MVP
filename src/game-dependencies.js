@@ -264,6 +264,9 @@
     return Object.freeze({ createRunWorld, physicalSize, visibleBounds, spawnPosition });
   }
 
+  const playerVisualInset = (player) =>
+    Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
+
   // Source-owned composition capability: derive, never retain, a run's camera.
   function createWorldViewRuntime({ canvas }) {
     function snapshot(game) {
@@ -286,7 +289,13 @@
         canvas
       );
       const spatialView = snapshot(game);
-      return spatialView ? viewToWorld(view, spatialView.camera) : view;
+      if (!spatialView) return view;
+      const pointInWorld = viewToWorld(view, spatialView.camera);
+      const inset = playerVisualInset(game.player);
+      return Object.freeze({
+        x: Math.max(inset, Math.min(spatialView.worldBounds.right - inset, pointInWorld.x)),
+        y: Math.max(inset, Math.min(spatialView.worldBounds.bottom - inset, pointInWorld.y)),
+      });
     }
 
     return Object.freeze({ snapshot, targetFromEvent });
@@ -9482,6 +9491,9 @@
     mapSystem,
     clamp,
   }) {
+    const playerVisualInset = (player) =>
+      Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
+
     function movePlayer(player, dt) {
       const dx = player.targetX - player.x;
       const dy = player.targetY - player.y;
@@ -9496,9 +9508,11 @@
         player.x += player.facingX * step;
         player.y += player.facingY * step;
       }
-      const bounds = spatial?.physicalSize(getGame()) || canvas;
-      player.x = clamp(player.x, 18, bounds.width - 18);
-      player.y = clamp(player.y, 18, bounds.height - 18);
+      const game = getGame();
+      const bounds = spatial?.physicalSize(game) || canvas;
+      const inset = game?.world && spatial?.physicalSize ? playerVisualInset(player) : 18;
+      player.x = clamp(player.x, inset, bounds.width - inset);
+      player.y = clamp(player.y, inset, bounds.height - inset);
     }
 
     function update(dt) {

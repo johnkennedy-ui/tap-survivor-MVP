@@ -90,8 +90,26 @@ inputCanvas.emit("touchstart", { preventDefault() {}, touches: [{ clientX: 10, c
 assert.deepEqual(
   [player.targetX, player.targetY],
   [2112, 1188],
-  "touch uses CSS-to-view scaling once"
+  "interior touch uses CSS-to-view scaling once"
 );
+player.x = 56;
+player.y = 56;
+assert.equal(
+  setTargetFromEvent({
+    event: { clientX: 10, clientY: 20 },
+    canvas: inputCanvas,
+    game,
+    worldView: inputWorldView,
+  }),
+  true
+);
+assert.deepEqual(
+  [player.targetX, player.targetY],
+  [56, 56],
+  "event targets stop at the visual player inset"
+);
+player.x = 2862;
+player.y = 1602;
 assert.equal(typeof bound.setTarget, "function");
 
 let gatedGame = { ...game, awaitingFirstMoveInput: true, player: { ...player, x: 1440, y: 810 } };
@@ -313,7 +331,7 @@ for (const modeId of ["climb", "farm"]) {
   gateCanvas.emit("touchmove", { touches: [{ clientX: 50, clientY: 70 }] });
   assert.deepEqual(
     [gatedGame.player.targetX, gatedGame.player.targetY],
-    modeId === "climb" ? [2112, 1188] : [0, 0]
+    modeId === "climb" ? [2112, 1188] : [56, 56]
   );
   rect = { left: 10, top: 20, width: 480, height: 270 };
 }

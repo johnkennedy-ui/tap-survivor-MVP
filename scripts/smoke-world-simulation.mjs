@@ -154,10 +154,10 @@ for (const modeId of ["climb", "farm"]) {
   update.update(1);
   assert.equal(p.x, game.world.width / 2 + 185, "speed remains 185 simulation units/second");
   for (const [x, y, expectedX, expectedY] of [
-    [-1000, -1000, 18, 18],
-    [1e6, -1000, game.world.width - 18, 18],
-    [-1000, 1e6, 18, game.world.height - 18],
-    [1e6, 1e6, game.world.width - 18, game.world.height - 18],
+    [-1000, -1000, 56, 56],
+    [1e6, -1000, game.world.width - 56, 56],
+    [-1000, 1e6, 56, game.world.height - 56],
+    [1e6, 1e6, game.world.width - 56, game.world.height - 56],
   ]) {
     Object.assign(p, { x, y, targetX: x, targetY: y });
     update.update(0);
@@ -166,7 +166,7 @@ for (const modeId of ["climb", "farm"]) {
   }
   if (modeId === "climb") assert.ok(p.x > 960 && p.y > 540);
 }
-console.log("PASS player speed and all physical-world clamps beyond old bounds");
+console.log("PASS player speed and visual-safe physical-world clamps beyond old bounds");
 
 function projectiles(game, provider = spatial) {
   return createWeaponProjectileSystem({

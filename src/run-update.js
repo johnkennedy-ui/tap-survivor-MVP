@@ -21,6 +21,9 @@
     mapSystem,
     clamp,
   }) {
+    const playerVisualInset = (player) =>
+      Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
+
     function movePlayer(player, dt) {
       const dx = player.targetX - player.x;
       const dy = player.targetY - player.y;
@@ -35,9 +38,11 @@
         player.x += player.facingX * step;
         player.y += player.facingY * step;
       }
-      const bounds = spatial?.physicalSize(getGame()) || canvas;
-      player.x = clamp(player.x, 18, bounds.width - 18);
-      player.y = clamp(player.y, 18, bounds.height - 18);
+      const game = getGame();
+      const bounds = spatial?.physicalSize(game) || canvas;
+      const inset = game?.world && spatial?.physicalSize ? playerVisualInset(player) : 18;
+      player.x = clamp(player.x, inset, bounds.width - inset);
+      player.y = clamp(player.y, inset, bounds.height - inset);
     }
 
     function update(dt) {
