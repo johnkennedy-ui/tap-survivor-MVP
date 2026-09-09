@@ -11,14 +11,16 @@
     <main class="shell">
       <section class="game-panel">
         <canvas id="game" width="960" height="540" aria-label="Tap Survivor game canvas"></canvas>
-        <div class="speed-controls" aria-label="Game speed controls">
-          <button class="speed-button active" type="button" data-speed="1">x1</button>
-          <button class="speed-button" type="button" data-speed="2">x2</button>
-          <button class="speed-button" type="button" data-speed="5">x5</button>
-          <button id="muteAudio" class="speed-button mute-button" type="button" aria-pressed="false">Sound</button>
+        <div class="play-controls">
+          <div class="speed-controls" aria-label="Game speed controls">
+            <button class="speed-button active" type="button" data-speed="1">x1</button>
+            <button class="speed-button" type="button" data-speed="2">x2</button>
+            <button class="speed-button" type="button" data-speed="5">x5</button>
+            <button id="muteAudio" class="speed-button mute-button" type="button" aria-pressed="false">Sound</button>
+          </div>
+          <button id="fullscreenButton" class="fullscreen-button" type="button">Full Screen</button>
+          <button id="openMenu" class="menu-button" type="button" aria-expanded="false">Menu</button>
         </div>
-        <button id="fullscreenButton" class="fullscreen-button" type="button">Full Screen</button>
-        <button id="openMenu" class="menu-button" type="button" aria-expanded="false">Menu</button>
         <div id="questBanner" class="quest-banner hidden"></div>
         <div id="titleScreen" class="modal">
           <div class="modal-box start-box">
