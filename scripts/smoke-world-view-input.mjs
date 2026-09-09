@@ -106,7 +106,7 @@ assert.equal(
 assert.deepEqual(
   [player.targetX, player.targetY],
   [56, 56],
-  "event targets stop at the visual player inset"
+  "event targets stop at the stable body-safe player inset"
 );
 const farmTargetGame = {
   ...game,
@@ -115,8 +115,8 @@ const farmTargetGame = {
 };
 assert.deepEqual(
   inputWorldView.targetFromEvent({ clientX: 250, clientY: 20 }, farmTargetGame),
-  { x: 480, y: 270 },
-  "Farm input caps an oversized pickup inset to its non-empty legal interval"
+  { x: 480, y: 56 },
+  "Farm input keeps the normal body-safe edge even when pickup reach exceeds half its height"
 );
 player.x = 2862;
 player.y = 1602;
@@ -675,8 +675,241 @@ for (const retainedPath of [false, true]) {
   runtime.dispose?.();
 }
 
+// Supported production save, not an invented player radius. The same fixture
+// that exposed Farm's lost Y axis must survive normalization and real run start.
+const pickupShopItems = generatedContent.shopItems.filter(
+  (item) => item.effect?.stat === "pickupRadius"
+);
+assert.equal(pickupShopItems.length, 15);
+assert.ok(pickupShopItems.every((item) => item.maxTier === 3));
+const progressionSave = {
+  saveVersion: 4,
+  towerFloor: 20,
+  coins: 0,
+  shopPurchases: Object.fromEntries(pickupShopItems.map((item) => [item.id, item.maxTier])),
+  unlockedWeapons: ["spark_bolt"],
+  unlockedRelics: ["pickup_radius_focus_relic"],
+  equippedRelics: ["pickup_radius_focus_relic"],
+};
+assert.equal(
+  pickupShopItems.reduce((sum, item) => sum + item.effect.value * item.maxTier, 0),
+  129
+);
+const directions = [
+  ["up", 0, -1],
+  ["down", 0, 1],
+  ["left", -1, 0],
+  ["right", 1, 0],
+];
+const near = (actual, expected, label) =>
+  assert.ok(Math.abs(actual - expected) < 1e-8, `${label}: ${actual} != ${expected}`);
+
+function progressionRuntime(modeId, progressed, nativeBoot = false) {
+  const harness = createGameHarness({ initialSave: progressed ? progressionSave : null });
+  const entry = nativeBoot ? bootProductionModuleEntrypoint({ globalRef: harness.context }) : null;
+  if (entry) entry.startRun(modeId);
+  else harness.elements.get(modeId === "farm" ? "titleStartFarm" : "titleStartGame").click();
+  const dependencies = entry?.dependencies || harness.dependencies;
+  const run = dependencies.getGame();
+  const canvas = harness.elements.get("game");
+  const radius = progressed ? 342.25 : 54;
+  assert.equal(run.player.pickupRadius, radius, "actual shop/relic/starting-skill composition");
+  assert.equal(run.player.speed, 185);
+  assert.equal(run.runUpgradeTiers.run_pickup_radius || 0, progressed ? 1 : 0);
+  assert.deepEqual(
+    [run.world.width, run.world.height, run.world.zoom],
+    modeId === "farm" ? [960, 540, 1] : [2880, 1620, 1.25]
+  );
+  if (progressed) {
+    const save = dependencies.getSave();
+    assert.equal(save.towerFloor, 20);
+    assert.deepEqual(save.shopPurchases, progressionSave.shopPurchases);
+    assert.deepEqual(save.equippedRelics, progressionSave.equippedRelics);
+  }
+  // Deliberately fractional, nonuniform CSS scaling: exercise the bound event
+  // handler, not direct target assignment or a hand-reimplemented conversion.
+  const rect = { left: 13.7, top: -9.3, width: 371.2, height: 259.7 };
+  canvas.getBoundingClientRect = () => rect;
+  const input = (x, y, touch = false) => {
+    const point = {
+      clientX: rect.left + (x / 960) * rect.width,
+      clientY: rect.top + (y / 540) * rect.height,
+    };
+    canvas.listeners.get(touch ? "touchstart" : "mousedown")(
+      touch ? { touches: [point], preventDefault() {} } : point
+    );
+  };
+  return { harness, dependencies, run, input, dispose: () => entry?.dispose() };
+}
+
+for (const nativeBoot of [false, true]) {
+  for (const modeId of ["farm", "climb"]) {
+    for (const [direction, dx, dy] of directions) {
+      const controls = [];
+      for (const progressed of [false, true]) {
+        const runtime = progressionRuntime(modeId, progressed, nativeBoot);
+        const { run, dependencies, input } = runtime;
+        const p = run.player;
+        const before = [p.x, p.y];
+        assert.equal(run.awaitingFirstMoveInput, true);
+        dependencies.runUpdater.update(1 / 60);
+        assert.deepEqual([p.x, p.y, run.elapsed], [...before, 0], "first input gate holds");
+        input(480 + dx * 480, 270 + dy * 270, direction === "up" || direction === "left");
+        assert.equal(run.awaitingFirstMoveInput, false);
+        const target = [p.targetX, p.targetY];
+        const travel = modeId === "farm" ? (dx ? 424 : 214) : dx ? 384 : 216;
+        near(p.targetX, before[0] + dx * travel, "event-time target X");
+        near(p.targetY, before[1] + dy * travel, "event-time target Y");
+        for (let frame = 0; frame < 30; frame++) dependencies.runUpdater.update(1 / 60);
+        near(p.x - before[0], dx * 92.5, "meaningful half-second X movement");
+        near(p.y - before[1], dy * 92.5, "meaningful half-second Y movement");
+        near(run.elapsed, 0.5, "unpaused simulation advanced");
+        assert.equal(p.moving, true);
+        assert.equal(p.pickupRadius, progressed ? 342.25 : 54);
+        controls.push({ target, displacement: [p.x - before[0], p.y - before[1]], speed: p.speed });
+        console.log(
+          JSON.stringify({
+            scenario: "production-directional",
+            nativeBoot,
+            modeId,
+            progressed,
+            direction,
+            pickupRadius: p.pickupRadius,
+            ...controls.at(-1),
+            elapsed: run.elapsed,
+          })
+        );
+        runtime.dispose();
+      }
+      assert.deepEqual(
+        controls[1],
+        controls[0],
+        "progression preserves mapping, speed and both axes"
+      );
+    }
+  }
+}
+
+function applyPickupTier({ dependencies, run }) {
+  const upgrade = dependencies.moduleSystems.contentRegistry.runUpgradeDefs.find(
+    (item) => item.id === "run_pickup_radius"
+  );
+  const tier = run.runUpgradeTiers[upgrade.id] || 0;
+  assert.ok(tier < upgrade.maxTier, "one further supported tier is available");
+  const radius = run.player.pickupRadius;
+  // Invoke the actual registry effect with the same tier bookkeeping as a
+  // selected upgrade. This is not a level-choice UI/browser acceptance test.
+  run.runUpgradeTiers[upgrade.id] = tier + 1;
+  run.levelUpRunUpgradeTiers ??= {};
+  run.levelUpRunUpgradeTiers[upgrade.id] = (run.levelUpRunUpgradeTiers[upgrade.id] || 0) + 1;
+  if (typeof upgrade.apply === "function") {
+    upgrade.apply(run);
+  } else {
+    dependencies.moduleSystems.effects.applyRunUpgradeEffects(run, upgrade.effects || []);
+  }
+  assert.equal(run.player.pickupRadius, radius + 22);
+}
+
+for (const modeId of ["farm", "climb"]) {
+  for (const progressed of [false, true]) {
+    for (const [direction, dx, dy] of directions) {
+      const runtime = progressionRuntime(modeId, progressed, true);
+      const { run, dependencies, input } = runtime;
+      const p = run.player;
+      const edge = [
+        dx < 0 ? 56 : dx > 0 ? run.world.width - 56 : run.world.width / 2,
+        dy < 0 ? 56 : dy > 0 ? run.world.height - 56 : run.world.height / 2,
+      ];
+      // Seed a legal near-edge position, then reach the edge through production
+      // input and movement. Delay spawns solely to isolate long idle/arrival
+      // assertions from combat; no fake movement, pickup stats or camera.
+      Object.assign(p, { x: edge[0] - dx * 100, y: edge[1] - dy * 100 });
+      run.spawnTimer = 100;
+      input(480 + dx * 480, 270 + dy * 270);
+      assert.deepEqual([p.targetX, p.targetY], edge, "pointer uses the physical boundary");
+      dependencies.runUpdater.update(0.25);
+      const inFlight = [p.x, p.y, p.targetX, p.targetY];
+      applyPickupTier(runtime);
+      dependencies.runUpdater.update(0);
+      assert.deepEqual(
+        [p.x, p.y, p.targetX, p.targetY],
+        inFlight,
+        "upgrade cannot teleport in flight"
+      );
+      for (let frame = 0; frame < 240; frame++) dependencies.runUpdater.update(1 / 60);
+      assert.ok(Math.hypot(p.x - edge[0], p.y - edge[1]) <= 3, "arrives at retained edge target");
+      assert.equal(p.moving, false);
+      assert.equal(p.animTime, 0);
+      const stationary = [p.x, p.y, p.targetX, p.targetY];
+      applyPickupTier(runtime);
+      dependencies.runUpdater.update(0);
+      assert.deepEqual(
+        [p.x, p.y, p.targetX, p.targetY],
+        stationary,
+        "radius-only upgrade cannot teleport idle player"
+      );
+      for (let frame = 0; frame < 240; frame++) dependencies.runUpdater.update(1 / 60);
+      assert.deepEqual([p.x, p.y, p.targetX, p.targetY], stationary);
+      assert.equal(p.moving, false, "no perpetual walking after upgrade");
+      assert.equal(p.animTime, 0);
+      input(480 + dx * 480, 270 + dy * 270, true);
+      assert.deepEqual([p.targetX, p.targetY], edge, "new touch target retains the same bounds");
+      dependencies.runUpdater.update(0);
+      assert.equal(p.moving, false);
+      // Moving away from every boundary remains possible after both upgrades.
+      input(480, 270);
+      const away = [p.x, p.y];
+      for (let frame = 0; frame < 30; frame++) dependencies.runUpdater.update(1 / 60);
+      near((p.x - away[0]) * -dx + (p.y - away[1]) * -dy, 92.5, "movement away from edge");
+      console.log(
+        JSON.stringify({
+          scenario: "production-edge-upgrades",
+          modeId,
+          progressed,
+          direction,
+          edge,
+          pickupRadius: p.pickupRadius,
+          stationary,
+          awayDisplacement: 92.5,
+        })
+      );
+      runtime.dispose();
+    }
+    const runtime = progressionRuntime(modeId, progressed, true);
+    const { run, dependencies, harness } = runtime;
+    const p = run.player;
+    run.xpDrops = [{ x: p.x + 300, y: p.y, radius: 7, value: 1 }];
+    run.lootDrops = [{ x: p.x + 300, y: p.y, radius: 7, type: "coin", value: 2 }];
+    const pickups = dependencies.moduleSystems.pickups.instance;
+    pickups.updateXpDrops(0.1);
+    pickups.updateLootDrops(0.1);
+    near(run.xpDrops[0].x - p.x, progressed ? 252 : 300, "real XP attraction uses full radius");
+    near(run.lootDrops[0].x - p.x, progressed ? 246 : 300, "real loot attraction uses full radius");
+    for (let frame = 0; frame < 10; frame++) {
+      pickups.updateXpDrops(0.1);
+      pickups.updateLootDrops(0.1);
+    }
+    assert.equal(run.xpDrops.length, progressed ? 0 : 1);
+    assert.equal(run.lootDrops.length, progressed ? 0 : 1);
+    assert.equal(p.xp, progressed ? 1 : 0);
+    assert.equal(dependencies.getSave().coins, progressed ? 2 : 0);
+    dependencies.persist();
+    const persisted = JSON.parse(
+      harness.context.localStorage.store.get("tap-survivor-mvp-save-v2")
+    );
+    if (progressed) {
+      assert.deepEqual(persisted.shopPurchases, progressionSave.shopPurchases);
+      assert.deepEqual(persisted.equippedRelics, progressionSave.equippedRelics);
+      assert.equal(persisted.towerFloor, 20);
+    }
+    for (const key of ["player", "world", "camera", "pickupRadius", "runUpgradeTiers"])
+      assert.equal(Object.hasOwn(persisted, key), false, "transient run state stays out of saves");
+    runtime.dispose();
+  }
+}
+
 console.log(
-  "PASS world camera render transforms, restoration, HUD, lifecycle snapshots, and event-time input; actual native/retained composition and save exclusion"
+  "PASS world camera/render/input regressions and legal production progression: all four directions, stable edge bounds/upgrades, idle reconciliation, pickup effects and saves; no browser acceptance claimed"
 );
 
 function makeCanvas(context = makeContext()) {

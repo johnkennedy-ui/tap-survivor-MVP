@@ -264,13 +264,10 @@
     return Object.freeze({ createRunWorld, physicalSize, visibleBounds, spawnPosition });
   }
 
-  const playerVisualInset = (player) =>
-    Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
-
-  const movementBounds = (bounds, player) => {
-    const preferredInset = playerVisualInset(player);
-    const xInset = Math.min(preferredInset, bounds.right / 2);
-    const yInset = Math.min(preferredInset, bounds.bottom / 2);
+  // Match run-update's normal-run body-safe margin, independent of pickup reach.
+  const movementBounds = (bounds) => {
+    const xInset = Math.min(56, bounds.right / 2);
+    const yInset = Math.min(56, bounds.bottom / 2);
     return {
       minX: xInset,
       maxX: bounds.right - xInset,
@@ -303,7 +300,7 @@
       const spatialView = snapshot(game);
       if (!spatialView) return view;
       const pointInWorld = viewToWorld(view, spatialView.camera);
-      const limits = movementBounds(spatialView.worldBounds, game.player);
+      const limits = movementBounds(spatialView.worldBounds);
       return Object.freeze({
         x: Math.max(limits.minX, Math.min(limits.maxX, pointInWorld.x)),
         y: Math.max(limits.minY, Math.min(limits.maxY, pointInWorld.y)),
@@ -9504,13 +9501,11 @@
     mapSystem,
     clamp,
   }) {
-    const playerVisualInset = (player) =>
-      Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
-
-    function movementBounds(bounds, player, inset) {
-      const preferredInset = inset ?? playerVisualInset(player);
-      const xInset = Math.min(preferredInset, bounds.width / 2);
-      const yInset = Math.min(preferredInset, bounds.height / 2);
+    // Keep the normal-run body-safe margin stable. Pickup reach is an interaction
+    // radius, not a physical footprint; its aura may extend beyond the viewport.
+    function movementBounds(bounds, inset) {
+      const xInset = Math.min(inset, bounds.width / 2);
+      const yInset = Math.min(inset, bounds.height / 2);
       return {
         minX: xInset,
         maxX: bounds.width - xInset,
@@ -9523,13 +9518,9 @@
       const game = getGame();
       const bounds = spatial?.physicalSize(game) || canvas;
       const dynamicWorldBounds = Boolean(game?.world && spatial?.physicalSize);
-      const limits = movementBounds(
-        bounds,
-        player,
-        dynamicWorldBounds ? undefined : 18
-      );
-      // Stat changes can grow the visual inset after a target was chosen. Reconcile
-      // both endpoints first so a stale out-of-bounds target cannot keep walking.
+      const limits = movementBounds(bounds, dynamicWorldBounds ? 56 : 18);
+      // Reconcile both endpoints so an out-of-bounds target cannot keep walking.
+      // Pickup-only upgrades leave these bounds and legal positions unchanged.
       if (dynamicWorldBounds) {
         player.x = clamp(player.x, limits.minX, limits.maxX);
         player.y = clamp(player.y, limits.minY, limits.maxY);

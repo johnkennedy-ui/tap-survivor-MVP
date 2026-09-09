@@ -6,13 +6,10 @@ import {
   worldBounds,
 } from "./world-camera.js";
 
-const playerVisualInset = (player) =>
-  Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
-
-const movementBounds = (bounds, player) => {
-  const preferredInset = playerVisualInset(player);
-  const xInset = Math.min(preferredInset, bounds.right / 2);
-  const yInset = Math.min(preferredInset, bounds.bottom / 2);
+// Match run-update's normal-run body-safe margin, independent of pickup reach.
+const movementBounds = (bounds) => {
+  const xInset = Math.min(56, bounds.right / 2);
+  const yInset = Math.min(56, bounds.bottom / 2);
   return {
     minX: xInset,
     maxX: bounds.right - xInset,
@@ -45,7 +42,7 @@ export function createWorldViewRuntime({ canvas }) {
     const spatialView = snapshot(game);
     if (!spatialView) return view;
     const pointInWorld = viewToWorld(view, spatialView.camera);
-    const limits = movementBounds(spatialView.worldBounds, game.player);
+    const limits = movementBounds(spatialView.worldBounds);
     return Object.freeze({
       x: Math.max(limits.minX, Math.min(limits.maxX, pointInWorld.x)),
       y: Math.max(limits.minY, Math.min(limits.maxY, pointInWorld.y)),

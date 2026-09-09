@@ -14,13 +14,11 @@ export function createRunUpdater({
   mapSystem,
   clamp,
 }) {
-  const playerVisualInset = (player) =>
-    Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
-
-  function movementBounds(bounds, player, inset) {
-    const preferredInset = inset ?? playerVisualInset(player);
-    const xInset = Math.min(preferredInset, bounds.width / 2);
-    const yInset = Math.min(preferredInset, bounds.height / 2);
+  // Keep the normal-run body-safe margin stable. Pickup reach is an interaction
+  // radius, not a physical footprint; its aura may extend beyond the viewport.
+  function movementBounds(bounds, inset) {
+    const xInset = Math.min(inset, bounds.width / 2);
+    const yInset = Math.min(inset, bounds.height / 2);
     return {
       minX: xInset,
       maxX: bounds.width - xInset,
@@ -33,13 +31,9 @@ export function createRunUpdater({
     const game = getGame();
     const bounds = spatial?.physicalSize(game) || canvas;
     const dynamicWorldBounds = Boolean(game?.world && spatial?.physicalSize);
-    const limits = movementBounds(
-      bounds,
-      player,
-      dynamicWorldBounds ? undefined : 18
-    );
-    // Stat changes can grow the visual inset after a target was chosen. Reconcile
-    // both endpoints first so a stale out-of-bounds target cannot keep walking.
+    const limits = movementBounds(bounds, dynamicWorldBounds ? 56 : 18);
+    // Reconcile both endpoints so an out-of-bounds target cannot keep walking.
+    // Pickup-only upgrades leave these bounds and legal positions unchanged.
     if (dynamicWorldBounds) {
       player.x = clamp(player.x, limits.minX, limits.maxX);
       player.y = clamp(player.y, limits.minY, limits.maxY);

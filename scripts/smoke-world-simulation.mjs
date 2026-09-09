@@ -168,41 +168,42 @@ for (const modeId of ["climb", "farm"]) {
 }
 console.log("PASS player speed and visual-safe physical-world clamps beyond old bounds");
 
-{
-  const game = fresh();
-  const update = updater(game);
-  Object.assign(game.player, { x: 56, y: 56, targetX: 56, targetY: 56, pickupRadius: 76 });
+// Out-of-world targets still reconcile, independently of interaction reach.
+// Production save/upgrades and directional controls are exercised by the
+// world-view-input smoke; here isolate the physical and legacy contracts.
+for (const modeId of ["climb", "farm"]) {
+  for (const pickupRadius of [54, 76, 342.25, 364.25]) {
+    const game = fresh(modeId);
+    const update = updater(game);
+    const p = game.player;
+    p.pickupRadius = pickupRadius;
+    for (const [x, y, targetX, targetY] of [
+      [56, 56, -1000, -1000],
+      [game.world.width - 56, game.world.height - 56, 1e6, 1e6],
+    ]) {
+      Object.assign(p, { x, y, targetX, targetY });
+      for (let frame = 0; frame < 240; frame++) update.update(1 / 60);
+      assert.deepEqual(
+        [p.x, p.y, p.targetX, p.targetY, p.moving, p.animTime],
+        [x, y, x, y, false, 0],
+        "stable body-safe bounds reconcile illegal targets without perpetual walking"
+      );
+      assert.equal(p.pickupRadius, pickupRadius, "movement must not nerf pickup reach");
+    }
+  }
+}
+for (const pickupRadius of [54, 342.25]) {
+  const game = stateFactory(null).resetGameState({ modeId: "farm" });
+  const update = updater(game, null);
+  Object.assign(game.player, { x: 0, y: 540, targetX: 480, targetY: 270, pickupRadius });
   update.update(0);
   assert.deepEqual(
-    [game.player.x, game.player.y, game.player.targetX, game.player.targetY, game.player.moving],
-    [78, 78, 78, 78, false],
-    "pickup-radius growth reconciles a retained edge target before movement"
-  );
-  for (let frame = 0; frame < 240; frame++) update.update(1 / 60);
-  assert.deepEqual(
-    [game.player.x, game.player.y, game.player.targetX, game.player.targetY, game.player.moving],
-    [78, 78, 78, 78, false],
-    "reconciled target cannot restore perpetual walking"
+    [game.player.x, game.player.y, game.player.targetX, game.player.targetY],
+    [18, 522, 480, 270],
+    "no-spatial legacy keeps its 18-unit clamp and target semantics"
   );
 }
-{
-  const game = fresh("farm");
-  const update = updater(game);
-  Object.assign(game.player, {
-    x: 480,
-    y: 270,
-    targetX: 480,
-    targetY: 270,
-    pickupRadius: 342.25,
-  });
-  update.update(0);
-  assert.deepEqual(
-    [game.player.x, game.player.y, game.player.targetX, game.player.targetY, game.player.moving],
-    [480, 270, 480, 270, false],
-    "legal Farm pickup progression retains a non-empty vertical movement interval"
-  );
-}
-console.log("PASS pickup-radius target reconciliation and non-empty Farm movement bounds");
+console.log("PASS stable physical bounds, illegal-target reconciliation and legacy movement");
 
 function projectiles(game, provider = spatial) {
   return createWeaponProjectileSystem({
