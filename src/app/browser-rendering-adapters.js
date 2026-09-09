@@ -88,10 +88,11 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
           list(game.beams).forEach((beam) => drawBeam(beam, spriteAdapters));
           list(game.pickupTexts).forEach(drawPickupText);
         });
+        // This remains screen-space, but is painted before the later player pass.
+        drawTowerFloorBadge(game);
         return true;
       },
       renderHud({ game }) {
-        drawTowerFloorBadge(game);
         drawBossSpawnNotice(game);
         drawBossHealthBar(game);
         drawBossSpecialBar(game);

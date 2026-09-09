@@ -108,6 +108,16 @@ assert.deepEqual(
   [56, 56],
   "event targets stop at the visual player inset"
 );
+const farmTargetGame = {
+  ...game,
+  player: { ...player, x: 480, y: 270, targetX: 480, targetY: 270, pickupRadius: 342.25 },
+  world: Object.freeze({ modeId: "farm", width: 960, height: 540, zoom: 1 }),
+};
+assert.deepEqual(
+  inputWorldView.targetFromEvent({ clientX: 250, clientY: 20 }, farmTargetGame),
+  { x: 480, y: 270 },
+  "Farm input caps an oversized pickup inset to its non-empty legal interval"
+);
 player.x = 2862;
 player.y = 1602;
 assert.equal(typeof bound.setTarget, "function");
@@ -203,6 +213,39 @@ browser.renderFrame({
 });
 assert.deepEqual(browserContext.transforms.at(-1), [1, 0, 0, 1, 0, 0], "Farm camera is identity");
 
+for (const [modeId, northPlayer, northView] of [
+  [
+    "climb",
+    { ...player, x: 1440, y: 56, targetX: 1440, targetY: 56, hp: 100, maxHp: 100 },
+    { ...spatialView, camera: { ...spatialView.camera, x: 1056, y: 0 } },
+  ],
+  [
+    "farm",
+    { ...player, x: 480, y: 56, targetX: 480, targetY: 56, hp: 100, maxHp: 100 },
+    {
+      ...spatialView,
+      camera: { ...spatialView.camera, x: 0, y: 0, zoom: 1 },
+      worldBounds: { left: 0, top: 0, right: 960, bottom: 540 },
+    },
+  ],
+]) {
+  const northContext = makeContext();
+  const northCanvas = makeCanvas(northContext);
+  const northBrowser = createBrowserRenderingAdapters({ canvas: northCanvas }).renderers;
+  const northGame = { ...game, player: northPlayer, world: { ...world, modeId } };
+  northBrowser.renderFrame({ game: northGame, spatialView: northView, spriteAdapters: sprites });
+  northBrowser.renderPlayer({ game: northGame, spatialView: northView, spriteAdapters: sprites });
+  northBrowser.renderHud({ game: northGame });
+  const badgeIndex = northContext.operations.findIndex(
+    ({ name, args }) => name === "fillText" && args[0].startsWith("Tower Floor")
+  );
+  const hpIndex = northContext.operations.findIndex(
+    ({ name, args }) =>
+      name === "moveTo" && args[0] === northPlayer.x - 28.5 && args[1] === northPlayer.y - 35
+  );
+  assert.ok(badgeIndex >= 0 && hpIndex > badgeIndex, `${modeId} HP paints above the tower badge`);
+}
+
 const retainedContext = makeContext();
 const retained = createRenderer({
   worldView: createWorldViewRuntime({ canvas: makeCanvas(retainedContext) }),
@@ -231,6 +274,36 @@ assert.deepEqual(
   retainedContext.initialMatrix,
   "retained renderer restores its matrix"
 );
+
+{
+  const drawOrder = [];
+  const ordered = createRenderer({
+    worldView: createWorldViewRuntime({ canvas: makeCanvas() }),
+    canvas: makeCanvas(),
+    ctx: makeContext(),
+    clamp: (n, low, high) => Math.max(low, Math.min(high, n)),
+    createEnemyRenderer: () => ({ drawEnemy() {}, drawEnemyBolt() {} }),
+    createHudRenderer: () => ({
+      drawBossSpawnNotice() {},
+      drawGameHud() {},
+      drawTowerFloorBadge() {
+        drawOrder.push("badge");
+      },
+    }),
+    createSkillRailRenderer: () => ({}),
+    drawImage: () => false,
+    drawSprite() {
+      drawOrder.push("player");
+      return false;
+    },
+    weaponDefs: {},
+  });
+  ordered.draw(game);
+  assert.ok(
+    drawOrder.indexOf("badge") < drawOrder.indexOf("player"),
+    "retained HP/player paints above badge"
+  );
+}
 
 player.x = 1440;
 player.y = 810;

@@ -267,6 +267,18 @@
   const playerVisualInset = (player) =>
     Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
 
+  const movementBounds = (bounds, player) => {
+    const preferredInset = playerVisualInset(player);
+    const xInset = Math.min(preferredInset, bounds.right / 2);
+    const yInset = Math.min(preferredInset, bounds.bottom / 2);
+    return {
+      minX: xInset,
+      maxX: bounds.right - xInset,
+      minY: yInset,
+      maxY: bounds.bottom - yInset,
+    };
+  };
+
   // Source-owned composition capability: derive, never retain, a run's camera.
   function createWorldViewRuntime({ canvas }) {
     function snapshot(game) {
@@ -291,10 +303,10 @@
       const spatialView = snapshot(game);
       if (!spatialView) return view;
       const pointInWorld = viewToWorld(view, spatialView.camera);
-      const inset = playerVisualInset(game.player);
+      const limits = movementBounds(spatialView.worldBounds, game.player);
       return Object.freeze({
-        x: Math.max(inset, Math.min(spatialView.worldBounds.right - inset, pointInWorld.x)),
-        y: Math.max(inset, Math.min(spatialView.worldBounds.bottom - inset, pointInWorld.y)),
+        x: Math.max(limits.minX, Math.min(limits.maxX, pointInWorld.x)),
+        y: Math.max(limits.minY, Math.min(limits.maxY, pointInWorld.y)),
       });
     }
 
@@ -5510,6 +5522,8 @@
         throw new Error("Climb renderer requires worldView");
       const spatialView = worldView?.snapshot(game);
       const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
+      // Keep the fixed screen-space badge behind world-space player presentation.
+      hudRenderer.drawTowerFloorBadge?.(game);
       withWorldTransform(spatialView, () => {
         drawArena(game, bounds.right, bounds.bottom);
         game.areas.forEach(drawArea);
@@ -5526,7 +5540,6 @@
       });
       hudRenderer.drawBossSpawnNotice(game);
       hudRenderer.drawGameHud(game);
-      hudRenderer.drawTowerFloorBadge(game);
     }
 
     function roundedRectPath(x, y, width, height, radius) {
@@ -9494,7 +9507,35 @@
     const playerVisualInset = (player) =>
       Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
 
+    function movementBounds(bounds, player, inset) {
+      const preferredInset = inset ?? playerVisualInset(player);
+      const xInset = Math.min(preferredInset, bounds.width / 2);
+      const yInset = Math.min(preferredInset, bounds.height / 2);
+      return {
+        minX: xInset,
+        maxX: bounds.width - xInset,
+        minY: yInset,
+        maxY: bounds.height - yInset,
+      };
+    }
+
     function movePlayer(player, dt) {
+      const game = getGame();
+      const bounds = spatial?.physicalSize(game) || canvas;
+      const dynamicWorldBounds = Boolean(game?.world && spatial?.physicalSize);
+      const limits = movementBounds(
+        bounds,
+        player,
+        dynamicWorldBounds ? undefined : 18
+      );
+      // Stat changes can grow the visual inset after a target was chosen. Reconcile
+      // both endpoints first so a stale out-of-bounds target cannot keep walking.
+      if (dynamicWorldBounds) {
+        player.x = clamp(player.x, limits.minX, limits.maxX);
+        player.y = clamp(player.y, limits.minY, limits.maxY);
+        player.targetX = clamp(player.targetX, limits.minX, limits.maxX);
+        player.targetY = clamp(player.targetY, limits.minY, limits.maxY);
+      }
       const dx = player.targetX - player.x;
       const dy = player.targetY - player.y;
       const dist = Math.hypot(dx, dy);
@@ -9508,11 +9549,8 @@
         player.x += player.facingX * step;
         player.y += player.facingY * step;
       }
-      const game = getGame();
-      const bounds = spatial?.physicalSize(game) || canvas;
-      const inset = game?.world && spatial?.physicalSize ? playerVisualInset(player) : 18;
-      player.x = clamp(player.x, inset, bounds.width - inset);
-      player.y = clamp(player.y, inset, bounds.height - inset);
+      player.x = clamp(player.x, limits.minX, limits.maxX);
+      player.y = clamp(player.y, limits.minY, limits.maxY);
     }
 
     function update(dt) {

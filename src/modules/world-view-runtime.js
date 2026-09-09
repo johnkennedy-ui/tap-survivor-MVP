@@ -9,6 +9,18 @@ import {
 const playerVisualInset = (player) =>
   Math.max(56, Number.isFinite(player?.pickupRadius) ? player.pickupRadius + 2 : 0);
 
+const movementBounds = (bounds, player) => {
+  const preferredInset = playerVisualInset(player);
+  const xInset = Math.min(preferredInset, bounds.right / 2);
+  const yInset = Math.min(preferredInset, bounds.bottom / 2);
+  return {
+    minX: xInset,
+    maxX: bounds.right - xInset,
+    minY: yInset,
+    maxY: bounds.bottom - yInset,
+  };
+};
+
 // Source-owned composition capability: derive, never retain, a run's camera.
 export function createWorldViewRuntime({ canvas }) {
   function snapshot(game) {
@@ -33,10 +45,10 @@ export function createWorldViewRuntime({ canvas }) {
     const spatialView = snapshot(game);
     if (!spatialView) return view;
     const pointInWorld = viewToWorld(view, spatialView.camera);
-    const inset = playerVisualInset(game.player);
+    const limits = movementBounds(spatialView.worldBounds, game.player);
     return Object.freeze({
-      x: Math.max(inset, Math.min(spatialView.worldBounds.right - inset, pointInWorld.x)),
-      y: Math.max(inset, Math.min(spatialView.worldBounds.bottom - inset, pointInWorld.y)),
+      x: Math.max(limits.minX, Math.min(limits.maxX, pointInWorld.x)),
+      y: Math.max(limits.minY, Math.min(limits.maxY, pointInWorld.y)),
     });
   }
 

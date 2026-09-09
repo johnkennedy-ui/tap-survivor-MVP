@@ -74,6 +74,8 @@
         throw new Error("Climb renderer requires worldView");
       const spatialView = worldView?.snapshot(game);
       const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
+      // Keep the fixed screen-space badge behind world-space player presentation.
+      hudRenderer.drawTowerFloorBadge?.(game);
       withWorldTransform(spatialView, () => {
         drawArena(game, bounds.right, bounds.bottom);
         game.areas.forEach(drawArea);
@@ -90,7 +92,6 @@
       });
       hudRenderer.drawBossSpawnNotice(game);
       hudRenderer.drawGameHud(game);
-      hudRenderer.drawTowerFloorBadge(game);
     }
 
     function roundedRectPath(x, y, width, height, radius) {
