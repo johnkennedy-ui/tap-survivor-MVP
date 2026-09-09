@@ -5171,10 +5171,10 @@
     function drawTowerFloorBadge(game) {
       const floor = game?.towerFloor || 1;
       const width = 132;
-      const height = 34;
+      const height = 20;
       const x = canvas.width / 2 - width / 2;
-      const y = 12;
-      roundedRectPath(x, y, width, height, 8);
+      const y = 0;
+      roundedRectPath(x, y, width, height, 6);
       ctx.fillStyle = "rgba(10, 14, 20, 0.76)";
       ctx.fill();
       ctx.strokeStyle = "rgba(255, 209, 102, 0.7)";
@@ -5183,7 +5183,7 @@
       ctx.fillStyle = "#ffd166";
       ctx.font = "700 15px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`Tower Floor ${floor}`, canvas.width / 2, y + 22);
+      ctx.fillText(`Tower Floor ${floor}`, canvas.width / 2, y + 15);
       ctx.textAlign = "start";
     }
 
@@ -5519,8 +5519,6 @@
         throw new Error("Climb renderer requires worldView");
       const spatialView = worldView?.snapshot(game);
       const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
-      // Keep the fixed screen-space badge behind world-space player presentation.
-      hudRenderer.drawTowerFloorBadge?.(game);
       withWorldTransform(spatialView, () => {
         drawArena(game, bounds.right, bounds.bottom);
         game.areas.forEach(drawArea);
@@ -5533,6 +5531,11 @@
         game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
         game.beams.forEach(drawBeam);
         game.pickupTexts.forEach(drawPickupText);
+      });
+      // Paint the fixed screen-space badge after the opaque arena/world pass and
+      // before the later world-space player pass, matching the native adapters.
+      hudRenderer.drawTowerFloorBadge?.(game);
+      withWorldTransform(spatialView, () => {
         drawPlayer(game.player);
       });
       hudRenderer.drawBossSpawnNotice(game);

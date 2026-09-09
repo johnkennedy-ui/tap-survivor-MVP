@@ -10,6 +10,7 @@ import { createBrowserRenderingAdapters } from "../src/app/browser-rendering-ada
 import { createGameRuntimeController } from "../src/modules/game-runtime.js";
 import { bindMovementInput, setTargetFromEvent } from "../src/modules/input.js";
 import { createModuleGameLifecycleOwner } from "../src/modules/module-game-lifecycle.js";
+import { createHudRenderer as createModuleHudRenderer } from "../src/modules/render-hud.js";
 import { createRenderer } from "../src/modules/rendering.js";
 import { createWorldViewRuntime } from "../src/modules/world-view-runtime.js";
 import { createBrowserPlatformAdapters } from "../src/app/browser-platform-adapters.js";
@@ -244,6 +245,93 @@ for (const [modeId, northPlayer, northView] of [
       name === "moveTo" && args[0] === northPlayer.x - 28.5 && args[1] === northPlayer.y - 35
   );
   assert.ok(badgeIndex >= 0 && hpIndex > badgeIndex, `${modeId} HP paints above the tower badge`);
+  const badge = northContext.operations[badgeIndex];
+  assert.equal(badge.args[2], 15, `${modeId} tower badge stays in the compact top strip`);
+  assert.deepEqual(badge.matrix, northContext.initialMatrix, `${modeId} badge stays screen-space`);
+}
+
+for (const [modeId, northPlayer, northWorld] of [
+  [
+    "climb",
+    {
+      ...player,
+      x: 1440,
+      y: 56,
+      targetX: 1440,
+      targetY: 56,
+      hp: 100,
+      maxHp: 100,
+      equippedWeapons: [],
+    },
+    world,
+  ],
+  [
+    "farm",
+    {
+      ...player,
+      x: 480,
+      y: 56,
+      targetX: 480,
+      targetY: 56,
+      hp: 100,
+      maxHp: 100,
+      equippedWeapons: [],
+    },
+    { modeId: "farm", width: 960, height: 540, zoom: 1 },
+  ],
+]) {
+  const retainedR3Context = makeContext();
+  const retainedR3Canvas = makeCanvas(retainedR3Context);
+  const retainedR3 = createRenderer({
+    worldView: createWorldViewRuntime({ canvas: retainedR3Canvas }),
+    canvas: retainedR3Canvas,
+    ctx: retainedR3Context,
+    clamp: (n, low, high) => Math.max(low, Math.min(high, n)),
+    createEnemyRenderer: () => ({ drawEnemy() {}, drawEnemyBolt() {} }),
+    createHudRenderer: (options) => createModuleHudRenderer(options),
+    createSkillRailRenderer: () => ({ drawSkillRail() {}, drawUpgradeRail() {} }),
+    drawImage: () => false,
+    drawSprite: () => false,
+    weaponDefs: {},
+  });
+  retainedR3.draw({
+    ...game,
+    towerFloor: 20,
+    player: northPlayer,
+    world: northWorld,
+  });
+  const arenaIndex = retainedR3Context.operations.findIndex(
+    ({ name, args }) =>
+      name === "fillRect" &&
+      args[0] === 0 &&
+      args[1] === 0 &&
+      args[2] === northWorld.width &&
+      args[3] === northWorld.height
+  );
+  const badgeIndex = retainedR3Context.operations.findIndex(
+    ({ name, args }) => name === "fillText" && args[0] === "Tower Floor 20"
+  );
+  const hpIndex = retainedR3Context.operations.findIndex(
+    ({ name, args }) =>
+      name === "fillRect" &&
+      args[0] === northPlayer.x - 22 &&
+      args[1] === northPlayer.y - northPlayer.radius - 16 &&
+      args[2] === 44 &&
+      args[3] === 6
+  );
+  assert.ok(arenaIndex >= 0, `${modeId} retained arena paints`);
+  assert.ok(badgeIndex > arenaIndex, `${modeId} retained badge paints after opaque arena`);
+  assert.ok(hpIndex > badgeIndex, `${modeId} retained HP paints after the readable badge`);
+  assert.equal(
+    retainedR3Context.operations[badgeIndex].args[2],
+    15,
+    `${modeId} retained badge uses the compact top-strip baseline`
+  );
+  assert.deepEqual(
+    retainedR3Context.operations[badgeIndex].matrix,
+    retainedR3Context.initialMatrix,
+    `${modeId} retained badge stays screen-space`
+  );
 }
 
 const retainedContext = makeContext();

@@ -46,8 +46,6 @@ export function createRenderer({
       throw new Error("Climb renderer requires worldView");
     const spatialView = worldView?.snapshot(game);
     const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
-    // Keep the fixed screen-space badge behind world-space player presentation.
-    hudRenderer.drawTowerFloorBadge?.(game);
     withWorldTransform(spatialView, () => {
       drawArena(game, bounds.right, bounds.bottom);
       game.areas.forEach(drawArea);
@@ -60,6 +58,11 @@ export function createRenderer({
       game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
       game.beams.forEach(drawBeam);
       game.pickupTexts.forEach(drawPickupText);
+    });
+    // Paint the fixed screen-space badge after the opaque arena/world pass and
+    // before the later world-space player pass, matching the native adapters.
+    hudRenderer.drawTowerFloorBadge?.(game);
+    withWorldTransform(spatialView, () => {
       drawPlayer(game.player);
     });
     hudRenderer.drawBossSpawnNotice(game);

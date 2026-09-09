@@ -675,10 +675,10 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
 
   function drawTowerFloorBadge(game) {
     const width = 150;
-    const height = 34;
+    const height = 20;
     const x = canvas.width / 2 - width / 2;
-    const y = 12;
-    roundedRectPath(x, y, width, height, 8);
+    const y = 0;
+    roundedRectPath(x, y, width, height, 6);
     set("fillStyle", "rgba(10, 14, 20, 0.76)");
     call("fill");
     set("strokeStyle", "rgba(255, 209, 102, 0.7)");
@@ -687,7 +687,7 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     drawText(
       `Tower Floor ${Math.max(1, Math.floor(number(game?.towerFloor, 1)))}`,
       canvas.width / 2,
-      y + 22,
+      y + 15,
       {
         align: "center",
         color: "#ffd166",
