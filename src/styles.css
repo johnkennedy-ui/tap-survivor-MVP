@@ -772,9 +772,17 @@ section + section {
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
+  #game {
+    width: min(100vw, calc(100vh * 16 / 9));
+  }
+
   .speed-controls {
-    top: auto;
-    bottom: 12px;
+    top: 50%;
+    right: 6px;
+    bottom: auto;
+    left: auto;
+    flex-direction: column;
+    transform: translateY(-50%);
   }
 }
 
