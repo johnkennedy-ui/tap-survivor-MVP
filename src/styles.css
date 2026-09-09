@@ -771,6 +771,13 @@ section + section {
   }
 }
 
+@media (orientation: landscape) and (max-height: 500px) {
+  .speed-controls {
+    top: auto;
+    bottom: 12px;
+  }
+}
+
 @media (max-width: 363px) {
   .fullscreen-button {
     top: 56px;
