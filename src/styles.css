@@ -577,6 +577,16 @@ section + section {
   display: none;
 }
 
+/* The paused Run Menu owns the overlay above gameplay controls and banners. */
+#runMenu {
+  z-index: 4;
+}
+
+/* Keep the rail's layout, but exclude background controls from menu focus. */
+.game-panel:has(> #runMenu:not(.hidden)) > .play-controls {
+  visibility: hidden;
+}
+
 .modal-box {
   width: min(440px, 100%);
   border: 1px solid #58677c;
