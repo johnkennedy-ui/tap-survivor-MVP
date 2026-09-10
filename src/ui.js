@@ -52,6 +52,7 @@
     "startTransition",
     "titleScreen",
     "titleStartGame",
+    "titleStartFarm",
     "toggleDebug",
   ]);
 
@@ -132,6 +133,7 @@
       startTransition: get("startTransition"),
       titleScreen: get("titleScreen"),
       titleStartGame: get("titleStartGame"),
+      titleStartFarm: get("titleStartFarm"),
       toggleDebug: get("toggleDebug"),
     };
   }

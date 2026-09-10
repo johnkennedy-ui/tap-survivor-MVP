@@ -1,13 +1,26 @@
+// GENERATED FILE. Do not edit directly.
+// Source: src/modules/enemy-behaviors.js
+// Run: npm run build:bridges
 (() => {
+  "use strict";
+
+  const MODULE_NATIVE_ENEMY_BEHAVIOR_SLOTS = Object.freeze(["enemyBehaviors"]);
+
+  const MODULE_NATIVE_ENEMY_BEHAVIOR_PROOF_SLOTS = Object.freeze(["createEnemyBehaviorSystem"]);
+
+  /**
+   * @param {any} [options]
+   */
   function createEnemyBehaviorSystem({
     canvas,
+    spatial,
     bossAbilities = {},
     boltConfig = {},
     getGame,
     distance,
     clamp,
     damagePlayer,
-  }) {
+  } = {}) {
     const safeProjectileColor = "#b794ff";
 
     function resolveEnemyProjectileColor(enemyType) {
@@ -16,7 +29,7 @@
         enemyType?.spriteAccentColor,
         enemyType?.accentColor,
         enemyType?.color,
-        safeProjectileColor,
+        safeProjectileColor
       );
     }
 
@@ -26,7 +39,7 @@
         bossAbility?.spriteAccentColor,
         bossAbility?.accentColor,
         bossAbility?.color,
-        safeProjectileColor,
+        safeProjectileColor
       );
     }
 
@@ -53,6 +66,13 @@
         const dx = p.x - enemy.x;
         const dy = p.y - enemy.y;
         const dist = Math.max(1, Math.hypot(dx, dy));
+        if (hasBossAbility(enemy, "charger") && enemy.chargeState) {
+          enemy.facingX = enemy.chargeDirX;
+          enemy.facingY = enemy.chargeDirY;
+        } else if (enemy.attackRange && enemy.projectileCooldown && dist <= enemy.attackRange) {
+          enemy.facingX = dx / dist;
+          enemy.facingY = dy / dist;
+        }
         if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           applyEnemyTouch(enemy, dt);
@@ -86,15 +106,16 @@
         }
         return true;
       }
+      const bounds = spatial?.physicalSize(game) || canvas;
       boss.x = clamp(
         boss.x + boss.chargeDirX * boss.chargeSpeed * dt,
         boss.radius,
-        canvas.width - boss.radius,
+        bounds.width - boss.radius
       );
       boss.y = clamp(
         boss.y + boss.chargeDirY * boss.chargeSpeed * dt,
         boss.radius,
-        canvas.height - boss.radius,
+        bounds.height - boss.radius
       );
       if (boss.chargeTimer <= 0) {
         const slash = bossAbilities.charger.slash;
@@ -191,6 +212,10 @@
       const divisor = Math.max(dt, 0.0001);
       enemy.vx = (enemy.x - previousX) / divisor;
       enemy.vy = (enemy.y - previousY) / divisor;
+      if (Math.hypot(enemy.vx, enemy.vy) > 0.01) {
+        enemy.facingX = enemy.vx / Math.hypot(enemy.vx, enemy.vy);
+        enemy.facingY = enemy.vy / Math.hypot(enemy.vx, enemy.vy);
+      }
     }
 
     function updateEnemyBolts(dt) {
@@ -210,13 +235,14 @@
           bolt.life = 0;
         }
       });
+      const bounds = spatial?.physicalSize(game) || canvas;
       game.enemyBolts = game.enemyBolts.filter(
         (bolt) =>
           bolt.life > 0 &&
           bolt.x > -24 &&
-          bolt.x < canvas.width + 24 &&
+          bolt.x < bounds.width + 24 &&
           bolt.y > -24 &&
-          bolt.y < canvas.height + 24,
+          bolt.y < bounds.height + 24
       );
     }
 
@@ -233,5 +259,4 @@
       updateEnemyBolts,
     };
   }
-
 })();

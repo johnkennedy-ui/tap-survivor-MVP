@@ -186,13 +186,22 @@
       actions.className = "module-shell-actions";
       const startButton = documentRef.createElement("button");
       startButton.type = "button";
-      startButton.textContent = "Start Run";
+      startButton.textContent = "Climb";
       startButton.dataset.action = "start-run";
       startButton.disabled = !model.actions.canStartRun;
       addListener(startButton, "click", () => {
-        if (!startButton.disabled) onStartRun?.(model);
+        if (!startButton.disabled) onStartRun?.("climb", model);
       });
       actions.appendChild(startButton);
+      const farmButton = documentRef.createElement("button");
+      farmButton.type = "button";
+      farmButton.textContent = "Farm — original arena";
+      farmButton.dataset.action = "start-farm";
+      farmButton.disabled = !model.actions.canStartRun;
+      addListener(farmButton, "click", () => {
+        if (!farmButton.disabled) onStartRun?.("farm", model);
+      });
+      actions.appendChild(farmButton);
 
       const openMenuButton = createActionButton("open-menu", "Menu", () => onOpenPanel?.(model.activePanel, model));
       openMenuButton.setAttribute("aria-expanded", model.actions.openMenuExpanded);
@@ -350,7 +359,7 @@
             onOpenShop: () => openShop(),
             onResetSave: () => resetSave(),
             onSetGameSpeed: (speed) => setGameSpeed(speed),
-            onStartRun: () => startRun(),
+            onStartRun: (modeId) => startRun(modeId),
             onToggleFullscreen: () => toggleFullscreen(),
             presenter,
             root,
@@ -428,8 +437,9 @@
       return shellRelicController.selectRelic?.(relicId);
     }
 
-    function startRun() {
-      onStartRun?.(snapshot());
+    function startRun(modeId = "climb") {
+      if (state.disposed || state.screen === "game") return snapshot();
+      onStartRun?.(modeId, snapshot());
       state = {
         ...state,
         screen: "game",
@@ -613,6 +623,8 @@
     }
 
     function showTitleScreen() {
+      if (startTransitionTimer !== null) scheduler.clearTimeout(startTransitionTimer);
+      startTransitionTimer = null;
       moduleController.render({ screen: "title" });
       ui.titleScreen?.classList.remove("hidden");
       ui.startTransition?.classList.add("hidden");
@@ -626,7 +638,7 @@
       currentScreen = "game";
     }
 
-    function startGameFromTitle() {
+    function startGameFromTitle(modeId = "climb") {
       if (currentScreen !== "title") return;
       playStartLaugh?.();
       moduleController.render({ screen: "startingTransition" });
@@ -636,8 +648,9 @@
       if (startTransitionTimer) scheduler.clearTimeout(startTransitionTimer);
       startTransitionTimer = scheduler.setTimeout(() => {
         startTransitionTimer = null;
-        moduleController.startRun();
-        startRun();
+        if (currentScreen !== "startingTransition") return;
+        moduleController.startRun(modeId);
+        startRun(modeId);
       }, 450);
     }
 
@@ -749,7 +762,8 @@
     }
 
     function bind() {
-      ui.titleStartGame?.addEventListener("click", startGameFromTitle);
+      ui.titleStartGame?.addEventListener("click", () => startGameFromTitle("climb"));
+      ui.titleStartFarm?.addEventListener("click", () => startGameFromTitle("farm"));
       ui.openShop?.addEventListener("click", openShopMenu);
       ui.closeShop.addEventListener("click", closeShopMenu);
       ui.closeShopBottom.addEventListener("click", closeShopMenu);

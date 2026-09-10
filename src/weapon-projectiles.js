@@ -64,6 +64,7 @@
   /**
    * @param {{
    *   canvas: ProjectileCanvas,
+   *   spatial?: { physicalSize(game: ProjectileGame): ProjectileCanvas },
    *   weaponDefs: WeaponDefs,
    *   getGame: () => ProjectileGame,
    *   getRunUpgradeTier: (id: string) => number,
@@ -81,6 +82,7 @@
    */
   function createWeaponProjectileSystem({
     canvas,
+    spatial,
     weaponDefs,
     getGame,
     getRunUpgradeTier,
@@ -166,18 +168,19 @@
 
     function updateBolts(dt) {
       const game = getGame();
+      const bounds = spatial?.physicalSize(game) || canvas;
       game.bolts.forEach((bolt) => {
         bolt.x += bolt.vx * dt;
         bolt.y += bolt.vy * dt;
         bolt.life -= dt;
-        if (bolt.bounces > 0 && (bolt.x < bolt.radius || bolt.x > canvas.width - bolt.radius)) {
+        if (bolt.bounces > 0 && (bolt.x < bolt.radius || bolt.x > bounds.width - bolt.radius)) {
           bolt.vx *= -1;
-          bolt.x = clamp(bolt.x, bolt.radius, canvas.width - bolt.radius);
+          bolt.x = clamp(bolt.x, bolt.radius, bounds.width - bolt.radius);
           bolt.bounces -= 1;
         }
-        if (bolt.bounces > 0 && (bolt.y < bolt.radius || bolt.y > canvas.height - bolt.radius)) {
+        if (bolt.bounces > 0 && (bolt.y < bolt.radius || bolt.y > bounds.height - bolt.radius)) {
           bolt.vy *= -1;
-          bolt.y = clamp(bolt.y, bolt.radius, canvas.height - bolt.radius);
+          bolt.y = clamp(bolt.y, bolt.radius, bounds.height - bolt.radius);
           bolt.bounces -= 1;
         }
         const enemy = game.enemies.find((candidate) => {

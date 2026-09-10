@@ -9,6 +9,7 @@ export const MODULE_NATIVE_WEAPON_BEHAVIORS_PROOF_SLOTS = Object.freeze([
  */
 export function createWeaponBehaviorSystem({
   canvas,
+  spatial,
   weaponDefs,
   getGame,
   getRunUpgradeTier,
@@ -118,11 +119,12 @@ export function createWeaponBehaviorSystem({
   }
 
   function nextBeamWall(x, y, dirX, dirY) {
-    if (!Number.isFinite(canvas?.width) || !Number.isFinite(canvas?.height)) {
+    const bounds = spatial?.physicalSize(getGame()) || canvas;
+    if (!Number.isFinite(bounds?.width) || !Number.isFinite(bounds?.height)) {
       return { distance: Infinity, hit: false, hitX: false, hitY: false };
     }
-    const xDistance = dirX > 0 ? (canvas.width - x) / dirX : dirX < 0 ? -x / dirX : Infinity;
-    const yDistance = dirY > 0 ? (canvas.height - y) / dirY : dirY < 0 ? -y / dirY : Infinity;
+    const xDistance = dirX > 0 ? (bounds.width - x) / dirX : dirX < 0 ? -x / dirX : Infinity;
+    const yDistance = dirY > 0 ? (bounds.height - y) / dirY : dirY < 0 ? -y / dirY : Infinity;
     const distance = Math.min(xDistance, yDistance);
     const epsilon = 0.000001;
     return {

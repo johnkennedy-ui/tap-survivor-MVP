@@ -14,6 +14,7 @@
    */
   function createCombatSystem({
     canvas,
+    spatial,
     balance,
     combatDamage,
     content,
@@ -52,6 +53,7 @@
   } = {}) {
     const damageSystem = combatDamage.createCombatDamageSystem({
       canvas,
+      spatial,
       getGame,
       getRelicSpecialEffects,
       addQuestProgressForWeapon,
@@ -66,6 +68,7 @@
     });
     const enemySystem = enemies.createEnemySystem({
       canvas,
+      spatial,
       balance,
       enemyBehaviors,
       enemySpawning,
@@ -82,6 +85,7 @@
     });
     const weaponFireSystem = weaponFire.createWeaponFireSystem({
       canvas,
+      spatial,
       content,
       weaponDefs,
       getGame,

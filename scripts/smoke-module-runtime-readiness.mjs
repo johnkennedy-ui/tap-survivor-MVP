@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { extname, join } from "node:path";
+import { bindMovementInput } from "../src/modules/input.js";
 
 import {
   BROWSER_DEPENDENCY_BAG_PROOF_SLOTS,
@@ -793,7 +794,10 @@ const runtime = composeRuntime({
     bannerSystem: {
       hideMovementGateBanner: () => calls.push("runtime:hide-movement-gate"),
     },
-    bindMovementInput: () => calls.push("runtime:bind-input"),
+    bindMovementInput: (options) => {
+      calls.push("runtime:bind-input");
+      return bindMovementInput(options);
+    },
     persist: () => calls.push("runtime:persist"),
     renderMeta: () => calls.push("runtime:render-meta"),
     loop: () => calls.push("runtime:loop"),

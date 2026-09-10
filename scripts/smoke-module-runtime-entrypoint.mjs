@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { bindMovementInput } from "../src/modules/input.js";
 
 import { createModuleRuntimeTestEntrypoint } from "../src/app/module-runtime-test-entrypoint.js";
 import { composeRuntime, createBrowserPlatform } from "../src/app/compose-runtime.js";
@@ -536,7 +537,10 @@ const entrypointOptions = {
         bannerSystem: {
           hideMovementGateBanner: () => calls.push("banner:hide-movement-gate"),
         },
-        bindMovementInput: () => calls.push("input:bind"),
+        bindMovementInput: (options) => {
+          calls.push("input:bind");
+          return bindMovementInput(options);
+        },
         loop: () => calls.push("loop"),
       },
       storageAdapters: {

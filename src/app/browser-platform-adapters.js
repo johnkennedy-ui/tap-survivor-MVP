@@ -1,4 +1,5 @@
 import { bindMovementInput } from "../modules/input.js";
+import { createWorldViewRuntime } from "../modules/world-view-runtime.js";
 
 export function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
   let frameHandler = null;
@@ -17,8 +18,13 @@ export function createBrowserPlatformAdapters({ canvas, globalRef, ui }) {
 
   return {
     bannerSystem: createBrowserBannerSystem({ globalRef, ui }),
-    bindMovementInput({ canvas: targetCanvas = canvas, getGame }) {
-      return bindMovementInput({ canvas: targetCanvas, getGame });
+    bindMovementInput({ canvas: targetCanvas = canvas, getGame, onTarget }) {
+      return bindMovementInput({
+        canvas: targetCanvas,
+        getGame,
+        onTarget,
+        worldView: createWorldViewRuntime({ canvas: targetCanvas }),
+      });
     },
     canvas,
     debugSystem: {
@@ -45,7 +51,8 @@ function createBrowserBannerSystem({ globalRef, ui }) {
     ui.questBanner.classList?.remove?.("hidden");
     clearTimer();
     if (duration > 0) {
-      bannerTimer = globalRef.setTimeout?.(() => ui.questBanner.classList?.add?.("hidden"), duration) || 0;
+      bannerTimer =
+        globalRef.setTimeout?.(() => ui.questBanner.classList?.add?.("hidden"), duration) || 0;
     }
   }
   return {

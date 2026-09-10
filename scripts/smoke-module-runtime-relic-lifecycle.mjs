@@ -8,9 +8,11 @@ function check(name, pass) {
   if (!pass) process.exitCode = 1;
 }
 
-elements.get("titleStartGame").click();
+elements.get("titleStartFarm").click();
 
 const bossRun = dependencies.getGame();
+const clearedWorld = { width: 960, height: 540 };
+bossRun.world = clearedWorld;
 bossRun.awaitingFirstMoveInput = false;
 bossRun.elapsed = bossRun.duration;
 bossRun.spawnTimer = Number.MAX_SAFE_INTEGER;
@@ -40,6 +42,14 @@ relicChoice?.click();
 const savedAfterChoice = JSON.parse(harness.context.localStorage.store.get("tap-survivor-mvp-save-v2"));
 const completedRun = dependencies.getGame();
 check(
+  "boss continuation preserves Farm and copies its world without persisting runtime fields",
+  completedRun.modeId === "farm" &&
+    completedRun.world !== clearedWorld &&
+    completedRun.world.width === clearedWorld.width &&
+    completedRun.world.height === clearedWorld.height &&
+    ["modeId", "world", "camera", "player"].every((key) => !(key in savedAfterChoice))
+);
+check(
   "choosing a relic persists floor 2 and resets the cleared run",
   dependencies.getSave().towerFloor === 2 &&
     savedAfterChoice.towerFloor === 2 &&
@@ -54,7 +64,7 @@ elements.get("titleStartGame").click();
 const freshRun = dependencies.getGame();
 check(
   "a fresh run is available on the newly unlocked floor",
-  freshRun.running === true && freshRun.awaitingFirstMoveInput === true && freshRun.towerFloor === 2
+  freshRun.running === true && freshRun.awaitingFirstMoveInput === true && freshRun.towerFloor === 2 && freshRun.modeId === "climb"
 );
 
 if (process.exitCode) {

@@ -7,6 +7,7 @@ export const MODULE_NATIVE_ENEMY_SPAWN_PROOF_SLOTS = Object.freeze(["createEnemy
  */
 export function createEnemySpawnSystem({
   canvas,
+  spatial,
   enemyTypes,
   levelDefs = [],
   getActiveFloorDef,
@@ -87,6 +88,8 @@ export function createEnemySpawnSystem({
   }
 
   function offscreenSpawnPosition(player, angle) {
+    const position = spatial?.spawnPosition(getGame(), angle, spawnEntryMargin);
+    if (position) return position;
     const dirX = Math.cos(angle);
     const dirY = Math.sin(angle);
     const edgeDistance = distanceToExpandedCanvasEdge(player, dirX, dirY);

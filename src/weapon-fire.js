@@ -14,6 +14,7 @@
    */
   function createWeaponFireSystem({
     canvas,
+    spatial,
     content,
     weaponDefs,
     getGame,
@@ -46,6 +47,7 @@
     });
     const projectileSystem = weaponProjectiles.createWeaponProjectileSystem({
       canvas,
+      spatial,
       weaponDefs,
       getGame,
       getRunUpgradeTier,
@@ -61,6 +63,7 @@
     });
     const behaviorSystem = weaponBehaviors.createWeaponBehaviorSystem({
       canvas,
+      spatial,
       weaponDefs,
       getGame,
       getRunUpgradeTier,

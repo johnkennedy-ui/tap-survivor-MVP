@@ -57,33 +57,39 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
         call("clearRect", 0, 0, canvas.width || 0, canvas.height || 0);
         return true;
       },
-      renderEnemies({ enemies = [], spriteAdapters, stressEnemies = [] }) {
-        list(enemies).forEach((enemy) => drawEnemy(enemy, spriteAdapters));
-        if (renderStressEnabled) {
-          list(stressEnemies).forEach((enemy) => drawEnemy(enemy, spriteAdapters));
-        }
+      renderEnemies({ enemies = [], spatialView, spriteAdapters, stressEnemies = [] }) {
+        withWorldTransform(spatialView, () => {
+          list(enemies).forEach((enemy) => drawEnemy(enemy, spriteAdapters));
+          if (renderStressEnabled) {
+            list(stressEnemies).forEach((enemy) => drawEnemy(enemy, spriteAdapters));
+          }
+        });
         return true;
       },
-      renderFrame({ game, spriteAdapters, stressProjectiles = [] }) {
-        const width = canvas.width || 0;
-        const height = canvas.height || 0;
-        drawArena(game, spriteAdapters, width, height);
-        if (!game) {
-          drawMenuHint();
-          return true;
-        }
-        list(game.areas).forEach((area) => drawArea(area, spriteAdapters));
-        list(game.weaponBursts).forEach(drawWeaponBurst);
-        list(game.bossAttacks).forEach(drawBossAttack);
-        list(game.xpDrops).forEach(drawXp);
-        list(game.lootDrops).forEach((drop) => drawLoot(drop, spriteAdapters));
-        list(game.bolts).forEach((bolt) => drawBolt(bolt, spriteAdapters));
-        if (renderStressEnabled) {
-          list(stressProjectiles).forEach((bolt) => drawBolt(bolt, spriteAdapters));
-        }
-        list(game.enemyBolts).forEach(drawEnemyBolt);
-        list(game.beams).forEach((beam) => drawBeam(beam, spriteAdapters));
-        list(game.pickupTexts).forEach(drawPickupText);
+      renderFrame({ game, spatialView, spriteAdapters, stressProjectiles = [] }) {
+        const width = spatialView?.worldBounds?.right || canvas.width || 0;
+        const height = spatialView?.worldBounds?.bottom || canvas.height || 0;
+        withWorldTransform(spatialView, () => {
+          drawArena(game, spriteAdapters, width, height);
+          if (!game) {
+            drawMenuHint();
+            return;
+          }
+          list(game.areas).forEach((area) => drawArea(area, spriteAdapters));
+          list(game.weaponBursts).forEach(drawWeaponBurst);
+          list(game.bossAttacks).forEach(drawBossAttack);
+          list(game.xpDrops).forEach(drawXp);
+          list(game.lootDrops).forEach((drop) => drawLoot(drop, spriteAdapters));
+          list(game.bolts).forEach((bolt) => drawBolt(bolt, spriteAdapters));
+          if (renderStressEnabled) {
+            list(stressProjectiles).forEach((bolt) => drawBolt(bolt, spriteAdapters));
+          }
+          list(game.enemyBolts).forEach(drawEnemyBolt);
+          list(game.beams).forEach((beam) => drawBeam(beam, spriteAdapters));
+          list(game.pickupTexts).forEach(drawPickupText);
+        });
+        // This remains screen-space, but is painted before the later player pass.
+        drawTowerFloorBadge(game);
         return true;
       },
       renderHud({ game }) {
@@ -92,49 +98,64 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
         drawBossSpecialBar(game);
         return true;
       },
-      renderPlayer({ game, spriteAdapters }) {
+      renderPlayer({ game, spatialView, spriteAdapters }) {
         const player = game?.player;
         if (!player) return true;
-        drawPlayerHpBar(player);
-        const previousAlpha = number(context?.globalAlpha, 1);
-        if (number(player.blinkTimer) > 0) {
-          set("globalAlpha", 0.35 + Math.abs(Math.sin(number(player.blinkTimer) * 24)) * 0.65);
-        }
-        const spriteId = playerSpriteId(player);
-        const size = Math.max(70, (player.radius || 16) * 3.8);
-        const draw = spriteAdapters?.spriteSystem?.drawSprite;
-        const drawn = player.actionTimer > 0 && player.actionSprite
-          ? draw?.(spriteId, player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) }) || draw?.("player", player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) })
-          : draw?.("player", player.x || 0, player.y || 0, size, 0, {
-              sheetId: "directional_player",
-              animationId: "move",
-              animationState: headingForEntity(player),
-              time: number(player.animTime),
-            }) || draw?.(spriteId, player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) }) || (spriteId !== "player" && draw?.("player", player.x || 0, player.y || 0, size, 0, { flipX: playerFacesLeft(player) }));
-        if (!drawn) drawPlayerFallback(player);
-        set("globalAlpha", previousAlpha);
-        if (number(player.invincibleTimer) > 0) {
-          set("strokeStyle", "rgba(88, 255, 157, 0.72)");
-          set("lineWidth", 3);
-          circlePath(player.x, player.y, number(player.radius, 16) + 8);
+        return withWorldTransform(spatialView, () => {
+          drawPlayerHpBar(player);
+          const previousAlpha = number(context?.globalAlpha, 1);
+          if (number(player.blinkTimer) > 0) {
+            set("globalAlpha", 0.35 + Math.abs(Math.sin(number(player.blinkTimer) * 24)) * 0.65);
+          }
+          const spriteId = playerSpriteId(player);
+          const size = Math.max(70, (player.radius || 16) * 3.8);
+          const draw = spriteAdapters?.spriteSystem?.drawSprite;
+          const drawn =
+            player.actionTimer > 0 && player.actionSprite
+              ? draw?.(spriteId, player.x || 0, player.y || 0, size, 0, {
+                  flipX: playerFacesLeft(player),
+                }) ||
+                draw?.("player", player.x || 0, player.y || 0, size, 0, {
+                  flipX: playerFacesLeft(player),
+                })
+              : draw?.("player", player.x || 0, player.y || 0, size, 0, {
+                  sheetId: "directional_player",
+                  animationId: "move",
+                  animationState: headingForEntity(player),
+                  time: number(player.animTime),
+                }) ||
+                draw?.(spriteId, player.x || 0, player.y || 0, size, 0, {
+                  flipX: playerFacesLeft(player),
+                }) ||
+                (spriteId !== "player" &&
+                  draw?.("player", player.x || 0, player.y || 0, size, 0, {
+                    flipX: playerFacesLeft(player),
+                  }));
+          if (!drawn) drawPlayerFallback(player);
+          set("globalAlpha", previousAlpha);
+          if (number(player.invincibleTimer) > 0) {
+            set("strokeStyle", "rgba(88, 255, 157, 0.72)");
+            set("lineWidth", 3);
+            circlePath(player.x, player.y, number(player.radius, 16) + 8);
+            call("stroke");
+          }
+          set("strokeStyle", "rgba(105, 210, 255, 0.28)");
+          set("lineWidth", 2);
+          circlePath(player.x, player.y, number(player.pickupRadius, 54));
           call("stroke");
-        }
-        set("strokeStyle", "rgba(105, 210, 255, 0.28)");
-        set("lineWidth", 2);
-        circlePath(player.x, player.y, number(player.pickupRadius, 54));
-        call("stroke");
-        set("strokeStyle", "#dff6ff");
-        set("lineWidth", 1);
-        call("beginPath");
-        call("moveTo", number(player.x), number(player.y));
-        call("lineTo", number(player.targetX, player.x), number(player.targetY, player.y));
-        call("stroke");
-        diagnostics?.spriteDraws?.push?.({
-          id: spriteId,
-          kind: "renderPlayer",
-          success: Boolean(drawn),
+          set("strokeStyle", "#dff6ff");
+          set("lineWidth", 1);
+          call("beginPath");
+          call("moveTo", number(player.x), number(player.y));
+          call("lineTo", number(player.targetX, player.x), number(player.targetY, player.y));
+          call("stroke");
+          diagnostics?.spriteDraws?.push?.({
+            id: spriteId,
+            kind: "renderPlayer",
+            success: Boolean(drawn),
+          });
+          return true;
         });
-        return true;
       },
       renderSkillRail({ game, spriteAdapters }) {
         drawSkillRail(game, spriteAdapters);
@@ -172,7 +193,29 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
       call("lineTo", width, y);
       call("stroke");
     }
-    if (game) drawTowerFloorBadge(game);
+  }
+
+  function withWorldTransform(spatialView, draw) {
+    const camera = spatialView?.camera;
+    if (!camera) return draw();
+    const zoom = number(camera.zoom, 1);
+    const translateX = number(camera.x) * zoom;
+    const translateY = number(camera.y) * zoom;
+    call("save");
+    try {
+      call(
+        "transform",
+        zoom,
+        0,
+        0,
+        zoom,
+        translateX ? -translateX : 0,
+        translateY ? -translateY : 0
+      );
+      return draw();
+    } finally {
+      call("restore");
+    }
   }
 
   function drawMenuHint() {
@@ -189,39 +232,34 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     const spriteSize = boss ? Math.max(116, radius * 3.3) : Math.max(48, radius * 4.0);
     const id = enemy?.assetId || enemy?.type || enemy?.kind || enemy?.id || "default";
     const spriteId = `enemy:${id}`;
-    const animationId = boss
-      ? enemy?.bossKind || enemy?.bossAbilities?.[0] || "warden"
-      : id;
-    const animationState = boss
-      ? bossAnimationState(enemy)
-      : enemyAnimationState(enemy);
+    const animationId = boss ? enemy?.bossKind || enemy?.bossAbilities?.[0] || "warden" : id;
+    const animationState = boss ? bossAnimationState(enemy) : enemyAnimationState(enemy);
     const draw = spriteAdapters?.spriteSystem?.drawSprite;
-    const directionalId = Number.isFinite(Number(enemy?.facingX)) && Number.isFinite(Number(enemy?.facingY))
-      ? (boss ? enemy?.bossKind || enemy?.bossAbilities?.[0] : id)
-      : null;
+    const directionalId =
+      Number.isFinite(Number(enemy?.facingX)) && Number.isFinite(Number(enemy?.facingY))
+        ? boss
+          ? enemy?.bossKind || enemy?.bossAbilities?.[0]
+          : id
+        : null;
     const activeState = boss ? animationState !== "idle" : animationState === "attack";
-    const directionalDrawn = !activeState && directionalId
-      ? draw?.(`enemy:${directionalId}`, number(enemy?.x), number(enemy?.y), spriteSize, 0, {
-          animationId: "move",
-          animationState: headingForEntity(enemy),
-          sheetId: `directional_${directionalId}`,
-          time: number(enemy?.animTime),
-        })
-      : false;
-    const drawn = directionalDrawn || draw?.(
-      spriteId,
-      number(enemy?.x),
-      number(enemy?.y),
-      spriteSize,
-      0,
-      {
+    const directionalDrawn =
+      !activeState && directionalId
+        ? draw?.(`enemy:${directionalId}`, number(enemy?.x), number(enemy?.y), spriteSize, 0, {
+            animationId: "move",
+            animationState: headingForEntity(enemy),
+            sheetId: `directional_${directionalId}`,
+            time: number(enemy?.animTime),
+          })
+        : false;
+    const drawn =
+      directionalDrawn ||
+      draw?.(spriteId, number(enemy?.x), number(enemy?.y), spriteSize, 0, {
         animationId,
         animationState,
         flipX: enemyFacesLeft(enemy),
         sheetId: boss ? "bosses" : "enemies",
         time: number(enemy?.animTime),
-      }
-    );
+      });
     if (!drawn) drawEnemyFallback(enemy, radius, boss);
     if (boss) {
       const charging = enemy?.chargeState === "windup";
@@ -289,7 +327,11 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     circlePath(enemy.x, enemy.y, Math.max(number(enemy.radius, 8) + 4, spriteSize * 0.36));
     call("fill");
     set("globalCompositeOperation", previousComposite || "source-over");
-    strokeEnemyRing(enemy, `rgba(${red}, ${green}, ${blue}, ${0.48 + progress * 0.28})`, 2 + progress * 2);
+    strokeEnemyRing(
+      enemy,
+      `rgba(${red}, ${green}, ${blue}, ${0.48 + progress * 0.28})`,
+      2 + progress * 2
+    );
   }
 
   function drawEnemyHpBar(enemy, radius, boss) {
@@ -358,7 +400,15 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
   function drawLoot(drop, spriteAdapters) {
     const radius = Math.max(4, number(drop?.radius, 7));
     if (drop?.type === "coin") {
-      if (spriteAdapters?.spriteSystem?.drawSprite?.("ui:coin", drop.x, drop.y, Math.max(26, radius * 3.1))) return;
+      if (
+        spriteAdapters?.spriteSystem?.drawSprite?.(
+          "ui:coin",
+          drop.x,
+          drop.y,
+          Math.max(26, radius * 3.1)
+        )
+      )
+        return;
       set("fillStyle", "#ffd166");
       circlePath(drop?.x, drop?.y, radius);
       call("fill");
@@ -368,11 +418,34 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
       call("stroke");
       return;
     }
-    if (drop?.type === "heart" && spriteAdapters?.spriteSystem?.drawSprite?.("ui:heart", drop.x, drop.y, Math.max(28, radius * 3))) return;
+    if (
+      drop?.type === "heart" &&
+      spriteAdapters?.spriteSystem?.drawSprite?.(
+        "ui:heart",
+        drop.x,
+        drop.y,
+        Math.max(28, radius * 3)
+      )
+    )
+      return;
     set("fillStyle", "#ff5f7a");
     call("beginPath");
-    call("arc", number(drop?.x) - radius * 0.34, number(drop?.y) - radius * 0.18, radius * 0.5, 0, Math.PI * 2);
-    call("arc", number(drop?.x) + radius * 0.34, number(drop?.y) - radius * 0.18, radius * 0.5, 0, Math.PI * 2);
+    call(
+      "arc",
+      number(drop?.x) - radius * 0.34,
+      number(drop?.y) - radius * 0.18,
+      radius * 0.5,
+      0,
+      Math.PI * 2
+    );
+    call(
+      "arc",
+      number(drop?.x) + radius * 0.34,
+      number(drop?.y) - radius * 0.18,
+      radius * 0.5,
+      0,
+      Math.PI * 2
+    );
     call("moveTo", number(drop?.x) - radius, number(drop?.y));
     call("lineTo", number(drop?.x), number(drop?.y) + radius);
     call("lineTo", number(drop?.x) + radius, number(drop?.y));
@@ -512,7 +585,14 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     const currentRadius = charging ? radius * progress : radius;
     const drop = attack?.type === "boss_drop";
     set("strokeStyle", charging ? (drop ? "#8de7ff" : "#ffd166") : "#ff5f7a");
-    set("fillStyle", charging ? (drop ? "rgba(141, 231, 255, 0.14)" : "rgba(255, 209, 102, 0.12)") : "rgba(255, 95, 122, 0.2)");
+    set(
+      "fillStyle",
+      charging
+        ? drop
+          ? "rgba(141, 231, 255, 0.14)"
+          : "rgba(255, 209, 102, 0.12)"
+        : "rgba(255, 95, 122, 0.2)"
+    );
     set("lineWidth", charging ? 3 : 5);
     circlePath(attack?.x, attack?.y, currentRadius);
     call("fill");
@@ -534,7 +614,11 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     set("lineWidth", charging ? 3 : 5);
     call("beginPath");
     call("moveTo", number(attack?.x), number(attack?.y));
-    call("lineTo", number(attack?.x) + Math.cos(left) * reach, number(attack?.y) + Math.sin(left) * reach);
+    call(
+      "lineTo",
+      number(attack?.x) + Math.cos(left) * reach,
+      number(attack?.y) + Math.sin(left) * reach
+    );
     call("arc", number(attack?.x), number(attack?.y), reach, left, right);
     call("closePath");
     call("fill");
@@ -554,7 +638,12 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     });
     const protection = player?.projectileBlockReady
       ? 1
-      : clamp(number(player?.projectileBlockCharge) / Math.max(1, number(player?.projectileBlockNeeded, 1)), 0, 1);
+      : clamp(
+          number(player?.projectileBlockCharge) /
+            Math.max(1, number(player?.projectileBlockNeeded, 1)),
+          0,
+          1
+        );
     drawBar(x, y + height + 3, width, 4, protection, {
       fill: player?.projectileBlockReady ? "#8de7ff" : "#4aa3ff",
       border: "rgba(141, 231, 255, 0.7)",
@@ -586,20 +675,25 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
 
   function drawTowerFloorBadge(game) {
     const width = 150;
-    const height = 34;
+    const height = 20;
     const x = canvas.width / 2 - width / 2;
-    const y = 12;
-    roundedRectPath(x, y, width, height, 8);
+    const y = 0;
+    roundedRectPath(x, y, width, height, 6);
     set("fillStyle", "rgba(10, 14, 20, 0.76)");
     call("fill");
     set("strokeStyle", "rgba(255, 209, 102, 0.7)");
     set("lineWidth", 2);
     call("stroke");
-    drawText(`Tower Floor ${Math.max(1, Math.floor(number(game?.towerFloor, 1)))}`, canvas.width / 2, y + 22, {
-      align: "center",
-      color: "#ffd166",
-      font: "700 15px sans-serif",
-    });
+    drawText(
+      `Tower Floor ${Math.max(1, Math.floor(number(game?.towerFloor, 1)))}`,
+      canvas.width / 2,
+      y + 15,
+      {
+        align: "center",
+        color: "#ffd166",
+        font: "700 15px sans-serif",
+      }
+    );
   }
 
   function drawBossHealthBar(game) {
@@ -621,11 +715,16 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
         : boss.bossKind === "turret"
           ? "TURRET BOSS"
           : "BOSS";
-    drawText(`${kind} ${Math.max(0, Math.ceil(number(boss.hp)))} / ${Math.ceil(number(boss.maxHp))}`, canvas.width / 2, y + 13, {
-      align: "center",
-      color: "#ffffff",
-      font: "700 12px sans-serif",
-    });
+    drawText(
+      `${kind} ${Math.max(0, Math.ceil(number(boss.hp)))} / ${Math.ceil(number(boss.maxHp))}`,
+      canvas.width / 2,
+      y + 13,
+      {
+        align: "center",
+        color: "#ffffff",
+        font: "700 12px sans-serif",
+      }
+    );
   }
 
   function drawBossSpecialBar(game) {
@@ -674,7 +773,10 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     if (!equipped.length) return;
     const maxRailHeight = canvas.height - 120;
     const gap = 8;
-    const size = Math.max(32, Math.min(48, Math.floor((maxRailHeight - (equipped.length - 1) * gap - 16) / equipped.length)));
+    const size = Math.max(
+      32,
+      Math.min(48, Math.floor((maxRailHeight - (equipped.length - 1) * gap - 16) / equipped.length))
+    );
     const x = 18;
     const y = 108;
     const railHeight = equipped.length * size + (equipped.length - 1) * gap + 16;
@@ -706,14 +808,23 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     const upgradeGap = 7;
     const upgradeX = 78;
     const upgradeY = 108;
-    const railHeightUpgrade = activeUpgrades.length * upgradeSize + (activeUpgrades.length - 1) * upgradeGap + 14;
+    const railHeightUpgrade =
+      activeUpgrades.length * upgradeSize + (activeUpgrades.length - 1) * upgradeGap + 14;
     roundedRectPath(upgradeX - 7, upgradeY - 7, upgradeSize + 14, railHeightUpgrade, 8);
     set("fillStyle", "rgba(10, 14, 20, 0.72)");
     call("fill");
     set("strokeStyle", "rgba(120, 224, 143, 0.24)");
     call("stroke");
     activeUpgrades.forEach(({ id, tier, upgrade }, index) => {
-      drawUpgradeIcon(id, upgrade, tier, upgradeX, upgradeY + index * (upgradeSize + upgradeGap), upgradeSize, spriteAdapters);
+      drawUpgradeIcon(
+        id,
+        upgrade,
+        tier,
+        upgradeX,
+        upgradeY + index * (upgradeSize + upgradeGap),
+        upgradeSize,
+        spriteAdapters
+      );
     });
   }
 
@@ -743,8 +854,20 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
       set("globalAlpha", 1);
     }
     drawWeaponGlyph(weapon.kind, centerX, centerY, size, color, 0.44);
-    spriteAdapters?.spriteSystem?.drawSprite?.(`weaponIcon:${weapon.assetId || weaponId}`, centerX, centerY, iconSize, 0, { trim: false }) ||
-      spriteAdapters?.spriteSystem?.drawSprite?.(`weapon:${weapon.assetId || weaponId}`, centerX, centerY, iconSize);
+    spriteAdapters?.spriteSystem?.drawSprite?.(
+      `weaponIcon:${weapon.assetId || weaponId}`,
+      centerX,
+      centerY,
+      iconSize,
+      0,
+      { trim: false }
+    ) ||
+      spriteAdapters?.spriteSystem?.drawSprite?.(
+        `weapon:${weapon.assetId || weaponId}`,
+        centerX,
+        centerY,
+        iconSize
+      );
   }
 
   function drawUpgradeIcon(upgradeId, upgrade, tier, x, y, size, spriteAdapters) {
@@ -757,7 +880,14 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     set("lineWidth", 2);
     call("stroke");
     drawUpgradeGlyph(upgradeId, centerX, centerY, size, "#78e08f", 0.5);
-    spriteAdapters?.spriteSystem?.drawSprite?.(`runUpgradeIcon:${upgradeId}`, centerX, centerY, size * 0.68, 0, { trim: false });
+    spriteAdapters?.spriteSystem?.drawSprite?.(
+      `runUpgradeIcon:${upgradeId}`,
+      centerX,
+      centerY,
+      size * 0.68,
+      0,
+      { trim: false }
+    );
     const badgeSize = 14;
     roundedRectPath(x + size - badgeSize, y + size - badgeSize, badgeSize, badgeSize, 5);
     set("fillStyle", "rgba(120, 224, 143, 0.92)");
@@ -873,7 +1003,12 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     call("arc", number(x), number(y), Math.max(0, number(radius)), 0, Math.PI * 2);
   }
 
-  function drawText(text, x, y, { align = "start", color = "#f3f6fb", font = "14px sans-serif" } = {}) {
+  function drawText(
+    text,
+    x,
+    y,
+    { align = "start", color = "#f3f6fb", font = "14px sans-serif" } = {}
+  ) {
     set("fillStyle", color);
     set("font", font);
     set("textAlign", align);
@@ -890,7 +1025,8 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
   }
 
   function enemyAnimationState(enemy) {
-    if (enemy?.attackRange && enemy?.projectileCooldown && number(enemy.attackVisualTimer) > 0) return "attack";
+    if (enemy?.attackRange && enemy?.projectileCooldown && number(enemy.attackVisualTimer) > 0)
+      return "attack";
     return "default";
   }
 
@@ -908,19 +1044,29 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
   }
 
   function enemyFacesLeft(enemy) {
-    if (enemy?.bossKind === "charger" && enemy?.chargeState && Number.isFinite(Number(enemy?.chargeDirX))) return number(enemy.chargeDirX) < -0.1;
+    if (
+      enemy?.bossKind === "charger" &&
+      enemy?.chargeState &&
+      Number.isFinite(Number(enemy?.chargeDirX))
+    )
+      return number(enemy.chargeDirX) < -0.1;
     if (Number.isFinite(Number(enemy?.vx))) return number(enemy.vx) < -1;
     return false;
   }
 
   function playerSpriteId(player) {
-    if (number(player?.actionTimer) > 0 && player?.actionSprite) return `player:${player.actionSprite}`;
+    if (number(player?.actionTimer) > 0 && player?.actionSprite)
+      return `player:${player.actionSprite}`;
     if (player?.moving) return "player:walk";
     return "player";
   }
 
   function playerFacesLeft(player) {
-    return Number.isFinite(Number(player?.targetX)) && Number.isFinite(Number(player?.x)) && number(player.targetX) < number(player.x) - 2;
+    return (
+      Number.isFinite(Number(player?.targetX)) &&
+      Number.isFinite(Number(player?.x)) &&
+      number(player.targetX) < number(player.x) - 2
+    );
   }
 
   function withAlpha(color, alpha) {

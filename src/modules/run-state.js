@@ -1,5 +1,8 @@
+import { DEFAULT_RUN_MODE, normalizeRunMode } from "./run-mode.js";
+
 export function createRunStateSystem({
   canvas,
+  spatial,
   mapSystem,
   getSave,
   getShopBonuses,
@@ -7,14 +10,14 @@ export function createRunStateSystem({
   maxEquippedWeapons,
   weaponDefs = {},
 }) {
-  function createPlayer() {
+  function createPlayer(world) {
     const shopBonuses = getShopBonuses();
     const maxHp = 100 + shopBonuses.maxHp;
     return {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      targetX: canvas.width / 2,
-      targetY: canvas.height / 2,
+      x: world.width / 2,
+      y: world.height / 2,
+      targetX: world.width / 2,
+      targetY: world.height / 2,
       facingX: 0,
       facingY: 1,
       moving: false,
@@ -48,8 +51,20 @@ export function createRunStateSystem({
     return "spark_bolt";
   }
 
-  function resetGameState() {
+  /**
+   * @param {{ modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options]
+   */
+  function resetGameState({ modeId = DEFAULT_RUN_MODE, world } = {}) {
+    const runMode = normalizeRunMode(modeId);
+    const bounds = spatial?.createRunWorld({ modeId: runMode, world }) || Object.freeze({
+      modeId: runMode,
+      width: Number.isFinite(world?.width) && world.width > 0 ? world.width : canvas.width,
+      height: Number.isFinite(world?.height) && world.height > 0 ? world.height : canvas.height,
+      zoom: 1,
+    });
     const run = {
+      modeId: runMode,
+      world: bounds,
       running: true,
       paused: false,
       pauseReason: "",
@@ -58,7 +73,7 @@ export function createRunStateSystem({
       towerFloor: getSave().towerFloor || 1,
       bossSpawned: false,
       bossDefeated: false,
-      player: createPlayer(),
+      player: createPlayer(bounds),
       enemies: [],
       xpDrops: [],
       lootDrops: [],

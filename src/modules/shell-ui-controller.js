@@ -56,7 +56,7 @@ export function createShellUiController(options = {}) {
           onOpenShop: () => openShop(),
           onResetSave: () => resetSave(),
           onSetGameSpeed: (speed) => setGameSpeed(speed),
-          onStartRun: () => startRun(),
+          onStartRun: (modeId) => startRun(modeId),
           onToggleFullscreen: () => toggleFullscreen(),
           presenter,
           root,
@@ -134,8 +134,9 @@ export function createShellUiController(options = {}) {
     return shellRelicController.selectRelic?.(relicId);
   }
 
-  function startRun() {
-    onStartRun?.(snapshot());
+  function startRun(modeId = "climb") {
+    if (state.disposed || state.screen === "game") return snapshot();
+    onStartRun?.(modeId, snapshot());
     state = {
       ...state,
       screen: "game",

@@ -7,6 +7,7 @@ export const MODULE_NATIVE_WEAPON_FIRE_PROOF_SLOTS = Object.freeze(["createWeapo
  */
 export function createWeaponFireSystem({
   canvas,
+  spatial,
   content,
   weaponDefs,
   getGame,
@@ -39,6 +40,7 @@ export function createWeaponFireSystem({
   });
   const projectileSystem = weaponProjectiles.createWeaponProjectileSystem({
     canvas,
+    spatial,
     weaponDefs,
     getGame,
     getRunUpgradeTier,
@@ -54,6 +56,7 @@ export function createWeaponFireSystem({
   });
   const behaviorSystem = weaponBehaviors.createWeaponBehaviorSystem({
     canvas,
+    spatial,
     weaponDefs,
     getGame,
     getRunUpgradeTier,

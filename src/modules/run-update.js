@@ -1,5 +1,6 @@
 export function createRunUpdater({
   canvas,
+  spatial,
   getGame,
   combat,
   pickupSystem,
@@ -13,7 +14,32 @@ export function createRunUpdater({
   mapSystem,
   clamp,
 }) {
+  // Keep the normal-run body-safe margin stable. Pickup reach is an interaction
+  // radius, not a physical footprint; its aura may extend beyond the viewport.
+  function movementBounds(bounds, inset) {
+    const xInset = Math.min(inset, bounds.width / 2);
+    const yInset = Math.min(inset, bounds.height / 2);
+    return {
+      minX: xInset,
+      maxX: bounds.width - xInset,
+      minY: yInset,
+      maxY: bounds.height - yInset,
+    };
+  }
+
   function movePlayer(player, dt) {
+    const game = getGame();
+    const bounds = spatial?.physicalSize(game) || canvas;
+    const dynamicWorldBounds = Boolean(game?.world && spatial?.physicalSize);
+    const limits = movementBounds(bounds, dynamicWorldBounds ? 56 : 18);
+    // Reconcile both endpoints so an out-of-bounds target cannot keep walking.
+    // Pickup-only upgrades leave these bounds and legal positions unchanged.
+    if (dynamicWorldBounds) {
+      player.x = clamp(player.x, limits.minX, limits.maxX);
+      player.y = clamp(player.y, limits.minY, limits.maxY);
+      player.targetX = clamp(player.targetX, limits.minX, limits.maxX);
+      player.targetY = clamp(player.targetY, limits.minY, limits.maxY);
+    }
     const dx = player.targetX - player.x;
     const dy = player.targetY - player.y;
     const dist = Math.hypot(dx, dy);
@@ -27,8 +53,8 @@ export function createRunUpdater({
       player.x += player.facingX * step;
       player.y += player.facingY * step;
     }
-    player.x = clamp(player.x, 18, canvas.width - 18);
-    player.y = clamp(player.y, 18, canvas.height - 18);
+    player.x = clamp(player.x, limits.minX, limits.maxX);
+    player.y = clamp(player.y, limits.minY, limits.maxY);
   }
 
   function update(dt) {

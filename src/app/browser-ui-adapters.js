@@ -50,6 +50,7 @@ export function createBrowserUi({ documentRef, canvas }) {
     startTransition: get("startTransition"),
     titleScreen: get("titleScreen"),
     titleStartGame: get("titleStartGame"),
+    titleStartFarm: get("titleStartFarm"),
     toggleDebug: get("toggleDebug"),
   };
 }
@@ -194,6 +195,7 @@ function createBrowserShellUiAdapter({
   ui,
 }) {
   let bound = false;
+  let titleActive = true;
   const renderInventoryPanel = renderInventory || (() => {});
   const renderShopPanel = renderShop || (() => {});
   const setMenuOpen = (open) => {
@@ -215,20 +217,24 @@ function createBrowserShellUiAdapter({
     if (inventory) renderInventoryPanel();
   };
   const showTitle = () => {
+    titleActive = true;
     toggleHidden(ui.titleScreen, false);
     toggleHidden(ui.startTransition, true);
     setMenuOpen(false);
     return true;
   };
   const closeStartFlow = () => {
+    titleActive = false;
     toggleHidden(ui.titleScreen, true);
     toggleHidden(ui.startTransition, true);
     setMenuOpen(false);
     return true;
   };
-  const startFromTitle = () => {
+  const startFromTitle = (modeId) => {
+    if (!titleActive) return;
+    titleActive = false;
     if (typeof onStartAudio === "function") onStartAudio();
-    if (typeof onStartRun === "function") onStartRun();
+    if (typeof onStartRun === "function") onStartRun(modeId);
   };
   const toggleMenu = () => {
     const nextOpen = ui.runMenu?.classList?.contains?.("hidden") ?? true;
@@ -266,7 +272,8 @@ function createBrowserShellUiAdapter({
     bind() {
       if (bound) return true;
       bound = true;
-      ui.titleStartGame?.addEventListener?.("click", startFromTitle);
+      ui.titleStartGame?.addEventListener?.("click", () => startFromTitle("climb"));
+      ui.titleStartFarm?.addEventListener?.("click", () => startFromTitle("farm"));
       ui.openMenu?.addEventListener?.("click", toggleMenu);
       ui.closeMenu?.addEventListener?.("click", () => setMenuOpen(false));
       ui.closeLevelUp?.addEventListener?.("click", closeLevelUpMenu);

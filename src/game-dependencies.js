@@ -5,6 +5,311 @@
 (() => {
   "use strict";
 
+  const DEFAULT_RUN_MODE = "climb";
+
+  function normalizeRunMode(value) {
+    return value === "farm" ? "farm" : DEFAULT_RUN_MODE;
+  }
+
+  /**
+   * Pure spatial seam. All returned records are frozen, with no retained inputs.
+   *
+   * World: { modeId, width, height, zoom } in simulation units; zoom is configured.
+   * Camera: { x, y, zoom, width, height }; x/y are the visible world's top-left,
+   * width/height are visible WORLD dimensions, zoom is effective view/world scale.
+   * Point: { x, y }. Bounds: { left, top, right, bottom }, inclusive world edges.
+   * Ray exit: { x, y, distance, hitX, hitY }; point + direction * distance.
+   * `distance` is a ray parameter (a physical distance only for unit directions).
+   *
+   * Numeric inputs must be finite numbers, not coerced strings. Sizes/scales must
+   * be positive. Invalid or unrepresentable geometry throws RangeError. Callers
+   * handle invalid input before changing movement targets or first-input gates.
+   * No DOM, ambient runtime state, randomness, save access, or input mutation.
+   */
+
+  function finite(value, label) {
+    if (!Number.isFinite(value)) throw new RangeError(`${label} must be finite`);
+    return value === 0 ? 0 : value;
+  }
+
+  function positive(value, label) {
+    finite(value, label);
+    if (value <= 0) throw new RangeError(`${label} must be positive`);
+    return value;
+  }
+
+  function checkPoint(point, label) {
+    finite(point?.x, `${label}.x`);
+    finite(point?.y, `${label}.y`);
+  }
+
+  function checkSize(size, label) {
+    positive(size?.width, `${label}.width`);
+    positive(size?.height, `${label}.height`);
+  }
+
+  function checkCamera(camera) {
+    checkPoint(camera, "camera");
+    checkSize(camera, "camera");
+    positive(camera.zoom, "camera.zoom");
+  }
+
+  function pointRecord(x, y) {
+    return Object.freeze({ x: finite(x, "result.x"), y: finite(y, "result.y") });
+  }
+
+  function boundsRecord(left, top, right, bottom) {
+    finite(left, "bounds.left");
+    finite(top, "bounds.top");
+    finite(right, "bounds.right");
+    finite(bottom, "bounds.bottom");
+    if (right <= left || bottom <= top) throw new RangeError("bounds must have positive area");
+    return Object.freeze({ left: left === 0 ? 0 : left, top: top === 0 ? 0 : top, right, bottom });
+  }
+
+  /**
+   * Logical run-start width/height are required. Only exact modeId === "farm"
+   * selects Farm; absent/unknown modes select Climb. All supplied numeric options
+   * are validated even in Farm, where valid worldScale/zoom are ignored.
+   * @param {{modeId?: unknown, width?: number, height?: number, worldScale?: number, zoom?: number}} [options]
+   */
+  function createWorld({ modeId, width, height, worldScale = 3, zoom = 1.25 } = {}) {
+    checkSize({ width, height }, "viewport");
+    positive(worldScale, "worldScale");
+    positive(zoom, "zoom");
+    const farm = modeId === "farm";
+    return Object.freeze({
+      modeId: farm ? "farm" : "climb",
+      width: positive(farm ? width : width * worldScale, "world.width"),
+      height: positive(farm ? height : height * worldScale, "world.height"),
+      zoom: farm ? 1 : zoom,
+    });
+  }
+
+  /**
+   * Derive a snapshot from the current player, including teleports/outside points.
+   * Climb raises effective zoom for small worlds/large logical viewports without
+   * changing world.zoom. Farm is always identity; an oversized logical Farm
+   * viewport is rejected rather than silently zooming or exposing off-map pixels.
+   * CSS-only resize belongs in clientToView and never changes world dimensions.
+   * @param {{world?: {modeId?: unknown, width: number, height: number, zoom: number}, viewport?: {width: number, height: number}, player?: {x: number, y: number}}} [options]
+   */
+  function cameraFor({ world, viewport, player } = {}) {
+    checkSize(world, "world");
+    positive(world.zoom, "world.zoom");
+    checkSize(viewport, "viewport");
+    checkPoint(player, "player");
+    if (world.modeId === "farm") {
+      if (viewport.width > world.width || viewport.height > world.height) {
+        throw new RangeError("Farm identity viewport must fit the world");
+      }
+      return Object.freeze({ x: 0, y: 0, zoom: 1, width: viewport.width, height: viewport.height });
+    }
+    let zoom = positive(
+      Math.max(world.zoom, viewport.width / world.width, viewport.height / world.height),
+      "effective zoom"
+    );
+    // A rounded-down fit ratio must not leave a sliver of off-map viewport.
+    if (viewport.width / zoom > world.width || viewport.height / zoom > world.height) {
+      zoom = positive(zoom * (1 + Number.EPSILON), "effective zoom");
+    }
+    const width = positive(viewport.width / zoom, "camera.width");
+    const height = positive(viewport.height / zoom, "camera.height");
+    return Object.freeze({
+      x: Math.max(0, Math.min(world.width - width, player.x - width / 2)),
+      y: Math.max(0, Math.min(world.height - height, player.y - height / 2)),
+      zoom,
+      width,
+      height,
+    });
+  }
+
+  /** Convert world units to logical view/backing-canvas units (not CSS pixels). */
+  function worldToView(point, camera) {
+    checkPoint(point, "point");
+    checkCamera(camera);
+    return pointRecord((point.x - camera.x) * camera.zoom, (point.y - camera.y) * camera.zoom);
+  }
+
+  /** Convert logical view units to world units; points are intentionally not clamped. */
+  function viewToWorld(point, camera) {
+    checkPoint(point, "point");
+    checkCamera(camera);
+    return pointRecord(point.x / camera.zoom + camera.x, point.y / camera.zoom + camera.y);
+  }
+
+  /**
+   * point is {x: clientX, y: clientY}; rect is {left, top, width, height} in CSS
+   * pixels and viewport is {width, height} in logical view units. Apply independent
+   * CSS axis scales exactly once. No DPR multiplier, camera offset, or clamp here.
+   * Missing points (including empty touch lists) and zero-sized rects must not be
+   * passed through as targets: they throw. Values outside the rect remain outside.
+   */
+  function clientToView(point, rect, viewport) {
+    checkPoint(point, "client");
+    finite(rect?.left, "rect.left");
+    finite(rect?.top, "rect.top");
+    checkSize(rect, "rect");
+    checkSize(viewport, "viewport");
+    return pointRecord(
+      ((point.x - rect.left) / rect.width) * viewport.width,
+      ((point.y - rect.top) / rect.height) * viewport.height
+    );
+  }
+
+  /** Positive margin expands all edges; negative margin insets. Empty insets throw. */
+  function worldBounds(world, margin = 0) {
+    checkSize(world, "world");
+    finite(margin, "margin");
+    return boundsRecord(-margin, -margin, world.width + margin, world.height + margin);
+  }
+
+  /** Snapshot bounds in world units, not scaled view units. */
+  function visibleWorldBounds(camera) {
+    checkCamera(camera);
+    return boundsRecord(camera.x, camera.y, camera.x + camera.width, camera.y + camera.height);
+  }
+
+  /**
+   * Exit a nonempty inclusive bounds rect from an inside/on-edge point along a
+   * finite nonzero direction. Outside origins throw (this is not an entry cast).
+   * Axis-aligned rays are supported without division by zero. An outward ray on
+   * an edge exits at distance 0; inward/tangent rays reach the next forward edge.
+   * Exact corner ties set both hit flags. Near-corner hits keep the nearest axis.
+   */
+  function rayExit(point, direction, rect) {
+    checkPoint(point, "point");
+    checkPoint(direction, "direction");
+    const { left, top, right, bottom } = boundsRecord(
+      rect?.left,
+      rect?.top,
+      rect?.right,
+      rect?.bottom
+    );
+    if (point.x < left || point.x > right || point.y < top || point.y > bottom) {
+      throw new RangeError("ray origin must be inside bounds");
+    }
+    if (direction.x === 0 && direction.y === 0) throw new RangeError("ray direction must be nonzero");
+    const xEdge = direction.x > 0 ? right : left;
+    const yEdge = direction.y > 0 ? bottom : top;
+    const tx = direction.x === 0 ? Infinity : (xEdge - point.x) / direction.x;
+    const ty = direction.y === 0 ? Infinity : (yEdge - point.y) / direction.y;
+    const distance = finite(Math.min(tx, ty), "ray distance");
+    const hitX = tx === distance;
+    const hitY = ty === distance;
+    // Snap the hit axes exactly to their edges to avoid arithmetic overshoot.
+    const x = hitX ? xEdge : Math.max(left, Math.min(right, point.x + direction.x * distance));
+    const y = hitY ? yEdge : Math.max(top, Math.min(bottom, point.y + direction.y * distance));
+    return Object.freeze({ ...pointRecord(x, y), distance, hitX, hitY });
+  }
+
+  /**
+   * Source-owned simulation capability, injected into native and retained factories.
+   * The viewport is read live for spawn queries only; physical dimensions are fixed
+   * by the run's copied, frozen descriptor. No RNG, save access or global publisher.
+   */
+  function createWorldSpatialRuntime({ canvas, worldScale = 3, zoom = 1.25 }) {
+    /** @param {{ modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options] */
+    function createRunWorld({ modeId, world } = {}) {
+      // A supplied world is already in simulation units (including boss continuation).
+      // Invalid legacy dimensions fall back to a fresh viewport-based descriptor.
+      const supplied =
+        Number.isFinite(world?.width) &&
+        world.width > 0 &&
+        Number.isFinite(world?.height) &&
+        world.height > 0;
+      return createWorld({
+        modeId,
+        width: supplied ? world.width : canvas.width,
+        height: supplied ? world.height : canvas.height,
+        worldScale: supplied ? 1 : worldScale,
+        zoom: supplied ? (world.zoom ?? zoom) : zoom,
+      });
+    }
+
+    function physicalSize(game) {
+      return game?.world || canvas;
+    }
+
+    function visibleBounds(game) {
+      if (game?.world?.modeId !== "climb") return null;
+      return visibleWorldBounds(
+        cameraFor({ world: game.world, viewport: canvas, player: game.player })
+      );
+    }
+
+    function spawnPosition(game, angle, margin) {
+      const visible = visibleBounds(game);
+      if (!visible) return null; // Farm keeps its original arithmetic and RNG mapping.
+      const world = physicalSize(game);
+      // Clip the expanded view to physical bounds, except for a bounded exterior
+      // entry band where the camera actually touches a world edge. Never clamp a
+      // sampled position back into view or substitute the distant world perimeter.
+      const entry = {
+        left: visible.left === 0 ? -margin : Math.max(0, visible.left - margin),
+        top: visible.top === 0 ? -margin : Math.max(0, visible.top - margin),
+        right:
+          visible.right === world.width
+            ? world.width + margin
+            : Math.min(world.width, visible.right + margin),
+        bottom:
+          visible.bottom === world.height
+            ? world.height + margin
+            : Math.min(world.height, visible.bottom + margin),
+      };
+      const hit = rayExit(game.player, { x: Math.cos(angle), y: Math.sin(angle) }, entry);
+      return { x: hit.x, y: hit.y };
+    }
+
+    return Object.freeze({ createRunWorld, physicalSize, visibleBounds, spawnPosition });
+  }
+
+  // Match run-update's normal-run body-safe margin, independent of pickup reach.
+  const movementBounds = (bounds) => {
+    const xInset = Math.min(56, bounds.right / 2);
+    const yInset = Math.min(56, bounds.bottom / 2);
+    return {
+      minX: xInset,
+      maxX: bounds.right - xInset,
+      minY: yInset,
+      maxY: bounds.bottom - yInset,
+    };
+  };
+
+  // Source-owned composition capability: derive, never retain, a run's camera.
+  function createWorldViewRuntime({ canvas }) {
+    function snapshot(game) {
+      if (!game?.world || !game?.player) return null;
+      const viewport = Object.freeze({ width: canvas.width, height: canvas.height });
+      const camera = cameraFor({ world: game.world, viewport, player: game.player });
+      return Object.freeze({
+        camera,
+        viewport,
+        visibleBounds: visibleWorldBounds(camera),
+        worldBounds: worldBounds(game.world),
+      });
+    }
+
+    function targetFromEvent(event, game) {
+      const point = event?.touches ? event.touches[0] : event;
+      const view = clientToView(
+        { x: point?.clientX, y: point?.clientY },
+        canvas.getBoundingClientRect(),
+        canvas
+      );
+      const spatialView = snapshot(game);
+      if (!spatialView) return view;
+      const pointInWorld = viewToWorld(view, spatialView.camera);
+      const limits = movementBounds(spatialView.worldBounds);
+      return Object.freeze({
+        x: Math.max(limits.minX, Math.min(limits.maxX, pointInWorld.x)),
+        y: Math.max(limits.minY, Math.min(limits.maxY, pointInWorld.y)),
+      });
+    }
+
+    return Object.freeze({ snapshot, targetFromEvent });
+  }
+
   const MODULE_NATIVE_ASSET_RESOLVER_SLOTS = Object.freeze([
     "choiceIconDefinition",
     "choiceIconPath",
@@ -1124,6 +1429,7 @@
    */
   function createCombatSystem({
     canvas,
+    spatial,
     balance,
     combatDamage,
     content,
@@ -1162,6 +1468,7 @@
   } = {}) {
     const damageSystem = combatDamage.createCombatDamageSystem({
       canvas,
+      spatial,
       getGame,
       getRelicSpecialEffects,
       addQuestProgressForWeapon,
@@ -1176,6 +1483,7 @@
     });
     const enemySystem = enemies.createEnemySystem({
       canvas,
+      spatial,
       balance,
       enemyBehaviors,
       enemySpawning,
@@ -1192,6 +1500,7 @@
     });
     const weaponFireSystem = weaponFire.createWeaponFireSystem({
       canvas,
+      spatial,
       content,
       weaponDefs,
       getGame,
@@ -1235,6 +1544,7 @@
 
   function createCombatDamageSystem({
     canvas,
+    spatial,
     getGame,
     getRelicSpecialEffects,
     addQuestProgressForWeapon,
@@ -1274,15 +1584,16 @@
         damageEnemy(source.enemy, effects.thornDamage, "relic_thorns");
       }
       if (effects.teleportOnHitCooldown && !(p.teleportCooldown > 0)) {
+        const bounds = spatial?.physicalSize(game) || canvas;
         p.x = clamp(
           p.x + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
           p.radius,
-          canvas.width - p.radius
+          bounds.width - p.radius
         );
         p.y = clamp(
           p.y + (Math.random() < 0.5 ? -1 : 1) * (effects.teleportDistance || 140),
           p.radius,
-          canvas.height - p.radius
+          bounds.height - p.radius
         );
         p.targetX = p.x;
         p.targetY = p.y;
@@ -1558,6 +1869,7 @@
    */
   function createEnemySystem({
     canvas,
+    spatial,
     balance,
     enemyBehaviors,
     enemySpawning,
@@ -1592,6 +1904,7 @@
     const floorDifficulty = balance.floorDifficulty;
     const behaviorSystem = enemyBehaviors.createEnemyBehaviorSystem({
       canvas,
+      spatial,
       bossAbilities,
       boltConfig,
       getGame,
@@ -1601,6 +1914,7 @@
     });
     const spawnSystem = enemySpawning.createEnemySpawnSystem({
       canvas,
+      spatial,
       enemyTypes,
       levelDefs,
       getActiveFloorDef,
@@ -1621,11 +1935,19 @@
       const selectedAbilities = chooseBossAbilities(superBoss ? superBossAbilityCount : normalBossAbilityCount);
       const bossKind = selectedAbilities[0] || fallbackAbility;
       const bossHp = (bossBaseHp + game.kills * bossHpPerKill) * difficulty.hp;
-      const landingX = 72 + Math.random() * (canvas.width - 144);
-      const landingY = 90 + Math.random() * (canvas.height - 180);
-      const sideEntry = landingX < sideEntryMargin || landingX > canvas.width - sideEntryMargin;
-      const startX = sideEntry ? (landingX < canvas.width / 2 ? -entryOffsetX : canvas.width + entryOffsetX) : landingX;
-      const startY = sideEntry ? landingY : -entryOffsetY;
+      const visible = spatial?.visibleBounds(game);
+      const region = visible || { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
+      const width = region.right - region.left;
+      const height = region.bottom - region.top;
+      // Small Climb views collapse an overlarge inset to the midpoint, not NaN or
+      // inverted bounds. Normal Farm retains the exact old random mapping.
+      const insetX = visible ? Math.min(72, width / 2) : 72;
+      const insetY = visible ? Math.min(90, height / 2) : 90;
+      const landingX = region.left + insetX + Math.random() * (width - insetX * 2);
+      const landingY = region.top + insetY + Math.random() * (height - insetY * 2);
+      const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
+      const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
+      const startY = sideEntry ? landingY : region.top - entryOffsetY;
       if (!sideEntry) {
         const drop = bossConfig.drop || {};
         game.bossAttacks.push({
@@ -1805,6 +2127,7 @@
    */
   function createEnemyBehaviorSystem({
     canvas,
+    spatial,
     bossAbilities = {},
     boltConfig = {},
     getGame,
@@ -1897,15 +2220,16 @@
         }
         return true;
       }
+      const bounds = spatial?.physicalSize(game) || canvas;
       boss.x = clamp(
         boss.x + boss.chargeDirX * boss.chargeSpeed * dt,
         boss.radius,
-        canvas.width - boss.radius
+        bounds.width - boss.radius
       );
       boss.y = clamp(
         boss.y + boss.chargeDirY * boss.chargeSpeed * dt,
         boss.radius,
-        canvas.height - boss.radius
+        bounds.height - boss.radius
       );
       if (boss.chargeTimer <= 0) {
         const slash = bossAbilities.charger.slash;
@@ -2025,13 +2349,14 @@
           bolt.life = 0;
         }
       });
+      const bounds = spatial?.physicalSize(game) || canvas;
       game.enemyBolts = game.enemyBolts.filter(
         (bolt) =>
           bolt.life > 0 &&
           bolt.x > -24 &&
-          bolt.x < canvas.width + 24 &&
+          bolt.x < bounds.width + 24 &&
           bolt.y > -24 &&
-          bolt.y < canvas.height + 24
+          bolt.y < bounds.height + 24
       );
     }
 
@@ -2058,6 +2383,7 @@
    */
   function createEnemySpawnSystem({
     canvas,
+    spatial,
     enemyTypes,
     levelDefs = [],
     getActiveFloorDef,
@@ -2138,6 +2464,8 @@
     }
 
     function offscreenSpawnPosition(player, angle) {
+      const position = spatial?.spawnPosition(getGame(), angle, spawnEntryMargin);
+      if (position) return position;
       const dirX = Math.cos(angle);
       const dirY = Math.sin(angle);
       const edgeDistance = distanceToExpandedCanvasEdge(player, dirX, dirY);
@@ -2288,7 +2616,9 @@
     loop,
   }) {
     if (typeof bindMovementInput !== "function") {
-      throw new Error("Missing Tap Survivor runtime dependency: bindMovementInput must be a function");
+      throw new Error(
+        "Missing Tap Survivor runtime dependency: bindMovementInput must be a function"
+      );
     }
 
     let gameSpeed = 1;
@@ -2343,27 +2673,19 @@
       bindMovementInput({
         canvas,
         getGame,
+        onTarget: clearFirstMoveGate,
       });
-      bindFirstMoveGate();
 
       spriteSystem.loadSprites();
       renderMeta();
       globalRef.requestAnimationFrame(loop);
     }
 
-    function bindFirstMoveGate() {
-      const clearGate = (event) => {
-        const game = getGame();
-        if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
-        const rect = canvas.getBoundingClientRect();
-        const point = event.touches ? event.touches[0] : event;
-        game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
-        game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
-        game.awaitingFirstMoveInput = false;
-        bannerSystem.hideMovementGateBanner();
-      };
-      canvas.addEventListener("mousedown", clearGate);
-      canvas.addEventListener("touchstart", clearGate);
+    function clearFirstMoveGate() {
+      const game = getGame();
+      if (!game?.running || game.paused || !game.awaitingFirstMoveInput) return;
+      game.awaitingFirstMoveInput = false;
+      bannerSystem.hideMovementGateBanner();
     }
 
     function bindLifecycleFlush() {
@@ -2419,18 +2741,56 @@
     };
   }
 
-  function setTargetFromEvent({ event, canvas, game }) {
-    if (!game || !game.running || game.paused) return;
+  function setTargetFromEvent({ event, canvas, game, worldView }) {
+    if (!game || !game.running || game.paused || !game.player) return false;
+    const point = event?.touches ? event.touches[0] : event;
 
-    const rect = canvas.getBoundingClientRect();
-    const point = event.touches ? event.touches[0] : event;
-    game.player.targetX = ((point.clientX - rect.left) / rect.width) * canvas.width;
-    game.player.targetY = ((point.clientY - rect.top) / rect.height) * canvas.height;
+    try {
+      let target;
+      if (worldView) {
+        target = worldView.targetFromEvent(event, game);
+      } else {
+        // Deliberate legacy/Farm seam for standalone injected factories.
+        // A Climb run must never silently receive screen-space coordinates.
+        if (game.world && game.world.modeId !== "farm") return false;
+        const rect = canvas.getBoundingClientRect();
+        if (
+          ![
+            point?.clientX,
+            point?.clientY,
+            rect.left,
+            rect.top,
+            rect.width,
+            rect.height,
+            canvas.width,
+            canvas.height,
+          ].every(Number.isFinite) ||
+          rect.width <= 0 ||
+          rect.height <= 0 ||
+          canvas.width <= 0 ||
+          canvas.height <= 0
+        )
+          return false;
+        target = {
+          x: ((point.clientX - rect.left) / rect.width) * canvas.width,
+          y: ((point.clientY - rect.top) / rect.height) * canvas.height,
+        };
+      }
+      if (!Number.isFinite(target?.x) || !Number.isFinite(target?.y)) return false;
+      game.player.targetX = target.x;
+      game.player.targetY = target.y;
+      return true;
+    } catch {
+      // Invalid touch/rect geometry must leave the current target and gate intact.
+      return false;
+    }
   }
 
-  function bindMovementInput({ canvas, getGame }) {
+  function bindMovementInput({ canvas, getGame, worldView, onTarget }) {
     function setTarget(event) {
-      setTargetFromEvent({ event, canvas, game: getGame?.() });
+      const converted = setTargetFromEvent({ event, canvas, game: getGame?.(), worldView });
+      if (converted) onTarget?.();
+      return converted;
     }
 
     canvas.addEventListener?.("mousedown", setTarget);
@@ -4811,10 +5171,10 @@
     function drawTowerFloorBadge(game) {
       const floor = game?.towerFloor || 1;
       const width = 132;
-      const height = 34;
+      const height = 20;
       const x = canvas.width / 2 - width / 2;
-      const y = 12;
-      roundedRectPath(x, y, width, height, 8);
+      const y = 0;
+      roundedRectPath(x, y, width, height, 6);
       ctx.fillStyle = "rgba(10, 14, 20, 0.76)";
       ctx.fill();
       ctx.strokeStyle = "rgba(255, 209, 102, 0.7)";
@@ -4823,7 +5183,7 @@
       ctx.fillStyle = "#ffd166";
       ctx.font = "700 15px sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`Tower Floor ${floor}`, canvas.width / 2, y + 22);
+      ctx.fillText(`Tower Floor ${floor}`, canvas.width / 2, y + 15);
       ctx.textAlign = "start";
     }
 
@@ -5115,7 +5475,21 @@
 
   const BEAM_SPRITE_RASTER_WIDTH = 256;
 
-  function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, createSkillRailRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
+  function createRenderer({
+    canvas,
+    ctx,
+    worldView,
+    clamp,
+    createEnemyRenderer,
+    createHudRenderer,
+    createSkillRailRenderer,
+    drawImage,
+    drawSprite,
+    runUpgradeDefs = [],
+    skillEffectSprites = {},
+    spriteSheetRenderer,
+    weaponDefs,
+  }) {
     const hudRenderer = createHudRenderer({
       canvas,
       ctx,
@@ -5135,23 +5509,35 @@
 
     function draw(game) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawArena(game);
       if (!game) {
+        drawArena(game);
+        hudRenderer.drawTowerFloorBadge(game);
         drawMenuHint();
         return;
       }
-
-      game.areas.forEach(drawArea);
-      game.weaponBursts.forEach(drawWeaponBurst);
-      game.bossAttacks.forEach(drawBossAttack);
-      game.xpDrops.forEach(drawXp);
-      game.lootDrops.forEach(drawLoot);
-      game.bolts.forEach(drawBolt);
-      game.enemyBolts.forEach(enemyRenderer.drawEnemyBolt);
-      game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
-      game.beams.forEach(drawBeam);
-      game.pickupTexts.forEach(drawPickupText);
-      drawPlayer(game.player);
+      if (game.world?.modeId === "climb" && !worldView)
+        throw new Error("Climb renderer requires worldView");
+      const spatialView = worldView?.snapshot(game);
+      const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
+      withWorldTransform(spatialView, () => {
+        drawArena(game, bounds.right, bounds.bottom);
+        game.areas.forEach(drawArea);
+        game.weaponBursts.forEach(drawWeaponBurst);
+        game.bossAttacks.forEach(drawBossAttack);
+        game.xpDrops.forEach(drawXp);
+        game.lootDrops.forEach(drawLoot);
+        game.bolts.forEach(drawBolt);
+        game.enemyBolts.forEach(enemyRenderer.drawEnemyBolt);
+        game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
+        game.beams.forEach(drawBeam);
+        game.pickupTexts.forEach(drawPickupText);
+      });
+      // Paint the fixed screen-space badge after the opaque arena/world pass and
+      // before the later world-space player pass, matching the native adapters.
+      hudRenderer.drawTowerFloorBadge?.(game);
+      withWorldTransform(spatialView, () => {
+        drawPlayer(game.player);
+      });
       hudRenderer.drawBossSpawnNotice(game);
       hudRenderer.drawGameHud(game);
     }
@@ -5179,30 +5565,50 @@
       ctx.closePath();
     }
 
-    function drawArena(game) {
+    function drawArena(game, width = canvas.width, height = canvas.height) {
       const backgroundId = game?.background?.spriteId || "background:tower_floor";
-      const backgroundDrawn = drawImage?.(backgroundId, 0, 0, canvas.width, canvas.height);
+      const backgroundDrawn = drawImage?.(backgroundId, 0, 0, width, height);
       if (!backgroundDrawn) {
         ctx.fillStyle = "#17202c";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, width, height);
       }
       ctx.fillStyle = "rgba(10, 14, 20, 0.16)";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, width, height);
       ctx.strokeStyle = backgroundDrawn ? "rgba(223, 246, 255, 0.08)" : "#243244";
       ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += 48) {
+      for (let x = 0; x < width; x += 48) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
+        ctx.lineTo(x, height);
         ctx.stroke();
       }
-      for (let y = 0; y < canvas.height; y += 48) {
+      for (let y = 0; y < height; y += 48) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.lineTo(width, y);
         ctx.stroke();
       }
-      hudRenderer.drawTowerFloorBadge(game);
+    }
+
+    function withWorldTransform(spatialView, drawWorld) {
+      const camera = spatialView?.camera;
+      if (!camera) return drawWorld();
+      const translateX = camera.x * camera.zoom;
+      const translateY = camera.y * camera.zoom;
+      ctx.save();
+      try {
+        ctx.transform(
+          camera.zoom,
+          0,
+          0,
+          camera.zoom,
+          translateX ? -translateX : 0,
+          translateY ? -translateY : 0
+        );
+        return drawWorld();
+      } finally {
+        ctx.restore();
+      }
     }
 
     function drawMenuHint() {
@@ -5219,14 +5625,19 @@
       if (p.blinkTimer > 0) ctx.globalAlpha = 0.35 + Math.abs(Math.sin(p.blinkTimer * 24)) * 0.65;
       const spriteId = playerSpriteId(p);
       const size = Math.max(70, p.radius * 3.8);
-      const playerDrawn = p.actionTimer > 0 && p.actionSprite
-        ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
-        : drawSprite("player", p.x, p.y, size, 0, {
-            sheetId: "directional_player",
-            animationId: "move",
-            animationState: headingForEntity(p),
-            time: p.animTime,
-          }) || drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
+      const playerDrawn =
+        p.actionTimer > 0 && p.actionSprite
+          ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) ||
+            drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
+          : drawSprite("player", p.x, p.y, size, 0, {
+              sheetId: "directional_player",
+              animationId: "move",
+              animationState: headingForEntity(p),
+              time: p.animTime,
+            }) ||
+            drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) ||
+            (spriteId !== "player" &&
+              drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
       if (!playerDrawn) {
         ctx.fillStyle = "#69d2ff";
         ctx.beginPath();
@@ -5280,7 +5691,9 @@
     }
 
     function drawProjectileBlockBar(p, x, y, width) {
-      const progress = p.projectileBlockReady ? 1 : clamp((p.projectileBlockCharge || 0) / (p.projectileBlockNeeded || 1), 0, 1);
+      const progress = p.projectileBlockReady
+        ? 1
+        : clamp((p.projectileBlockCharge || 0) / (p.projectileBlockNeeded || 1), 0, 1);
       if (progress <= 0) return;
       ctx.fillStyle = "rgba(10, 14, 20, 0.82)";
       ctx.fillRect(x, y, width, 4);
@@ -5308,11 +5721,27 @@
         return;
       }
 
-      if (drop.type === "heart" && drawSprite("ui:heart", drop.x, drop.y, Math.max(26, drop.radius * 3))) return;
+      if (
+        drop.type === "heart" &&
+        drawSprite("ui:heart", drop.x, drop.y, Math.max(26, drop.radius * 3))
+      )
+        return;
       ctx.fillStyle = "#ff5f7a";
       ctx.beginPath();
-      ctx.arc(drop.x - drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
-      ctx.arc(drop.x + drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
+      ctx.arc(
+        drop.x - drop.radius * 0.34,
+        drop.y - drop.radius * 0.18,
+        drop.radius * 0.5,
+        0,
+        Math.PI * 2
+      );
+      ctx.arc(
+        drop.x + drop.radius * 0.34,
+        drop.y - drop.radius * 0.18,
+        drop.radius * 0.5,
+        0,
+        Math.PI * 2
+      );
       ctx.moveTo(drop.x - drop.radius, drop.y);
       ctx.lineTo(drop.x, drop.y + drop.radius);
       ctx.lineTo(drop.x + drop.radius, drop.y);
@@ -5336,7 +5765,14 @@
       const weapon = weaponDefs[bolt.weaponId];
       const rotation = Math.atan2(bolt.vy || 0, bolt.vx || 1);
       const tuning = skillEffectTuning(bolt.weaponId, weapon);
-      const boltDrawn = drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`, bolt.x, bolt.y, bolt.radius * 2 * tuning.scale, rotation, { alpha: tuning.alpha });
+      const boltDrawn = drawSprite(
+        `weapon:${weapon?.assetId || bolt.weaponId}`,
+        bolt.x,
+        bolt.y,
+        bolt.radius * 2 * tuning.scale,
+        rotation,
+        { alpha: tuning.alpha }
+      );
       if (!boltDrawn) {
         ctx.fillStyle = bolt.color;
         ctx.beginPath();
@@ -5353,13 +5789,16 @@
       const midY = (beam.y + beam.endY) / 2;
       const rotation = Math.atan2(beam.endY - beam.y, beam.endX - beam.x);
       const spriteHeight = Math.max(1, beam.width * tuning.scale);
-      if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, {
-        width: length,
-        height: spriteHeight,
-        rasterWidth: BEAM_SPRITE_RASTER_WIDTH,
-        rasterHeight: spriteHeight,
-        alpha: tuning.alpha,
-      })) {
+      if (
+        weapon &&
+        drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, {
+          width: length,
+          height: spriteHeight,
+          rasterWidth: BEAM_SPRITE_RASTER_WIDTH,
+          rasterHeight: spriteHeight,
+          alpha: tuning.alpha,
+        })
+      ) {
         return;
       }
       ctx.save();
@@ -5377,15 +5816,19 @@
       const weapon = weaponDefs[area.weaponId];
       const tuning = skillEffectTuning(area.weaponId, weapon);
       const spriteSize = area.radius * 2 * tuning.scale;
-      const spriteDrawn = weapon && drawSprite(`weapon:${weapon.assetId || area.weaponId}`, area.x, area.y, spriteSize, 0, {
-        width: spriteSize,
-        height: spriteSize,
-        alpha: Math.max(0.1, Math.min(1, area.life)) * tuning.alpha,
-      });
+      const spriteDrawn =
+        weapon &&
+        drawSprite(`weapon:${weapon.assetId || area.weaponId}`, area.x, area.y, spriteSize, 0, {
+          width: spriteSize,
+          height: spriteSize,
+          alpha: Math.max(0.1, Math.min(1, area.life)) * tuning.alpha,
+        });
       ctx.save();
       ctx.strokeStyle = area.color;
       ctx.fillStyle = area.color;
-      ctx.globalAlpha = spriteDrawn ? 0.12 * tuning.alpha : Math.max(0.1, Math.min(0.32, area.life)) * tuning.alpha;
+      ctx.globalAlpha = spriteDrawn
+        ? 0.12 * tuning.alpha
+        : Math.max(0.1, Math.min(0.32, area.life)) * tuning.alpha;
       ctx.beginPath();
       ctx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -5429,7 +5872,11 @@
       const radius = charging ? attack.radius * progress : attack.radius;
       const drop = attack.type === "boss_drop";
       ctx.strokeStyle = charging ? (drop ? "#8de7ff" : "#ffd166") : "#ff5f7a";
-      ctx.fillStyle = charging ? (drop ? "rgba(141, 231, 255, 0.14)" : "rgba(255, 209, 102, 0.12)") : "rgba(255, 95, 122, 0.2)";
+      ctx.fillStyle = charging
+        ? drop
+          ? "rgba(141, 231, 255, 0.14)"
+          : "rgba(255, 209, 102, 0.12)"
+        : "rgba(255, 95, 122, 0.2)";
       ctx.lineWidth = charging ? 3 : 5;
       ctx.beginPath();
       ctx.arc(attack.x, attack.y, radius, 0, Math.PI * 2);
@@ -6659,13 +7106,22 @@
       actions.className = "module-shell-actions";
       const startButton = documentRef.createElement("button");
       startButton.type = "button";
-      startButton.textContent = "Start Run";
+      startButton.textContent = "Climb";
       startButton.dataset.action = "start-run";
       startButton.disabled = !model.actions.canStartRun;
       addListener(startButton, "click", () => {
-        if (!startButton.disabled) onStartRun?.(model);
+        if (!startButton.disabled) onStartRun?.("climb", model);
       });
       actions.appendChild(startButton);
+      const farmButton = documentRef.createElement("button");
+      farmButton.type = "button";
+      farmButton.textContent = "Farm — original arena";
+      farmButton.dataset.action = "start-farm";
+      farmButton.disabled = !model.actions.canStartRun;
+      addListener(farmButton, "click", () => {
+        if (!farmButton.disabled) onStartRun?.("farm", model);
+      });
+      actions.appendChild(farmButton);
 
       const openMenuButton = createActionButton("open-menu", "Menu", () => onOpenPanel?.(model.activePanel, model));
       openMenuButton.setAttribute("aria-expanded", model.actions.openMenuExpanded);
@@ -6823,7 +7279,7 @@
             onOpenShop: () => openShop(),
             onResetSave: () => resetSave(),
             onSetGameSpeed: (speed) => setGameSpeed(speed),
-            onStartRun: () => startRun(),
+            onStartRun: (modeId) => startRun(modeId),
             onToggleFullscreen: () => toggleFullscreen(),
             presenter,
             root,
@@ -6901,8 +7357,9 @@
       return shellRelicController.selectRelic?.(relicId);
     }
 
-    function startRun() {
-      onStartRun?.(snapshot());
+    function startRun(modeId = "climb") {
+      if (state.disposed || state.screen === "game") return snapshot();
+      onStartRun?.(modeId, snapshot());
       state = {
         ...state,
         screen: "game",
@@ -7086,6 +7543,8 @@
     }
 
     function showTitleScreen() {
+      if (startTransitionTimer !== null) scheduler.clearTimeout(startTransitionTimer);
+      startTransitionTimer = null;
       moduleController.render({ screen: "title" });
       ui.titleScreen?.classList.remove("hidden");
       ui.startTransition?.classList.add("hidden");
@@ -7099,7 +7558,7 @@
       currentScreen = "game";
     }
 
-    function startGameFromTitle() {
+    function startGameFromTitle(modeId = "climb") {
       if (currentScreen !== "title") return;
       playStartLaugh?.();
       moduleController.render({ screen: "startingTransition" });
@@ -7109,8 +7568,9 @@
       if (startTransitionTimer) scheduler.clearTimeout(startTransitionTimer);
       startTransitionTimer = scheduler.setTimeout(() => {
         startTransitionTimer = null;
-        moduleController.startRun();
-        startRun();
+        if (currentScreen !== "startingTransition") return;
+        moduleController.startRun(modeId);
+        startRun(modeId);
       }, 450);
     }
 
@@ -7222,7 +7682,8 @@
     }
 
     function bind() {
-      ui.titleStartGame?.addEventListener("click", startGameFromTitle);
+      ui.titleStartGame?.addEventListener("click", () => startGameFromTitle("climb"));
+      ui.titleStartFarm?.addEventListener("click", () => startGameFromTitle("farm"));
       ui.openShop?.addEventListener("click", openShopMenu);
       ui.closeShop.addEventListener("click", closeShopMenu);
       ui.closeShopBottom.addEventListener("click", closeShopMenu);
@@ -7391,6 +7852,7 @@
     "startTransition",
     "titleScreen",
     "titleStartGame",
+    "titleStartFarm",
     "toggleDebug",
   ]);
 
@@ -7471,6 +7933,7 @@
       startTransition: get("startTransition"),
       titleScreen: get("titleScreen"),
       titleStartGame: get("titleStartGame"),
+      titleStartFarm: get("titleStartFarm"),
       toggleDebug: get("toggleDebug"),
     };
   }
@@ -7725,6 +8188,7 @@
    */
   function createWeaponBehaviorSystem({
     canvas,
+    spatial,
     weaponDefs,
     getGame,
     getRunUpgradeTier,
@@ -7834,11 +8298,12 @@
     }
 
     function nextBeamWall(x, y, dirX, dirY) {
-      if (!Number.isFinite(canvas?.width) || !Number.isFinite(canvas?.height)) {
+      const bounds = spatial?.physicalSize(getGame()) || canvas;
+      if (!Number.isFinite(bounds?.width) || !Number.isFinite(bounds?.height)) {
         return { distance: Infinity, hit: false, hitX: false, hitY: false };
       }
-      const xDistance = dirX > 0 ? (canvas.width - x) / dirX : dirX < 0 ? -x / dirX : Infinity;
-      const yDistance = dirY > 0 ? (canvas.height - y) / dirY : dirY < 0 ? -y / dirY : Infinity;
+      const xDistance = dirX > 0 ? (bounds.width - x) / dirX : dirX < 0 ? -x / dirX : Infinity;
+      const yDistance = dirY > 0 ? (bounds.height - y) / dirY : dirY < 0 ? -y / dirY : Infinity;
       const distance = Math.min(xDistance, yDistance);
       const epsilon = 0.000001;
       return {
@@ -8300,6 +8765,7 @@
    */
   function createWeaponFireSystem({
     canvas,
+    spatial,
     content,
     weaponDefs,
     getGame,
@@ -8332,6 +8798,7 @@
     });
     const projectileSystem = weaponProjectiles.createWeaponProjectileSystem({
       canvas,
+      spatial,
       weaponDefs,
       getGame,
       getRunUpgradeTier,
@@ -8347,6 +8814,7 @@
     });
     const behaviorSystem = weaponBehaviors.createWeaponBehaviorSystem({
       canvas,
+      spatial,
       weaponDefs,
       getGame,
       getRunUpgradeTier,
@@ -8504,6 +8972,7 @@
   /**
    * @param {{
    *   canvas: ProjectileCanvas,
+   *   spatial?: { physicalSize(game: ProjectileGame): ProjectileCanvas },
    *   weaponDefs: WeaponDefs,
    *   getGame: () => ProjectileGame,
    *   getRunUpgradeTier: (id: string) => number,
@@ -8521,6 +8990,7 @@
    */
   function createWeaponProjectileSystem({
     canvas,
+    spatial,
     weaponDefs,
     getGame,
     getRunUpgradeTier,
@@ -8606,18 +9076,19 @@
 
     function updateBolts(dt) {
       const game = getGame();
+      const bounds = spatial?.physicalSize(game) || canvas;
       game.bolts.forEach((bolt) => {
         bolt.x += bolt.vx * dt;
         bolt.y += bolt.vy * dt;
         bolt.life -= dt;
-        if (bolt.bounces > 0 && (bolt.x < bolt.radius || bolt.x > canvas.width - bolt.radius)) {
+        if (bolt.bounces > 0 && (bolt.x < bolt.radius || bolt.x > bounds.width - bolt.radius)) {
           bolt.vx *= -1;
-          bolt.x = clamp(bolt.x, bolt.radius, canvas.width - bolt.radius);
+          bolt.x = clamp(bolt.x, bolt.radius, bounds.width - bolt.radius);
           bolt.bounces -= 1;
         }
-        if (bolt.bounces > 0 && (bolt.y < bolt.radius || bolt.y > canvas.height - bolt.radius)) {
+        if (bolt.bounces > 0 && (bolt.y < bolt.radius || bolt.y > bounds.height - bolt.radius)) {
           bolt.vy *= -1;
-          bolt.y = clamp(bolt.y, bolt.radius, canvas.height - bolt.radius);
+          bolt.y = clamp(bolt.y, bolt.radius, bounds.height - bolt.radius);
           bolt.bounces -= 1;
         }
         const enemy = game.enemies.find((candidate) => {
@@ -8733,13 +9204,13 @@
     updateRunHud,
     showMovementGateBanner,
   }) {
-    function startRun() {
+    function startRun(modeId = DEFAULT_RUN_MODE) {
       shellUi.closeStartFlow();
       shopSystem.closeShop();
       runUi.hideEndScreen();
       ui.levelUp.classList.add("hidden");
       shellUi.closeRunMenu(false);
-      const game = resetGameState();
+      const game = resetGameState({ modeId: normalizeRunMode(modeId) });
       game.awaitingFirstMoveInput = true;
       showMovementGateBanner();
     }
@@ -8811,7 +9282,8 @@
       ui.relicChoice.classList.add("hidden");
       save.towerFloor = Math.max(save.towerFloor || 1, clearedFloor + 1);
       persist();
-      const game = resetGameState();
+      const clearedRun = getGame();
+      const game = resetGameState({ modeId: clearedRun.modeId, world: clearedRun.world });
       game.lastFloorClear = {
         floor: clearedFloor,
         relicName: awardedRelics.length
@@ -8831,6 +9303,7 @@
 
   function createRunStateSystem({
     canvas,
+    spatial,
     mapSystem,
     getSave,
     getShopBonuses,
@@ -8838,14 +9311,14 @@
     maxEquippedWeapons,
     weaponDefs = {},
   }) {
-    function createPlayer() {
+    function createPlayer(world) {
       const shopBonuses = getShopBonuses();
       const maxHp = 100 + shopBonuses.maxHp;
       return {
-        x: canvas.width / 2,
-        y: canvas.height / 2,
-        targetX: canvas.width / 2,
-        targetY: canvas.height / 2,
+        x: world.width / 2,
+        y: world.height / 2,
+        targetX: world.width / 2,
+        targetY: world.height / 2,
         facingX: 0,
         facingY: 1,
         moving: false,
@@ -8879,8 +9352,20 @@
       return "spark_bolt";
     }
 
-    function resetGameState() {
+    /**
+     * @param {{ modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options]
+     */
+    function resetGameState({ modeId = DEFAULT_RUN_MODE, world } = {}) {
+      const runMode = normalizeRunMode(modeId);
+      const bounds = spatial?.createRunWorld({ modeId: runMode, world }) || Object.freeze({
+        modeId: runMode,
+        width: Number.isFinite(world?.width) && world.width > 0 ? world.width : canvas.width,
+        height: Number.isFinite(world?.height) && world.height > 0 ? world.height : canvas.height,
+        zoom: 1,
+      });
       const run = {
+        modeId: runMode,
+        world: bounds,
         running: true,
         paused: false,
         pauseReason: "",
@@ -8889,7 +9374,7 @@
         towerFloor: getSave().towerFloor || 1,
         bossSpawned: false,
         bossDefeated: false,
-        player: createPlayer(),
+        player: createPlayer(bounds),
         enemies: [],
         xpDrops: [],
         lootDrops: [],
@@ -9005,6 +9490,7 @@
 
   function createRunUpdater({
     canvas,
+    spatial,
     getGame,
     combat,
     pickupSystem,
@@ -9018,7 +9504,32 @@
     mapSystem,
     clamp,
   }) {
+    // Keep the normal-run body-safe margin stable. Pickup reach is an interaction
+    // radius, not a physical footprint; its aura may extend beyond the viewport.
+    function movementBounds(bounds, inset) {
+      const xInset = Math.min(inset, bounds.width / 2);
+      const yInset = Math.min(inset, bounds.height / 2);
+      return {
+        minX: xInset,
+        maxX: bounds.width - xInset,
+        minY: yInset,
+        maxY: bounds.height - yInset,
+      };
+    }
+
     function movePlayer(player, dt) {
+      const game = getGame();
+      const bounds = spatial?.physicalSize(game) || canvas;
+      const dynamicWorldBounds = Boolean(game?.world && spatial?.physicalSize);
+      const limits = movementBounds(bounds, dynamicWorldBounds ? 56 : 18);
+      // Reconcile both endpoints so an out-of-bounds target cannot keep walking.
+      // Pickup-only upgrades leave these bounds and legal positions unchanged.
+      if (dynamicWorldBounds) {
+        player.x = clamp(player.x, limits.minX, limits.maxX);
+        player.y = clamp(player.y, limits.minY, limits.maxY);
+        player.targetX = clamp(player.targetX, limits.minX, limits.maxX);
+        player.targetY = clamp(player.targetY, limits.minY, limits.maxY);
+      }
       const dx = player.targetX - player.x;
       const dy = player.targetY - player.y;
       const dist = Math.hypot(dx, dy);
@@ -9032,8 +9543,8 @@
         player.x += player.facingX * step;
         player.y += player.facingY * step;
       }
-      player.x = clamp(player.x, 18, canvas.width - 18);
-      player.y = clamp(player.y, 18, canvas.height - 18);
+      player.x = clamp(player.x, limits.minX, limits.maxX);
+      player.y = clamp(player.y, limits.minY, limits.maxY);
     }
 
     function update(dt) {
@@ -9118,9 +9629,10 @@
         storage: createBalanceStorageProvider(globalRef),
       });
     }
-    const configuredContent = rawContent && typeof rawContent === "object" && Array.isArray(profiles)
-      ? balanceRuntime.content()
-      : rawContent;
+    const configuredContent =
+      rawContent && typeof rawContent === "object" && Array.isArray(profiles)
+        ? balanceRuntime.content()
+        : rawContent;
     const content = configuredContent || {};
     const assets = {
       createAssetResolver(assetContent) {
@@ -9188,6 +9700,8 @@
       rendering: { createRenderer },
       runLifecycle: { createRunLifecycle },
       runState: { createRunStateSystem },
+      createWorldSpatialRuntime,
+      createWorldViewRuntime,
       runUi: { createRunUi },
       runUpdate: { createRunUpdater },
       save,

@@ -2,7 +2,21 @@ import { headingForEntity } from "./directional-facing.js";
 
 const BEAM_SPRITE_RASTER_WIDTH = 256;
 
-export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, createHudRenderer, createSkillRailRenderer, drawImage, drawSprite, runUpgradeDefs = [], skillEffectSprites = {}, spriteSheetRenderer, weaponDefs }) {
+export function createRenderer({
+  canvas,
+  ctx,
+  worldView,
+  clamp,
+  createEnemyRenderer,
+  createHudRenderer,
+  createSkillRailRenderer,
+  drawImage,
+  drawSprite,
+  runUpgradeDefs = [],
+  skillEffectSprites = {},
+  spriteSheetRenderer,
+  weaponDefs,
+}) {
   const hudRenderer = createHudRenderer({
     canvas,
     ctx,
@@ -22,23 +36,35 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
 
   function draw(game) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawArena(game);
     if (!game) {
+      drawArena(game);
+      hudRenderer.drawTowerFloorBadge(game);
       drawMenuHint();
       return;
     }
-
-    game.areas.forEach(drawArea);
-    game.weaponBursts.forEach(drawWeaponBurst);
-    game.bossAttacks.forEach(drawBossAttack);
-    game.xpDrops.forEach(drawXp);
-    game.lootDrops.forEach(drawLoot);
-    game.bolts.forEach(drawBolt);
-    game.enemyBolts.forEach(enemyRenderer.drawEnemyBolt);
-    game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
-    game.beams.forEach(drawBeam);
-    game.pickupTexts.forEach(drawPickupText);
-    drawPlayer(game.player);
+    if (game.world?.modeId === "climb" && !worldView)
+      throw new Error("Climb renderer requires worldView");
+    const spatialView = worldView?.snapshot(game);
+    const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
+    withWorldTransform(spatialView, () => {
+      drawArena(game, bounds.right, bounds.bottom);
+      game.areas.forEach(drawArea);
+      game.weaponBursts.forEach(drawWeaponBurst);
+      game.bossAttacks.forEach(drawBossAttack);
+      game.xpDrops.forEach(drawXp);
+      game.lootDrops.forEach(drawLoot);
+      game.bolts.forEach(drawBolt);
+      game.enemyBolts.forEach(enemyRenderer.drawEnemyBolt);
+      game.enemies.forEach((enemy) => enemyRenderer.drawEnemy(enemy, game));
+      game.beams.forEach(drawBeam);
+      game.pickupTexts.forEach(drawPickupText);
+    });
+    // Paint the fixed screen-space badge after the opaque arena/world pass and
+    // before the later world-space player pass, matching the native adapters.
+    hudRenderer.drawTowerFloorBadge?.(game);
+    withWorldTransform(spatialView, () => {
+      drawPlayer(game.player);
+    });
     hudRenderer.drawBossSpawnNotice(game);
     hudRenderer.drawGameHud(game);
   }
@@ -66,30 +92,50 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     ctx.closePath();
   }
 
-  function drawArena(game) {
+  function drawArena(game, width = canvas.width, height = canvas.height) {
     const backgroundId = game?.background?.spriteId || "background:tower_floor";
-    const backgroundDrawn = drawImage?.(backgroundId, 0, 0, canvas.width, canvas.height);
+    const backgroundDrawn = drawImage?.(backgroundId, 0, 0, width, height);
     if (!backgroundDrawn) {
       ctx.fillStyle = "#17202c";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, width, height);
     }
     ctx.fillStyle = "rgba(10, 14, 20, 0.16)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, width, height);
     ctx.strokeStyle = backgroundDrawn ? "rgba(223, 246, 255, 0.08)" : "#243244";
     ctx.lineWidth = 1;
-    for (let x = 0; x < canvas.width; x += 48) {
+    for (let x = 0; x < width; x += 48) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
+      ctx.lineTo(x, height);
       ctx.stroke();
     }
-    for (let y = 0; y < canvas.height; y += 48) {
+    for (let y = 0; y < height; y += 48) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
+      ctx.lineTo(width, y);
       ctx.stroke();
     }
-    hudRenderer.drawTowerFloorBadge(game);
+  }
+
+  function withWorldTransform(spatialView, drawWorld) {
+    const camera = spatialView?.camera;
+    if (!camera) return drawWorld();
+    const translateX = camera.x * camera.zoom;
+    const translateY = camera.y * camera.zoom;
+    ctx.save();
+    try {
+      ctx.transform(
+        camera.zoom,
+        0,
+        0,
+        camera.zoom,
+        translateX ? -translateX : 0,
+        translateY ? -translateY : 0
+      );
+      return drawWorld();
+    } finally {
+      ctx.restore();
+    }
   }
 
   function drawMenuHint() {
@@ -106,14 +152,19 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     if (p.blinkTimer > 0) ctx.globalAlpha = 0.35 + Math.abs(Math.sin(p.blinkTimer * 24)) * 0.65;
     const spriteId = playerSpriteId(p);
     const size = Math.max(70, p.radius * 3.8);
-    const playerDrawn = p.actionTimer > 0 && p.actionSprite
-      ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
-      : drawSprite("player", p.x, p.y, size, 0, {
-          sheetId: "directional_player",
-          animationId: "move",
-          animationState: headingForEntity(p),
-          time: p.animTime,
-        }) || drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) || (spriteId !== "player" && drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
+    const playerDrawn =
+      p.actionTimer > 0 && p.actionSprite
+        ? drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) ||
+          drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) })
+        : drawSprite("player", p.x, p.y, size, 0, {
+            sheetId: "directional_player",
+            animationId: "move",
+            animationState: headingForEntity(p),
+            time: p.animTime,
+          }) ||
+          drawSprite(spriteId, p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }) ||
+          (spriteId !== "player" &&
+            drawSprite("player", p.x, p.y, size, 0, { flipX: playerFacesLeft(p) }));
     if (!playerDrawn) {
       ctx.fillStyle = "#69d2ff";
       ctx.beginPath();
@@ -167,7 +218,9 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
   }
 
   function drawProjectileBlockBar(p, x, y, width) {
-    const progress = p.projectileBlockReady ? 1 : clamp((p.projectileBlockCharge || 0) / (p.projectileBlockNeeded || 1), 0, 1);
+    const progress = p.projectileBlockReady
+      ? 1
+      : clamp((p.projectileBlockCharge || 0) / (p.projectileBlockNeeded || 1), 0, 1);
     if (progress <= 0) return;
     ctx.fillStyle = "rgba(10, 14, 20, 0.82)";
     ctx.fillRect(x, y, width, 4);
@@ -195,11 +248,27 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
       return;
     }
 
-    if (drop.type === "heart" && drawSprite("ui:heart", drop.x, drop.y, Math.max(26, drop.radius * 3))) return;
+    if (
+      drop.type === "heart" &&
+      drawSprite("ui:heart", drop.x, drop.y, Math.max(26, drop.radius * 3))
+    )
+      return;
     ctx.fillStyle = "#ff5f7a";
     ctx.beginPath();
-    ctx.arc(drop.x - drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
-    ctx.arc(drop.x + drop.radius * 0.34, drop.y - drop.radius * 0.18, drop.radius * 0.5, 0, Math.PI * 2);
+    ctx.arc(
+      drop.x - drop.radius * 0.34,
+      drop.y - drop.radius * 0.18,
+      drop.radius * 0.5,
+      0,
+      Math.PI * 2
+    );
+    ctx.arc(
+      drop.x + drop.radius * 0.34,
+      drop.y - drop.radius * 0.18,
+      drop.radius * 0.5,
+      0,
+      Math.PI * 2
+    );
     ctx.moveTo(drop.x - drop.radius, drop.y);
     ctx.lineTo(drop.x, drop.y + drop.radius);
     ctx.lineTo(drop.x + drop.radius, drop.y);
@@ -223,7 +292,14 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     const weapon = weaponDefs[bolt.weaponId];
     const rotation = Math.atan2(bolt.vy || 0, bolt.vx || 1);
     const tuning = skillEffectTuning(bolt.weaponId, weapon);
-    const boltDrawn = drawSprite(`weapon:${weapon?.assetId || bolt.weaponId}`, bolt.x, bolt.y, bolt.radius * 2 * tuning.scale, rotation, { alpha: tuning.alpha });
+    const boltDrawn = drawSprite(
+      `weapon:${weapon?.assetId || bolt.weaponId}`,
+      bolt.x,
+      bolt.y,
+      bolt.radius * 2 * tuning.scale,
+      rotation,
+      { alpha: tuning.alpha }
+    );
     if (!boltDrawn) {
       ctx.fillStyle = bolt.color;
       ctx.beginPath();
@@ -240,13 +316,16 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     const midY = (beam.y + beam.endY) / 2;
     const rotation = Math.atan2(beam.endY - beam.y, beam.endX - beam.x);
     const spriteHeight = Math.max(1, beam.width * tuning.scale);
-    if (weapon && drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, {
-      width: length,
-      height: spriteHeight,
-      rasterWidth: BEAM_SPRITE_RASTER_WIDTH,
-      rasterHeight: spriteHeight,
-      alpha: tuning.alpha,
-    })) {
+    if (
+      weapon &&
+      drawSprite(`weapon:${weapon.assetId || beam.weaponId}`, midX, midY, length, rotation, {
+        width: length,
+        height: spriteHeight,
+        rasterWidth: BEAM_SPRITE_RASTER_WIDTH,
+        rasterHeight: spriteHeight,
+        alpha: tuning.alpha,
+      })
+    ) {
       return;
     }
     ctx.save();
@@ -264,15 +343,19 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     const weapon = weaponDefs[area.weaponId];
     const tuning = skillEffectTuning(area.weaponId, weapon);
     const spriteSize = area.radius * 2 * tuning.scale;
-    const spriteDrawn = weapon && drawSprite(`weapon:${weapon.assetId || area.weaponId}`, area.x, area.y, spriteSize, 0, {
-      width: spriteSize,
-      height: spriteSize,
-      alpha: Math.max(0.1, Math.min(1, area.life)) * tuning.alpha,
-    });
+    const spriteDrawn =
+      weapon &&
+      drawSprite(`weapon:${weapon.assetId || area.weaponId}`, area.x, area.y, spriteSize, 0, {
+        width: spriteSize,
+        height: spriteSize,
+        alpha: Math.max(0.1, Math.min(1, area.life)) * tuning.alpha,
+      });
     ctx.save();
     ctx.strokeStyle = area.color;
     ctx.fillStyle = area.color;
-    ctx.globalAlpha = spriteDrawn ? 0.12 * tuning.alpha : Math.max(0.1, Math.min(0.32, area.life)) * tuning.alpha;
+    ctx.globalAlpha = spriteDrawn
+      ? 0.12 * tuning.alpha
+      : Math.max(0.1, Math.min(0.32, area.life)) * tuning.alpha;
     ctx.beginPath();
     ctx.arc(area.x, area.y, area.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -316,7 +399,11 @@ export function createRenderer({ canvas, ctx, clamp, createEnemyRenderer, create
     const radius = charging ? attack.radius * progress : attack.radius;
     const drop = attack.type === "boss_drop";
     ctx.strokeStyle = charging ? (drop ? "#8de7ff" : "#ffd166") : "#ff5f7a";
-    ctx.fillStyle = charging ? (drop ? "rgba(141, 231, 255, 0.14)" : "rgba(255, 209, 102, 0.12)") : "rgba(255, 95, 122, 0.2)";
+    ctx.fillStyle = charging
+      ? drop
+        ? "rgba(141, 231, 255, 0.14)"
+        : "rgba(255, 209, 102, 0.12)"
+      : "rgba(255, 95, 122, 0.2)";
     ctx.lineWidth = charging ? 3 : 5;
     ctx.beginPath();
     ctx.arc(attack.x, attack.y, radius, 0, Math.PI * 2);

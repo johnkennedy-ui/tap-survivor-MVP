@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
+import { bindMovementInput } from "../src/modules/input.js";
 
 import { content } from "../src/content.generated.mjs";
 import {
@@ -839,7 +840,9 @@ uiSurface.titleStartGame.click();
 const browserGameAfterStart = browserEntrypoint.dependencies.getGame();
 canvas.listeners.get("mousedown")({ clientX: 240, clientY: 270 });
 const browserMovementTargetUpdated =
-  browserGameAfterStart?.player?.targetX === 240 && browserGameAfterStart?.player?.targetY === 270;
+  browserGameAfterStart?.modeId === "climb" &&
+  browserGameAfterStart?.player?.targetX === 1248 && browserGameAfterStart?.player?.targetY === 810 &&
+  browserGameAfterStart?.awaitingFirstMoveInput === false;
 const browserAudioMutedBeforeClick = browserEntrypoint.dependencies.audioSystem.isMuted();
 uiSurface.muteAudio.click();
 const browserAudioMuteStateAfterClick = browserEntrypoint.dependencies.audioSystem.isMuted();
@@ -1514,7 +1517,10 @@ function createFakeAdapters({ canvas, calls, initialSave, storage, uiSurface }) 
         hideMovementGateBanner: () => calls.push("banner:hide-movement-gate"),
         showMovementGateBanner: () => calls.push("banner:show-movement-gate"),
       },
-      bindMovementInput: () => calls.push("input:bind"),
+      bindMovementInput: (options) => {
+        calls.push("input:bind");
+        return bindMovementInput(options);
+      },
       canvas,
       debugSystem: {
         bind: () => calls.push("debug:bind"),

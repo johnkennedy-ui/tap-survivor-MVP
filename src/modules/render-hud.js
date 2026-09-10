@@ -13,10 +13,10 @@ export function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, we
   function drawTowerFloorBadge(game) {
     const floor = game?.towerFloor || 1;
     const width = 132;
-    const height = 34;
+    const height = 20;
     const x = canvas.width / 2 - width / 2;
-    const y = 12;
-    roundedRectPath(x, y, width, height, 8);
+    const y = 0;
+    roundedRectPath(x, y, width, height, 6);
     ctx.fillStyle = "rgba(10, 14, 20, 0.76)";
     ctx.fill();
     ctx.strokeStyle = "rgba(255, 209, 102, 0.7)";
@@ -25,7 +25,7 @@ export function createHudRenderer({ canvas, ctx, roundedRectPath, drawSprite, we
     ctx.fillStyle = "#ffd166";
     ctx.font = "700 15px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(`Tower Floor ${floor}`, canvas.width / 2, y + 22);
+    ctx.fillText(`Tower Floor ${floor}`, canvas.width / 2, y + 15);
     ctx.textAlign = "start";
   }
 

@@ -23,6 +23,7 @@ import { createRelicSystem } from "./relics.js";
 import { createRunLifecycle } from "./run-lifecycle.js";
 import { createRunStateSystem } from "./run-state.js";
 import { createRunUpdater } from "./run-update.js";
+import { createWorldSpatialRuntime } from "./world-spatial-runtime.js";
 import { createRunUi } from "./run-ui.js";
 import { createSaveLoadHandler } from "./save-corruption.js";
 import { CURRENT_SAVE_VERSION, createDefaultSave } from "./save-defaults.js";
@@ -226,8 +227,10 @@ export function createModuleGameDependencyBag({
     return Math.min(upgrade?.maxTier || tier, tier);
   };
   const maxEquippedWeapons = () => relics.maxEquippedWeapons(stateStore.getSave());
+  const spatial = createWorldSpatialRuntime({ canvas: platformAdapters.canvas });
   const runStateSystem = createRunStateSystem({
     canvas: platformAdapters.canvas,
+    spatial,
     getSave: stateStore.getSave,
     getShopBonuses: () => uiAdapters.shopSystemAdapter.getShopBonuses?.() || {},
     getUpgradeTier,
@@ -303,6 +306,7 @@ export function createModuleGameDependencyBag({
   });
   const combatSystem = gameplayAdapters.combat.createCombatSystem({
     canvas: platformAdapters.canvas,
+    spatial,
     balance: { floorDifficulty },
     combatDamage: { createCombatDamageSystem },
     content,
@@ -411,6 +415,7 @@ export function createModuleGameDependencyBag({
   if (hasCombatRuntime(combatSystem)) {
     runUpdater = createRunUpdater({
       canvas: platformAdapters.canvas,
+      spatial,
       getGame: stateStore.getGame,
       combat: combatSystem,
       pickupSystem,
@@ -430,8 +435,8 @@ export function createModuleGameDependencyBag({
       clamp,
     });
   }
-  const resetGameState = () => {
-    const run = runStateSystem.resetGameState();
+  const resetGameState = (options) => {
+    const run = runStateSystem.resetGameState(options);
     effects.applyRelicSpecialEffects(run, getRelicSpecialEffects());
     applyRelicStartingRunUpgrades({
       effects,
@@ -442,8 +447,11 @@ export function createModuleGameDependencyBag({
     });
     return run;
   };
-  const resetDebugRun = ({ towerFloor = 1 } = {}) => {
-    const run = resetGameState();
+  /**
+   * @param {{ towerFloor?: number, modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options]
+   */
+  const resetDebugRun = ({ towerFloor = 1, modeId, world } = {}) => {
+    const run = resetGameState({ modeId, world });
     run.towerFloor = towerFloor;
     mapSystemInstance.applyToGame(run);
     stateStore.setGame(run);
@@ -515,6 +523,7 @@ export function createModuleGameDependencyBag({
     audioSystem,
     bannerSystem: platformAdapters.bannerSystem,
     bindRunLifecycle,
+    spatial,
     bindMovementInput: platformAdapters.bindMovementInput,
     canvas: platformAdapters.canvas,
     combat: gameplayAdapters.combat,

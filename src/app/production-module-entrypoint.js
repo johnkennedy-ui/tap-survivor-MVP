@@ -51,7 +51,7 @@ export function createProductionModuleEntrypoint(options = {}) {
       documentRef: resolvedPlatform.documentRef,
       globalRef: resolvedGlobalRef,
       onStartAudio: () => playStartAudio(),
-      onStartRun: () => lifecycle?.startRun?.(),
+      onStartRun: (modeId) => lifecycle?.startRun?.(modeId),
     });
   const resolvedDependencies =
     dependencies ||

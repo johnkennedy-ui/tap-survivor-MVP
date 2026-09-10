@@ -45,6 +45,7 @@ export const MODULE_NATIVE_UI_SLOTS = Object.freeze([
   "startTransition",
   "titleScreen",
   "titleStartGame",
+  "titleStartFarm",
   "toggleDebug",
 ]);
 
@@ -125,6 +126,7 @@ export function createUi(options = {}) {
     startTransition: get("startTransition"),
     titleScreen: get("titleScreen"),
     titleStartGame: get("titleStartGame"),
+    titleStartFarm: get("titleStartFarm"),
     toggleDebug: get("toggleDebug"),
   };
 }

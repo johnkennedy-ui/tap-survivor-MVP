@@ -7,6 +7,7 @@ export const MODULE_NATIVE_ENEMY_PROOF_SLOTS = Object.freeze(["createEnemySystem
  */
 export function createEnemySystem({
   canvas,
+  spatial,
   balance,
   enemyBehaviors,
   enemySpawning,
@@ -41,6 +42,7 @@ export function createEnemySystem({
   const floorDifficulty = balance.floorDifficulty;
   const behaviorSystem = enemyBehaviors.createEnemyBehaviorSystem({
     canvas,
+    spatial,
     bossAbilities,
     boltConfig,
     getGame,
@@ -50,6 +52,7 @@ export function createEnemySystem({
   });
   const spawnSystem = enemySpawning.createEnemySpawnSystem({
     canvas,
+    spatial,
     enemyTypes,
     levelDefs,
     getActiveFloorDef,
@@ -70,11 +73,19 @@ export function createEnemySystem({
     const selectedAbilities = chooseBossAbilities(superBoss ? superBossAbilityCount : normalBossAbilityCount);
     const bossKind = selectedAbilities[0] || fallbackAbility;
     const bossHp = (bossBaseHp + game.kills * bossHpPerKill) * difficulty.hp;
-    const landingX = 72 + Math.random() * (canvas.width - 144);
-    const landingY = 90 + Math.random() * (canvas.height - 180);
-    const sideEntry = landingX < sideEntryMargin || landingX > canvas.width - sideEntryMargin;
-    const startX = sideEntry ? (landingX < canvas.width / 2 ? -entryOffsetX : canvas.width + entryOffsetX) : landingX;
-    const startY = sideEntry ? landingY : -entryOffsetY;
+    const visible = spatial?.visibleBounds(game);
+    const region = visible || { left: 0, top: 0, right: canvas.width, bottom: canvas.height };
+    const width = region.right - region.left;
+    const height = region.bottom - region.top;
+    // Small Climb views collapse an overlarge inset to the midpoint, not NaN or
+    // inverted bounds. Normal Farm retains the exact old random mapping.
+    const insetX = visible ? Math.min(72, width / 2) : 72;
+    const insetY = visible ? Math.min(90, height / 2) : 90;
+    const landingX = region.left + insetX + Math.random() * (width - insetX * 2);
+    const landingY = region.top + insetY + Math.random() * (height - insetY * 2);
+    const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
+    const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
+    const startY = sideEntry ? landingY : region.top - entryOffsetY;
     if (!sideEntry) {
       const drop = bossConfig.drop || {};
       game.bossAttacks.push({
