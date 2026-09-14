@@ -847,6 +847,22 @@ check(
   bridgeCombat === undefined && !combatBridge.source.includes("globalThis.TapSurvivorCombat")
 );
 check("combat bridge source has generated banner", hasGeneratedBanner(combatBridge.source));
+const moduleCombatPhysics = combatPhysicsSnapshot(createModuleCombatSystem);
+check("combat system exposes actor collision resolver", moduleCombatPhysics.exposesResolveActorCollisions);
+check("combat collision resolver separates player and enemy sprites", moduleCombatPhysics.playerEnemySeparated);
+check("combat collision resolver separates enemy sprites", moduleCombatPhysics.enemyEnemySeparated);
+check("combat collision resolver clamps actors to the arena", moduleCombatPhysics.clamped);
+check("combat radial knockback moves actor and target together", moduleCombatPhysics.knockbackMovedTarget);
+check("module exports createEnemyBehaviorSystem", typeof createModuleEnemyBehaviorSystem === "function");
+const moduleBossBlast = runBossBlastFixture(createModuleEnemyBehaviorSystem);
+check(
+  "boss blast attacks damage and knock back the player once",
+  moduleBossBlast.playerDamageCalls.length === 1 &&
+    moduleBossBlast.playerDamageCalls[0]?.damage === 12 &&
+    moduleBossBlast.knockbackCalls.length === 1 &&
+    moduleBossBlast.knockbackCalls[0]?.actorId === "player" &&
+    moduleBossBlast.remainingAttacks === 1
+);
 
 const relicFixtureDefs = [
   {
@@ -1267,6 +1283,19 @@ const fallbackFixture = createFallbackScalingFixture();
 const fallbackSnapshot = scalingSnapshot(createModuleWeaponScaling(fallbackFixture), fallbackFixture.weaponDefs.bolt);
 check("weapon cooldown fallback module handles optional callbacks", fallbackSnapshot.weaponCooldown > 0);
 
+check("module exports createWeaponBehaviorSystem", typeof createModuleWeaponBehaviorSystem === "function");
+const moduleMineExplosion = runMineExplosionFixture(createModuleWeaponBehaviorSystem);
+check(
+  "mine explosion damages and knocks back enemies and player once",
+  moduleMineExplosion.enemyDamageCalls.length === 1 &&
+    moduleMineExplosion.enemyDamageCalls[0]?.enemyId === "inside" &&
+    moduleMineExplosion.playerDamageCalls.length === 1 &&
+    moduleMineExplosion.playerDamageCalls[0]?.damage === 20 &&
+    JSON.stringify(moduleMineExplosion.knockbackActors) === JSON.stringify(["inside", "player"]) &&
+    moduleMineExplosion.exploded === true &&
+    moduleMineExplosion.reapCount === 1
+);
+
 check("module exports rotateVector", typeof moduleRotateVector === "function");
 check(
   "module exports createWeaponProjectileSystem",
@@ -1359,7 +1388,7 @@ check(
 
 const moduleExplosion = runExplosionFixture(createModuleWeaponProjectileSystem);
 check(
-  "projectile explosion excludes the primary and dead enemies while preserving radius-edge damage",
+  "projectile explosion damages player and knocks back every affected actor once",
   moduleExplosion.damageCalls.length === 3 &&
     moduleExplosion.damageCalls[0]?.enemyId === "primary" &&
     moduleExplosion.damageCalls[0]?.weaponId === "bolt" &&
@@ -1370,6 +1399,10 @@ check(
     moduleExplosion.damageCalls[2]?.enemyId === "edge" &&
     moduleExplosion.damageCalls[2]?.weaponId === "bolt" &&
     approxEqual(moduleExplosion.damageCalls[2]?.damage, 7.56) &&
+    moduleExplosion.playerDamageCalls.length === 1 &&
+    approxEqual(moduleExplosion.playerDamageCalls[0]?.damage, 7.56) &&
+    JSON.stringify(moduleExplosion.knockbackActors) ===
+      JSON.stringify(["primary", "inside", "edge", "player"]) &&
     JSON.stringify(moduleExplosion.areas) ===
       JSON.stringify([{ life: 0.18, radius: 60, visualOnly: true, x: 0, y: 0 }])
 );
@@ -2461,6 +2494,11 @@ check("combat damage creates XP drops", moduleCombatDamageSnapshot.reap.xpDrops 
 check("combat damage spawns loot drops", moduleCombatDamageSnapshot.reap.lootDrops === "normal,boss");
 check("combat damage applies lifesteal", moduleCombatDamageSnapshot.reap.playerHp === 100);
 check("combat damage applies kill explosion", moduleCombatDamageSnapshot.reap.aliveEnemyHp === 2);
+check(
+  "combat damage kill explosion damages and knocks back the player through damagePlayer",
+  moduleCombatDamageSnapshot.killExplosionPlayer.playerHp === 96 &&
+    moduleCombatDamageSnapshot.killExplosionPlayer.playerDamageKnockbacks === 1
+);
 check("combat damage records kill quests", moduleCombatDamageSnapshot.reap.killQuestValue === 2);
 check("combat damage records boss quests", moduleCombatDamageSnapshot.reap.bossQuestValue === 1);
 check("combat damage advances tower after boss", moduleCombatDamageSnapshot.reap.advanceTowerFloor === 1);
@@ -2898,6 +2936,7 @@ function runSplitOnHitFixture(createWeaponProjectileSystem) {
 
 function runExplosionFixture(createWeaponProjectileSystem) {
   const fixture = createProjectileFixture({
+    player: { id: "player", hp: 100, x: 30, y: 0, radius: 10, targetX: 30, targetY: 0 },
     enemies: [
       { id: "primary", x: 0, y: 0, radius: 4, hp: 10 },
       { id: "inside", x: 64, y: 0, radius: 5, hp: 10 },
@@ -2919,6 +2958,8 @@ function runExplosionFixture(createWeaponProjectileSystem) {
       y,
     })),
     damageCalls: fixture.damageCalls,
+    knockbackActors: fixture.knockbackCalls.map((call) => call.actorId),
+    playerDamageCalls: fixture.playerDamageCalls,
   };
 }
 
@@ -5180,6 +5221,7 @@ function combatDamageSnapshot(createCombatDamageSystem, mathRef) {
   const questGroupCalls = [];
   const weaponQuestCalls = [];
   const lootDrops = [];
+  const knockbackCalls = [];
   let advanceTowerFloorCalls = 0;
   const system = createCombatDamageSystem({
     canvas: { height: 100, width: 100 },
@@ -5202,6 +5244,16 @@ function combatDamageSnapshot(createCombatDamageSystem, mathRef) {
     },
     distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
     clamp: (value, min, max) => Math.max(min, Math.min(max, value)),
+    applyRadialKnockback(actor, origin, force, options) {
+      knockbackCalls.push({
+        actorId: actor.id || "player",
+        force,
+        originX: origin.x,
+        originY: origin.y,
+        radius: options?.radius,
+        targetFollows: options?.targetFollows === true,
+      });
+    },
   });
 
   effects = { bossDamageBonus: 0.5 };
@@ -5277,11 +5329,29 @@ function combatDamageSnapshot(createCombatDamageSystem, mathRef) {
     xpDrops: game.xpDrops.map((drop) => `${drop.radius}:${drop.value}`).join(","),
   };
 
+  game = createCombatDamageGame();
+  game.player.x = 8;
+  game.player.y = 0;
+  game.player.targetX = 8;
+  game.player.targetY = 0;
+  game.enemies = [{ id: "trigger", boss: false, hp: 0, radius: 5, x: 0, xp: 3, y: 0 }];
+  effects = {
+    killExplosionDamage: 4,
+    killExplosionRadius: 10,
+  };
+  knockbackCalls.length = 0;
+  system.reapEnemies();
+  const killExplosionPlayer = {
+    playerDamageKnockbacks: knockbackCalls.filter((call) => call.actorId === "player").length,
+    playerHp: game.player.hp,
+  };
+
   return {
     enemy,
     exposesDamageEnemy: typeof system.damageEnemy === "function",
     exposesDamagePlayer: typeof system.damagePlayer === "function",
     exposesReapEnemies: typeof system.reapEnemies === "function",
+    killExplosionPlayer,
     player,
     reap,
   };
@@ -5318,6 +5388,194 @@ function withCombatRandomSequence(mathRef, values, callback) {
   } finally {
     mathRef.random = previousRandom;
   }
+}
+
+function combatPhysicsSnapshot(createCombatSystem) {
+  const canvas = { width: 100, height: 80 };
+  const player = { id: "player", hp: 100, radius: 10, targetX: 20, targetY: 20, x: 20, y: 20 };
+  const collidingEnemy = { id: "colliding", hp: 10, radius: 10, x: 25, y: 20 };
+  const leftEnemy = { id: "left", hp: 10, radius: 10, x: 60, y: 50 };
+  const rightEnemy = { id: "right", hp: 10, radius: 10, x: 65, y: 50 };
+  const edgeEnemy = { id: "edge", hp: 10, radius: 8, x: 1, y: 1 };
+  const game = {
+    enemies: [collidingEnemy, leftEnemy, rightEnemy, edgeEnemy],
+    player,
+    runUpgradeTiers: {},
+  };
+  let capturedKnockback = null;
+  const system = createCombatSystem({
+    canvas,
+    balance: { floorDifficulty: () => ({ damage: 1, hp: 1, speed: 1 }) },
+    combatDamage: {
+      createCombatDamageSystem(options) {
+        capturedKnockback = options.applyRadialKnockback;
+        return {
+          damageEnemy() {},
+          damagePlayer() {},
+          reapEnemies() {},
+        };
+      },
+    },
+    enemies: {
+      createEnemySystem() {
+        return {
+          spawnBoss() {},
+          spawnEnemies() {},
+          updateBossSpecials() {},
+          updateEnemies() {},
+          updateEnemyBolts() {},
+        };
+      },
+    },
+    weaponFire: {
+      createWeaponFireSystem(options) {
+        capturedKnockback ||= options.applyRadialKnockback;
+        return {
+          updateAreas() {},
+          updateBeams() {},
+          updateBolts() {},
+          updateWeaponBursts() {},
+          updateWeapons() {},
+        };
+      },
+    },
+    getGame: () => game,
+    getUpgradeTier: () => 0,
+    getShopBonuses: () => ({}),
+    getRelicSpecialEffects: () => ({}),
+    addQuestProgress() {},
+    addQuestProgressForWeapon() {},
+    addQuestProgressGroup() {},
+    spawnLootDrops() {},
+    getWeaponDamageMultiplier: () => 1,
+    distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+    clamp: moduleClamp,
+    weaponBehaviors: {},
+    weaponCooldowns: {},
+    weaponProjectiles: {},
+    weaponTargeting: {},
+  });
+  system.resolveActorCollisions();
+  const actor = { id: "knockback", hp: 10, radius: 10, targetX: 40, targetY: 40, x: 40, y: 40 };
+  capturedKnockback?.(actor, { x: 40, y: 40 }, 20, { targetFollows: true });
+  return {
+    clamped: edgeEnemy.x >= edgeEnemy.radius && edgeEnemy.y >= edgeEnemy.radius,
+    enemyEnemySeparated:
+      Math.hypot(leftEnemy.x - rightEnemy.x, leftEnemy.y - rightEnemy.y) >=
+      leftEnemy.radius + rightEnemy.radius - 0.000001,
+    exposesResolveActorCollisions: typeof system.resolveActorCollisions === "function",
+    knockbackMovedTarget: actor.x > 40 && actor.targetX > 40,
+    playerEnemySeparated:
+      Math.hypot(player.x - collidingEnemy.x, player.y - collidingEnemy.y) >=
+      player.radius + collidingEnemy.radius - 0.000001,
+  };
+}
+
+function runBossBlastFixture(createEnemyBehaviorSystem) {
+  const game = {
+    bossAttacks: [{ type: "shockwave", x: 0, y: 0, radius: 40, damage: 12, age: 0, windup: 0, hit: false }],
+    enemyBolts: [],
+    enemies: [],
+    player: { id: "player", hp: 100, radius: 10, targetX: 10, targetY: 0, x: 10, y: 0 },
+  };
+  const playerDamageCalls = [];
+  const knockbackCalls = [];
+  const system = createEnemyBehaviorSystem({
+    canvas: { width: 100, height: 80 },
+    getGame: () => game,
+    distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+    clamp: moduleClamp,
+    damagePlayer: (damage, source) => {
+      playerDamageCalls.push({ damage, sourceType: source?.type });
+      return damage;
+    },
+    applyRadialKnockback: (actor, origin, force, options) => {
+      knockbackCalls.push({
+        actorId: actor.id || "player",
+        force,
+        originX: origin.x,
+        originY: origin.y,
+        radius: options?.radius,
+        targetFollows: options?.targetFollows === true,
+      });
+    },
+  });
+  system.updateBossAttacks(0.1);
+  return {
+    knockbackCalls,
+    playerDamageCalls,
+    remainingAttacks: game.bossAttacks.length,
+  };
+}
+
+function runMineExplosionFixture(createWeaponBehaviorSystem) {
+  const game = {
+    areas: [
+      {
+        weaponId: "void_mine",
+        x: 0,
+        y: 0,
+        radius: 20,
+        color: "#8b5cf6",
+        life: 1,
+        damageOnce: true,
+        damage: 20,
+      },
+    ],
+    beams: [],
+    enemies: [
+      { id: "inside", hp: 30, radius: 5, x: 10, y: 0 },
+      { id: "outside", hp: 30, radius: 5, x: 40, y: 0 },
+    ],
+    enemyBolts: [],
+    player: { id: "player", hp: 100, radius: 10, targetX: 10, targetY: 0, x: 10, y: 0 },
+    weaponBursts: [],
+    weaponIconFlashes: {},
+  };
+  const enemyDamageCalls = [];
+  const playerDamageCalls = [];
+  const knockbackCalls = [];
+  let reapCount = 0;
+  const system = createWeaponBehaviorSystem({
+    canvas: { width: 100, height: 80 },
+    weaponDefs: {},
+    getGame: () => game,
+    getRunUpgradeTier: () => 0,
+    nearestEnemy: () => null,
+    weaponDamage: () => 20,
+    weaponReach: () => 20,
+    weaponWidth: () => 8,
+    damageEnemy: (enemy, damage, weaponId) => {
+      enemyDamageCalls.push({ enemyId: enemy.id, damage, weaponId });
+    },
+    damagePlayer: (damage, source) => {
+      playerDamageCalls.push({ damage, sourceType: source?.type });
+      return damage;
+    },
+    reapEnemies: () => {
+      reapCount += 1;
+    },
+    addQuestProgress() {},
+    applyRadialKnockback: (actor, origin, force, options) => {
+      knockbackCalls.push({
+        actorId: actor.id || "player",
+        force,
+        originX: origin.x,
+        originY: origin.y,
+        radius: options?.radius,
+        targetFollows: options?.targetFollows === true,
+      });
+    },
+    distance: (a, b) => Math.hypot(a.x - b.x, a.y - b.y),
+  });
+  system.updateAreas(0.1);
+  return {
+    enemyDamageCalls,
+    exploded: game.areas[0]?.exploded,
+    knockbackActors: knockbackCalls.map((call) => call.actorId),
+    playerDamageCalls,
+    reapCount,
+  };
 }
 
 function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
@@ -5757,11 +6015,13 @@ function runUpdateSnapshot(createRunUpdater) {
       "spawnBoss",
       "spawnEnemies",
       "updateEnemies",
+      "resolveActorCollisions",
       "updateEnemyBolts",
       "updateBossSpecials",
       "updateWeapons",
       "updateBolts",
       "updateAreas",
+      "resolveActorCollisions",
       "updateBeams",
       "updateWeaponBursts",
     ].map((name) => [
@@ -5867,14 +6127,16 @@ function runUpdateSnapshot(createRunUpdater) {
   const expectedOrder = [
     "map",
     "quest:survive:0.2",
-    "spawnBoss",
-    "spawnEnemies",
-    "updateEnemies",
-    "updateEnemyBolts",
-    "updateBossSpecials",
+      "spawnBoss",
+      "spawnEnemies",
+      "updateEnemies",
+      "resolveActorCollisions",
+      "updateEnemyBolts",
+      "updateBossSpecials",
     "updateWeapons",
     "updateBolts",
     "updateAreas",
+    "resolveActorCollisions",
     "updateBeams",
     "updateWeaponBursts",
     "updateXpDrops",
@@ -5942,12 +6204,14 @@ function runUpdateSnapshot(createRunUpdater) {
 function createProjectileFixture(overrides = {}) {
   const target = { id: "target", x: 3, y: 4, radius: 4, hp: 10 };
   const game = {
-    player: { x: 0, y: 0 },
+    player: overrides.player || { id: "player", hp: 100, x: 0, y: 0, radius: 10, targetX: 0, targetY: 0 },
     bolts: [],
     enemies: overrides.enemies || [target],
     areas: [],
   };
   const damageCalls = [];
+  const playerDamageCalls = [];
+  const knockbackCalls = [];
   let distanceCalls = 0;
   let reapCount = 0;
   const weaponDefs = {
@@ -5964,6 +6228,8 @@ function createProjectileFixture(overrides = {}) {
   const getRunUpgradeTier = overrides.getRunUpgradeTier || (() => 0);
   return {
     damageCalls,
+    playerDamageCalls,
+    knockbackCalls,
     distanceCalls: () => distanceCalls,
     game,
     options: {
@@ -5979,8 +6245,22 @@ function createProjectileFixture(overrides = {}) {
       damageEnemy: (enemy, damage, weaponId) => {
         damageCalls.push({ enemyId: enemy.id, damage, weaponId });
       },
+      damagePlayer: (damage, source) => {
+        playerDamageCalls.push({ damage, sourceType: source?.type });
+        return damage;
+      },
       reapEnemies: () => {
         reapCount += 1;
+      },
+      applyRadialKnockback: (actor, origin, force, options) => {
+        knockbackCalls.push({
+          actorId: actor.id || "player",
+          force,
+          originX: origin.x,
+          originY: origin.y,
+          radius: options?.radius,
+          targetFollows: options?.targetFollows === true,
+        });
       },
       distance: (a, b) => {
         distanceCalls += 1;

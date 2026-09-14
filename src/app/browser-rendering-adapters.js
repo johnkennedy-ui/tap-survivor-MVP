@@ -133,6 +133,7 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
                   }));
           if (!drawn) drawPlayerFallback(player);
           set("globalAlpha", previousAlpha);
+          drawPlayerHitFlash(player);
           if (number(player.invincibleTimer) > 0) {
             set("strokeStyle", "rgba(88, 255, 157, 0.72)");
             set("lineWidth", 3);
@@ -658,6 +659,17 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
     set("lineWidth", 2);
     circlePath(player?.x, player?.y, Math.max(6, number(player?.radius, 16)));
     call("stroke");
+  }
+
+  function drawPlayerHitFlash(player) {
+    if (number(player?.hitInvincibilityTimer) <= 0 || Math.floor(number(player.hitInvincibilityTimer) * 20) % 2 !== 0)
+      return;
+    call("save");
+    set("globalAlpha", 0.62);
+    set("fillStyle", "#ff3b3b");
+    circlePath(player.x, player.y, number(player.radius, 16) + 2);
+    call("fill");
+    call("restore");
   }
 
   function drawBossSpawnNotice(game) {

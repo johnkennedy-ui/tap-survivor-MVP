@@ -16,6 +16,8 @@ export function createEnemyBehaviorSystem({
   distance,
   clamp,
   damagePlayer,
+  damageEnemy,
+  applyRadialKnockback,
 } = {}) {
   const safeProjectileColor = "#b794ff";
 
@@ -155,12 +157,29 @@ export function createEnemyBehaviorSystem({
       attack.age += dt;
       if (!attack.hit && attack.age >= attack.windup) {
         attack.hit = true;
+        if (attack.type !== "boss_slash") {
+          for (const enemy of game.enemies || []) {
+            if (!(enemy.hp > 0) || distance(enemy, attack) > enemy.radius + attack.radius) continue;
+            damageEnemy?.(enemy, attack.damage, "enemy_blast");
+            applyRadialKnockback?.(enemy, attack, bossBlastKnockback(attack), {
+              radius: attack.radius,
+            });
+          }
+        }
         if (
           attack.type === "boss_slash"
             ? playerInSlash(p, attack)
             : distance(p, attack) <= p.radius + attack.radius
         ) {
-          damagePlayer?.(attack.damage, { type: attack.type, attack });
+          const beforeX = p.x;
+          const beforeY = p.y;
+          const dealt = damagePlayer?.(attack.damage, { type: attack.type, attack });
+          if (attack.type !== "boss_slash" && dealt > 0 && p.hp > 0 && p.x === beforeX && p.y === beforeY) {
+            applyRadialKnockback?.(p, attack, bossBlastKnockback(attack), {
+              radius: attack.radius,
+              targetFollows: true,
+            });
+          }
         }
       }
     });
@@ -244,6 +263,10 @@ export function createEnemyBehaviorSystem({
 
   function hasBossAbility(boss, ability) {
     return boss.bossAbilities?.includes(ability) || boss.bossKind === ability;
+  }
+
+  function bossBlastKnockback(attack) {
+    return Math.min(46, Math.max(24, (attack.radius || 0) * 0.22));
   }
 
   return {

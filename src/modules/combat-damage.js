@@ -12,7 +12,10 @@ export function createCombatDamageSystem({
   advanceTowerFloor,
   distance,
   clamp,
+  applyRadialKnockback,
 }) {
+  const hitInvincibilitySeconds = 0.5;
+
   function damageEnemy(enemy, amount, weaponId) {
     const game = getGame();
     const before = enemy.hp;
@@ -30,6 +33,7 @@ export function createCombatDamageSystem({
     const game = getGame();
     const p = game?.player;
     if (!p || p.invincibleTimer > 0) return 0;
+    if (isEnemyHit(source) && p.hitInvincibilityTimer > 0) return 0;
     const effects = getRelicSpecialEffects?.() || {};
     if (effects.dodgeChance && Math.random() < Math.min(0.95, effects.dodgeChance)) {
       p.blinkTimer = Math.max(p.blinkTimer || 0, 0.35);
@@ -56,6 +60,9 @@ export function createCombatDamageSystem({
       p.teleportCooldown = effects.teleportOnHitCooldown;
     }
     p.hp -= finalDamage;
+    if (isEnemyHit(source) && finalDamage > 0) {
+      p.hitInvincibilityTimer = hitInvincibilitySeconds;
+    }
     if (effects.blinkInvulnerabilitySeconds) {
       p.invincibleTimer = Math.max(p.invincibleTimer || 0, effects.blinkInvulnerabilitySeconds);
       p.blinkTimer = Math.max(p.blinkTimer || 0, effects.blinkInvulnerabilitySeconds);
@@ -75,12 +82,28 @@ export function createCombatDamageSystem({
         );
       }
       if (effects.killExplosionDamage && effects.killExplosionRadius) {
+        const blast = { x: enemy.x, y: enemy.y, radius: effects.killExplosionRadius };
+        const knockback = killExplosionKnockback(effects.killExplosionRadius);
         game.enemies.forEach((candidate) => {
           if (candidate === enemy || candidate.hp <= 0) return;
-          if (distance(enemy, candidate) <= effects.killExplosionRadius + candidate.radius) {
+          if (distance(blast, candidate) <= effects.killExplosionRadius + candidate.radius) {
             damageEnemy(candidate, effects.killExplosionDamage, "relic_kill_explosion");
+            applyRadialKnockback?.(candidate, blast, knockback, {
+              radius: effects.killExplosionRadius,
+            });
           }
         });
+        if (game.player && distance(blast, game.player) <= effects.killExplosionRadius + actorRadius(game.player)) {
+          const beforeX = game.player.x;
+          const beforeY = game.player.y;
+          const dealt = damagePlayer(effects.killExplosionDamage, { type: "relic_kill_explosion", origin: blast });
+          if (dealt > 0 && game.player.hp > 0 && game.player.x === beforeX && game.player.y === beforeY) {
+            applyRadialKnockback?.(game.player, blast, knockback * 0.82, {
+              radius: effects.killExplosionRadius,
+              targetFollows: true,
+            });
+          }
+        }
       }
       game.kills += 1;
       addQuestProgressGroup(killQuestIds, 1);
@@ -93,6 +116,18 @@ export function createCombatDamageSystem({
       }
     });
     game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
+  }
+
+  function killExplosionKnockback(radius) {
+    return Math.min(64, Math.max(30, radius * 0.38));
+  }
+
+  function actorRadius(actor) {
+    return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
+  }
+
+  function isEnemyHit(source) {
+    return Boolean(source.enemy || source.attack || source.bolt);
   }
 
   return {

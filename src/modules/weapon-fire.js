@@ -19,7 +19,9 @@ export function createWeaponFireSystem({
   playWeaponSfx,
   addQuestProgress,
   damageEnemy,
+  damagePlayer,
   reapEnemies,
+  applyRadialKnockback,
   distance,
   clamp,
   weaponBehaviors,
@@ -50,7 +52,9 @@ export function createWeaponFireSystem({
     weaponDamage: scaling.weaponDamage,
     projectileSkillModifier: scaling.projectileSkillModifier,
     damageEnemy,
+    damagePlayer,
     reapEnemies,
+    applyRadialKnockback,
     distance,
     clamp,
   });
@@ -65,8 +69,10 @@ export function createWeaponFireSystem({
     weaponReach: scaling.weaponReach,
     weaponWidth: scaling.weaponWidth,
     damageEnemy,
+    damagePlayer,
     reapEnemies,
     addQuestProgress,
+    applyRadialKnockback,
     distance,
   });
 

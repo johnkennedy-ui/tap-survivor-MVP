@@ -18,8 +18,10 @@ export function createWeaponBehaviorSystem({
   weaponReach,
   weaponWidth,
   damageEnemy,
+  damagePlayer,
   reapEnemies,
   addQuestProgress,
+  applyRadialKnockback,
   distance,
 } = {}) {
   function fireBeam(weaponId) {
@@ -260,20 +262,19 @@ export function createWeaponBehaviorSystem({
     const weapon = weaponDefs[weaponId];
     const target = nearestEnemy();
     if (!target) return;
-    game.enemies.forEach((enemy) => {
-      if (distance(target, enemy) <= weaponReach(weapon) + enemy.radius) {
-        damageEnemy(enemy, weaponDamage(weaponId), weaponId);
-      }
-    });
-    game.areas.push({
+    // Snapshot the strike center before the target is displaced by blast knockback.
+    const area = {
       weaponId,
       x: target.x,
       y: target.y,
       radius: weaponReach(weapon),
+      damage: weaponDamage(weaponId),
       color: weapon.color,
       life: 0.28,
       visualOnly: true,
-    });
+    };
+    damageActorsInArea(area, { includePlayer: true, knockback: true });
+    game.areas.push(area);
     reapEnemies();
   }
 
@@ -326,7 +327,7 @@ export function createWeaponBehaviorSystem({
       }
       if (area.damageOnce) {
         if (!area.exploded) {
-          damageEnemiesInArea(area);
+          damageActorsInArea(area, { includePlayer: true, knockback: true });
           area.exploded = true;
           area.life = Math.min(area.life, area.explosionLife || 0.28);
         }
@@ -335,19 +336,53 @@ export function createWeaponBehaviorSystem({
       area.tickTimer -= dt;
       if (area.tickTimer > 0) return;
       area.tickTimer = area.tick;
-      damageEnemiesInArea(area);
+      damageActorsInArea(area);
     });
     game.areas = game.areas.filter((area) => area.life > 0);
     reapEnemies();
   }
 
-  function damageEnemiesInArea(area) {
+  function damageActorsInArea(area, options = {}) {
     const game = getGame();
+    const knockback = areaKnockback(area);
     game.enemies.forEach((enemy) => {
+      if (!(enemy?.hp > 0)) return;
       if (distance(area, enemy) <= area.radius + enemy.radius) {
         damageEnemy(enemy, area.damage, area.weaponId);
+        if (options.knockback) {
+          applyRadialKnockback?.(enemy, area, knockback, { radius: area.radius });
+        }
       }
     });
+    if (!options.includePlayer || !game.player) return;
+    if (distance(area, game.player) <= area.radius + actorRadius(game.player)) {
+      const beforeX = game.player.x;
+      const beforeY = game.player.y;
+      const dealt = damagePlayer?.(area.damage, {
+        type: "area_explosion",
+        weaponId: area.weaponId,
+        area,
+      });
+      if (
+        !(dealt > 0) ||
+        !(game.player.hp > 0) ||
+        game.player.x !== beforeX ||
+        game.player.y !== beforeY
+      )
+        return;
+      applyRadialKnockback?.(game.player, area, knockback * 0.82, {
+        radius: area.radius,
+        targetFollows: true,
+      });
+    }
+  }
+
+  function areaKnockback(area) {
+    return Math.min(58, Math.max(26, (area.radius || 0) * 0.34));
+  }
+
+  function actorRadius(actor) {
+    return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
   }
 
   function playerFacingVector(player) {

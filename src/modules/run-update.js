@@ -69,16 +69,23 @@ export function createRunUpdater({
       combat.spawnBoss();
     }
 
+    updateHitInvincibilityTimer(player, dt);
+
+    combat.beginActorMotionFrame?.(dt);
     movePlayer(player, dt);
     combat.spawnEnemies(dt);
+    combat.captureActorMotionFrame?.();
     combat.updateEnemies(dt);
+    combat.resolveActorCollisions?.(dt);
     combat.updateEnemyBolts(dt);
     combat.updateBossSpecials(dt);
     combat.updateWeapons(dt);
     combat.updateBolts(dt);
     combat.updateAreas(dt);
+    combat.resolveActorCollisions?.(dt);
     combat.updateBeams(dt);
     combat.updateWeaponBursts(dt);
+    combat.finishActorMotionFrame?.(dt);
     updateRelicTimers(player, dt);
     updatePlayerAnimation(player, dt);
     pickupSystem.updateXpDrops(dt);
@@ -98,6 +105,11 @@ export function createRunUpdater({
     player.invincibleTimer = Math.max(0, (player.invincibleTimer || 0) - dt);
     player.blinkTimer = Math.max(0, (player.blinkTimer || 0) - dt);
     player.teleportCooldown = Math.max(0, (player.teleportCooldown || 0) - dt);
+  }
+
+  function updateHitInvincibilityTimer(player, dt) {
+    const remaining = (player.hitInvincibilityTimer || 0) - dt;
+    player.hitInvincibilityTimer = remaining > 1e-9 ? remaining : 0;
   }
 
   function collectXp(value) {

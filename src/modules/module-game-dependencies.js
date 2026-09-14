@@ -238,7 +238,17 @@ export function createModuleGameDependencyBag({
     maxEquippedWeapons,
     weaponDefs: contentRegistry.weaponDefs,
   });
-  const getRelicSpecialEffects = () => relics.specialEffects(stateStore.getSave());
+  // Debug fixtures may select one of a small set of transient combat modifier
+  // profiles.  It is deliberately in-memory only: normal runs see the relic
+  // result unchanged, and resetDebugRun clears it before constructing a run.
+  let debugSpecialEffects = null;
+  const getRelicSpecialEffects = () => ({
+    ...relics.specialEffects(stateStore.getSave()),
+    ...(debugSpecialEffects || {}),
+  });
+  const setDebugSpecialEffects = (effects) => {
+    debugSpecialEffects = effects ? Object.freeze({ ...effects }) : null;
+  };
   const getWeaponDamageMultiplier = () => relics.getWeaponDamageMultiplier(stateStore.getSave());
   const questSystem = createQuestSystemFacade(
     progressionAdapters.quests.createQuestSystem?.({
@@ -451,6 +461,7 @@ export function createModuleGameDependencyBag({
    * @param {{ towerFloor?: number, modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options]
    */
   const resetDebugRun = ({ towerFloor = 1, modeId, world } = {}) => {
+    setDebugSpecialEffects(null);
     const run = resetGameState({ modeId, world });
     run.towerFloor = towerFloor;
     mapSystemInstance.applyToGame(run);
@@ -465,6 +476,8 @@ export function createModuleGameDependencyBag({
     getGame: stateStore.getGame,
     pickupSystem,
     resetRun: resetDebugRun,
+    runUpdater,
+    setDebugSpecialEffects,
   });
   platformAdapters.debugSystem.setRuntime?.(debugRuntime);
 

@@ -1466,6 +1466,9 @@
     weaponProjectiles,
     weaponTargeting,
   } = {}) {
+    const actorMotion = new WeakMap();
+    let actorMotionFrame;
+    const maxSolverPasses = 10;
     const damageSystem = combatDamage.createCombatDamageSystem({
       canvas,
       spatial,
@@ -1480,6 +1483,7 @@
       advanceTowerFloor,
       distance,
       clamp,
+      applyRadialKnockback,
     });
     const enemySystem = enemies.createEnemySystem({
       canvas,
@@ -1496,6 +1500,8 @@
       distance,
       clamp,
       damagePlayer: damageSystem.damagePlayer,
+      damageEnemy: damageSystem.damageEnemy,
+      applyRadialKnockback,
       onBossSpawn,
     });
     const weaponFireSystem = weaponFire.createWeaponFireSystem({
@@ -1513,6 +1519,7 @@
       addQuestProgress,
       damageEnemy: damageSystem.damageEnemy,
       reapEnemies: damageSystem.reapEnemies,
+      applyRadialKnockback,
       distance,
       clamp,
       weaponBehaviors,
@@ -1527,6 +1534,301 @@
       return game?.runUpgradeTiers?.[id] || 0;
     }
 
+    function beginActorMotionFrame(dt = 0) {
+      actorMotionFrame = { dt, positions: new WeakMap(), sweptPairs: new Set() };
+      captureActorMotionFrame();
+    }
+
+    function captureActorMotionFrame() {
+      if (!actorMotionFrame) return;
+      const game = getGame();
+      [game?.player, ...(game?.enemies || [])].forEach((actor) => {
+        if (actor && !actorMotionFrame.positions.has(actor)) {
+          actorMotionFrame.positions.set(actor, snapshotActorMotion(actor));
+        }
+      });
+    }
+
+    function finishActorMotionFrame(dt = 0) {
+      const frame = actorMotionFrame;
+      actorMotionFrame = undefined;
+      if (!frame) return;
+      const game = getGame();
+      const actors = [game?.player, ...(game?.enemies || [])].filter(isPhysicalActor);
+      actors.forEach((actor) => {
+        const start = frame.positions.get(actor);
+        if (start) rememberActorMotion(actor, start, dt);
+        else actorMotion.set(actor, snapshotActorMotion(actor));
+      });
+    }
+
+    function resolveActorCollisions(dt = 0) {
+      const game = getGame();
+      if (!game?.player || !Array.isArray(game.enemies)) return;
+      const actors = [game.player, ...game.enemies.filter(isCollisionActor)].filter(isPhysicalActor);
+      const motion = new Map(actors.map((actor) => [actor, actorMotionFor(actor, dt)]));
+      const sweptPairs = actorMotionFrame?.sweptPairs || new Set();
+      const passCount = Math.min(maxSolverPasses, Math.max(4, Math.ceil(Math.sqrt(actors.length)) + 2));
+      for (let pass = 0; pass < passCount; pass += 1) {
+        const playerMoved = resolvePlayerEnemyContacts(game.player, game.enemies, dt, motion, sweptPairs);
+        const enemiesMoved = resolveEnemyEnemyContacts(game.enemies, dt, motion, sweptPairs);
+        if (!playerMoved && !enemiesMoved) break;
+      }
+      clampActor(game.player);
+      game.enemies.filter(isCollisionActor).forEach(clampActor);
+      if (!actorMotionFrame) actors.forEach((actor) => rememberActorMotion(actor, motion.get(actor), dt));
+    }
+
+    function resolvePlayerEnemyContacts(player, enemyList, dt, motion, sweptPairs) {
+      if (!isPhysicalActor(player)) return false;
+      let moved = false;
+      enemyList.forEach((enemy, index) => {
+        if (!isCollisionActor(enemy)) return;
+        const contact = pairContact(player, enemy, index, motion, sweptPairs, `player:${index}`);
+        if (!contact) return;
+        const playerShare = enemy.boss ? 0.72 : 0.58;
+        moved = separateContact(player, enemy, contact, playerShare, dt) || moved;
+      });
+      return moved;
+    }
+
+    function resolveEnemyEnemyContacts(enemyList, dt, motion, sweptPairs) {
+      let moved = false;
+      for (let leftIndex = 0; leftIndex < enemyList.length; leftIndex += 1) {
+        const left = enemyList[leftIndex];
+        if (!isCollisionActor(left)) continue;
+        for (let rightIndex = leftIndex + 1; rightIndex < enemyList.length; rightIndex += 1) {
+          const right = enemyList[rightIndex];
+          if (!isCollisionActor(right)) continue;
+          const contact = pairContact(
+            right,
+            left,
+            leftIndex + rightIndex,
+            motion,
+            sweptPairs,
+            `enemy:${leftIndex}:${rightIndex}`
+          );
+          if (!contact) continue;
+          moved = separateContact(right, left, contact, 0.5, dt) || moved;
+        }
+      }
+      return moved;
+    }
+
+    function pairContact(first, second, seed, motion, sweptPairs, pairId) {
+      const overlap = contactVector(first, second, seed);
+      if (overlap) return overlap;
+      if (sweptPairs.has(pairId)) return null;
+      const swept = sweptContactVector(first, second, motion.get(first), motion.get(second), seed);
+      if (!swept) return null;
+      sweptPairs.add(pairId);
+      placeAtSweepContact(first, swept.first, swept.time);
+      placeAtSweepContact(second, swept.second, swept.time);
+      const contact = contactVector(first, second, seed);
+      return contact ? { ...contact, x: swept.x, y: swept.y } : swept;
+    }
+
+    function separateContact(first, second, contact, firstShare, dt) {
+      let moved =
+        moveActor(first, contact.x * contact.overlap * firstShare, contact.y * contact.overlap * firstShare, { dt }) +
+        moveActor(second, -contact.x * contact.overlap * (1 - firstShare), -contact.y * contact.overlap * (1 - firstShare), { dt });
+      // Transfer separation lost at a physical boundary to the actor that can move.
+      // Both attempts are bounded; an overfull arena must not cause an endless solve.
+      let remaining = contactVector(first, second);
+      if (!remaining || remaining.overlap <= 0.0001) return moved > 0.0001;
+      moved += moveActor(first, remaining.x * remaining.overlap, remaining.y * remaining.overlap, { dt });
+      remaining = contactVector(first, second);
+      if (!remaining || remaining.overlap <= 0.0001) return moved > 0.0001;
+      moved += moveActor(second, -remaining.x * remaining.overlap, -remaining.y * remaining.overlap, { dt });
+      return moved > 0.0001;
+    }
+
+    function actorMotionFor(actor, dt) {
+      const captured = actorMotionFrame?.positions.get(actor);
+      const previous = captured || actorMotion.get(actor);
+      const start =
+        previous && Number.isFinite(previous.x) && Number.isFinite(previous.y)
+          ? previous
+          : { x: actor.x, y: actor.y };
+      const moved = Math.hypot(actor.x - start.x, actor.y - start.y);
+      const speed = Math.max(
+        Number.isFinite(actor.speed) ? Math.max(0, actor.speed) : 0,
+        Number.isFinite(actor.vx) || Number.isFinite(actor.vy)
+          ? Math.hypot(actor.vx || 0, actor.vy || 0)
+          : 0
+      );
+      const allowance = speed * Math.max(0, dt) + Math.max(1, physicalRadius(actor) * 0.25);
+      const teleportRelocation =
+        actor.teleportCooldown > 0 &&
+        ((Number.isFinite(previous?.teleportCooldown) && actor.teleportCooldown > previous.teleportCooldown + 0.0001) ||
+          moved > allowance + Math.max(1, physicalRadius(actor) * 0.25));
+      return {
+        ...start,
+        canSweep:
+          Boolean(previous) &&
+          !teleportRelocation &&
+          Number.isFinite(dt) &&
+          dt > 0 &&
+          (speed <= 0 || moved <= allowance),
+      };
+    }
+
+    function sweptContactVector(first, second, firstMotion, secondMotion, seed) {
+      if (!firstMotion?.canSweep || !secondMotion?.canSweep) return null;
+      const firstDx = first.x - firstMotion.x;
+      const firstDy = first.y - firstMotion.y;
+      const secondDx = second.x - secondMotion.x;
+      const secondDy = second.y - secondMotion.y;
+      const startX = firstMotion.x - secondMotion.x;
+      const startY = firstMotion.y - secondMotion.y;
+      const deltaX = firstDx - secondDx;
+      const deltaY = firstDy - secondDy;
+      const deltaLengthSquared = deltaX * deltaX + deltaY * deltaY;
+      const unclampedTime =
+        deltaLengthSquared > 0.00000001 ? -(startX * deltaX + startY * deltaY) / deltaLengthSquared : 0;
+      const time = Math.max(0, Math.min(1, unclampedTime));
+      const closestX = startX + deltaX * time;
+      const closestY = startY + deltaY * time;
+      const closestDistance = Math.hypot(closestX, closestY);
+      const overlap = physicalRadius(first) + physicalRadius(second) - closestDistance;
+      if (!(overlap > 0.0001)) return null;
+      const direction =
+        closestDistance > 0.0001
+          ? { x: closestX / closestDistance, y: closestY / closestDistance }
+          : sweepFallbackDirection(startX, startY, seed);
+      return { first: firstMotion, overlap, second: secondMotion, time, x: direction.x, y: direction.y };
+    }
+
+    function sweepFallbackDirection(startX, startY, seed) {
+      const distanceFromStart = Math.hypot(startX, startY);
+      if (distanceFromStart > 0.0001) return { x: startX / distanceFromStart, y: startY / distanceFromStart };
+      const angle = seed * 2.399963229728653;
+      return { x: Math.cos(angle), y: Math.sin(angle) };
+    }
+
+    function placeAtSweepContact(actor, motion, time) {
+      const x = motion.x + (actor.x - motion.x) * time;
+      const y = motion.y + (actor.y - motion.y) * time;
+      actor.x = clampToArena(actor, x, "width");
+      actor.y = clampToArena(actor, y, "height");
+    }
+
+    function rememberActorMotion(actor, start, dt) {
+      if (start && Number.isFinite(dt) && dt > 0) {
+        if (Number.isFinite(actor.vx)) actor.vx = (actor.x - start.x) / dt;
+        if (Number.isFinite(actor.vy)) actor.vy = (actor.y - start.y) / dt;
+      }
+      actorMotion.set(actor, snapshotActorMotion(actor));
+    }
+
+    function snapshotActorMotion(actor) {
+      return { x: actor.x, y: actor.y, teleportCooldown: actor.teleportCooldown || 0 };
+    }
+
+    function applyRadialKnockback(actor, origin, force = 0, options = {}) {
+      if (!isPhysicalActor(actor) || !Number.isFinite(force) || !(force > 0)) return 0;
+      const center = blastCenter(origin, actor);
+      const dx = actor.x - center.x;
+      const dy = actor.y - center.y;
+      const distanceToOrigin = Math.hypot(dx, dy);
+      const direction =
+        distanceToOrigin > 0.0001
+          ? { x: dx / distanceToOrigin, y: dy / distanceToOrigin }
+          : fallbackDirection(actor, center);
+      const radius = Number.isFinite(options.radius) ? Math.max(0, options.radius) : 0;
+      const reach = radius + physicalRadius(actor);
+      const falloff = radius > 0 ? Math.max(0.25, 1 - distanceToOrigin / Math.max(1, reach)) : 1;
+      return moveActor(actor, direction.x * force * falloff, direction.y * force * falloff, options);
+    }
+
+    function contactVector(first, second, seed = 0) {
+      const dx = first.x - second.x;
+      const dy = first.y - second.y;
+      const distanceBetween = Math.hypot(dx, dy);
+      const overlap = physicalRadius(first) + physicalRadius(second) - distanceBetween;
+      if (!(overlap > 0)) return null;
+      if (distanceBetween > 0.0001) {
+        return { x: dx / distanceBetween, y: dy / distanceBetween, overlap };
+      }
+      const angle = seed * 2.399963229728653;
+      return { x: Math.cos(angle), y: Math.sin(angle), overlap };
+    }
+
+    function blastCenter(origin, actor) {
+      const bounds = physicalBounds();
+      return {
+        x: Number.isFinite(origin?.x) ? origin.x : Number.isFinite(bounds.width) ? bounds.width / 2 : actor.x,
+        y: Number.isFinite(origin?.y) ? origin.y : Number.isFinite(bounds.height) ? bounds.height / 2 : actor.y,
+      };
+    }
+
+    function fallbackDirection(actor, origin) {
+      const vx = Number.isFinite(actor.vx) ? actor.vx : Number.isFinite(origin?.vx) ? -origin.vx : 0;
+      const vy = Number.isFinite(actor.vy) ? actor.vy : Number.isFinite(origin?.vy) ? -origin.vy : 0;
+      const speed = Math.hypot(vx || 0, vy || 0);
+      if (speed > 0.0001) return { x: vx / speed, y: vy / speed };
+      return { x: 1, y: 0 };
+    }
+
+    function isPhysicalActor(actor) {
+      return (
+        actor &&
+        Number.isFinite(actor.x) &&
+        Number.isFinite(actor.y) &&
+        physicalRadius(actor) > 0 &&
+        !(actor.hp <= 0)
+      );
+    }
+
+    function isCollisionActor(actor) {
+      return isPhysicalActor(actor) && overlapsPhysicalArena(actor);
+    }
+
+    function overlapsPhysicalArena(actor) {
+      const bounds = physicalBounds();
+      if (!Number.isFinite(bounds.width) || !Number.isFinite(bounds.height)) return true;
+      const radius = physicalRadius(actor);
+      return actor.x + radius >= 0 && actor.x - radius <= bounds.width && actor.y + radius >= 0 && actor.y - radius <= bounds.height;
+    }
+
+    function physicalRadius(actor) {
+      return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
+    }
+
+    function moveActor(actor, dx, dy, options = {}) {
+      if (!Number.isFinite(dx) || !Number.isFinite(dy)) return 0;
+      const previousX = actor.x;
+      const previousY = actor.y;
+      actor.x = clampToArena(actor, actor.x + dx, "width");
+      actor.y = clampToArena(actor, actor.y + dy, "height");
+      const appliedX = actor.x - previousX;
+      const appliedY = actor.y - previousY;
+      if (options.targetFollows && Number.isFinite(actor.targetX) && Number.isFinite(actor.targetY)) {
+        actor.targetX = clampToArena(actor, actor.targetX + appliedX, "width");
+        actor.targetY = clampToArena(actor, actor.targetY + appliedY, "height");
+      }
+      const velocityDt = Number.isFinite(options.dt) && options.dt > 0 ? options.dt : 0;
+      if (velocityDt && Number.isFinite(actor.vx) && Math.abs(appliedX) > 0.0001) actor.vx += appliedX / velocityDt;
+      if (velocityDt && Number.isFinite(actor.vy) && Math.abs(appliedY) > 0.0001) actor.vy += appliedY / velocityDt;
+      return Math.hypot(appliedX, appliedY);
+    }
+
+    function clampActor(actor) {
+      if (!isPhysicalActor(actor)) return;
+      moveActor(actor, 0, 0);
+    }
+
+    function clampToArena(actor, value, axis) {
+      const size = physicalBounds()[axis];
+      const radius = Math.min(physicalRadius(actor), size / 2);
+      if (!Number.isFinite(size) || typeof clamp !== "function") return value;
+      return clamp(value, radius, size - radius);
+    }
+
+    function physicalBounds() {
+      return spatial?.physicalSize?.(getGame()) || canvas || {};
+    }
+
     return {
       spawnEnemies: enemySystem.spawnEnemies,
       spawnBoss: enemySystem.spawnBoss,
@@ -1538,6 +1840,10 @@
       updateAreas: weaponFireSystem.updateAreas,
       updateBeams: weaponFireSystem.updateBeams,
       updateWeaponBursts: weaponFireSystem.updateWeaponBursts,
+      beginActorMotionFrame,
+      captureActorMotionFrame,
+      finishActorMotionFrame,
+      resolveActorCollisions,
       getRunUpgradeTier,
     };
   }
@@ -1556,7 +1862,10 @@
     advanceTowerFloor,
     distance,
     clamp,
+    applyRadialKnockback,
   }) {
+    const hitInvincibilitySeconds = 0.5;
+
     function damageEnemy(enemy, amount, weaponId) {
       const game = getGame();
       const before = enemy.hp;
@@ -1574,6 +1883,7 @@
       const game = getGame();
       const p = game?.player;
       if (!p || p.invincibleTimer > 0) return 0;
+      if (isEnemyHit(source) && p.hitInvincibilityTimer > 0) return 0;
       const effects = getRelicSpecialEffects?.() || {};
       if (effects.dodgeChance && Math.random() < Math.min(0.95, effects.dodgeChance)) {
         p.blinkTimer = Math.max(p.blinkTimer || 0, 0.35);
@@ -1600,6 +1910,9 @@
         p.teleportCooldown = effects.teleportOnHitCooldown;
       }
       p.hp -= finalDamage;
+      if (isEnemyHit(source) && finalDamage > 0) {
+        p.hitInvincibilityTimer = hitInvincibilitySeconds;
+      }
       if (effects.blinkInvulnerabilitySeconds) {
         p.invincibleTimer = Math.max(p.invincibleTimer || 0, effects.blinkInvulnerabilitySeconds);
         p.blinkTimer = Math.max(p.blinkTimer || 0, effects.blinkInvulnerabilitySeconds);
@@ -1619,12 +1932,28 @@
           );
         }
         if (effects.killExplosionDamage && effects.killExplosionRadius) {
+          const blast = { x: enemy.x, y: enemy.y, radius: effects.killExplosionRadius };
+          const knockback = killExplosionKnockback(effects.killExplosionRadius);
           game.enemies.forEach((candidate) => {
             if (candidate === enemy || candidate.hp <= 0) return;
-            if (distance(enemy, candidate) <= effects.killExplosionRadius + candidate.radius) {
+            if (distance(blast, candidate) <= effects.killExplosionRadius + candidate.radius) {
               damageEnemy(candidate, effects.killExplosionDamage, "relic_kill_explosion");
+              applyRadialKnockback?.(candidate, blast, knockback, {
+                radius: effects.killExplosionRadius,
+              });
             }
           });
+          if (game.player && distance(blast, game.player) <= effects.killExplosionRadius + actorRadius(game.player)) {
+            const beforeX = game.player.x;
+            const beforeY = game.player.y;
+            const dealt = damagePlayer(effects.killExplosionDamage, { type: "relic_kill_explosion", origin: blast });
+            if (dealt > 0 && game.player.hp > 0 && game.player.x === beforeX && game.player.y === beforeY) {
+              applyRadialKnockback?.(game.player, blast, knockback * 0.82, {
+                radius: effects.killExplosionRadius,
+                targetFollows: true,
+              });
+            }
+          }
         }
         game.kills += 1;
         addQuestProgressGroup(killQuestIds, 1);
@@ -1637,6 +1966,18 @@
         }
       });
       game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
+    }
+
+    function killExplosionKnockback(radius) {
+      return Math.min(64, Math.max(30, radius * 0.38));
+    }
+
+    function actorRadius(actor) {
+      return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
+    }
+
+    function isEnemyHit(source) {
+      return Boolean(source.enemy || source.attack || source.bolt);
     }
 
     return {
@@ -1882,6 +2223,8 @@
     distance,
     clamp,
     damagePlayer,
+    damageEnemy,
+    applyRadialKnockback,
     onBossSpawn,
   } = {}) {
     const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
@@ -1911,6 +2254,8 @@
       distance,
       clamp,
       damagePlayer,
+      damageEnemy,
+      applyRadialKnockback,
     });
     const spawnSystem = enemySpawning.createEnemySpawnSystem({
       canvas,
@@ -2134,6 +2479,8 @@
     distance,
     clamp,
     damagePlayer,
+    damageEnemy,
+    applyRadialKnockback,
   } = {}) {
     const safeProjectileColor = "#b794ff";
 
@@ -2273,12 +2620,29 @@
         attack.age += dt;
         if (!attack.hit && attack.age >= attack.windup) {
           attack.hit = true;
+          if (attack.type !== "boss_slash") {
+            for (const enemy of game.enemies || []) {
+              if (!(enemy.hp > 0) || distance(enemy, attack) > enemy.radius + attack.radius) continue;
+              damageEnemy?.(enemy, attack.damage, "enemy_blast");
+              applyRadialKnockback?.(enemy, attack, bossBlastKnockback(attack), {
+                radius: attack.radius,
+              });
+            }
+          }
           if (
             attack.type === "boss_slash"
               ? playerInSlash(p, attack)
               : distance(p, attack) <= p.radius + attack.radius
           ) {
-            damagePlayer?.(attack.damage, { type: attack.type, attack });
+            const beforeX = p.x;
+            const beforeY = p.y;
+            const dealt = damagePlayer?.(attack.damage, { type: attack.type, attack });
+            if (attack.type !== "boss_slash" && dealt > 0 && p.hp > 0 && p.x === beforeX && p.y === beforeY) {
+              applyRadialKnockback?.(p, attack, bossBlastKnockback(attack), {
+                radius: attack.radius,
+                targetFollows: true,
+              });
+            }
           }
         }
       });
@@ -2362,6 +2726,10 @@
 
     function hasBossAbility(boss, ability) {
       return boss.bossAbilities?.includes(ability) || boss.bossKind === ability;
+    }
+
+    function bossBlastKnockback(attack) {
+      return Math.min(46, Math.max(24, (attack.radius || 0) * 0.22));
     }
 
     return {
@@ -5645,6 +6013,7 @@
         ctx.fill();
       }
       ctx.globalAlpha = previousAlpha;
+      drawPlayerHitFlash(p);
       if (p.invincibleTimer > 0) {
         ctx.strokeStyle = "rgba(88, 255, 157, 0.72)";
         ctx.lineWidth = 3;
@@ -5662,6 +6031,17 @@
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.targetX, p.targetY);
       ctx.stroke();
+    }
+
+    function drawPlayerHitFlash(p) {
+      if (!(p.hitInvincibilityTimer > 0) || Math.floor(p.hitInvincibilityTimer * 20) % 2 !== 0) return;
+      ctx.save();
+      ctx.globalAlpha = 0.62;
+      ctx.fillStyle = "#ff3b3b";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius + 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     function playerSpriteId(p) {
@@ -8197,8 +8577,10 @@
     weaponReach,
     weaponWidth,
     damageEnemy,
+    damagePlayer,
     reapEnemies,
     addQuestProgress,
+    applyRadialKnockback,
     distance,
   } = {}) {
     function fireBeam(weaponId) {
@@ -8439,20 +8821,19 @@
       const weapon = weaponDefs[weaponId];
       const target = nearestEnemy();
       if (!target) return;
-      game.enemies.forEach((enemy) => {
-        if (distance(target, enemy) <= weaponReach(weapon) + enemy.radius) {
-          damageEnemy(enemy, weaponDamage(weaponId), weaponId);
-        }
-      });
-      game.areas.push({
+      // Snapshot the strike center before the target is displaced by blast knockback.
+      const area = {
         weaponId,
         x: target.x,
         y: target.y,
         radius: weaponReach(weapon),
+        damage: weaponDamage(weaponId),
         color: weapon.color,
         life: 0.28,
         visualOnly: true,
-      });
+      };
+      damageActorsInArea(area, { includePlayer: true, knockback: true });
+      game.areas.push(area);
       reapEnemies();
     }
 
@@ -8505,7 +8886,7 @@
         }
         if (area.damageOnce) {
           if (!area.exploded) {
-            damageEnemiesInArea(area);
+            damageActorsInArea(area, { includePlayer: true, knockback: true });
             area.exploded = true;
             area.life = Math.min(area.life, area.explosionLife || 0.28);
           }
@@ -8514,19 +8895,53 @@
         area.tickTimer -= dt;
         if (area.tickTimer > 0) return;
         area.tickTimer = area.tick;
-        damageEnemiesInArea(area);
+        damageActorsInArea(area);
       });
       game.areas = game.areas.filter((area) => area.life > 0);
       reapEnemies();
     }
 
-    function damageEnemiesInArea(area) {
+    function damageActorsInArea(area, options = {}) {
       const game = getGame();
+      const knockback = areaKnockback(area);
       game.enemies.forEach((enemy) => {
+        if (!(enemy?.hp > 0)) return;
         if (distance(area, enemy) <= area.radius + enemy.radius) {
           damageEnemy(enemy, area.damage, area.weaponId);
+          if (options.knockback) {
+            applyRadialKnockback?.(enemy, area, knockback, { radius: area.radius });
+          }
         }
       });
+      if (!options.includePlayer || !game.player) return;
+      if (distance(area, game.player) <= area.radius + actorRadius(game.player)) {
+        const beforeX = game.player.x;
+        const beforeY = game.player.y;
+        const dealt = damagePlayer?.(area.damage, {
+          type: "area_explosion",
+          weaponId: area.weaponId,
+          area,
+        });
+        if (
+          !(dealt > 0) ||
+          !(game.player.hp > 0) ||
+          game.player.x !== beforeX ||
+          game.player.y !== beforeY
+        )
+          return;
+        applyRadialKnockback?.(game.player, area, knockback * 0.82, {
+          radius: area.radius,
+          targetFollows: true,
+        });
+      }
+    }
+
+    function areaKnockback(area) {
+      return Math.min(58, Math.max(26, (area.radius || 0) * 0.34));
+    }
+
+    function actorRadius(actor) {
+      return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
     }
 
     function playerFacingVector(player) {
@@ -8777,7 +9192,9 @@
     playWeaponSfx,
     addQuestProgress,
     damageEnemy,
+    damagePlayer,
     reapEnemies,
+    applyRadialKnockback,
     distance,
     clamp,
     weaponBehaviors,
@@ -8808,7 +9225,9 @@
       weaponDamage: scaling.weaponDamage,
       projectileSkillModifier: scaling.projectileSkillModifier,
       damageEnemy,
+      damagePlayer,
       reapEnemies,
+      applyRadialKnockback,
       distance,
       clamp,
     });
@@ -8823,8 +9242,10 @@
       weaponReach: scaling.weaponReach,
       weaponWidth: scaling.weaponWidth,
       damageEnemy,
+      damagePlayer,
       reapEnemies,
       addQuestProgress,
+      applyRadialKnockback,
       distance,
     });
 
@@ -8924,7 +9345,7 @@
    * }} WeaponDef
    * @typedef {Record<string, WeaponDef>} WeaponDefs
    * @typedef {{ width: number, height: number }} ProjectileCanvas
-   * @typedef {{ x: number, y: number }} Player
+   * @typedef {{ x: number, y: number, radius?: number, hp?: number, targetX?: number, targetY?: number }} Player
    * @typedef {{ x: number, y: number, radius: number, hp?: number }} Enemy
    * @typedef {{
    *   weaponId: string,
@@ -8982,7 +9403,14 @@
    *   weaponDamage: (weaponId: string) => number,
    *   projectileSkillModifier: (weapon: WeaponDef, field: string) => number,
    *   damageEnemy: (enemy: Enemy, damage: number, weaponId: string) => void,
+   *   damagePlayer?: (damage: number, source?: Record<string, unknown>) => number | void,
    *   reapEnemies: () => void,
+   *   applyRadialKnockback?: (
+   *     actor: PointLike,
+   *     origin: PointLike,
+   *     force: number,
+   *     options?: { radius?: number, targetFollows?: boolean }
+   *   ) => void,
    *   distance: (a: PointLike, b: PointLike) => number,
    *   clamp: (value: number, min: number, max: number) => number
    * }} options
@@ -9000,7 +9428,9 @@
     weaponDamage,
     projectileSkillModifier,
     damageEnemy,
+    damagePlayer,
     reapEnemies,
+    applyRadialKnockback,
     distance,
     clamp,
   }) {
@@ -9119,21 +9549,68 @@
       if (!explosionTier) return;
       const radius = 42 + explosionTier * 18;
       const damage = bolt.damage * (0.28 + explosionTier * 0.08);
+      const knockback = explosionKnockback(radius);
       const game = getGame();
+      const origin = { x: enemy.x, y: enemy.y, radius: enemy.radius };
+      applyRadialKnockback?.(enemy, impactKnockbackOrigin(bolt, enemy), knockback);
       game.enemies.forEach((candidate) => {
         if (candidate === enemy || candidate.hp <= 0) return;
-        if (distance(enemy, candidate) <= radius + candidate.radius) {
+        if (distance(origin, candidate) <= radius + candidate.radius) {
           damageEnemy(candidate, damage, bolt.weaponId);
+          applyRadialKnockback?.(candidate, origin, knockback, { radius });
         }
       });
+      applyPlayerExplosion(origin, radius, damage, knockback, {
+        type: "explosive_hit",
+        weaponId: bolt.weaponId,
+        bolt,
+      });
       game.areas.push({
-        x: enemy.x,
-        y: enemy.y,
+        x: origin.x,
+        y: origin.y,
         radius,
         color: bolt.color,
         life: 0.18,
         visualOnly: true,
       });
+    }
+
+    function applyPlayerExplosion(origin, radius, damage, knockback, source) {
+      const game = getGame();
+      const player = game.player;
+      if (!player || distance(origin, player) > radius + actorRadius(player)) return;
+      const beforeX = player.x;
+      const beforeY = player.y;
+      const dealt = damagePlayer?.(damage, { ...source, origin });
+      if (
+        typeof dealt !== "number" ||
+        !(dealt > 0) ||
+        !(player.hp > 0) ||
+        player.x !== beforeX ||
+        player.y !== beforeY
+      )
+        return;
+      applyRadialKnockback?.(player, origin, knockback * 0.82, {
+        radius,
+        targetFollows: true,
+      });
+    }
+
+    function impactKnockbackOrigin(bolt, enemy) {
+      const speed = Math.hypot(bolt.vx || 0, bolt.vy || 0);
+      if (speed <= 0.0001) return enemy;
+      return {
+        x: enemy.x - bolt.vx / speed,
+        y: enemy.y - bolt.vy / speed,
+      };
+    }
+
+    function explosionKnockback(radius) {
+      return Math.min(54, Math.max(24, radius * 0.45));
+    }
+
+    function actorRadius(actor) {
+      return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
     }
 
     function splitBoltOnHit(bolt) {
@@ -9559,16 +10036,23 @@
         combat.spawnBoss();
       }
 
+      updateHitInvincibilityTimer(player, dt);
+
+      combat.beginActorMotionFrame?.(dt);
       movePlayer(player, dt);
       combat.spawnEnemies(dt);
+      combat.captureActorMotionFrame?.();
       combat.updateEnemies(dt);
+      combat.resolveActorCollisions?.(dt);
       combat.updateEnemyBolts(dt);
       combat.updateBossSpecials(dt);
       combat.updateWeapons(dt);
       combat.updateBolts(dt);
       combat.updateAreas(dt);
+      combat.resolveActorCollisions?.(dt);
       combat.updateBeams(dt);
       combat.updateWeaponBursts(dt);
+      combat.finishActorMotionFrame?.(dt);
       updateRelicTimers(player, dt);
       updatePlayerAnimation(player, dt);
       pickupSystem.updateXpDrops(dt);
@@ -9588,6 +10072,11 @@
       player.invincibleTimer = Math.max(0, (player.invincibleTimer || 0) - dt);
       player.blinkTimer = Math.max(0, (player.blinkTimer || 0) - dt);
       player.teleportCooldown = Math.max(0, (player.teleportCooldown || 0) - dt);
+    }
+
+    function updateHitInvincibilityTimer(player, dt) {
+      const remaining = (player.hitInvincibilityTimer || 0) - dt;
+      player.hitInvincibilityTimer = remaining > 1e-9 ? remaining : 0;
     }
 
     function collectXp(value) {
