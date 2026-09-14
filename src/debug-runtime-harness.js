@@ -103,7 +103,7 @@ export function createDebugRuntimeHarness({
       "actor-player-enemy-crossing", "actor-enemy-enemy-crossing",
       "actor-wall-left", "actor-wall-right", "actor-wall-top", "actor-wall-bottom",
       "actor-highspeed", "actor-crowd-feasible", "actor-crowd-overfull",
-      "climb-wall-face", "climb-wall-slide", "climb-wall-corner", "climb-wall-knockback", "climb-wall-spawn-clearance", "climb-wall-head-on-route",
+      "climb-wall-face", "climb-wall-slide", "climb-wall-corner", "climb-wall-knockback", "climb-wall-touch-immunity", "climb-wall-spawn-clearance", "climb-wall-head-on-route",
       "projectile-explosive-hit", "mine-triggered", "target-area-triggered",
       "relic-kill-explosion", "boss-radial-blast",
       "protection-mitigation", "protection-invulnerability", "protection-dodge",
@@ -281,7 +281,6 @@ export function createDebugRuntimeHarness({
     const cy = bounds.height / 2;
     const p = game.player;
     const climbWallScenario = id.startsWith("climb-wall-");
-    if (climbWallScenario) game.world = Object.freeze({ ...(game.world || {}), modeId: "climb" });
     game.awaitingFirstMoveInput = false;
     game.paused = true;
     game.spawnTimer = 1e9;
@@ -392,10 +391,46 @@ export function createDebugRuntimeHarness({
         return observe({ kind: "corner", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
       }
       if (id === "climb-wall-knockback") {
-        spawn([[wall.x - radius - 20, p.y, undefined, 0]]);
-        p.targetX = wall.x + wall.width + radius + 150;
-        p.speed = 2400;
-        return observe({ kind: "knockback", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+        const wallClearance = 4;
+        p.x = p.targetX = wall.x - radius - wallClearance;
+        const [enemy, farWitness] = spawn([
+          [p.x, p.y + radius + 18, 100, 0],
+          [p.x - 200, p.y, 100, 0],
+        ]);
+        if (!enemy) return false;
+        const blastCenter = Object.freeze({ x: p.x - 70, y: p.y });
+        addBlast("shockwave", blastCenter.x, blastCenter.y, 20);
+        return observe({
+          kind: "owner-fired-wall-limited-knockback",
+          wallId: wall.id,
+          wallClearance,
+          blastCenter,
+          prearmed: { frames: 1, dt: 0.005 },
+          impact: { frames: 1, dt: 0.01 },
+          expired: { frames: 5, dt: 0.1 },
+          before: {
+            player: { x: p.x, y: p.y, radius },
+            enemy: { x: enemy.x, y: enemy.y, radius: enemy.radius },
+            farWitness: { id: farWitness?.id, x: farWitness?.x, y: farWitness?.y, hp: farWitness?.hp },
+          },
+        });
+      }
+      if (id === "climb-wall-touch-immunity") {
+        p.x = p.targetX = wall.x - radius - 80;
+        const [enemy] = spawn([[p.x - 100, p.y, 100, 260]]);
+        if (!enemy) return false;
+        enemy.x = p.x - p.radius - enemy.radius - 1;
+        enemy.touchTimer = 0;
+        enemy.touchCooldown = 0;
+        return observe({
+          kind: "real-rapid-recurring-contact",
+          wallId: wall.id,
+          rapidTouchCooldown: enemy.touchCooldown,
+          firstHit: { frames: 1, dt: 0.01 },
+          immuneWindow: { frames: 48, dt: 0.01 },
+          postExpiry: { frames: 3, dt: 0.01 },
+          before: { player: { x: p.x, y: p.y, radius }, enemy: { x: enemy.x, y: enemy.y, radius: enemy.radius } },
+        });
       }
       if (id === "climb-wall-spawn-clearance") {
         spawn([[wall.x + wall.width / 2, wall.y + wall.height / 2, undefined, 0]]);

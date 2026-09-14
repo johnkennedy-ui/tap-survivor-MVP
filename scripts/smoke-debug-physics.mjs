@@ -129,6 +129,49 @@ for (const id of ["actor-wall-left", "actor-wall-right", "actor-wall-top", "acto
   const expired = api.invoke("frame.step", { frames: 4, dt: 0.1 }).result;
   assert.equal(expired.areas.length, 0, "single mine expires without a cooldown refire");
 }
+{
+  const before = api.invoke("physics.scenario", { id: "climb-wall-knockback" }).result;
+  assert.equal(before.world.modeId, "climb", "Climb fixture preserves the reset world descriptor");
+  assert.equal(before.walls.length, 5, "Climb fixture exposes cached renderer-visible wall geometry");
+  const parameters = before.scenario.parameters;
+  assert.ok(Object.isFrozen(parameters.blastCenter), "blast center is immutable scenario metadata");
+  assert.equal(before.bossAttacks.length, 1, "knockback uses one existing boss blast owner");
+  assert.equal(before.player.hp, 100, "blast player begins with survivable observed HP");
+  assert.equal(before.enemies[0].hp, 100, "blast near witness begins with survivable observed HP");
+  assert.ok(distance(before.player, before.enemies[0]) >= separation(before.player, before.enemies[0]) + 4.9, "blast witnesses begin separated");
+  const prearmed = api.invoke("frame.step", parameters.prearmed).result;
+  assert.equal(prearmed.bossAttacks.length, 1, "blast remains present before its impact windup");
+  assert.equal(prearmed.bossAttacks[0].hit, false, "blast is prearmed rather than synthetic knockback");
+  assert.equal(prearmed.player.hp, before.player.hp, "prearmed blast has no early player damage");
+  assert.equal(prearmed.enemies[0].hp, before.enemies[0].hp, "prearmed blast has no early enemy damage");
+  assert.equal(prearmed.player.x, before.player.x, "prearmed separated actors retain position");
+  const impact = api.invoke("frame.step", parameters.impact).result;
+  assert.equal(impact.bossAttacks[0].hit, true, "blast reaches its real impact lifecycle");
+  assert.ok(impact.player.hp < before.player.hp && impact.enemies[0].hp < before.enemies[0].hp, "owner blast damages player and nearby enemy");
+  assert.ok(impact.player.x > before.player.x || impact.player.y !== before.player.y, "player receives real blast displacement");
+  assert.ok(impact.enemies[0].x > before.enemies[0].x || impact.enemies[0].y !== before.enemies[0].y, "enemy receives real blast displacement");
+  const wall = before.walls[0];
+  assert.ok(impact.player.x <= wall.x - impact.player.radius + 0.001, "blast displacement is limited at the wall face");
+  assert.ok(impact.player.x >= wall.x - impact.player.radius - parameters.wallClearance - 0.01, "blast reaches the near wall face");
+  assert.equal(impact.enemies[1].hp, before.enemies[1].hp, "far blast witness remains undamaged");
+  const expired = api.invoke("frame.step", parameters.expired).result;
+  assert.equal(expired.bossAttacks.length, 0, "blast expires through its existing owner lifecycle");
+  assert.equal(expired.player.hp, impact.player.hp, "expired blast cannot repeat player damage");
+  assert.equal(expired.enemies[0].hp, impact.enemies[0].hp, "expired blast cannot repeat enemy damage");
+}
+{
+  const before = api.invoke("physics.scenario", { id: "climb-wall-touch-immunity" }).result;
+  const parameters = before.scenario.parameters;
+  assert.equal(parameters.rapidTouchCooldown, 0, "fixture deliberately removes enemy touch cooldown for immunity stress");
+  assert.ok(distance(before.player, before.enemies[0]) >= separation(before.player, before.enemies[0]) + 0.99, "chaser starts separated");
+  const first = api.invoke("frame.step", parameters.firstHit).result;
+  assert.ok(first.player.hp < before.player.hp, "real chaser contact causes first damage");
+  assert.ok(first.playerTimers.hitInvincibilityTimer > 0.48, "first contact starts the half-second timer");
+  const immune = api.invoke("frame.step", parameters.immuneWindow).result;
+  assert.equal(immune.player.hp, first.player.hp, "continued contact cannot damage during the sub-0.5s window");
+  const second = api.invoke("frame.step", parameters.postExpiry).result;
+  assert.ok(second.player.hp < immune.player.hp, "continued real contact damages again after expiry");
+}
 for (const id of ["boss-radial-blast", "protection-mitigation", "protection-teleport", "control-boss-slash"]) {
   const { before, after } = transition(id);
   assert.ok(after.player.hp < before.player.hp, `${id} reaches the player damage owner`);
