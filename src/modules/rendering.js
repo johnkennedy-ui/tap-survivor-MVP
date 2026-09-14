@@ -172,6 +172,7 @@ export function createRenderer({
       ctx.fill();
     }
     ctx.globalAlpha = previousAlpha;
+    drawPlayerHitFlash(p);
     if (p.invincibleTimer > 0) {
       ctx.strokeStyle = "rgba(88, 255, 157, 0.72)";
       ctx.lineWidth = 3;
@@ -189,6 +190,17 @@ export function createRenderer({
     ctx.moveTo(p.x, p.y);
     ctx.lineTo(p.targetX, p.targetY);
     ctx.stroke();
+  }
+
+  function drawPlayerHitFlash(p) {
+    if (!(p.hitInvincibilityTimer > 0) || Math.floor(p.hitInvincibilityTimer * 20) % 2 !== 0) return;
+    ctx.save();
+    ctx.globalAlpha = 0.62;
+    ctx.fillStyle = "#ff3b3b";
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius + 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   function playerSpriteId(p) {

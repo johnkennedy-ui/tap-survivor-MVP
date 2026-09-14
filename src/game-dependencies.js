@@ -1864,6 +1864,8 @@
     clamp,
     applyRadialKnockback,
   }) {
+    const hitInvincibilitySeconds = 0.5;
+
     function damageEnemy(enemy, amount, weaponId) {
       const game = getGame();
       const before = enemy.hp;
@@ -1881,6 +1883,7 @@
       const game = getGame();
       const p = game?.player;
       if (!p || p.invincibleTimer > 0) return 0;
+      if (isEnemyHit(source) && p.hitInvincibilityTimer > 0) return 0;
       const effects = getRelicSpecialEffects?.() || {};
       if (effects.dodgeChance && Math.random() < Math.min(0.95, effects.dodgeChance)) {
         p.blinkTimer = Math.max(p.blinkTimer || 0, 0.35);
@@ -1907,6 +1910,9 @@
         p.teleportCooldown = effects.teleportOnHitCooldown;
       }
       p.hp -= finalDamage;
+      if (isEnemyHit(source) && finalDamage > 0) {
+        p.hitInvincibilityTimer = hitInvincibilitySeconds;
+      }
       if (effects.blinkInvulnerabilitySeconds) {
         p.invincibleTimer = Math.max(p.invincibleTimer || 0, effects.blinkInvulnerabilitySeconds);
         p.blinkTimer = Math.max(p.blinkTimer || 0, effects.blinkInvulnerabilitySeconds);
@@ -1968,6 +1974,10 @@
 
     function actorRadius(actor) {
       return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
+    }
+
+    function isEnemyHit(source) {
+      return Boolean(source.enemy || source.attack || source.bolt);
     }
 
     return {
@@ -6003,6 +6013,7 @@
         ctx.fill();
       }
       ctx.globalAlpha = previousAlpha;
+      drawPlayerHitFlash(p);
       if (p.invincibleTimer > 0) {
         ctx.strokeStyle = "rgba(88, 255, 157, 0.72)";
         ctx.lineWidth = 3;
@@ -6020,6 +6031,17 @@
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(p.targetX, p.targetY);
       ctx.stroke();
+    }
+
+    function drawPlayerHitFlash(p) {
+      if (!(p.hitInvincibilityTimer > 0) || Math.floor(p.hitInvincibilityTimer * 20) % 2 !== 0) return;
+      ctx.save();
+      ctx.globalAlpha = 0.62;
+      ctx.fillStyle = "#ff3b3b";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius + 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     function playerSpriteId(p) {
@@ -10014,6 +10036,8 @@
         combat.spawnBoss();
       }
 
+      updateHitInvincibilityTimer(player, dt);
+
       combat.beginActorMotionFrame?.(dt);
       movePlayer(player, dt);
       combat.spawnEnemies(dt);
@@ -10048,6 +10072,11 @@
       player.invincibleTimer = Math.max(0, (player.invincibleTimer || 0) - dt);
       player.blinkTimer = Math.max(0, (player.blinkTimer || 0) - dt);
       player.teleportCooldown = Math.max(0, (player.teleportCooldown || 0) - dt);
+    }
+
+    function updateHitInvincibilityTimer(player, dt) {
+      const remaining = (player.hitInvincibilityTimer || 0) - dt;
+      player.hitInvincibilityTimer = remaining > 1e-9 ? remaining : 0;
     }
 
     function collectXp(value) {

@@ -76,6 +76,8 @@
         combat.spawnBoss();
       }
 
+      updateHitInvincibilityTimer(player, dt);
+
       combat.beginActorMotionFrame?.(dt);
       movePlayer(player, dt);
       combat.spawnEnemies(dt);
@@ -110,6 +112,11 @@
       player.invincibleTimer = Math.max(0, (player.invincibleTimer || 0) - dt);
       player.blinkTimer = Math.max(0, (player.blinkTimer || 0) - dt);
       player.teleportCooldown = Math.max(0, (player.teleportCooldown || 0) - dt);
+    }
+
+    function updateHitInvincibilityTimer(player, dt) {
+      const remaining = (player.hitInvincibilityTimer || 0) - dt;
+      player.hitInvincibilityTimer = remaining > 1e-9 ? remaining : 0;
     }
 
     function collectXp(value) {

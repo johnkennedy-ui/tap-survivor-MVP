@@ -20,6 +20,8 @@
     clamp,
     applyRadialKnockback,
   }) {
+    const hitInvincibilitySeconds = 0.5;
+
     function damageEnemy(enemy, amount, weaponId) {
       const game = getGame();
       const before = enemy.hp;
@@ -37,6 +39,7 @@
       const game = getGame();
       const p = game?.player;
       if (!p || p.invincibleTimer > 0) return 0;
+      if (isEnemyHit(source) && p.hitInvincibilityTimer > 0) return 0;
       const effects = getRelicSpecialEffects?.() || {};
       if (effects.dodgeChance && Math.random() < Math.min(0.95, effects.dodgeChance)) {
         p.blinkTimer = Math.max(p.blinkTimer || 0, 0.35);
@@ -63,6 +66,9 @@
         p.teleportCooldown = effects.teleportOnHitCooldown;
       }
       p.hp -= finalDamage;
+      if (isEnemyHit(source) && finalDamage > 0) {
+        p.hitInvincibilityTimer = hitInvincibilitySeconds;
+      }
       if (effects.blinkInvulnerabilitySeconds) {
         p.invincibleTimer = Math.max(p.invincibleTimer || 0, effects.blinkInvulnerabilitySeconds);
         p.blinkTimer = Math.max(p.blinkTimer || 0, effects.blinkInvulnerabilitySeconds);
@@ -124,6 +130,10 @@
 
     function actorRadius(actor) {
       return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
+    }
+
+    function isEnemyHit(source) {
+      return Boolean(source.enemy || source.attack || source.bolt);
     }
 
     return {
