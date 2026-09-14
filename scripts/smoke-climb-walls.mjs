@@ -34,6 +34,53 @@ runner.x = wall.x + wall.width + radius + 80;
 assert.ok(spatial.resolveSolidTerrain(climb, runner, start), "fast movement intersects solid terrain");
 assert.ok(runner.x <= wall.x - radius + 0.001, "fast movement cannot tunnel through a wall");
 
+const faceCases = [
+  { name: "left", x: wall.x - radius, y: wall.y + wall.height / 2, inward: [320, 0], outward: [-80, 0], tangent: [0, 8] },
+  { name: "right", x: wall.x + wall.width + radius, y: wall.y + wall.height / 2, inward: [-320, 0], outward: [80, 0], tangent: [0, 8] },
+  { name: "top", x: wall.x + wall.width / 2, y: wall.y - radius, inward: [0, 120], outward: [0, -80], tangent: [24, 0] },
+  { name: "bottom", x: wall.x + wall.width / 2, y: wall.y + wall.height + radius, inward: [0, -120], outward: [0, 80], tangent: [24, 0] },
+];
+for (const face of faceCases) {
+  const verify = (kind, [dx, dy], expectedBlocked) => {
+    const actor = { hp: 10, radius, x: face.x + dx, y: face.y + dy };
+    const changed = spatial.resolveSolidTerrain(climb, actor, { x: face.x, y: face.y });
+    assert.equal(changed, expectedBlocked, `${face.name} exact-face ${kind} has expected sweep result`);
+    if (expectedBlocked) {
+      assert.ok(Math.abs(actor.x - face.x) < 0.001 && Math.abs(actor.y - face.y) < 0.001, `${face.name} exact-face inward motion stays at the face`);
+    } else {
+      assert.ok(Math.abs(actor.x - (face.x + dx)) < 0.001 && Math.abs(actor.y - (face.y + dy)) < 0.001, `${face.name} exact-face ${kind} motion remains legal`);
+    }
+  };
+  verify("inward", face.inward, true);
+  verify("outward", face.outward, false);
+  verify("tangent", face.tangent, false);
+}
+
+const cornerCases = [
+  { name: "top-left", x: wall.x - radius, y: wall.y - radius, inward: [100, 100], tangent: [100, 0], escape: [100, -1] },
+  { name: "top-right", x: wall.x + wall.width + radius, y: wall.y - radius, inward: [-100, 100], tangent: [-100, 0], escape: [-100, -1] },
+  { name: "bottom-left", x: wall.x - radius, y: wall.y + wall.height + radius, inward: [100, -100], tangent: [100, 0], escape: [100, 1] },
+  { name: "bottom-right", x: wall.x + wall.width + radius, y: wall.y + wall.height + radius, inward: [-100, -100], tangent: [-100, 0], escape: [-100, 1] },
+];
+for (const cornerCase of cornerCases) {
+  const verifyCorner = (kind, [dx, dy], blocked) => {
+    const start = { x: cornerCase.x, y: cornerCase.y };
+    const actor = { hp: 10, radius, x: start.x + dx, y: start.y + dy };
+    const changed = spatial.resolveSolidTerrain(climb, actor, start);
+    assert.equal(changed, blocked, `${cornerCase.name} ${kind} has expected sweep result`);
+    assert.ok(Number.isFinite(actor.x) && Number.isFinite(actor.y), `${cornerCase.name} ${kind} remains finite`);
+    if (blocked) {
+      assert.ok(Math.abs(actor.x - start.x) < 0.001 && Math.abs(actor.y - start.y) < 0.001, `${cornerCase.name} interior crossing remains at the corner`);
+    } else {
+      assert.equal(actor.x, start.x + dx, `${cornerCase.name} ${kind} keeps legal x movement`);
+      assert.equal(actor.y, start.y + dy, `${cornerCase.name} ${kind} keeps legal y movement`);
+    }
+  };
+  verifyCorner("interior crossing", cornerCase.inward, true);
+  verifyCorner("tangent", cornerCase.tangent, false);
+  verifyCorner("escape", cornerCase.escape, false);
+}
+
 const slider = { hp: 10, radius, x: wall.x - radius + 1, y: wall.y - radius - 30 };
 const sliderStart = { ...slider };
 slider.y = wall.y + wall.height + radius + 30;

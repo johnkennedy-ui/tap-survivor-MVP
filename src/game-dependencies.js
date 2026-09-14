@@ -378,13 +378,19 @@
         exit = Math.min(exit, Math.max(first, second));
         if (enter > exit) return null;
       }
-      if (!(enter > 0 && enter <= 1)) return null;
+      if (enter < 0 || enter > 1) return null;
       const atX = Math.abs((start.x + dx * enter) - left) < 0.0001 ? -1 : Math.abs((start.x + dx * enter) - right) < 0.0001 ? 1 : 0;
       const atY = Math.abs((start.y + dy * enter) - top) < 0.0001 ? -1 : Math.abs((start.y + dy * enter) - bottom) < 0.0001 ? 1 : 0;
       if (atX && atY) {
+        // A corner is entered only when both incident faces are crossed. A path
+        // that merely grazes one face must retain its legal tangent/escape move.
+        if (!(dx * atX < 0 && dy * atY < 0)) return null;
         const scale = Math.SQRT1_2;
-        return { time: enter, normalX: atX * scale, normalY: atY * scale };
+        const normalX = atX * scale;
+        const normalY = atY * scale;
+        return { time: enter, normalX, normalY };
       }
+      if (enter === 0 && dx * atX + dy * atY >= 0) return null;
       return { time: enter, normalX: atX, normalY: atY };
     }
 
