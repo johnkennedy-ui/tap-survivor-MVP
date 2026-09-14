@@ -32,6 +32,7 @@
 
   function createRenderer({
     canvas,
+    spatial,
     ctx,
     worldView,
     clamp,
@@ -76,6 +77,7 @@
       const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
       withWorldTransform(spatialView, () => {
         drawArena(game, bounds.right, bounds.bottom);
+        drawStoneWalls(game);
         game.areas.forEach(drawArea);
         game.weaponBursts.forEach(drawWeaponBurst);
         game.bossAttacks.forEach(drawBossAttack);
@@ -142,6 +144,31 @@
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
         ctx.stroke();
+      }
+    }
+
+    function drawStoneWalls(game) {
+      for (const wall of spatial?.solidWalls?.(game) || []) {
+        ctx.fillStyle = "#53606a";
+        ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+        ctx.strokeStyle = "#9eabb5";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
+        ctx.strokeStyle = "rgba(21, 28, 34, 0.7)";
+        ctx.lineWidth = 1;
+        const horizontal = wall.width >= wall.height;
+        const span = horizontal ? wall.width : wall.height;
+        for (let offset = 12; offset < span; offset += 18) {
+          ctx.beginPath();
+          if (horizontal) {
+            ctx.moveTo(wall.x + offset, wall.y);
+            ctx.lineTo(wall.x + offset, wall.y + wall.height);
+          } else {
+            ctx.moveTo(wall.x, wall.y + offset);
+            ctx.lineTo(wall.x + wall.width, wall.y + offset);
+          }
+          ctx.stroke();
+        }
       }
     }
 

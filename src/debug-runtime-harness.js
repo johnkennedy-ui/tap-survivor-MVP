@@ -19,6 +19,7 @@ export function createDebugRuntimeHarness({
   resetRun,
   runUpdater,
   setDebugSpecialEffects,
+  spatial,
 } = /** @type {any} */ ({})) {
   const registry = contentRegistry || {};
   const weaponDefs = registry.weaponDefs || {};
@@ -102,6 +103,7 @@ export function createDebugRuntimeHarness({
       "actor-player-enemy-crossing", "actor-enemy-enemy-crossing",
       "actor-wall-left", "actor-wall-right", "actor-wall-top", "actor-wall-bottom",
       "actor-highspeed", "actor-crowd-feasible", "actor-crowd-overfull",
+      "climb-wall-face", "climb-wall-slide", "climb-wall-corner", "climb-wall-knockback", "climb-wall-spawn-clearance", "climb-wall-head-on-route",
       "projectile-explosive-hit", "mine-triggered", "target-area-triggered",
       "relic-kill-explosion", "boss-radial-blast",
       "protection-mitigation", "protection-invulnerability", "protection-dodge",
@@ -155,14 +157,17 @@ export function createDebugRuntimeHarness({
     const malformed = argumentObject(command, args);
     if (malformed) return { error: malformed };
     const keys = Object.keys(args);
-    if (keys.some((key) => key !== "towerFloor")) {
-      return { error: failure(command, "MALFORMED_ARGS", "run.reset accepts only towerFloor") };
+    if (keys.some((key) => key !== "towerFloor" && key !== "modeId")) {
+      return { error: failure(command, "MALFORMED_ARGS", "run.reset accepts only towerFloor and modeId") };
     }
-    if (args.towerFloor === undefined) return { towerFloor: 1 };
-    if (!Number.isInteger(args.towerFloor) || args.towerFloor < 1) {
+    const towerFloor = args.towerFloor === undefined ? 1 : args.towerFloor;
+    if (!Number.isInteger(towerFloor) || towerFloor < 1) {
       return { error: failure(command, "MALFORMED_ARGS", "towerFloor must be a positive integer") };
     }
-    return { towerFloor: args.towerFloor };
+    if (args.modeId !== undefined && typeof args.modeId !== "string") {
+      return { error: failure(command, "MALFORMED_ARGS", "modeId must be a string") };
+    }
+    return { towerFloor, modeId: args.modeId };
   }
 
   function stepArguments(command, args) {
@@ -237,9 +242,24 @@ export function createDebugRuntimeHarness({
       }),
       bounds: Object.freeze({ playerMovement: playerInset }),
       scenario: scenarioObservation,
+      walls: Object.freeze(
+        (spatial?.solidWalls?.(game) || []).map((wall) =>
+          Object.freeze({
+            id: wall.id,
+            x: wall.x,
+            y: wall.y,
+            width: wall.width,
+            height: wall.height,
+            thickness: Math.min(wall.width, wall.height),
+            mode: game.world?.modeId || null,
+            floor: game.towerFloor || 1,
+          })
+        )
+      ),
       player: actor(game.player, 0),
       playerTimers: Object.freeze({
         invincible: numeric(game.player?.invincibleTimer),
+        hitInvincibilityTimer: numeric(game.player?.hitInvincibilityTimer),
         teleport: numeric(game.player?.teleportCooldown),
         blink: numeric(game.player?.blinkTimer),
       }),
@@ -260,6 +280,8 @@ export function createDebugRuntimeHarness({
     const cx = bounds.width / 2;
     const cy = bounds.height / 2;
     const p = game.player;
+    const climbWallScenario = id.startsWith("climb-wall-");
+    if (climbWallScenario) game.world = Object.freeze({ ...(game.world || {}), modeId: "climb" });
     game.awaitingFirstMoveInput = false;
     game.paused = true;
     game.spawnTimer = 1e9;
@@ -338,6 +360,54 @@ export function createDebugRuntimeHarness({
       stepRandom = random;
       return true;
     };
+    if (climbWallScenario) {
+      const wall = spatial?.solidWalls?.(game)?.[0];
+      if (!wall) return false;
+      const radius = p.radius;
+      p.x = p.targetX = wall.x - radius - 80;
+      p.y = p.targetY = wall.y + wall.height / 2;
+      const spawnWallWitness = () => {
+        spawn([[wall.x - radius - 140, wall.y + wall.height / 2, undefined, 0]]);
+      };
+      if (id === "climb-wall-face") {
+        spawnWallWitness();
+        p.targetX = wall.x + wall.width + radius + 120;
+        p.speed = 1800;
+        return observe({ kind: "face", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+      }
+      if (id === "climb-wall-slide") {
+        spawnWallWitness();
+        p.y = p.targetY = wall.y + 4;
+        p.targetX = wall.x + 80;
+        p.targetY = wall.y + wall.height + radius + 120;
+        p.speed = 1800;
+        return observe({ kind: "slide", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+      }
+      if (id === "climb-wall-corner") {
+        spawnWallWitness();
+        p.y = p.targetY = wall.y - radius - 50;
+        p.targetX = wall.x + 60;
+        p.targetY = wall.y + 60;
+        p.speed = 1800;
+        return observe({ kind: "corner", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+      }
+      if (id === "climb-wall-knockback") {
+        spawn([[wall.x - radius - 20, p.y, undefined, 0]]);
+        p.targetX = wall.x + wall.width + radius + 150;
+        p.speed = 2400;
+        return observe({ kind: "knockback", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+      }
+      if (id === "climb-wall-spawn-clearance") {
+        spawn([[wall.x + wall.width / 2, wall.y + wall.height / 2, undefined, 0]]);
+        return observe({ kind: "spawn-clearance", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+      }
+      if (id === "climb-wall-head-on-route") {
+        p.x = p.targetX = wall.x + wall.width + radius + 80;
+        p.y = p.targetY = wall.y + wall.height / 2;
+        spawn([[wall.x - radius - 90, p.y, undefined, 240]]);
+        return observe({ kind: "head-on-route", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+      }
+    }
     if (id === "actor-player-enemy-crossing") {
       p.x = cx - 70;
       p.targetX = cx + 130;
@@ -444,7 +514,7 @@ export function createDebugRuntimeHarness({
       if (!game?.running || !game.player) {
         return failure(command, "OWNER_REJECTED", "Run-state owner did not create an active run");
       }
-      return result(command, { towerFloor: game.towerFloor });
+      return result(command, { modeId: game.modeId, towerFloor: game.towerFloor });
     }
 
     if (command === "snapshot") {
@@ -466,7 +536,7 @@ export function createDebugRuntimeHarness({
       const parsedScenario = idArgument(command, args); if (parsedScenario.error) return parsedScenario.error;
       if (!catalog.physics.scenarios.includes(parsedScenario.id)) return failure(command, "UNKNOWN_ID", `Unknown physics scenario: ${parsedScenario.id}`);
       if (typeof resetRun !== "function") return failure(command, "OWNER_UNAVAILABLE", "Run-state owner is unavailable");
-      const game = resetRun({ towerFloor: 1 });
+      const game = resetRun({ towerFloor: 1, modeId: parsedScenario.id.startsWith("climb-wall-") ? "climb" : undefined });
       if (!game?.running || !game.player || !setupPhysicsScenario(game, parsedScenario.id)) return failure(command, "OWNER_REJECTED", "Scenario owner did not create a valid run");
       return result(command, snapshot(game));
     }

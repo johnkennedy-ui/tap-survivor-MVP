@@ -203,6 +203,46 @@
     return Object.freeze({ ...pointRecord(x, y), distance, hitX, hitY });
   }
 
+  const CLIMB_WALL_LAYOUT = Object.freeze([
+    Object.freeze({ x: 0.19, y: 0.27, width: 0.09, height: 0.018 }),
+    Object.freeze({ x: 0.34, y: 0.66, width: 0.018, height: 0.13 }),
+    Object.freeze({ x: 0.58, y: 0.22, width: 0.1, height: 0.018 }),
+    Object.freeze({ x: 0.7, y: 0.54, width: 0.018, height: 0.14 }),
+    Object.freeze({ x: 0.82, y: 0.77, width: 0.1, height: 0.018 }),
+  ]);
+  const wallCache = new WeakMap();
+
+  function climbSolidWalls(world) {
+    if (world?.modeId !== "climb" || !Number.isFinite(world.width) || !Number.isFinite(world.height)) return [];
+    if (world.width < 960 || world.height < 540) return [];
+    if (Array.isArray(world.solidWalls)) return world.solidWalls;
+    const cached = wallCache.get(world);
+    if (cached) return cached;
+    const walls = Object.freeze(
+      CLIMB_WALL_LAYOUT.map((wall, id) =>
+        Object.freeze({
+          id: `climb-wall-${id + 1}`,
+          x: world.width * wall.x,
+          y: world.height * wall.y,
+          width: world.width * wall.width,
+          height: world.height * wall.height,
+        })
+      )
+    );
+    wallCache.set(world, walls);
+    return walls;
+  }
+
+  function worldWithSolidWalls(world) {
+    if (world?.modeId !== "climb") return world;
+    const next = { ...world };
+    Object.defineProperty(next, "solidWalls", {
+      value: climbSolidWalls(world),
+      enumerable: false,
+    });
+    return Object.freeze(next);
+  }
+
   /**
    * Source-owned simulation capability, injected into native and retained factories.
    * The viewport is read live for spawn queries only; physical dimensions are fixed
@@ -218,13 +258,13 @@
         world.width > 0 &&
         Number.isFinite(world?.height) &&
         world.height > 0;
-      return createWorld({
+      return worldWithSolidWalls(createWorld({
         modeId,
         width: supplied ? world.width : canvas.width,
         height: supplied ? world.height : canvas.height,
         worldScale: supplied ? 1 : worldScale,
         zoom: supplied ? (world.zoom ?? zoom) : zoom,
-      });
+      }));
     }
 
     function physicalSize(game) {
@@ -261,7 +301,128 @@
       return { x: hit.x, y: hit.y };
     }
 
-    return Object.freeze({ createRunWorld, physicalSize, visibleBounds, spawnPosition });
+    function solidWalls(game) {
+      return climbSolidWalls(game?.world);
+    }
+
+    function resolveSolidTerrain(game, actor, previous = actor) {
+      const radius = Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
+      if (!radius || !Number.isFinite(actor?.x) || !Number.isFinite(actor?.y)) return false;
+      const start = {
+        x: Number.isFinite(previous?.x) ? previous.x : actor.x,
+        y: Number.isFinite(previous?.y) ? previous.y : actor.y,
+      };
+      let changed = false;
+      for (const wall of solidWalls(game)) {
+        const hit = previous?.canSweep === false ? null : segmentEntry(start, actor, wall, radius);
+        if (hit) {
+          const dx = actor.x - start.x;
+          const dy = actor.y - start.y;
+          actor.x = start.x + dx * Math.max(0, hit.time - 0.00001);
+          actor.y = start.y + dy * Math.max(0, hit.time - 0.00001);
+          if (hit.normalX && !hit.normalY) actor.y = start.y + dy;
+          else if (hit.normalY && !hit.normalX) actor.x = start.x + dx;
+          changed = true;
+        }
+        changed = pushOutOfWall(actor, wall, radius) || changed;
+      }
+      return changed;
+    }
+
+    function openPosition(game, point, radius = 0) {
+      const actor = { radius, x: point?.x, y: point?.y };
+      resolveSolidTerrain(game, actor, { canSweep: false, x: actor.x, y: actor.y });
+      return { x: actor.x, y: actor.y };
+    }
+
+    function routePosition(game, actor, target) {
+      if (!actor || !target) return target;
+      const radius = Math.max(0, Number(actor.radius) || 0);
+      for (const wall of solidWalls(game)) {
+        if (!segmentEntry(actor, target, wall, radius)) continue;
+        const pad = radius + 8;
+        const ends = [
+          { x: wall.x - pad, y: wall.y - pad },
+          { x: wall.x + wall.width + pad, y: wall.y - pad },
+          { x: wall.x - pad, y: wall.y + wall.height + pad },
+          { x: wall.x + wall.width + pad, y: wall.y + wall.height + pad },
+        ];
+        return ends.reduce((best, point) =>
+          routeLength(actor, point, target) < routeLength(actor, best, target) ? point : best
+        );
+      }
+      return target;
+    }
+
+    function routeLength(actor, waypoint, target) {
+      return Math.hypot(actor.x - waypoint.x, actor.y - waypoint.y) + Math.hypot(target.x - waypoint.x, target.y - waypoint.y);
+    }
+
+    function segmentEntry(start, end, wall, radius) {
+      const left = wall.x - radius;
+      const right = wall.x + wall.width + radius;
+      const top = wall.y - radius;
+      const bottom = wall.y + wall.height + radius;
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      let enter = 0;
+      let exit = 1;
+      for (const [origin, delta, min, max] of [[start.x, dx, left, right], [start.y, dy, top, bottom]]) {
+        if (Math.abs(delta) < 0.0000001) {
+          if (origin < min || origin > max) return null;
+          continue;
+        }
+        const first = (min - origin) / delta;
+        const second = (max - origin) / delta;
+        enter = Math.max(enter, Math.min(first, second));
+        exit = Math.min(exit, Math.max(first, second));
+        if (enter > exit) return null;
+      }
+      if (!(enter > 0 && enter <= 1)) return null;
+      const atX = Math.abs((start.x + dx * enter) - left) < 0.0001 ? -1 : Math.abs((start.x + dx * enter) - right) < 0.0001 ? 1 : 0;
+      const atY = Math.abs((start.y + dy * enter) - top) < 0.0001 ? -1 : Math.abs((start.y + dy * enter) - bottom) < 0.0001 ? 1 : 0;
+      if (atX && atY) {
+        const scale = Math.SQRT1_2;
+        return { time: enter, normalX: atX * scale, normalY: atY * scale };
+      }
+      return { time: enter, normalX: atX, normalY: atY };
+    }
+
+    function pushOutOfWall(actor, wall, radius) {
+      const nearestX = Math.max(wall.x, Math.min(wall.x + wall.width, actor.x));
+      const nearestY = Math.max(wall.y, Math.min(wall.y + wall.height, actor.y));
+      const dx = actor.x - nearestX;
+      const dy = actor.y - nearestY;
+      const distance = Math.hypot(dx, dy);
+      if (distance >= radius - 0.00001) return false;
+      if (distance > 0.00001) {
+        const correction = radius - distance;
+        actor.x += (dx / distance) * correction;
+        actor.y += (dy / distance) * correction;
+        return true;
+      }
+      const options = [
+        [wall.x - radius - actor.x, 0],
+        [wall.x + wall.width + radius - actor.x, 0],
+        [0, wall.y - radius - actor.y],
+        [0, wall.y + wall.height + radius - actor.y],
+      ];
+      options.sort((left, right) => Math.abs(left[0] + left[1]) - Math.abs(right[0] + right[1]));
+      actor.x += options[0][0];
+      actor.y += options[0][1];
+      return true;
+    }
+
+    return Object.freeze({
+      createRunWorld,
+      physicalSize,
+      visibleBounds,
+      spawnPosition,
+      solidWalls,
+      resolveSolidTerrain,
+      openPosition,
+      routePosition,
+    });
   }
 
   // Match run-update's normal-run body-safe margin, independent of pickup reach.
@@ -1568,6 +1729,7 @@
       const actors = [game.player, ...game.enemies.filter(isCollisionActor)].filter(isPhysicalActor);
       const motion = new Map(actors.map((actor) => [actor, actorMotionFor(actor, dt)]));
       const sweptPairs = actorMotionFrame?.sweptPairs || new Set();
+      actors.forEach((actor) => spatial?.resolveSolidTerrain?.(game, actor, motion.get(actor)));
       const passCount = Math.min(maxSolverPasses, Math.max(4, Math.ceil(Math.sqrt(actors.length)) + 2));
       for (let pass = 0; pass < passCount; pass += 1) {
         const playerMoved = resolvePlayerEnemyContacts(game.player, game.enemies, dt, motion, sweptPairs);
@@ -1801,6 +1963,7 @@
       const previousY = actor.y;
       actor.x = clampToArena(actor, actor.x + dx, "width");
       actor.y = clampToArena(actor, actor.y + dy, "height");
+      spatial?.resolveSolidTerrain?.(getGame(), actor, { x: previousX, y: previousY });
       const appliedX = actor.x - previousX;
       const appliedY = actor.y - previousY;
       if (options.targetFollows && Number.isFinite(actor.targetX) && Number.isFinite(actor.targetY)) {
@@ -2288,8 +2451,13 @@
       // inverted bounds. Normal Farm retains the exact old random mapping.
       const insetX = visible ? Math.min(72, width / 2) : 72;
       const insetY = visible ? Math.min(90, height / 2) : 90;
-      const landingX = region.left + insetX + Math.random() * (width - insetX * 2);
-      const landingY = region.top + insetY + Math.random() * (height - insetY * 2);
+      const requestedLanding = {
+        x: region.left + insetX + Math.random() * (width - insetX * 2),
+        y: region.top + insetY + Math.random() * (height - insetY * 2),
+      };
+      const landing = spatial?.openPosition?.(game, requestedLanding, 38) || requestedLanding;
+      const landingX = landing.x;
+      const landingY = landing.y;
       const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
       const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
       const startY = sideEntry ? landingY : region.top - entryOffsetY;
@@ -2521,34 +2689,40 @@
           const progress = 1 - enemy.dropTimer / enemy.dropWindup;
           enemy.x = enemy.startX + (enemy.landingX - enemy.startX) * progress;
           enemy.y = enemy.startY + (enemy.landingY - enemy.startY) * progress;
+          spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           return;
         }
-        const dx = p.x - enemy.x;
-        const dy = p.y - enemy.y;
-        const dist = Math.max(1, Math.hypot(dx, dy));
+        const playerDx = p.x - enemy.x;
+        const playerDy = p.y - enemy.y;
+        const chaseTarget = spatial?.routePosition?.(game, enemy, p) || p;
+        const dx = chaseTarget.x - enemy.x;
+        const dy = chaseTarget.y - enemy.y;
+        const dist = Math.max(1, Math.hypot(playerDx, playerDy));
+        const chaseDist = Math.max(1, Math.hypot(dx, dy));
         if (hasBossAbility(enemy, "charger") && enemy.chargeState) {
           enemy.facingX = enemy.chargeDirX;
           enemy.facingY = enemy.chargeDirY;
         } else if (enemy.attackRange && enemy.projectileCooldown && dist <= enemy.attackRange) {
-          enemy.facingX = dx / dist;
-          enemy.facingY = dy / dist;
+          enemy.facingX = playerDx / dist;
+          enemy.facingY = playerDy / dist;
         }
-        if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
+        if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt, previousX, previousY)) {
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           applyEnemyTouch(enemy, dt);
           return;
         }
         const ranged = enemy.attackRange && enemy.projectileCooldown;
         if (!ranged || dist > enemy.attackRange * 0.72) {
-          enemy.x += (dx / dist) * enemy.speed * dt;
-          enemy.y += (dy / dist) * enemy.speed * dt;
+          enemy.x += (dx / chaseDist) * enemy.speed * dt;
+          enemy.y += (dy / chaseDist) * enemy.speed * dt;
         }
+        spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
         if (ranged && dist <= enemy.attackRange) {
           enemy.shootTimer -= dt;
           if (enemy.shootTimer <= 0) {
             enemy.shootTimer = enemy.projectileCooldown;
-            spawnEnemyBolt(enemy, dx / dist, dy / dist);
+            spawnEnemyBolt(enemy, playerDx / dist, playerDy / dist);
           }
         }
         applyEnemyTouch(enemy, dt);
@@ -2556,7 +2730,7 @@
       });
     }
 
-    function updateBossCharge(boss, dt) {
+    function updateBossCharge(boss, dt, previousX = boss.x, previousY = boss.y) {
       if (!boss.chargeState) return false;
       const game = getGame();
       boss.chargeTimer -= dt;
@@ -2578,6 +2752,7 @@
         boss.radius,
         bounds.height - boss.radius
       );
+      spatial?.resolveSolidTerrain?.(game, boss, { x: previousX, y: previousY });
       if (boss.chargeTimer <= 0) {
         const slash = bossAbilities.charger.slash;
         game.bossAttacks.push({
@@ -2864,14 +3039,15 @@
       const difficulty = floorDifficulty(game.towerFloor);
       const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
       const speed = scaledProjectileSpeed(type.projectileSpeed || 0, game);
+      const spawn = spatial?.openPosition?.(game, position, type.radius) || position;
       game.enemies.push({
         type: type.id,
         name: type.name,
         color: type.color,
         assetId: type.assetId || type.id,
         towerFloor: game.towerFloor,
-        x: position.x,
-        y: position.y,
+        x: spawn.x,
+        y: spawn.y,
         radius: type.radius,
         hp: type.hp,
         speed: type.speed,
@@ -2889,8 +3065,8 @@
         attackVisualTimer: 0,
         vx: 0,
         vy: 0,
-        facingX: game.player.x - position.x,
-        facingY: game.player.y - position.y,
+        facingX: game.player.x - spawn.x,
+        facingY: game.player.y - spawn.y,
       });
     }
 
@@ -5845,6 +6021,7 @@
 
   function createRenderer({
     canvas,
+    spatial,
     ctx,
     worldView,
     clamp,
@@ -5889,6 +6066,7 @@
       const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
       withWorldTransform(spatialView, () => {
         drawArena(game, bounds.right, bounds.bottom);
+        drawStoneWalls(game);
         game.areas.forEach(drawArea);
         game.weaponBursts.forEach(drawWeaponBurst);
         game.bossAttacks.forEach(drawBossAttack);
@@ -5955,6 +6133,31 @@
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
         ctx.stroke();
+      }
+    }
+
+    function drawStoneWalls(game) {
+      for (const wall of spatial?.solidWalls?.(game) || []) {
+        ctx.fillStyle = "#53606a";
+        ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+        ctx.strokeStyle = "#9eabb5";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
+        ctx.strokeStyle = "rgba(21, 28, 34, 0.7)";
+        ctx.lineWidth = 1;
+        const horizontal = wall.width >= wall.height;
+        const span = horizontal ? wall.width : wall.height;
+        for (let offset = 12; offset < span; offset += 18) {
+          ctx.beginPath();
+          if (horizontal) {
+            ctx.moveTo(wall.x + offset, wall.y);
+            ctx.lineTo(wall.x + offset, wall.y + wall.height);
+          } else {
+            ctx.moveTo(wall.x, wall.y + offset);
+            ctx.lineTo(wall.x + wall.width, wall.y + offset);
+          }
+          ctx.stroke();
+        }
       }
     }
 

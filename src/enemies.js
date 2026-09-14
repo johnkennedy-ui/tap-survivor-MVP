@@ -91,8 +91,13 @@
       // inverted bounds. Normal Farm retains the exact old random mapping.
       const insetX = visible ? Math.min(72, width / 2) : 72;
       const insetY = visible ? Math.min(90, height / 2) : 90;
-      const landingX = region.left + insetX + Math.random() * (width - insetX * 2);
-      const landingY = region.top + insetY + Math.random() * (height - insetY * 2);
+      const requestedLanding = {
+        x: region.left + insetX + Math.random() * (width - insetX * 2),
+        y: region.top + insetY + Math.random() * (height - insetY * 2),
+      };
+      const landing = spatial?.openPosition?.(game, requestedLanding, 38) || requestedLanding;
+      const landingX = landing.x;
+      const landingY = landing.y;
       const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
       const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
       const startY = sideEntry ? landingY : region.top - entryOffsetY;

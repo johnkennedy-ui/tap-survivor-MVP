@@ -61,6 +61,11 @@ function resetRun(towerFloor = 1) {
   return game;
 }
 
+const climbRun = api.invoke("run.reset", { modeId: "climb", towerFloor: 2 });
+assert.equal(climbRun.ok, true, "debug reset accepts a Climb mode");
+assert.equal(harness.dependencies.getGame().modeId, "climb", "debug reset selects Climb mode");
+assert.equal(climbRun.result.modeId, "climb", "debug reset reports the active mode");
+
 for (const { id } of catalog.weapons) {
   resetRun();
   assert.equal(api.invoke("weapon.fire", { id }).ok, true, `weapon ${id}`);

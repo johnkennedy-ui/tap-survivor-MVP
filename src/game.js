@@ -476,6 +476,7 @@ function toggleAudioMute() {
 
 const renderer = rendering.createRenderer({
   canvas,
+  spatial,
   worldView,
   ctx,
   clamp,

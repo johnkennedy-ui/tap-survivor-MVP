@@ -269,7 +269,7 @@ function behaviors(game, provider = spatial) {
 }
 {
   const game = fresh(),
-    system = behaviors(game);
+    system = behaviors(game, { physicalSize: spatial.physicalSize });
   for (const [dx, dy, ex, ey] of [
     [-1, -1, 38, 38],
     [1, -1, 2842, 38],

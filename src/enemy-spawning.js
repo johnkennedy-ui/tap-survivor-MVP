@@ -126,14 +126,15 @@
       const difficulty = floorDifficulty(game.towerFloor);
       const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
       const speed = scaledProjectileSpeed(type.projectileSpeed || 0, game);
+      const spawn = spatial?.openPosition?.(game, position, type.radius) || position;
       game.enemies.push({
         type: type.id,
         name: type.name,
         color: type.color,
         assetId: type.assetId || type.id,
         towerFloor: game.towerFloor,
-        x: position.x,
-        y: position.y,
+        x: spawn.x,
+        y: spawn.y,
         radius: type.radius,
         hp: type.hp,
         speed: type.speed,
@@ -151,8 +152,8 @@
         attackVisualTimer: 0,
         vx: 0,
         vy: 0,
-        facingX: game.player.x - position.x,
-        facingY: game.player.y - position.y,
+        facingX: game.player.x - spawn.x,
+        facingY: game.player.y - spawn.y,
       });
     }
 
