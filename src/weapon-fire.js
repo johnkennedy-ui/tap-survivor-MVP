@@ -26,7 +26,9 @@
     playWeaponSfx,
     addQuestProgress,
     damageEnemy,
+    damagePlayer,
     reapEnemies,
+    applyRadialKnockback,
     distance,
     clamp,
     weaponBehaviors,
@@ -57,7 +59,9 @@
       weaponDamage: scaling.weaponDamage,
       projectileSkillModifier: scaling.projectileSkillModifier,
       damageEnemy,
+      damagePlayer,
       reapEnemies,
+      applyRadialKnockback,
       distance,
       clamp,
     });
@@ -72,8 +76,10 @@
       weaponReach: scaling.weaponReach,
       weaponWidth: scaling.weaponWidth,
       damageEnemy,
+      damagePlayer,
       reapEnemies,
       addQuestProgress,
+      applyRadialKnockback,
       distance,
     });
 

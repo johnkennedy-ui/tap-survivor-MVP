@@ -20,6 +20,8 @@ export function createEnemySystem({
   distance,
   clamp,
   damagePlayer,
+  damageEnemy,
+  applyRadialKnockback,
   onBossSpawn,
 } = {}) {
   const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
@@ -49,6 +51,8 @@ export function createEnemySystem({
     distance,
     clamp,
     damagePlayer,
+    damageEnemy,
+    applyRadialKnockback,
   });
   const spawnSystem = enemySpawning.createEnemySpawnSystem({
     canvas,

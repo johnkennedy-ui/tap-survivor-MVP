@@ -18,6 +18,7 @@
     advanceTowerFloor,
     distance,
     clamp,
+    applyRadialKnockback,
   }) {
     function damageEnemy(enemy, amount, weaponId) {
       const game = getGame();
@@ -81,12 +82,28 @@
           );
         }
         if (effects.killExplosionDamage && effects.killExplosionRadius) {
+          const blast = { x: enemy.x, y: enemy.y, radius: effects.killExplosionRadius };
+          const knockback = killExplosionKnockback(effects.killExplosionRadius);
           game.enemies.forEach((candidate) => {
             if (candidate === enemy || candidate.hp <= 0) return;
-            if (distance(enemy, candidate) <= effects.killExplosionRadius + candidate.radius) {
+            if (distance(blast, candidate) <= effects.killExplosionRadius + candidate.radius) {
               damageEnemy(candidate, effects.killExplosionDamage, "relic_kill_explosion");
+              applyRadialKnockback?.(candidate, blast, knockback, {
+                radius: effects.killExplosionRadius,
+              });
             }
           });
+          if (game.player && distance(blast, game.player) <= effects.killExplosionRadius + actorRadius(game.player)) {
+            const beforeX = game.player.x;
+            const beforeY = game.player.y;
+            const dealt = damagePlayer(effects.killExplosionDamage, { type: "relic_kill_explosion", origin: blast });
+            if (dealt > 0 && game.player.hp > 0 && game.player.x === beforeX && game.player.y === beforeY) {
+              applyRadialKnockback?.(game.player, blast, knockback * 0.82, {
+                radius: effects.killExplosionRadius,
+                targetFollows: true,
+              });
+            }
+          }
         }
         game.kills += 1;
         addQuestProgressGroup(killQuestIds, 1);
@@ -99,6 +116,14 @@
         }
       });
       game.enemies = game.enemies.filter((enemy) => enemy.hp > 0);
+    }
+
+    function killExplosionKnockback(radius) {
+      return Math.min(64, Math.max(30, radius * 0.38));
+    }
+
+    function actorRadius(actor) {
+      return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
     }
 
     return {

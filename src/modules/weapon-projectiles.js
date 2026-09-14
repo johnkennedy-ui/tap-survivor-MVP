@@ -9,7 +9,7 @@
  * }} WeaponDef
  * @typedef {Record<string, WeaponDef>} WeaponDefs
  * @typedef {{ width: number, height: number }} ProjectileCanvas
- * @typedef {{ x: number, y: number }} Player
+ * @typedef {{ x: number, y: number, radius?: number, hp?: number, targetX?: number, targetY?: number }} Player
  * @typedef {{ x: number, y: number, radius: number, hp?: number }} Enemy
  * @typedef {{
  *   weaponId: string,
@@ -67,7 +67,14 @@ export function rotateVector(vx, vy, angle) {
  *   weaponDamage: (weaponId: string) => number,
  *   projectileSkillModifier: (weapon: WeaponDef, field: string) => number,
  *   damageEnemy: (enemy: Enemy, damage: number, weaponId: string) => void,
+ *   damagePlayer?: (damage: number, source?: Record<string, unknown>) => number | void,
  *   reapEnemies: () => void,
+ *   applyRadialKnockback?: (
+ *     actor: PointLike,
+ *     origin: PointLike,
+ *     force: number,
+ *     options?: { radius?: number, targetFollows?: boolean }
+ *   ) => void,
  *   distance: (a: PointLike, b: PointLike) => number,
  *   clamp: (value: number, min: number, max: number) => number
  * }} options
@@ -85,7 +92,9 @@ export function createWeaponProjectileSystem({
   weaponDamage,
   projectileSkillModifier,
   damageEnemy,
+  damagePlayer,
   reapEnemies,
+  applyRadialKnockback,
   distance,
   clamp,
 }) {
@@ -204,21 +213,68 @@ export function createWeaponProjectileSystem({
     if (!explosionTier) return;
     const radius = 42 + explosionTier * 18;
     const damage = bolt.damage * (0.28 + explosionTier * 0.08);
+    const knockback = explosionKnockback(radius);
     const game = getGame();
+    const origin = { x: enemy.x, y: enemy.y, radius: enemy.radius };
+    applyRadialKnockback?.(enemy, impactKnockbackOrigin(bolt, enemy), knockback);
     game.enemies.forEach((candidate) => {
       if (candidate === enemy || candidate.hp <= 0) return;
-      if (distance(enemy, candidate) <= radius + candidate.radius) {
+      if (distance(origin, candidate) <= radius + candidate.radius) {
         damageEnemy(candidate, damage, bolt.weaponId);
+        applyRadialKnockback?.(candidate, origin, knockback, { radius });
       }
     });
+    applyPlayerExplosion(origin, radius, damage, knockback, {
+      type: "explosive_hit",
+      weaponId: bolt.weaponId,
+      bolt,
+    });
     game.areas.push({
-      x: enemy.x,
-      y: enemy.y,
+      x: origin.x,
+      y: origin.y,
       radius,
       color: bolt.color,
       life: 0.18,
       visualOnly: true,
     });
+  }
+
+  function applyPlayerExplosion(origin, radius, damage, knockback, source) {
+    const game = getGame();
+    const player = game.player;
+    if (!player || distance(origin, player) > radius + actorRadius(player)) return;
+    const beforeX = player.x;
+    const beforeY = player.y;
+    const dealt = damagePlayer?.(damage, { ...source, origin });
+    if (
+      typeof dealt !== "number" ||
+      !(dealt > 0) ||
+      !(player.hp > 0) ||
+      player.x !== beforeX ||
+      player.y !== beforeY
+    )
+      return;
+    applyRadialKnockback?.(player, origin, knockback * 0.82, {
+      radius,
+      targetFollows: true,
+    });
+  }
+
+  function impactKnockbackOrigin(bolt, enemy) {
+    const speed = Math.hypot(bolt.vx || 0, bolt.vy || 0);
+    if (speed <= 0.0001) return enemy;
+    return {
+      x: enemy.x - bolt.vx / speed,
+      y: enemy.y - bolt.vy / speed,
+    };
+  }
+
+  function explosionKnockback(radius) {
+    return Math.min(54, Math.max(24, radius * 0.45));
+  }
+
+  function actorRadius(actor) {
+    return Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
   }
 
   function splitBoltOnHit(bolt) {

@@ -69,16 +69,21 @@ export function createRunUpdater({
       combat.spawnBoss();
     }
 
+    combat.beginActorMotionFrame?.(dt);
     movePlayer(player, dt);
     combat.spawnEnemies(dt);
+    combat.captureActorMotionFrame?.();
     combat.updateEnemies(dt);
+    combat.resolveActorCollisions?.(dt);
     combat.updateEnemyBolts(dt);
     combat.updateBossSpecials(dt);
     combat.updateWeapons(dt);
     combat.updateBolts(dt);
     combat.updateAreas(dt);
+    combat.resolveActorCollisions?.(dt);
     combat.updateBeams(dt);
     combat.updateWeaponBursts(dt);
+    combat.finishActorMotionFrame?.(dt);
     updateRelicTimers(player, dt);
     updatePlayerAnimation(player, dt);
     pickupSystem.updateXpDrops(dt);
