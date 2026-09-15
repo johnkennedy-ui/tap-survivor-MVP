@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Super Boss Arsenal Cache Relic icon">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b780ff"/>
+      <stop offset="1" stop-color="#08130f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="52%">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#62f0bd" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect x="4" y="4" width="56" height="56" rx="10" fill="url(#bg)"/>
+  <rect x="7" y="7" width="50" height="50" rx="8" fill="none" stroke="#d8ffe2" stroke-opacity="0.55" stroke-width="2"/>
+  <circle cx="32" cy="32" r="24" fill="url(#glow)" opacity="0.72"/>
+  <path d="M16 48 L48 16" stroke="#62f0bd" stroke-width="4" stroke-linecap="round" opacity="0.55"/>
+  <polygon points="15.6,39.3 23.3,22.3 41.0,16.4 44.7,34.7 33.9,49.9" fill="#22d3ee" stroke="#f7ffe9" stroke-width="2" opacity="0.96"/>
+  <circle cx="32" cy="32" r="7" fill="#07120d" opacity="0.8"/>
+  <text x="32" y="37" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="900" fill="#f7ffe9">◆</text>
+  <circle cx="14" cy="14" r="3" fill="#62f0bd"/>
+  <circle cx="50" cy="50" r="3" fill="#22d3ee"/>
+</svg>

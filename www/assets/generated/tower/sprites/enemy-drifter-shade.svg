@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="shade" x1="35" y1="18" x2="96" y2="111" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6b7890"/>
+      <stop offset=".55" stop-color="#2a3448"/>
+      <stop offset="1" stop-color="#111722"/>
+    </linearGradient>
+    <filter id="eyeGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <ellipse cx="64" cy="105" rx="33" ry="9" fill="#05070d" opacity=".38"/>
+  <path d="M22 88 Q27 34 56 21 Q64 13 72 21 Q101 34 106 88 Q89 77 78 103 Q70 86 64 101 Q58 86 50 103 Q39 77 22 88Z" fill="url(#shade)" stroke="#c7d3e1" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M37 86 Q45 55 64 39 Q83 55 91 86 Q77 78 71 94 Q66 82 64 96 Q62 82 57 94 Q51 78 37 86Z" fill="#182233" opacity=".72"/>
+  <g fill="#ffd166" filter="url(#eyeGlow)">
+    <path d="M43 55 Q53 46 61 57 Q52 60 43 55Z"/>
+    <path d="M67 57 Q75 46 85 55 Q76 60 67 57Z"/>
+  </g>
+  <path d="M45 75 Q64 84 83 75" fill="none" stroke="#0b1018" stroke-width="5" stroke-linecap="round"/>
+  <g stroke="#69d2ff" stroke-width="3" stroke-linecap="round" opacity=".75">
+    <path d="M32 92 L43 81"/>
+    <path d="M96 92 L85 81"/>
+    <path d="M57 101 L64 90 L71 101"/>
+  </g>
+</svg>
