@@ -62,34 +62,42 @@
           const progress = 1 - enemy.dropTimer / enemy.dropWindup;
           enemy.x = enemy.startX + (enemy.landingX - enemy.startX) * progress;
           enemy.y = enemy.startY + (enemy.landingY - enemy.startY) * progress;
+          spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           return;
         }
-        const dx = p.x - enemy.x;
-        const dy = p.y - enemy.y;
-        const dist = Math.max(1, Math.hypot(dx, dy));
+        const playerDx = p.x - enemy.x;
+        const playerDy = p.y - enemy.y;
+        const chaseTarget = spatial?.routePosition?.(game, enemy, p) || p;
+        const dx = chaseTarget.x - enemy.x;
+        const dy = chaseTarget.y - enemy.y;
+        const dist = Math.max(1, Math.hypot(playerDx, playerDy));
+        const chaseDist = Math.max(1, Math.hypot(dx, dy));
         if (hasBossAbility(enemy, "charger") && enemy.chargeState) {
           enemy.facingX = enemy.chargeDirX;
           enemy.facingY = enemy.chargeDirY;
         } else if (enemy.attackRange && enemy.projectileCooldown && dist <= enemy.attackRange) {
-          enemy.facingX = dx / dist;
-          enemy.facingY = dy / dist;
+          enemy.facingX = playerDx / dist;
+          enemy.facingY = playerDy / dist;
         }
-        if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
+        if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt, previousX, previousY)) {
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           applyEnemyTouch(enemy, dt);
           return;
         }
         const ranged = enemy.attackRange && enemy.projectileCooldown;
         if (!ranged || dist > enemy.attackRange * 0.72) {
-          enemy.x += (dx / dist) * enemy.speed * dt;
-          enemy.y += (dy / dist) * enemy.speed * dt;
+          const travel =
+            game.world?.modeId === "climb" ? Math.min(chaseDist, enemy.speed * dt) : enemy.speed * dt;
+          enemy.x += (dx / chaseDist) * travel;
+          enemy.y += (dy / chaseDist) * travel;
         }
+        spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
         if (ranged && dist <= enemy.attackRange) {
           enemy.shootTimer -= dt;
           if (enemy.shootTimer <= 0) {
             enemy.shootTimer = enemy.projectileCooldown;
-            spawnEnemyBolt(enemy, dx / dist, dy / dist);
+            spawnEnemyBolt(enemy, playerDx / dist, playerDy / dist);
           }
         }
         applyEnemyTouch(enemy, dt);
@@ -97,7 +105,7 @@
       });
     }
 
-    function updateBossCharge(boss, dt) {
+    function updateBossCharge(boss, dt, previousX = boss.x, previousY = boss.y) {
       if (!boss.chargeState) return false;
       const game = getGame();
       boss.chargeTimer -= dt;
@@ -119,6 +127,7 @@
         boss.radius,
         bounds.height - boss.radius
       );
+      spatial?.resolveSolidTerrain?.(game, boss, { x: previousX, y: previousY });
       if (boss.chargeTimer <= 0) {
         const slash = bossAbilities.charger.slash;
         game.bossAttacks.push({
@@ -129,7 +138,8 @@
           dirY: boss.chargeDirY,
           arc: Math.PI * slash.arcPi,
           radius: boss.superBoss ? slash.superRadius : slash.radius,
-          damage: boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
+          damage:
+            boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
           age: 0,
           windup: slash.windup,
           hit: false,
@@ -178,7 +188,13 @@
             const beforeX = p.x;
             const beforeY = p.y;
             const dealt = damagePlayer?.(attack.damage, { type: attack.type, attack });
-            if (attack.type !== "boss_slash" && dealt > 0 && p.hp > 0 && p.x === beforeX && p.y === beforeY) {
+            if (
+              attack.type !== "boss_slash" &&
+              dealt > 0 &&
+              p.hp > 0 &&
+              p.x === beforeX &&
+              p.y === beforeY
+            ) {
               applyRadialKnockback?.(p, attack, bossBlastKnockback(attack), {
                 radius: attack.radius,
                 targetFollows: true,

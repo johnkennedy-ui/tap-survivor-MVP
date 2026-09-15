@@ -24,7 +24,9 @@ export function createEnemySystem({
   applyRadialKnockback,
   onBossSpawn,
 } = {}) {
-  const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
+  const bossKinds = bossConfig.abilityIds?.length
+    ? bossConfig.abilityIds
+    : Object.keys(bossAbilities);
   const normalBossAbilityCount = bossConfig.normalAbilityCount || 1;
   const superBossAbilityCount = bossConfig.superAbilityCount || 2;
   const bossBaseHp = bossConfig.baseHp || 1400;
@@ -74,7 +76,9 @@ export function createEnemySystem({
     game.bossSpawned = true;
     const difficulty = floorDifficulty(game.towerFloor);
     const superBoss = game.towerFloor % 5 === 0;
-    const selectedAbilities = chooseBossAbilities(superBoss ? superBossAbilityCount : normalBossAbilityCount);
+    const selectedAbilities = chooseBossAbilities(
+      superBoss ? superBossAbilityCount : normalBossAbilityCount
+    );
     const bossKind = selectedAbilities[0] || fallbackAbility;
     const bossHp = (bossBaseHp + game.kills * bossHpPerKill) * difficulty.hp;
     const visible = spatial?.visibleBounds(game);
@@ -85,10 +89,29 @@ export function createEnemySystem({
     // inverted bounds. Normal Farm retains the exact old random mapping.
     const insetX = visible ? Math.min(72, width / 2) : 72;
     const insetY = visible ? Math.min(90, height / 2) : 90;
-    const landingX = region.left + insetX + Math.random() * (width - insetX * 2);
-    const landingY = region.top + insetY + Math.random() * (height - insetY * 2);
-    const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
-    const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
+    const requestedLanding = {
+      x: region.left + insetX + Math.random() * (width - insetX * 2),
+      y: region.top + insetY + Math.random() * (height - insetY * 2),
+    };
+    const landingBounds = visible
+      ? {
+          left: region.left + insetX,
+          right: region.right - insetX,
+          top: region.top + insetY,
+          bottom: region.bottom - insetY,
+        }
+      : null;
+    const landing =
+      spatial?.openPosition?.(game, requestedLanding, 38, landingBounds) || requestedLanding;
+    const landingX = landing.x;
+    const landingY = landing.y;
+    const sideEntry =
+      landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
+    const startX = sideEntry
+      ? landingX < region.left + width / 2
+        ? region.left - entryOffsetX
+        : region.right + entryOffsetX
+      : landingX;
     const startY = sideEntry ? landingY : region.top - entryOffsetY;
     if (!sideEntry) {
       const drop = bossConfig.drop || {};
@@ -110,8 +133,12 @@ export function createEnemySystem({
     };
     onBossSpawn?.({ superBoss, abilities: selectedAbilities });
     const turretBoss = hasAbility(selectedAbilities, "turret");
-    const turretCooldown = turretBoss ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game) : 0;
-    const turretSpeed = turretBoss ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game) : 0;
+    const turretCooldown = turretBoss
+      ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game)
+      : 0;
+    const turretSpeed = turretBoss
+      ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game)
+      : 0;
     const boss = {
       boss: true,
       superBoss,
@@ -137,9 +164,16 @@ export function createEnemySystem({
       attackRange: turretBoss ? bossAbilities.turret.attackRange : 0,
       projectileCooldown: turretCooldown,
       projectileSpeed: turretSpeed,
-      projectileDamage: (superBoss ? bossAbilities.turret.superProjectileDamage : bossAbilities.turret.projectileDamage) * difficulty.damage,
-      projectileColor: turretBoss ? behaviorSystem.resolveBossProjectileColor(bossAbilities.turret) : undefined,
-      shootTimer: turretBoss ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game) : 0,
+      projectileDamage:
+        (superBoss
+          ? bossAbilities.turret.superProjectileDamage
+          : bossAbilities.turret.projectileDamage) * difficulty.damage,
+      projectileColor: turretBoss
+        ? behaviorSystem.resolveBossProjectileColor(bossAbilities.turret)
+        : undefined,
+      shootTimer: turretBoss
+        ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game)
+        : 0,
       animTime: 0,
       attackVisualTimer: 0,
       vx: 0,
@@ -180,7 +214,10 @@ export function createEnemySystem({
   }
 
   function bossColor(abilities) {
-    const priority = bossKinds.slice().reverse().find((ability) => hasAbility(abilities, ability));
+    const priority = bossKinds
+      .slice()
+      .reverse()
+      .find((ability) => hasAbility(abilities, ability));
     return bossAbilities[priority]?.color || "#ff4f8b";
   }
 

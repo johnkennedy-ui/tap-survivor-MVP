@@ -478,6 +478,7 @@ export function createModuleGameDependencyBag({
     resetRun: resetDebugRun,
     runUpdater,
     setDebugSpecialEffects,
+    spatial,
   });
   platformAdapters.debugSystem.setRuntime?.(debugRuntime);
 

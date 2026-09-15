@@ -203,6 +203,31 @@
     return Object.freeze({ ...pointRecord(x, y), distance, hitX, hitY });
   }
 
+  const wallCache = new WeakMap();
+  const routeCache = new WeakMap();
+
+  function climbSolidWalls(world) {
+    if (world?.modeId !== "climb" || !Number.isFinite(world.width) || !Number.isFinite(world.height))
+      return [];
+    if (world.width < 960 || world.height < 540) return [];
+    if (Array.isArray(world.solidWalls)) return world.solidWalls;
+    const cached = wallCache.get(world);
+    if (cached) return cached;
+    const walls = createClimbMazeWalls(world);
+    wallCache.set(world, walls);
+    return walls;
+  }
+
+  function worldWithSolidWalls(world) {
+    if (world?.modeId !== "climb") return world;
+    const next = { ...world };
+    Object.defineProperty(next, "solidWalls", {
+      value: climbSolidWalls(world),
+      enumerable: false,
+    });
+    return Object.freeze(next);
+  }
+
   /**
    * Source-owned simulation capability, injected into native and retained factories.
    * The viewport is read live for spawn queries only; physical dimensions are fixed
@@ -218,13 +243,15 @@
         world.width > 0 &&
         Number.isFinite(world?.height) &&
         world.height > 0;
-      return createWorld({
-        modeId,
-        width: supplied ? world.width : canvas.width,
-        height: supplied ? world.height : canvas.height,
-        worldScale: supplied ? 1 : worldScale,
-        zoom: supplied ? (world.zoom ?? zoom) : zoom,
-      });
+      return worldWithSolidWalls(
+        createWorld({
+          modeId,
+          width: supplied ? world.width : canvas.width,
+          height: supplied ? world.height : canvas.height,
+          worldScale: supplied ? 1 : worldScale,
+          zoom: supplied ? (world.zoom ?? zoom) : zoom,
+        })
+      );
     }
 
     function physicalSize(game) {
@@ -261,7 +288,301 @@
       return { x: hit.x, y: hit.y };
     }
 
-    return Object.freeze({ createRunWorld, physicalSize, visibleBounds, spawnPosition });
+    function solidWalls(game) {
+      return climbSolidWalls(game?.world);
+    }
+
+    function resolveSolidTerrain(game, actor, previous = actor) {
+      const radius = Number.isFinite(actor?.radius) ? Math.max(0, actor.radius) : 0;
+      if (!radius || !Number.isFinite(actor?.x) || !Number.isFinite(actor?.y)) return false;
+      const start = {
+        x: Number.isFinite(previous?.x) ? previous.x : actor.x,
+        y: Number.isFinite(previous?.y) ? previous.y : actor.y,
+      };
+      const walls = solidWalls(game);
+      let changed = false;
+      if (previous?.canSweep !== false) {
+        let from = start;
+        let remaining = { x: actor.x - start.x, y: actor.y - start.y };
+        for (let pass = 0; pass < 2 && (remaining.x || remaining.y); pass += 1) {
+          const end = { x: from.x + remaining.x, y: from.y + remaining.y };
+          const hit = earliestWallHit(from, end, walls, radius);
+          if (!hit) {
+            actor.x = end.x;
+            actor.y = end.y;
+            break;
+          }
+          const time = Math.max(0, hit.time - 0.00001);
+          actor.x = from.x + remaining.x * time;
+          actor.y = from.y + remaining.y * time;
+          const remainder = 1 - time;
+          remaining = { x: remaining.x * remainder, y: remaining.y * remainder };
+          if (hit.normalX) remaining.x = 0;
+          if (hit.normalY) remaining.y = 0;
+          from = { x: actor.x, y: actor.y };
+          changed = true;
+        }
+      }
+      for (let pass = 0; pass < walls.length; pass += 1) {
+        let pushed = false;
+        for (const wall of walls) pushed = pushOutOfWall(actor, wall, radius) || pushed;
+        changed = changed || pushed;
+        if (!pushed) break;
+      }
+      return changed;
+    }
+
+    function openPosition(game, point, radius = 0, bounds = null) {
+      const actor = { radius, x: point?.x, y: point?.y };
+      resolveSolidTerrain(game, actor, { canSweep: false, x: actor.x, y: actor.y });
+      if (
+        bounds &&
+        (actor.x < bounds.left ||
+          actor.x > bounds.right ||
+          actor.y < bounds.top ||
+          actor.y > bounds.bottom)
+      ) {
+        // Boss landings retain their visible-region inset even when a joined
+        // wall would push the sampled point beyond it. No additional RNG draws.
+        const walls = solidWalls(game);
+        const xs = [
+          Math.max(bounds.left, Math.min(bounds.right, point.x)),
+          bounds.left,
+          bounds.right,
+        ];
+        const ys = [
+          Math.max(bounds.top, Math.min(bounds.bottom, point.y)),
+          bounds.top,
+          bounds.bottom,
+        ];
+        for (const wall of walls) {
+          xs.push(wall.x - radius, wall.x + wall.width + radius);
+          ys.push(wall.y - radius, wall.y + wall.height + radius);
+        }
+        let best = null,
+          bestDistance = Infinity;
+        for (const x of new Set(xs))
+          for (const y of new Set(ys)) {
+            if (
+              x < bounds.left ||
+              x > bounds.right ||
+              y < bounds.top ||
+              y > bounds.bottom ||
+              !nodeClear({ x, y }, walls, radius)
+            )
+              continue;
+            const distance = (x - point.x) ** 2 + (y - point.y) ** 2;
+            if (distance < bestDistance) {
+              best = { x, y };
+              bestDistance = distance;
+            }
+          }
+        if (best) return best;
+      }
+      return { x: actor.x, y: actor.y };
+    }
+
+    function routePosition(game, actor, target) {
+      if (!actor || !target) return target;
+      const radius = Math.max(0, Number(actor.radius) || 0);
+      const walls = solidWalls(game);
+      if (!walls.length || pathOpen(actor, target, walls, radius)) return target;
+      const graph = routeGraph(game?.world, walls, radius);
+      const nodes = [actor, ...graph.nodes, target];
+      const distances = Array(nodes.length).fill(Infinity);
+      const previous = Array(nodes.length).fill(-1);
+      const pending = new Set(nodes.map((_, index) => index));
+      distances[0] = 0;
+      while (pending.size) {
+        let current = -1;
+        for (const index of pending)
+          if (current < 0 || distances[index] < distances[current]) current = index;
+        if (current < 0 || !Number.isFinite(distances[current]) || current === nodes.length - 1)
+          break;
+        pending.delete(current);
+        for (let next = 0; next < nodes.length; next += 1) {
+          const staticEdge =
+            current > 0 && current < nodes.length - 1 && next > 0 && next < nodes.length - 1;
+          if (
+            !pending.has(next) ||
+            (staticEdge
+              ? !graph.edges[current - 1][next - 1]
+              : !pathOpen(nodes[current], nodes[next], walls, radius))
+          )
+            continue;
+          const candidate =
+            distances[current] +
+            Math.hypot(nodes[current].x - nodes[next].x, nodes[current].y - nodes[next].y);
+          if (candidate < distances[next]) {
+            distances[next] = candidate;
+            previous[next] = current;
+          }
+        }
+      }
+      if (previous[nodes.length - 1] < 0) return target;
+      let waypoint = nodes.length - 1;
+      while (previous[waypoint] !== 0 && previous[waypoint] >= 0) waypoint = previous[waypoint];
+      return nodes[waypoint] || target;
+    }
+
+    function routeGraph(world, walls, radius) {
+      const cacheOwner = world && typeof world === "object" ? world : null;
+      const fingerprint = walls
+        .map((wall) => `${wall.x},${wall.y},${wall.width},${wall.height}`)
+        .join(";");
+      const cached = cacheOwner && routeCache.get(cacheOwner);
+      const byRadius = cached || new Map();
+      const prior = byRadius.get(radius);
+      if (prior?.fingerprint === fingerprint) return prior;
+      const pad = radius + 8;
+      const nodes = walls
+        .flatMap((wall) => [
+          { x: wall.x - pad, y: wall.y - pad },
+          { x: wall.x + wall.width + pad, y: wall.y - pad },
+          { x: wall.x - pad, y: wall.y + wall.height + pad },
+          { x: wall.x + wall.width + pad, y: wall.y + wall.height + pad },
+        ])
+        .filter(
+          (node, index, all) =>
+            nodeClear(node, walls, radius) &&
+            all.findIndex((other) => other.x === node.x && other.y === node.y) === index
+        );
+      const edges = nodes.map((node, index) =>
+        nodes.map((other, otherIndex) => index !== otherIndex && pathOpen(node, other, walls, radius))
+      );
+      const graph = Object.freeze({
+        fingerprint,
+        nodes: Object.freeze(nodes),
+        edges: Object.freeze(edges.map((row) => Object.freeze(row))),
+      });
+      byRadius.set(radius, graph);
+      if (cacheOwner) routeCache.set(cacheOwner, byRadius);
+      return graph;
+    }
+
+    function pathOpen(start, end, walls, radius) {
+      return (
+        nodeClear(start, walls, radius) &&
+        nodeClear(end, walls, radius) &&
+        !walls.some((wall) => segmentEntry(start, end, wall, radius))
+      );
+    }
+
+    function nodeClear(point, walls, radius) {
+      if (!Number.isFinite(point?.x) || !Number.isFinite(point?.y)) return false;
+      return !walls.some((wall) => {
+        const nearestX = Math.max(wall.x, Math.min(wall.x + wall.width, point.x));
+        const nearestY = Math.max(wall.y, Math.min(wall.y + wall.height, point.y));
+        return Math.hypot(point.x - nearestX, point.y - nearestY) < radius - 0.0001;
+      });
+    }
+
+    function earliestWallHit(start, end, walls, radius) {
+      let earliest = null;
+      for (const wall of walls) {
+        const hit = segmentEntry(start, end, wall, radius);
+        if (hit && (!earliest || hit.time < earliest.time)) earliest = hit;
+      }
+      return earliest;
+    }
+
+    function segmentEntry(start, end, wall, radius) {
+      const left = wall.x - radius;
+      const right = wall.x + wall.width + radius;
+      const top = wall.y - radius;
+      const bottom = wall.y + wall.height + radius;
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      // Contact correction can leave a circle-clear centre inside an expanded
+      // AABB corner. Permit outward/tangent escape, not an unchecked sweep
+      // through the collider simply because the AABB entry time is already zero.
+      if (start.x > left && start.x < right && start.y > top && start.y < bottom) {
+        const nearestX = Math.max(wall.x, Math.min(wall.x + wall.width, start.x));
+        const nearestY = Math.max(wall.y, Math.min(wall.y + wall.height, start.y));
+        const offsetX = start.x - nearestX,
+          offsetY = start.y - nearestY;
+        const length = Math.hypot(offsetX, offsetY);
+        if (length >= radius - 0.0001 && length > 0 && dx * offsetX + dy * offsetY < 0) {
+          return { time: 0, normalX: offsetX / length, normalY: offsetY / length };
+        }
+      }
+      let enter = 0;
+      let exit = 1;
+      for (const [origin, delta, min, max] of [
+        [start.x, dx, left, right],
+        [start.y, dy, top, bottom],
+      ]) {
+        if (Math.abs(delta) < 0.0000001) {
+          if (origin < min || origin > max) return null;
+          continue;
+        }
+        const first = (min - origin) / delta;
+        const second = (max - origin) / delta;
+        enter = Math.max(enter, Math.min(first, second));
+        exit = Math.min(exit, Math.max(first, second));
+        if (enter > exit) return null;
+      }
+      if (enter < 0 || enter > 1) return null;
+      const atX =
+        Math.abs(start.x + dx * enter - left) < 0.0001
+          ? -1
+          : Math.abs(start.x + dx * enter - right) < 0.0001
+            ? 1
+            : 0;
+      const atY =
+        Math.abs(start.y + dy * enter - top) < 0.0001
+          ? -1
+          : Math.abs(start.y + dy * enter - bottom) < 0.0001
+            ? 1
+            : 0;
+      if (atX && atY) {
+        // A corner is entered only when both incident faces are crossed. A path
+        // that merely grazes one face must retain its legal tangent/escape move.
+        if (!(dx * atX < 0 && dy * atY < 0)) return null;
+        const scale = Math.SQRT1_2;
+        const normalX = atX * scale;
+        const normalY = atY * scale;
+        return { time: enter, normalX, normalY };
+      }
+      if (enter === 0 && dx * atX + dy * atY >= 0) return null;
+      return { time: enter, normalX: atX, normalY: atY };
+    }
+
+    function pushOutOfWall(actor, wall, radius) {
+      const nearestX = Math.max(wall.x, Math.min(wall.x + wall.width, actor.x));
+      const nearestY = Math.max(wall.y, Math.min(wall.y + wall.height, actor.y));
+      const dx = actor.x - nearestX;
+      const dy = actor.y - nearestY;
+      const distance = Math.hypot(dx, dy);
+      if (distance >= radius - 0.00001) return false;
+      if (distance > 0.00001) {
+        const correction = radius - distance;
+        actor.x += (dx / distance) * correction;
+        actor.y += (dy / distance) * correction;
+        return true;
+      }
+      const options = [
+        [wall.x - radius - actor.x, 0],
+        [wall.x + wall.width + radius - actor.x, 0],
+        [0, wall.y - radius - actor.y],
+        [0, wall.y + wall.height + radius - actor.y],
+      ];
+      options.sort((left, right) => Math.abs(left[0] + left[1]) - Math.abs(right[0] + right[1]));
+      actor.x += options[0][0];
+      actor.y += options[0][1];
+      return true;
+    }
+
+    return Object.freeze({
+      createRunWorld,
+      physicalSize,
+      visibleBounds,
+      spawnPosition,
+      solidWalls,
+      resolveSolidTerrain,
+      openPosition,
+      routePosition,
+    });
   }
 
   // Match run-update's normal-run body-safe margin, independent of pickup reach.
@@ -1568,6 +1889,7 @@
       const actors = [game.player, ...game.enemies.filter(isCollisionActor)].filter(isPhysicalActor);
       const motion = new Map(actors.map((actor) => [actor, actorMotionFor(actor, dt)]));
       const sweptPairs = actorMotionFrame?.sweptPairs || new Set();
+      actors.forEach((actor) => spatial?.resolveSolidTerrain?.(game, actor, motion.get(actor)));
       const passCount = Math.min(maxSolverPasses, Math.max(4, Math.ceil(Math.sqrt(actors.length)) + 2));
       for (let pass = 0; pass < passCount; pass += 1) {
         const playerMoved = resolvePlayerEnemyContacts(game.player, game.enemies, dt, motion, sweptPairs);
@@ -1801,6 +2123,7 @@
       const previousY = actor.y;
       actor.x = clampToArena(actor, actor.x + dx, "width");
       actor.y = clampToArena(actor, actor.y + dy, "height");
+      spatial?.resolveSolidTerrain?.(getGame(), actor, { x: previousX, y: previousY });
       const appliedX = actor.x - previousX;
       const appliedY = actor.y - previousY;
       if (options.targetFollows && Number.isFinite(actor.targetX) && Number.isFinite(actor.targetY)) {
@@ -2227,7 +2550,9 @@
     applyRadialKnockback,
     onBossSpawn,
   } = {}) {
-    const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
+    const bossKinds = bossConfig.abilityIds?.length
+      ? bossConfig.abilityIds
+      : Object.keys(bossAbilities);
     const normalBossAbilityCount = bossConfig.normalAbilityCount || 1;
     const superBossAbilityCount = bossConfig.superAbilityCount || 2;
     const bossBaseHp = bossConfig.baseHp || 1400;
@@ -2277,7 +2602,9 @@
       game.bossSpawned = true;
       const difficulty = floorDifficulty(game.towerFloor);
       const superBoss = game.towerFloor % 5 === 0;
-      const selectedAbilities = chooseBossAbilities(superBoss ? superBossAbilityCount : normalBossAbilityCount);
+      const selectedAbilities = chooseBossAbilities(
+        superBoss ? superBossAbilityCount : normalBossAbilityCount
+      );
       const bossKind = selectedAbilities[0] || fallbackAbility;
       const bossHp = (bossBaseHp + game.kills * bossHpPerKill) * difficulty.hp;
       const visible = spatial?.visibleBounds(game);
@@ -2288,10 +2615,29 @@
       // inverted bounds. Normal Farm retains the exact old random mapping.
       const insetX = visible ? Math.min(72, width / 2) : 72;
       const insetY = visible ? Math.min(90, height / 2) : 90;
-      const landingX = region.left + insetX + Math.random() * (width - insetX * 2);
-      const landingY = region.top + insetY + Math.random() * (height - insetY * 2);
-      const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
-      const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
+      const requestedLanding = {
+        x: region.left + insetX + Math.random() * (width - insetX * 2),
+        y: region.top + insetY + Math.random() * (height - insetY * 2),
+      };
+      const landingBounds = visible
+        ? {
+            left: region.left + insetX,
+            right: region.right - insetX,
+            top: region.top + insetY,
+            bottom: region.bottom - insetY,
+          }
+        : null;
+      const landing =
+        spatial?.openPosition?.(game, requestedLanding, 38, landingBounds) || requestedLanding;
+      const landingX = landing.x;
+      const landingY = landing.y;
+      const sideEntry =
+        landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
+      const startX = sideEntry
+        ? landingX < region.left + width / 2
+          ? region.left - entryOffsetX
+          : region.right + entryOffsetX
+        : landingX;
       const startY = sideEntry ? landingY : region.top - entryOffsetY;
       if (!sideEntry) {
         const drop = bossConfig.drop || {};
@@ -2313,8 +2659,12 @@
       };
       onBossSpawn?.({ superBoss, abilities: selectedAbilities });
       const turretBoss = hasAbility(selectedAbilities, "turret");
-      const turretCooldown = turretBoss ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game) : 0;
-      const turretSpeed = turretBoss ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game) : 0;
+      const turretCooldown = turretBoss
+        ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game)
+        : 0;
+      const turretSpeed = turretBoss
+        ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game)
+        : 0;
       const boss = {
         boss: true,
         superBoss,
@@ -2340,9 +2690,16 @@
         attackRange: turretBoss ? bossAbilities.turret.attackRange : 0,
         projectileCooldown: turretCooldown,
         projectileSpeed: turretSpeed,
-        projectileDamage: (superBoss ? bossAbilities.turret.superProjectileDamage : bossAbilities.turret.projectileDamage) * difficulty.damage,
-        projectileColor: turretBoss ? behaviorSystem.resolveBossProjectileColor(bossAbilities.turret) : undefined,
-        shootTimer: turretBoss ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game) : 0,
+        projectileDamage:
+          (superBoss
+            ? bossAbilities.turret.superProjectileDamage
+            : bossAbilities.turret.projectileDamage) * difficulty.damage,
+        projectileColor: turretBoss
+          ? behaviorSystem.resolveBossProjectileColor(bossAbilities.turret)
+          : undefined,
+        shootTimer: turretBoss
+          ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game)
+          : 0,
         animTime: 0,
         attackVisualTimer: 0,
         vx: 0,
@@ -2383,7 +2740,10 @@
     }
 
     function bossColor(abilities) {
-      const priority = bossKinds.slice().reverse().find((ability) => hasAbility(abilities, ability));
+      const priority = bossKinds
+        .slice()
+        .reverse()
+        .find((ability) => hasAbility(abilities, ability));
       return bossAbilities[priority]?.color || "#ff4f8b";
     }
 
@@ -2521,34 +2881,42 @@
           const progress = 1 - enemy.dropTimer / enemy.dropWindup;
           enemy.x = enemy.startX + (enemy.landingX - enemy.startX) * progress;
           enemy.y = enemy.startY + (enemy.landingY - enemy.startY) * progress;
+          spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           return;
         }
-        const dx = p.x - enemy.x;
-        const dy = p.y - enemy.y;
-        const dist = Math.max(1, Math.hypot(dx, dy));
+        const playerDx = p.x - enemy.x;
+        const playerDy = p.y - enemy.y;
+        const chaseTarget = spatial?.routePosition?.(game, enemy, p) || p;
+        const dx = chaseTarget.x - enemy.x;
+        const dy = chaseTarget.y - enemy.y;
+        const dist = Math.max(1, Math.hypot(playerDx, playerDy));
+        const chaseDist = Math.max(1, Math.hypot(dx, dy));
         if (hasBossAbility(enemy, "charger") && enemy.chargeState) {
           enemy.facingX = enemy.chargeDirX;
           enemy.facingY = enemy.chargeDirY;
         } else if (enemy.attackRange && enemy.projectileCooldown && dist <= enemy.attackRange) {
-          enemy.facingX = dx / dist;
-          enemy.facingY = dy / dist;
+          enemy.facingX = playerDx / dist;
+          enemy.facingY = playerDy / dist;
         }
-        if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt)) {
+        if (hasBossAbility(enemy, "charger") && updateBossCharge(enemy, dt, previousX, previousY)) {
           updateEnemyVelocity(enemy, previousX, previousY, dt);
           applyEnemyTouch(enemy, dt);
           return;
         }
         const ranged = enemy.attackRange && enemy.projectileCooldown;
         if (!ranged || dist > enemy.attackRange * 0.72) {
-          enemy.x += (dx / dist) * enemy.speed * dt;
-          enemy.y += (dy / dist) * enemy.speed * dt;
+          const travel =
+            game.world?.modeId === "climb" ? Math.min(chaseDist, enemy.speed * dt) : enemy.speed * dt;
+          enemy.x += (dx / chaseDist) * travel;
+          enemy.y += (dy / chaseDist) * travel;
         }
+        spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
         if (ranged && dist <= enemy.attackRange) {
           enemy.shootTimer -= dt;
           if (enemy.shootTimer <= 0) {
             enemy.shootTimer = enemy.projectileCooldown;
-            spawnEnemyBolt(enemy, dx / dist, dy / dist);
+            spawnEnemyBolt(enemy, playerDx / dist, playerDy / dist);
           }
         }
         applyEnemyTouch(enemy, dt);
@@ -2556,7 +2924,7 @@
       });
     }
 
-    function updateBossCharge(boss, dt) {
+    function updateBossCharge(boss, dt, previousX = boss.x, previousY = boss.y) {
       if (!boss.chargeState) return false;
       const game = getGame();
       boss.chargeTimer -= dt;
@@ -2578,6 +2946,7 @@
         boss.radius,
         bounds.height - boss.radius
       );
+      spatial?.resolveSolidTerrain?.(game, boss, { x: previousX, y: previousY });
       if (boss.chargeTimer <= 0) {
         const slash = bossAbilities.charger.slash;
         game.bossAttacks.push({
@@ -2588,7 +2957,8 @@
           dirY: boss.chargeDirY,
           arc: Math.PI * slash.arcPi,
           radius: boss.superBoss ? slash.superRadius : slash.radius,
-          damage: boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
+          damage:
+            boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
           age: 0,
           windup: slash.windup,
           hit: false,
@@ -2637,7 +3007,13 @@
             const beforeX = p.x;
             const beforeY = p.y;
             const dealt = damagePlayer?.(attack.damage, { type: attack.type, attack });
-            if (attack.type !== "boss_slash" && dealt > 0 && p.hp > 0 && p.x === beforeX && p.y === beforeY) {
+            if (
+              attack.type !== "boss_slash" &&
+              dealt > 0 &&
+              p.hp > 0 &&
+              p.x === beforeX &&
+              p.y === beforeY
+            ) {
               applyRadialKnockback?.(p, attack, bossBlastKnockback(attack), {
                 radius: attack.radius,
                 targetFollows: true,
@@ -2864,14 +3240,16 @@
       const difficulty = floorDifficulty(game.towerFloor);
       const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
       const speed = scaledProjectileSpeed(type.projectileSpeed || 0, game);
+      const opened = spatial?.openPosition?.(game, position, type.radius) || position;
+      const spawn = preserveSpawnEntryBand(game, position, opened, type.radius);
       game.enemies.push({
         type: type.id,
         name: type.name,
         color: type.color,
         assetId: type.assetId || type.id,
         towerFloor: game.towerFloor,
-        x: position.x,
-        y: position.y,
+        x: spawn.x,
+        y: spawn.y,
         radius: type.radius,
         hp: type.hp,
         speed: type.speed,
@@ -2889,9 +3267,56 @@
         attackVisualTimer: 0,
         vx: 0,
         vy: 0,
-        facingX: game.player.x - position.x,
-        facingY: game.player.y - position.y,
+        facingX: game.player.x - spawn.x,
+        facingY: game.player.y - spawn.y,
       });
+    }
+
+    function preserveSpawnEntryBand(game, requested, opened, radius) {
+      const visible = spatial?.visibleBounds?.(game);
+      if (!visible || withinEntryBand(opened, visible) || !spatial?.solidWalls) return opened;
+      const walls = spatial.solidWalls(game);
+      const candidates = [opened];
+      for (const wall of walls) {
+        candidates.push(
+          { x: wall.x - radius, y: requested.y },
+          { x: wall.x + wall.width + radius, y: requested.y },
+          { x: requested.x, y: wall.y - radius },
+          { x: requested.x, y: wall.y + wall.height + radius }
+        );
+      }
+      const valid = candidates.filter(
+        (candidate) => withinEntryBand(candidate, visible) && clearOfWalls(candidate, radius, walls)
+      );
+      if (!valid.length) return opened;
+      return valid.reduce((best, candidate) =>
+        distanceSquared(candidate, requested) < distanceSquared(best, requested) ? candidate : best
+      );
+    }
+
+    function withinEntryBand(point, visible) {
+      return (
+        point.x >= visible.left - spawnEntryMargin &&
+        point.x <= visible.right + spawnEntryMargin &&
+        point.y >= visible.top - spawnEntryMargin &&
+        point.y <= visible.bottom + spawnEntryMargin &&
+        (point.x < visible.left ||
+          point.x > visible.right ||
+          point.y < visible.top ||
+          point.y > visible.bottom)
+      );
+    }
+
+    function clearOfWalls(point, radius, walls) {
+      return walls.every((wall) => {
+        const x = Math.max(wall.x, Math.min(wall.x + wall.width, point.x));
+        const y = Math.max(wall.y, Math.min(wall.y + wall.height, point.y));
+        return Math.hypot(point.x - x, point.y - y) >= radius - 0.0001;
+      });
+    }
+
+    function distanceSquared(first, second) {
+      return (first.x - second.x) ** 2 + (first.y - second.y) ** 2;
     }
 
     return {
@@ -5845,6 +6270,7 @@
 
   function createRenderer({
     canvas,
+    spatial,
     ctx,
     worldView,
     clamp,
@@ -5889,6 +6315,7 @@
       const bounds = spatialView?.worldBounds || { right: canvas.width, bottom: canvas.height };
       withWorldTransform(spatialView, () => {
         drawArena(game, bounds.right, bounds.bottom);
+        drawStoneWalls(game);
         game.areas.forEach(drawArea);
         game.weaponBursts.forEach(drawWeaponBurst);
         game.bossAttacks.forEach(drawBossAttack);
@@ -5955,6 +6382,31 @@
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
         ctx.stroke();
+      }
+    }
+
+    function drawStoneWalls(game) {
+      for (const wall of spatial?.solidWalls?.(game) || []) {
+        ctx.fillStyle = "#53606a";
+        ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+        ctx.strokeStyle = "#9eabb5";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
+        ctx.strokeStyle = "rgba(21, 28, 34, 0.7)";
+        ctx.lineWidth = 1;
+        const horizontal = wall.width >= wall.height;
+        const span = horizontal ? wall.width : wall.height;
+        for (let offset = 12; offset < span; offset += 18) {
+          ctx.beginPath();
+          if (horizontal) {
+            ctx.moveTo(wall.x + offset, wall.y);
+            ctx.lineTo(wall.x + offset, wall.y + wall.height);
+          } else {
+            ctx.moveTo(wall.x, wall.y + offset);
+            ctx.lineTo(wall.x + wall.width, wall.y + offset);
+          }
+          ctx.stroke();
+        }
       }
     }
 

@@ -1,5 +1,4 @@
 import { headingForEntity } from "../modules/directional-facing.js";
-
 export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, content = {} }) {
   const context = canvas.getContext?.("2d");
   const renderStressEnabled = typeof canvasCommandSink === "function";
@@ -71,6 +70,7 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
         const height = spatialView?.worldBounds?.bottom || canvas.height || 0;
         withWorldTransform(spatialView, () => {
           drawArena(game, spriteAdapters, width, height);
+          drawStoneWalls(game);
           if (!game) {
             drawMenuHint();
             return;
@@ -193,6 +193,26 @@ export function createBrowserRenderingAdapters({ canvas, canvasCommandSink, cont
       call("moveTo", 0, y);
       call("lineTo", width, y);
       call("stroke");
+    }
+  }
+
+  function drawStoneWalls(game) {
+    for (const wall of game?.world?.solidWalls || []) {
+      set("fillStyle", "#53606a");
+      call("fillRect", wall.x, wall.y, wall.width, wall.height);
+      set("strokeStyle", "#9eabb5");
+      set("lineWidth", 3);
+      call("strokeRect", wall.x, wall.y, wall.width, wall.height);
+      set("strokeStyle", "rgba(21, 28, 34, 0.7)");
+      set("lineWidth", 1);
+      const vertical = wall.width >= wall.height;
+      const span = vertical ? wall.width : wall.height;
+      for (let offset = 12; offset < span; offset += 18) {
+        call("beginPath");
+        if (vertical) { call("moveTo", wall.x + offset, wall.y); call("lineTo", wall.x + offset, wall.y + wall.height); }
+        else { call("moveTo", wall.x, wall.y + offset); call("lineTo", wall.x + wall.width, wall.y + offset); }
+        call("stroke");
+      }
     }
   }
 

@@ -120,14 +120,16 @@ export function createEnemySpawnSystem({
     const difficulty = floorDifficulty(game.towerFloor);
     const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
     const speed = scaledProjectileSpeed(type.projectileSpeed || 0, game);
+    const opened = spatial?.openPosition?.(game, position, type.radius) || position;
+    const spawn = preserveSpawnEntryBand(game, position, opened, type.radius);
     game.enemies.push({
       type: type.id,
       name: type.name,
       color: type.color,
       assetId: type.assetId || type.id,
       towerFloor: game.towerFloor,
-      x: position.x,
-      y: position.y,
+      x: spawn.x,
+      y: spawn.y,
       radius: type.radius,
       hp: type.hp,
       speed: type.speed,
@@ -145,9 +147,56 @@ export function createEnemySpawnSystem({
       attackVisualTimer: 0,
       vx: 0,
       vy: 0,
-      facingX: game.player.x - position.x,
-      facingY: game.player.y - position.y,
+      facingX: game.player.x - spawn.x,
+      facingY: game.player.y - spawn.y,
     });
+  }
+
+  function preserveSpawnEntryBand(game, requested, opened, radius) {
+    const visible = spatial?.visibleBounds?.(game);
+    if (!visible || withinEntryBand(opened, visible) || !spatial?.solidWalls) return opened;
+    const walls = spatial.solidWalls(game);
+    const candidates = [opened];
+    for (const wall of walls) {
+      candidates.push(
+        { x: wall.x - radius, y: requested.y },
+        { x: wall.x + wall.width + radius, y: requested.y },
+        { x: requested.x, y: wall.y - radius },
+        { x: requested.x, y: wall.y + wall.height + radius }
+      );
+    }
+    const valid = candidates.filter(
+      (candidate) => withinEntryBand(candidate, visible) && clearOfWalls(candidate, radius, walls)
+    );
+    if (!valid.length) return opened;
+    return valid.reduce((best, candidate) =>
+      distanceSquared(candidate, requested) < distanceSquared(best, requested) ? candidate : best
+    );
+  }
+
+  function withinEntryBand(point, visible) {
+    return (
+      point.x >= visible.left - spawnEntryMargin &&
+      point.x <= visible.right + spawnEntryMargin &&
+      point.y >= visible.top - spawnEntryMargin &&
+      point.y <= visible.bottom + spawnEntryMargin &&
+      (point.x < visible.left ||
+        point.x > visible.right ||
+        point.y < visible.top ||
+        point.y > visible.bottom)
+    );
+  }
+
+  function clearOfWalls(point, radius, walls) {
+    return walls.every((wall) => {
+      const x = Math.max(wall.x, Math.min(wall.x + wall.width, point.x));
+      const y = Math.max(wall.y, Math.min(wall.y + wall.height, point.y));
+      return Math.hypot(point.x - x, point.y - y) >= radius - 0.0001;
+    });
+  }
+
+  function distanceSquared(first, second) {
+    return (first.x - second.x) ** 2 + (first.y - second.y) ** 2;
   }
 
   return {

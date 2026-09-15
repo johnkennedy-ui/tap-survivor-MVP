@@ -153,6 +153,7 @@
       const actors = [game.player, ...game.enemies.filter(isCollisionActor)].filter(isPhysicalActor);
       const motion = new Map(actors.map((actor) => [actor, actorMotionFor(actor, dt)]));
       const sweptPairs = actorMotionFrame?.sweptPairs || new Set();
+      actors.forEach((actor) => spatial?.resolveSolidTerrain?.(game, actor, motion.get(actor)));
       const passCount = Math.min(maxSolverPasses, Math.max(4, Math.ceil(Math.sqrt(actors.length)) + 2));
       for (let pass = 0; pass < passCount; pass += 1) {
         const playerMoved = resolvePlayerEnemyContacts(game.player, game.enemies, dt, motion, sweptPairs);
@@ -386,6 +387,7 @@
       const previousY = actor.y;
       actor.x = clampToArena(actor, actor.x + dx, "width");
       actor.y = clampToArena(actor, actor.y + dy, "height");
+      spatial?.resolveSolidTerrain?.(getGame(), actor, { x: previousX, y: previousY });
       const appliedX = actor.x - previousX;
       const appliedY = actor.y - previousY;
       if (options.targetFollows && Number.isFinite(actor.targetX) && Number.isFinite(actor.targetY)) {
