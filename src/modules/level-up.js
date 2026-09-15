@@ -134,7 +134,8 @@ export function createLevelUpSystem({
     const runUpgradeChoices = runUpgradeDefs
       .filter(
         (upgrade) =>
-          (!upgrade.requiresWeapon || game.player.equippedWeapons.includes(upgrade.requiresWeapon)) &&
+          (!upgrade.requiresWeapon ||
+            game.player.equippedWeapons.includes(upgrade.requiresWeapon)) &&
           getRunUpgradeTier(upgrade.id) <
             upgrade.maxTier + relicBonusFor(upgrade.id, "maxTierBonus") &&
           !runUpgradeDefs.some(
@@ -143,7 +144,10 @@ export function createLevelUpSystem({
               exclusiveGroupFor(otherUpgrade) === exclusiveGroupFor(upgrade) &&
               Boolean(exclusiveGroupFor(upgrade)) &&
               getRunUpgradeTier(otherUpgrade.id) > 0
-          )
+          ) &&
+          (upgrade.id !== "run_wall_bounce" ||
+            game.world?.modeId !== "climb" ||
+            (typeof random === "function" ? random() : Math.random()) < 1 / 3)
       )
       .map((upgrade) => {
         const tier = getRunUpgradeTier(upgrade.id);
