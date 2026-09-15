@@ -203,32 +203,17 @@
     return Object.freeze({ ...pointRecord(x, y), distance, hitX, hitY });
   }
 
-  const CLIMB_WALL_LAYOUT = Object.freeze([
-    Object.freeze({ x: 0.19, y: 0.27, width: 0.09, height: 0.018 }),
-    Object.freeze({ x: 0.34, y: 0.66, width: 0.018, height: 0.13 }),
-    Object.freeze({ x: 0.58, y: 0.22, width: 0.1, height: 0.018 }),
-    Object.freeze({ x: 0.7, y: 0.54, width: 0.018, height: 0.14 }),
-    Object.freeze({ x: 0.82, y: 0.77, width: 0.1, height: 0.018 }),
-  ]);
   const wallCache = new WeakMap();
+  const routeCache = new WeakMap();
 
   function climbSolidWalls(world) {
-    if (world?.modeId !== "climb" || !Number.isFinite(world.width) || !Number.isFinite(world.height)) return [];
+    if (world?.modeId !== "climb" || !Number.isFinite(world.width) || !Number.isFinite(world.height))
+      return [];
     if (world.width < 960 || world.height < 540) return [];
     if (Array.isArray(world.solidWalls)) return world.solidWalls;
     const cached = wallCache.get(world);
     if (cached) return cached;
-    const walls = Object.freeze(
-      CLIMB_WALL_LAYOUT.map((wall, id) =>
-        Object.freeze({
-          id: `climb-wall-${id + 1}`,
-          x: world.width * wall.x,
-          y: world.height * wall.y,
-          width: world.width * wall.width,
-          height: world.height * wall.height,
-        })
-      )
-    );
+    const walls = createClimbMazeWalls(world);
     wallCache.set(world, walls);
     return walls;
   }
@@ -258,13 +243,15 @@
         world.width > 0 &&
         Number.isFinite(world?.height) &&
         world.height > 0;
-      return worldWithSolidWalls(createWorld({
-        modeId,
-        width: supplied ? world.width : canvas.width,
-        height: supplied ? world.height : canvas.height,
-        worldScale: supplied ? 1 : worldScale,
-        zoom: supplied ? (world.zoom ?? zoom) : zoom,
-      }));
+      return worldWithSolidWalls(
+        createWorld({
+          modeId,
+          width: supplied ? world.width : canvas.width,
+          height: supplied ? world.height : canvas.height,
+          worldScale: supplied ? 1 : worldScale,
+          zoom: supplied ? (world.zoom ?? zoom) : zoom,
+        })
+      );
     }
 
     function physicalSize(game) {
@@ -312,50 +299,191 @@
         x: Number.isFinite(previous?.x) ? previous.x : actor.x,
         y: Number.isFinite(previous?.y) ? previous.y : actor.y,
       };
+      const walls = solidWalls(game);
       let changed = false;
-      for (const wall of solidWalls(game)) {
-        const hit = previous?.canSweep === false ? null : segmentEntry(start, actor, wall, radius);
-        if (hit) {
-          const dx = actor.x - start.x;
-          const dy = actor.y - start.y;
-          actor.x = start.x + dx * Math.max(0, hit.time - 0.00001);
-          actor.y = start.y + dy * Math.max(0, hit.time - 0.00001);
-          if (hit.normalX && !hit.normalY) actor.y = start.y + dy;
-          else if (hit.normalY && !hit.normalX) actor.x = start.x + dx;
+      if (previous?.canSweep !== false) {
+        let from = start;
+        let remaining = { x: actor.x - start.x, y: actor.y - start.y };
+        for (let pass = 0; pass < 2 && (remaining.x || remaining.y); pass += 1) {
+          const end = { x: from.x + remaining.x, y: from.y + remaining.y };
+          const hit = earliestWallHit(from, end, walls, radius);
+          if (!hit) {
+            actor.x = end.x;
+            actor.y = end.y;
+            break;
+          }
+          const time = Math.max(0, hit.time - 0.00001);
+          actor.x = from.x + remaining.x * time;
+          actor.y = from.y + remaining.y * time;
+          const remainder = 1 - time;
+          remaining = { x: remaining.x * remainder, y: remaining.y * remainder };
+          if (hit.normalX) remaining.x = 0;
+          if (hit.normalY) remaining.y = 0;
+          from = { x: actor.x, y: actor.y };
           changed = true;
         }
-        changed = pushOutOfWall(actor, wall, radius) || changed;
+      }
+      for (let pass = 0; pass < walls.length; pass += 1) {
+        let pushed = false;
+        for (const wall of walls) pushed = pushOutOfWall(actor, wall, radius) || pushed;
+        changed = changed || pushed;
+        if (!pushed) break;
       }
       return changed;
     }
 
-    function openPosition(game, point, radius = 0) {
+    function openPosition(game, point, radius = 0, bounds = null) {
       const actor = { radius, x: point?.x, y: point?.y };
       resolveSolidTerrain(game, actor, { canSweep: false, x: actor.x, y: actor.y });
+      if (
+        bounds &&
+        (actor.x < bounds.left ||
+          actor.x > bounds.right ||
+          actor.y < bounds.top ||
+          actor.y > bounds.bottom)
+      ) {
+        // Boss landings retain their visible-region inset even when a joined
+        // wall would push the sampled point beyond it. No additional RNG draws.
+        const walls = solidWalls(game);
+        const xs = [
+          Math.max(bounds.left, Math.min(bounds.right, point.x)),
+          bounds.left,
+          bounds.right,
+        ];
+        const ys = [
+          Math.max(bounds.top, Math.min(bounds.bottom, point.y)),
+          bounds.top,
+          bounds.bottom,
+        ];
+        for (const wall of walls) {
+          xs.push(wall.x - radius, wall.x + wall.width + radius);
+          ys.push(wall.y - radius, wall.y + wall.height + radius);
+        }
+        let best = null,
+          bestDistance = Infinity;
+        for (const x of new Set(xs))
+          for (const y of new Set(ys)) {
+            if (
+              x < bounds.left ||
+              x > bounds.right ||
+              y < bounds.top ||
+              y > bounds.bottom ||
+              !nodeClear({ x, y }, walls, radius)
+            )
+              continue;
+            const distance = (x - point.x) ** 2 + (y - point.y) ** 2;
+            if (distance < bestDistance) {
+              best = { x, y };
+              bestDistance = distance;
+            }
+          }
+        if (best) return best;
+      }
       return { x: actor.x, y: actor.y };
     }
 
     function routePosition(game, actor, target) {
       if (!actor || !target) return target;
       const radius = Math.max(0, Number(actor.radius) || 0);
-      for (const wall of solidWalls(game)) {
-        if (!segmentEntry(actor, target, wall, radius)) continue;
-        const pad = radius + 8;
-        const ends = [
+      const walls = solidWalls(game);
+      if (!walls.length || pathOpen(actor, target, walls, radius)) return target;
+      const graph = routeGraph(game?.world, walls, radius);
+      const nodes = [actor, ...graph.nodes, target];
+      const distances = Array(nodes.length).fill(Infinity);
+      const previous = Array(nodes.length).fill(-1);
+      const pending = new Set(nodes.map((_, index) => index));
+      distances[0] = 0;
+      while (pending.size) {
+        let current = -1;
+        for (const index of pending)
+          if (current < 0 || distances[index] < distances[current]) current = index;
+        if (current < 0 || !Number.isFinite(distances[current]) || current === nodes.length - 1)
+          break;
+        pending.delete(current);
+        for (let next = 0; next < nodes.length; next += 1) {
+          const staticEdge =
+            current > 0 && current < nodes.length - 1 && next > 0 && next < nodes.length - 1;
+          if (
+            !pending.has(next) ||
+            (staticEdge
+              ? !graph.edges[current - 1][next - 1]
+              : !pathOpen(nodes[current], nodes[next], walls, radius))
+          )
+            continue;
+          const candidate =
+            distances[current] +
+            Math.hypot(nodes[current].x - nodes[next].x, nodes[current].y - nodes[next].y);
+          if (candidate < distances[next]) {
+            distances[next] = candidate;
+            previous[next] = current;
+          }
+        }
+      }
+      if (previous[nodes.length - 1] < 0) return target;
+      let waypoint = nodes.length - 1;
+      while (previous[waypoint] !== 0 && previous[waypoint] >= 0) waypoint = previous[waypoint];
+      return nodes[waypoint] || target;
+    }
+
+    function routeGraph(world, walls, radius) {
+      const cacheOwner = world && typeof world === "object" ? world : null;
+      const fingerprint = walls
+        .map((wall) => `${wall.x},${wall.y},${wall.width},${wall.height}`)
+        .join(";");
+      const cached = cacheOwner && routeCache.get(cacheOwner);
+      const byRadius = cached || new Map();
+      const prior = byRadius.get(radius);
+      if (prior?.fingerprint === fingerprint) return prior;
+      const pad = radius + 8;
+      const nodes = walls
+        .flatMap((wall) => [
           { x: wall.x - pad, y: wall.y - pad },
           { x: wall.x + wall.width + pad, y: wall.y - pad },
           { x: wall.x - pad, y: wall.y + wall.height + pad },
           { x: wall.x + wall.width + pad, y: wall.y + wall.height + pad },
-        ];
-        return ends.reduce((best, point) =>
-          routeLength(actor, point, target) < routeLength(actor, best, target) ? point : best
+        ])
+        .filter(
+          (node, index, all) =>
+            nodeClear(node, walls, radius) &&
+            all.findIndex((other) => other.x === node.x && other.y === node.y) === index
         );
-      }
-      return target;
+      const edges = nodes.map((node, index) =>
+        nodes.map((other, otherIndex) => index !== otherIndex && pathOpen(node, other, walls, radius))
+      );
+      const graph = Object.freeze({
+        fingerprint,
+        nodes: Object.freeze(nodes),
+        edges: Object.freeze(edges.map((row) => Object.freeze(row))),
+      });
+      byRadius.set(radius, graph);
+      if (cacheOwner) routeCache.set(cacheOwner, byRadius);
+      return graph;
     }
 
-    function routeLength(actor, waypoint, target) {
-      return Math.hypot(actor.x - waypoint.x, actor.y - waypoint.y) + Math.hypot(target.x - waypoint.x, target.y - waypoint.y);
+    function pathOpen(start, end, walls, radius) {
+      return (
+        nodeClear(start, walls, radius) &&
+        nodeClear(end, walls, radius) &&
+        !walls.some((wall) => segmentEntry(start, end, wall, radius))
+      );
+    }
+
+    function nodeClear(point, walls, radius) {
+      if (!Number.isFinite(point?.x) || !Number.isFinite(point?.y)) return false;
+      return !walls.some((wall) => {
+        const nearestX = Math.max(wall.x, Math.min(wall.x + wall.width, point.x));
+        const nearestY = Math.max(wall.y, Math.min(wall.y + wall.height, point.y));
+        return Math.hypot(point.x - nearestX, point.y - nearestY) < radius - 0.0001;
+      });
+    }
+
+    function earliestWallHit(start, end, walls, radius) {
+      let earliest = null;
+      for (const wall of walls) {
+        const hit = segmentEntry(start, end, wall, radius);
+        if (hit && (!earliest || hit.time < earliest.time)) earliest = hit;
+      }
+      return earliest;
     }
 
     function segmentEntry(start, end, wall, radius) {
@@ -365,9 +493,25 @@
       const bottom = wall.y + wall.height + radius;
       const dx = end.x - start.x;
       const dy = end.y - start.y;
+      // Contact correction can leave a circle-clear centre inside an expanded
+      // AABB corner. Permit outward/tangent escape, not an unchecked sweep
+      // through the collider simply because the AABB entry time is already zero.
+      if (start.x > left && start.x < right && start.y > top && start.y < bottom) {
+        const nearestX = Math.max(wall.x, Math.min(wall.x + wall.width, start.x));
+        const nearestY = Math.max(wall.y, Math.min(wall.y + wall.height, start.y));
+        const offsetX = start.x - nearestX,
+          offsetY = start.y - nearestY;
+        const length = Math.hypot(offsetX, offsetY);
+        if (length >= radius - 0.0001 && length > 0 && dx * offsetX + dy * offsetY < 0) {
+          return { time: 0, normalX: offsetX / length, normalY: offsetY / length };
+        }
+      }
       let enter = 0;
       let exit = 1;
-      for (const [origin, delta, min, max] of [[start.x, dx, left, right], [start.y, dy, top, bottom]]) {
+      for (const [origin, delta, min, max] of [
+        [start.x, dx, left, right],
+        [start.y, dy, top, bottom],
+      ]) {
         if (Math.abs(delta) < 0.0000001) {
           if (origin < min || origin > max) return null;
           continue;
@@ -379,8 +523,18 @@
         if (enter > exit) return null;
       }
       if (enter < 0 || enter > 1) return null;
-      const atX = Math.abs((start.x + dx * enter) - left) < 0.0001 ? -1 : Math.abs((start.x + dx * enter) - right) < 0.0001 ? 1 : 0;
-      const atY = Math.abs((start.y + dy * enter) - top) < 0.0001 ? -1 : Math.abs((start.y + dy * enter) - bottom) < 0.0001 ? 1 : 0;
+      const atX =
+        Math.abs(start.x + dx * enter - left) < 0.0001
+          ? -1
+          : Math.abs(start.x + dx * enter - right) < 0.0001
+            ? 1
+            : 0;
+      const atY =
+        Math.abs(start.y + dy * enter - top) < 0.0001
+          ? -1
+          : Math.abs(start.y + dy * enter - bottom) < 0.0001
+            ? 1
+            : 0;
       if (atX && atY) {
         // A corner is entered only when both incident faces are crossed. A path
         // that merely grazes one face must retain its legal tangent/escape move.
@@ -2396,7 +2550,9 @@
     applyRadialKnockback,
     onBossSpawn,
   } = {}) {
-    const bossKinds = bossConfig.abilityIds?.length ? bossConfig.abilityIds : Object.keys(bossAbilities);
+    const bossKinds = bossConfig.abilityIds?.length
+      ? bossConfig.abilityIds
+      : Object.keys(bossAbilities);
     const normalBossAbilityCount = bossConfig.normalAbilityCount || 1;
     const superBossAbilityCount = bossConfig.superAbilityCount || 2;
     const bossBaseHp = bossConfig.baseHp || 1400;
@@ -2446,7 +2602,9 @@
       game.bossSpawned = true;
       const difficulty = floorDifficulty(game.towerFloor);
       const superBoss = game.towerFloor % 5 === 0;
-      const selectedAbilities = chooseBossAbilities(superBoss ? superBossAbilityCount : normalBossAbilityCount);
+      const selectedAbilities = chooseBossAbilities(
+        superBoss ? superBossAbilityCount : normalBossAbilityCount
+      );
       const bossKind = selectedAbilities[0] || fallbackAbility;
       const bossHp = (bossBaseHp + game.kills * bossHpPerKill) * difficulty.hp;
       const visible = spatial?.visibleBounds(game);
@@ -2461,11 +2619,25 @@
         x: region.left + insetX + Math.random() * (width - insetX * 2),
         y: region.top + insetY + Math.random() * (height - insetY * 2),
       };
-      const landing = spatial?.openPosition?.(game, requestedLanding, 38) || requestedLanding;
+      const landingBounds = visible
+        ? {
+            left: region.left + insetX,
+            right: region.right - insetX,
+            top: region.top + insetY,
+            bottom: region.bottom - insetY,
+          }
+        : null;
+      const landing =
+        spatial?.openPosition?.(game, requestedLanding, 38, landingBounds) || requestedLanding;
       const landingX = landing.x;
       const landingY = landing.y;
-      const sideEntry = landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
-      const startX = sideEntry ? (landingX < region.left + width / 2 ? region.left - entryOffsetX : region.right + entryOffsetX) : landingX;
+      const sideEntry =
+        landingX < region.left + sideEntryMargin || landingX > region.right - sideEntryMargin;
+      const startX = sideEntry
+        ? landingX < region.left + width / 2
+          ? region.left - entryOffsetX
+          : region.right + entryOffsetX
+        : landingX;
       const startY = sideEntry ? landingY : region.top - entryOffsetY;
       if (!sideEntry) {
         const drop = bossConfig.drop || {};
@@ -2487,8 +2659,12 @@
       };
       onBossSpawn?.({ superBoss, abilities: selectedAbilities });
       const turretBoss = hasAbility(selectedAbilities, "turret");
-      const turretCooldown = turretBoss ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game) : 0;
-      const turretSpeed = turretBoss ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game) : 0;
+      const turretCooldown = turretBoss
+        ? scaledProjectileCooldown(bossAbilities.turret.projectileCooldown, game)
+        : 0;
+      const turretSpeed = turretBoss
+        ? scaledProjectileSpeed(bossAbilities.turret.projectileSpeed, game)
+        : 0;
       const boss = {
         boss: true,
         superBoss,
@@ -2514,9 +2690,16 @@
         attackRange: turretBoss ? bossAbilities.turret.attackRange : 0,
         projectileCooldown: turretCooldown,
         projectileSpeed: turretSpeed,
-        projectileDamage: (superBoss ? bossAbilities.turret.superProjectileDamage : bossAbilities.turret.projectileDamage) * difficulty.damage,
-        projectileColor: turretBoss ? behaviorSystem.resolveBossProjectileColor(bossAbilities.turret) : undefined,
-        shootTimer: turretBoss ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game) : 0,
+        projectileDamage:
+          (superBoss
+            ? bossAbilities.turret.superProjectileDamage
+            : bossAbilities.turret.projectileDamage) * difficulty.damage,
+        projectileColor: turretBoss
+          ? behaviorSystem.resolveBossProjectileColor(bossAbilities.turret)
+          : undefined,
+        shootTimer: turretBoss
+          ? bossAbilities.turret.initialShootTimer / projectileFireRateScale(game)
+          : 0,
         animTime: 0,
         attackVisualTimer: 0,
         vx: 0,
@@ -2557,7 +2740,10 @@
     }
 
     function bossColor(abilities) {
-      const priority = bossKinds.slice().reverse().find((ability) => hasAbility(abilities, ability));
+      const priority = bossKinds
+        .slice()
+        .reverse()
+        .find((ability) => hasAbility(abilities, ability));
       return bossAbilities[priority]?.color || "#ff4f8b";
     }
 
@@ -2720,8 +2906,10 @@
         }
         const ranged = enemy.attackRange && enemy.projectileCooldown;
         if (!ranged || dist > enemy.attackRange * 0.72) {
-          enemy.x += (dx / chaseDist) * enemy.speed * dt;
-          enemy.y += (dy / chaseDist) * enemy.speed * dt;
+          const travel =
+            game.world?.modeId === "climb" ? Math.min(chaseDist, enemy.speed * dt) : enemy.speed * dt;
+          enemy.x += (dx / chaseDist) * travel;
+          enemy.y += (dy / chaseDist) * travel;
         }
         spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
         if (ranged && dist <= enemy.attackRange) {
@@ -2769,7 +2957,8 @@
           dirY: boss.chargeDirY,
           arc: Math.PI * slash.arcPi,
           radius: boss.superBoss ? slash.superRadius : slash.radius,
-          damage: boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
+          damage:
+            boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
           age: 0,
           windup: slash.windup,
           hit: false,
@@ -2818,7 +3007,13 @@
             const beforeX = p.x;
             const beforeY = p.y;
             const dealt = damagePlayer?.(attack.damage, { type: attack.type, attack });
-            if (attack.type !== "boss_slash" && dealt > 0 && p.hp > 0 && p.x === beforeX && p.y === beforeY) {
+            if (
+              attack.type !== "boss_slash" &&
+              dealt > 0 &&
+              p.hp > 0 &&
+              p.x === beforeX &&
+              p.y === beforeY
+            ) {
               applyRadialKnockback?.(p, attack, bossBlastKnockback(attack), {
                 radius: attack.radius,
                 targetFollows: true,
@@ -3045,7 +3240,8 @@
       const difficulty = floorDifficulty(game.towerFloor);
       const cooldown = scaledProjectileCooldown(type.projectileCooldown || 0, game);
       const speed = scaledProjectileSpeed(type.projectileSpeed || 0, game);
-      const spawn = spatial?.openPosition?.(game, position, type.radius) || position;
+      const opened = spatial?.openPosition?.(game, position, type.radius) || position;
+      const spawn = preserveSpawnEntryBand(game, position, opened, type.radius);
       game.enemies.push({
         type: type.id,
         name: type.name,
@@ -3074,6 +3270,53 @@
         facingX: game.player.x - spawn.x,
         facingY: game.player.y - spawn.y,
       });
+    }
+
+    function preserveSpawnEntryBand(game, requested, opened, radius) {
+      const visible = spatial?.visibleBounds?.(game);
+      if (!visible || withinEntryBand(opened, visible) || !spatial?.solidWalls) return opened;
+      const walls = spatial.solidWalls(game);
+      const candidates = [opened];
+      for (const wall of walls) {
+        candidates.push(
+          { x: wall.x - radius, y: requested.y },
+          { x: wall.x + wall.width + radius, y: requested.y },
+          { x: requested.x, y: wall.y - radius },
+          { x: requested.x, y: wall.y + wall.height + radius }
+        );
+      }
+      const valid = candidates.filter(
+        (candidate) => withinEntryBand(candidate, visible) && clearOfWalls(candidate, radius, walls)
+      );
+      if (!valid.length) return opened;
+      return valid.reduce((best, candidate) =>
+        distanceSquared(candidate, requested) < distanceSquared(best, requested) ? candidate : best
+      );
+    }
+
+    function withinEntryBand(point, visible) {
+      return (
+        point.x >= visible.left - spawnEntryMargin &&
+        point.x <= visible.right + spawnEntryMargin &&
+        point.y >= visible.top - spawnEntryMargin &&
+        point.y <= visible.bottom + spawnEntryMargin &&
+        (point.x < visible.left ||
+          point.x > visible.right ||
+          point.y < visible.top ||
+          point.y > visible.bottom)
+      );
+    }
+
+    function clearOfWalls(point, radius, walls) {
+      return walls.every((wall) => {
+        const x = Math.max(wall.x, Math.min(wall.x + wall.width, point.x));
+        const y = Math.max(wall.y, Math.min(wall.y + wall.height, point.y));
+        return Math.hypot(point.x - x, point.y - y) >= radius - 0.0001;
+      });
+    }
+
+    function distanceSquared(first, second) {
+      return (first.x - second.x) ** 2 + (first.y - second.y) ** 2;
     }
 
     return {

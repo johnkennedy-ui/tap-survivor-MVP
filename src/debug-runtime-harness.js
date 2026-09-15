@@ -10,17 +10,19 @@ export const DEBUG_RUNTIME_GLOBAL_NAME = "TapSurvivorDebugRuntime";
  *
  * @param {any} dependencies
  */
-export function createDebugRuntimeHarness({
-  combat,
-  contentRegistry,
-  effects,
-  getGame,
-  pickupSystem,
-  resetRun,
-  runUpdater,
-  setDebugSpecialEffects,
-  spatial,
-} = /** @type {any} */ ({})) {
+export function createDebugRuntimeHarness(
+  {
+    combat,
+    contentRegistry,
+    effects,
+    getGame,
+    pickupSystem,
+    resetRun,
+    runUpdater,
+    setDebugSpecialEffects,
+    spatial,
+  } = /** @type {any} */ ({})
+) {
   const registry = contentRegistry || {};
   const weaponDefs = registry.weaponDefs || {};
   const enemyTypes = Array.isArray(registry.enemyTypes) ? registry.enemyTypes : [];
@@ -28,9 +30,7 @@ export function createDebugRuntimeHarness({
   const bossIds = Array.isArray(registry.bossConfig?.abilityIds)
     ? registry.bossConfig.abilityIds
     : Object.keys(bossAbilities);
-  const runUpgradeDefs = Array.isArray(registry.runUpgradeDefs)
-    ? registry.runUpgradeDefs
-    : [];
+  const runUpgradeDefs = Array.isArray(registry.runUpgradeDefs) ? registry.runUpgradeDefs : [];
   const effectEntries = runUpgradeDefs.flatMap((upgrade) =>
     (upgrade.effects || []).map((effect, index) => ({
       id: `${upgrade.id}:${index}`,
@@ -99,16 +99,39 @@ export function createDebugRuntimeHarness({
       Object.freeze({ id: "coin", kind: "loot" }),
       Object.freeze({ id: "heart", kind: "loot" }),
     ]),
-    physics: Object.freeze({ scenarios: Object.freeze([
-      "actor-player-enemy-crossing", "actor-enemy-enemy-crossing",
-      "actor-wall-left", "actor-wall-right", "actor-wall-top", "actor-wall-bottom",
-      "actor-highspeed", "actor-crowd-feasible", "actor-crowd-overfull",
-      "climb-wall-face", "climb-wall-slide", "climb-wall-corner", "climb-wall-knockback", "climb-wall-touch-immunity", "climb-wall-spawn-clearance", "climb-wall-head-on-route",
-      "projectile-explosive-hit", "mine-triggered", "target-area-triggered",
-      "relic-kill-explosion", "boss-radial-blast",
-      "protection-mitigation", "protection-invulnerability", "protection-dodge",
-      "protection-teleport", "protection-death", "control-boss-slash", "control-lingering-area",
-    ]) }),
+    physics: Object.freeze({
+      scenarios: Object.freeze([
+        "actor-player-enemy-crossing",
+        "actor-enemy-enemy-crossing",
+        "actor-wall-left",
+        "actor-wall-right",
+        "actor-wall-top",
+        "actor-wall-bottom",
+        "actor-highspeed",
+        "actor-crowd-feasible",
+        "actor-crowd-overfull",
+        "climb-wall-face",
+        "climb-wall-slide",
+        "climb-wall-corner",
+        "climb-wall-knockback",
+        "climb-wall-touch-immunity",
+        "climb-wall-spawn-clearance",
+        "climb-wall-head-on-route",
+        "climb-maze-pursuit",
+        "projectile-explosive-hit",
+        "mine-triggered",
+        "target-area-triggered",
+        "relic-kill-explosion",
+        "boss-radial-blast",
+        "protection-mitigation",
+        "protection-invulnerability",
+        "protection-dodge",
+        "protection-teleport",
+        "protection-death",
+        "control-boss-slash",
+        "control-lingering-area",
+      ]),
+    }),
   });
 
   function result(command, value) {
@@ -148,7 +171,9 @@ export function createDebugRuntimeHarness({
     const malformed = argumentObject(command, args);
     if (malformed) return { error: malformed };
     if (typeof args.id !== "string" || !args.id || Object.keys(args).some((key) => key !== "id")) {
-      return { error: failure(command, "MALFORMED_ARGS", "Arguments must contain only a non-empty id") };
+      return {
+        error: failure(command, "MALFORMED_ARGS", "Arguments must contain only a non-empty id"),
+      };
     }
     return { id: args.id };
   }
@@ -158,7 +183,9 @@ export function createDebugRuntimeHarness({
     if (malformed) return { error: malformed };
     const keys = Object.keys(args);
     if (keys.some((key) => key !== "towerFloor" && key !== "modeId")) {
-      return { error: failure(command, "MALFORMED_ARGS", "run.reset accepts only towerFloor and modeId") };
+      return {
+        error: failure(command, "MALFORMED_ARGS", "run.reset accepts only towerFloor and modeId"),
+      };
     }
     const towerFloor = args.towerFloor === undefined ? 1 : args.towerFloor;
     if (!Number.isInteger(towerFloor) || towerFloor < 1) {
@@ -173,10 +200,21 @@ export function createDebugRuntimeHarness({
   function stepArguments(command, args) {
     const malformed = argumentObject(command, args);
     if (malformed) return { error: malformed };
-    if (Object.keys(args).some((key) => key !== "frames" && key !== "dt")) return { error: failure(command, "MALFORMED_ARGS", "frame.step accepts only frames and dt") };
+    if (Object.keys(args).some((key) => key !== "frames" && key !== "dt"))
+      return { error: failure(command, "MALFORMED_ARGS", "frame.step accepts only frames and dt") };
     const frames = args.frames === undefined ? 1 : args.frames;
     const dt = args.dt === undefined ? 1 / 60 : args.dt;
-    if (!Number.isInteger(frames) || frames < 1 || frames > 120 || !Number.isFinite(dt) || dt <= 0 || dt > 0.1) return { error: failure(command, "MALFORMED_ARGS", "frames and dt must be bounded finite values") };
+    if (
+      !Number.isInteger(frames) ||
+      frames < 1 ||
+      frames > 120 ||
+      !Number.isFinite(dt) ||
+      dt <= 0 ||
+      dt > 0.1
+    )
+      return {
+        error: failure(command, "MALFORMED_ARGS", "frames and dt must be bounded finite values"),
+      };
     return { frames, dt };
   }
 
@@ -190,14 +228,15 @@ export function createDebugRuntimeHarness({
     const world = game.world || {};
     const width = numeric(world.width);
     const height = numeric(world.height);
-    const playerInset = Number.isFinite(world.width) && Number.isFinite(world.height)
-      ? Object.freeze({
-          minX: numeric(Math.min(56, world.width / 2)),
-          maxX: numeric(Math.max(world.width - 56, world.width / 2)),
-          minY: numeric(Math.min(56, world.height / 2)),
-          maxY: numeric(Math.max(world.height - 56, world.height / 2)),
-        })
-      : null;
+    const playerInset =
+      Number.isFinite(world.width) && Number.isFinite(world.height)
+        ? Object.freeze({
+            minX: numeric(Math.min(56, world.width / 2)),
+            maxX: numeric(Math.max(world.width - 56, world.width / 2)),
+            minY: numeric(Math.min(56, world.height / 2)),
+            maxY: numeric(Math.max(world.height - 56, world.height / 2)),
+          })
+        : null;
     const actor = (entry, index) =>
       Object.freeze({
         id: String(entry?.id || `${entry?.type || "actor"}:${index}`),
@@ -272,7 +311,8 @@ export function createDebugRuntimeHarness({
   }
 
   function setupPhysicsScenario(game, id) {
-    if (!catalog.physics.scenarios.includes(id) || typeof combat?.spawnEnemies !== "function") return false;
+    if (!catalog.physics.scenarios.includes(id) || typeof combat?.spawnEnemies !== "function")
+      return false;
     if (id === "actor-crowd-overfull") {
       game.world = Object.freeze({ ...(game.world || {}), width: 64, height: 64 });
     }
@@ -353,12 +393,91 @@ export function createDebugRuntimeHarness({
         damage,
         hit: false,
       });
+    // Physics fixtures select their protection profile explicitly rather than
+    // inheriting incidental dodge/healing effects from the current relic state.
+    // This override is transient, query-gated, and cleared by resetDebugRun.
+    const neutralEffects = {
+      dodgeChance: 0,
+      damageReduction: 0,
+      teleportOnHitCooldown: 0,
+      blinkInvulnerabilitySeconds: 0,
+      thornDamage: 0,
+      lifestealOnKill: 0,
+      killExplosionDamage: 0,
+      killExplosionRadius: 0,
+    };
     const setEffects = (effects, random = null) => {
       if (typeof setDebugSpecialEffects !== "function") return false;
-      setDebugSpecialEffects(effects);
+      setDebugSpecialEffects({ ...neutralEffects, ...effects });
       stepRandom = random;
       return true;
     };
+    if (typeof setDebugSpecialEffects === "function") setEffects({});
+    if (id === "climb-maze-pursuit") {
+      const walls = spatial?.solidWalls?.(game) || [];
+      const radius = Math.max(p.radius, enemyTypes[0]?.radius || 0) + 12;
+      const open = (point) =>
+        walls.every(
+          (wall) =>
+            Math.hypot(
+              point.x - Math.max(wall.x, Math.min(wall.x + wall.width, point.x)),
+              point.y - Math.max(wall.y, Math.min(wall.y + wall.height, point.y))
+            ) >= radius
+        );
+      const crosses = (start, end, wall) => {
+        let first = 0,
+          last = 1;
+        for (const [origin, delta, min, max] of [
+          [start.x, end.x - start.x, wall.x, wall.x + wall.width],
+          [start.y, end.y - start.y, wall.y, wall.y + wall.height],
+        ]) {
+          if (Math.abs(delta) < 1e-8) {
+            if (origin < min || origin > max) return false;
+          } else {
+            const near = (min - origin) / delta,
+              far = (max - origin) / delta;
+            first = Math.max(first, Math.min(near, far));
+            last = Math.min(last, Math.max(near, far));
+            if (first > last) return false;
+          }
+        }
+        return first <= last && last > 0 && first < 1;
+      };
+      const points = [];
+      for (let column = 1; column <= 9; column += 1)
+        for (let row = 1; row <= 9; row += 1) {
+          const point = { x: (bounds.width * column) / 10, y: (bounds.height * row) / 10 };
+          if (open(point)) points.push(point);
+        }
+      let chosen = null;
+      for (const start of points)
+        for (const target of points) {
+          const blocked = walls.filter((wall) => crosses(start, target, wall));
+          const score =
+            blocked.length * (bounds.width + bounds.height) +
+            Math.hypot(start.x - target.x, start.y - target.y);
+          if (blocked.length >= 2 && (!chosen || score > chosen.score))
+            chosen = { start, target, blocked, score };
+        }
+      if (!chosen) return false;
+      p.x = p.targetX = chosen.target.x;
+      p.y = p.targetY = chosen.target.y;
+      const [enemy] = spawn([[chosen.start.x, chosen.start.y, 1000, 360]]);
+      if (!enemy) return false;
+      return observe({
+        kind: "real-enemy-multi-wall-pursuit",
+        initialPlayer: Object.freeze({
+          id: String(p.id || "actor:0"),
+          x: p.x,
+          y: p.y,
+          radius: p.radius,
+        }),
+        initialEnemy: Object.freeze({ id: enemy.id, x: enemy.x, y: enemy.y, radius: enemy.radius }),
+        blockedWallIds: Object.freeze(chosen.blocked.map((wall) => wall.id)),
+        frames: 1000,
+        dt: 0.05,
+      });
+    }
     if (climbWallScenario) {
       const wall = spatial?.solidWalls?.(game)?.[0];
       if (!wall) return false;
@@ -411,7 +530,12 @@ export function createDebugRuntimeHarness({
           before: {
             player: { x: p.x, y: p.y, radius },
             enemy: { x: enemy.x, y: enemy.y, radius: enemy.radius },
-            farWitness: { id: farWitness?.id, x: farWitness?.x, y: farWitness?.y, hp: farWitness?.hp },
+            farWitness: {
+              id: farWitness?.id,
+              x: farWitness?.x,
+              y: farWitness?.y,
+              hp: farWitness?.hp,
+            },
           },
         });
       }
@@ -429,18 +553,29 @@ export function createDebugRuntimeHarness({
           firstHit: { frames: 1, dt: 0.01 },
           immuneWindow: { frames: 48, dt: 0.01 },
           postExpiry: { frames: 3, dt: 0.01 },
-          before: { player: { x: p.x, y: p.y, radius }, enemy: { x: enemy.x, y: enemy.y, radius: enemy.radius } },
+          before: {
+            player: { x: p.x, y: p.y, radius },
+            enemy: { x: enemy.x, y: enemy.y, radius: enemy.radius },
+          },
         });
       }
       if (id === "climb-wall-spawn-clearance") {
         spawn([[wall.x + wall.width / 2, wall.y + wall.height / 2, undefined, 0]]);
-        return observe({ kind: "spawn-clearance", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+        return observe({
+          kind: "spawn-clearance",
+          wallId: wall.id,
+          before: { x: p.x, y: p.y, radius },
+        });
       }
       if (id === "climb-wall-head-on-route") {
         p.x = p.targetX = wall.x + wall.width + radius + 80;
         p.y = p.targetY = wall.y + wall.height / 2;
         spawn([[wall.x - radius - 90, p.y, undefined, 240]]);
-        return observe({ kind: "head-on-route", wallId: wall.id, before: { x: p.x, y: p.y, radius } });
+        return observe({
+          kind: "head-on-route",
+          wallId: wall.id,
+          before: { x: p.x, y: p.y, radius },
+        });
       }
     }
     if (id === "actor-player-enemy-crossing") {
@@ -453,19 +588,47 @@ export function createDebugRuntimeHarness({
     if (id === "actor-enemy-enemy-crossing") {
       p.y = p.targetY = cy - 200;
       p.speed = 0;
-      spawn([[cx - 80, cy, undefined, 3000], [cx + 80, cy, undefined, 3000]]);
+      spawn([
+        [cx - 80, cy, undefined, 3000],
+        [cx + 80, cy, undefined, 3000],
+      ]);
       return observe({ frames: 1, dt: 0.1, initialGap: 160, kind: "separated-moving-crossing" });
     }
-    const walls = { "actor-wall-left": [p.radius - 2, cy], "actor-wall-right": [bounds.width - p.radius + 2, cy], "actor-wall-top": [cx, p.radius - 2], "actor-wall-bottom": [cx, bounds.height - p.radius + 2] };
-    if (Object.hasOwn(walls, id)) { [p.x, p.y] = walls[id]; p.targetX = p.x; p.targetY = p.y; spawn([[p.x, p.y]]); return true; }
+    const walls = {
+      "actor-wall-left": [p.radius - 2, cy],
+      "actor-wall-right": [bounds.width - p.radius + 2, cy],
+      "actor-wall-top": [cx, p.radius - 2],
+      "actor-wall-bottom": [cx, bounds.height - p.radius + 2],
+    };
+    if (Object.hasOwn(walls, id)) {
+      [p.x, p.y] = walls[id];
+      p.targetX = p.x;
+      p.targetY = p.y;
+      spawn([[p.x, p.y]]);
+      return true;
+    }
     if (id === "actor-highspeed") {
       p.x = cx - 120;
       p.targetX = cx + 220;
       p.speed = 2000;
       spawn([[cx, cy, undefined, 0]]);
-      return observe({ frames: 1, dt: 0.1, initialGap: 120, attemptedTravel: 200, kind: "swept-crossing" });
+      return observe({
+        frames: 1,
+        dt: 0.1,
+        initialGap: 120,
+        attemptedTravel: 200,
+        kind: "swept-crossing",
+      });
     }
-    if (id === "actor-crowd-feasible") { spawn(Array.from({ length: 12 }, (_, i) => [cx - 44 + (i % 4) * 28, cy - 28 + Math.floor(i / 4) * 28])); return true; }
+    if (id === "actor-crowd-feasible") {
+      spawn(
+        Array.from({ length: 12 }, (_, i) => [
+          cx - 44 + (i % 4) * 28,
+          cy - 28 + Math.floor(i / 4) * 28,
+        ])
+      );
+      return true;
+    }
     if (id === "actor-crowd-overfull") {
       const enemyCount = 18;
       const enemyRadius = 13;
@@ -477,16 +640,28 @@ export function createDebugRuntimeHarness({
         kind: "geometrically-impossible-crowd",
         actorCount: enemyCount + 1,
         arenaArea: bounds.width * bounds.height,
-        minimumDiscArea: Math.PI * (playerRadius * playerRadius + enemyCount * enemyRadius * enemyRadius),
+        minimumDiscArea:
+          Math.PI * (playerRadius * playerRadius + enemyCount * enemyRadius * enemyRadius),
       });
     }
-    if (id === "projectile-explosive-hit") { spawn([[cx + 22, cy, 100], [cx + 52, cy, 100]]); if (!applyUpgrade("run_explosive_hit")) return false; queueWeapon("spark_bolt"); return true; }
+    if (id === "projectile-explosive-hit") {
+      spawn([
+        [cx + 22, cy, 100],
+        [cx + 52, cy, 100],
+      ]);
+      if (!applyUpgrade("run_explosive_hit")) return false;
+      queueWeapon("spark_bolt");
+      return true;
+    }
     if (id === "mine-triggered") {
       p.facingX = 1;
       p.facingY = 0;
       if (!fireWeaponOnce("void_mine")) return false;
       p.x = p.targetX = cx + 140;
-      spawn([[cx - 62, cy, 100, 0], [cx + 180, cy, 100, 0]]);
+      spawn([
+        [cx - 62, cy, 100, 0],
+        [cx + 180, cy, 100, 0],
+      ]);
       return observe({
         arm: Object.freeze({ frames: 19, dt: 0.1 }),
         explode: Object.freeze({ frames: 1, dt: 0.1 }),
@@ -495,17 +670,64 @@ export function createDebugRuntimeHarness({
       });
     }
     if (id === "target-area-triggered") {
-      spawn([[cx + 64, cy, 100, 0], [cx + 100, cy, 100, 0], [cx + 180, cy, 100, 0]]);
+      spawn([
+        [cx + 64, cy, 100, 0],
+        [cx + 100, cy, 100, 0],
+        [cx + 180, cy, 100, 0],
+      ]);
       queueWeapon("meteor_pin");
       return observe({ frames: 1, dt: 1 / 60, radius: 72, kind: "target-area-in-out-radius" });
     }
-    if (id === "relic-kill-explosion") { if (!setEffects({ killExplosionDamage: 70, killExplosionRadius: 90 })) return false; spawn([[cx + 40, cy, 1], [cx + 140, cy, 100]]); queueWeapon("meteor_pin"); return true; }
-    if (id === "boss-radial-blast") { spawn([[cx + 38, cy, 100], [cx - 38, cy, 100]]); addBlast("shockwave", cx, cy); return true; }
-    if (id === "protection-mitigation") { if (!setEffects({ damageReduction: 0.5 })) return false; spawn([[cx + 20, cy]]); addBlast("shockwave", cx, cy); return true; }
-    if (id === "protection-invulnerability") { p.invincibleTimer = 1; spawn([[cx + 20, cy]]); addBlast("shockwave", cx, cy); return true; }
-    if (id === "protection-dodge") { if (!setEffects({ dodgeChance: 0.95 }, 0)) return false; spawn([[cx + 20, cy]]); addBlast("shockwave", cx, cy); return true; }
-    if (id === "protection-teleport") { if (!setEffects({ teleportOnHitCooldown: 3.5, teleportDistance: 140 }, 0)) return false; spawn([[cx + 20, cy]]); addBlast("shockwave", cx, cy); return true; }
-    if (id === "protection-death") { p.hp = 5; spawn([[cx + 20, cy]]); addBlast("shockwave", cx, cy, 20); return true; }
+    if (id === "relic-kill-explosion") {
+      if (!setEffects({ killExplosionDamage: 70, killExplosionRadius: 90 })) return false;
+      spawn([
+        [cx + 40, cy, 1],
+        [cx + 140, cy, 100],
+      ]);
+      queueWeapon("meteor_pin");
+      return true;
+    }
+    if (id === "boss-radial-blast") {
+      spawn([
+        [cx + 38, cy, 100],
+        [cx - 38, cy, 100],
+      ]);
+      addBlast("shockwave", cx, cy);
+      return true;
+    }
+    if (id === "protection-mitigation") {
+      if (!setEffects({ damageReduction: 0.5 })) return false;
+      // Keep the required real actor alive through the blast.  A default-health
+      // witness can drop and immediately collect a heart on the second frame,
+      // masking the mitigation damage with random fixture-owned healing.
+      spawn([[cx + 20, cy, 100]]);
+      addBlast("shockwave", cx, cy);
+      return true;
+    }
+    if (id === "protection-invulnerability") {
+      p.invincibleTimer = 1;
+      spawn([[cx + 20, cy]]);
+      addBlast("shockwave", cx, cy);
+      return true;
+    }
+    if (id === "protection-dodge") {
+      if (!setEffects({ dodgeChance: 0.95 }, 0)) return false;
+      spawn([[cx + 20, cy]]);
+      addBlast("shockwave", cx, cy);
+      return true;
+    }
+    if (id === "protection-teleport") {
+      if (!setEffects({ teleportOnHitCooldown: 3.5, teleportDistance: 140 }, 0)) return false;
+      spawn([[cx + 20, cy]]);
+      addBlast("shockwave", cx, cy);
+      return true;
+    }
+    if (id === "protection-death") {
+      p.hp = 5;
+      spawn([[cx + 20, cy]]);
+      addBlast("shockwave", cx, cy, 20);
+      return true;
+    }
     if (id === "control-boss-slash") {
       spawn([[cx + 20, cy]]);
       game.bossAttacks.push({
@@ -524,13 +746,20 @@ export function createDebugRuntimeHarness({
       });
       return true;
     }
-    if (id === "control-lingering-area") { spawn([[cx + 50, cy, 100]]); queueWeapon("acid_pool"); return true; }
+    if (id === "control-lingering-area") {
+      spawn([[cx + 50, cy, 100]]);
+      queueWeapon("acid_pool");
+      return true;
+    }
     return false;
   }
 
   function invoke(command, args = {}) {
     if (command === "catalog") {
-      if (args !== undefined && (typeof args !== "object" || Array.isArray(args) || Object.keys(args).length)) {
+      if (
+        args !== undefined &&
+        (typeof args !== "object" || Array.isArray(args) || Object.keys(args).length)
+      ) {
         return failure(command, "MALFORMED_ARGS", "catalog accepts no arguments");
       }
       return result(command, catalog);
@@ -553,26 +782,45 @@ export function createDebugRuntimeHarness({
     }
 
     if (command === "snapshot") {
-      if (!args || typeof args !== "object" || Array.isArray(args) || Object.keys(args).length) return failure(command, "MALFORMED_ARGS", "snapshot accepts no arguments");
-      const active = activeGame(command); if (active.error) return active.error;
+      if (!args || typeof args !== "object" || Array.isArray(args) || Object.keys(args).length)
+        return failure(command, "MALFORMED_ARGS", "snapshot accepts no arguments");
+      const active = activeGame(command);
+      if (active.error) return active.error;
       return result(command, snapshot(active.game));
     }
     if (command === "frame.step") {
-      const parsedStep = stepArguments(command, args); if (parsedStep.error) return parsedStep.error;
-      const active = activeGame(command); if (active.error) return active.error;
-      if (typeof runUpdater?.update !== "function") return failure(command, "OWNER_UNAVAILABLE", "Run updater is unavailable");
-      const wasPaused = active.game.paused; active.game.paused = false;
+      const parsedStep = stepArguments(command, args);
+      if (parsedStep.error) return parsedStep.error;
+      const active = activeGame(command);
+      if (active.error) return active.error;
+      if (typeof runUpdater?.update !== "function")
+        return failure(command, "OWNER_UNAVAILABLE", "Run updater is unavailable");
+      const wasPaused = active.game.paused;
+      active.game.paused = false;
       const originalRandom = Math.random;
       if (Number.isFinite(stepRandom)) Math.random = () => stepRandom;
-      try { for (let index = 0; index < parsedStep.frames; index += 1) runUpdater.update(parsedStep.dt); } finally { Math.random = originalRandom; stepRandom = null; active.game.paused = wasPaused; }
+      try {
+        for (let index = 0; index < parsedStep.frames; index += 1) runUpdater.update(parsedStep.dt);
+      } finally {
+        Math.random = originalRandom;
+        stepRandom = null;
+        active.game.paused = wasPaused;
+      }
       return result(command, snapshot(active.game));
     }
     if (command === "physics.scenario") {
-      const parsedScenario = idArgument(command, args); if (parsedScenario.error) return parsedScenario.error;
-      if (!catalog.physics.scenarios.includes(parsedScenario.id)) return failure(command, "UNKNOWN_ID", `Unknown physics scenario: ${parsedScenario.id}`);
-      if (typeof resetRun !== "function") return failure(command, "OWNER_UNAVAILABLE", "Run-state owner is unavailable");
-      const game = resetRun({ towerFloor: 1, modeId: parsedScenario.id.startsWith("climb-wall-") ? "climb" : undefined });
-      if (!game?.running || !game.player || !setupPhysicsScenario(game, parsedScenario.id)) return failure(command, "OWNER_REJECTED", "Scenario owner did not create a valid run");
+      const parsedScenario = idArgument(command, args);
+      if (parsedScenario.error) return parsedScenario.error;
+      if (!catalog.physics.scenarios.includes(parsedScenario.id))
+        return failure(command, "UNKNOWN_ID", `Unknown physics scenario: ${parsedScenario.id}`);
+      if (typeof resetRun !== "function")
+        return failure(command, "OWNER_UNAVAILABLE", "Run-state owner is unavailable");
+      const game = resetRun({
+        towerFloor: 1,
+        modeId: parsedScenario.id.startsWith("climb-") ? "climb" : undefined,
+      });
+      if (!game?.running || !game.player || !setupPhysicsScenario(game, parsedScenario.id))
+        return failure(command, "OWNER_REJECTED", "Scenario owner did not create a valid run");
       return result(command, snapshot(game));
     }
 
@@ -614,8 +862,10 @@ export function createDebugRuntimeHarness({
 
     if (command === "weapon.fire") {
       const equipped = game.player.equippedWeapons;
-      if (!Array.isArray(equipped)) return failure(command, "INVALID_STATE", "Run weapon state is invalid");
-      if (typeof combat?.updateWeapons !== "function") return failure(command, "OWNER_UNAVAILABLE", "Weapon owner is unavailable");
+      if (!Array.isArray(equipped))
+        return failure(command, "INVALID_STATE", "Run weapon state is invalid");
+      if (typeof combat?.updateWeapons !== "function")
+        return failure(command, "OWNER_UNAVAILABLE", "Weapon owner is unavailable");
       const wasEquipped = equipped.includes(id);
       const previousTimers = game.weaponTimers || {};
       const hadTimer = Object.prototype.hasOwnProperty.call(previousTimers, id);
@@ -634,9 +884,14 @@ export function createDebugRuntimeHarness({
       const hadFloor = Object.prototype.hasOwnProperty.call(game, "activeFloor");
       const previousTimer = game.spawnTimer;
       const enemy = enemyTypes.find((entry) => entry.id === id);
-      if (typeof combat?.spawnEnemies !== "function") return failure(command, "OWNER_UNAVAILABLE", "Enemy owner is unavailable");
+      if (typeof combat?.spawnEnemies !== "function")
+        return failure(command, "OWNER_UNAVAILABLE", "Enemy owner is unavailable");
       if (Number.isFinite(enemy.minTowerFloor) && game.towerFloor < enemy.minTowerFloor) {
-        return failure(command, "UNAVAILABLE_ID", `Enemy is unavailable on tower floor ${game.towerFloor}`);
+        return failure(
+          command,
+          "UNAVAILABLE_ID",
+          `Enemy is unavailable on tower floor ${game.towerFloor}`
+        );
       }
       game.activeFloor = { ...(previousFloor || {}), enemyIds: [id], spawnCount: 1 };
       game.spawnTimer = 0;
@@ -648,8 +903,10 @@ export function createDebugRuntimeHarness({
     }
 
     if (command === "boss.spawn") {
-      if (typeof combat?.spawnBoss !== "function") return failure(command, "OWNER_UNAVAILABLE", "Boss owner is unavailable");
-      if (game.bossSpawned) return failure(command, "ALREADY_SPAWNED", "The run already has a spawned boss");
+      if (typeof combat?.spawnBoss !== "function")
+        return failure(command, "OWNER_UNAVAILABLE", "Boss owner is unavailable");
+      if (game.bossSpawned)
+        return failure(command, "ALREADY_SPAWNED", "The run already has a spawned boss");
       const previousRandom = Math.random;
       const bossIndex = bossIds.indexOf(id);
       try {
@@ -668,10 +925,22 @@ export function createDebugRuntimeHarness({
     if (command === "runUpgrade.apply") {
       const upgrade = runUpgradeDefs.find((entry) => entry.id === id);
       const currentTier = Number(game.runUpgradeTiers?.[id] || 0);
-      if (currentTier >= upgrade.maxTier) return failure(command, "MAX_TIER", `Upgrade is already at max tier: ${id}`);
-      if (upgrade.exclusiveGroup && runUpgradeDefs.some((other) =>
-        other.id !== id && other.exclusiveGroup === upgrade.exclusiveGroup && Number(game.runUpgradeTiers?.[other.id] || 0) > 0
-      )) return failure(command, "EXCLUSIVE_GROUP", `Upgrade conflicts with an active upgrade: ${id}`);
+      if (currentTier >= upgrade.maxTier)
+        return failure(command, "MAX_TIER", `Upgrade is already at max tier: ${id}`);
+      if (
+        upgrade.exclusiveGroup &&
+        runUpgradeDefs.some(
+          (other) =>
+            other.id !== id &&
+            other.exclusiveGroup === upgrade.exclusiveGroup &&
+            Number(game.runUpgradeTiers?.[other.id] || 0) > 0
+        )
+      )
+        return failure(
+          command,
+          "EXCLUSIVE_GROUP",
+          `Upgrade conflicts with an active upgrade: ${id}`
+        );
       game.runUpgradeTiers ||= {};
       upgrade.apply?.(game);
       game.runUpgradeTiers[id] = currentTier + 1;
@@ -680,13 +949,18 @@ export function createDebugRuntimeHarness({
 
     if (command === "effect.apply") {
       const entry = effectEntries.find((candidate) => candidate.id === id);
-      if (typeof effects?.applyRunUpgradeEffects !== "function") return failure(command, "OWNER_UNAVAILABLE", "Effect owner is unavailable");
+      if (typeof effects?.applyRunUpgradeEffects !== "function")
+        return failure(command, "OWNER_UNAVAILABLE", "Effect owner is unavailable");
       effects?.applyRunUpgradeEffects?.(game, [entry.effect]);
       return result(command, { id, type: entry.effect.type });
     }
 
     const player = game.player;
-    if (typeof pickupSystem?.updateXpDrops !== "function" || typeof pickupSystem?.updateLootDrops !== "function") return failure(command, "OWNER_UNAVAILABLE", "Pickup owner is unavailable");
+    if (
+      typeof pickupSystem?.updateXpDrops !== "function" ||
+      typeof pickupSystem?.updateLootDrops !== "function"
+    )
+      return failure(command, "OWNER_UNAVAILABLE", "Pickup owner is unavailable");
     if (id === "xp") {
       game.xpDrops ||= [];
       game.xpDrops.push({ x: player.x, y: player.y, radius: player.radius || 7, value: 1 });
@@ -697,9 +971,7 @@ export function createDebugRuntimeHarness({
     if (typeof pickupSystem.spawnLootDrops === "function") {
       const before = game.lootDrops.length;
       pickupSystem.spawnLootDrops({ boss: true, x: player.x, y: player.y });
-      game.lootDrops = game.lootDrops.filter(
-        (drop, index) => index < before || drop.type === id
-      );
+      game.lootDrops = game.lootDrops.filter((drop, index) => index < before || drop.type === id);
     } else {
       game.lootDrops.push({
         type: id,

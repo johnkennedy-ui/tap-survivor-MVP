@@ -87,8 +87,10 @@
         }
         const ranged = enemy.attackRange && enemy.projectileCooldown;
         if (!ranged || dist > enemy.attackRange * 0.72) {
-          enemy.x += (dx / chaseDist) * enemy.speed * dt;
-          enemy.y += (dy / chaseDist) * enemy.speed * dt;
+          const travel =
+            game.world?.modeId === "climb" ? Math.min(chaseDist, enemy.speed * dt) : enemy.speed * dt;
+          enemy.x += (dx / chaseDist) * travel;
+          enemy.y += (dy / chaseDist) * travel;
         }
         spatial?.resolveSolidTerrain?.(game, enemy, { x: previousX, y: previousY });
         if (ranged && dist <= enemy.attackRange) {
@@ -136,7 +138,8 @@
           dirY: boss.chargeDirY,
           arc: Math.PI * slash.arcPi,
           radius: boss.superBoss ? slash.superRadius : slash.radius,
-          damage: boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
+          damage:
+            boss.damage * (boss.superBoss ? slash.superDamageMultiplier : slash.damageMultiplier),
           age: 0,
           windup: slash.windup,
           hit: false,
@@ -185,7 +188,13 @@
             const beforeX = p.x;
             const beforeY = p.y;
             const dealt = damagePlayer?.(attack.damage, { type: attack.type, attack });
-            if (attack.type !== "boss_slash" && dealt > 0 && p.hp > 0 && p.x === beforeX && p.y === beforeY) {
+            if (
+              attack.type !== "boss_slash" &&
+              dealt > 0 &&
+              p.hp > 0 &&
+              p.x === beforeX &&
+              p.y === beforeY
+            ) {
               applyRadialKnockback?.(p, attack, bossBlastKnockback(attack), {
                 radius: attack.radius,
                 targetFollows: true,

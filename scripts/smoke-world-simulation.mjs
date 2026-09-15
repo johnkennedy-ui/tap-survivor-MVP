@@ -466,14 +466,56 @@ for (const [x, y, [left, top, right, bottom]] of locations) {
     game.bossSpawned = false;
     game.enemies = [];
     game.bossAttacks = [];
-    randomSequence([0, sample, sample], () => system.spawnBoss());
+    let requestedLanding = null;
+    let landingClearanceCalls = 0;
+    const bossSystem = enemies(game, {
+      ...spatial,
+      openPosition(current, point, radius, bounds) {
+        requestedLanding = { ...point };
+        landingClearanceCalls += 1;
+        return spatial.openPosition(current, point, radius, bounds);
+      },
+    });
+    randomSequence([0, sample, sample], () => bossSystem.spawnBoss());
     const boss = game.enemies[0];
-    approx(boss.landingX, left + 72 + sample * 624);
-    approx(boss.landingY, top + 90 + sample * 252);
+    // The original random mapping remains exact. Only a sampled point blocked
+    // by the new maze may relocate, and that landing must retain the inset.
+    assert.equal(landingClearanceCalls, 1);
+    approx(requestedLanding.x, left + 72 + sample * 624);
+    approx(requestedLanding.y, top + 90 + sample * 252);
+    const landingClear = (point) =>
+      spatial
+        .solidWalls(game)
+        .every(
+          (wall) =>
+            Math.hypot(
+              point.x - clamp(point.x, wall.x, wall.x + wall.width),
+              point.y - clamp(point.y, wall.y, wall.y + wall.height)
+            ) >=
+            boss.radius - 0.001
+        );
+    assert.ok(
+      landingClear({ x: boss.landingX, y: boss.landingY }),
+      "boss landing is clear of the complete maze"
+    );
+    if (landingClear(requestedLanding)) {
+      approx(boss.landingX, requestedLanding.x);
+      approx(boss.landingY, requestedLanding.y);
+    } else {
+      assert.ok(
+        Math.hypot(boss.landingX - requestedLanding.x, boss.landingY - requestedLanding.y) > 0,
+        "blocked sampled landing actually relocates"
+      );
+    }
     assert.ok(boss.landingX >= left + 72 && boss.landingX <= right - 72);
     assert.ok(boss.landingY >= top + 90 && boss.landingY <= bottom - 90);
     if (sample === 0.5) {
-      assert.equal(boss.startX, left + 384);
+      approx(requestedLanding.x, left + 384);
+      assert.equal(
+        boss.startX,
+        boss.landingX,
+        "central boss drops vertically onto its terrain-safe landing"
+      );
       assert.equal(boss.startY, top - 72);
     }
     if (sample === 0) {
