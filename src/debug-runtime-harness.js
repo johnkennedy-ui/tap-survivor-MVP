@@ -118,6 +118,8 @@ export function createDebugRuntimeHarness(
         "climb-wall-spawn-clearance",
         "climb-wall-head-on-route",
         "climb-maze-pursuit",
+        "climb-projectile-wall-ricochet",
+        "climb-projectile-wall-no-upgrade",
         "projectile-explosive-hit",
         "mine-triggered",
         "target-area-triggered",
@@ -262,6 +264,7 @@ export function createDebugRuntimeHarness(
         vy: numeric(entry?.vy),
         radius: numeric(entry?.radius),
         lifetime: numeric(entry?.life ?? entry?.timer),
+        bounces: numeric(entry?.bounces),
         age: numeric(entry?.age),
         armDelay: numeric(entry?.armDelay),
         hit: Boolean(entry?.hit),
@@ -413,6 +416,50 @@ export function createDebugRuntimeHarness(
       return true;
     };
     if (typeof setDebugSpecialEffects === "function") setEffects({});
+    if (id === "climb-projectile-wall-ricochet" || id === "climb-projectile-wall-no-upgrade") {
+      const wall = spatial?.solidWalls?.(game)?.find((entry) => entry.height > entry.width);
+      if (!wall || typeof combat?.updateWeapons !== "function") return false;
+      // Reset only this query-gated fixture's transient upgrade/effect inputs.
+      // Fire through the real weapon owner, never manufacture a bolt snapshot.
+      game.runUpgradeTiers = {};
+      game.levelUpRunUpgradeTiers = {};
+      if (!setEffects({ doubleShotCount: 0, projectileSpeedBonus: 0 })) return false;
+      p.x = p.targetX = wall.x - p.radius - 70;
+      p.y = p.targetY = wall.y + wall.height / 2;
+      p.facingX = 1;
+      p.facingY = 0;
+      const [target] = spawn([[wall.x + wall.width + 90, p.y, 10000, 0]]);
+      const ricochet = id === "climb-projectile-wall-ricochet";
+      if (ricochet && !applyUpgrade("run_wall_bounce")) return false;
+      queueWeapon("spark_bolt");
+      combat.updateWeapons(0);
+      p.equippedWeapons = [];
+      game.weaponTimers = {};
+      const [bolt] = game.bolts;
+      if (game.bolts.length !== 1 || !(bolt.vx > 0) || !target) return false;
+      return observe({
+        kind: "single-owner-fired-internal-wall-projectile",
+        ricochet,
+        wall: Object.freeze({
+          id: wall.id,
+          x: wall.x,
+          y: wall.y,
+          width: wall.width,
+          height: wall.height,
+        }),
+        targetId: target.id,
+        targetHp: target.hp,
+        initial: Object.freeze({
+          x: bolt.x,
+          y: bolt.y,
+          vx: bolt.vx,
+          vy: bolt.vy,
+          radius: bolt.radius,
+          bounces: bolt.bounces,
+        }),
+        step: Object.freeze({ frames: 1, dt: 1 / 60 }),
+      });
+    }
     if (id === "climb-maze-pursuit") {
       const walls = spatial?.solidWalls?.(game) || [];
       const radius = Math.max(p.radius, enemyTypes[0]?.radius || 0) + 12;
