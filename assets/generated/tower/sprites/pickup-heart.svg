@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Heart pickup">
+  <defs>
+    <radialGradient id="heartGlow" cx="36%" cy="28%" r="72%">
+      <stop offset="0" stop-color="#ffd8e2"/>
+      <stop offset="0.48" stop-color="#ff5f7a"/>
+      <stop offset="1" stop-color="#b51f43"/>
+    </radialGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#4b0b1c" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <path filter="url(#softShadow)" fill="#8d1533" d="M64 111C37 88 18 70 18 46c0-16 11-28 27-28 9 0 16 4 19 11 4-7 11-11 20-11 16 0 27 12 27 28 0 24-20 42-47 65z"/>
+  <path fill="url(#heartGlow)" d="M64 103C41 83 25 68 25 47c0-13 9-22 22-22 9 0 15 5 17 13 3-8 9-13 18-13 13 0 22 9 22 22 0 21-17 36-40 56z"/>
+  <path d="M42 38c-8 4-10 14-7 22" fill="none" stroke="#ffd0db" stroke-width="7" stroke-linecap="round" opacity="0.85"/>
+</svg>

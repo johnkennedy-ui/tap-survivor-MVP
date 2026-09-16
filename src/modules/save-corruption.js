@@ -1,0 +1,54 @@
+/**
+ * @typedef {Record<string, unknown>} SaveData
+ * @typedef {{ setCorruptBackupRaw?: (raw: string) => void }} CorruptBackupStorage
+ * @typedef {() => SaveData} DefaultSaveFn
+ * @typedef {(save: SaveData) => SaveData} NormalizeAndMigrateSaveFn
+ * @typedef {{
+ *   fromRaw(raw: string | null | undefined): SaveData,
+ *   getLastLoadWarning(): string | null,
+ *   storageReadFailed(): SaveData
+ * }} SaveLoadHandler
+ */
+
+/**
+ * @param {{
+ *   defaultSave: DefaultSaveFn,
+ *   normalizeAndMigrateSave: NormalizeAndMigrateSaveFn,
+ *   storage?: CorruptBackupStorage
+ * }} options
+ * @returns {SaveLoadHandler}
+ */
+export function createSaveLoadHandler({ defaultSave, normalizeAndMigrateSave, storage }) {
+  let lastLoadWarning = null;
+
+  function fromRaw(raw) {
+    lastLoadWarning = null;
+
+    if (!raw) {
+      return normalizeAndMigrateSave({});
+    }
+
+    try {
+      return normalizeAndMigrateSave(JSON.parse(raw));
+    } catch {
+      lastLoadWarning = "corrupt-save";
+      storage?.setCorruptBackupRaw?.(raw);
+      return defaultSave();
+    }
+  }
+
+  function storageReadFailed() {
+    lastLoadWarning = "storage-read-failed";
+    return defaultSave();
+  }
+
+  function getLastLoadWarning() {
+    return lastLoadWarning;
+  }
+
+  return {
+    fromRaw,
+    getLastLoadWarning,
+    storageReadFailed,
+  };
+}

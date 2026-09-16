@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Heavy Projectiles Focus Relic">
+  <rect width="96" height="96" rx="10" fill="#172033"/>
+  <circle cx="50" cy="49" r="24" fill="#8de7ff" stroke="#e0f7ff" stroke-width="6"/>
+  <path d="M24 25 12 13M73 73l11 11M74 24l11-11M23 73 12 84" stroke="#64748b" stroke-width="7" stroke-linecap="round"/>
+  <path d="M43 40h15l-10 9h13L42 65l6-13H36Z" fill="#0f172a"/>
+</svg>

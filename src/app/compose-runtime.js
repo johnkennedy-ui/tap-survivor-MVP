@@ -1,0 +1,333 @@
+import { createGameRuntimeController } from "../modules/game-runtime.js";
+import { floorDifficulty } from "../modules/balance.js";
+import { createContentRegistry } from "../modules/content-registry.js";
+import { createEffects } from "../modules/effects.js";
+import { createSaveLoadHandler } from "../modules/save-corruption.js";
+import { createDefaultSave, CURRENT_SAVE_VERSION } from "../modules/save-defaults.js";
+import { isPlainObject, migrateSave } from "../modules/save-migrations.js";
+import { createSaveNormalizer } from "../modules/save-normalize.js";
+import { createSaveSystem } from "../modules/save.js";
+import { createShopPricing } from "../modules/shop-pricing.js";
+import { createRelicSystem } from "../modules/relics.js";
+import { createShellRelicController } from "../modules/shell-relic-controller.js";
+import { createShellRelicPresenter } from "../modules/shell-relic-presenter.js";
+import { createShellRelicUiAdapter } from "../modules/shell-relic-ui.js";
+import { createShellUiController } from "../modules/shell-ui-controller.js";
+import { createShellUiDomAdapter } from "../modules/shell-ui-dom-adapter.js";
+import { createShellUiPresenter } from "../modules/shell-ui-presenter.js";
+
+export function createBrowserPlatform(options = {}) {
+  const globalRef = requireBrowserGlobalRef(options.globalRef);
+  const documentRef = options.documentRef || globalRef.document;
+  if (!documentRef) {
+    throw new Error("Missing Tap Survivor platform capability: documentRef");
+  }
+  if (typeof globalRef.requestAnimationFrame !== "function") {
+    throw new Error("Missing Tap Survivor platform capability: requestAnimationFrame");
+  }
+  return {
+    documentRef,
+    runtimeGlobal: {
+      requestAnimationFrame: (callback) => globalRef.requestAnimationFrame(callback),
+      addEventListener: (...args) => globalRef.addEventListener?.(...args),
+      Capacitor: globalRef.Capacitor,
+    },
+  };
+}
+
+function requireBrowserGlobalRef(globalRef) {
+  if (
+    !globalRef ||
+    (typeof globalRef !== "object" && typeof globalRef !== "function")
+  ) {
+    throw new Error("Missing Tap Survivor platform capability: globalRef");
+  }
+  return globalRef;
+}
+
+export function composeRuntime({ platform, dependencies }) {
+  if (!platform?.documentRef) {
+    throw new Error("Missing Tap Survivor module bootstrap dependency: platform.documentRef");
+  }
+  if (!platform?.runtimeGlobal?.requestAnimationFrame) {
+    throw new Error("Missing Tap Survivor module bootstrap dependency: platform.runtimeGlobal");
+  }
+  if (!dependencies) {
+    throw new Error("Missing Tap Survivor module bootstrap dependency: dependencies");
+  }
+
+  return createGameRuntimeController({
+    ...dependencies,
+    documentRef: platform.documentRef,
+    globalRef: platform.runtimeGlobal,
+  });
+}
+
+export function composeSaveSubsystem({
+  saveKey,
+  legacySaveKey,
+  storageAdapter,
+  starterQuestIds = [],
+  questDefs = {},
+  weaponUnlocks = [],
+  upgradeDefs = [],
+  shopItemDefs = [],
+  questOpenIds = () => [],
+}) {
+  if (!saveKey || !legacySaveKey) {
+    throw new Error("Missing Tap Survivor module save dependency: save keys");
+  }
+  if (!storageAdapter) {
+    throw new Error("Missing Tap Survivor module save dependency: storageAdapter");
+  }
+
+  return createSaveSystem({
+    saveKey,
+    legacySaveKey,
+    saveNormalize: {
+      createSaveNormalizer,
+    },
+    saveCorruption: {
+      createSaveLoadHandler,
+    },
+    saveDefaults: {
+      CURRENT_SAVE_VERSION,
+      createDefaultSave,
+    },
+    saveMigrations: {
+      isPlainObject,
+      migrateSave,
+    },
+    starterQuestIds,
+    questDefs,
+    weaponUnlocks,
+    upgradeDefs,
+    shopItemDefs,
+    questOpenIds,
+    storageAdapter,
+  });
+}
+
+export function composeContentBalanceEffects({ content, contentSchema = {}, upgradeContent = {} }) {
+  if (!content) {
+    throw new Error("Missing Tap Survivor module content dependency: content");
+  }
+
+  return {
+    balance: {
+      floorDifficulty,
+    },
+    content,
+    contentRegistry: createContentRegistry({ content, upgradeContent }),
+    effects: createEffects({ contentSchema }),
+  };
+}
+
+export function composeShopEconomy({
+  shopItemDefs = [],
+  pricingConfig = {},
+  getSave,
+  effects,
+}) {
+  if (typeof getSave !== "function") {
+    throw new Error("Missing Tap Survivor module shop dependency: getSave");
+  }
+  if (!effects) {
+    throw new Error("Missing Tap Survivor module shop dependency: effects");
+  }
+
+  return {
+    pricing: createShopPricing({
+      shopItemDefs,
+      pricingConfig,
+      getSave,
+    }),
+    effects,
+    shopItemDefs,
+  };
+}
+
+export function composeRelicProgression({
+  relicDefs = [],
+  weaponDefs = {},
+  progressionConfig = {},
+  effects,
+  random,
+}) {
+  if (!effects) {
+    throw new Error("Missing Tap Survivor module relic dependency: effects");
+  }
+
+  return {
+    progression: createRelicSystem({
+      relicDefs,
+      weaponDefs,
+      progressionConfig,
+      random,
+    }),
+    effects,
+    relicDefs,
+  };
+}
+
+export function composeShellRelicPresentation({
+  content = {},
+  relicDefs = [],
+  relicSystem,
+  assetResolver,
+}) {
+  return createShellRelicPresenter({
+    content,
+    relicDefs,
+    relicSystem,
+    assetResolver,
+  });
+}
+
+export function composeShellRelicUiAdapter({
+  presenter,
+  documentRef,
+  root,
+  onEquip,
+  onUnequip,
+  onSelect,
+  onLockedSelect,
+  getSave,
+  relicSystem,
+  persist,
+  renderMeta,
+  scheduler,
+  lockPopupDelayMs,
+  previewAdapter,
+}) {
+  return createShellRelicUiAdapter({
+    presenter,
+    documentRef,
+    root,
+    onEquip,
+    onUnequip,
+    onSelect,
+    onLockedSelect,
+    getSave,
+    relicSystem,
+    persist,
+    renderMeta,
+    scheduler,
+    lockPopupDelayMs,
+    previewAdapter,
+  });
+}
+
+export function composeShellRelicController({
+  presenter,
+  documentRef,
+  root,
+  getSave,
+  relicSystem,
+  persist,
+  renderMeta,
+  scheduler,
+  lockPopupDelayMs,
+  previewAdapter,
+  onEquip,
+  onUnequip,
+  onSelect,
+  onLockedSelect,
+}) {
+  return createShellRelicController({
+    presenter,
+    documentRef,
+    root,
+    getSave,
+    relicSystem,
+    persist,
+    renderMeta,
+    scheduler,
+    lockPopupDelayMs,
+    previewAdapter,
+    onEquip,
+    onUnequip,
+    onSelect,
+    onLockedSelect,
+  });
+}
+
+export function composeShellUiController({
+  shellRelicController,
+  getSave,
+  shellView,
+  presenter,
+  documentRef,
+  root,
+  initialScreen,
+  initialPanel,
+  onStartRun,
+  onExitRun,
+  onResetSave,
+  onOpenShop,
+  onCloseShop,
+  onOpenPanel,
+  onSetGameSpeed,
+  onToggleFullscreen,
+  onMuteToggle,
+}) {
+  return createShellUiController({
+    shellRelicController,
+    getSave,
+    shellView,
+    presenter,
+    documentRef,
+    root,
+    initialScreen,
+    initialPanel,
+    onStartRun,
+    onExitRun,
+    onResetSave,
+    onOpenShop,
+    onCloseShop,
+    onOpenPanel,
+    onSetGameSpeed,
+    onToggleFullscreen,
+    onMuteToggle,
+  });
+}
+
+export function composeShellUiPresentation(options = {}) {
+  return createShellUiPresenter(options);
+}
+
+export function composeShellUiDomAdapter({
+  presenter,
+  documentRef,
+  root,
+  shellRelicController,
+  getSave,
+  onCloseMenu,
+  onExitRun,
+  onMuteToggle,
+  onOpenPanel,
+  onOpenShop,
+  onResetSave,
+  onSetGameSpeed,
+  onStartRun,
+  onToggleFullscreen,
+  speedOptions,
+}) {
+  return createShellUiDomAdapter({
+    presenter,
+    documentRef,
+    root,
+    shellRelicController,
+    getSave,
+    onCloseMenu,
+    onExitRun,
+    onMuteToggle,
+    onOpenPanel,
+    onOpenShop,
+    onResetSave,
+    onSetGameSpeed,
+    onStartRun,
+    onToggleFullscreen,
+    speedOptions,
+  });
+}

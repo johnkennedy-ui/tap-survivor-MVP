@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="aura" cx="50%" cy="45%" r="58%">
+      <stop offset="0" stop-color="#35526f"/>
+      <stop offset="1" stop-color="#0c111b"/>
+    </radialGradient>
+    <linearGradient id="robe" x1="34" y1="23" x2="92" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5f7fa2"/>
+      <stop offset="0.55" stop-color="#24344c"/>
+      <stop offset="1" stop-color="#151c2b"/>
+    </linearGradient>
+    <filter id="glow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <ellipse cx="64" cy="106" rx="35" ry="10" fill="#05070d" opacity=".42"/>
+  <circle cx="64" cy="66" r="45" fill="url(#aura)" stroke="#27364a" stroke-width="3"/>
+  <path d="M28 99 L45 39 L56 24 L64 9 L72 24 L83 39 L100 99 L82 112 L64 103 L46 112 Z" fill="url(#robe)" stroke="#dff6ff" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M45 42 L64 28 L83 42 L76 57 L64 50 L52 57 Z" fill="#1b2638" stroke="#ffd166" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="64" cy="51" r="12" fill="#f4e1c0" stroke="#111827" stroke-width="4"/>
+  <path d="M52 50 Q64 61 76 50" fill="none" stroke="#17202c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M44 88 Q64 101 84 88" fill="none" stroke="#69d2ff" stroke-width="5" stroke-linecap="round"/>
+  <path d="M50 22 L64 5 L78 22 L70 27 L64 18 L58 27 Z" fill="#ffd166" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M35 76 L21 87 M93 76 L107 87" stroke="#dff6ff" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="64" cy="75" r="9" fill="#69d2ff" filter="url(#glow)"/>
+  <path d="M59 75 L64 64 L69 75 L64 86 Z" fill="#f3f6fb"/>
+  <g fill="none" stroke="#ffd166" stroke-width="3" stroke-linecap="round">
+    <path d="M40 95 L50 84"/>
+    <path d="M88 95 L78 84"/>
+    <path d="M56 103 L64 92 L72 103"/>
+  </g>
+</svg>
