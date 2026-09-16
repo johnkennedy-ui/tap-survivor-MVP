@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createClimbMazeWalls } from "../src/modules/climb-maze-layout.js";
+import { attachClimbLayoutSeed, createClimbMazeWalls } from "../src/modules/climb-maze-layout.js";
 
 const dimensions = [
   { width: 960, height: 540 },
@@ -9,52 +9,63 @@ const dimensions = [
 const radii = [16, 20, 38];
 const reports = [];
 for (const world of dimensions) {
-  const walls = createClimbMazeWalls(world);
-  assert.ok(Object.isFrozen(walls), "wall list is immutable");
-  assert.equal(walls.length, 14, "maze has fourteen joined stone runs");
-  assert.deepEqual(walls, createClimbMazeWalls(world), "geometry is deterministic");
-  for (const [index, wall] of walls.entries()) {
-    assert.ok(Object.isFrozen(wall));
-    assert.equal(wall.id, `climb-wall-${index + 1}`);
-    assert.ok([wall.x, wall.y, wall.width, wall.height].every(Number.isFinite));
-    assert.ok(wall.width > 0 && wall.height > 0);
-    assert.ok(wall.x > 0 && wall.y > 0);
-    assert.ok(wall.x + wall.width < world.width && wall.y + wall.height < world.height);
-  }
-  for (const [first, second] of [
-    [0, 1],
-    [2, 3],
-    [4, 5],
-    [7, 8],
-    [8, 9],
-    [10, 11],
-    [12, 13],
-  ]) {
-    assert.ok(touches(walls[first], walls[second]), "maze turns are joined");
-  }
-  for (const radius of radii) {
-    const center = { x: world.width / 2, y: world.height / 2 };
-    assert.ok(isOpen(center, radius, walls, world), "centre spawn is clear");
-    const topology = freeSpace(world, walls, radius);
-    assert.ok(topology.count > 100, "fixture contains meaningful traversable space");
-    assert.equal(
-      topology.components.length,
-      1,
-      `all free cells connect for radius ${radius} in ${world.width}x${world.height}: ${JSON.stringify(topology.components)}`
+  const unseeded = createClimbMazeWalls(world);
+  assert.deepEqual(unseeded, createClimbMazeWalls(world), "unseeded geometry is deterministic");
+  assert.notDeepEqual(
+    createClimbMazeWalls(seededWorld(world, 1)),
+    createClimbMazeWalls(seededWorld(world, 2)),
+    "different layout seeds produce different maze geometry"
+  );
+  for (const seed of [0, 1, 2, 123456789, 0xffffffff]) {
+    const seeded = seededWorld(world, seed);
+    assert.deepEqual(Object.keys(seeded), ["width", "height"], "layout seed is not enumerable");
+    assert.equal(JSON.stringify(seeded).includes("seed"), false, "layout seed is not serialized");
+    const walls = createClimbMazeWalls(seeded);
+    assert.ok(Object.isFrozen(walls), "wall list is immutable");
+    assert.equal(walls.length, 12, "maze has twelve procedurally placed stone runs");
+    assert.deepEqual(
+      walls,
+      createClimbMazeWalls(seededWorld(world, seed)),
+      "seeded geometry is deterministic"
     );
-    reports.push({
-      ...world,
-      radius,
-      freeCells: topology.count,
-      components: topology.components.length,
-    });
+    for (const [index, wall] of walls.entries()) {
+      assert.ok(Object.isFrozen(wall));
+      assert.equal(wall.id, `climb-wall-${index + 1}`);
+      assert.ok([wall.x, wall.y, wall.width, wall.height].every(Number.isFinite));
+      assert.ok(wall.width > 0 && wall.height > 0);
+      assert.ok(wall.x > 0 && wall.y > 0);
+      assert.ok(wall.x + wall.width < world.width && wall.y + wall.height < world.height);
+    }
+    for (const radius of radii) {
+      const center = { x: world.width / 2, y: world.height / 2 };
+      assert.ok(isOpen(center, radius, walls, world), "centre spawn is clear");
+      const topology = freeSpace(world, walls, radius);
+      assert.ok(topology.count > 100, "fixture contains meaningful traversable space");
+      assert.equal(
+        topology.components.length,
+        1,
+        `all free cells connect for radius ${radius} in ${world.width}x${world.height} seed ${seed}: ${JSON.stringify(topology.components)}`
+      );
+      reports.push({
+        ...world,
+        seed,
+        radius,
+        freeCells: topology.count,
+        components: topology.components.length,
+      });
+    }
   }
 }
 // Negative control retains the worker's original too-narrow upper-left portal.
 const small = dimensions[0];
-const trapped = createClimbMazeWalls(small).map((wall, index) =>
-  index === 3 ? { ...wall, y: small.height * 0.2, height: small.height * 0.184 } : wall
-);
+const baselineTrapWalls = createClimbMazeWalls(seededWorld(small, 0));
+const trapped = [
+  ...baselineTrapWalls,
+  { x: 140, y: 90, width: 300, height: 16 },
+  { x: 140, y: 320, width: 300, height: 16 },
+  { x: 140, y: 90, width: 16, height: 246 },
+  { x: 424, y: 90, width: 16, height: 246 },
+];
 assert.ok(
   freeSpace(small, trapped, 38).components.length > 1,
   "connectivity check rejects the formerly trapped pocket"
@@ -65,17 +76,17 @@ assert.deepEqual(createClimbMazeWalls(), []);
 console.log(
   JSON.stringify({
     decision: "PASS",
-    walls: 14,
+    walls: 12,
+    seeds: 5,
     topology: reports,
     trappedPocketNegativeControl: "rejected",
   })
 );
 
-function touches(a, b) {
-  return (
-    a.x <= b.x + b.width && b.x <= a.x + a.width && a.y <= b.y + b.height && b.y <= a.y + a.height
-  );
+function seededWorld(world, seed) {
+  return attachClimbLayoutSeed({ ...world }, seed);
 }
+
 function isOpen(point, radius, walls, world) {
   if (
     point.x < radius ||

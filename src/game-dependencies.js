@@ -218,11 +218,12 @@
     return walls;
   }
 
-  function worldWithSolidWalls(world) {
+  function worldWithSolidWalls(world, seed) {
     if (world?.modeId !== "climb") return world;
     const next = { ...world };
+    attachClimbLayoutSeed(next, typeof seed === "function" ? seed() : seed);
     Object.defineProperty(next, "solidWalls", {
-      value: climbSolidWalls(world),
+      value: createClimbMazeWalls(next),
       enumerable: false,
     });
     return Object.freeze(next);
@@ -231,9 +232,15 @@
   /**
    * Source-owned simulation capability, injected into native and retained factories.
    * The viewport is read live for spawn queries only; physical dimensions are fixed
-   * by the run's copied, frozen descriptor. No RNG, save access or global publisher.
+   * by the run's copied, frozen descriptor. The injected RNG is consumed only to
+   * seed a new Climb run; there is no save access or global publisher.
    */
-  function createWorldSpatialRuntime({ canvas, worldScale = 3, zoom = 1.25 }) {
+  function createWorldSpatialRuntime({
+    canvas,
+    worldScale = 3,
+    zoom = 1.25,
+    random = Math.random,
+  }) {
     /** @param {{ modeId?: unknown, world?: { width?: number, height?: number, zoom?: number } }} [options] */
     function createRunWorld({ modeId, world } = {}) {
       // A supplied world is already in simulation units (including boss continuation).
@@ -243,15 +250,22 @@
         world.width > 0 &&
         Number.isFinite(world?.height) &&
         world.height > 0;
-      return worldWithSolidWalls(
-        createWorld({
-          modeId,
-          width: supplied ? world.width : canvas.width,
-          height: supplied ? world.height : canvas.height,
-          worldScale: supplied ? 1 : worldScale,
-          zoom: supplied ? (world.zoom ?? zoom) : zoom,
-        })
-      );
+      const next = createWorld({
+        modeId,
+        width: supplied ? world.width : canvas.width,
+        height: supplied ? world.height : canvas.height,
+        worldScale: supplied ? 1 : worldScale,
+        zoom: supplied ? (world.zoom ?? zoom) : zoom,
+      });
+      // Boss-floor continuation supplies the prior run descriptor. Carry its
+      // hidden seed forward so one Climb run never regenerates its terrain.
+      return worldWithSolidWalls(next, climbLayoutSeed(world) ?? nextLayoutSeed);
+    }
+
+    function nextLayoutSeed() {
+      const value = typeof random === "function" ? Number(random()) : Math.random();
+      if (!Number.isFinite(value)) return 0;
+      return Math.floor(Math.max(0, Math.min(0.999999999999, value)) * 0x100000000) >>> 0;
     }
 
     function physicalSize(game) {
@@ -335,6 +349,14 @@
     function openPosition(game, point, radius = 0, bounds = null) {
       const actor = { radius, x: point?.x, y: point?.y };
       resolveSolidTerrain(game, actor, { canSweep: false, x: actor.x, y: actor.y });
+      const walls = solidWalls(game);
+      if (!nodeClear(actor, walls, radius)) {
+        const recovered = nearestClearPosition(game, point, walls, radius, bounds);
+        if (recovered) {
+          actor.x = recovered.x;
+          actor.y = recovered.y;
+        }
+      }
       if (
         bounds &&
         (actor.x < bounds.left ||
@@ -344,7 +366,6 @@
       ) {
         // Boss landings retain their visible-region inset even when a joined
         // wall would push the sampled point beyond it. No additional RNG draws.
-        const walls = solidWalls(game);
         const xs = [
           Math.max(bounds.left, Math.min(bounds.right, point.x)),
           bounds.left,
@@ -380,6 +401,39 @@
         if (best) return best;
       }
       return { x: actor.x, y: actor.y };
+    }
+
+    function nearestClearPosition(game, point, walls, radius, bounds = null) {
+      const world = physicalSize(game);
+      const xs = [point?.x, radius, world.width - radius];
+      const ys = [point?.y, radius, world.height - radius];
+      for (const wall of walls) {
+        xs.push(wall.x - radius, wall.x + wall.width + radius);
+        ys.push(wall.y - radius, wall.y + wall.height + radius);
+      }
+      let best = null,
+        bestDistance = Infinity;
+      for (const x of new Set(xs))
+        for (const y of new Set(ys)) {
+          if (
+            !Number.isFinite(x) ||
+            !Number.isFinite(y) ||
+            x < radius ||
+            x > world.width - radius ||
+            y < radius ||
+            y > world.height - radius ||
+            (bounds &&
+              (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom)) ||
+            !nodeClear({ x, y }, walls, radius)
+          )
+            continue;
+          const distance = (x - point.x) ** 2 + (y - point.y) ** 2;
+          if (distance < bestDistance) {
+            best = { x, y };
+            bestDistance = distance;
+          }
+        }
+      return best;
     }
 
     function routePosition(game, actor, target) {
