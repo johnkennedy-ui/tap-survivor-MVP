@@ -236,7 +236,7 @@ for (const id of ["actor-wall-left", "actor-wall-right", "actor-wall-top", "acto
   assert.equal(before.world.modeId, "climb", "Climb fixture preserves the reset world descriptor");
   assert.equal(
     before.walls.length,
-    14,
+    12,
     "Climb fixture exposes cached renderer-visible maze geometry"
   );
   const parameters = before.scenario.parameters;

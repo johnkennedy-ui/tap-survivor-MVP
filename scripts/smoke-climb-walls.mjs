@@ -10,7 +10,7 @@ const farm = { world: spatial.createRunWorld({ modeId: "farm" }) };
 const walls = spatial.solidWalls(climb);
 assert.strictEqual(spatial.solidWalls(climb), walls, "immutable world reuses cached wall geometry");
 
-assert.equal(walls.length, 14, "Climb has a connected fourteen-run maze layout");
+assert.equal(walls.length, 12, "Climb has a connected twelve-run maze layout");
 assert.deepEqual(spatial.solidWalls(farm), [], "Farm has no Climb terrain");
 for (const wall of walls) {
   assert.ok(wall.width > 0 && wall.height > 0, "wall geometry is visible");
@@ -161,15 +161,29 @@ for (const cornerCase of cornerCases) {
   verifyCorner("escape", cornerCase.escape, false);
 }
 
-const joinedStart = { x: wall.x - radius, y: wall.y + wall.height + radius };
+// Generated runs 3 and 4 join at the lower-left turn. A horizontal tangent
+// that reaches the vertical neighbour must collide with that joined geometry.
+const joinedHorizontal = walls[2];
+const joinedVertical = walls[3];
+assert.ok(
+  joinedVertical.x <= joinedHorizontal.x + joinedHorizontal.width &&
+    joinedVertical.x + joinedVertical.width >= joinedHorizontal.x &&
+    joinedVertical.y <= joinedHorizontal.y + joinedHorizontal.height &&
+    joinedVertical.y + joinedVertical.height >= joinedHorizontal.y,
+  "generated lower-left turn retains overlapping joined-pair geometry"
+);
+const joinedStart = {
+  x: joinedVertical.x - radius,
+  y: joinedHorizontal.y + joinedHorizontal.height + radius,
+};
 const joinedTangent = { radius, x: joinedStart.x + 100, y: joinedStart.y };
 assert.ok(
   spatial.resolveSolidTerrain(climb, joinedTangent, joinedStart),
-  "a tangent to one wall cannot cross its joined neighbour"
+  "a tangent to one generated run cannot cross its joined neighbour"
 );
 assert.ok(
   joinedTangent.x <= joinedStart.x + 0.001,
-  "joined-wall control preserves the approached side"
+  "joined-pair tangent preserves the approached side"
 );
 
 const slider = { hp: 10, radius, x: wall.x - radius + 1, y: wall.y - radius - 30 };
