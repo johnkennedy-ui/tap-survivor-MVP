@@ -16,6 +16,7 @@ tmp/final-reports/
 *.jks
 *.keystore
 *.pem
+*.key
 *.p12
 *.pfx
 key.properties

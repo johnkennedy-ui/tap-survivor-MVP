@@ -1,7 +1,7 @@
 {
   "name": "tap-survivor-mvp",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "agent:start": "node scripts/agent-start.mjs",
