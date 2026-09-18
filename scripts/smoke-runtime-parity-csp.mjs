@@ -14,6 +14,7 @@ import {
 const repoRoot = process.cwd();
 const localRequire = createRequire(import.meta.url);
 const browserExecutable = parseBrowserExecutable(process.argv.slice(2));
+const staticOnly = process.argv.includes("--static-only");
 const expectedCsp =
   "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'";
 
@@ -66,12 +67,12 @@ async function main() {
       );
       assert.ok((await response.text()).trim(), `synthetic resource is empty: ${path}`);
     }
-    await assertBrowserCspControl(origin);
+    if (!staticOnly) await assertBrowserCspControl(origin);
   } finally {
     await new Promise((resolveClose) => server.close(resolveClose));
   }
 
-  console.log("Runtime parity CSP transport controls passed");
+  console.log(`Runtime parity CSP transport controls passed${staticOnly ? " (static-only)" : ""}`);
 }
 
 function assertExternalScriptTags(html) {

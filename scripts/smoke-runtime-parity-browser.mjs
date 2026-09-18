@@ -3347,8 +3347,9 @@ async function failBeforeMain(message) {
 const dockerBinary = existsSync("/usr/bin/docker") ? "/usr/bin/docker" : "docker";
 const invokedAsScript =
   process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const invokedByStrictWrapper = Boolean(globalThis["__TapSurvivorParityFailOnDiff__"]);
 
-if (invokedAsScript && cli.docker && !runningDockerChild) {
+if ((invokedAsScript || invokedByStrictWrapper) && cli.docker && !runningDockerChild) {
   const dockerVersion = spawnSync(dockerBinary, ["version"], { encoding: "utf8", stdio: "ignore" });
   if (dockerVersion.status !== 0) {
     void failBeforeMain("Docker parity mode was requested but Docker is unavailable");
@@ -3405,7 +3406,7 @@ if (invokedAsScript && cli.docker && !runningDockerChild) {
     }
     process.exit(result.status ?? 1);
   }
-} else if (invokedAsScript) {
+} else if (invokedAsScript || invokedByStrictWrapper) {
   void main();
 }
 
