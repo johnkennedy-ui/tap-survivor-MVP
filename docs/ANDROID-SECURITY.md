@@ -30,13 +30,17 @@ Run the checked-in guard from the repository root:
 
 ```sh
 node scripts/check-android-security.mjs
+node scripts/smoke-android-security.mjs
 ```
 
 It checks the checked-in manifest/configuration for the launcher export,
 non-exported FileProvider, explicit cleartext denial, retained backup policy,
 only the reviewed `INTERNET` permission, HTTPS Capacitor scheme, no remote
 navigation configuration, no checked-in debug flag, reviewed Gradle wrapper
-version, and sensitive tracked file names. It is intentionally static: merged
+version and integrity, reviewed plugins, and sensitive tracked file names. Safe
+`.env.example` templates remain allowed but their contents are still scanned by
+Gitleaks. Mutation controls prove the guard rejects unsafe configuration changes.
+It is intentionally static: merged
 dependency manifests and APK contents require a debug build.
 
 ## Build prerequisites and residual verification
@@ -45,8 +49,10 @@ Source currently requires Node 22 for this task's locked tooling, JDK 21
 (`android/app/capacitor.build.gradle`), Android SDK platform 35
 (`android/variables.gradle`), Android Gradle Plugin 8.13.0
 (`android/build.gradle` and Capacitor Android 8.4.0), and the repository Gradle
-8.14.3 wrapper. The wrapper checksum is not set because no verified distribution
-checksum provenance was supplied; do not add one from an unverified source.
+8.14.3 wrapper. The distribution checksum is pinned to the official
+`https://services.gradle.org/distributions/gradle-8.14.3-all.zip.sha256` value;
+the checked-in wrapper JAR matches
+`https://services.gradle.org/distributions/gradle-8.14.3-wrapper.jar.sha256`.
 
 Root integration should run the non-signing debug build with those prerequisites,
 then inspect the merged manifest/APK and test on an Android device or emulator:
