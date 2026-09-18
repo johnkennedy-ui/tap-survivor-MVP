@@ -1,11 +1,6 @@
 name: Agent Check
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - master
   workflow_dispatch:
 
 permissions:
@@ -32,7 +27,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run agent validation
         run: npm run agent:check

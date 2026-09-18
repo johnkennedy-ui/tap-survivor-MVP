@@ -33,10 +33,10 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Run agent validation
-        run: npm run agent:check
+        run: npm run agent:check -- --full
 
       - name: Build shared web runtime
         run: npm run build:web
@@ -55,7 +55,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      # Publish the already verified Pages artifact; never mutate repository contents.
       pages: write
+      # GitHub Pages validates this deployment job identity through OIDC.
       id-token: write
     environment:
       name: github-pages

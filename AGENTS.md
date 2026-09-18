@@ -1,91 +1,150 @@
 # Tap Survivor Agent Instructions
 
+## Security and CI invariants
+
+1. Never commit secrets, credentials, signing keys, or other private-key material; release authority
+   does not make source control an appropriate secret store.
+2. Never broaden CI permissions to make a failing workflow pass; keep dependency execution separate
+   from deployment authority.
+3. Pin every GitHub Action to a full immutable commit SHA; never replace it with a mutable tag.
+4. Keep failing security checks blocking; diagnose and document the root cause rather than bypassing
+   or suppressing the check.
+5. Document and review any new runtime network destination before adding it.
+6. Evaluate dependency risk and a small local alternative before adding a production dependency.
+7. Never run `npm audit fix --force` automatically.
+8. Require migration and backward-compatibility tests for any save-schema change.
+9. Never force-push deployment branches.
+10. Never disable or broadly relax CSP to make a feature work; retain narrow, documented, tested
+    allowances.
+11. Never add `eval`, dynamic code generation, or remote executable scripts.
+12. Run `npm run agent:check -- --full` before declaring a task complete; preserve the shared
+    generated `www/` browser/Android runtime and strict built-browser smoke coverage.
+
 Before editing this repo:
 
 1. Read `docs/AGENT_CODEBASE_CONTEXT.md`.
 2. Read `docs/CONTENT_EXTENSION_GUIDE.md`.
 3. Read `docs/MAINTENANCE.md`.
-4. For bounded execution, read `docs/skills/SKILL_ROUTER.md`, select one matching skill, and load only that skill.
+4. For bounded execution, read `docs/skills/SKILL_ROUTER.md`, select one matching skill, and load
+   only that skill.
 5. Do not combine skills unless the current request explicitly instructs you to do so.
 6. Stop after the selected skill's stop condition and report the required evidence.
 7. Use `npm run agent:status` for a quick repo overview when needed.
-8. Treat `docs/CURRENT_TASK.md` as optional housekeeping only. Do not use it as the source of truth for the active request; the conversation and current git diff are authoritative.
+8. Treat `docs/CURRENT_TASK.md` as optional housekeeping only. Do not use it as the source of truth
+   for the active request; the conversation and current git diff are authoritative.
 9. Inspect only the files relevant to the requested change.
-10. Prefer content edits in `content/registry/*.json` via `npm run add:content -- <type> <id> ...`, then run `npm run build:content`.
-11. Before adding a new content asset, feature definition, or progression entry,
-    use `docs/skills/content-creation-blueprint.md`. It covers every registry
-    domain and requires an explicit debug-catalog, deterministic-validation, or
-    manual/UI QA disposition for each changed domain.
+10. Prefer content edits in `content/registry/*.json` via `npm run add:content -- <type> <id> ...`,
+    then run `npm run build:content`.
+11. Before adding a new content asset, feature definition, or progression entry, use
+    `docs/skills/content-creation-blueprint.md`. It covers every registry domain and requires an
+    explicit debug-catalog, deterministic-validation, or manual/UI QA disposition for each changed
+    domain.
 12. Do not edit `src/content.generated.js` by hand.
-13. Do not rewrite the game loop, renderer, or combat system unless the task specifically requires it.
-14. Use `npm run agent:handoff` when handing the repo to another agent or resuming later.
-    Use `npm run task:list` at session start when `.agent/tasks.json` exists, and mark the active task complete or blocked before handoff when the task queue is being used.
-    For the task queue operating pattern, see `docs/AGENT_TASK_QUEUE.md`.
+13. Do not rewrite the game loop, renderer, or combat system unless the task specifically requires
+    it.
+14. Use `npm run agent:handoff` when handing the repo to another agent or resuming later. Use
+    `npm run task:list` at session start when `.agent/tasks.json` exists, and mark the active task
+    complete or blocked before handoff when the task queue is being used. For the task queue
+    operating pattern, see `docs/AGENT_TASK_QUEUE.md`.
 15. Run `npm run agent:check` before reporting code or structure changes.
 16. Use `npm run agent:evidence -- --task "<short task name>"` to create a replayable evidence stub.
 17. For Android/GitHub.io runtime changes, read `docs/RUNTIME_PARITY.md`.
 18. For Android packaging/release prep, read `docs/PLAY_STORE_ANDROID_PREP.md`.
 19. Do not hand-edit `www/`, fork gameplay between GitHub.io and Android, or commit signing secrets.
-20. Before committing, if the task changed Prettier-supported files, run `docs/skills/prettier-before-commit.md`.
-21. For balance-only experiments, use `content/balance/*.json` and validate with `npm run balance:check`; do not change runtime code for numeric tuning-only work.
-22. Dev-only balance runtime selection lives in `src/balance-runtime.js`; keep production default behaviour on the `default` profile.
-23. Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` is only the compatibility export surface.
-24. Content tooling type contracts live under `types/` and are JSDoc-checked with `npm run typecheck`.
-    Keep those contracts scoped to `scripts/content/*.mjs`, the barrel, and `src/content-registry.js` unless a separate task broadens them.
-    Do not convert runtime files to TypeScript without a separate migration task.
-25. Do not add direct `window` or `globalThis` runtime coupling. Browser capabilities enter only through the explicit
-    `globalRef` boundary; run `npm run check:globals` after changes. Update `docs/GLOBAL_STATE_INVENTORY.md` and
-    `scripts/allowed-globals.json` only when a reviewed platform boundary or test fixture changes, never to revive a
-    retired publisher.
-26. New math helper consumers must receive/import math helpers explicitly. The old publisher namespace is retired.
-27. New HUD renderer consumers must receive/import `createHudRenderer` explicitly. The old publisher namespace is retired.
-28. New enemy renderer consumers must receive/import `createEnemyRenderer` explicitly. The old publisher namespace is retired.
-29. Enemy/boss sprite-sheet work belongs in `assets.sprites.spriteSheets` metadata plus `src/sprite-sheet-renderer.js`; preserve fallback order: sheet frame, existing single sprite/SVG, then shape rendering.
-30. For ES-module migration slices, keep the real implementation in `src/modules/` and generate the global-free compatibility artifact with `npm run build:bridges`.
-    Do not hand-edit generated bridge files such as `src/shop-pricing.js`. New dependencies must be passed through the source-owned dependency bag; do not add or restore `TapSurvivor*` publishers.
-    `src/modules/balance.js` owns floor difficulty implementation; `src/balance.js` is a generated compatibility bridge.
-    `src/modules/level-up-choices.js` owns level-up choice helper implementation; `src/level-up-choices.js` is a generated compatibility bridge.
-    `src/modules/map-system.js` owns map/floor resolver implementation; `src/map-system.js` is a generated compatibility bridge.
-    `src/modules/math.js` owns math helper implementation; `src/math.js` is a generated compatibility bridge.
-    `src/modules/save-corruption.js` owns corrupt-save load handling; `src/save-corruption.js` is a generated compatibility bridge.
-    `src/modules/save-defaults.js` owns default save construction; `src/save-defaults.js` is a generated compatibility bridge.
-    `src/modules/save-migrations.js` owns save migration implementation; `src/save-migrations.js` is a generated compatibility bridge.
-    `src/modules/save-normalize.js` owns save normalization implementation; `src/save-normalize.js` is a generated compatibility bridge.
-    `src/modules/save.js` owns save-system orchestration; `src/save.js` is a generated compatibility bridge.
-    `src/modules/game-dependencies.js` owns the runtime dependency bag seam, including the input binder passed into the runtime controller.
-    `src/game-dependencies.js` is a generated compatibility bridge loaded immediately before `src/game.js`.
-    `src/modules/pickups.js` owns XP/loot pickup spawning, attraction, collection, and pickup text aging; `src/pickups.js` is a generated compatibility bridge.
-    `src/modules/combat-damage.js` owns combat damage, player damage, enemy reap, XP drop, loot handoff, and boss defeat handling; `src/combat-damage.js` is a generated compatibility bridge.
-    `src/modules/run-lifecycle.js` owns run lifecycle start/end/boss-clear behavior; `src/run-lifecycle.js` is a generated compatibility bridge.
-    `src/modules/run-state.js` owns run state/player reset construction; `src/run-state.js` is a generated compatibility bridge.
-    `src/modules/run-ui.js` owns run HUD/end-screen rendering; `src/run-ui.js` is a generated compatibility bridge.
-    `src/modules/run-update.js` owns run ticking/player movement/XP updates; `src/run-update.js` is a generated compatibility bridge.
-    Save consumers receive save helpers through the dependency bag; retired save namespaces must not be read or restored.
-    `src/game.js` is a retained explicit platform-injection composition boundary, not a publisher contract.
-    Do not hand-edit generated save bridges or change save defaults, migrations, normalization semantics, corrupt-save backup, storage behavior, persistence semantics, or runtime initialization while moving these bridges.
-    `src/modules/weapon-cooldowns.js` owns weapon cooldown/stat-scaling implementation; `src/weapon-cooldowns.js` is a generated compatibility bridge.
-    `src/modules/weapon-projectiles.js` owns projectile weapon implementation; `src/weapon-projectiles.js` is a generated compatibility bridge.
-    `src/modules/weapon-targeting.js` owns weapon-targeting implementation; `src/weapon-targeting.js` is a generated compatibility bridge.
+20. Before committing, if the task changed Prettier-supported files, run
+    `docs/skills/prettier-before-commit.md`.
+21. For balance-only experiments, use `content/balance/*.json` and validate with
+    `npm run balance:check`; do not change runtime code for numeric tuning-only work.
+22. Dev-only balance runtime selection lives in `src/balance-runtime.js`; keep production default
+    behaviour on the `default` profile.
+23. Content tooling is split under `scripts/content/`; `scripts/content-tools.mjs` is only the
+    compatibility export surface.
+24. Content tooling type contracts live under `types/` and are JSDoc-checked with
+    `npm run typecheck`. Keep those contracts scoped to `scripts/content/*.mjs`, the barrel, and
+    `src/content-registry.js` unless a separate task broadens them. Do not convert runtime files to
+    TypeScript without a separate migration task.
+25. Do not add direct `window` or `globalThis` runtime coupling. Browser capabilities enter only
+    through the explicit `globalRef` boundary; run `npm run check:globals` after changes. Update
+    `docs/GLOBAL_STATE_INVENTORY.md` and `scripts/allowed-globals.json` only when a reviewed
+    platform boundary or test fixture changes, never to revive a retired publisher.
+26. New math helper consumers must receive/import math helpers explicitly. The old publisher
+    namespace is retired.
+27. New HUD renderer consumers must receive/import `createHudRenderer` explicitly. The old publisher
+    namespace is retired.
+28. New enemy renderer consumers must receive/import `createEnemyRenderer` explicitly. The old
+    publisher namespace is retired.
+29. Enemy/boss sprite-sheet work belongs in `assets.sprites.spriteSheets` metadata plus
+    `src/sprite-sheet-renderer.js`; preserve fallback order: sheet frame, existing single
+    sprite/SVG, then shape rendering.
+30. For ES-module migration slices, keep the real implementation in `src/modules/` and generate the
+    global-free compatibility artifact with `npm run build:bridges`. Do not hand-edit generated
+    bridge files such as `src/shop-pricing.js`. New dependencies must be passed through the
+    source-owned dependency bag; do not add or restore `TapSurvivor*` publishers.
+    `src/modules/balance.js` owns floor difficulty implementation; `src/balance.js` is a generated
+    compatibility bridge. `src/modules/level-up-choices.js` owns level-up choice helper
+    implementation; `src/level-up-choices.js` is a generated compatibility bridge.
+    `src/modules/map-system.js` owns map/floor resolver implementation; `src/map-system.js` is a
+    generated compatibility bridge. `src/modules/math.js` owns math helper implementation;
+    `src/math.js` is a generated compatibility bridge. `src/modules/save-corruption.js` owns
+    corrupt-save load handling; `src/save-corruption.js` is a generated compatibility bridge.
+    `src/modules/save-defaults.js` owns default save construction; `src/save-defaults.js` is a
+    generated compatibility bridge. `src/modules/save-migrations.js` owns save migration
+    implementation; `src/save-migrations.js` is a generated compatibility bridge.
+    `src/modules/save-normalize.js` owns save normalization implementation; `src/save-normalize.js`
+    is a generated compatibility bridge. `src/modules/save.js` owns save-system orchestration;
+    `src/save.js` is a generated compatibility bridge. `src/modules/game-dependencies.js` owns the
+    runtime dependency bag seam, including the input binder passed into the runtime controller.
+    `src/game-dependencies.js` is a generated compatibility bridge loaded immediately before
+    `src/game.js`. `src/modules/pickups.js` owns XP/loot pickup spawning, attraction, collection,
+    and pickup text aging; `src/pickups.js` is a generated compatibility bridge.
+    `src/modules/combat-damage.js` owns combat damage, player damage, enemy reap, XP drop, loot
+    handoff, and boss defeat handling; `src/combat-damage.js` is a generated compatibility bridge.
+    `src/modules/run-lifecycle.js` owns run lifecycle start/end/boss-clear behavior;
+    `src/run-lifecycle.js` is a generated compatibility bridge. `src/modules/run-state.js` owns run
+    state/player reset construction; `src/run-state.js` is a generated compatibility bridge.
+    `src/modules/run-ui.js` owns run HUD/end-screen rendering; `src/run-ui.js` is a generated
+    compatibility bridge. `src/modules/run-update.js` owns run ticking/player movement/XP updates;
+    `src/run-update.js` is a generated compatibility bridge. Save consumers receive save helpers
+    through the dependency bag; retired save namespaces must not be read or restored. `src/game.js`
+    is a retained explicit platform-injection composition boundary, not a publisher contract. Do not
+    hand-edit generated save bridges or change save defaults, migrations, normalization semantics,
+    corrupt-save backup, storage behavior, persistence semantics, or runtime initialization while
+    moving these bridges. `src/modules/weapon-cooldowns.js` owns weapon cooldown/stat-scaling
+    implementation; `src/weapon-cooldowns.js` is a generated compatibility bridge.
+    `src/modules/weapon-projectiles.js` owns projectile weapon implementation;
+    `src/weapon-projectiles.js` is a generated compatibility bridge.
+    `src/modules/weapon-targeting.js` owns weapon-targeting implementation;
+    `src/weapon-targeting.js` is a generated compatibility bridge.
 
 ## Mission Mode and Token Budget
 
-- At the beginning of normal missions, run `npm run agent:mission-start` for compact branch, queue, status, and Frank-run context.
-- Default to mission-sized batches instead of micro-slices: one queue task, one evidence file, one final validation gate, one commit, and one push per mission.
-- Avoid repeated full context reloads after the mission is anchored; inspect only the files needed for the active change.
-- Do not run full preflight before every inspection or small edit. Use focused checks during the mission and full validation near the end.
-- Before the final validation gate in normal agent missions, run `npm run agent:check -- --fix-format-changed`.
-  Use it instead of waiting for `npm run format:check` or `npm run check:format-hygiene` to fail.
-  Plain `npm run agent:check` remains the CI check-only path.
-- Stop only on hard blockers such as wrong base, dirty pre-edit worktree, invalid queue state, forbidden file changes, failing required validation, or unclear scope.
+- At the beginning of normal missions, run `npm run agent:mission-start` for compact branch, queue,
+  status, and Frank-run context.
+- Default to mission-sized batches instead of micro-slices: one queue task, one evidence file, one
+  final validation gate, one commit, and one push per mission.
+- Avoid repeated full context reloads after the mission is anchored; inspect only the files needed
+  for the active change.
+- Do not run full preflight before every inspection or small edit. Use focused checks during the
+  mission and full validation near the end.
+- Before the final validation gate in normal agent missions, run
+  `npm run agent:check -- --fix-format-changed`. Use it instead of waiting for
+  `npm run format:check` or `npm run check:format-hygiene` to fail. Plain `npm run agent:check`
+  remains the CI check-only path.
+- Stop only on hard blockers such as wrong base, dirty pre-edit worktree, invalid queue state,
+  forbidden file changes, failing required validation, or unclear scope.
 
 ## Frank Anti-Lockup Tools
 
-- Run `npm run frank:heartbeat -- --task "<task>" --phase "<phase>"` before and after each major phase.
-- Use `npm run frank:run -- "<command>" --timeout <seconds>` for validation commands expected to take more than a few seconds.
+- Run `npm run frank:heartbeat -- --task "<task>" --phase "<phase>"` before and after each major
+  phase.
+- Use `npm run frank:run -- "<command>" --timeout <seconds>` for validation commands expected to
+  take more than a few seconds.
 - If a preflight wrapper loses child-process state, loses its live output path, mishandles an exit,
   or requires manual recovery, stop and report the task as blocked. Do not continue implementation
   from a recovered preflight unless the human explicitly approves it.
-- If the same command fails twice, stop, update Frank status with `--blocker`, and report instead of continuing.
-- If blocked, write the blocker into `.agent/frank-status.json` with `npm run frank:heartbeat -- --blocker "<reason>"` and stop.
+- If the same command fails twice, stop, update Frank status with `--blocker`, and report instead of
+  continuing.
+- If blocked, write the blocker into `.agent/frank-status.json` with
+  `npm run frank:heartbeat -- --blocker "<reason>"` and stop.
 
 For future tasks, use `docs/AGENT_TASK_TEMPLATE.md` as the working checklist.

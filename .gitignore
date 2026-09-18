@@ -12,6 +12,7 @@ tmp/final-reports/
 .env
 .env.*
 *.env
+*.key
 
 *.jks
 *.keystore
