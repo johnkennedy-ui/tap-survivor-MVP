@@ -500,9 +500,20 @@ function isDrawableImage(image) {
 }
 
 function spriteSource(definition) {
-  if (typeof definition === "string") return definition;
+  if (typeof definition === "string") return safeAssetPath(definition);
   if (definition && typeof definition === "object") {
-    return definition.src || definition.path || definition.iconSrc || "";
+    return safeAssetPath(definition.src || definition.path || definition.iconSrc);
   }
   return "";
+}
+
+function safeAssetPath(value) {
+  if (typeof value !== "string") return "";
+  const path = value.trim();
+  const pathname = path.split(/[?#]/, 1)[0];
+  if (pathname.startsWith("/") || pathname.includes(":")) return "";
+  if (pathname.split("/").some((segment) => !segment || segment === "." || segment === "..")) {
+    return "";
+  }
+  return path;
 }

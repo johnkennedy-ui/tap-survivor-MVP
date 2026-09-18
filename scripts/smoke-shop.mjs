@@ -26,6 +26,10 @@ function descendantsWithClass(root, className) {
   return found;
 }
 
+function renderedText(root) {
+  return [root.textContent || "", ...(root.children || []).map(renderedText)].join(" ");
+}
+
 function shopSections(container) {
   return (container.children || []).filter((child) =>
     String(child.className || "").split(/\s+/).includes("shop-section"),
@@ -65,7 +69,7 @@ check("menu shop groups items by effect stat", sectionStats(harness.elements.get
 check("menu shop preserves all grouped items", renderedMenuShopItems.length === content.shopItems.length);
 
 const firstItem = shopItemById(harness.elements.get("shopItems"), "training_boots");
-const buyButton = firstItem.children[0];
+const buyButton = firstItem.children.at(-1);
 buyButton.click();
 
 const saved = JSON.parse(harness.context.localStorage.getItem("tap-survivor-mvp-save-v2"));
@@ -84,7 +88,7 @@ check("shop shows inflation notice as banner", harness.elements.get("questBanner
 check("shop inline inflation notice stays empty", !harness.elements.get("shopNotice").textContent.includes("Inflation huh."));
 check(
   "other shop item price inflates",
-  shopItemById(harness.elements.get("shopItems"), "coin_magnet").innerHTML.includes("Needs 22 coins"),
+  renderedText(shopItemById(harness.elements.get("shopItems"), "coin_magnet")).includes("Needs 22 coins"),
 );
 
 harness.elements.get("closeShop").click();
@@ -112,7 +116,7 @@ rewards.elements.get("titleStartGame").click();
 rewards.elements.get("openMenu").click();
 const rewardNode = rewards.elements.get("menuTree").children[0];
 const rewardIcon = rewardNode?.children[0];
-const rewardButton = rewardNode?.children[1];
+const rewardButton = rewardNode?.children.at(-1);
 check("Rewards tab renders a nonempty QP balance", rewards.elements.get("menuQpHud").textContent.includes("Quest Points: 1"));
 check("Rewards tab renders progression nodes and active quests", rewards.elements.get("menuTree").children.length > 0 && rewards.elements.get("menuQuests").children.length > 0);
 check("Rewards weapon node uses a source-owned skill icon", Boolean(rewardIcon?.src) && rewardIcon?.alt === "Prism Beam skill icon");
@@ -138,10 +142,10 @@ const floorHundred = createGameHarness({
 });
 floorHundred.elements.get("openShop").click();
 const floorHundredFirstItem = shopItemById(floorHundred.elements.get("shopItems"), "training_boots");
-floorHundredFirstItem.children[0].click();
+floorHundredFirstItem.children.at(-1).click();
 check(
   "floor 100 shop prices stay buyout-scale",
-  shopItemById(floorHundred.elements.get("shopItems"), "coin_magnet").innerHTML.includes(
+  renderedText(shopItemById(floorHundred.elements.get("shopItems"), "coin_magnet")).includes(
     "Cost: 85 coins",
   ),
 );

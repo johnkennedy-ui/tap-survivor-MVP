@@ -30,6 +30,7 @@ function makeClassList() {
 
 function makeElement(id = "") {
   let html = "";
+  let text = "";
   const element = {
     id,
     dataset: {},
@@ -43,7 +44,13 @@ function makeElement(id = "") {
       html = value;
       this.children = [];
     },
-    textContent: "",
+    get textContent() {
+      return [text, ...this.children.map((child) => child.textContent || "")].join("");
+    },
+    set textContent(value) {
+      text = String(value);
+      this.children = [];
+    },
     style: {},
     appendChild(child) {
       this.children.push(child);
@@ -54,6 +61,15 @@ function makeElement(id = "") {
       this.children.unshift(child);
       child.parentElement = this;
       child.isConnected = true;
+    },
+    replaceChildren(...children) {
+      html = "";
+      text = "";
+      this.children = children;
+      children.forEach((child) => {
+        child.parentElement = this;
+        child.isConnected = true;
+      });
     },
     querySelector(selector) {
       if (!selector?.startsWith(".")) return null;
@@ -285,10 +301,16 @@ export function createGameHarness({
         return selector === "[data-speed]" ? speedButtons : [];
       },
       createElement(tag) {
-        return makeElement(tag);
+        const element = makeElement(tag);
+        element.ownerDocument = context.document;
+        return element;
       },
     },
   };
+
+  [...elements.values(), ...speedButtons].forEach((element) => {
+    element.ownerDocument = context.document;
+  });
 
   if (initialSave) {
     context.localStorage.store.set("tap-survivor-mvp-save-v2", JSON.stringify(initialSave));

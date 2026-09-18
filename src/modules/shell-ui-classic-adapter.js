@@ -216,10 +216,12 @@ export function createShellUiController({
     const panel = documentRef.createElement("div");
     panel.className = "relic-item available starting-weapon-panel";
     const copy = documentRef.createElement("span");
-    copy.innerHTML = `
-      <strong>MVP starting weapon</strong>
-      <span>Choose the first weapon for your next run.</span>
-    `;
+    const title = documentRef.createElement("strong");
+    title.textContent = "MVP starting weapon";
+    const description = documentRef.createElement("span");
+    description.textContent = "Choose the first weapon for your next run.";
+    copy.appendChild(title);
+    copy.appendChild(description);
 
     const select = documentRef.createElement("select");
     select.className = "starting-weapon-select";

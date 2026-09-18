@@ -377,7 +377,7 @@
       ui.menuRelicSlots.textContent = `Relic slots: ${slots}/${relicSlotLevels.length} unlocked. ${
         nextLevel ? `Next slot at tower level ${nextLevel}.` : "Maximum slots unlocked."
       }`;
-      ui.menuRelicInventory.innerHTML = "";
+      ui.menuRelicInventory.replaceChildren();
       const loadout = documentRef.createElement("div");
       loadout.className = "relic-loadout";
       loadout.appendChild(createCharacterPanel(save));
@@ -449,11 +449,9 @@
       setRelicBackground(button, relic);
       button.type = "button";
       button.setAttribute("aria-label", isUnlocked ? `View ${relic.name}` : `${relic.name} locked`);
-      button.innerHTML = `
-        <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
-        <span>${relic.name}</span>
-        ${isUnlocked ? "" : '<em class="relic-lock-badge">Locked</em>'}
-      `;
+      appendImage(documentRef, button, relicIconSrc(relic), "relic-icon");
+      appendText(documentRef, button, "span", relic.name);
+      if (!isUnlocked) appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
       button.addEventListener("click", () => {
         if (!isUnlocked) {
           showRelicLockedMessage();
@@ -465,7 +463,7 @@
     }
 
     function relicIconSrc(relic) {
-      return assetResolver.relicIcon(relic);
+      return safeAssetPath(assetResolver.relicIcon(relic));
     }
 
     function showRelicLockedMessage() {
@@ -491,7 +489,7 @@
       const canEquip = equippedRelics.length < slots;
       const skill = (content?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
       ui.menuRelicSlots.textContent = relic.name;
-      ui.menuRelicInventory.innerHTML = "";
+      ui.menuRelicInventory.replaceChildren();
 
       const detail = documentRef.createElement("div");
       detail.className = `relic-detail-screen ${relic.rarity === "green" ? "green-relic" : ""}`;
@@ -500,13 +498,16 @@
       detail.appendChild(preview);
       const copy = documentRef.createElement("div");
       copy.className = "relic-detail-copy";
-      copy.innerHTML = `
-        <span class="relic-slot-index">Selected relic</span>
-        <strong>${relic.name}</strong>
-        <p>${relic.description}</p>
-        ${relic.specialAbility ? `<p><strong>${relic.specialAbility.label}</strong>: ${relic.specialAbility.description}</p>` : ""}
-        ${skill ? `<p>Linked skill: ${skill.name}</p>` : ""}
-      `;
+      appendText(documentRef, copy, "span", "Selected relic", { className: "relic-slot-index" });
+      appendText(documentRef, copy, "strong", relic.name);
+      appendText(documentRef, copy, "p", relic.description);
+      if (relic.specialAbility) {
+        const ability = documentRef.createElement("p");
+        appendText(documentRef, ability, "strong", relic.specialAbility.label);
+        appendText(documentRef, ability, "span", `: ${relic.specialAbility.description}`);
+        copy.appendChild(ability);
+      }
+      if (skill) appendText(documentRef, copy, "p", `Linked skill: ${skill.name}`);
       detail.appendChild(copy);
 
       const actions = documentRef.createElement("div");
@@ -592,13 +593,11 @@
       const panel = documentRef.createElement("div");
       panel.className = "relic-character-panel";
       const playerSprite = content?.assets?.sprites?.player || "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
-      panel.innerHTML = `
-        <img class="relic-character-sprite" src="${playerSprite}" alt="" />
-        <span>
-          <strong>Character</strong>
-          <span>Tower level ${Math.max(1, save.towerFloor || 1)}</span>
-        </span>
-      `;
+      appendImage(documentRef, panel, safeAssetPath(playerSprite), "relic-character-sprite");
+      const copy = documentRef.createElement("span");
+      appendText(documentRef, copy, "strong", "Character");
+      appendText(documentRef, copy, "span", `Tower level ${Math.max(1, save.towerFloor || 1)}`);
+      panel.appendChild(copy);
       return panel;
     }
 
@@ -609,30 +608,24 @@
       slot.className = `relic-slot ${unlocked ? (relic ? "equipped" : "empty") : "locked"} ${relic?.rarity === "green" ? "green-relic" : ""}`;
       setRelicBackground(slot, relic);
       if (!unlocked) {
-        slot.innerHTML = `
-          <span class="relic-slot-index">Slot ${index + 1}</span>
-          <strong>Locked</strong>
-          <span>Unlocked at tower level ${unlockLevel}.</span>
-        `;
+        appendText(documentRef, slot, "span", `Slot ${index + 1}`, { className: "relic-slot-index" });
+        appendText(documentRef, slot, "strong", "Locked");
+        appendText(documentRef, slot, "span", `Unlocked at tower level ${unlockLevel}.`);
         return slot;
       }
       if (!relic) {
-        slot.innerHTML = `
-          <span class="relic-slot-index">Slot ${index + 1}</span>
-          <strong>Empty relic slot</strong>
-          <span>Equip an unlocked relic below.</span>
-        `;
+        appendText(documentRef, slot, "span", `Slot ${index + 1}`, { className: "relic-slot-index" });
+        appendText(documentRef, slot, "strong", "Empty relic slot");
+        appendText(documentRef, slot, "span", "Equip an unlocked relic below.");
         return slot;
       }
 
-      slot.innerHTML = `
-        <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
-        <span>
-          <span class="relic-slot-index">Slot ${index + 1}</span>
-          <strong>${relic.name}</strong>
-          <span>${relic.description}</span>
-        </span>
-      `;
+      appendImage(documentRef, slot, relicIconSrc(relic), "relic-icon");
+      const copy = documentRef.createElement("span");
+      appendText(documentRef, copy, "span", `Slot ${index + 1}`, { className: "relic-slot-index" });
+      appendText(documentRef, copy, "strong", relic.name);
+      appendText(documentRef, copy, "span", relic.description);
+      slot.appendChild(copy);
       const button = documentRef.createElement("button");
       button.textContent = "Unequip";
       button.addEventListener("click", () => {
@@ -677,8 +670,17 @@
   function createRelicImage(documentRef, relic, className = "relic-icon") {
     const image = documentRef.createElement("img");
     image.className = className;
-    image.src = relic?.iconSrc || "";
+    image.src = safeAssetPath(relic?.iconSrc);
     image.alt = "";
+    return image;
+  }
+
+  function appendImage(documentRef, parent, src, className) {
+    const image = documentRef.createElement("img");
+    image.className = className;
+    image.src = safeAssetPath(src);
+    image.alt = "";
+    parent.appendChild(image);
     return image;
   }
 
@@ -714,11 +716,17 @@
   }
 
   function clearRoot(root) {
-    if (typeof root.replaceChildren === "function") {
-      root.replaceChildren();
-      return;
+    root.replaceChildren();
+  }
+
+  function safeAssetPath(value) {
+    if (typeof value !== "string") return "";
+    const path = value.trim();
+    const pathname = path.split(/[?#]/, 1)[0];
+    if (pathname.startsWith("/") || pathname.includes(":")) return "";
+    if (pathname.split("/").some((segment) => !segment || segment === "." || segment === "..")) {
+      return "";
     }
-    root.innerHTML = "";
-    if (Array.isArray(root.children)) root.children.length = 0;
+    return path;
   }
 })();

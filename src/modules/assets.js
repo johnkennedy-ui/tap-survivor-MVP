@@ -22,6 +22,17 @@ export const MODULE_NATIVE_ASSET_RESOLVER_LOW_LEVEL_SLOTS = Object.freeze([
 
 const DEFAULT_SKILL_ICON = "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
 
+function safeAssetPath(value) {
+  if (typeof value !== "string") return "";
+  const path = value.trim();
+  const pathname = path.split(/[?#]/, 1)[0];
+  if (pathname.startsWith("/") || pathname.includes(":")) return "";
+  if (pathname.split("/").some((segment) => !segment || segment === "." || segment === "..")) {
+    return "";
+  }
+  return path;
+}
+
 export function createAssetResolver(options = {}) {
   const resolvedOptions = requireObject(options, "options");
   const assetDefs = requireObject(
@@ -30,12 +41,12 @@ export function createAssetResolver(options = {}) {
   );
   const sprites = assetDefs.sprites || {};
   const fallbackSkillIcon =
-    resolvedOptions.fallbackSkillIcon || sprites.ui?.quest || DEFAULT_SKILL_ICON;
+    safeAssetPath(resolvedOptions.fallbackSkillIcon || sprites.ui?.quest) || DEFAULT_SKILL_ICON;
 
   function spriteSource(definition) {
-    if (typeof definition === "string") return definition;
+    if (typeof definition === "string") return safeAssetPath(definition);
     if (definition && typeof definition === "object") {
-      return definition.src || definition.path || definition.iconSrc || "";
+      return safeAssetPath(definition.src || definition.path || definition.iconSrc);
     }
     return "";
   }
@@ -46,7 +57,7 @@ export function createAssetResolver(options = {}) {
 
   function weaponIcon(weaponId) {
     const definition = weaponSprite(weaponId);
-    return definition?.iconSrc || spriteSource(definition) || fallbackSkillIcon;
+    return safeAssetPath(definition?.iconSrc) || spriteSource(definition) || fallbackSkillIcon;
   }
 
   function runUpgradeSprite(upgradeId) {
@@ -56,15 +67,15 @@ export function createAssetResolver(options = {}) {
   function runUpgradeIcon(upgradeId) {
     const definition = runUpgradeSprite(upgradeId);
     return (
-      sprites.runUpgradeIcons?.[upgradeId] ||
-      definition?.iconSrc ||
+      safeAssetPath(sprites.runUpgradeIcons?.[upgradeId]) ||
+      safeAssetPath(definition?.iconSrc) ||
       spriteSource(definition) ||
       fallbackSkillIcon
     );
   }
 
   function relicIcon(relic) {
-    return relic?.iconPath || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon;
+    return safeAssetPath(relic?.iconPath) || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon;
   }
 
   function choiceIconDefinition(choice) {

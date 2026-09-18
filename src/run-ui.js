@@ -52,17 +52,23 @@
       const game = getGame();
       const save = getSave();
       if (!game) return;
-      ui.runStats.innerHTML = `
-          <p>Result: ${reason}</p>
-          <p>Tower floor: ${game.towerFloor}</p>
-          <p>Time survived: ${formatTime(game.elapsed)}</p>
-          <p>Enemies defeated: ${game.kills}</p>
-          <p>Level reached: ${game.player.level}</p>
-          <p>XP collected: ${game.xpCollected}</p>
-          <p>Coins banked: ${save.coins}</p>
-          <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
-          <p>Quest Points: ${save.questPoints} available</p>
-        `;
+      ui.runStats.replaceChildren(
+        ...[
+          `Result: ${reason}`,
+          `Tower floor: ${game.towerFloor}`,
+          `Time survived: ${formatTime(game.elapsed)}`,
+          `Enemies defeated: ${game.kills}`,
+          `Level reached: ${game.player.level}`,
+          `XP collected: ${game.xpCollected}`,
+          `Coins banked: ${save.coins}`,
+          `Laser damage dealt: ${Math.floor(game.laserDamage)}`,
+          `Quest Points: ${save.questPoints} available`,
+        ].map((text) => {
+          const line = ui.runStats.ownerDocument.createElement("p");
+          line.textContent = text;
+          return line;
+        })
+      );
       ui.endScreen.classList.remove("hidden");
     }
 
