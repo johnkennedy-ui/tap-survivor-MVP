@@ -1,6 +1,10 @@
 import { createBrowserSpriteSystem } from "../src/app/browser-sprite-system.js";
 import { createAssetResolver } from "../src/modules/assets.js";
 import { createRunUi } from "../src/modules/run-ui.js";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 function check(name, pass) {
   console.log(`${pass ? "PASS" : "FAIL"} ${name}`);
@@ -14,10 +18,21 @@ const hostilePaths = [
   "data:image/png;base64,AAAA",
   "blob:example",
   "assets/../outside.png",
+  "assets/%2e%2e/outside.png",
+  String.raw`\\\\example.invalid\\sprite.png`,
+  "assets/ui/\u0000icon.png",
 ];
 const pathResolver = createAssetResolver({ assetDefs: {} });
-check("local asset paths remain available", pathResolver.spriteSource("assets/ui/icon.png?v=1") === "assets/ui/icon.png?v=1" && pathResolver.spriteSource("fixture.png") === "fixture.png");
-check("hostile asset paths are rejected", hostilePaths.every((path) => pathResolver.spriteSource(path) === ""));
+check(
+  "local asset paths and query strings remain available",
+  pathResolver.spriteSource("assets/ui/icon.png?v=1&variant=basic") ===
+    "assets/ui/icon.png?v=1&variant=basic" &&
+    pathResolver.spriteSource("fixture.png") === "fixture.png"
+);
+check(
+  "hostile asset paths are rejected",
+  hostilePaths.every((path) => pathResolver.spriteSource(path) === "")
+);
 
 const resolver = createAssetResolver({
   assetDefs: {
@@ -27,8 +42,14 @@ const resolver = createAssetResolver({
     },
   },
 });
-check("asset resolver falls back after hostile content paths", resolver.weaponIcon("hostile").startsWith("assets/"));
-check("relic icon rejects hostile save/content path", resolver.relicIcon({ iconPath: "data:text/html,x" }).startsWith("assets/"));
+check(
+  "asset resolver falls back after hostile content paths",
+  resolver.weaponIcon("hostile").startsWith("assets/")
+);
+check(
+  "relic icon rejects hostile save/content path",
+  resolver.relicIcon({ iconPath: "data:text/html,x" }).startsWith("assets/")
+);
 
 const assignedImageSources = [];
 const spriteSystem = createBrowserSpriteSystem({
@@ -43,8 +64,18 @@ const spriteSystem = createBrowserSpriteSystem({
     },
   },
 });
-spriteSystem.loadSprites({ weapons: { hostile: "javascript:alert(1)", local: "assets/ui/icon.png" } });
-check("sprite loader assigns only validated local paths", assignedImageSources.length === 1 && assignedImageSources[0] === "assets/ui/icon.png");
+spriteSystem.loadSprites({
+  weapons: {
+    hostile: "javascript:alert(1)",
+    hostileBackslash: String.raw`\\\\example.invalid\\sprite.png`,
+    hostileTraversal: "assets/%2e%2e/outside.png",
+    local: "assets/ui/icon.png",
+  },
+});
+check(
+  "sprite loader assigns only validated local paths",
+  assignedImageSources.length === 1 && assignedImageSources[0] === "assets/ui/icon.png"
+);
 
 const documentRef = {
   createElement(tagName) {
@@ -68,13 +99,76 @@ const runStats = {
 createRunUi({
   ui: { endScreen: { classList: { remove() {} } }, runStats },
   formatTime: () => "0:00",
-  getGame: () => ({ elapsed: 0, enemies: [], kills: 0, laserDamage: 0, player: { level: 1 }, towerFloor: 1, xpCollected: 0 }),
+  getGame: () => ({
+    elapsed: 0,
+    enemies: [],
+    kills: 0,
+    laserDamage: 0,
+    player: { level: 1 },
+    towerFloor: 1,
+    xpCollected: 0,
+  }),
   getSave: () => ({ coins: 0, questPoints: 0 }),
   getGameSpeed: () => 1,
   maxEquippedWeapons: () => 1,
   renderDebug() {},
 }).showEndScreen('<img src=x onerror="alert(1)">');
-check("hostile runtime strings remain text nodes", runStats.children[0]?.textContent.includes("<img src=x onerror"));
+check(
+  "hostile runtime strings remain text nodes",
+  runStats.children[0]?.textContent.includes("<img src=x onerror")
+);
+
+const root = fileURLToPath(new URL("..", import.meta.url));
+const fixtureParent = join(root, ".agent");
+mkdirSync(fixtureParent, { recursive: true });
+[
+  [
+    "widened script source",
+    (fixtureRoot) =>
+      mutateIndex(fixtureRoot, "script-src 'self'", "script-src 'self' 'unsafe-inline'"),
+  ],
+  [
+    "duplicate CSP directive",
+    (fixtureRoot) =>
+      mutateIndex(fixtureRoot, "script-src 'self';", "script-src 'self'; script-src 'self';"),
+  ],
+  [
+    "Function call without new",
+    (fixtureRoot) => writeFixtureSource(fixtureRoot, "Function('return 1')"),
+  ],
+  ["network primitive", (fixtureRoot) => writeFixtureSource(fixtureRoot, "fetch('/fixture')")],
+  ["HTML sink", (fixtureRoot) => writeFixtureUiSource(fixtureRoot, "node.innerHTML = value")],
+].forEach(([name, mutate]) => {
+  const fixtureRoot = mkdtempSync(join(fixtureParent, "browser-security-"));
+  try {
+    cpSync(join(root, "src"), join(fixtureRoot, "src"), { recursive: true });
+    writeFileSync(join(fixtureRoot, "index.html"), readFileSync(join(root, "index.html")));
+    mutate(fixtureRoot);
+    const result = spawnSync(
+      process.execPath,
+      [join(root, "scripts/check-browser-security.mjs"), fixtureRoot],
+      {
+        encoding: "utf8",
+      }
+    );
+    check(`guard rejects ${name}`, result.status !== 0);
+  } finally {
+    rmSync(fixtureRoot, { force: true, recursive: true });
+  }
+});
 
 if (process.exitCode) process.exit(process.exitCode);
 console.log("Browser security smoke passed.");
+
+function mutateIndex(fixtureRoot, before, after) {
+  const indexPath = join(fixtureRoot, "index.html");
+  writeFileSync(indexPath, readFileSync(indexPath, "utf8").replace(before, after));
+}
+
+function writeFixtureSource(fixtureRoot, source) {
+  writeFileSync(join(fixtureRoot, "src", "browser-security-fixture.js"), source);
+}
+
+function writeFixtureUiSource(fixtureRoot, source) {
+  writeFileSync(join(fixtureRoot, "src", "modules", "run-ui.js"), source);
+}

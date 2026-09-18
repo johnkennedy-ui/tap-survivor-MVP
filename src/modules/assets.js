@@ -26,8 +26,26 @@ function safeAssetPath(value) {
   if (typeof value !== "string") return "";
   const path = value.trim();
   const pathname = path.split(/[?#]/, 1)[0];
-  if (pathname.startsWith("/") || pathname.includes(":")) return "";
-  if (pathname.split("/").some((segment) => !segment || segment === "." || segment === "..")) {
+  if (
+    !pathname ||
+    pathname.startsWith("/") ||
+    pathname.includes(":") ||
+    /[\\\\\u0000-\u001f\u007f]/.test(path)
+  ) {
+    return "";
+  }
+  const segments = pathname.split("/");
+  if (
+    segments.some((segment) => {
+      if (!segment) return true;
+      try {
+        const decoded = decodeURIComponent(segment);
+        return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+      } catch {
+        return true;
+      }
+    })
+  ) {
     return "";
   }
   return path;
@@ -75,7 +93,9 @@ export function createAssetResolver(options = {}) {
   }
 
   function relicIcon(relic) {
-    return safeAssetPath(relic?.iconPath) || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon;
+    return (
+      safeAssetPath(relic?.iconPath) || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon
+    );
   }
 
   function choiceIconDefinition(choice) {

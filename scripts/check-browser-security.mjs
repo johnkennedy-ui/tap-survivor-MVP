@@ -1,20 +1,23 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = process.argv[2]
+  ? resolve(process.argv[2])
+  : fileURLToPath(new URL("..", import.meta.url));
 const failures = [];
-const expectedDirectives = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self'",
-  "media-src 'self'",
-  "font-src 'self'",
-  "connect-src 'self'",
-  "object-src 'none'",
-  "base-uri 'none'",
-  "form-action 'none'",
-];
+const expectedDirectives = new Map([
+  ["default-src", ["'self'"]],
+  ["script-src", ["'self'"]],
+  ["style-src", ["'self'", "'unsafe-inline'"]],
+  ["img-src", ["'self'"]],
+  ["media-src", ["'self'"]],
+  ["font-src", ["'self'"]],
+  ["connect-src", ["'self'"]],
+  ["object-src", ["'none'"]],
+  ["base-uri", ["'none'"]],
+  ["form-action", ["'none'"]],
+]);
 const uiSources = [
   "src/modules/run-lifecycle.js",
   "src/modules/ui-progression.js",
@@ -26,7 +29,7 @@ const uiSources = [
 ];
 const forbiddenRuntimePatterns = [
   { name: "eval", pattern: /\beval\s*\(/ },
-  { name: "new Function", pattern: /\bnew\s+Function\s*\(/ },
+  { name: "Function constructor", pattern: /\b(?:new\s+)?Function\s*\(/ },
   { name: "document.write", pattern: /\bdocument\.write\s*\(/ },
   { name: "string setTimeout", pattern: /\bsetTimeout\s*\(\s*["'`]/ },
   { name: "string setInterval", pattern: /\bsetInterval\s*\(\s*["'`]/ },
@@ -38,18 +41,20 @@ const forbiddenRuntimePatterns = [
 ];
 
 const indexHtml = readFileSync(join(root, "index.html"), "utf8");
-const cspMatch = indexHtml.match(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"\s*\/?\s*>/i);
-if (!cspMatch) {
-  failures.push("index.html must contain a CSP meta tag");
+const cspMetaTags = (indexHtml.match(/<meta\b[^>]*>/gi) || []).filter(
+  (tag) => readMetaAttribute(tag, "http-equiv")?.toLowerCase() === "content-security-policy"
+);
+if (cspMetaTags.length !== 1) {
+  failures.push("index.html must contain exactly one CSP meta tag");
 } else {
-  const policy = cspMatch[1];
-  expectedDirectives.forEach((directive) => {
-    if (!policy.includes(directive)) failures.push(`CSP missing ${directive}`);
-  });
-  ["unsafe-eval", "*", "http:", "https:", "data:", "blob:"].forEach((forbidden) => {
-    if (policy.includes(forbidden)) failures.push(`CSP must not allow ${forbidden}`);
-  });
-  if (indexHtml.indexOf(cspMatch[0]) > indexHtml.indexOf("<link")) {
+  const cspMetaTag = cspMetaTags[0];
+  const policy = readMetaAttribute(cspMetaTag, "content");
+  if (!policy) {
+    failures.push("CSP meta tag must have a content value");
+  } else {
+    checkCsp(policy, failures);
+  }
+  if (indexHtml.indexOf(cspMetaTag) > indexHtml.indexOf("<link")) {
     failures.push("CSP meta tag must precede resource elements");
   }
 }
@@ -79,6 +84,43 @@ if (failures.length) {
 console.log("PASS CSP and referrer policy are restrictive");
 console.log("PASS active UI modules use DOM/textContent rendering");
 console.log("PASS application source has no dynamic-code or network primitives");
+
+function readMetaAttribute(tag, name) {
+  const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i"));
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? "";
+}
+
+function checkCsp(policy, errors) {
+  const actualDirectives = new Map();
+  policy.split(";").forEach((rawDirective) => {
+    const tokens = rawDirective.trim().split(/\s+/);
+    if (!rawDirective.trim()) return;
+    const [name, ...sources] = tokens;
+    if (actualDirectives.has(name)) {
+      errors.push(`CSP contains duplicate ${name} directive`);
+      return;
+    }
+    actualDirectives.set(name, sources);
+  });
+
+  actualDirectives.forEach((sources, name) => {
+    const expectedSources = expectedDirectives.get(name);
+    if (!expectedSources) {
+      errors.push(`CSP contains unapproved ${name} directive`);
+      return;
+    }
+    if (!sameSourceSet(sources, expectedSources)) {
+      errors.push(`CSP ${name} must exactly match approved sources`);
+    }
+  });
+  expectedDirectives.forEach((expectedSources, name) => {
+    if (!actualDirectives.has(name)) errors.push(`CSP missing ${name}`);
+  });
+}
+
+function sameSourceSet(actual, expected) {
+  return actual.length === expected.length && actual.every((source) => expected.includes(source));
+}
 
 function forEachSourceFile(directory, visit) {
   readdirSync(directory, { withFileTypes: true }).forEach((entry) => {

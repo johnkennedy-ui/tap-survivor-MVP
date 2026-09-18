@@ -27,9 +27,8 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
   function registerSprite(id, definition) {
     const src = spriteSource(definition);
     if (!id || !src) return false;
-    const config = definition && typeof definition === "object" && !Array.isArray(definition)
-      ? definition
-      : {};
+    const config =
+      definition && typeof definition === "object" && !Array.isArray(definition) ? definition : {};
     spriteConfigs.set(id, config);
     if (typeof ImageCtor !== "function") return false;
     const image = new ImageCtor();
@@ -73,9 +72,8 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
   function registerSpriteSheet(id, definition) {
     const src = spriteSource(definition);
     if (!id || !src) return false;
-    const config = definition && typeof definition === "object" && !Array.isArray(definition)
-      ? definition
-      : {};
+    const config =
+      definition && typeof definition === "object" && !Array.isArray(definition) ? definition : {};
     spriteSheets.set(id, { config, image: null, src });
     diagnostics?.spriteRegistrations?.push?.({
       id: `spriteSheet:${id}`,
@@ -217,9 +215,10 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
     const bounds = spriteSourceBounds(image, config, frameIndex);
     const rasterWidth = Math.max(1, Math.ceil(numberValue(options.rasterWidth, width)));
     const rasterHeight = Math.max(1, Math.ceil(numberValue(options.rasterHeight, height)));
-    const source = options.trim === false
-      ? null
-      : rasterizedSprite(id, image, rasterWidth, rasterHeight, config, frameIndex, bounds);
+    const source =
+      options.trim === false
+        ? null
+        : rasterizedSprite(id, image, rasterWidth, rasterHeight, config, frameIndex, bounds);
     const previousAlpha = context.globalAlpha;
     let drawn = false;
     try {
@@ -228,7 +227,8 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
       context.rotate?.(rotation);
       context.scale?.(options.flipX ? -1 : 1, options.flipY ? -1 : 1);
       if (Number.isFinite(Number(options.alpha))) {
-        context.globalAlpha = (Number.isFinite(previousAlpha) ? previousAlpha : 1) * clampValue(options.alpha, 0, 1);
+        context.globalAlpha =
+          (Number.isFinite(previousAlpha) ? previousAlpha : 1) * clampValue(options.alpha, 0, 1);
       }
       if (source) {
         context.drawImage(source, -width / 2, -height / 2, width, height);
@@ -280,11 +280,17 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
     const rows = Math.max(1, Math.floor(numberValue(sheet.config?.rows, 1)));
     const frame = selectedSpriteSheetFrame(animation, options.time);
     const row = Number(animation.row);
-    if (!Number.isInteger(row) || row < 0 || row >= rows || frame < 0 || frame >= columns) return null;
+    if (!Number.isInteger(row) || row < 0 || row >= rows || frame < 0 || frame >= columns)
+      return null;
 
     const frameWidth = (image.naturalWidth || image.width) / columns;
     const frameHeight = (image.naturalHeight || image.height) / rows;
-    if (!Number.isFinite(frameWidth) || !Number.isFinite(frameHeight) || frameWidth <= 0 || frameHeight <= 0) {
+    if (
+      !Number.isFinite(frameWidth) ||
+      !Number.isFinite(frameHeight) ||
+      frameWidth <= 0 ||
+      frameHeight <= 0
+    ) {
       return null;
     }
 
@@ -328,7 +334,8 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
       context.rotate?.(rotation);
       context.scale?.(options.flipX ? -1 : 1, options.flipY ? -1 : 1);
       if (Number.isFinite(Number(options.alpha))) {
-        context.globalAlpha = (Number.isFinite(previousAlpha) ? previousAlpha : 1) * clampValue(options.alpha, 0, 1);
+        context.globalAlpha =
+          (Number.isFinite(previousAlpha) ? previousAlpha : 1) * clampValue(options.alpha, 0, 1);
       }
       context.imageSmoothingEnabled = false;
       context.drawImage(
@@ -375,10 +382,26 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
       ? Math.max(0, time)
       : Math.max(0, numberValue(globalRef?.performance?.now?.(), 0) / 1000);
     const frameIndex = Math.floor(elapsed * fps);
-    return Number(frames[animation.loop === false ? Math.min(frames.length - 1, frameIndex) : frameIndex % frames.length]);
+    return Number(
+      frames[
+        animation.loop === false
+          ? Math.min(frames.length - 1, frameIndex)
+          : frameIndex % frames.length
+      ]
+    );
   }
 
-  function recordSpriteDraw({ animationId, frameIndex, id, image, row, sheetId, source, state, success }) {
+  function recordSpriteDraw({
+    animationId,
+    frameIndex,
+    id,
+    image,
+    row,
+    sheetId,
+    source,
+    state,
+    success,
+  }) {
     diagnostics?.spriteDraws?.push?.({
       animationId,
       frameIndex,
@@ -397,7 +420,9 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
 
   function rasterizedSprite(id, image, width, height, config, frameIndex, bounds) {
     const frames = Array.isArray(config?.frames) ? config.frames : [];
-    const transparentColor = Array.isArray(config?.transparentColor) ? config.transparentColor : null;
+    const transparentColor = Array.isArray(config?.transparentColor)
+      ? config.transparentColor
+      : null;
     if (!frames.length && !transparentColor) return null;
     const key = `${id}:${width}x${height}:${frameIndex}`;
     if (rasterCache.has(key)) return rasterCache.get(key);
@@ -428,7 +453,12 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
 
   function applyTransparentColor(rasterContext, width, height, config) {
     const color = config?.transparentColor;
-    if (!Array.isArray(color) || color.length < 3 || typeof rasterContext.getImageData !== "function") return;
+    if (
+      !Array.isArray(color) ||
+      color.length < 3 ||
+      typeof rasterContext.getImageData !== "function"
+    )
+      return;
     try {
       const pixels = rasterContext.getImageData(0, 0, width, height);
       const data = pixels.data;
@@ -460,7 +490,8 @@ export function createBrowserSpriteSystem({ assetDefs = {}, canvas, globalRef })
   function spriteSourceBounds(image, config, frameIndex) {
     const frames = Array.isArray(config?.frames) ? config.frames : [];
     if (frames[frameIndex]) return normalizeBounds(frames[frameIndex], image);
-    if (config && (config.x !== undefined || config.y !== undefined)) return normalizeBounds(config, image);
+    if (config && (config.x !== undefined || config.y !== undefined))
+      return normalizeBounds(config, image);
     return normalizeBounds({}, image);
   }
 
@@ -511,8 +542,26 @@ function safeAssetPath(value) {
   if (typeof value !== "string") return "";
   const path = value.trim();
   const pathname = path.split(/[?#]/, 1)[0];
-  if (pathname.startsWith("/") || pathname.includes(":")) return "";
-  if (pathname.split("/").some((segment) => !segment || segment === "." || segment === "..")) {
+  if (
+    !pathname ||
+    pathname.startsWith("/") ||
+    pathname.includes(":") ||
+    /[\\\\\u0000-\u001f\u007f]/.test(path)
+  ) {
+    return "";
+  }
+  const segments = pathname.split("/");
+  if (
+    segments.some((segment) => {
+      if (!segment) return true;
+      try {
+        const decoded = decodeURIComponent(segment);
+        return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+      } catch {
+        return true;
+      }
+    })
+  ) {
     return "";
   }
   return path;
