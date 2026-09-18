@@ -37,6 +37,9 @@ function parseArgs(argv) {
   }
 
   if (!commandParts.length) throw new Error("missing command");
+  if (commandParts.length > 1 && commandParts.some((part) => /^[;&|<>]+$/.test(part))) {
+    throw new Error("Shell operators are unsupported; run each command separately.");
+  }
   const commandArgv = commandParts.length === 1 ? splitCommand(commandParts[0]) : commandParts;
   if (!commandArgv.length) throw new Error("missing command");
   return {
@@ -66,6 +69,10 @@ function splitCommand(command) {
       continue;
     }
 
+    if (/[;&|<>]/.test(char)) {
+      throw new Error("Shell operators are unsupported; run each command separately.");
+    }
+
     if (/\s/.test(char)) {
       if (current) {
         parts.push(current);
@@ -77,6 +84,7 @@ function splitCommand(command) {
     current += char;
   }
 
+  if (quote) throw new Error("Unterminated quote in command.");
   if (current) parts.push(current);
   return parts;
 }
@@ -116,12 +124,16 @@ function closeLog() {
 }
 
 function createRunDir(command) {
-  const stamp = new Date().toISOString().replaceAll(":", "").replace(/\.\d{3}Z$/, "Z");
-  const slug = command
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 64) || "command";
+  const stamp = new Date()
+    .toISOString()
+    .replaceAll(":", "")
+    .replace(/\.\d{3}Z$/, "Z");
+  const slug =
+    command
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 64) || "command";
   let candidate = `${runsRoot}/${stamp}_${slug}`;
   let suffix = 1;
   while (existsSync(candidate)) {
@@ -295,7 +307,7 @@ child.on("close", (code, signal) => {
   closeLog();
   const resolvedCode = exitInfo?.code ?? code;
   const resolvedSignal = exitInfo?.signal ?? signal;
-  const exitCode = state.timed_out ? 124 : resolvedCode ?? (resolvedSignal ? 1 : 0);
+  const exitCode = state.timed_out ? 124 : (resolvedCode ?? (resolvedSignal ? 1 : 0));
   const status = exitCode === 0 ? "passed" : "failed";
   appendLog(logPath, `\n# ended_at: ${new Date().toISOString()}\n`);
   appendLog(logPath, `# exit_code: ${exitCode}\n`);
