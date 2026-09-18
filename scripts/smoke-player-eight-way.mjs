@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { installProductionBrowserWitnesses } from "./production-browser-witness.mjs";
 
 import { createBrowserRenderingAdapters } from "../src/app/browser-rendering-adapters.js";
 import { createBrowserSpriteSystem } from "../src/app/browser-sprite-system.js";
@@ -43,6 +44,7 @@ for (const { id, row } of fixture.headings) {
 
 verifySectorBoundaries();
 verifyRunClocks();
+verifyProductionVisibilityWitness();
 for (const path of ["native", "browser"]) {
   verifyActualFrames(path);
   verifyFallbacks(path);
@@ -51,6 +53,68 @@ for (const path of ["native", "browser"]) {
 console.log(
   "Player eight-way PASS: exact approved RGBA atlas; 128 real frame crops across native/browser render paths; sector boundaries, tick-to-draw clocks, idle/pause/input gates, action/static/shape fallbacks, lazy loading and non-mutation."
 );
+
+export function verifyProductionVisibilityWitness(install = installProductionBrowserWitnesses) {
+  const witness = install({
+    CanvasRenderingContext2D: class TestCanvasContext {
+      drawImage() {}
+    },
+    document: {},
+  });
+  const base = {
+    dest: { width: 70, height: 70 },
+    visibleRect: { x: 10, y: 10, width: 70, height: 70 },
+    source: { naturalWidth: fixture.width, naturalHeight: fixture.height },
+    intersectsCanvas: true,
+    globalAlpha: 1,
+    globalCompositeOperation: "source-over",
+    pixelDelta: 123,
+    sequence: 1,
+    threw: false,
+  };
+  const entry = (id, changes = {}) => ({
+    ...base,
+    id,
+    kind: witness.kindForSpriteId(id),
+    ...changes,
+  });
+  const sheetId = `spriteSheet:${fixture.sheetId}`;
+  for (const id of ["player", "player:cast_orb", sheetId]) {
+    assert.equal(witness.summarizeCanvasWitness(entry(id)).visibleSpriteProof, true, id);
+  }
+  for (const id of [
+    "spriteSheet:directional_enemy",
+    "spriteSheet:unknown",
+    "enemy:test",
+    "background:tower_floor",
+    "",
+  ]) {
+    assert.equal(witness.summarizeCanvasWitness(entry(id)).visibleSpriteProof, false, id);
+  }
+  for (const [name, changes] of [
+    ["transparent", { globalAlpha: 0 }],
+    ["offscreen", { intersectsCanvas: false }],
+    ["invalid source", { source: { naturalWidth: 0, naturalHeight: 0 } }],
+    ["empty destination", { dest: { width: 0, height: 0 } }],
+    ["erase operation", { globalCompositeOperation: "destination-out" }],
+    ["no current pixels", { pixelDelta: 0 }],
+    ["clipped", { visibleRect: { x: 0, y: 0, width: 20, height: 20 } }],
+  ]) {
+    assert.equal(
+      witness.summarizeCanvasWitness(entry(sheetId, changes)).visibleSpriteProof,
+      false,
+      name
+    );
+  }
+  witness.retainCanvasWitness(entry(sheetId));
+  assert.equal(witness.diagnostics.playerCanvasVisible, true);
+  witness.retainCanvasWitness(entry("background:tower_floor", { sequence: 2 }));
+  assert.equal(witness.diagnostics.playerCanvasVisible, false, "later background invalidates");
+  witness.retainCanvasWitness(entry(sheetId, { sequence: 3, pixelDelta: 0 }));
+  assert.equal(witness.diagnostics.playerCanvasVisible, false, "no historical success latch");
+  witness.retainCanvasWitness(entry(sheetId, { sequence: 4 }));
+  assert.equal(witness.diagnostics.playerCanvasVisible, true, "new current pixel proof");
+}
 
 function freshGame() {
   const save = {
