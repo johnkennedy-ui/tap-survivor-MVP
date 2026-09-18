@@ -121,24 +121,53 @@ check(
 const root = fileURLToPath(new URL("..", import.meta.url));
 const fixtureParent = join(root, ".agent");
 mkdirSync(fixtureParent, { recursive: true });
+const knownGoodResult = spawnSync(
+  process.execPath,
+  [join(root, "scripts/check-browser-security.mjs")],
+  {
+    encoding: "utf8",
+  }
+);
+check(
+  "guard accepts known-good source fixture",
+  knownGoodResult.status === 0 &&
+    knownGoodResult.stdout.includes("PASS CSP and referrer policy are restrictive")
+);
 [
   [
     "widened script source",
     (fixtureRoot) =>
       mutateIndex(fixtureRoot, "script-src 'self'", "script-src 'self' 'unsafe-inline'"),
+    "CSP script-src must exactly match approved sources",
   ],
   [
     "duplicate CSP directive",
     (fixtureRoot) =>
       mutateIndex(fixtureRoot, "script-src 'self';", "script-src 'self'; script-src 'self';"),
+    "CSP contains duplicate script-src directive",
+  ],
+  [
+    "duplicate CSP source",
+    (fixtureRoot) =>
+      mutateIndex(fixtureRoot, "style-src 'self' 'unsafe-inline'", "style-src 'self' 'self'"),
+    "CSP style-src must exactly match approved sources",
   ],
   [
     "Function call without new",
     (fixtureRoot) => writeFixtureSource(fixtureRoot, "Function('return 1')"),
+    "src/browser-security-fixture.js contains Function constructor",
   ],
-  ["network primitive", (fixtureRoot) => writeFixtureSource(fixtureRoot, "fetch('/fixture')")],
-  ["HTML sink", (fixtureRoot) => writeFixtureUiSource(fixtureRoot, "node.innerHTML = value")],
-].forEach(([name, mutate]) => {
+  [
+    "network primitive",
+    (fixtureRoot) => writeFixtureSource(fixtureRoot, "fetch('/fixture')"),
+    "src/browser-security-fixture.js contains fetch",
+  ],
+  [
+    "HTML sink",
+    (fixtureRoot) => writeFixtureUiSource(fixtureRoot, "node.innerHTML = value"),
+    "src/modules/run-ui.js contains an HTML execution sink",
+  ],
+].forEach(([name, mutate, diagnostic]) => {
   const fixtureRoot = mkdtempSync(join(fixtureParent, "browser-security-"));
   try {
     cpSync(join(root, "src"), join(fixtureRoot, "src"), { recursive: true });
@@ -151,7 +180,10 @@ mkdirSync(fixtureParent, { recursive: true });
         encoding: "utf8",
       }
     );
-    check(`guard rejects ${name}`, result.status !== 0);
+    check(
+      `guard rejects ${name}`,
+      result.status === 1 && `${result.stdout}\n${result.stderr}`.includes(diagnostic)
+    );
   } finally {
     rmSync(fixtureRoot, { force: true, recursive: true });
   }

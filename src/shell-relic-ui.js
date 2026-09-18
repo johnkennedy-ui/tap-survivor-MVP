@@ -75,10 +75,21 @@
         item.textContent = `${row.label}: ${row.value}`;
         summary.appendChild(item);
       });
-      appendText(documentRef, summary, "div", `Can equip more: ${model.canEquipMore ? "Yes" : "No"}`, {
-        className: "shell-relic-summary-row",
-      });
-      appendBonusRows(documentRef, summary, "Run-start bonuses", model.bonuses?.startingRunUpgradeTiers);
+      appendText(
+        documentRef,
+        summary,
+        "div",
+        `Can equip more: ${model.canEquipMore ? "Yes" : "No"}`,
+        {
+          className: "shell-relic-summary-row",
+        }
+      );
+      appendBonusRows(
+        documentRef,
+        summary,
+        "Run-start bonuses",
+        model.bonuses?.startingRunUpgradeTiers
+      );
       appendBonusRows(documentRef, summary, "Max-tier bonuses", model.bonuses?.maxTierBonuses);
       appendModifierRows(documentRef, summary, model.specialModifiers);
       return summary;
@@ -94,7 +105,8 @@
         documentRef,
         action,
         "span",
-        reward.description || "Spend 1 QP for a random locked relic, or 25 coins when all relics are owned."
+        reward.description ||
+          "Spend 1 QP for a random locked relic, or 25 coins when all relics are owned."
       );
       const button = documentRef.createElement("button");
       button.type = "button";
@@ -162,7 +174,9 @@
       const list = documentRef.createElement("section");
       list.className = "relic-icon-grid shell-relic-available";
       if (!model.availableRelics.length) {
-        appendText(documentRef, list, "div", "All relics are equipped.", { className: "relic-item locked" });
+        appendText(documentRef, list, "div", "All relics are equipped.", {
+          className: "relic-item locked",
+        });
         return list;
       }
       model.availableRelics.forEach((relic) => {
@@ -184,8 +198,10 @@
         setRelicBackground(button, relic);
         button.appendChild(createRelicImage(documentRef, relic));
         appendText(documentRef, button, "span", relic.name);
-        if (!relic.unlocked) appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
-        if (relic.linkedSkill) appendText(documentRef, button, "span", `Linked skill: ${relic.linkedSkill.name}`);
+        if (!relic.unlocked)
+          appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
+        if (relic.linkedSkill)
+          appendText(documentRef, button, "span", `Linked skill: ${relic.linkedSkill.name}`);
         button.addEventListener("click", () => {
           if (relic.unlocked) onSelect?.(relic, model);
           else {
@@ -208,11 +224,18 @@
       appendText(documentRef, detail, "strong", relic.name);
       appendText(documentRef, detail, "p", relic.description);
       if (relic.specialAbility) {
-        appendText(documentRef, detail, "p", `${relic.specialAbility.label}: ${relic.specialAbility.description}`, {
-          className: "relic-special-ability",
-        });
+        appendText(
+          documentRef,
+          detail,
+          "p",
+          `${relic.specialAbility.label}: ${relic.specialAbility.description}`,
+          {
+            className: "relic-special-ability",
+          }
+        );
       }
-      if (relic.linkedSkill) appendText(documentRef, detail, "p", `Linked skill: ${relic.linkedSkill.name}`);
+      if (relic.linkedSkill)
+        appendText(documentRef, detail, "p", `Linked skill: ${relic.linkedSkill.name}`);
 
       const actions = documentRef.createElement("div");
       actions.className = "relic-detail-actions";
@@ -281,7 +304,8 @@
     function createRelicPreview(relic) {
       const sprite = previewAdapter.runUpgradeSprite?.(relic.targetUpgradeId);
       const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
-      const source = previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || "";
+      const source =
+        previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || "";
       if (frames.length && source && previewAdapter.createCanvas && previewAdapter.createImage) {
         const canvas =
           previewAdapter.createCanvas({
@@ -300,7 +324,9 @@
     }
 
     function startAnimatedPreview({ canvas, frames, relic, source, sprite }) {
-      const context = previewAdapter.getContext?.(canvas, { willReadFrequently: true }) || canvas.getContext?.("2d", { willReadFrequently: true });
+      const context =
+        previewAdapter.getContext?.(canvas, { willReadFrequently: true }) ||
+        canvas.getContext?.("2d", { willReadFrequently: true });
       const image = previewAdapter.createImage?.({ relic, source, sprite });
       if (!context || !image) return false;
       let frameIndex = 0;
@@ -316,14 +342,25 @@
         context.imageSmoothingEnabled = false;
         previewAdapter.drawFrame?.({ canvas, context, frame, image, sprite });
         if (!previewAdapter.drawFrame) {
-          context.drawImage?.(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+          context.drawImage?.(
+            image,
+            frame.x,
+            frame.y,
+            frame.width,
+            frame.height,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
         }
         previewAdapter.applyTransparency?.({ canvas, context, sprite });
         timer = scheduler.setTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10)) || null;
       }
 
       const onLoad = () => drawFrame();
-      if (typeof image.addEventListener === "function") image.addEventListener("load", onLoad, { once: true });
+      if (typeof image.addEventListener === "function")
+        image.addEventListener("load", onLoad, { once: true });
       else previewAdapter.onImageLoad?.(image, onLoad) ?? onLoad();
       if ("src" in image) image.src = source;
       else previewAdapter.setImageSource?.(image, source);
@@ -411,7 +448,9 @@
     function createQuestCacheAction(save) {
       const cost = relicSystem.questCacheCost || 1;
       const fallbackCoins = relicSystem.questCacheFallbackCoins || 25;
-      const lockedRelicCount = relicDefs.filter((relic) => !save.unlockedRelics?.includes(relic.id)).length;
+      const lockedRelicCount = relicDefs.filter(
+        (relic) => !save.unlockedRelics?.includes(relic.id)
+      ).length;
       const action = documentRef.createElement("div");
       action.className = "quest-cache-action";
       const label = documentRef.createElement("strong");
@@ -451,7 +490,8 @@
       button.setAttribute("aria-label", isUnlocked ? `View ${relic.name}` : `${relic.name} locked`);
       appendImage(documentRef, button, relicIconSrc(relic), "relic-icon");
       appendText(documentRef, button, "span", relic.name);
-      if (!isUnlocked) appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
+      if (!isUnlocked)
+        appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
       button.addEventListener("click", () => {
         if (!isUnlocked) {
           showRelicLockedMessage();
@@ -487,7 +527,9 @@
       const slots = relicSystem.maxEquippedRelics(save);
       const equippedRelics = relicSystem.equippedRelics(save);
       const canEquip = equippedRelics.length < slots;
-      const skill = (content?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
+      const skill = (content?.runUpgrades || []).find(
+        (upgrade) => upgrade.id === relic.targetUpgradeId
+      );
       ui.menuRelicSlots.textContent = relic.name;
       ui.menuRelicInventory.replaceChildren();
 
@@ -563,7 +605,17 @@
         frameIndex += 1;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(
+          image,
+          frame.x,
+          frame.y,
+          frame.width,
+          frame.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
         applyPreviewTransparency(ctx, canvas.width, canvas.height, sprite);
         scheduler.animationSetTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10));
       }
@@ -580,7 +632,10 @@
         const pixels = ctx.getImageData(0, 0, width, height);
         const data = pixels.data;
         for (let index = 0; index < data.length; index += 4) {
-          const delta = Math.abs(data[index] - color[0]) + Math.abs(data[index + 1] - color[1]) + Math.abs(data[index + 2] - color[2]);
+          const delta =
+            Math.abs(data[index] - color[0]) +
+            Math.abs(data[index + 1] - color[1]) +
+            Math.abs(data[index + 2] - color[2]);
           if (delta <= tolerance) data[index + 3] = 0;
         }
         ctx.putImageData(pixels, 0, 0);
@@ -592,7 +647,9 @@
     function createCharacterPanel(save) {
       const panel = documentRef.createElement("div");
       panel.className = "relic-character-panel";
-      const playerSprite = content?.assets?.sprites?.player || "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
+      const playerSprite =
+        content?.assets?.sprites?.player ||
+        "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
       appendImage(documentRef, panel, safeAssetPath(playerSprite), "relic-character-sprite");
       const copy = documentRef.createElement("span");
       appendText(documentRef, copy, "strong", "Character");
@@ -650,7 +707,9 @@
       .filter(([, value]) => value)
       .sort(([left], [right]) => left.localeCompare(right))
       .forEach(([key, value]) => {
-        appendText(documentRef, parent, "div", `${label}: ${key} +${value}`, { className: "shell-relic-bonus-row" });
+        appendText(documentRef, parent, "div", `${label}: ${key} +${value}`, {
+          className: "shell-relic-bonus-row",
+        });
       });
   }
 
@@ -664,7 +723,11 @@
 
   function findRelic(model, relicId) {
     if (!relicId) return null;
-    return [...(model.equippedRelics || []), ...(model.availableRelics || [])].find((relic) => relic.id === relicId) || null;
+    return (
+      [...(model.equippedRelics || []), ...(model.availableRelics || [])].find(
+        (relic) => relic.id === relicId
+      ) || null
+    );
   }
 
   function createRelicImage(documentRef, relic, className = "relic-icon") {
@@ -699,18 +762,27 @@
 
   function setRelicBackground(element, relic) {
     if (!element?.style || !relic?.backgroundColor) return;
-    if (typeof element.style.setProperty === "function") element.style.setProperty("--relic-bg", relic.backgroundColor);
+    if (typeof element.style.setProperty === "function")
+      element.style.setProperty("--relic-bg", relic.backgroundColor);
     else element.style["--relic-bg"] = relic.backgroundColor;
   }
 
   function addClass(element, className) {
-    const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+    const current = new Set(
+      String(element.className || "")
+        .split(/\s+/)
+        .filter(Boolean)
+    );
     current.add(className);
     element.className = [...current].join(" ");
   }
 
   function removeClass(element, className) {
-    const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+    const current = new Set(
+      String(element.className || "")
+        .split(/\s+/)
+        .filter(Boolean)
+    );
     current.delete(className);
     element.className = [...current].join(" ");
   }
@@ -723,8 +795,26 @@
     if (typeof value !== "string") return "";
     const path = value.trim();
     const pathname = path.split(/[?#]/, 1)[0];
-    if (pathname.startsWith("/") || pathname.includes(":")) return "";
-    if (pathname.split("/").some((segment) => !segment || segment === "." || segment === "..")) {
+    if (
+      !pathname ||
+      pathname.startsWith("/") ||
+      pathname.includes(":") ||
+      /[\\\\\u0000-\u001f\u007f]/.test(path)
+    ) {
+      return "";
+    }
+    const segments = pathname.split("/");
+    if (
+      segments.some((segment) => {
+        if (!segment) return true;
+        try {
+          const decoded = decodeURIComponent(segment);
+          return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+        } catch {
+          return true;
+        }
+      })
+    ) {
       return "";
     }
     return path;

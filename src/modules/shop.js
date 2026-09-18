@@ -61,7 +61,9 @@ export function createShopSystem(options = {}) {
   }
 
   function isShopVisible() {
-    return !ui.shopModal?.classList.contains("hidden") || !ui.menuShopPanel?.classList.contains("hidden");
+    return (
+      !ui.shopModal?.classList.contains("hidden") || !ui.menuShopPanel?.classList.contains("hidden")
+    );
   }
 
   function renderShopList(container, coinHud, save) {
@@ -103,45 +105,45 @@ export function createShopSystem(options = {}) {
   }
 
   function renderShopItem(item, save) {
-      const tier = pricing.tierFor(item);
-      const maxed = tier >= item.maxTier;
-      const cost = pricing.costFor(item, tier);
-      const affordable = !maxed && save.coins >= cost;
-      const el = documentRef.createElement("div");
-      el.className = `shop-item ${affordable ? "available" : "locked"}`;
-      if (el.dataset) el.dataset.shopItemId = item.id;
-      else el.setAttribute?.("data-shop-item-id", item.id);
-      const iconContainer = documentRef.createElement("div");
-      iconContainer.className = "shop-item-icon";
-      const spritePath = safeAssetPath(item.spritePath);
-      if (spritePath) {
-        const sprite = documentRef.createElement("img");
-        sprite.className = "shop-item-sprite";
-        sprite.src = spritePath;
-        sprite.alt = "";
-        iconContainer.appendChild(sprite);
-      }
-      el.appendChild(iconContainer);
-      const copy = documentRef.createElement("div");
-      copy.className = "shop-item-copy";
-      appendTextElement(documentRef, copy, "strong", item.name);
-      appendTextElement(documentRef, copy, "span", item.description);
-      copy.appendChild(documentRef.createElement("br"));
-      appendTextElement(documentRef, copy, "span", `Tier: ${tier}/${item.maxTier}`);
-      copy.appendChild(documentRef.createElement("br"));
-      appendTextElement(
-        documentRef,
-        copy,
-        "span",
-        maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`
-      );
-      el.appendChild(copy);
-      const button = documentRef.createElement("button");
-      button.textContent = maxed ? "Maxed" : `Buy Tier ${tier + 1}`;
-      button.disabled = maxed || !affordable;
-      button.addEventListener("click", () => buyItem(item));
-      el.appendChild(button);
-      return el;
+    const tier = pricing.tierFor(item);
+    const maxed = tier >= item.maxTier;
+    const cost = pricing.costFor(item, tier);
+    const affordable = !maxed && save.coins >= cost;
+    const el = documentRef.createElement("div");
+    el.className = `shop-item ${affordable ? "available" : "locked"}`;
+    if (el.dataset) el.dataset.shopItemId = item.id;
+    else el.setAttribute?.("data-shop-item-id", item.id);
+    const iconContainer = documentRef.createElement("div");
+    iconContainer.className = "shop-item-icon";
+    const spritePath = safeAssetPath(item.spritePath);
+    if (spritePath) {
+      const sprite = documentRef.createElement("img");
+      sprite.className = "shop-item-sprite";
+      sprite.src = spritePath;
+      sprite.alt = "";
+      iconContainer.appendChild(sprite);
+    }
+    el.appendChild(iconContainer);
+    const copy = documentRef.createElement("div");
+    copy.className = "shop-item-copy";
+    appendTextElement(documentRef, copy, "strong", item.name);
+    appendTextElement(documentRef, copy, "span", item.description);
+    copy.appendChild(documentRef.createElement("br"));
+    appendTextElement(documentRef, copy, "span", `Tier: ${tier}/${item.maxTier}`);
+    copy.appendChild(documentRef.createElement("br"));
+    appendTextElement(
+      documentRef,
+      copy,
+      "span",
+      maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`
+    );
+    el.appendChild(copy);
+    const button = documentRef.createElement("button");
+    button.textContent = maxed ? "Maxed" : `Buy Tier ${tier + 1}`;
+    button.disabled = maxed || !affordable;
+    button.addEventListener("click", () => buyItem(item));
+    el.appendChild(button);
+    return el;
   }
 
   function openShop() {
@@ -248,8 +250,26 @@ function safeAssetPath(value) {
   if (typeof value !== "string") return "";
   const path = value.trim();
   const pathname = path.split(/[?#]/, 1)[0];
-  if (pathname.startsWith("/") || pathname.includes(":")) return "";
-  if (pathname.split("/").some((segment) => !segment || segment === "." || segment === "..")) {
+  if (
+    !pathname ||
+    pathname.startsWith("/") ||
+    pathname.includes(":") ||
+    /[\\\\\u0000-\u001f\u007f]/.test(path)
+  ) {
+    return "";
+  }
+  const segments = pathname.split("/");
+  if (
+    segments.some((segment) => {
+      if (!segment) return true;
+      try {
+        const decoded = decodeURIComponent(segment);
+        return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+      } catch {
+        return true;
+      }
+    })
+  ) {
     return "";
   }
   return path;

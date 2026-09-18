@@ -119,7 +119,11 @@ function checkCsp(policy, errors) {
 }
 
 function sameSourceSet(actual, expected) {
-  return actual.length === expected.length && actual.every((source) => expected.includes(source));
+  return (
+    new Set(actual).size === actual.length &&
+    actual.length === expected.length &&
+    actual.every((source) => expected.includes(source))
+  );
 }
 
 function forEachSourceFile(directory, visit) {
