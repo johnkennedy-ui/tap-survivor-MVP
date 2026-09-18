@@ -54,10 +54,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Publish only the verified artifact, with OIDC proving this deployment job identity.
+    # These rights never permit repository-content writes or dependency execution.
     permissions:
-      # Publish the already verified Pages artifact; never mutate repository contents.
       pages: write
-      # GitHub Pages validates this deployment job identity through OIDC.
       id-token: write
     environment:
       name: github-pages
