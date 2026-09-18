@@ -8,7 +8,10 @@ import { createShopSystem } from "../src/modules/shop.js";
 import { createShopPricing } from "../src/modules/shop-pricing.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const generatedClassicGameDependenciesSource = readFileSync(`${root}/src/game-dependencies.js`, "utf8");
+const generatedClassicGameDependenciesSource = readFileSync(
+  `${root}/src/game-dependencies.js`,
+  "utf8"
+);
 const shopItems = [
   {
     cost: [10, 20],
@@ -42,12 +45,19 @@ const snapshotsMatch =
   JSON.stringify(native.snapshot) === JSON.stringify(selectedBrowser.snapshot);
 
 if (!snapshotsMatch) {
-  console.error("Provider snapshots:", JSON.stringify({ native, classic, selectedBrowser }, null, 2));
+  console.error(
+    "Provider snapshots:",
+    JSON.stringify({ native, classic, selectedBrowser }, null, 2)
+  );
 }
 
 check(
   "native, generated classic, and selected-browser Shop providers have equal deterministic snapshots",
   snapshotsMatch
+);
+check(
+  "Shop parity observes actual rendered prices after purchase and reload",
+  native.snapshot.afterPurchase.orbCost > 0 && native.snapshot.recovery.nextBootsCost > 0
 );
 check(
   "real native Shop provider opens both the modal and menu panel",
@@ -156,7 +166,7 @@ function runParityScenario(kind, initialSave = baseSave()) {
     effects: fixture.effectCount(),
     hud: fixture.ui.shopCoinHud.textContent,
     notices: [...fixture.calls.notices],
-    orbCost: extractShopCost(shopItemAt(fixture.ui.shopItems, 1).innerHTML),
+    orbCost: extractShopCost(shopItemAt(fixture.ui.shopItems, 1).textContent),
     persisted: persistedShopState(fixture.persistedSave()),
     purchases: { ...fixture.getSave().shopPurchases },
     renderMeta: fixture.calls.renderMeta,
@@ -243,7 +253,9 @@ function createClassicProvider(fixture) {
     "TapSurvivorGameDependencies"
   );
   context.globalThis = context;
-  vm.runInContext(generatedClassicGameDependenciesSource, context, { filename: "src/game-dependencies.js" });
+  vm.runInContext(generatedClassicGameDependenciesSource, context, {
+    filename: "src/game-dependencies.js",
+  });
   const globalRef = createClassicDependencyGlobal(fixture);
   const dependencies = createClassicGameDependencyBag({
     documentRef: fixture.documentRef,
@@ -259,7 +271,6 @@ function createClassicProvider(fixture) {
       retiredGameDependenciesPublisherDescriptor?.get,
   };
 }
-
 
 function createClassicDependencyGlobal(fixture) {
   const names = [
@@ -306,9 +317,7 @@ function createClassicDependencyGlobal(fixture) {
     "TapSurvivorLevelUp",
     "TapSurvivorShellUi",
   ];
-  const retiredPublisherReads = Object.fromEntries(
-    retiredPublisherNames.map((name) => [name, 0])
-  );
+  const retiredPublisherReads = Object.fromEntries(retiredPublisherNames.map((name) => [name, 0]));
   retiredPublisherNames.forEach((name) => {
     Object.defineProperty(globalRef, name, {
       configurable: true,
@@ -367,7 +376,9 @@ function createSelectedBrowserProvider(fixture) {
     ui: fixture.ui,
   });
   const adapterBeforeBinding = browserOptions.adapters.uiAdapters.shopSystemAdapter;
-  const unboundAdapterFailedClosed = throwsStableBindingError(() => adapterBeforeBinding.renderShop());
+  const unboundAdapterFailedClosed = throwsStableBindingError(() =>
+    adapterBeforeBinding.renderShop()
+  );
   const dependencies = createModuleGameDependencyBag(browserOptions);
   fixture.getGame = dependencies.getGame;
   fixture.getSave = dependencies.getSave;
@@ -389,7 +400,7 @@ function runRecoveryScenario(kind, persistedSave) {
     bonuses: normalizeObject(bonuses),
     bootsTier: recovered.getSave().shopPurchases.boots,
     nextBootsButton: shopItemAt(recovered.ui.shopItems, 0).children.at(-1).textContent,
-    nextBootsCost: extractShopCost(shopItemAt(recovered.ui.shopItems, 0).innerHTML),
+    nextBootsCost: extractShopCost(shopItemAt(recovered.ui.shopItems, 0).textContent),
   };
 }
 
@@ -408,7 +419,8 @@ function verifyDeniedAndMaxedPurchases(kind, originalFixture) {
   denied.provider.renderShop();
   const deniedBefore = JSON.stringify({ calls: denied.calls, save: denied.getSave() });
   shopItemAt(denied.ui.shopItems, 1).children.at(-1).click();
-  const deniedUnchanged = shopItemAt(denied.ui.shopItems, 1).children.at(-1).disabled &&
+  const deniedUnchanged =
+    shopItemAt(denied.ui.shopItems, 1).children.at(-1).disabled &&
     deniedBefore === JSON.stringify({ calls: denied.calls, save: denied.getSave() });
 
   const maxed = runProviderFixture(kind, {
@@ -419,7 +431,8 @@ function verifyDeniedAndMaxedPurchases(kind, originalFixture) {
   maxed.provider.renderShop();
   const maxedBefore = JSON.stringify({ calls: maxed.calls, save: maxed.getSave() });
   shopItemAt(maxed.ui.shopItems, 0).children.at(-1).click();
-  const maxedUnchanged = shopItemAt(maxed.ui.shopItems, 0).children.at(-1).disabled &&
+  const maxedUnchanged =
+    shopItemAt(maxed.ui.shopItems, 0).children.at(-1).disabled &&
     maxedBefore === JSON.stringify({ calls: maxed.calls, save: maxed.getSave() });
 
   return deniedUnchanged && maxedUnchanged && Boolean(originalFixture);
@@ -568,6 +581,7 @@ function createShopUi() {
 function createFakeElement(tagName, hidden = false) {
   const listeners = new Map();
   const classes = new Set(hidden ? ["hidden"] : []);
+  let text = "";
   const element = {
     children: [],
     classList: {
@@ -589,13 +603,23 @@ function createFakeElement(tagName, hidden = false) {
     },
     disabled: false,
     tagName,
-    textContent: "",
+    get textContent() {
+      return text + this.children.map((child) => child.textContent || "").join("");
+    },
+    set textContent(value) {
+      text = String(value);
+      this.children = [];
+    },
     addEventListener(type, handler) {
       listeners.set(type, handler);
     },
     appendChild(child) {
       this.children.push(child);
       return child;
+    },
+    replaceChildren(...children) {
+      text = "";
+      this.children = children;
     },
     click() {
       if (!this.disabled) listeners.get("click")?.({ currentTarget: this, type: "click" });
@@ -714,7 +738,9 @@ function missingDocumentRefFailsClosed() {
   const platformTarget = globalThis;
   const originalDocumentDescriptor = Object.getOwnPropertyDescriptor(platformTarget, "document");
   const failsClosed = withPoisonedDocument(platformTarget, () =>
-    throwsStableDocumentError(() => createShopSystem(withoutDocumentRef(createFixture(baseSave()).nativeOptions)))
+    throwsStableDocumentError(() =>
+      createShopSystem(withoutDocumentRef(createFixture(baseSave()).nativeOptions))
+    )
   );
   return (
     failsClosed &&
@@ -736,7 +762,8 @@ function withPoisonedDocument(platformTarget, callback) {
   try {
     return callback();
   } finally {
-    if (originalDocumentDescriptor === undefined) Reflect.deleteProperty(platformTarget, "document");
+    if (originalDocumentDescriptor === undefined)
+      Reflect.deleteProperty(platformTarget, "document");
     else Object.defineProperty(platformTarget, "document", originalDocumentDescriptor);
   }
 }

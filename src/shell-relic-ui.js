@@ -304,8 +304,9 @@
     function createRelicPreview(relic) {
       const sprite = previewAdapter.runUpgradeSprite?.(relic.targetUpgradeId);
       const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
-      const source =
-        previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || "";
+      const source = safeAssetPath(
+        previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || ""
+      );
       if (frames.length && source && previewAdapter.createCanvas && previewAdapter.createImage) {
         const canvas =
           previewAdapter.createCanvas({
@@ -809,7 +810,12 @@
         if (!segment) return true;
         try {
           const decoded = decodeURIComponent(segment);
-          return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
         } catch {
           return true;
         }

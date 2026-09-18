@@ -156,7 +156,12 @@
         if (!segment) return true;
         try {
           const decoded = decodeURIComponent(segment);
-          return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
         } catch {
           return true;
         }

@@ -61,21 +61,16 @@ function makeClassList() {
 
 function makeElement() {
   const listeners = new Map();
-  let html = "";
   return {
     children: [],
     classList: makeClassList(),
     disabled: false,
-    get innerHTML() {
-      return html;
-    },
-    set innerHTML(value) {
-      html = value;
-      this.children = [];
-    },
     appendChild(child) {
       this.children.push(child);
       return child;
+    },
+    replaceChildren(...children) {
+      this.children = children;
     },
     addEventListener(type, listener) {
       listeners.set(type, listener);
@@ -141,11 +136,7 @@ assert.equal(content.weapons.laser_staff.range, 820, "Laser Staff source range i
 {
   const { game, system } = createFixture({ upgrades: { run_wall_bounce: 2 } });
   system.fireBeam("laser_staff");
-  assert.equal(
-    game.beams.length,
-    1,
-    "relic-only Ricochet tier does not reflect Laser Staff beams"
-  );
+  assert.equal(game.beams.length, 1, "relic-only Ricochet tier does not reflect Laser Staff beams");
 }
 
 {
@@ -157,13 +148,29 @@ assert.equal(content.weapons.laser_staff.range, 820, "Laser Staff source range i
   });
   selectRicochetAtLevelUp(game);
   system.fireBeam("laser_staff");
-  assert.equal(game.levelUpRunUpgradeTiers.run_wall_bounce, 1, "level-up selection records Ricochet provenance");
-  assert.equal(game.runUpgradeTiers.run_wall_bounce, 2, "level-up selection retains the active Ricochet tier");
+  assert.equal(
+    game.levelUpRunUpgradeTiers.run_wall_bounce,
+    1,
+    "level-up selection records Ricochet provenance"
+  );
+  assert.equal(
+    game.runUpgradeTiers.run_wall_bounce,
+    2,
+    "level-up selection retains the active Ricochet tier"
+  );
   assert.equal(game.beams.length, 3, "active tier 2 emits two reflected Laser Staff segments");
   assert.equal(game.beams[0].endX, 200, "outbound segment terminates at the arena wall");
   assert.ok(game.beams[1].endX < game.beams[1].x, "reflected segment travels back into the arena");
-  assert.equal(damageCalls.filter(({ enemy }) => enemy === outbound).length, 1, "outbound enemy is hit once across the ricochet path");
-  assert.equal(damageCalls.filter(({ enemy }) => enemy === returned).length, 1, "returned-path enemy is hit once");
+  assert.equal(
+    damageCalls.filter(({ enemy }) => enemy === outbound).length,
+    1,
+    "outbound enemy is hit once across the ricochet path"
+  );
+  assert.equal(
+    damageCalls.filter(({ enemy }) => enemy === returned).length,
+    1,
+    "returned-path enemy is hit once"
+  );
 }
 
 {
@@ -179,7 +186,10 @@ assert.equal(content.weapons.laser_staff.range, 820, "Laser Staff source range i
   });
   system.fireBeam("laser_staff");
   assert.equal(game.beams.length, 3, "Split Fire tier 1 emits three laser branches");
-  assert.ok(new Set(game.beams.map((beam) => beam.endY)).size === 3, "split branches use distinct directions");
+  assert.ok(
+    new Set(game.beams.map((beam) => beam.endY)).size === 3,
+    "split branches use distinct directions"
+  );
 }
 
 {
@@ -189,7 +199,11 @@ assert.equal(content.weapons.laser_staff.range, 820, "Laser Staff source range i
   });
   system.fireBeam("laser_staff");
   assert.equal(game.beams.length, 5, "Split Fire tier 2 follows the projectile five-way pattern");
-  assert.equal(new Set(game.beams.map((beam) => beam.endY)).size, 5, "tier 2 branches use five distinct directions");
+  assert.equal(
+    new Set(game.beams.map((beam) => beam.endY)).size,
+    5,
+    "tier 2 branches use five distinct directions"
+  );
 }
 
 {
@@ -209,10 +223,15 @@ assert.equal(content.weapons.laser_staff.range, 820, "Laser Staff source range i
     weaponDefs,
     random: () => 0,
   });
-  const offered = relicSystem.relicChoices({ unlockedRelics: [] }, ["laser_staff"], 2).map((relic) => relic.id);
+  const offered = relicSystem
+    .relicChoices({ unlockedRelics: [] }, ["laser_staff"], 2)
+    .map((relic) => relic.id);
   assert.ok(offered.includes("bounce"), "beam-only runs can receive Ricochet Shots");
   assert.ok(offered.includes("split"), "beam-only runs can receive Split Fire");
-  assert.ok(!offered.includes("pierce"), "projectile-only upgrades remain excluded from beam-only runs");
+  assert.ok(
+    !offered.includes("pierce"),
+    "projectile-only upgrades remain excluded from beam-only runs"
+  );
 }
 
 console.log("PASS beam upgrades smoke");

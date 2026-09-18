@@ -727,7 +727,12 @@
         if (!segment) return true;
         try {
           const decoded = decodeURIComponent(segment);
-          return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
         } catch {
           return true;
         }
@@ -7170,7 +7175,12 @@
         if (!segment) return true;
         try {
           const decoded = decodeURIComponent(segment);
-          return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
         } catch {
           return true;
         }
@@ -7480,8 +7490,9 @@
     function createRelicPreview(relic) {
       const sprite = previewAdapter.runUpgradeSprite?.(relic.targetUpgradeId);
       const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
-      const source =
-        previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || "";
+      const source = safeAssetPath(
+        previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || ""
+      );
       if (frames.length && source && previewAdapter.createCanvas && previewAdapter.createImage) {
         const canvas =
           previewAdapter.createCanvas({
@@ -7985,7 +7996,12 @@
         if (!segment) return true;
         try {
           const decoded = decodeURIComponent(segment);
-          return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
         } catch {
           return true;
         }
@@ -8546,10 +8562,14 @@
   }) {
     const assetResolver = assets?.createAssetResolver?.(content) || {
       relicIcon: (relic) =>
-        relic?.iconPath || content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+        relic?.iconPath ||
+        content?.assets?.sprites?.ui?.quest ||
+        "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
       runUpgradeSprite: (upgradeId) => content?.assets?.sprites?.runUpgrades?.[upgradeId],
       spriteSource: (definition) =>
-        typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
+        typeof definition === "string"
+          ? definition
+          : definition?.src || definition?.path || definition?.iconSrc || "",
     };
     const relicUi = shellRelicUi.createShellRelicUi({
       ui,
@@ -9131,7 +9151,8 @@
         if (!Array.isArray(upgrade.cost) || !Number.isFinite(upgrade.maxTier)) return false;
         const tier = getUpgradeTier(upgrade.id);
         if (tier >= upgrade.maxTier) return false;
-        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return false;
+        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon))
+          return false;
         if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return false;
         return !upgrade.requiresQuest || isQuestComplete(upgrade.requiresQuest);
       });
@@ -9185,7 +9206,12 @@
         el.appendChild(doc.createElement("br"));
         appendTextElement(doc, el, "span", `Tier: ${tier}/${upgrade.maxTier}`);
         el.appendChild(doc.createElement("br"));
-        appendTextElement(doc, el, "span", canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`);
+        appendTextElement(
+          doc,
+          el,
+          "span",
+          canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`
+        );
         const button = doc.createElement("button");
         button.textContent = `Buy Tier ${tier + 1}`;
         button.disabled = !canBuy;
@@ -10761,7 +10787,12 @@
         if (!segment) return true;
         try {
           const decoded = decodeURIComponent(segment);
-          return decoded === "." || decoded === ".." || /[\\\\\u0000-\u001f\u007f]/.test(decoded);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
         } catch {
           return true;
         }

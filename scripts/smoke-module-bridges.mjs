@@ -10,12 +10,8 @@ import { floorDifficulty as moduleFloorDifficulty } from "../src/modules/balance
 import { createContentRegistry as createModuleContentRegistry } from "../src/modules/content-registry.js";
 import { createDebugSystem as createModuleDebugSystem } from "../src/modules/debug.js";
 import { createEffects as createModuleEffects } from "../src/modules/effects.js";
-import {
-  createEnemyBehaviorSystem as createModuleEnemyBehaviorSystem,
-} from "../src/modules/enemy-behaviors.js";
-import {
-  createEnemySpawnSystem as createModuleEnemySpawnSystem,
-} from "../src/modules/enemy-spawning.js";
+import { createEnemyBehaviorSystem as createModuleEnemyBehaviorSystem } from "../src/modules/enemy-behaviors.js";
+import { createEnemySpawnSystem as createModuleEnemySpawnSystem } from "../src/modules/enemy-spawning.js";
 import { createEnemySystem as createModuleEnemySystem } from "../src/modules/enemies.js";
 import { createGameBannerSystem as createModuleGameBannerSystem } from "../src/modules/game-banners.js";
 import { createGameDependencyBag as createModuleGameDependencyBag } from "../src/modules/game-dependencies.js";
@@ -45,10 +41,11 @@ import { createSkillRailRenderer as createModuleSkillRailRenderer } from "../src
 import { createRenderer as createModuleRenderer } from "../src/modules/rendering.js";
 import { createShellRelicUi as createModuleShellRelicUi } from "../src/modules/shell-relic-ui.js";
 import { createShellUiController as createModuleClassicShellUiController } from "../src/modules/shell-ui-classic-adapter.js";
-import { createUi as createModuleUi, createUiRenderer as createModuleUiRenderer } from "../src/modules/ui.js";
 import {
-  createUiProgressionRenderer as createModuleUiProgressionRenderer,
-} from "../src/modules/ui-progression.js";
+  createUi as createModuleUi,
+  createUiRenderer as createModuleUiRenderer,
+} from "../src/modules/ui.js";
+import { createUiProgressionRenderer as createModuleUiProgressionRenderer } from "../src/modules/ui-progression.js";
 import { createShellUiController as createModuleShellUiController } from "../src/modules/shell-ui-controller.js";
 import {
   choiceId as moduleChoiceId,
@@ -68,9 +65,8 @@ import {
   CURRENT_SAVE_VERSION as moduleCurrentSaveVersion,
   createDefaultSave as createModuleDefaultSave,
 } from "../src/modules/save-defaults.js";
-const { isPlainObject: moduleIsPlainObject, migrateSave: moduleMigrateSave } = await import(
-  "../src/modules/save-migrations.js"
-);
+const { isPlainObject: moduleIsPlainObject, migrateSave: moduleMigrateSave } =
+  await import("../src/modules/save-migrations.js");
 const {
   arrayValue: moduleArrayValue,
   createSaveNormalizer: createModuleSaveNormalizer,
@@ -139,10 +135,7 @@ const upgradeBridgeEffectsFixture = {
 };
 
 const balanceBridge = loadBridge("../src/balance.js", "src/balance.js");
-const contentRegistryBridge = loadBridge(
-  "../src/content-registry.js",
-  "src/content-registry.js"
-);
+const contentRegistryBridge = loadBridge("../src/content-registry.js", "src/content-registry.js");
 const assetsBridge = loadBridge("../src/assets.js", "src/assets.js");
 const audioBridge = loadBridge("../src/audio.js", "src/audio.js");
 const effectsBridge = loadBridge("../src/effects.js", "src/effects.js", {
@@ -157,12 +150,10 @@ const saveCorruptionBridge = loadBridge("../src/save-corruption.js", "src/save-c
 const saveDefaultsBridge = loadBridge("../src/save-defaults.js", "src/save-defaults.js");
 const saveMigrationsBridge = loadBridge("../src/save-migrations.js", "src/save-migrations.js");
 const saveNormalizeBridge = loadBridge("../src/save-normalize.js", "src/save-normalize.js");
-const saveBridge = loadBridge(
-  "../src/save.js",
-  "src/save.js",
-  {},
-  ["TapSurvivorSaveNormalize", "TapSurvivorSaveCorruption"]
-);
+const saveBridge = loadBridge("../src/save.js", "src/save.js", {}, [
+  "TapSurvivorSaveNormalize",
+  "TapSurvivorSaveCorruption",
+]);
 const storageBridge = loadBridge("../src/storage-adapter.js", "src/storage-adapter.js", {}, [
   "TapSurvivorStorage",
 ]);
@@ -176,16 +167,21 @@ const relicsBridge = loadBridge("../src/relics.js", "src/relics.js", {
   },
 });
 const shellRelicUiBridge = loadBridge("../src/shell-relic-ui.js", "src/shell-relic-ui.js");
-const shellUiClassicBridge = loadBridge("../src/shell-ui.js", "src/shell-ui.js", {
-  clearTimeout(timer) {
-    if (timer) timer.cleared = true;
+const shellUiClassicBridge = loadBridge(
+  "../src/shell-ui.js",
+  "src/shell-ui.js",
+  {
+    clearTimeout(timer) {
+      if (timer) timer.cleared = true;
+    },
+    setTimeout(callback, delay) {
+      const timer = { callback, delay };
+      callback();
+      return timer;
+    },
   },
-  setTimeout(callback, delay) {
-    const timer = { callback, delay };
-    callback();
-    return timer;
-  },
-}, ["TapSurvivorShellUi"]);
+  ["TapSurvivorShellUi"]
+);
 const mathBridge = loadBridge("../src/math.js", "src/math.js");
 const spritesBridge = loadBridge("../src/sprites.js", "src/sprites.js");
 const targetingBridge = loadBridge("../src/weapon-targeting.js", "src/weapon-targeting.js");
@@ -262,14 +258,12 @@ const createBridgePickupSystem = createModulePickupSystem;
 const createBridgeRelicSystem = createModuleRelicSystem;
 
 const moduleSpriteFactoryRuntime = createSpriteParityRuntime();
-const moduleSpriteFactorySnapshot = withGlobalBindings(
-  moduleSpriteFactoryRuntime.globals,
-  () =>
-    spriteFactorySnapshot(
-      createModuleSpriteSystem,
-      createModuleSpriteSheetRenderer,
-      moduleSpriteFactoryRuntime
-    )
+const moduleSpriteFactorySnapshot = withGlobalBindings(moduleSpriteFactoryRuntime.globals, () =>
+  spriteFactorySnapshot(
+    createModuleSpriteSystem,
+    createModuleSpriteSheetRenderer,
+    moduleSpriteFactoryRuntime
+  )
 );
 const spriteShimLifecycle = spriteShimLifecycleSnapshot();
 
@@ -350,8 +344,7 @@ check(
 );
 check(
   "floorDifficulty floor two value is unchanged",
-  JSON.stringify(moduleFloorDifficulty(2)) ===
-    JSON.stringify({ hp: 1.1, damage: 1, spawnRate: 1 })
+  JSON.stringify(moduleFloorDifficulty(2)) === JSON.stringify({ hp: 1.1, damage: 1, spawnRate: 1 })
 );
 check(
   "floorDifficulty floor three value is unchanged",
@@ -380,13 +373,11 @@ const mutableFloorOne = moduleFloorDifficulty(1);
 mutableFloorOne.hp = 99;
 check("floorDifficulty returns copies", moduleFloorDifficulty(1).hp === 0.9);
 
-check(
-  "module exports createContentRegistry",
-  typeof createModuleContentRegistry === "function"
-);
+check("module exports createContentRegistry", typeof createModuleContentRegistry === "function");
 check(
   "bridge does not publish retired TapSurvivorContentRegistry",
-  bridgeContentRegistry === undefined && !contentRegistryBridge.source.includes("globalThis.TapSurvivorContentRegistry")
+  bridgeContentRegistry === undefined &&
+    !contentRegistryBridge.source.includes("globalThis.TapSurvivorContentRegistry")
 );
 check(
   "content registry bridge source has generated banner",
@@ -405,10 +396,7 @@ const upgradeContentFixture = {
 const moduleContentRegistrySnapshot = contentRegistrySnapshot(
   createModuleContentRegistry({ content: contentSource, upgradeContent: upgradeContentFixture })
 );
-check(
-  "content registry exposes spark bolt",
-  moduleContentRegistrySnapshot.sparkBoltDamage === 12
-);
+check("content registry exposes spark bolt", moduleContentRegistrySnapshot.sparkBoltDamage === 12);
 check(
   "content registry exposes starter quest group",
   moduleContentRegistrySnapshot.starterQuestIds.includes("first_blood")
@@ -425,7 +413,9 @@ check(
 );
 check("effects bridge source has generated banner", hasGeneratedBanner(effectsBridge.source));
 
-const moduleEffectsSnapshot = effectsSnapshot(createModuleEffects({ contentSchema: contentSchemaFixture }));
+const moduleEffectsSnapshot = effectsSnapshot(
+  createModuleEffects({ contentSchema: contentSchemaFixture })
+);
 check("effects apply run upgrade stat effects", moduleEffectsSnapshot.runUpgradeSpeed === 110);
 check("effects cap run upgrade healing", moduleEffectsSnapshot.runUpgradeHp === 100);
 check("effects create shop bonus defaults", moduleEffectsSnapshot.shopBonuses.pickupRadius === 0);
@@ -500,7 +490,8 @@ check("module exports shuffleChoices", typeof moduleShuffleChoices === "function
 check("module exports weightedChoices", typeof moduleWeightedChoices === "function");
 check(
   "bridge does not publish retired TapSurvivorLevelUpChoices",
-  bridgeChoices === undefined && !choicesBridge.source.includes("globalThis.TapSurvivorLevelUpChoices")
+  bridgeChoices === undefined &&
+    !choicesBridge.source.includes("globalThis.TapSurvivorLevelUpChoices")
 );
 check(
   "asset and level-up bridges are global-free with dependency-bag provenance",
@@ -511,7 +502,9 @@ check(
     ([bridge, name]) =>
       bridge.context[name] === undefined &&
       !bridge.source.includes(`globalThis.${name} =`) &&
-      bridge.source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+      bridge.source.includes(
+        `// Retired global: ${name}. Exports are supplied through the game dependency bag.`
+      )
   )
 );
 check(
@@ -567,8 +560,14 @@ check(
 check("map system bridge source has generated banner", hasGeneratedBanner(mapBridge.source));
 
 const moduleFallbackMap = mapSystemSnapshot(createModuleMapSystem(createFallbackMapFixture()));
-check("fallback map fixture uses default tower", moduleFallbackMap.fallback.mapId === "default_tower");
-check("fallback map fixture uses tower background", moduleFallbackMap.fallback.backgroundId === "tower_floor");
+check(
+  "fallback map fixture uses default tower",
+  moduleFallbackMap.fallback.mapId === "default_tower"
+);
+check(
+  "fallback map fixture uses tower background",
+  moduleFallbackMap.fallback.backgroundId === "tower_floor"
+);
 
 const mapFixture = createMapFixture();
 const moduleMapSystem = createModuleMapSystem(mapFixture);
@@ -576,10 +575,22 @@ const moduleMapSnapshot = mapSystemSnapshot(moduleMapSystem);
 const moduleMapBackgroundFallback = mapSystemSnapshot(
   createModuleMapSystem(createMapBackgroundFallbackFixture())
 );
-check("map selection fixture uses modulo floor selection", moduleMapSnapshot.floorTwo.mapId === "ice");
-check("floor selection fixture uses elapsed startsAt", moduleMapSnapshot.floorTwo.floorId === "ice_late");
-check("floorIds fixture limits floor pool", moduleMapSnapshot.floorTwo.floorPool.join(",") === "ice_late,ice_early");
-check("floor background fixture resolves direct asset", moduleMapSnapshot.floorTwo.backgroundId === "ice_bg");
+check(
+  "map selection fixture uses modulo floor selection",
+  moduleMapSnapshot.floorTwo.mapId === "ice"
+);
+check(
+  "floor selection fixture uses elapsed startsAt",
+  moduleMapSnapshot.floorTwo.floorId === "ice_late"
+);
+check(
+  "floorIds fixture limits floor pool",
+  moduleMapSnapshot.floorTwo.floorPool.join(",") === "ice_late,ice_early"
+);
+check(
+  "floor background fixture resolves direct asset",
+  moduleMapSnapshot.floorTwo.backgroundId === "ice_bg"
+);
 check(
   "map background fallback fixture resolves map asset",
   moduleMapBackgroundFallback.floorOne.backgroundId === "forest_bg"
@@ -589,19 +600,36 @@ check(
   "fallback background fixture uses tower floor",
   moduleMapSnapshot.noConfiguredBackground.backgroundId === "tower_floor"
 );
-check("modifier merge fixture lets floor override map", moduleMapSnapshot.floorTwo.modifiers.density === 4);
-check("modifier merge fixture keeps map-only modifier", moduleMapSnapshot.floorTwo.modifiers.weather === "snow");
-check("modifier merge fixture adds floor-only modifier", moduleMapSnapshot.floorTwo.modifiers.elite === true);
+check(
+  "modifier merge fixture lets floor override map",
+  moduleMapSnapshot.floorTwo.modifiers.density === 4
+);
+check(
+  "modifier merge fixture keeps map-only modifier",
+  moduleMapSnapshot.floorTwo.modifiers.weather === "snow"
+);
+check(
+  "modifier merge fixture adds floor-only modifier",
+  moduleMapSnapshot.floorTwo.modifiers.elite === true
+);
 check("applyToGame fixture mutates activeMap", moduleMapSnapshot.applied.activeMapId === "ice");
-check("applyToGame fixture mutates activeFloor", moduleMapSnapshot.applied.activeFloorId === "ice_late");
-check("applyToGame fixture mutates mapModifiers", moduleMapSnapshot.applied.modifiers.density === 4);
-check("applyToGame fixture mutates background", moduleMapSnapshot.applied.backgroundId === "ice_bg");
+check(
+  "applyToGame fixture mutates activeFloor",
+  moduleMapSnapshot.applied.activeFloorId === "ice_late"
+);
+check(
+  "applyToGame fixture mutates mapModifiers",
+  moduleMapSnapshot.applied.modifiers.density === 4
+);
+check(
+  "applyToGame fixture mutates background",
+  moduleMapSnapshot.applied.backgroundId === "ice_bg"
+);
 check(
   "applyToGame fixture mutates floorPool",
   moduleMapSnapshot.applied.floorPool.join(",") === "ice_late,ice_early"
 );
 check("applyToGame null fixture returns null", moduleMapSnapshot.nullApply === null);
-
 
 check("module exports createSaveLoadHandler", typeof createModuleSaveLoadHandler === "function");
 check(
@@ -615,14 +643,20 @@ check(
 );
 
 const moduleSaveLoadSnapshot = saveLoadSnapshot(createModuleSaveLoadHandler);
-check("missing raw save normalizes empty object", moduleSaveLoadSnapshot.empty.normalized[0] === "{}");
+check(
+  "missing raw save normalizes empty object",
+  moduleSaveLoadSnapshot.empty.normalized[0] === "{}"
+);
 check("missing raw save has no warning", moduleSaveLoadSnapshot.empty.warning === null);
 check(
   "valid raw save normalizes parsed object",
-  moduleSaveLoadSnapshot.valid.normalized[0] === "{\"coins\":7}"
+  moduleSaveLoadSnapshot.valid.normalized[0] === '{"coins":7}'
 );
 check("valid raw save has no warning", moduleSaveLoadSnapshot.valid.warning === null);
-check("corrupt raw save returns default save", moduleSaveLoadSnapshot.corrupt.result.defaulted === true);
+check(
+  "corrupt raw save returns default save",
+  moduleSaveLoadSnapshot.corrupt.result.defaulted === true
+);
 check("corrupt raw save sets warning", moduleSaveLoadSnapshot.corrupt.warning === "corrupt-save");
 check("corrupt raw save backs up raw value", moduleSaveLoadSnapshot.corrupt.backups[0] === "{bad");
 check(
@@ -638,15 +672,20 @@ check("module exports CURRENT_SAVE_VERSION", moduleCurrentSaveVersion === 4);
 check("module exports createDefaultSave", typeof createModuleDefaultSave === "function");
 check(
   "save defaults bridge retires global publisher",
-  bridgeSaveDefaults === undefined && !saveDefaultsBridge.source.includes("globalThis.TapSurvivorSaveDefaults")
+  bridgeSaveDefaults === undefined &&
+    !saveDefaultsBridge.source.includes("globalThis.TapSurvivorSaveDefaults")
 );
-check("save defaults bridge source has generated banner", hasGeneratedBanner(saveDefaultsBridge.source));
+check(
+  "save defaults bridge source has generated banner",
+  hasGeneratedBanner(saveDefaultsBridge.source)
+);
 
 check("module exports isPlainObject", typeof moduleIsPlainObject === "function");
 check("module exports migrateSave", typeof moduleMigrateSave === "function");
 check(
   "save migrations bridge retires global publisher",
-  bridgeSaveMigrations === undefined && !saveMigrationsBridge.source.includes("globalThis.TapSurvivorSaveMigrations")
+  bridgeSaveMigrations === undefined &&
+    !saveMigrationsBridge.source.includes("globalThis.TapSurvivorSaveMigrations")
 );
 check(
   "save migrations bridge source has generated banner",
@@ -665,7 +704,10 @@ const saveMigrationFixtures = [
   { saveVersion: 1, shopPurchases: { boots: 2 }, seenBanners: ["floor_2"] },
 ];
 const moduleMigrationResults = saveMigrationFixtures.map(moduleMigrateSave);
-check("migrateSave version one fixture ends at current version", moduleMigrationResults[0].saveVersion === 4);
+check(
+  "migrateSave version one fixture ends at current version",
+  moduleMigrationResults[0].saveVersion === 4
+);
 check(
   "migrateSave version one fixture applies version two shop purchases",
   JSON.stringify(moduleMigrationResults[0].shopPurchases) === JSON.stringify({})
@@ -705,17 +747,30 @@ check(
   hasGeneratedBanner(saveNormalizeBridge.source)
 );
 check("arrayValue returns arrays", moduleArrayValue(["alpha"])[0] === "alpha");
-check("arrayValue falls back to empty array", JSON.stringify(moduleArrayValue("alpha")) === JSON.stringify([]));
+check(
+  "arrayValue falls back to empty array",
+  JSON.stringify(moduleArrayValue("alpha")) === JSON.stringify([])
+);
 check("objectValue returns plain objects", moduleObjectValue({ alpha: 1 }).alpha === 1);
-check("objectValue falls back to empty object", JSON.stringify(moduleObjectValue([])) === JSON.stringify({}));
+check(
+  "objectValue falls back to empty object",
+  JSON.stringify(moduleObjectValue([])) === JSON.stringify({})
+);
 const moduleNormalizeSnapshot = saveNormalizeSnapshot(createModuleSaveNormalizer);
-check("invalid input normalizes to current save version", moduleNormalizeSnapshot.invalid.saveVersion === 3);
-check("invalid input normalizes to default save coins", moduleNormalizeSnapshot.invalid.coins === 0);
+check(
+  "invalid input normalizes to current save version",
+  moduleNormalizeSnapshot.invalid.saveVersion === 3
+);
+check(
+  "invalid input normalizes to default save coins",
+  moduleNormalizeSnapshot.invalid.coins === 0
+);
 check("coins are floored and clamped", moduleNormalizeSnapshot.complex.coins === 0);
 check("towerFloor is floored and clamped", moduleNormalizeSnapshot.complex.towerFloor === 2);
 check(
   "unlockedWeapons includes spark bolt and dedupes",
-  JSON.stringify(moduleNormalizeSnapshot.complex.unlockedWeapons) === JSON.stringify(["spark_bolt", "laser"])
+  JSON.stringify(moduleNormalizeSnapshot.complex.unlockedWeapons) ===
+    JSON.stringify(["spark_bolt", "laser"])
 );
 check(
   "seenBanners array normalizes and dedupes",
@@ -733,18 +788,29 @@ check(
 );
 check(
   "shopPurchases clamp tiers and drop unknown items",
-  JSON.stringify(moduleNormalizeSnapshot.complex.shopPurchases) === JSON.stringify({ boots: 2, orb: 1 })
+  JSON.stringify(moduleNormalizeSnapshot.complex.shopPurchases) ===
+    JSON.stringify({ boots: 2, orb: 1 })
 );
-check("default starter quests are ensured open", moduleNormalizeSnapshot.complex.activeQuests.includes("starter"));
-check("completed quests open follow-up quests", moduleNormalizeSnapshot.complex.activeQuests.includes("follow"));
+check(
+  "default starter quests are ensured open",
+  moduleNormalizeSnapshot.complex.activeQuests.includes("starter")
+);
+check(
+  "completed quests open follow-up quests",
+  moduleNormalizeSnapshot.complex.activeQuests.includes("follow")
+);
 check(
   "unlocked weapon nodes open linked quests",
   moduleNormalizeSnapshot.complex.activeQuests.includes("weapon_quest")
 );
-check("unlocked upgrades backfill upgrade tiers", moduleNormalizeSnapshot.complex.upgradeTiers.damage === 1);
+check(
+  "unlocked upgrades backfill upgrade tiers",
+  moduleNormalizeSnapshot.complex.upgradeTiers.damage === 1
+);
 check(
   "positive upgrade tiers populate unlockedUpgrades",
-  JSON.stringify(moduleNormalizeSnapshot.complex.unlockedUpgrades.sort()) === JSON.stringify(["damage", "speed"])
+  JSON.stringify(moduleNormalizeSnapshot.complex.unlockedUpgrades.sort()) ===
+    JSON.stringify(["damage", "speed"])
 );
 check(
   "positive upgrade tiers open linked quests",
@@ -770,7 +836,8 @@ check(
     storageBridge.source.includes(
       "// Retired global: TapSurvivorStorage. Exports are supplied through the game dependency bag."
     ) &&
-    typeof Object.getOwnPropertyDescriptor(storageBridge.context, "TapSurvivorStorage")?.get === "function"
+    typeof Object.getOwnPropertyDescriptor(storageBridge.context, "TapSurvivorStorage")?.get ===
+      "function"
 );
 const moduleSaveSystemSnapshot = saveSystemSnapshot(createModuleSaveSystem);
 check(
@@ -783,14 +850,24 @@ check("loadSave handles corrupt raw saves", moduleSaveSystemSnapshot.corruptLoad
 check("corrupt load warning delegates", moduleSaveSystemSnapshot.corruptWarning === "corrupt-save");
 check("corrupt load backs up raw value", moduleSaveSystemSnapshot.corruptBackups[0] === "{bad");
 check("storage read failure returns default", moduleSaveSystemSnapshot.failedLoad.coins === 0);
-check("storage read failure warning delegates", moduleSaveSystemSnapshot.failedWarning === "storage-read-failed");
-check("persist writes JSON through storage adapter", moduleSaveSystemSnapshot.persistWrites.length === 1);
+check(
+  "storage read failure warning delegates",
+  moduleSaveSystemSnapshot.failedWarning === "storage-read-failed"
+);
+check(
+  "persist writes JSON through storage adapter",
+  moduleSaveSystemSnapshot.persistWrites.length === 1
+);
 check(
   "persist refreshes unlockedUpgrades",
-  JSON.stringify(moduleSaveSystemSnapshot.persistSave.unlockedUpgrades) === JSON.stringify(["damage"])
+  JSON.stringify(moduleSaveSystemSnapshot.persistSave.unlockedUpgrades) ===
+    JSON.stringify(["damage"])
 );
 check("removeSave delegates to storage adapter", moduleSaveSystemSnapshot.removed === true);
-check("provided storage adapter bypasses fallback factory", moduleSaveSystemSnapshot.providedFallbackCalls === 0);
+check(
+  "provided storage adapter bypasses fallback factory",
+  moduleSaveSystemSnapshot.providedFallbackCalls === 0
+);
 check("fallback storage factory is called", moduleSaveSystemSnapshot.fallbackCalls.length === 1);
 check(
   "fallback storage receives save keys",
@@ -801,7 +878,8 @@ check(
 check("module exports createShopPricing", typeof createModuleShopPricing === "function");
 check(
   "shop pricing bridge remains retired",
-  createBridgeShopPricing === undefined && !pricingBridge.source.includes("globalThis.TapSurvivorShopPricing")
+  createBridgeShopPricing === undefined &&
+    !pricingBridge.source.includes("globalThis.TapSurvivorShopPricing")
 );
 check("shop pricing bridge source has generated banner", hasGeneratedBanner(pricingBridge.source));
 check(
@@ -848,12 +926,24 @@ check(
 );
 check("combat bridge source has generated banner", hasGeneratedBanner(combatBridge.source));
 const moduleCombatPhysics = combatPhysicsSnapshot(createModuleCombatSystem);
-check("combat system exposes actor collision resolver", moduleCombatPhysics.exposesResolveActorCollisions);
-check("combat collision resolver separates player and enemy sprites", moduleCombatPhysics.playerEnemySeparated);
+check(
+  "combat system exposes actor collision resolver",
+  moduleCombatPhysics.exposesResolveActorCollisions
+);
+check(
+  "combat collision resolver separates player and enemy sprites",
+  moduleCombatPhysics.playerEnemySeparated
+);
 check("combat collision resolver separates enemy sprites", moduleCombatPhysics.enemyEnemySeparated);
 check("combat collision resolver clamps actors to the arena", moduleCombatPhysics.clamped);
-check("combat radial knockback moves actor and target together", moduleCombatPhysics.knockbackMovedTarget);
-check("module exports createEnemyBehaviorSystem", typeof createModuleEnemyBehaviorSystem === "function");
+check(
+  "combat radial knockback moves actor and target together",
+  moduleCombatPhysics.knockbackMovedTarget
+);
+check(
+  "module exports createEnemyBehaviorSystem",
+  typeof createModuleEnemyBehaviorSystem === "function"
+);
 const moduleBossBlast = runBossBlastFixture(createModuleEnemyBehaviorSystem);
 check(
   "boss blast attacks damage and knock back the player once",
@@ -911,13 +1001,19 @@ const moduleRelicSnapshot = relicSystemSnapshot(
   relicFixtureSave,
   specialRelicFixtureSave
 );
-check("relic bridge max equipped slots follows the six-level schedule", moduleRelicSnapshot.maxEquippedRelics === 3);
+check(
+  "relic bridge max equipped slots follows the six-level schedule",
+  moduleRelicSnapshot.maxEquippedRelics === 3
+);
 check(
   "relic bridge run-start tiers fixture is unchanged",
   moduleRelicSnapshot.startingRunUpgradeTiers.run_move_speed === 1 &&
     moduleRelicSnapshot.startingRunUpgradeTiers.run_fire_rate === 2
 );
-check("relic bridge max-tier bonus fixture is unchanged", moduleRelicSnapshot.moveSpeedMaxTierBonus === 1);
+check(
+  "relic bridge max-tier bonus fixture is unchanged",
+  moduleRelicSnapshot.moveSpeedMaxTierBonus === 1
+);
 check(
   "relic bridge special modifiers fixture is unchanged",
   moduleRelicSnapshot.specialEffects.maxHpMultiplier === 0.6 &&
@@ -931,7 +1027,10 @@ check(
   bridgeShellRelicUi === undefined &&
     !shellRelicUiBridge.source.includes("globalThis.TapSurvivorShellRelicUi")
 );
-check("shell relic UI bridge source has generated banner", hasGeneratedBanner(shellRelicUiBridge.source));
+check(
+  "shell relic UI bridge source has generated banner",
+  hasGeneratedBanner(shellRelicUiBridge.source)
+);
 check(
   "shell relic UI bridge transforms both native exports for dependency-bag bundling",
   shellRelicUiBridge.source.includes("function createShellRelicUiAdapter") &&
@@ -1010,7 +1109,9 @@ check(
 check(
   "shell relic UI native factory preserves classic detail and preview behavior",
   shellRelicUiModuleSnapshot.detailSlotText === "Pickup Radius Focus" &&
-    shellRelicUiModuleSnapshot.detailClasses.some((className) => className.includes("relic-detail-screen")) &&
+    shellRelicUiModuleSnapshot.detailClasses.some((className) =>
+      className.includes("relic-detail-screen")
+    ) &&
     shellRelicUiModuleSnapshot.previewDraws === 1 &&
     shellRelicUiModuleSnapshot.previewTimerDelay === 100
 );
@@ -1084,7 +1185,10 @@ check(
     shellRelicHarness.storagePublisherProof.storagePublisherAbsentAfterBoot
 );
 
-check("shell UI bridge source has generated banner", hasGeneratedBanner(shellUiClassicBridge.source));
+check(
+  "shell UI bridge source has generated banner",
+  hasGeneratedBanner(shellUiClassicBridge.source)
+);
 check(
   "shell UI bridge source is generated from module classic adapter",
   shellUiClassicBridge.source.includes("Source: src/modules/shell-ui-classic-adapter.js")
@@ -1128,7 +1232,9 @@ check(
 check(
   "classic shell UI adapter keeps injected native relic behavior through the frame and panel path",
   shellUiClassicSnapshot.relicSlotsText.includes("Relic slots: 3/6") &&
-    shellUiClassicSnapshot.inventoryClasses.some((className) => className.includes("relic-loadout")) &&
+    shellUiClassicSnapshot.inventoryClasses.some((className) =>
+      className.includes("relic-loadout")
+    ) &&
     shellUiClassicSnapshot.progressHidden === true &&
     shellUiClassicSnapshot.inventoryHidden === false
 );
@@ -1160,7 +1266,9 @@ check(
   "classic shell UI defaults its optional transition scheduler to browser timers",
   shellUiClassicAdapterSource.includes("scheduler = {") &&
     shellUiClassicAdapterSource.includes("clearTimeout: (timer) => clearTimeout(timer)") &&
-    shellUiClassicAdapterSource.includes("setTimeout: (callback, delay) => setTimeout(callback, delay)") &&
+    shellUiClassicAdapterSource.includes(
+      "setTimeout: (callback, delay) => setTimeout(callback, delay)"
+    ) &&
     shellUiClassicAdapterSource.includes("scheduler.clearTimeout(startTransitionTimer)") &&
     shellUiClassicAdapterSource.includes("scheduler.setTimeout(() =>")
 );
@@ -1216,7 +1324,8 @@ check("module randomRange returns number in range", moduleRandom >= 2 && moduleR
 check("module exports nearestEnemy", typeof moduleNearestEnemy === "function");
 check(
   "weapon targeting bridge remains retired",
-  bridgeTargeting === undefined && !targetingBridge.source.includes("globalThis.TapSurvivorWeaponTargeting")
+  bridgeTargeting === undefined &&
+    !targetingBridge.source.includes("globalThis.TapSurvivorWeaponTargeting")
 );
 check(
   "weapon targeting bridge source has generated banner",
@@ -1269,7 +1378,10 @@ const scalingFixture = createScalingFixture();
 const moduleScaling = createModuleWeaponScaling(scalingFixture);
 const moduleScalingResults = scalingSnapshot(moduleScaling, scalingFixture.weaponDefs.bolt);
 check("weaponCooldown fixture is finite", Number.isFinite(moduleScalingResults.weaponCooldown));
-check("weaponSfxOptions fixture has playbackRate", moduleScalingResults.weaponSfxOptions.playbackRate > 0);
+check(
+  "weaponSfxOptions fixture has playbackRate",
+  moduleScalingResults.weaponSfxOptions.playbackRate > 0
+);
 check("weaponReach fixture is finite", Number.isFinite(moduleScalingResults.weaponReach));
 check("weaponWidth fixture is finite", Number.isFinite(moduleScalingResults.weaponWidth));
 check("projectileRadius fixture is finite", Number.isFinite(moduleScalingResults.projectileRadius));
@@ -1280,10 +1392,19 @@ check(
 );
 
 const fallbackFixture = createFallbackScalingFixture();
-const fallbackSnapshot = scalingSnapshot(createModuleWeaponScaling(fallbackFixture), fallbackFixture.weaponDefs.bolt);
-check("weapon cooldown fallback module handles optional callbacks", fallbackSnapshot.weaponCooldown > 0);
+const fallbackSnapshot = scalingSnapshot(
+  createModuleWeaponScaling(fallbackFixture),
+  fallbackFixture.weaponDefs.bolt
+);
+check(
+  "weapon cooldown fallback module handles optional callbacks",
+  fallbackSnapshot.weaponCooldown > 0
+);
 
-check("module exports createWeaponBehaviorSystem", typeof createModuleWeaponBehaviorSystem === "function");
+check(
+  "module exports createWeaponBehaviorSystem",
+  typeof createModuleWeaponBehaviorSystem === "function"
+);
 const moduleMineExplosion = runMineExplosionFixture(createModuleWeaponBehaviorSystem);
 check(
   "mine explosion damages and knocks back enemies and player once",
@@ -1306,7 +1427,10 @@ check(
   bridgeProjectiles === undefined &&
     !projectileBridge.source.includes("globalThis.TapSurvivorWeaponProjectiles")
 );
-check("weapon projectiles bridge source has generated banner", hasGeneratedBanner(projectileBridge.source));
+check(
+  "weapon projectiles bridge source has generated banner",
+  hasGeneratedBanner(projectileBridge.source)
+);
 
 const moduleRotated = moduleRotateVector(1, 0, Math.PI / 2);
 check(
@@ -1316,7 +1440,10 @@ check(
 
 const moduleProjectileFire = runProjectileFireFixture(createModuleWeaponProjectileSystem);
 check("projectile fire fixture spawns one bolt", moduleProjectileFire.boltCount === 1);
-check("projectile fire fixture direction uses target vector", approxEqual(moduleProjectileFire.vx, 6));
+check(
+  "projectile fire fixture direction uses target vector",
+  approxEqual(moduleProjectileFire.vx, 6)
+);
 check("projectile fire fixture speed uses target vector", approxEqual(moduleProjectileFire.vy, 8));
 check("projectile fire fixture radius is injected", moduleProjectileFire.radius === 7);
 check("projectile fire fixture damage is injected", moduleProjectileFire.damage === 21);
@@ -1339,7 +1466,10 @@ check("wall bounce fixture decreases bounce count", moduleBounce.bounces === 0);
 const moduleCollision = runCollisionFixture(createModuleWeaponProjectileSystem);
 check("collision fixture calls damageEnemy", moduleCollision.damageCalls.length === 1);
 check("collision fixture passes expected damage", moduleCollision.damageCalls[0]?.damage === 21);
-check("collision fixture passes expected weapon ID", moduleCollision.damageCalls[0]?.weaponId === "bolt");
+check(
+  "collision fixture passes expected weapon ID",
+  moduleCollision.damageCalls[0]?.weaponId === "bolt"
+);
 check("collision fixture calls reapEnemies", moduleCollision.reapCount === 1);
 
 const moduleCollisionFilter = runCollisionFilterFixture(createModuleWeaponProjectileSystem);
@@ -1411,7 +1541,10 @@ check(
   "module exports createGameRuntimeController",
   typeof createModuleGameRuntimeController === "function"
 );
-check("game runtime bridge source has generated banner", hasGeneratedBanner(gameRuntimeBridge.source));
+check(
+  "game runtime bridge source has generated banner",
+  hasGeneratedBanner(gameRuntimeBridge.source)
+);
 check(
   "game runtime bridge is global-free with retired provenance",
   !gameRuntimeBridge.source.includes("globalThis.TapSurvivorGameRuntime") &&
@@ -1522,7 +1655,10 @@ check(
     !gameDependenciesBridge.source.includes('"TapSurvivorRenderHud"')
 );
 check("module exports createEnemyRenderer", typeof createModuleEnemyRenderer === "function");
-check("render enemies bridge source has generated banner", hasGeneratedBanner(renderEnemiesBridge.source));
+check(
+  "render enemies bridge source has generated banner",
+  hasGeneratedBanner(renderEnemiesBridge.source)
+);
 check(
   "render enemies bridge is global-free with retired provenance",
   renderEnemiesBridge.context.TapSurvivorRenderEnemies === undefined &&
@@ -1635,15 +1771,27 @@ const moduleGameRuntimeSnapshot = gameRuntimeSnapshot(createModuleGameRuntimeCon
 check("game runtime initializes with loaded save", moduleGameRuntimeSnapshot.saveCoins === 7);
 check("game runtime resets speed controls", moduleGameRuntimeSnapshot.initialSpeed === 1);
 check("game runtime speed setter accepts x5", moduleGameRuntimeSnapshot.speedAfterSet === 5);
-check("game runtime speed setter rejects unsupported values", moduleGameRuntimeSnapshot.speedAfterInvalid === 5);
+check(
+  "game runtime speed setter rejects unsupported values",
+  moduleGameRuntimeSnapshot.speedAfterInvalid === 5
+);
 check("game runtime reset clears game state", moduleGameRuntimeSnapshot.gameAfterReset === null);
 check("game runtime reset persists once", moduleGameRuntimeSnapshot.persistCount === 2);
 check("game runtime binds movement input", moduleGameRuntimeSnapshot.movementBinds === 1);
-check("game runtime passes canvas to injected input", moduleGameRuntimeSnapshot.movementCanvasWidth === 960);
-check("game runtime passes getGame to injected input", moduleGameRuntimeSnapshot.movementGetGameRunning === true);
+check(
+  "game runtime passes canvas to injected input",
+  moduleGameRuntimeSnapshot.movementCanvasWidth === 960
+);
+check(
+  "game runtime passes getGame to injected input",
+  moduleGameRuntimeSnapshot.movementGetGameRunning === true
+);
 check("game runtime schedules loop", moduleGameRuntimeSnapshot.rafCount === 1);
 
-check("module exports createGameDependencyBag", typeof createModuleGameDependencyBag === "function");
+check(
+  "module exports createGameDependencyBag",
+  typeof createModuleGameDependencyBag === "function"
+);
 check("module exports createGameBannerSystem", typeof createModuleGameBannerSystem === "function");
 check(
   "game dependencies bridge is global-free with retired provenance and preserves absent, poisoned, and restored namespaces",
@@ -1668,8 +1816,14 @@ check(
   "source-owned dependency bag factory remains directly callable after publisher retirement",
   typeof createModuleGameDependencyBag === "function"
 );
-check("module UI factories are callable", typeof createModuleUi === "function" && typeof createModuleUiRenderer === "function");
-check("module UI progression factory is callable", typeof createModuleUiProgressionRenderer === "function");
+check(
+  "module UI factories are callable",
+  typeof createModuleUi === "function" && typeof createModuleUiRenderer === "function"
+);
+check(
+  "module UI progression factory is callable",
+  typeof createModuleUiProgressionRenderer === "function"
+);
 check(
   "game banners bridge source has generated banner",
   hasGeneratedBanner(gameBannersBridge.source)
@@ -1737,7 +1891,9 @@ check(
   moduleGameDependenciesSource.includes(
     'import { createRuntimeBalanceProvider } from "./balance-runtime.js";'
   ) &&
-    moduleGameDependenciesSource.includes("const balanceRuntime = createRuntimeBalanceProvider();") &&
+    moduleGameDependenciesSource.includes(
+      "const balanceRuntime = createRuntimeBalanceProvider();"
+    ) &&
     !moduleGameDependenciesSource.includes("TapSurvivorBalanceRuntime") &&
     gameDependenciesBridge.source.includes("function createRuntimeBalanceProvider") &&
     !gameDependenciesBridge.source.includes("TapSurvivorBalanceRuntime")
@@ -1777,15 +1933,15 @@ check(
     ([bridge, name]) =>
       bridge.context[name] === undefined &&
       !bridge.source.includes(`globalThis.${name} =`) &&
-      bridge.source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+      bridge.source.includes(
+        `// Retired global: ${name}. Exports are supplied through the game dependency bag.`
+      )
   )
 );
 const moduleGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 // The retired generated bridge intentionally does not expose a factory. Its execution is
 // asserted above; behavioral/recovery coverage uses the canonical source-owned factory.
-const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(
-  createModuleGameDependencyBag
-);
+const bridgeGameDependenciesSnapshot = gameDependenciesSnapshot(createModuleGameDependencyBag);
 check(
   "module and bridge game dependency bag output match",
   JSON.stringify(moduleGameDependenciesSnapshot) === JSON.stringify(bridgeGameDependenciesSnapshot)
@@ -1862,7 +2018,8 @@ check(
 );
 check(
   "module dependency bag exposes the statically imported enemy renderer",
-  moduleGameDependenciesSnapshot.__bag.renderEnemies.createEnemyRenderer === createModuleEnemyRenderer
+  moduleGameDependenciesSnapshot.__bag.renderEnemies.createEnemyRenderer ===
+    createModuleEnemyRenderer
 );
 check(
   "module dependency bag exposes the statically imported rendering factory",
@@ -1876,7 +2033,8 @@ const bridgeDependencyBagRenderingSnapshot = renderingSnapshot(
 );
 check(
   "native and generated dependency bags inject rendering factories with source-owned parity",
-  JSON.stringify(moduleRenderingSnapshot) === JSON.stringify(moduleDependencyBagRenderingSnapshot) &&
+  JSON.stringify(moduleRenderingSnapshot) ===
+    JSON.stringify(moduleDependencyBagRenderingSnapshot) &&
     JSON.stringify(moduleRenderingSnapshot) === JSON.stringify(bridgeDependencyBagRenderingSnapshot)
 );
 const moduleDependencyBagEnemyRendererSnapshot = enemyRendererSnapshot(
@@ -1887,8 +2045,10 @@ const bridgeDependencyBagEnemyRendererSnapshot = enemyRendererSnapshot(
 );
 check(
   "native and generated dependency bags inject matching source-owned enemy renderer output",
-  JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(moduleDependencyBagEnemyRendererSnapshot) &&
-    JSON.stringify(moduleEnemyRendererSnapshot) === JSON.stringify(bridgeDependencyBagEnemyRendererSnapshot)
+  JSON.stringify(moduleEnemyRendererSnapshot) ===
+    JSON.stringify(moduleDependencyBagEnemyRendererSnapshot) &&
+    JSON.stringify(moduleEnemyRendererSnapshot) ===
+      JSON.stringify(bridgeDependencyBagEnemyRendererSnapshot)
 );
 check(
   "native and generated dependency bags preserve the injected enemy renderer with missing, poisoned, and restored legacy globals without reads",
@@ -2263,7 +2423,10 @@ check("dependency bag exposes input binder", moduleGameDependenciesSnapshot.hasI
 check("dependency bag exposes map factory", moduleGameDependenciesSnapshot.hasMapSystem);
 check("dependency bag exposes pickup factory", moduleGameDependenciesSnapshot.hasPickups);
 check("dependency bag exposes relic factory", moduleGameDependenciesSnapshot.hasRelics);
-check("dependency bag exposes run lifecycle factory", moduleGameDependenciesSnapshot.hasRunLifecycle);
+check(
+  "dependency bag exposes run lifecycle factory",
+  moduleGameDependenciesSnapshot.hasRunLifecycle
+);
 check("dependency bag exposes run state factory", moduleGameDependenciesSnapshot.hasRunState);
 check("dependency bag exposes run UI factory", moduleGameDependenciesSnapshot.hasRunUi);
 check(
@@ -2278,15 +2441,27 @@ check(
 check("dependency bag exposes level-up choices", moduleGameDependenciesSnapshot.hasLevelUpChoices);
 check("dependency bag exposes native level-up factory", moduleGameDependenciesSnapshot.hasLevelUp);
 check("dependency bag exposes native HUD renderer", moduleGameDependenciesSnapshot.hasRenderHud);
-check("dependency bag exposes render skill rail", moduleGameDependenciesSnapshot.hasRenderSkillRail);
+check(
+  "dependency bag exposes render skill rail",
+  moduleGameDependenciesSnapshot.hasRenderSkillRail
+);
 check("dependency bag exposes source-owned renderer", moduleGameDependenciesSnapshot.hasRendering);
-check("dependency bag injects native weapon behaviors", moduleGameDependenciesSnapshot.hasWeaponBehaviors);
+check(
+  "dependency bag injects native weapon behaviors",
+  moduleGameDependenciesSnapshot.hasWeaponBehaviors
+);
 check("dependency bag exposes weapon cooldowns", moduleGameDependenciesSnapshot.hasWeaponCooldowns);
 check("dependency bag injects native weapon fire", moduleGameDependenciesSnapshot.hasWeaponFire);
-check("dependency bag exposes weapon projectiles", moduleGameDependenciesSnapshot.hasWeaponProjectiles);
+check(
+  "dependency bag exposes weapon projectiles",
+  moduleGameDependenciesSnapshot.hasWeaponProjectiles
+);
 check("dependency bag exposes weapon targeting", moduleGameDependenciesSnapshot.hasWeaponTargeting);
 check("dependency bag exposes save corruption", moduleGameDependenciesSnapshot.hasSaveCorruption);
-check("dependency bag exposes native save defaults", moduleGameDependenciesSnapshot.hasSaveDefaults);
+check(
+  "dependency bag exposes native save defaults",
+  moduleGameDependenciesSnapshot.hasSaveDefaults
+);
 check(
   "dependency bag supplies current save version",
   moduleGameDependenciesSnapshot.saveDefaultsVersion === moduleCurrentSaveVersion
@@ -2304,7 +2479,8 @@ check(
 check("dependency bag exposes save migrations", moduleGameDependenciesSnapshot.hasSaveMigrations);
 check(
   "dependency bag migration helper output matches module fixture",
-  JSON.stringify(moduleGameDependenciesSnapshot.migrationResults) === JSON.stringify(moduleMigrationResults)
+  JSON.stringify(moduleGameDependenciesSnapshot.migrationResults) ===
+    JSON.stringify(moduleMigrationResults)
 );
 check(
   "dependency bag isPlainObject output matches module fixture",
@@ -2330,12 +2506,27 @@ check(
     moduleGameDependenciesSnapshot.shellRelicCallerTiming.previewTimerDelay === 100 &&
     moduleGameDependenciesSnapshot.shellRelicCallerTimerCount === 2
 );
-check("dependency bag exposes native game banner factory", moduleGameDependenciesSnapshot.hasGameBannerFactory);
-check("dependency bag ignores poisoned game banner global", moduleGameDependenciesSnapshot.bannerGlobalReads === 0);
-check("dependency bag exposes native Shop factory", moduleGameDependenciesSnapshot.hasNativeShopFactory);
-check("dependency bag creates native Shop with preserved documentRef", moduleGameDependenciesSnapshot.hasNativeShop);
+check(
+  "dependency bag exposes native game banner factory",
+  moduleGameDependenciesSnapshot.hasGameBannerFactory
+);
+check(
+  "dependency bag ignores poisoned game banner global",
+  moduleGameDependenciesSnapshot.bannerGlobalReads === 0
+);
+check(
+  "dependency bag exposes native Shop factory",
+  moduleGameDependenciesSnapshot.hasNativeShopFactory
+);
+check(
+  "dependency bag creates native Shop with preserved documentRef",
+  moduleGameDependenciesSnapshot.hasNativeShop
+);
 check("dependency bag exposes shop pricing", moduleGameDependenciesSnapshot.hasShopPricing);
-check("dependency bag injects native UI progression", moduleGameDependenciesSnapshot.hasUiProgression);
+check(
+  "dependency bag injects native UI progression",
+  moduleGameDependenciesSnapshot.hasUiProgression
+);
 check("dependency bag injects native progression", moduleGameDependenciesSnapshot.hasProgression);
 check("dependency bag injects native quests", moduleGameDependenciesSnapshot.hasQuests);
 check("dependency bag injects native UI", moduleGameDependenciesSnapshot.hasUi);
@@ -2361,7 +2552,8 @@ check(
 );
 check(
   "module dependency bag uses the six native injected factories",
-  moduleGameDependenciesSnapshot.__bag.progression.createProgressionSystem === createModuleProgressionSystem &&
+  moduleGameDependenciesSnapshot.__bag.progression.createProgressionSystem ===
+    createModuleProgressionSystem &&
     moduleGameDependenciesSnapshot.__bag.quests.createQuestSystem === createModuleQuestSystem &&
     moduleGameDependenciesSnapshot.__bag.quests.questOpenIds === moduleQuestOpenIds &&
     typeof moduleGameDependenciesSnapshot.__bag.ui.createUi === "function" &&
@@ -2370,7 +2562,8 @@ check(
       "function" &&
     moduleGameDependenciesSnapshot.__bag.weaponBehaviors.createWeaponBehaviorSystem ===
       createModuleWeaponBehaviorSystem &&
-    moduleGameDependenciesSnapshot.__bag.weaponFire.createWeaponFireSystem === createModuleWeaponFireSystem
+    moduleGameDependenciesSnapshot.__bag.weaponFire.createWeaponFireSystem ===
+      createModuleWeaponFireSystem
 );
 check(
   "dependency bag preserves balance runtime profile",
@@ -2399,7 +2592,8 @@ check(
 );
 check(
   "debug bridge retires globalThis.TapSurvivorDebug",
-  debugBridge.context.TapSurvivorDebug === undefined && !debugBridge.source.includes("globalThis.TapSurvivorDebug")
+  debugBridge.context.TapSurvivorDebug === undefined &&
+    !debugBridge.source.includes("globalThis.TapSurvivorDebug")
 );
 check("debug bridge source has generated banner", hasGeneratedBanner(debugBridge.source));
 check(
@@ -2446,7 +2640,10 @@ check("pickup system exposes updatePickupTexts", modulePickupSnapshot.exposesUpd
 check("pickup boss drops coin and heart", modulePickupSnapshot.bossDrop.types === "coin,heart");
 check("pickup boss drops use boss radii", modulePickupSnapshot.bossDrop.radii === "10,11");
 check("pickup boss coin value scales by floor", modulePickupSnapshot.bossDrop.coinValue === 27);
-check("pickup normal enemy deterministic coin drops", modulePickupSnapshot.normalDrop.types === "coin");
+check(
+  "pickup normal enemy deterministic coin drops",
+  modulePickupSnapshot.normalDrop.types === "coin"
+);
 check("pickup normal enemy uses normal radius", modulePickupSnapshot.normalDrop.radii === "7");
 check("pickup normal coin value scales by floor", modulePickupSnapshot.normalDrop.coinValue === 9);
 check("pickup XP drops collect XP", modulePickupSnapshot.xp.collectXpValue === 5);
@@ -2459,14 +2656,21 @@ check(
 );
 check("pickup heart loot heals without exceeding max", modulePickupSnapshot.loot.playerHp === 100);
 check("pickup loot drops add pickup text", modulePickupSnapshot.loot.texts === "+15,+20 HP");
-check("pickup loot drops are removed after collection", modulePickupSnapshot.loot.remainingDrops === 0);
+check(
+  "pickup loot drops are removed after collection",
+  modulePickupSnapshot.loot.remainingDrops === 0
+);
 check("pickup texts rise and expire", modulePickupSnapshot.texts.remaining === 1);
 check("pickup texts update y position", modulePickupSnapshot.texts.firstY === 86);
 
-check("module exports createCombatDamageSystem", typeof createModuleCombatDamageSystem === "function");
+check(
+  "module exports createCombatDamageSystem",
+  typeof createModuleCombatDamageSystem === "function"
+);
 check(
   "combat damage bridge remains retired",
-  bridgeCombatDamage === undefined && !combatDamageBridge.source.includes("globalThis.TapSurvivorCombatDamage")
+  bridgeCombatDamage === undefined &&
+    !combatDamageBridge.source.includes("globalThis.TapSurvivorCombatDamage")
 );
 check(
   "combat damage bridge source has generated banner",
@@ -2480,18 +2684,36 @@ check("combat damage exposes reapEnemies", moduleCombatDamageSnapshot.exposesRea
 check("combat damage applies boss damage bonus", moduleCombatDamageSnapshot.enemy.bossHp === 5);
 check("combat damage returns capped damage dealt", moduleCombatDamageSnapshot.enemy.dealt === 15);
 check("combat damage records weapon damage", moduleCombatDamageSnapshot.enemy.weaponDamage === 15);
-check("combat damage records damage quests", moduleCombatDamageSnapshot.enemy.damageQuestValue === 15);
-check("combat damage records weapon quest progress", moduleCombatDamageSnapshot.enemy.weaponQuestValue === 15);
-check("combat damage ignores invincible player", moduleCombatDamageSnapshot.player.invincibleDamage === 0);
-check("combat damage dodge sets blink timer", moduleCombatDamageSnapshot.player.dodgeBlink === 0.35);
+check(
+  "combat damage records damage quests",
+  moduleCombatDamageSnapshot.enemy.damageQuestValue === 15
+);
+check(
+  "combat damage records weapon quest progress",
+  moduleCombatDamageSnapshot.enemy.weaponQuestValue === 15
+);
+check(
+  "combat damage ignores invincible player",
+  moduleCombatDamageSnapshot.player.invincibleDamage === 0
+);
+check(
+  "combat damage dodge sets blink timer",
+  moduleCombatDamageSnapshot.player.dodgeBlink === 0.35
+);
 check("combat damage applies reduction", moduleCombatDamageSnapshot.player.reducedDamage === 15);
 check("combat damage applies thorn damage", moduleCombatDamageSnapshot.player.thornEnemyHp === 6);
 check("combat damage teleports player", moduleCombatDamageSnapshot.player.teleportX === 80);
-check("combat damage sets blink invulnerability", moduleCombatDamageSnapshot.player.invincibleTimer === 1);
+check(
+  "combat damage sets blink invulnerability",
+  moduleCombatDamageSnapshot.player.invincibleTimer === 1
+);
 check("combat damage reaps dead enemies", moduleCombatDamageSnapshot.reap.remainingEnemies === 1);
 check("combat damage increments kills", moduleCombatDamageSnapshot.reap.kills === 2);
 check("combat damage creates XP drops", moduleCombatDamageSnapshot.reap.xpDrops === "7:3,12:8");
-check("combat damage spawns loot drops", moduleCombatDamageSnapshot.reap.lootDrops === "normal,boss");
+check(
+  "combat damage spawns loot drops",
+  moduleCombatDamageSnapshot.reap.lootDrops === "normal,boss"
+);
 check("combat damage applies lifesteal", moduleCombatDamageSnapshot.reap.playerHp === 100);
 check("combat damage applies kill explosion", moduleCombatDamageSnapshot.reap.aliveEnemyHp === 2);
 check(
@@ -2501,15 +2723,22 @@ check(
 );
 check("combat damage records kill quests", moduleCombatDamageSnapshot.reap.killQuestValue === 2);
 check("combat damage records boss quests", moduleCombatDamageSnapshot.reap.bossQuestValue === 1);
-check("combat damage advances tower after boss", moduleCombatDamageSnapshot.reap.advanceTowerFloor === 1);
+check(
+  "combat damage advances tower after boss",
+  moduleCombatDamageSnapshot.reap.advanceTowerFloor === 1
+);
 check("combat damage marks boss defeated", moduleCombatDamageSnapshot.reap.bossDefeated);
 
 check("module exports createRunLifecycle", typeof createModuleRunLifecycle === "function");
 check(
   "run lifecycle bridge does not publish retired global",
-  bridgeRunLifecycle === undefined && !runLifecycleBridge.source.includes("globalThis.TapSurvivorRunLifecycle")
+  bridgeRunLifecycle === undefined &&
+    !runLifecycleBridge.source.includes("globalThis.TapSurvivorRunLifecycle")
 );
-check("run lifecycle bridge source has generated banner", hasGeneratedBanner(runLifecycleBridge.source));
+check(
+  "run lifecycle bridge source has generated banner",
+  hasGeneratedBanner(runLifecycleBridge.source)
+);
 check(
   "game dependency bag exposes createRunLifecycle",
   typeof bridgeGameDependenciesSnapshot.__bag.runLifecycle.createRunLifecycle === "function"
@@ -2524,23 +2753,50 @@ check(
   "module and bridge run lifecycle output match",
   JSON.stringify(moduleRunLifecycleSnapshot) === JSON.stringify(bridgeRunLifecycleSnapshot)
 );
-check("run lifecycle start closes start flow", moduleRunLifecycleSnapshot.start.closeStartFlow === 1);
+check(
+  "run lifecycle start closes start flow",
+  moduleRunLifecycleSnapshot.start.closeStartFlow === 1
+);
 check("run lifecycle start closes shop", moduleRunLifecycleSnapshot.start.closeShop === 1);
 check("run lifecycle start hides end screen", moduleRunLifecycleSnapshot.start.hideEndScreen === 1);
 check("run lifecycle start hides level-up UI", moduleRunLifecycleSnapshot.start.levelUpHidden);
-check("run lifecycle start closes run menu", moduleRunLifecycleSnapshot.start.closeRunMenuArg === false);
-check("run lifecycle start resets game state", moduleRunLifecycleSnapshot.start.resetGameState === 1);
-check("run lifecycle start waits for first movement", moduleRunLifecycleSnapshot.start.awaitingFirstMoveInput);
-check("run lifecycle start shows movement gate banner", moduleRunLifecycleSnapshot.start.showMovementGateBanner === 1);
+check(
+  "run lifecycle start closes run menu",
+  moduleRunLifecycleSnapshot.start.closeRunMenuArg === false
+);
+check(
+  "run lifecycle start resets game state",
+  moduleRunLifecycleSnapshot.start.resetGameState === 1
+);
+check(
+  "run lifecycle start waits for first movement",
+  moduleRunLifecycleSnapshot.start.awaitingFirstMoveInput
+);
+check(
+  "run lifecycle start shows movement gate banner",
+  moduleRunLifecycleSnapshot.start.showMovementGateBanner === 1
+);
 check("run lifecycle end with no game is no-op", moduleRunLifecycleSnapshot.noGame.noOp);
 check("run lifecycle end stops game", moduleRunLifecycleSnapshot.end.running === false);
 check("run lifecycle end stores reason", moduleRunLifecycleSnapshot.end.endReason === "defeat");
-check("run lifecycle end shows end screen", moduleRunLifecycleSnapshot.end.showEndScreenReason === "defeat");
+check(
+  "run lifecycle end shows end screen",
+  moduleRunLifecycleSnapshot.end.showEndScreenReason === "defeat"
+);
 check("run lifecycle end persists once", moduleRunLifecycleSnapshot.end.persist === 1);
 check("run lifecycle end renders meta", moduleRunLifecycleSnapshot.end.renderMeta === 1);
-check("run lifecycle boss clear opens relic choice", moduleRunLifecycleSnapshot.relic.choiceVisible);
-check("run lifecycle relic click advances tower floor", moduleRunLifecycleSnapshot.relic.saveTowerFloor === 6);
-check("run lifecycle relic click records floor clear", moduleRunLifecycleSnapshot.relic.lastFloorClearFloor === 5);
+check(
+  "run lifecycle boss clear opens relic choice",
+  moduleRunLifecycleSnapshot.relic.choiceVisible
+);
+check(
+  "run lifecycle relic click advances tower floor",
+  moduleRunLifecycleSnapshot.relic.saveTowerFloor === 6
+);
+check(
+  "run lifecycle relic click records floor clear",
+  moduleRunLifecycleSnapshot.relic.lastFloorClearFloor === 5
+);
 check("run lifecycle relic click updates HUD", moduleRunLifecycleSnapshot.relic.updateRunHud === 1);
 
 check("module exports createRunStateSystem", typeof createModuleRunStateSystem === "function");
@@ -2555,7 +2811,9 @@ check(
 );
 
 const moduleRunStateSnapshot = runStateSnapshot(createModuleRunStateSystem);
-const bridgeRunStateSnapshot = runStateSnapshot(bridgeGameDependenciesSnapshot.__bag.runState.createRunStateSystem);
+const bridgeRunStateSnapshot = runStateSnapshot(
+  bridgeGameDependenciesSnapshot.__bag.runState.createRunStateSystem
+);
 check(
   "module and bridge run state output match",
   JSON.stringify(moduleRunStateSnapshot) === JSON.stringify(bridgeRunStateSnapshot)
@@ -2569,16 +2827,28 @@ check("run state reset centers player x", moduleRunStateSnapshot.reset.playerX =
 check("run state reset centers player y", moduleRunStateSnapshot.reset.playerY === 270);
 check("run state reset centers target x", moduleRunStateSnapshot.reset.targetX === 480);
 check("run state reset centers target y", moduleRunStateSnapshot.reset.targetY === 270);
-check("run state reset equips spark bolt", moduleRunStateSnapshot.reset.equippedWeapons.includes("spark_bolt"));
+check(
+  "run state reset equips spark bolt",
+  moduleRunStateSnapshot.reset.equippedWeapons.includes("spark_bolt")
+);
 check("run state reset applies shop-only speed", moduleRunStateSnapshot.reset.playerSpeed === 217);
-check("run state reset applies shop-only pickup radius", moduleRunStateSnapshot.reset.pickupRadius === 61);
+check(
+  "run state reset applies shop-only pickup radius",
+  moduleRunStateSnapshot.reset.pickupRadius === 61
+);
 check("run state reset applies shop-only max hp", moduleRunStateSnapshot.reset.maxHp === 130);
 check("run state reset calls map apply", moduleRunStateSnapshot.reset.mapApplied === 1);
-check("run state reset initializes combat collections", moduleRunStateSnapshot.reset.emptyCollections);
+check(
+  "run state reset initializes combat collections",
+  moduleRunStateSnapshot.reset.emptyCollections
+);
 check("run state reset initializes state maps", moduleRunStateSnapshot.reset.emptyStateMaps);
 check("run state meta upgrades leave null game unchanged", moduleRunStateSnapshot.meta.nullSafe);
 check("run state meta upgrades leave speed unchanged", moduleRunStateSnapshot.meta.speed === 100);
-check("run state meta upgrades leave pickup radius unchanged", moduleRunStateSnapshot.meta.pickupRadius === 40);
+check(
+  "run state meta upgrades leave pickup radius unchanged",
+  moduleRunStateSnapshot.meta.pickupRadius === 40
+);
 check("run state meta upgrades leave max hp unchanged", moduleRunStateSnapshot.meta.maxHp === 120);
 check("run state meta upgrades leave hp unchanged", moduleRunStateSnapshot.meta.hp === 60);
 
@@ -2632,7 +2902,8 @@ check("run ui hideEndScreen hides end screen", moduleRunUiSnapshot.endScreen.hid
 check("module exports createRunUpdater", typeof createModuleRunUpdater === "function");
 check(
   "run update bridge retires its classic publisher",
-  bridgeRunUpdate === undefined && !runUpdateBridge.source.includes("globalThis.TapSurvivorRunUpdate")
+  bridgeRunUpdate === undefined &&
+    !runUpdateBridge.source.includes("globalThis.TapSurvivorRunUpdate")
 );
 check("run update bridge source has generated banner", hasGeneratedBanner(runUpdateBridge.source));
 
@@ -2645,23 +2916,50 @@ check("run update with paused game is no-op", moduleRunUpdateSnapshot.noOps.paus
 check("run update while awaiting movement is no-op", moduleRunUpdateSnapshot.noOps.awaiting);
 check("run update increments elapsed", moduleRunUpdateSnapshot.active.elapsed === 10.1);
 check("run update applies map system", moduleRunUpdateSnapshot.active.mapApplied === 1);
-check("run update records survival quest dt", moduleRunUpdateSnapshot.active.survivalQuestValue === 0.2);
+check(
+  "run update records survival quest dt",
+  moduleRunUpdateSnapshot.active.survivalQuestValue === 0.2
+);
 check("run update spawns boss at duration", moduleRunUpdateSnapshot.active.bossCalls === 1);
 check("run update moves player toward target", moduleRunUpdateSnapshot.active.playerX === 30);
 check("run update clamps player to canvas bounds", moduleRunUpdateSnapshot.active.playerY === 18);
 check("run update marks player moving", moduleRunUpdateSnapshot.active.moving === true);
 check("run update sets player facing", moduleRunUpdateSnapshot.active.facingX === 1);
-check("run update keeps relic timers non-negative", moduleRunUpdateSnapshot.active.timersNonNegative);
-check("run update clears expired action sprite", moduleRunUpdateSnapshot.active.actionSprite === "");
-check("run update calls combat and pickup systems in order", moduleRunUpdateSnapshot.active.callOrderMatches);
-check("run update ends defeated player run", moduleRunUpdateSnapshot.active.endReason === "Player defeated");
+check(
+  "run update keeps relic timers non-negative",
+  moduleRunUpdateSnapshot.active.timersNonNegative
+);
+check(
+  "run update clears expired action sprite",
+  moduleRunUpdateSnapshot.active.actionSprite === ""
+);
+check(
+  "run update calls combat and pickup systems in order",
+  moduleRunUpdateSnapshot.active.callOrderMatches
+);
+check(
+  "run update ends defeated player run",
+  moduleRunUpdateSnapshot.active.endReason === "Player defeated"
+);
 check("run update collectXp without player is no-op", moduleRunUpdateSnapshot.collect.noPlayerNoOp);
-check("run update collectXp applies relic multiplier", moduleRunUpdateSnapshot.collect.playerXp === 2);
-check("run update collectXp increments collected XP", moduleRunUpdateSnapshot.collect.xpCollected === 3);
-check("run update collectXp records original XP quest value", moduleRunUpdateSnapshot.collect.xpQuestValue === 2);
+check(
+  "run update collectXp applies relic multiplier",
+  moduleRunUpdateSnapshot.collect.playerXp === 2
+);
+check(
+  "run update collectXp increments collected XP",
+  moduleRunUpdateSnapshot.collect.xpCollected === 3
+);
+check(
+  "run update collectXp records original XP quest value",
+  moduleRunUpdateSnapshot.collect.xpQuestValue === 2
+);
 check("run update collectXp levels player", moduleRunUpdateSnapshot.collect.level === 2);
 check("run update collectXp increments level ups", moduleRunUpdateSnapshot.collect.levelUps === 1);
-check("run update collectXp records level quest", moduleRunUpdateSnapshot.collect.levelQuestValue === 1);
+check(
+  "run update collectXp records level quest",
+  moduleRunUpdateSnapshot.collect.levelQuestValue === 1
+);
 check("run update collectXp shows level-up UI", moduleRunUpdateSnapshot.collect.showLevelUp === 1);
 if (process.exitCode) {
   process.exit(process.exitCode);
@@ -2760,10 +3058,7 @@ function createFallbackScalingFixture() {
 function scalingSnapshot(scaling, weapon) {
   return {
     projectileRadius: scaling.projectileRadius(weapon),
-    projectileSkillModifier: scaling.projectileSkillModifier(
-      weapon,
-      "projectileDamageMultiplier"
-    ),
+    projectileSkillModifier: scaling.projectileSkillModifier(weapon, "projectileDamageMultiplier"),
     weaponCooldown: scaling.weaponCooldown(weapon),
     weaponDamage: scaling.weaponDamage(weapon.id),
     weaponReach: scaling.weaponReach(weapon),
@@ -3113,8 +3408,15 @@ function createGameRuntimeOptions(overrides = {}) {
 }
 
 function gameRuntimeSnapshot(createGameRuntimeController) {
-  const { buttons, calls, controllerOptions, documentRef, documentListeners, getGameState, getSaveState } =
-    createGameRuntimeOptions();
+  const {
+    buttons,
+    calls,
+    controllerOptions,
+    documentRef,
+    documentListeners,
+    getGameState,
+    getSaveState,
+  } = createGameRuntimeOptions();
 
   const controller = createGameRuntimeController(controllerOptions);
 
@@ -3199,17 +3501,31 @@ function uiDependencySnapshot(bag, documentRef) {
   };
 }
 
-function createUiDependencyFakeElement(tagName) {
+function createUiDependencyFakeElement(tagName, ownerDocument) {
+  const documentOwner = ownerDocument || {
+    createElement: (childTagName) => createUiDependencyFakeElement(childTagName),
+  };
+  let renderedText = "";
   const element = {
     appendChild(child) {
+      this.childNodes.push(child);
       this.children.push(child);
       return child;
     },
     children: [],
+    childNodes: [],
     className: "",
-    innerHTML: "",
+    ownerDocument: documentOwner,
     tagName,
-    textContent: "",
+    replaceChildren(...children) {
+      this.children = [];
+      this.childNodes = [];
+      renderedText = "";
+      for (const child of children) {
+        if (typeof child === "string") this.childNodes.push({ textContent: child });
+        else this.appendChild(child);
+      }
+    },
     addEventListener() {},
     classList: {
       add() {},
@@ -3219,6 +3535,26 @@ function createUiDependencyFakeElement(tagName) {
       remove() {},
     },
   };
+  Object.defineProperties(element, {
+    innerHTML: {
+      get() {
+        return renderedText;
+      },
+      set(value) {
+        this.replaceChildren();
+        renderedText = String(value).replace(/<[^>]*>/gu, "");
+      },
+    },
+    textContent: {
+      get() {
+        return [renderedText, ...this.childNodes.map((child) => child.textContent || "")].join("");
+      },
+      set(value) {
+        this.replaceChildren();
+        renderedText = String(value);
+      },
+    },
+  });
   return element;
 }
 
@@ -3587,11 +3923,20 @@ function spriteFactorySnapshot(createSpriteSystem, createSpriteSheetRenderer, ru
       rasterHeight: 10,
       rasterWidth: 8,
     }),
-    sheetAnimation: spriteSheetRenderer.drawAnimation("fixture", "walk", "default", 50, 60, 30, 20, {
-      alpha: 0.5,
-      flipX: true,
-      time: 0.3,
-    }),
+    sheetAnimation: spriteSheetRenderer.drawAnimation(
+      "fixture",
+      "walk",
+      "default",
+      50,
+      60,
+      30,
+      20,
+      {
+        alpha: 0.5,
+        flipX: true,
+        time: 0.3,
+      }
+    ),
     spriteSheetApi: Object.keys(spriteSheetRenderer).sort(),
     spriteSystemApi: Object.keys(spriteSystem).sort(),
     trace: runtime.trace,
@@ -3735,7 +4080,10 @@ function withGlobalBindings(bindings, callback) {
 
 function spriteShimLifecycleSnapshot() {
   const spritesSource = readFileSync(new URL("../src/sprites.js", import.meta.url), "utf8");
-  const shimSource = readFileSync(new URL("../src/sprite-sheet-renderer.js", import.meta.url), "utf8");
+  const shimSource = readFileSync(
+    new URL("../src/sprite-sheet-renderer.js", import.meta.url),
+    "utf8"
+  );
   const runArtifacts = (context) => {
     let error = "";
     [
@@ -3785,14 +4133,19 @@ function spriteShimLifecycleSnapshot() {
 
   return {
     absentError,
-    absentPublisherPresent: Object.prototype.hasOwnProperty.call(absentContext, "TapSurvivorSprites"),
+    absentPublisherPresent: Object.prototype.hasOwnProperty.call(
+      absentContext,
+      "TapSurvivorSprites"
+    ),
     poisonedError,
     poisonedPublisherReads,
     poisonedDescriptorRetained:
-      Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorSprites")?.get === poisonedDescriptor?.get,
+      Object.getOwnPropertyDescriptor(poisonedContext, "TapSurvivorSprites")?.get ===
+      poisonedDescriptor?.get,
     restoredError,
     restoredDescriptorRetained:
-      Object.getOwnPropertyDescriptor(restoredContext, "TapSurvivorSprites")?.value === restoredDescriptor?.value,
+      Object.getOwnPropertyDescriptor(restoredContext, "TapSurvivorSprites")?.value ===
+      restoredDescriptor?.value,
   };
 }
 
@@ -3925,7 +4278,7 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   const uiElements = new Map();
   const documentRef = {
     createElement(tagName) {
-      return createUiDependencyFakeElement(tagName);
+      return createUiDependencyFakeElement(tagName, this);
     },
     getElementById(id) {
       return uiElements.get(id) || null;
@@ -3934,13 +4287,13 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       return [];
     },
   };
-  const canvasElement = createUiDependencyFakeElement("canvas");
+  const canvasElement = createUiDependencyFakeElement("canvas", documentRef);
   canvasElement.getContext = () => ({
     clearRect() {},
   });
   uiElements.set("game", canvasElement);
   ["menuTree", "menuQuests"].forEach((id) => {
-    uiElements.set(id, createUiDependencyFakeElement("div"));
+    uiElements.set(id, createUiDependencyFakeElement("div", documentRef));
   });
   globalRef.document = documentRef;
   globalRef.location = { search: "?balance=testing" };
@@ -4380,8 +4733,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     documentRef
   );
   const poisonedContentPublisherDescriptorRetained =
-    Object.getOwnPropertyDescriptor(contentPublisherRecoveryGlobalRef, "TapSurvivorContent")?.get ===
-    poisonedContentPublisherDescriptor?.get;
+    Object.getOwnPropertyDescriptor(contentPublisherRecoveryGlobalRef, "TapSurvivorContent")
+      ?.get === poisonedContentPublisherDescriptor?.get;
   const restoredContentPublisher = createBalanceContent("restored-publisher");
   Object.defineProperty(contentPublisherRecoveryGlobalRef, "TapSurvivorContent", {
     configurable: true,
@@ -4422,8 +4775,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     documentRef
   );
   const poisonedBalancePublisherDescriptorRetained =
-    Object.getOwnPropertyDescriptor(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime")?.get ===
-    balancePublisherDescriptor?.get;
+    Object.getOwnPropertyDescriptor(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime")
+      ?.get === balancePublisherDescriptor?.get;
   const restoredBalancePublisher = { restored: true };
   Object.defineProperty(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime", {
     configurable: true,
@@ -4510,7 +4863,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       poisoned: {
         error: poisonedBalancePublisherResult.error,
         profile: poisonedBalancePublisherResult.bag?.balanceRuntime?.getActiveProfile?.() || "",
-        publisherAbsent: !Object.hasOwn(balancePublisherRecoveryGlobalRef, "TapSurvivorBalanceRuntime"),
+        publisherAbsent: !Object.hasOwn(
+          balancePublisherRecoveryGlobalRef,
+          "TapSurvivorBalanceRuntime"
+        ),
         publisherReads: balancePublisherReads,
         poisonedDescriptorRetained: poisonedBalancePublisherDescriptorRetained,
       },
@@ -4525,7 +4881,9 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     balanceRuntimeUsesInjectedContent: bag.content === injectedContent,
     injectedContentHasNoProfileProperty,
     contentId: bag.content.id,
-    defaultUpgradeIds: injectedUpgradeContent.createUpgradeDefs(upgradeWeaponDefs).map((upgrade) => upgrade.id),
+    defaultUpgradeIds: injectedUpgradeContent
+      .createUpgradeDefs(upgradeWeaponDefs)
+      .map((upgrade) => upgrade.id),
     defaultRunUpgradeIds: injectedUpgradeContent.runUpgradeDefs.map((upgrade) => upgrade.id),
     runtimeProfile: bag.balanceRuntime.getActiveProfile(),
     missingBalanceContentError: missingBalanceContentResult.error,
@@ -4575,14 +4933,10 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hasQuests:
       typeof bag.quests?.createQuestSystem === "function" &&
       typeof bag.quests?.questOpenIds === "function",
-    hasUi:
-      typeof bag.ui?.createUi === "function" &&
-      typeof bag.ui?.createUiRenderer === "function",
-    hasUiProgression:
-      typeof bag.uiProgression?.createUiProgressionRenderer === "function",
+    hasUi: typeof bag.ui?.createUi === "function" && typeof bag.ui?.createUiRenderer === "function",
+    hasUiProgression: typeof bag.uiProgression?.createUiProgressionRenderer === "function",
     uiDependency,
-    hasWeaponBehaviors:
-      typeof bag.weaponBehaviors?.createWeaponBehaviorSystem === "function",
+    hasWeaponBehaviors: typeof bag.weaponBehaviors?.createWeaponBehaviorSystem === "function",
     hasWeaponFire: typeof bag.weaponFire?.createWeaponFireSystem === "function",
     hasWeaponProjectiles:
       typeof bag.weaponProjectiles.createWeaponProjectileSystem === "function" &&
@@ -4593,12 +4947,18 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       bag.saveDefaults.CURRENT_SAVE_VERSION === moduleCurrentSaveVersion &&
       typeof bag.saveDefaults.createDefaultSave === "function",
     saveDefaultsVersion: bag.saveDefaults.CURRENT_SAVE_VERSION,
-    defaultSave: bag.saveDefaults.createDefaultSave({ starterQuestIds: ["daily_one", "daily_two"] }),
+    defaultSave: bag.saveDefaults.createDefaultSave({
+      starterQuestIds: ["daily_one", "daily_two"],
+    }),
     hasSaveMigrations:
       typeof bag.saveMigrations.isPlainObject === "function" &&
       typeof bag.saveMigrations.migrateSave === "function",
-    migrationResults: saveMigrationFixtures.map((fixture) => bag.saveMigrations.migrateSave(fixture)),
-    isPlainObjectResults: [{}, null, []].map((fixture) => bag.saveMigrations.isPlainObject(fixture)),
+    migrationResults: saveMigrationFixtures.map((fixture) =>
+      bag.saveMigrations.migrateSave(fixture)
+    ),
+    isPlainObjectResults: [{}, null, []].map((fixture) =>
+      bag.saveMigrations.isPlainObject(fixture)
+    ),
     hasSaveNormalize:
       typeof bag.saveNormalize?.arrayValue === "function" &&
       typeof bag.saveNormalize?.createSaveNormalizer === "function" &&
@@ -4651,13 +5011,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     renderingGlobalReads,
     missingRenderEnemiesGlobalError: missingRenderEnemiesGlobalResult.error,
     missingRenderEnemiesGlobalFactory:
-      typeof missingRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer === "function",
+      typeof missingRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer ===
+      "function",
     poisonedRenderEnemiesGlobalError: poisonedRenderEnemiesGlobalResult.error,
     poisonedRenderEnemiesGlobalFactory:
-      typeof poisonedRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer === "function",
+      typeof poisonedRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer ===
+      "function",
     recoveredRenderEnemiesGlobalError: recoveredRenderEnemiesGlobalResult.error,
     recoveredRenderEnemiesGlobalFactory:
-      typeof recoveredRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer === "function",
+      typeof recoveredRenderEnemiesGlobalResult.bag?.renderEnemies?.createEnemyRenderer ===
+      "function",
     renderEnemiesGlobalReads,
     missingHudRetiredGlobalError: missingHudRetiredGlobalResult.error,
     missingHudRetiredGlobalFactory:
@@ -4671,13 +5034,16 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
     hudRetiredGlobalReads,
     missingSkillRailRetiredGlobalError: missingSkillRailRetiredGlobalResult.error,
     missingSkillRailRetiredGlobalFactory:
-      typeof missingSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
+      typeof missingSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer ===
+      "function",
     poisonedSkillRailRetiredGlobalError: poisonedSkillRailRetiredGlobalResult.error,
     poisonedSkillRailRetiredGlobalFactory:
-      typeof poisonedSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
+      typeof poisonedSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer ===
+      "function",
     recoveredSkillRailRetiredGlobalError: recoveredSkillRailRetiredGlobalResult.error,
     recoveredSkillRailRetiredGlobalFactory:
-      typeof recoveredSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer === "function",
+      typeof recoveredSkillRailRetiredGlobalResult.bag?.renderSkillRail?.createSkillRailRenderer ===
+      "function",
     skillRailRetiredGlobalReads,
     missingRetiredPublisherError: missingRetiredPublisherResult.error,
     absentInputError: absentInputResult.error,
@@ -4695,7 +5061,8 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
       typeof poisonedGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
     recoveredGameRuntimeError: recoveredGameRuntimeResult.error,
     recoveredGameRuntimeFactory:
-      typeof recoveredGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController === "function",
+      typeof recoveredGameRuntimeResult.bag?.gameRuntime?.createGameRuntimeController ===
+      "function",
     gameRuntimeTargetGlobalReads,
     poisonedRetiredPublisherError: poisonedRetiredPublisherResult.error,
     retiredPublisherGlobalReads,
@@ -4706,7 +5073,12 @@ function gameDependenciesSnapshot(createGameDependencyBag) {
   return snapshot;
 }
 
-function createGameDependencyBagResult(createGameDependencyBag, globalRef, documentRef, dependencyOptions = {}) {
+function createGameDependencyBagResult(
+  createGameDependencyBag,
+  globalRef,
+  documentRef,
+  dependencyOptions = {}
+) {
   try {
     return {
       bag: createGameDependencyBag({ ...dependencyOptions, globalRef, documentRef }),
@@ -4734,14 +5106,22 @@ function spritePublisherRecoverySnapshot(createGameDependencyBag, globalRef, doc
       throw new Error("Forbidden TapSurvivorSprites global read");
     },
   });
-  const poisoned = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+  const poisoned = createGameDependencyBagResult(
+    createGameDependencyBag,
+    testGlobalRef,
+    documentRef
+  );
 
   if (originalDescriptor) {
     Object.defineProperty(testGlobalRef, "TapSurvivorSprites", originalDescriptor);
   } else {
     Reflect.deleteProperty(testGlobalRef, "TapSurvivorSprites");
   }
-  const restored = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+  const restored = createGameDependencyBagResult(
+    createGameDependencyBag,
+    testGlobalRef,
+    documentRef
+  );
 
   return {
     absent: spriteDependencySnapshot(absent),
@@ -4774,14 +5154,22 @@ function retiredStoragePublisherRecoverySnapshot(createGameDependencyBag, global
       throw new Error("Forbidden TapSurvivorStorage global read");
     },
   });
-  const poisoned = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+  const poisoned = createGameDependencyBagResult(
+    createGameDependencyBag,
+    testGlobalRef,
+    documentRef
+  );
 
   if (originalDescriptor) {
     Object.defineProperty(testGlobalRef, "TapSurvivorStorage", originalDescriptor);
   } else {
     Reflect.deleteProperty(testGlobalRef, "TapSurvivorStorage");
   }
-  const restored = createGameDependencyBagResult(createGameDependencyBag, testGlobalRef, documentRef);
+  const restored = createGameDependencyBagResult(
+    createGameDependencyBag,
+    testGlobalRef,
+    documentRef
+  );
 
   return {
     absent: storageDependencySnapshot(absent, "absent"),
@@ -4956,7 +5344,8 @@ function shellUiDocumentLifecycleSnapshot(createGameDependencyBag, globalRef, do
     Reflect.deleteProperty(missingDocumentGlobalRef, "document");
     const missing = classicShellUiSnapshotResult(
       withoutDocumentRef(
-        createGameDependencyBag({ globalRef: missingDocumentGlobalRef }).shellUi.createShellUiController
+        createGameDependencyBag({ globalRef: missingDocumentGlobalRef }).shellUi
+          .createShellUiController
       ),
       classicShellUiFixtureOptions()
     );
@@ -4983,7 +5372,8 @@ function shellUiDocumentLifecycleSnapshot(createGameDependencyBag, globalRef, do
         platformDocumentReads - injectedPlatformDocumentReads - missingPlatformDocumentReads,
     };
   } finally {
-    if (originalDocumentDescriptor === undefined) Reflect.deleteProperty(platformTarget, "document");
+    if (originalDocumentDescriptor === undefined)
+      Reflect.deleteProperty(platformTarget, "document");
     else Object.defineProperty(platformTarget, "document", originalDocumentDescriptor);
   }
   return {
@@ -5473,7 +5863,9 @@ function combatPhysicsSnapshot(createCombatSystem) {
 
 function runBossBlastFixture(createEnemyBehaviorSystem) {
   const game = {
-    bossAttacks: [{ type: "shockwave", x: 0, y: 0, radius: 40, damage: 12, age: 0, windup: 0, hit: false }],
+    bossAttacks: [
+      { type: "shockwave", x: 0, y: 0, radius: 40, damage: 12, age: 0, windup: 0, hit: false },
+    ],
     enemyBolts: [],
     enemies: [],
     player: { id: "player", hp: 100, radius: 10, targetX: 10, targetY: 0, x: 10, y: 0 },
@@ -5597,24 +5989,7 @@ function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
   const clickedButtons = [];
   const documentRef = {
     createElement(tagName) {
-      const listeners = new Map();
-      const button = {
-        tagName,
-        className: "",
-        innerHTML: "",
-        style: {
-          values: {},
-          setProperty(name, value) {
-            this.values[name] = value;
-          },
-        },
-        addEventListener(type, handler) {
-          listeners.set(type, handler);
-        },
-        click() {
-          listeners.get("click")?.();
-        },
-      };
+      const button = createShellRelicFakeElement(tagName, this);
       clickedButtons.push(button);
       return button;
     },
@@ -5643,13 +6018,7 @@ function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
       },
       relicChoiceText: { textContent: "" },
       relicChoiceTitle: { textContent: "" },
-      relicChoices: {
-        children: [],
-        innerHTML: "stale",
-        appendChild(button) {
-          this.children.push(button);
-        },
-      },
+      relicChoices: createShellRelicFakeElement("div", documentRef),
     };
     const controller = createRunLifecycle({
       documentRef,
@@ -5784,9 +6153,10 @@ function runLifecycleSnapshot(createRunLifecycle, runtimeGlobal) {
   });
   const updateBeforeRelic = calls.updateRunHud;
   relicFixture.controller.advanceTowerFloor();
-  const choiceVisible = calls.relicChoiceVisible && relicFixture.ui.relicChoices.children.length === 1;
+  const choiceVisible =
+    calls.relicChoiceVisible && relicFixture.ui.relicChoices.children.length === 1;
   relicFixture.ui.relicChoices.children[0]?.click();
-  relicFixture.ui.relicChoices.children[1]?.click();
+  relicFixture.ui.relicChoices.children[0]?.click();
   const relicGame = relicFixture.getGame();
   const relicSnapshot = {
     choiceVisible,
@@ -5898,7 +6268,7 @@ function runUiSnapshot(createRunUi) {
   const ui = {
     endScreen: createClassElement(["hidden"]),
     runHud: { textContent: "" },
-    runStats: { innerHTML: "" },
+    runStats: createShellRelicFakeElement("div"),
   };
   const controller = createRunUi({
     ui,
@@ -5939,7 +6309,7 @@ function runUiSnapshot(createRunUi) {
   const gameHud = ui.runHud.textContent;
   const gameHudDebugCalls = debugCalls;
   controller.showEndScreen("Player defeated");
-  const endStats = ui.runStats.innerHTML;
+  const endStats = ui.runStats.textContent;
   const opened = !ui.endScreen.classList.contains("hidden");
   controller.hideEndScreen();
   const hidden = ui.endScreen.classList.contains("hidden");
@@ -6127,12 +6497,12 @@ function runUpdateSnapshot(createRunUpdater) {
   const expectedOrder = [
     "map",
     "quest:survive:0.2",
-      "spawnBoss",
-      "spawnEnemies",
-      "updateEnemies",
-      "resolveActorCollisions",
-      "updateEnemyBolts",
-      "updateBossSpecials",
+    "spawnBoss",
+    "spawnEnemies",
+    "updateEnemies",
+    "resolveActorCollisions",
+    "updateEnemyBolts",
+    "updateBossSpecials",
     "updateWeapons",
     "updateBolts",
     "updateAreas",
@@ -6204,7 +6574,15 @@ function runUpdateSnapshot(createRunUpdater) {
 function createProjectileFixture(overrides = {}) {
   const target = { id: "target", x: 3, y: 4, radius: 4, hp: 10 };
   const game = {
-    player: overrides.player || { id: "player", hp: 100, x: 0, y: 0, radius: 10, targetX: 0, targetY: 0 },
+    player: overrides.player || {
+      id: "player",
+      hp: 100,
+      x: 0,
+      y: 0,
+      radius: 10,
+      targetX: 0,
+      targetY: 0,
+    },
     bolts: [],
     enemies: overrides.enemies || [target],
     areas: [],
@@ -6445,7 +6823,7 @@ function snapshotResolvedMap(resolved) {
 function saveLoadSnapshot(createSaveLoadHandler) {
   return {
     empty: runSaveLoadCase(createSaveLoadHandler, ""),
-    valid: runSaveLoadCase(createSaveLoadHandler, "{\"coins\":7}"),
+    valid: runSaveLoadCase(createSaveLoadHandler, '{"coins":7}'),
     corrupt: runSaveLoadCase(createSaveLoadHandler, "{bad"),
     storageFailed: runStorageReadFailedCase(createSaveLoadHandler),
   };
@@ -6790,11 +7168,16 @@ function shellRelicUiSnapshot(createShellRelicUi, options) {
   controller.renderInventory();
   const initialSlotText = ui.menuRelicSlots.textContent;
   const inventoryClasses = collectShellRelicClasses(ui.menuRelicInventory);
-  const availablePickupButton = findShellRelicElement(ui.menuRelicInventory, (element) =>
-    String(element.innerHTML || "").includes("Pickup Radius Focus")
+  const availablePickupButton = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) =>
+      element.tagName === "button" &&
+      String(element.textContent || "").includes("Pickup Radius Focus")
   );
-  const lockedButton = findShellRelicElement(ui.menuRelicInventory, (element) =>
-    String(element.innerHTML || "").includes("Locked Focus")
+  const lockedButton = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) =>
+      element.tagName === "button" && String(element.textContent || "").includes("Locked Focus")
   );
   availablePickupButton?.eventListeners?.click?.[0]?.();
   const detailSlotText = ui.menuRelicSlots.textContent;
@@ -6805,8 +7188,11 @@ function shellRelicUiSnapshot(createShellRelicUi, options) {
   );
   equipButton?.eventListeners?.click?.[0]?.();
   const equippedAfterEquip = [...save.equippedRelics];
-  const moveSpeedSlot = findShellRelicElement(ui.menuRelicInventory, (element) =>
-    String(element.innerHTML || "").includes("Move Speed Focus")
+  const moveSpeedSlot = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) =>
+      String(element.className || "").includes("relic-slot") &&
+      String(element.textContent || "").includes("Move Speed Focus")
   );
   const unequipButton = findShellRelicElement(
     moveSpeedSlot,
@@ -6815,8 +7201,10 @@ function shellRelicUiSnapshot(createShellRelicUi, options) {
   unequipButton?.eventListeners?.click?.[0]?.();
   const equippedAfterUnequip = [...save.equippedRelics];
   controller.renderInventory();
-  const lockedButtonAfterRender = findShellRelicElement(ui.menuRelicInventory, (element) =>
-    String(element.innerHTML || "").includes("Locked Focus")
+  const lockedButtonAfterRender = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) =>
+      element.tagName === "button" && String(element.textContent || "").includes("Locked Focus")
   );
   lockedButtonAfterRender?.eventListeners?.click?.[0]?.();
   const lockPopup = findShellRelicElement(ui.menuRelicInventory, (element) =>
@@ -6833,7 +7221,9 @@ function shellRelicUiSnapshot(createShellRelicUi, options) {
     equippedAfterUnequip,
     initialSlotText,
     inventoryClasses,
-    lockPopupHidden: lockPopup?.classList?.contains("hidden") || String(lockPopup?.className || "").includes("hidden"),
+    lockPopupHidden:
+      lockPopup?.classList?.contains("hidden") ||
+      String(lockPopup?.className || "").includes("hidden"),
     lockPopupText: lockPopup?.textContent,
     lockTimerDelay: lockTimer?.delay,
     persistCount,
@@ -7007,26 +7397,29 @@ function exerciseShellRelicTiming(fixture, timers) {
     fixture.controller.renderInventory();
     const lockedButton = findShellRelicElement(
       fixture.ui.menuRelicInventory,
-      (element) => String(element.innerHTML || "").includes("Locked Focus")
+      (element) =>
+        element.tagName === "button" && String(element.textContent || "").includes("Locked Focus")
     );
     lockedButton?.eventListeners?.click?.[0]?.();
-    const lockPopup = findShellRelicElement(
-      fixture.ui.menuRelicInventory,
-      (element) => String(element.className || "").includes("relic-lock-popup")
+    const lockPopup = findShellRelicElement(fixture.ui.menuRelicInventory, (element) =>
+      String(element.className || "").includes("relic-lock-popup")
     );
     const currentTimers = () => timers.slice(timerStart);
     const lockTimer = currentTimers().find((timer) => timer.kind === "lock");
     lockTimer?.callback?.();
     const availableButton = findShellRelicElement(
       fixture.ui.menuRelicInventory,
-      (element) => String(element.innerHTML || "").includes("Pickup Radius Focus")
+      (element) =>
+        element.tagName === "button" &&
+        String(element.textContent || "").includes("Pickup Radius Focus")
     );
     availableButton?.eventListeners?.click?.[0]?.();
     const animationTimer = currentTimers().find((timer) => timer.kind === "animation");
     return {
       error: "",
       lockPopupHidden:
-        lockPopup?.classList?.contains("hidden") || String(lockPopup?.className || "").includes("hidden"),
+        lockPopup?.classList?.contains("hidden") ||
+        String(lockPopup?.className || "").includes("hidden"),
       lockTimerDelay: lockTimer?.delay,
       previewTimerDelay: animationTimer?.delay,
       timerCount: currentTimers().length,
@@ -7112,7 +7505,9 @@ function classicShellUiSnapshot(createShellUiController, options) {
   controller.bind();
   const boundListeners = Object.entries(ui)
     .filter(([, element]) => element?.eventListeners)
-    .flatMap(([name, element]) => Object.keys(element.eventListeners).map((type) => `${name}:${type}`));
+    .flatMap(([name, element]) =>
+      Object.keys(element.eventListeners).map((type) => `${name}:${type}`)
+    );
   boundListeners.push(
     ...ui.speedButtons.flatMap((button) =>
       Object.keys(button.eventListeners || {}).map((type) => `speed${button.dataset.speed}:${type}`)
@@ -7120,8 +7515,11 @@ function classicShellUiSnapshot(createShellUiController, options) {
   );
   clickFirst(ui.openMenu);
   clickFirst(ui.menuInventoryTab);
-  const availablePickupButton = findShellRelicElement(ui.menuRelicInventory, (element) =>
-    String(element.innerHTML || "").includes("Pickup Radius Focus")
+  const availablePickupButton = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) =>
+      element.tagName === "button" &&
+      String(element.textContent || "").includes("Pickup Radius Focus")
   );
   availablePickupButton?.eventListeners?.click?.[0]?.();
   const equipButton = findShellRelicElement(
@@ -7130,8 +7528,11 @@ function classicShellUiSnapshot(createShellUiController, options) {
   );
   equipButton?.eventListeners?.click?.[0]?.();
   const equippedAfterEquip = [...save.equippedRelics];
-  const moveSpeedSlot = findShellRelicElement(ui.menuRelicInventory, (element) =>
-    String(element.innerHTML || "").includes("Move Speed Focus")
+  const moveSpeedSlot = findShellRelicElement(
+    ui.menuRelicInventory,
+    (element) =>
+      String(element.className || "").includes("relic-slot") &&
+      String(element.textContent || "").includes("Move Speed Focus")
   );
   const unequipButton = findShellRelicElement(
     moveSpeedSlot,
@@ -7151,7 +7552,8 @@ function classicShellUiSnapshot(createShellUiController, options) {
   const openMenuCollapsed = ui.openMenu.attributes["aria-expanded"];
   const previousShopCloseCount = calls.filter((call) => call === "shop:close").length;
   controller.closeShopMenu();
-  const shopClosedByMethod = calls.filter((call) => call === "shop:close").length === previousShopCloseCount + 1;
+  const shopClosedByMethod =
+    calls.filter((call) => call === "shop:close").length === previousShopCloseCount + 1;
   controller.closeStartFlow();
   const startFlowClosed =
     ui.titleScreen.classList.contains("hidden") && ui.startTransition.classList.contains("hidden");
@@ -7262,33 +7664,59 @@ function clickFirst(element) {
   element?.eventListeners?.click?.[0]?.();
 }
 
-function createShellRelicFakeElement(tagName) {
+function createShellRelicFakeElement(tagName, ownerDocument) {
+  const documentOwner = ownerDocument || {
+    createElement: (childTagName) => createShellRelicFakeElement(childTagName),
+  };
+  let renderedText = "";
   const element = {
     tagName,
     attributes: {},
     children: [],
+    childNodes: [],
     className: "",
     dataset: {},
     eventListeners: {},
-    innerHTML: "",
     isConnected: true,
+    ownerDocument: documentOwner,
     style: {
       setProperty(key, value) {
         this[key] = value;
       },
     },
-    textContent: "",
     type: "",
     appendChild(child) {
+      this.childNodes.push(child);
       this.children.push(child);
       return child;
     },
+    replaceChildren(...children) {
+      this.children = [];
+      this.childNodes = [];
+      renderedText = "";
+      for (const child of children) {
+        if (typeof child === "string") {
+          this.childNodes.push({ textContent: child });
+        } else {
+          this.appendChild(child);
+        }
+      }
+    },
     classList: {
       add(className) {
-        element.className = [...new Set([...String(element.className || "").split(/\s+/).filter(Boolean), className])].join(" ");
+        element.className = [
+          ...new Set([
+            ...String(element.className || "")
+              .split(/\s+/)
+              .filter(Boolean),
+            className,
+          ]),
+        ].join(" ");
       },
       contains(className) {
-        return String(element.className || "").split(/\s+/).includes(className);
+        return String(element.className || "")
+          .split(/\s+/)
+          .includes(className);
       },
       remove(className) {
         element.className = String(element.className || "")
@@ -7307,6 +7735,9 @@ function createShellRelicFakeElement(tagName) {
       this.eventListeners[type] = this.eventListeners[type] || [];
       this.eventListeners[type].push(handler);
     },
+    click() {
+      this.eventListeners.click?.forEach((handler) => handler({ type: "click" }));
+    },
     getContext() {
       return {
         clearRect() {},
@@ -7322,7 +7753,9 @@ function createShellRelicFakeElement(tagName) {
       };
     },
     removeEventListener(type, handler) {
-      this.eventListeners[type] = (this.eventListeners[type] || []).filter((item) => item !== handler);
+      this.eventListeners[type] = (this.eventListeners[type] || []).filter(
+        (item) => item !== handler
+      );
     },
     prepend(child) {
       this.children.unshift(child);
@@ -7330,7 +7763,9 @@ function createShellRelicFakeElement(tagName) {
     },
     querySelector(selector) {
       if (selector !== ".relic-lock-popup") return null;
-      return findShellRelicElement(this, (item) => String(item.className || "").includes("relic-lock-popup"));
+      return findShellRelicElement(this, (item) =>
+        String(item.className || "").includes("relic-lock-popup")
+      );
     },
     setAttribute(key, value) {
       this.attributes[key] = value;
@@ -7349,6 +7784,26 @@ function createShellRelicFakeElement(tagName) {
       putImageData() {},
     });
   }
+  Object.defineProperties(element, {
+    innerHTML: {
+      get() {
+        return renderedText;
+      },
+      set(value) {
+        this.replaceChildren();
+        renderedText = String(value).replace(/<[^>]*>/gu, "");
+      },
+    },
+    textContent: {
+      get() {
+        return [renderedText, ...this.childNodes.map((child) => child.textContent || "")].join("");
+      },
+      set(value) {
+        this.replaceChildren();
+        renderedText = String(value);
+      },
+    },
+  });
   return element;
 }
 
@@ -7373,14 +7828,14 @@ function createShellRelicFakeImage(images) {
 
 function collectShellRelicClasses(element) {
   if (!element) return [];
-  return [element.className || "", ...element.children.flatMap(collectShellRelicClasses)].filter(Boolean);
+  return [element.className || "", ...element.children.flatMap(collectShellRelicClasses)].filter(
+    Boolean
+  );
 }
 
 function collectShellRelicText(element) {
   if (!element) return "";
-  return [element.textContent || "", element.innerHTML || "", ...(element.children || []).map(collectShellRelicText)]
-    .filter(Boolean)
-    .join(" ");
+  return element.textContent || "";
 }
 
 function findShellRelicElement(element, predicate) {
@@ -7515,8 +7970,7 @@ function loadRetiredGameDependenciesBridge() {
       poisonedError,
       poisonedReads,
       restoredError,
-      restoredPublisherRetained:
-        restoredContext.TapSurvivorGameDependencies === restoredPublisher,
+      restoredPublisherRetained: restoredContext.TapSurvivorGameDependencies === restoredPublisher,
     },
   };
 }
@@ -7577,7 +8031,9 @@ function saveProviderLifecycleSnapshot() {
   const unconfigured = saveProviderErrorSnapshot(() =>
     publisher.createSaveSystem(createSaveSystemFixture())
   );
-  const missingConfiguration = saveProviderErrorSnapshot(() => publisher.configureDefaultProviders({}));
+  const missingConfiguration = saveProviderErrorSnapshot(() =>
+    publisher.configureDefaultProviders({})
+  );
   const samePublisherAfterMissing = context.TapSurvivorSave === publisher;
   const configuredStorageCalls = [];
   const configuredStorage = {

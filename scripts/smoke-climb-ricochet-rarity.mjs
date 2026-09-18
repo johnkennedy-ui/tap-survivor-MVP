@@ -16,21 +16,16 @@ function makeClassList() {
 
 function makeElement() {
   const listeners = new Map();
-  let html = "";
   return {
     children: [],
     classList: makeClassList(),
     disabled: false,
-    get innerHTML() {
-      return html;
-    },
-    set innerHTML(value) {
-      html = value;
-      this.children = [];
-    },
     appendChild(child) {
       this.children.push(child);
       return child;
+    },
+    replaceChildren(...children) {
+      this.children = children;
     },
     addEventListener(type, listener) {
       listeners.set(type, listener);

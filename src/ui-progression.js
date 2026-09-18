@@ -78,7 +78,8 @@
         if (!Array.isArray(upgrade.cost) || !Number.isFinite(upgrade.maxTier)) return false;
         const tier = getUpgradeTier(upgrade.id);
         if (tier >= upgrade.maxTier) return false;
-        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return false;
+        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon))
+          return false;
         if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return false;
         return !upgrade.requiresQuest || isQuestComplete(upgrade.requiresQuest);
       });
@@ -132,7 +133,12 @@
         el.appendChild(doc.createElement("br"));
         appendTextElement(doc, el, "span", `Tier: ${tier}/${upgrade.maxTier}`);
         el.appendChild(doc.createElement("br"));
-        appendTextElement(doc, el, "span", canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`);
+        appendTextElement(
+          doc,
+          el,
+          "span",
+          canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`
+        );
         const button = doc.createElement("button");
         button.textContent = `Buy Tier ${tier + 1}`;
         button.disabled = !canBuy;

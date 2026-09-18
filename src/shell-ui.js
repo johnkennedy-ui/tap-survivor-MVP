@@ -555,10 +555,14 @@
   }) {
     const assetResolver = assets?.createAssetResolver?.(content) || {
       relicIcon: (relic) =>
-        relic?.iconPath || content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+        relic?.iconPath ||
+        content?.assets?.sprites?.ui?.quest ||
+        "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
       runUpgradeSprite: (upgradeId) => content?.assets?.sprites?.runUpgrades?.[upgradeId],
       spriteSource: (definition) =>
-        typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
+        typeof definition === "string"
+          ? definition
+          : definition?.src || definition?.path || definition?.iconSrc || "",
     };
     const relicUi = shellRelicUi.createShellRelicUi({
       ui,

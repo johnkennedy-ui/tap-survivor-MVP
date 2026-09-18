@@ -19,6 +19,9 @@ const hostilePaths = [
   "blob:example",
   "assets/../outside.png",
   "assets/%2e%2e/outside.png",
+  "assets/%2e%2e%2foutside.png",
+  "assets/ui%2f..%2foutside.png",
+  "assets/%2Foutside.png",
   String.raw`\\\\example.invalid\\sprite.png`,
   "assets/ui/\u0000icon.png",
 ];
@@ -66,9 +69,7 @@ const spriteSystem = createBrowserSpriteSystem({
 });
 spriteSystem.loadSprites({
   weapons: {
-    hostile: "javascript:alert(1)",
-    hostileBackslash: String.raw`\\\\example.invalid\\sprite.png`,
-    hostileTraversal: "assets/%2e%2e/outside.png",
+    ...Object.fromEntries(hostilePaths.map((path, index) => [`hostile${index}`, path])),
     local: "assets/ui/icon.png",
   },
 });
@@ -134,6 +135,16 @@ check(
     knownGoodResult.stdout.includes("PASS CSP and referrer policy are restrictive")
 );
 [
+  [
+    "lookalike CSP attribute",
+    (fixtureRoot) =>
+      mutateIndex(
+        fixtureRoot,
+        'http-equiv="Content-Security-Policy"',
+        'data-http-equiv="Content-Security-Policy"'
+      ),
+    "index.html must contain exactly one CSP meta tag",
+  ],
   [
     "widened script source",
     (fixtureRoot) =>

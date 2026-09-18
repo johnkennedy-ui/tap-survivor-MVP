@@ -86,7 +86,9 @@ console.log("PASS active UI modules use DOM/textContent rendering");
 console.log("PASS application source has no dynamic-code or network primitives");
 
 function readMetaAttribute(tag, name) {
-  const match = tag.match(new RegExp(`\\b${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i"));
+  const match = tag.match(
+    new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, "i")
+  );
   return match?.[1] ?? match?.[2] ?? match?.[3] ?? "";
 }
 

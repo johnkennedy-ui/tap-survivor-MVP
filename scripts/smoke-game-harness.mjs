@@ -77,7 +77,12 @@ function makeElement(id = "") {
       const stack = [...this.children];
       while (stack.length) {
         const child = stack.shift();
-        if (String(child.className || "").split(/\s+/).includes(name)) return child;
+        if (
+          String(child.className || "")
+            .split(/\s+/)
+            .includes(name)
+        )
+          return child;
         stack.push(...(child.children || []));
       }
       return null;
@@ -235,7 +240,11 @@ export function createGameHarness({
       this.preload = "";
       this.cloneNode = () => new context.Audio(this.src);
       this.play = () => {
-        context.__audioPlays.push({ src: this.src, volume: this.volume, playbackRate: this.playbackRate });
+        context.__audioPlays.push({
+          src: this.src,
+          volume: this.volume,
+          playbackRate: this.playbackRate,
+        });
         return Promise.resolve();
       };
     },
@@ -548,12 +557,15 @@ export function createGameHarness({
     floorDifficulty: (floor) => dependencies?.moduleSystems?.balance?.floorDifficulty?.(floor),
     getActiveProfile: () => sourceGameDependencies.balanceRuntime.getActiveProfile(),
     getGame: () => dependencies?.getGame?.(),
-    getRelicSpecialEffects: () => dependencies?.moduleSystems?.relics?.specialEffects?.(dependencies?.getSave?.()),
+    getRelicSpecialEffects: () =>
+      dependencies?.moduleSystems?.relics?.specialEffects?.(dependencies?.getSave?.()),
     getRunUpgradeTier: (id) => dependencies?.getGame?.()?.runUpgradeTiers?.[id] || 0,
     getSave: () => dependencies?.getSave?.(),
     getWeaponDamageMultiplier: () =>
-      dependencies?.moduleSystems?.relics?.getWeaponDamageMultiplier?.(dependencies?.getSave?.()) || 1,
-    maxEquippedWeapons: () => dependencies?.moduleSystems?.relics?.maxEquippedWeapons?.(dependencies?.getSave?.()) || 4,
+      dependencies?.moduleSystems?.relics?.getWeaponDamageMultiplier?.(dependencies?.getSave?.()) ||
+      1,
+    maxEquippedWeapons: () =>
+      dependencies?.moduleSystems?.relics?.maxEquippedWeapons?.(dependencies?.getSave?.()) || 4,
     relicDefs: content.relics || [],
     runUpgradeDefs: content.runUpgrades || [],
     ui: dependencyBagOptions.adapters.uiAdapters.ui,
@@ -628,14 +640,14 @@ export function createGameHarness({
       createShellRelicUi(options = {}) {
         return createClassicShellRelicUi({
           ...options,
-          imageFactory: options.imageFactory || (() => (typeof context.Image === "function" ? new context.Image() : null)),
-          scheduler:
-            options.scheduler ||
-            {
-              clearTimeout: (timer) => context.clearTimeout?.(timer),
-              setTimeout: (callback, delay) => context.setTimeout?.(callback, delay),
-              animationSetTimeout: (callback, delay) => context.setTimeout?.(callback, delay),
-            },
+          imageFactory:
+            options.imageFactory ||
+            (() => (typeof context.Image === "function" ? new context.Image() : null)),
+          scheduler: options.scheduler || {
+            clearTimeout: (timer) => context.clearTimeout?.(timer),
+            setTimeout: (callback, delay) => context.setTimeout?.(callback, delay),
+            animationSetTimeout: (callback, delay) => context.setTimeout?.(callback, delay),
+          },
         });
       },
     },

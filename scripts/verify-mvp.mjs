@@ -1011,9 +1011,9 @@ check(
 );
 check(
   "title Climb/Farm forwards chosen mode after transition",
-  index.includes('id="titleStartGame" type="button">Climb</button>') &&
-    index.includes(
-      'id="titleStartFarm" type="button" class="secondary">Farm — original arena</button>'
+  /id="titleStartGame"\s+type="button">\s*Climb\s*<\/button>/.test(index) &&
+    /id="titleStartFarm"\s+type="button"\s+class="secondary">\s*Farm — original arena\s*<\/button>/.test(
+      index
     ) &&
     shellUi.includes('function startGameFromTitle(modeId = "climb")') &&
     shellUi.includes('startGameFromTitle("climb")') &&

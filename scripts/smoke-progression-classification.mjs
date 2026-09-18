@@ -22,10 +22,12 @@ function makeElement() {
     children: [],
     classList: makeClassList(),
     disabled: false,
-    innerHTML: "",
     appendChild(child) {
       this.children.push(child);
       return child;
+    },
+    replaceChildren(...children) {
+      this.children = children;
     },
     addEventListener(name, listener) {
       listeners.set(name, listener);
@@ -70,25 +72,40 @@ const sparkDamage = runUpgradeDefs.find((upgrade) => upgrade.id === "spark_damag
 const laserDamage = runUpgradeDefs.find((upgrade) => upgrade.id === "laser_damage");
 const genericUpgrade = runUpgradeDefs.find((upgrade) => upgrade.id === "run_move_speed");
 
-check("permanent QP upgrade definitions are not exposed", upgradeContent.createUpgradeDefs(content.weapons).length === 0);
-check("legacy permanent metadata is retained only for save refunds", content.metaUpgrades.every((upgrade) => upgrade.retired));
+check(
+  "permanent QP upgrade definitions are not exposed",
+  upgradeContent.createUpgradeDefs(content.weapons).length === 0
+);
+check(
+  "legacy permanent metadata is retained only for save refunds",
+  content.metaUpgrades.every((upgrade) => upgrade.retired)
+);
 check(
   "all weapon damage upgrades are run upgrades",
   Object.values(content.weapons).every((weapon) =>
-    runUpgradeDefs.some((upgrade) => upgrade.id === weapon.upgradeId && upgrade.requiresWeapon),
-  ),
+    runUpgradeDefs.some((upgrade) => upgrade.id === weapon.upgradeId && upgrade.requiresWeapon)
+  )
 );
 
 const sparkChoices = levelUpChoiceNames([genericUpgrade, sparkDamage, laserDamage], ["spark_bolt"]);
 check(
   "generic and equipped weapon upgrades appear at level-up",
-  sparkChoices.includes("Move Speed +1") && sparkChoices.includes("Spark Bolt Damage +1"),
+  sparkChoices.includes("Move Speed +1") && sparkChoices.includes("Spark Bolt Damage +1")
 );
-check("unequipped weapon damage is excluded from level-up", !sparkChoices.includes("Prism Beam Damage +1"));
+check(
+  "unequipped weapon damage is excluded from level-up",
+  !sparkChoices.includes("Prism Beam Damage +1")
+);
 
 const laserChoices = levelUpChoiceNames([genericUpgrade, sparkDamage, laserDamage], ["prism_beam"]);
-check("equipping another weapon changes its eligible damage upgrade", laserChoices.includes("Prism Beam Damage +1"));
-check("other unequipped weapon damage remains excluded", !laserChoices.includes("Spark Bolt Damage +1"));
+check(
+  "equipping another weapon changes its eligible damage upgrade",
+  laserChoices.includes("Prism Beam Damage +1")
+);
+check(
+  "other unequipped weapon damage remains excluded",
+  !laserChoices.includes("Spark Bolt Damage +1")
+);
 
 if (process.exitCode) process.exit(process.exitCode);
 console.log("Progression classification smoke passed.");
