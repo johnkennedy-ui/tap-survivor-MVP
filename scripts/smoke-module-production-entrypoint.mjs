@@ -630,9 +630,8 @@ function createFixtureElement(tagName, ownerDocument = documentRef) {
       get() {
         return renderedText;
       },
-      set(value) {
-        this.replaceChildren();
-        renderedText = String(value).replace(/<[^>]*>/gu, "");
+      set() {
+        throw new Error("Test fixtures forbid innerHTML writes; use textContent instead.");
       },
     },
     textContent: {

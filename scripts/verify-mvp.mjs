@@ -16,6 +16,10 @@ function readRequired(path) {
   return exists ? readFileSync(fullPath, "utf8") : "";
 }
 
+function includesExactLine(text, expectedLine) {
+  return text.split(/\r?\n/u).some((line) => line.trim() === expectedLine);
+}
+
 const index = readRequired("index.html");
 const game = readRequired("src/game.js");
 const gameBanners = readRequired("src/game-banners.js");
@@ -1729,7 +1733,7 @@ check(
 check("styles include mobile layout", styles.includes("@media (max-width: 920px)"));
 check(
   "pipeline documents test URL",
-  pipeline.includes("https://johnkennedy-ui.github.io/tap-survivor-MVP/")
+  includesExactLine(pipeline, "https://johnkennedy-ui.github.io/tap-survivor-MVP/")
 );
 check("pipeline documents Android flow", pipeline.includes("Android Test Steps"));
 check("game plan documents MVP loop", plan.includes("Laser") && plan.includes("Quest Point"));

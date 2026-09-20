@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { lstat, mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { lstat, mkdir, mkdtemp, open, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
@@ -108,14 +109,19 @@ function gitCommit() {
 async function checksumArtifact(candidate) {
   const artifact = relativeRepositoryPath(candidate, "Artifact");
   const resolvedArtifact = await resolvedPathInsideRepository(artifact.absolute, "Artifact");
-  const metadata = await stat(resolvedArtifact);
-  if (!metadata.isFile()) fail(`Artifact is not a regular file: ${artifact.relative}`);
-  const bytes = await readFile(resolvedArtifact);
-  return {
-    path: artifact.relative,
-    bytes: metadata.size,
-    sha256: createHash("sha256").update(bytes).digest("hex"),
-  };
+  const handle = await open(resolvedArtifact, constants.O_RDONLY | constants.O_NOFOLLOW);
+  try {
+    const metadata = await handle.stat();
+    if (!metadata.isFile()) fail(`Artifact is not a regular file: ${artifact.relative}`);
+    const bytes = await handle.readFile();
+    return {
+      path: artifact.relative,
+      bytes: metadata.size,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    };
+  } finally {
+    await handle.close();
+  }
 }
 
 function npmInvocation() {

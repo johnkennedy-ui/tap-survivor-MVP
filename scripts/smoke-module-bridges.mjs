@@ -3540,9 +3540,8 @@ function createUiDependencyFakeElement(tagName, ownerDocument) {
       get() {
         return renderedText;
       },
-      set(value) {
-        this.replaceChildren();
-        renderedText = String(value).replace(/<[^>]*>/gu, "");
+      set() {
+        throw new Error("Test fixtures forbid innerHTML writes; use textContent instead.");
       },
     },
     textContent: {
@@ -7789,9 +7788,8 @@ function createShellRelicFakeElement(tagName, ownerDocument) {
       get() {
         return renderedText;
       },
-      set(value) {
-        this.replaceChildren();
-        renderedText = String(value).replace(/<[^>]*>/gu, "");
+      set() {
+        throw new Error("Test fixtures forbid innerHTML writes; use textContent instead.");
       },
     },
     textContent: {
