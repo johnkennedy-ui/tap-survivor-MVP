@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { lstat, mkdir, mkdtemp, open, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createReleaseMetadata } from "./release-metadata.mjs";
@@ -16,6 +17,7 @@ const externalFixtureDirectory = await mkdtemp(
 );
 const artifactPath = path.join(fixtureDirectory, "artifact.txt");
 const outputPath = path.join(fixtureDirectory, "metadata");
+const descriptorDirectoryFlags = constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW;
 
 try {
   const artifactContents = "Tap Survivor release metadata smoke fixture\n";
@@ -73,7 +75,7 @@ try {
       "--output",
       path.relative(repositoryRoot, outputPath),
     ]),
-    /Artifact resolves outside the repository/
+    /Artifact cannot be opened securely/
   );
   assert.equal(await readFile(externalArtifact, "utf8"), externalArtifactContents);
 
@@ -88,7 +90,7 @@ try {
       "--output",
       path.relative(repositoryRoot, outputSymlink),
     ]),
-    /Output directory resolves outside the repository/
+    /Output directory cannot be opened securely/
   );
   assert.deepEqual(await readdir(externalOutput), []);
 
@@ -136,6 +138,244 @@ try {
     JSON.parse(await readFile(path.join(outputPath, "checksums.json"), "utf8")).artifacts[0].sha256,
     createHash("sha256").update(artifactContents).digest("hex")
   );
+
+  const artifactRaceDirectory = path.join(fixtureDirectory, "artifact-ancestor-race");
+  const artifactRaceParent = path.join(artifactRaceDirectory, "parent");
+  const artifactRaceMoved = path.join(artifactRaceDirectory, "parent-held");
+  const artifactRacePath = path.join(artifactRaceParent, "artifact.txt");
+  const artifactRaceContents = "descriptor-held artifact bytes\n";
+  const externalArtifactRaceDirectory = path.join(externalFixtureDirectory, "artifact-race-target");
+  const externalArtifactRacePath = path.join(externalArtifactRaceDirectory, "artifact.txt");
+  const externalArtifactRaceContents = "outside artifact bytes\n";
+  await mkdir(artifactRaceParent, { recursive: true });
+  await mkdir(externalArtifactRaceDirectory);
+  await writeFile(artifactRacePath, artifactRaceContents);
+  await writeFile(externalArtifactRacePath, externalArtifactRaceContents);
+  let artifactAncestorSwapped = false;
+  await createReleaseMetadata(
+    [
+      "--artifact",
+      path.relative(repositoryRoot, artifactRacePath),
+      "--output",
+      path.relative(repositoryRoot, outputPath),
+    ],
+    {
+      async afterDirectoryOpen(context) {
+        if (
+          !artifactAncestorSwapped &&
+          context.label === "Artifact" &&
+          context.relative === path.relative(repositoryRoot, artifactRaceParent)
+        ) {
+          await rename(artifactRaceParent, artifactRaceMoved);
+          await symlink(externalArtifactRaceDirectory, artifactRaceParent);
+          artifactAncestorSwapped = true;
+        }
+      },
+    }
+  );
+  assert.equal(artifactAncestorSwapped, true);
+  const artifactRaceManifest = JSON.parse(
+    await readFile(path.join(outputPath, "checksums.json"), "utf8")
+  );
+  assert.equal(
+    artifactRaceManifest.artifacts[0].sha256,
+    createHash("sha256").update(artifactRaceContents).digest("hex")
+  );
+  assert.equal(await readFile(externalArtifactRacePath, "utf8"), externalArtifactRaceContents);
+
+  const artifactLeafRaceDirectory = path.join(fixtureDirectory, "artifact-leaf-race");
+  const artifactLeafRacePath = path.join(artifactLeafRaceDirectory, "artifact.txt");
+  const externalArtifactLeafRacePath = path.join(externalFixtureDirectory, "artifact-leaf-target.txt");
+  const externalArtifactLeafContents = "outside artifact leaf bytes\n";
+  await mkdir(artifactLeafRaceDirectory);
+  await writeFile(artifactLeafRacePath, "inside artifact leaf bytes\n");
+  await writeFile(externalArtifactLeafRacePath, externalArtifactLeafContents);
+  let artifactLeafSwapped = false;
+  await assert.rejects(
+    createReleaseMetadata(
+      [
+        "--artifact",
+        path.relative(repositoryRoot, artifactLeafRacePath),
+        "--output",
+        path.relative(repositoryRoot, outputPath),
+      ],
+      {
+        async beforeFileOpen(context) {
+          if (
+            !artifactLeafSwapped &&
+            context.label === "Artifact" &&
+            context.relative === path.relative(repositoryRoot, artifactLeafRacePath)
+          ) {
+            await rm(artifactLeafRacePath);
+            await symlink(externalArtifactLeafRacePath, artifactLeafRacePath);
+            artifactLeafSwapped = true;
+          }
+        },
+      }
+    ),
+    /Artifact cannot be opened securely/
+  );
+  assert.equal(artifactLeafSwapped, true);
+  assert.equal(await readFile(externalArtifactLeafRacePath, "utf8"), externalArtifactLeafContents);
+
+  const stagingOutputRace = path.join(fixtureDirectory, "staging-mkdir-race");
+  const externalStagingRace = path.join(externalFixtureDirectory, "staging-mkdir-target");
+  const externalStagingSentinel = path.join(externalStagingRace, "sentinel.txt");
+  const externalStagingSentinelContents = "outside staging sentinel\n";
+  await mkdir(externalStagingRace);
+  await writeFile(externalStagingSentinel, externalStagingSentinelContents);
+  let stagingBeforeReopenSwapped = false;
+  await assert.rejects(
+    createReleaseMetadata(
+      [
+        "--artifact",
+        path.relative(repositoryRoot, artifactPath),
+        "--output",
+        path.relative(repositoryRoot, stagingOutputRace),
+      ],
+      {
+        async afterDirectoryCreateBeforeOpen(context) {
+          if (!stagingBeforeReopenSwapped && context.label === "SBOM staging directory") {
+            const stagingPath = path.join(repositoryRoot, context.relative);
+            await rename(stagingPath, `${stagingPath}-held`);
+            await symlink(externalStagingRace, stagingPath);
+            stagingBeforeReopenSwapped = true;
+          }
+        },
+      }
+    ),
+    /SBOM staging directory cannot be opened securely/
+  );
+  assert.equal(stagingBeforeReopenSwapped, true);
+  assert.equal(await readFile(externalStagingSentinel, "utf8"), externalStagingSentinelContents);
+  assert.deepEqual(await readdir(externalStagingRace), ["sentinel.txt"]);
+
+  const outputAncestorRace = path.join(fixtureDirectory, "output-ancestor-race");
+  const outputAncestorRaceMoved = path.join(fixtureDirectory, "output-ancestor-race-held");
+  const externalOutputAncestorRace = path.join(externalFixtureDirectory, "output-ancestor-race-target");
+  await mkdir(externalOutputAncestorRace);
+  let outputAncestorSwapped = false;
+  await createReleaseMetadata(
+    [
+      "--artifact",
+      path.relative(repositoryRoot, artifactPath),
+      "--output",
+      path.relative(repositoryRoot, outputAncestorRace),
+    ],
+    {
+      async afterDirectoryOpen(context) {
+        if (
+          !outputAncestorSwapped &&
+          context.label === "Output directory" &&
+          context.relative === path.relative(repositoryRoot, outputAncestorRace)
+        ) {
+          await rename(outputAncestorRace, outputAncestorRaceMoved);
+          await symlink(externalOutputAncestorRace, outputAncestorRace);
+          outputAncestorSwapped = true;
+        }
+      },
+    }
+  );
+  assert.equal(outputAncestorSwapped, true);
+  assert.equal(
+    JSON.parse(await readFile(path.join(outputAncestorRaceMoved, "checksums.json"), "utf8")).artifacts[0]
+      .sha256,
+    createHash("sha256").update(artifactContents).digest("hex")
+  );
+  assert.deepEqual(await readdir(externalOutputAncestorRace), []);
+
+  const mkdirRace = path.join(fixtureDirectory, "mkdir-before-reopen-race");
+  const mkdirRaceMoved = path.join(fixtureDirectory, "mkdir-before-reopen-race-held");
+  const externalMkdirRace = path.join(externalFixtureDirectory, "mkdir-before-reopen-target");
+  const externalMkdirSentinel = path.join(externalMkdirRace, "sentinel.txt");
+  const externalMkdirSentinelContents = "outside mkdir sentinel\n";
+  await mkdir(externalMkdirRace);
+  await writeFile(externalMkdirSentinel, externalMkdirSentinelContents);
+  let mkdirBeforeReopenSwapped = false;
+  await assert.rejects(
+    createReleaseMetadata(
+      [
+        "--artifact",
+        path.relative(repositoryRoot, artifactPath),
+        "--output",
+        path.relative(repositoryRoot, path.join(mkdirRace, "nested")),
+      ],
+      {
+        async afterDirectoryCreateBeforeOpen(context) {
+          if (
+            !mkdirBeforeReopenSwapped &&
+            context.label === "Output directory" &&
+            context.relative === path.relative(repositoryRoot, mkdirRace)
+          ) {
+            await rename(mkdirRace, mkdirRaceMoved);
+            await symlink(externalMkdirRace, mkdirRace);
+            mkdirBeforeReopenSwapped = true;
+          }
+        },
+      }
+    ),
+    /Output directory cannot be opened securely/
+  );
+  assert.equal(mkdirBeforeReopenSwapped, true);
+  assert.equal(await readFile(externalMkdirSentinel, "utf8"), externalMkdirSentinelContents);
+  assert.deepEqual(await readdir(externalMkdirRace), ["sentinel.txt"]);
+
+  const leafOutputRace = path.join(fixtureDirectory, "output-leaf-race");
+  const externalLeafTarget = path.join(externalFixtureDirectory, "checksums-leaf-target.json");
+  const externalLeafContents = "external checksum leaf target\n";
+  await writeFile(externalLeafTarget, externalLeafContents);
+  await createReleaseMetadata([
+    "--artifact",
+    path.relative(repositoryRoot, artifactPath),
+    "--output",
+    path.relative(repositoryRoot, leafOutputRace),
+  ]);
+  let outputLeafSwapped = false;
+  await createReleaseMetadata(
+    [
+      "--artifact",
+      path.relative(repositoryRoot, artifactPath),
+      "--output",
+      path.relative(repositoryRoot, leafOutputRace),
+    ],
+    {
+      async beforeOutputPublish(context) {
+        if (!outputLeafSwapped && context.filename === "checksums.json") {
+          await rm(path.join(leafOutputRace, "checksums.json"));
+          await symlink(externalLeafTarget, path.join(leafOutputRace, "checksums.json"));
+          outputLeafSwapped = true;
+        }
+      },
+    }
+  );
+  assert.equal(outputLeafSwapped, true);
+  assert.equal(await readFile(externalLeafTarget, "utf8"), externalLeafContents);
+  assert.equal((await lstat(path.join(leafOutputRace, "checksums.json"))).isSymbolicLink(), false);
+  assert.equal(
+    JSON.parse(await readFile(path.join(leafOutputRace, "checksums.json"), "utf8")).artifacts[0]
+      .sha256,
+    createHash("sha256").update(artifactContents).digest("hex")
+  );
+
+  const relocationDirectory = path.join(fixtureDirectory, "descriptor-relocation-limit");
+  const relocationMoved = path.join(fixtureDirectory, "descriptor-relocation-limit-held");
+  const relocationReplacement = path.join(fixtureDirectory, "descriptor-relocation-limit");
+  const relocationFile = "still-held.txt";
+  await mkdir(relocationDirectory);
+  const heldDirectory = await open(relocationDirectory, descriptorDirectoryFlags);
+  try {
+    await rename(relocationDirectory, relocationMoved);
+    await mkdir(relocationReplacement);
+    await writeFile(`/proc/self/fd/${heldDirectory.fd}/${relocationFile}`, "held descriptor bytes\n");
+  } finally {
+    await heldDirectory.close();
+  }
+  assert.equal(
+    await readFile(path.join(relocationMoved, relocationFile), "utf8"),
+    "held descriptor bytes\n"
+  );
+  assert.equal((await readdir(relocationReplacement)).includes(relocationFile), false);
+  console.log("Release metadata descriptor relocation limitation demonstrated");
 
   const coldRoot = path.join(fixtureDirectory, "cold-checkout");
   await mkdir(coldRoot);

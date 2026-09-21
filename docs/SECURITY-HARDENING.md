@@ -92,10 +92,30 @@ silently enter `www/`.
 `scripts/release-metadata.mjs` creates a local CycloneDX SBOM using
 `npm sbom --sbom-format cyclonedx --package-lock-only`, plus a SHA-256 checksum manifest for
 explicitly selected existing artifacts. This is an npm/package-lock-only inventory: it excludes
-native Android components and build attestations. It records the exact local commit and rejects
-artifact or output paths that resolve outside the repository, including external symlinks.
-`scripts/smoke-release-metadata.mjs` exercises checksum bytes, scoped package PURLs, the dependency
-graph, and outside-repository path rejection using temporary synthetic fixtures.
+native Android components and build attestations. It records the exact local commit and is a
+Linux-only, fail-closed helper: it requires trusted `/proc/self/fd` descriptor traversal plus
+`O_DIRECTORY` and `O_NOFOLLOW`; there is no `realpath`/`lstat`-then-pathname fallback on an
+unsupported platform.
+
+Repository-relative artifact, lockfile, and output paths are first reduced to lexical components.
+The helper then retains a live repository directory descriptor, opens one component at a time,
+reads regular artifacts through their opened file handles, and creates metadata in fresh temporary
+inodes before descriptor-anchored `rename` publication. A pre-existing output symlink is rejected;
+if a leaf is substituted after that check, publication replaces the link instead of following it.
+This prevents the checked ancestor and final-leaf symlink-redirection races from redirecting reads
+or output writes outside the acquired directory objects.
+
+This is deliberately not a general filesystem isolation claim. A held directory can be renamed
+outside the repository after acquisition; descriptor-relative operations then continue to address
+that held directory. Hard-link aliases, mount changes, and same-UID content modification are also
+outside this helper's containment guarantee, and the two published metadata names are not one
+transaction. Callers need a trusted, stable source and output namespace for the operation's
+duration when those residual cases matter.
+
+`scripts/smoke-release-metadata.mjs` exercises checksum bytes, scoped package PURLs, dependency
+graph coverage, external-symlink rejection, awaited ancestor and mkdir-before-reopen swaps,
+post-check output-leaf substitution, and the documented descriptor-relocation limitation using
+temporary synthetic fixtures.
 
 The helper does not sign, publish, upload, attest, or create a release. Those operations require a
 future protected-release boundary with a reviewed tag policy, least-privilege environment, isolated
