@@ -118,7 +118,7 @@
     "release:metadata": "node scripts/release-metadata.mjs"
   },
   "dependencies": {
-    "@capacitor/android": "^8.4.0",
+    "@capacitor/android": "^8.5.2",
     "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/preferences": "^8.0.1"
