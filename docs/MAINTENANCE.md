@@ -108,8 +108,15 @@ report a local change.
 ## Deployment
 
 Pushes to `main` publish the GitHub Pages site via `.github/workflows/tap-survivor-pages.yml`.
-The Pages workflow builds `www/`, checks runtime parity, and publishes only `www/` to `gh-pages`.
-Pushes and pull requests run `npm run agent:check` via `.github/workflows/agent-check.yml`.
+Its read-only build job runs the full verification gate, builds `www/`, checks runtime parity, and
+uploads the official Pages artifact. Only the dependent artifact-only deployment job receives Pages
+and OIDC permissions; it never installs dependencies, executes repository scripts, or pushes a
+`gh-pages` branch. Pages must use GitHub Actions and its environment must permit `main`.
+
+`.github/workflows/ci.yml` is the canonical pull-request and main-branch gate, including
+`npm run agent:check -- --full`, strict built-browser smoke, and an unsigned Android debug build.
+`.github/workflows/agent-check.yml` remains a manual diagnostic workflow only. See
+[Security hardening](SECURITY-HARDENING.md) for the security gates and owner-controlled settings.
 
 With explicit release authority, use `npm run agent:release -- --message "<commit message>"` for changes that should be live-verified immediately after push.
 Use `npm run check:deploy` for a read-only live Pages deployment check.

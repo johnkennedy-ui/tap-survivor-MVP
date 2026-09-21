@@ -139,18 +139,19 @@ check(
     completedQuestSet.size === normalizedQuestState.completedQuests.length &&
     normalizedQuestState.activeQuests.every((id) => !completedQuestSet.has(id)) &&
     normalizedQuestState.activeQuests.every((id) => content.quests[id]) &&
-    normalizedQuestState.completedQuests.every((id) => content.quests[id]),
+    normalizedQuestState.completedQuests.every((id) => content.quests[id])
 );
 check(
   "save normalizer preserves legitimate quest progress",
   normalizedQuestState.questProgress.gatherer === 12 &&
     normalizedQuestState.questProgress.boss_hunter === 0 &&
-    normalizedQuestState.questProgress.spark_bolt_mastery === content.quests.spark_bolt_mastery.target &&
-    normalizedQuestState.questProgress.missing_quest === undefined,
+    normalizedQuestState.questProgress.spark_bolt_mastery ===
+      content.quests.spark_bolt_mastery.target &&
+    normalizedQuestState.questProgress.missing_quest === undefined
 );
 check(
   "save normalizer keeps available QP nonnegative and within earned QP",
-  normalizedQuestState.questPoints === 7 && normalizedQuestState.totalQuestPoints === 7,
+  normalizedQuestState.questPoints === 7 && normalizedQuestState.totalQuestPoints === 7
 );
 const nonNegativeQuestState = isolatedSaveNormalizer.normalizeSave({
   questPoints: -4,
@@ -158,7 +159,7 @@ const nonNegativeQuestState = isolatedSaveNormalizer.normalizeSave({
 });
 check(
   "save normalizer clamps negative QP values",
-  nonNegativeQuestState.questPoints === 0 && nonNegativeQuestState.totalQuestPoints === 0,
+  nonNegativeQuestState.questPoints === 0 && nonNegativeQuestState.totalQuestPoints === 0
 );
 const sixRelicIds = content.relics.slice(0, 6).map((relic) => relic.id);
 const normalizedSixRelicLoadout = isolatedSaveNormalizer.normalizeSave({
@@ -168,7 +169,7 @@ const normalizedSixRelicLoadout = isolatedSaveNormalizer.normalizeSave({
 });
 check(
   "save normalizer preserves six valid equipped relic IDs",
-  JSON.stringify(normalizedSixRelicLoadout.equippedRelics) === JSON.stringify(sixRelicIds),
+  JSON.stringify(normalizedSixRelicLoadout.equippedRelics) === JSON.stringify(sixRelicIds)
 );
 
 const saveKey = "tap-survivor-mvp-save-v2";
@@ -208,7 +209,8 @@ function check(name, pass) {
 
 check(
   "retired quest publisher is absent from save bridge context",
-  context.TapSurvivorQuests === undefined && !questsSource.includes("globalThis.TapSurvivorQuests =")
+  context.TapSurvivorQuests === undefined &&
+    !questsSource.includes("globalThis.TapSurvivorQuests =")
 );
 check(
   "retired storage publisher is never read while the direct dependency provider remains available",
@@ -232,8 +234,14 @@ check(
 
 const fresh = await saveSystem.loadSave();
 check("fresh save starts with Spark Bolt", fresh.unlockedWeapons.includes("spark_bolt"));
-check("fresh save opens starter quests", content.questGroups.starter.every((id) => fresh.activeQuests.includes(id)));
-check("web save backend is localStorage", storageAdapter.getStorageBackendName() === "localStorage");
+check(
+  "fresh save opens starter quests",
+  content.questGroups.starter.every((id) => fresh.activeQuests.includes(id))
+);
+check(
+  "web save backend is localStorage",
+  storageAdapter.getStorageBackendName() === "localStorage"
+);
 
 check(
   "legacy refund uses the exact recorded tiers and costs",
@@ -243,33 +251,51 @@ check(
       unlockedUpgrades: ["laser_damage"],
       upgradeTiers: { fire_rate: 3, spark_damage: 4 },
     },
-    { currentSaveVersion: 4 },
-  ).questPoints === 17,
+    { currentSaveVersion: 4 }
+  ).questPoints === 17
 );
 
-storage.set(legacySaveKey, JSON.stringify({
-  coins: 12.8,
-  unlockedWeapons: [],
-  completedQuests: ["gatherer"],
-  unlockedNodes: ["unlock_laser"],
-  unlockedUpgrades: ["laser_damage"],
-  shopPurchases: {
-    training_boots: 99,
-    missing_item: 2,
-  },
-}));
+storage.set(
+  legacySaveKey,
+  JSON.stringify({
+    coins: 12.8,
+    unlockedWeapons: [],
+    completedQuests: ["gatherer"],
+    unlockedNodes: ["unlock_laser"],
+    unlockedUpgrades: ["laser_damage"],
+    shopPurchases: {
+      training_boots: 99,
+      missing_item: 2,
+    },
+  })
+);
 
 const migrated = await saveSystem.loadSave();
 const trainingBoots = content.shopItems.find((item) => item.id === "training_boots");
-check("legacy save is normalized", migrated.coins === 12 && migrated.unlockedWeapons.includes("spark_bolt"));
+check(
+  "legacy save is normalized",
+  migrated.coins === 12 && migrated.unlockedWeapons.includes("spark_bolt")
+);
 check("save version is current", migrated.saveVersion === 4);
 check("seen banners normalize", Array.isArray(migrated.seenBanners));
-check("shop purchases clamp to content tiers", migrated.shopPurchases.training_boots === trainingBoots.maxTier);
+check(
+  "shop purchases clamp to content tiers",
+  migrated.shopPurchases.training_boots === trainingBoots.maxTier
+);
 check("missing shop purchases are removed", migrated.shopPurchases.missing_item === undefined);
-check("completed quest follow-ups reopen", migrated.activeQuests.includes("rapid_growth") && migrated.activeQuests.includes("gem_hoarder"));
+check(
+  "completed quest follow-ups reopen",
+  migrated.activeQuests.includes("rapid_growth") && migrated.activeQuests.includes("gem_hoarder")
+);
 check("unlock-opened quests reopen", migrated.activeQuests.includes("use_laser_run"));
-check("legacy upgrades are retired and refunded", migrated.upgradeTiers.laser_damage === undefined && migrated.questPoints === 1);
-check("retired upgrades do not reopen follow-up quests", !migrated.activeQuests.includes("laser_damage_5000"));
+check(
+  "legacy upgrades are retired and refunded",
+  migrated.upgradeTiers.laser_damage === undefined && migrated.questPoints === 1
+);
+check(
+  "retired upgrades do not reopen follow-up quests",
+  !migrated.activeQuests.includes("laser_damage_5000")
+);
 
 await saveSystem.persist(migrated);
 const persisted = JSON.parse(storage.get(saveKey));
@@ -285,51 +311,70 @@ check("corrupt save falls back to default", corrupt.unlockedWeapons.includes("sp
 check("corrupt save warning is exposed", saveSystem.getLastLoadWarning() === "corrupt-save");
 check("corrupt save raw is backed up", storage.get(corruptBackupKey) === "{broken json");
 
-storage.set(saveKey, JSON.stringify({
-  saveVersion: 4,
-  coins: -10,
-  towerFloor: 0,
-  unlockedWeapons: "laser",
-  unlockedNodes: {},
-  upgradeTiers: [],
-  unlockedUpgrades: "laser_damage",
-  shopPurchases: "bad",
-  seenBanners: {},
-  unlockedRelics: {},
-  equippedRelics: {},
-  activeQuests: {},
-  completedQuests: {},
-  questProgress: [],
-}));
+storage.set(
+  saveKey,
+  JSON.stringify({
+    saveVersion: 4,
+    coins: -10,
+    towerFloor: 0,
+    unlockedWeapons: "laser",
+    unlockedNodes: {},
+    upgradeTiers: [],
+    unlockedUpgrades: "laser_damage",
+    shopPurchases: "bad",
+    seenBanners: {},
+    unlockedRelics: {},
+    equippedRelics: {},
+    activeQuests: {},
+    completedQuests: {},
+    questProgress: [],
+  })
+);
 const partial = await saveSystem.loadSave();
 check("partial save normalizes coins", partial.coins === 0);
 check("partial save normalizes tower floor", partial.towerFloor === 1);
 check("partial save restores default weapon", partial.unlockedWeapons.includes("spark_bolt"));
-check("partial save normalizes arrays", Array.isArray(partial.activeQuests) && Array.isArray(partial.completedQuests));
-check("partial save normalizes objects", typeof partial.upgradeTiers === "object" && !Array.isArray(partial.upgradeTiers));
+check(
+  "partial save normalizes arrays",
+  Array.isArray(partial.activeQuests) && Array.isArray(partial.completedQuests)
+);
+check(
+  "partial save normalizes objects",
+  typeof partial.upgradeTiers === "object" && !Array.isArray(partial.upgradeTiers)
+);
 
-storage.set(saveKey, JSON.stringify({
-  saveVersion: 1,
-  coins: 4,
-  completedQuests: ["gatherer"],
-  unlockedUpgrades: ["laser_damage"],
-}));
+storage.set(
+  saveKey,
+  JSON.stringify({
+    saveVersion: 1,
+    coins: 4,
+    completedQuests: ["gatherer"],
+    unlockedUpgrades: ["laser_damage"],
+  })
+);
 const oldVersion = await saveSystem.loadSave();
 check("old save migrates to current version", oldVersion.saveVersion === 4);
-check("old save migration adds shop purchases", oldVersion.shopPurchases && typeof oldVersion.shopPurchases === "object");
+check(
+  "old save migration adds shop purchases",
+  oldVersion.shopPurchases && typeof oldVersion.shopPurchases === "object"
+);
 check("old save migration adds seen banners", Array.isArray(oldVersion.seenBanners));
 const refundedQuestPoints = oldVersion.questPoints;
 const migratedAgain = saveSystem.normalizeSave(oldVersion);
 check(
   "legacy permanent refund is one-time after migration",
-  migratedAgain.questPoints === refundedQuestPoints && migratedAgain.legacyPermanentUpgradeRefundVersion === 4,
+  migratedAgain.questPoints === refundedQuestPoints &&
+    migratedAgain.legacyPermanentUpgradeRefundVersion === 4
 );
 
-storage.set(saveKey, JSON.stringify({
-  saveVersion: 99,
-  coins: 7,
-  futureField: { keep: true },
-}));
+storage.set(
+  saveKey,
+  JSON.stringify({
+    saveVersion: 99,
+    coins: 7,
+    futureField: { keep: true },
+  })
+);
 const future = await saveSystem.loadSave();
 check("future save version is normalized current", future.saveVersion === 4);
 check("future unknown fields are preserved", future.futureField?.keep === true);
@@ -457,9 +502,15 @@ const throwingSaveSystem = throwingDependencyBag.save.createSaveSystem({
 
 const unavailableSave = await throwingSaveSystem.loadSave();
 const unavailablePersisted = await throwingSaveSystem.persist(unavailableSave);
-check("save defaults bridge publishes no retired global", !saveDefaultsSource.includes("globalThis.TapSurvivorSaveDefaults"));
+check(
+  "save defaults bridge publishes no retired global",
+  !saveDefaultsSource.includes("globalThis.TapSurvivorSaveDefaults")
+);
 check("save defaults are supplied by dependency bag", saveDefaults.CURRENT_SAVE_VERSION === 4);
-check("save migrations bridge publishes no retired global", !saveMigrationsSource.includes("globalThis.TapSurvivorSaveMigrations"));
+check(
+  "save migrations bridge publishes no retired global",
+  !saveMigrationsSource.includes("globalThis.TapSurvivorSaveMigrations")
+);
 check(
   "save normalize bridge publishes no retired global",
   !saveNormalizeSource.includes("globalThis.TapSurvivorSaveNormalize")
@@ -477,7 +528,8 @@ check(
 );
 check(
   "save migrations are supplied by dependency bag",
-  typeof saveMigrations.isPlainObject === "function" && typeof saveMigrations.migrateSave === "function"
+  typeof saveMigrations.isPlainObject === "function" &&
+    typeof saveMigrations.migrateSave === "function"
 );
 check(
   "retired save, storage, and GameDependencies globals are never read",
@@ -496,9 +548,15 @@ check(
     retiredGameDependenciesPublisherReads === 0 &&
     throwingRetiredGameDependenciesPublisherReads === 0
 );
-check("storage unavailable load returns default save", unavailableSave.unlockedWeapons.includes("spark_bolt"));
+check(
+  "storage unavailable load returns default save",
+  unavailableSave.unlockedWeapons.includes("spark_bolt")
+);
 check("storage unavailable persist reports false", unavailablePersisted === false);
-check("storage unavailable backend is controlled", throwingAdapter.getStorageBackendName() === "unavailable");
+check(
+  "storage unavailable backend is controlled",
+  throwingAdapter.getStorageBackendName() === "unavailable"
+);
 
 const guardedStorage = createStorageBackend();
 const guardedPreferences = createPreferencesBackend();
@@ -524,7 +582,11 @@ Object.defineProperty(context, "localStorage", {
     throw new Error("Forbidden direct localStorage global read");
   },
 });
-const guardedAdapter = storageProvider.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
+const guardedAdapter = storageProvider.createStorageAdapter({
+  saveKey,
+  legacySaveKey,
+  corruptBackupKey,
+});
 const guardedSet = await guardedAdapter.setSaveRaw("preferences-current");
 const guardedCurrent = await guardedAdapter.getSaveRaw();
 guardedPreferences.values.delete(saveKey);
@@ -557,9 +619,15 @@ check(
 
 const fallbackStorage = createStorageBackend();
 const failingPreferences = {
-  get() { throw new Error("preferences unavailable"); },
-  remove() { throw new Error("preferences unavailable"); },
-  set() { throw new Error("preferences unavailable"); },
+  get() {
+    throw new Error("preferences unavailable");
+  },
+  remove() {
+    throw new Error("preferences unavailable");
+  },
+  set() {
+    throw new Error("preferences unavailable");
+  },
 };
 storageProvider.configureDefaultProviders({
   platformCapabilities: {
@@ -567,7 +635,11 @@ storageProvider.configureDefaultProviders({
     getPreferences: () => failingPreferences,
   },
 });
-const fallbackAdapter = storageProvider.createStorageAdapter({ saveKey, legacySaveKey, corruptBackupKey });
+const fallbackAdapter = storageProvider.createStorageAdapter({
+  saveKey,
+  legacySaveKey,
+  corruptBackupKey,
+});
 const fallbackSet = await fallbackAdapter.setSaveRaw("fallback-current");
 const fallbackCurrent = await fallbackAdapter.getSaveRaw();
 const fallbackBackup = await fallbackAdapter.setCorruptBackupRaw("fallback-backup");
@@ -623,7 +695,8 @@ check(
 );
 check(
   "storage adapter removes direct platform global reads",
-  !storageSource.includes("globalThis.Capacitor") && !storageSource.includes("globalThis.localStorage")
+  !storageSource.includes("globalThis.Capacitor") &&
+    !storageSource.includes("globalThis.localStorage")
 );
 
 const sourceStorageParity = await storageProviderParitySnapshot(createStorageProvider());
@@ -638,6 +711,8 @@ check(
     !nativeStorageSource.includes("TapSurvivorStorage") &&
     !nativeStorageSource.includes("globalThis")
 );
+
+await import("./smoke-save-resilience.mjs");
 
 if (process.exitCode) {
   console.error("\nSave smoke failed.");
@@ -791,17 +866,29 @@ async function storageProviderParitySnapshot(storageProvider) {
 function createPreferencesBackend(values = new Map()) {
   return {
     values,
-    async get({ key }) { return { value: values.get(key) || null }; },
-    async remove({ key }) { values.delete(key); },
-    async set({ key, value }) { values.set(key, value); },
+    async get({ key }) {
+      return { value: values.get(key) || null };
+    },
+    async remove({ key }) {
+      values.delete(key);
+    },
+    async set({ key, value }) {
+      values.set(key, value);
+    },
   };
 }
 
 function createStorageBackend(values = new Map()) {
   return {
     values,
-    getItem(key) { return values.get(key) || null; },
-    removeItem(key) { values.delete(key); },
-    setItem(key, value) { values.set(key, value); },
+    getItem(key) {
+      return values.get(key) || null;
+    },
+    removeItem(key) {
+      values.delete(key);
+    },
+    setItem(key, value) {
+      values.set(key, value);
+    },
   };
 }

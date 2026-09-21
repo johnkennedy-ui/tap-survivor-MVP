@@ -28,7 +28,19 @@ const excludedFormatPrefixes = [
   "www/",
 ];
 
+const securityChecks = [
+  ["npm", ["run", "check:browser-security"]],
+  ["npm", ["run", "smoke:browser-security"]],
+  ["npm", ["run", "check:android-security"]],
+  ["npm", ["run", "smoke:android-security"]],
+  ["npm", ["run", "check:build-security"]],
+  ["npm", ["run", "smoke:save-resilience"]],
+  ["npm", ["run", "smoke:release-metadata"]],
+  ["npm", ["run", "smoke:frank-run"]],
+];
+
 const fullChecks = [
+  ...securityChecks,
   ["git", ["diff", "--check"]],
   ["npm", ["run", "format:check"]],
   ["npm", ["run", "check:format-hygiene"]],
@@ -262,6 +274,7 @@ function printCommandOutput(result) {
 
 function focusedChecks(files) {
   const checks = [
+    ...securityChecks,
     ["git", ["diff", "--check"]],
     ["npm", ["run", "format:check"]],
     ["npm", ["run", "check:format-hygiene"]],

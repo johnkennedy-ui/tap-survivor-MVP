@@ -95,7 +95,7 @@ export function createLevelUpSystem({
     const save = getSave();
     game.paused = true;
     game.pauseReason = "level";
-    ui.choices.innerHTML = "";
+    ui.choices.replaceChildren();
     const maxWeapons = maxEquippedWeapons?.() || 4;
     const canEquipWeapon = game.player.equippedWeapons.length < maxWeapons;
     const weaponChoices = canEquipWeapon

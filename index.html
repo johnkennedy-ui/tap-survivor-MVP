@@ -3,8 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; media-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
     <title>Tap Survivor</title>
-    <link rel="icon" type="image/svg+xml" href="assets/generated/tower/sprites/player-tower-mage.svg" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="assets/generated/tower/sprites/player-tower-mage.svg"
+    />
     <link rel="stylesheet" href="src/styles.css?v=auto-fca0dbbf" />
   </head>
   <body>
@@ -16,10 +25,19 @@
             <button class="speed-button active" type="button" data-speed="1">x1</button>
             <button class="speed-button" type="button" data-speed="2">x2</button>
             <button class="speed-button" type="button" data-speed="5">x5</button>
-            <button id="muteAudio" class="speed-button mute-button" type="button" aria-pressed="false">Sound</button>
+            <button
+              id="muteAudio"
+              class="speed-button mute-button"
+              type="button"
+              aria-pressed="false"
+            >
+              Sound
+            </button>
           </div>
           <button id="fullscreenButton" class="fullscreen-button" type="button">Full Screen</button>
-          <button id="openMenu" class="menu-button" type="button" aria-expanded="false">Menu</button>
+          <button id="openMenu" class="menu-button" type="button" aria-expanded="false">
+            Menu
+          </button>
         </div>
         <div id="questBanner" class="quest-banner hidden"></div>
         <div id="titleScreen" class="modal">
@@ -27,7 +45,9 @@
             <h2>Tap Survivor</h2>
             <div class="start-actions">
               <button id="titleStartGame" type="button">Climb</button>
-              <button id="titleStartFarm" type="button" class="secondary">Farm — original arena</button>
+              <button id="titleStartFarm" type="button" class="secondary">
+                Farm — original arena
+              </button>
             </div>
           </div>
         </div>
@@ -41,7 +61,9 @@
           <div class="modal-box menu-box">
             <div class="modal-header">
               <h2>Coin Shop</h2>
-              <button id="closeShop" class="modal-close" type="button" aria-label="Close shop">&times;</button>
+              <button id="closeShop" class="modal-close" type="button" aria-label="Close shop">
+                &times;
+              </button>
             </div>
             <p id="shopCoinHud"></p>
             <p id="shopNotice" class="shop-notice"></p>
@@ -53,7 +75,9 @@
           <div class="modal-box menu-box">
             <div class="modal-header">
               <h2>Run Menu</h2>
-              <button id="closeMenu" class="modal-close" type="button" aria-label="Close run menu">&times;</button>
+              <button id="closeMenu" class="modal-close" type="button" aria-label="Close run menu">
+                &times;
+              </button>
             </div>
             <div class="menu-tabs" role="tablist" aria-label="Run menu tabs">
               <button id="menuProgressTab" class="menu-tab active" type="button">Rewards</button>
@@ -84,7 +108,14 @@
           <div class="modal-box">
             <div class="modal-header">
               <h2>Level Up</h2>
-              <button id="closeLevelUp" class="modal-close" type="button" aria-label="Close level up menu">&times;</button>
+              <button
+                id="closeLevelUp"
+                class="modal-close"
+                type="button"
+                aria-label="Close level up menu"
+              >
+                &times;
+              </button>
             </div>
             <p>Choose one upgrade.</p>
             <div id="choices" class="choice-list"></div>
@@ -101,14 +132,20 @@
           <div class="modal-box">
             <div class="modal-header">
               <h2>Run Complete</h2>
-              <button id="closeEndX" class="modal-close" type="button" aria-label="Close end screen">&times;</button>
+              <button
+                id="closeEndX"
+                class="modal-close"
+                type="button"
+                aria-label="Close end screen"
+              >
+                &times;
+              </button>
             </div>
             <div id="runStats" class="stats"></div>
             <button id="closeEnd">Return to Menu</button>
           </div>
         </div>
       </section>
-
     </main>
 
     <script src="src/shell-relic-ui.js?v=auto-shell-helpers"></script>

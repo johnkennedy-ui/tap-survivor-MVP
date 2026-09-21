@@ -70,7 +70,7 @@
       if (!container) return;
       const doc = requireDocument(documentRef);
       const save = getSave();
-      container.innerHTML = "";
+      container.replaceChildren();
       const availableWeaponUnlocks = weaponUnlocks.filter(
         (unlock) => !hasNode(unlock.id) && isNodeVisible(unlock)
       );
@@ -78,7 +78,8 @@
         if (!Array.isArray(upgrade.cost) || !Number.isFinite(upgrade.maxTier)) return false;
         const tier = getUpgradeTier(upgrade.id);
         if (tier >= upgrade.maxTier) return false;
-        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return false;
+        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon))
+          return false;
         if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return false;
         return !upgrade.requiresQuest || isQuestComplete(upgrade.requiresQuest);
       });
@@ -98,12 +99,12 @@
         const gateStatus = nodeGateStatus(unlock);
         const el = doc.createElement("div");
         el.className = `node ${gateStatus ? "locked" : "available"}`;
-        el.innerHTML = `
-          <strong>Unlock ${weapon.name}</strong>
-          <span>${weapon.description}</span><br />
-          <span>Branch: ${unlock.branch} | Cost: ${unlock.cost} QP</span><br />
-          <span>${gateStatus || "Ready to unlock"}</span>
-        `;
+        appendTextElement(doc, el, "strong", `Unlock ${weapon.name}`);
+        appendTextElement(doc, el, "span", weapon.description);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Branch: ${unlock.branch} | Cost: ${unlock.cost} QP`);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", gateStatus || "Ready to unlock");
         const iconSource = assetResolver?.weaponIcon?.(unlock.weaponId);
         if (iconSource) {
           const icon = doc.createElement("img");
@@ -127,12 +128,17 @@
         const canBuy = save.questPoints >= nextCost;
         const el = doc.createElement("div");
         el.className = `node ${canBuy ? "available" : "locked"}`;
-        el.innerHTML = `
-          <strong>${upgrade.name}</strong>
-          <span>${upgrade.description}</span><br />
-          <span>Tier: ${tier}/${upgrade.maxTier}</span><br />
-          <span>${canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`}</span>
-        `;
+        appendTextElement(doc, el, "strong", upgrade.name);
+        appendTextElement(doc, el, "span", upgrade.description);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Tier: ${tier}/${upgrade.maxTier}`);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(
+          doc,
+          el,
+          "span",
+          canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`
+        );
         const button = doc.createElement("button");
         button.textContent = `Buy Tier ${tier + 1}`;
         button.disabled = !canBuy;
@@ -146,7 +152,7 @@
       if (!container) return;
       const doc = requireDocument(documentRef);
       const save = getSave();
-      container.innerHTML = "";
+      container.replaceChildren();
       const activeQuestIds = Object.keys(questDefs).filter((id) => save.activeQuests.includes(id));
       if (!activeQuestIds.length) {
         const empty = doc.createElement("div");
@@ -163,13 +169,14 @@
         const progress = save.questProgress[id] || 0;
         const el = doc.createElement("div");
         el.className = "quest active";
-        el.innerHTML = `
-          <strong>${quest.name}</strong>
-          <span>${quest.description}</span><br />
-          <span>Status: Active</span><br />
-          <span>Progress: ${Math.floor(progress)} / ${quest.target}</span><br />
-          <span>Reward: ${quest.rewardQp} QP</span>
-        `;
+        appendTextElement(doc, el, "strong", quest.name);
+        appendTextElement(doc, el, "span", quest.description);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", "Status: Active");
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Progress: ${Math.floor(progress)} / ${quest.target}`);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Reward: ${quest.rewardQp} QP`);
         container.appendChild(el);
       });
     }
@@ -197,5 +204,12 @@
 
   function positiveIntegerOrDefault(value, fallback) {
     return Number.isInteger(value) && value > 0 ? value : fallback;
+  }
+
+  function appendTextElement(documentRef, parent, tagName, text) {
+    const element = documentRef.createElement(tagName);
+    element.textContent = text;
+    parent.appendChild(element);
+    return element;
   }
 })();

@@ -1,7 +1,7 @@
 {
   "name": "tap-survivor-mvp",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "agent:start": "node scripts/agent-start.mjs",
@@ -106,7 +106,16 @@
     "pretest": "npm run smoke:run-mode && npm run smoke:world-simulation && npm run smoke:world-view-input",
     "test": "npm run audit:quests && node scripts/verify-mvp.mjs && npm run smoke:module-bootstrap && npm run test:speed && npm run smoke:directional-atlases && npm run smoke:eight-way-rendering && npm run smoke:player-eight-way",
     "serve": "node scripts/serve-local.mjs",
-    "serve:apk": "node scripts/serve-debug-apk.mjs"
+    "serve:apk": "node scripts/serve-debug-apk.mjs",
+    "check:browser-security": "node scripts/check-browser-security.mjs",
+    "smoke:browser-security": "node scripts/smoke-browser-security.mjs",
+    "check:android-security": "node scripts/check-android-security.mjs",
+    "smoke:android-security": "node scripts/smoke-android-security.mjs",
+    "check:build-security": "node scripts/check-build-security.mjs",
+    "smoke:save-resilience": "node scripts/smoke-save-resilience.mjs",
+    "smoke:release-metadata": "node scripts/smoke-release-metadata.mjs",
+    "smoke:frank-run": "node scripts/smoke-frank-run.mjs",
+    "release:metadata": "node scripts/release-metadata.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",

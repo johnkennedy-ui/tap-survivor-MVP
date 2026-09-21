@@ -3,13 +3,31 @@ import { cp, mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const wwwDir = path.resolve("www");
-const forbiddenDirNames = new Set([".git", ".github", "android", "docs", "node_modules", "scripts", "tests"]);
-const forbiddenFileNames = new Set([".env", "AGENTS.md", "package.json", "package-lock.json", "README.md", "key.properties"]);
+const forbiddenDirNames = new Set([
+  ".git",
+  ".github",
+  "android",
+  "docs",
+  "node_modules",
+  "scripts",
+  "tests",
+]);
+const forbiddenFileNames = new Set([
+  ".env",
+  "AGENTS.md",
+  "package.json",
+  "package-lock.json",
+  "README.md",
+  "key.properties",
+]);
 const forbiddenFilePatterns = [
   /(^|[-_.])secret(s)?([-_.]|$)/i,
   /(^|[-_.])credential(s)?([-_.]|$)/i,
   /service[-_.]?account/i,
   /keystore/i,
+  /^\.env\..+$/i,
+  /.+\.env$/i,
+  /.+\.key$/i,
   /\.(jks|keystore|p12|pfx|pem)$/i,
 ];
 
@@ -19,7 +37,7 @@ function runGit(args, fallback = null) {
   return result.stdout.trim() || fallback;
 }
 
-function isForbiddenRuntimePath(relativePath) {
+export function isForbiddenRuntimePath(relativePath) {
   const normalized = relativePath.split(path.sep).join("/");
   const parts = normalized.split("/").filter(Boolean);
   if (parts.some((part) => forbiddenDirNames.has(part))) return true;
@@ -39,35 +57,6 @@ async function copyRuntimePath(source, target) {
     },
   });
 }
-
-await rm(wwwDir, { recursive: true, force: true });
-await mkdir(wwwDir, { recursive: true });
-
-await copyRuntimePath("index.html", path.join(wwwDir, "index.html"));
-await copyRuntimePath("src", path.join(wwwDir, "src"));
-await copyRuntimePath("assets", path.join(wwwDir, "assets"));
-
-const buildInfo = {
-  gitCommit: runGit(["rev-parse", "HEAD"], "unknown"),
-  branch: runGit(["branch", "--show-current"], "unknown"),
-  buildTimestamp: new Date().toISOString(),
-  source: "shared-www",
-  appName: "Tap Survivor",
-};
-
-await writeFile(path.join(wwwDir, ".nojekyll"), "");
-await writeFile(path.join(wwwDir, "build-info.json"), `${JSON.stringify(buildInfo, null, 2)}\n`);
-
-if (!(await fileExists(path.join(wwwDir, "index.html")))) {
-  throw new Error("www/index.html is missing after build");
-}
-
-const forbidden = await findForbiddenRuntimeFiles(wwwDir);
-if (forbidden.length) {
-  throw new Error(`Forbidden runtime files in www/:\n${forbidden.map((file) => `- ${file}`).join("\n")}`);
-}
-
-console.log("Shared web runtime built: www/");
 
 async function fileExists(filePath) {
   try {
@@ -98,4 +87,41 @@ async function findForbiddenRuntimeFiles(rootDir) {
 
   await walk(rootDir);
   return files;
+}
+
+export async function buildWebRuntime() {
+  await rm(wwwDir, { recursive: true, force: true });
+  await mkdir(wwwDir, { recursive: true });
+
+  await copyRuntimePath("index.html", path.join(wwwDir, "index.html"));
+  await copyRuntimePath("src", path.join(wwwDir, "src"));
+  await copyRuntimePath("assets", path.join(wwwDir, "assets"));
+
+  const buildInfo = {
+    gitCommit: runGit(["rev-parse", "HEAD"], "unknown"),
+    branch: runGit(["branch", "--show-current"], "unknown"),
+    buildTimestamp: new Date().toISOString(),
+    source: "shared-www",
+    appName: "Tap Survivor",
+  };
+
+  await writeFile(path.join(wwwDir, ".nojekyll"), "");
+  await writeFile(path.join(wwwDir, "build-info.json"), `${JSON.stringify(buildInfo, null, 2)}\n`);
+
+  if (!(await fileExists(path.join(wwwDir, "index.html")))) {
+    throw new Error("www/index.html is missing after build");
+  }
+
+  const forbidden = await findForbiddenRuntimeFiles(wwwDir);
+  if (forbidden.length) {
+    throw new Error(
+      `Forbidden runtime files in www/:\n${forbidden.map((file) => `- ${file}`).join("\n")}`
+    );
+  }
+
+  console.log("Shared web runtime built: www/");
+}
+
+if (import.meta.url === new URL(process.argv[1], "file:").href) {
+  await buildWebRuntime();
 }

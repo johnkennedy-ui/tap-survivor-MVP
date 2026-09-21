@@ -68,7 +68,7 @@
       ui.relicChoiceTitle.textContent =
         remainingPicks > 1 ? `Choose Relic ${awardedRelics.length + 1}` : "Choose Relic";
       ui.relicChoiceText.textContent = "Pick one reward shaped by your current weapons.";
-      ui.relicChoices.innerHTML = "";
+      ui.relicChoices.replaceChildren();
       choices.forEach((relic) => {
         const button = documentRef?.createElement?.("button");
         if (!button) {
@@ -80,11 +80,26 @@
         } else if (relic.backgroundColor && button.style) {
           button.style["--relic-bg"] = relic.backgroundColor;
         }
-        button.innerHTML = `
-          <img class="level-choice-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
-          <strong>${relic.name}</strong><br /><span>${relic.description}</span>
-          ${relic.specialAbility ? `<br /><span>${relic.specialAbility.label}: ${relic.specialAbility.description}</span>` : ""}
-        `;
+        const icon = documentRef.createElement("img");
+        icon.className = "level-choice-icon";
+        icon.src =
+          safeAssetPath(relic.iconPath) ||
+          "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+        icon.alt = "";
+        button.appendChild(icon);
+        const name = documentRef.createElement("strong");
+        name.textContent = relic.name;
+        button.appendChild(name);
+        button.appendChild(documentRef.createElement("br"));
+        const description = documentRef.createElement("span");
+        description.textContent = relic.description;
+        button.appendChild(description);
+        if (relic.specialAbility) {
+          button.appendChild(documentRef.createElement("br"));
+          const ability = documentRef.createElement("span");
+          ability.textContent = `${relic.specialAbility.label}: ${relic.specialAbility.description}`;
+          button.appendChild(ability);
+        }
         button.addEventListener("click", () => {
           const granted = relicSystem.grantRelic(save, relic);
           const nextAwarded = granted ? [...awardedRelics, granted] : awardedRelics;
@@ -121,5 +136,39 @@
       endRun,
       startRun,
     };
+  }
+
+  function safeAssetPath(value) {
+    if (typeof value !== "string") return "";
+    const path = value.trim();
+    const pathname = path.split(/[?#]/, 1)[0];
+    if (
+      !pathname ||
+      pathname.startsWith("/") ||
+      pathname.includes(":") ||
+      /[\\\\\u0000-\u001f\u007f]/.test(path)
+    ) {
+      return "";
+    }
+    const segments = pathname.split("/");
+    if (
+      segments.some((segment) => {
+        if (!segment) return true;
+        try {
+          const decoded = decodeURIComponent(segment);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
+        } catch {
+          return true;
+        }
+      })
+    ) {
+      return "";
+    }
+    return path;
   }
 })();

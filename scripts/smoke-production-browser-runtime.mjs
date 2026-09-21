@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, join, normalize, resolve } from "node:path";
 import { chromium } from "playwright";
+import { installProductionBrowserWitnesses } from "./production-browser-witness.mjs";
 
 const cli = parseCli(process.argv.slice(2));
 const strict = cli.strict || process.env.SMOKE_PRODUCTION_BROWSER_STRICT === "1";
@@ -98,11 +99,16 @@ function isLocalUrl(url, origin) {
 function isCriticalAsset(url, origin) {
   if (!isLocalUrl(url, origin)) return false;
   const path = new URL(url).pathname;
-  return /\.(?:css|html|js|json|mjs|png|svg|ico|webp|jpg|jpeg|gif|woff2?|ttf)$/.test(path) || path === "/index.html";
+  return (
+    /\.(?:css|html|js|json|mjs|png|svg|ico|webp|jpg|jpeg|gif|woff2?|ttf)$/.test(path) ||
+    path === "/index.html"
+  );
 }
 
 function shortMessage(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function parseCli(args) {
@@ -227,302 +233,7 @@ async function main() {
   const requestEvents = [];
   const responseEvents = [];
   const responseStatusByUrl = new Map();
-  await page.addInitScript(() => {
-    const retiredPublisherNames = [
-      "TapSurvivorAudio",
-      "TapSurvivorAssets",
-      "TapSurvivorCombat",
-      "TapSurvivorEnemies",
-      "TapSurvivorEnemyBehaviors",
-      "TapSurvivorEnemySpawning",
-      "TapSurvivorPickups",
-      "TapSurvivorRelics",
-      "TapSurvivorWeaponBehaviors",
-      "TapSurvivorWeaponFire",
-      "TapSurvivorLevelUp",
-      "TapSurvivorGameRuntime",
-      "TapSurvivorInput",
-      "TapSurvivorShellUi",
-    ];
-    const retiredPublisherReads = Object.fromEntries(
-      retiredPublisherNames.map((name) => [name, 0])
-    );
-    retiredPublisherNames.forEach((name) => {
-      Object.defineProperty(globalThis, name, {
-        configurable: true,
-        get() {
-          retiredPublisherReads[name] += 1;
-          throw new Error(`Forbidden retired Tap Survivor publisher read: ${name}`);
-        },
-      });
-    });
-    const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
-    const diagnostics = {
-      canvasDrawCount: 0,
-      canvasWitnesses: {
-        background: null,
-        player: null,
-      },
-      playerCanvasVisible: false,
-      spriteDraws: [],
-      spriteLoadRequests: [],
-      spriteLoads: [],
-      spriteRegistrations: [],
-    };
-    document.__TapSurvivorBrowserSmoke = {
-      diagnostics,
-      retiredPublisherReads,
-    };
-    CanvasRenderingContext2D.prototype.drawImage = function patchedDrawImage(image, ...args) {
-      const before = describeCanvasDraw(this, image, args);
-      const id = spriteIdForImageSource(before.imageSrc, diagnostics.spriteRegistrations);
-      const kind = kindForSpriteId(id);
-      const beforeStats = kind === "player" ? sampleCanvasRect(this, before.visibleRect) : null;
-      let result;
-      let threw;
-      try {
-        result = originalDrawImage.call(this, image, ...args);
-        return result;
-      } catch (error) {
-        threw = error;
-        throw error;
-      } finally {
-        const afterStats = kind === "player" ? sampleCanvasRect(this, before.visibleRect) : null;
-        retainCanvasWitness({
-          ...before,
-          id,
-          kind,
-          pixelDelta: pixelStatsDelta(beforeStats, afterStats),
-          sequence: ++diagnostics.canvasDrawCount,
-          threw: Boolean(threw),
-        });
-      }
-    };
-
-    function retainCanvasWitness(entry) {
-      if (entry.kind === "background" && entry.intersectsCanvas) {
-        diagnostics.canvasWitnesses.background = summarizeCanvasWitness(entry);
-        diagnostics.playerCanvasVisible = false;
-        return;
-      }
-      if (entry.kind !== "player") return;
-      const witness = summarizeCanvasWitness(entry);
-      if (witness.visibleSpriteProof) {
-        diagnostics.canvasWitnesses.player = witness;
-        diagnostics.playerCanvasVisible = true;
-      }
-    }
-
-    function summarizeCanvasWitness(entry) {
-      const positiveDestination = entry.dest?.width > 0 && entry.dest?.height > 0;
-      const visibleCoverage =
-        positiveDestination && entry.visibleRect
-          ? (entry.visibleRect.width * entry.visibleRect.height) / (entry.dest.width * entry.dest.height)
-          : 0;
-      const validSource = entry.source?.naturalWidth > 0 && entry.source?.naturalHeight > 0;
-      const visibleSpriteProof =
-        entry.kind === "player" &&
-        positiveDestination &&
-        visibleCoverage >= 0.9 &&
-        validSource &&
-        entry.intersectsCanvas &&
-        entry.globalAlpha > 0 &&
-        entry.globalCompositeOperation !== "destination-out" &&
-        (entry.pixelDelta || 0) > 0;
-      return {
-        dest: entry.dest,
-        globalAlpha: entry.globalAlpha,
-        globalCompositeOperation: entry.globalCompositeOperation,
-        id: entry.id,
-        imageSrc: entry.imageSrc,
-        intersectsCanvas: entry.intersectsCanvas,
-        kind: entry.kind,
-        pixelDelta: entry.pixelDelta,
-        positiveDestination,
-        sequence: entry.sequence,
-        source: entry.source,
-        threw: entry.threw,
-        validSource,
-        visibleCoverage,
-        visibleRect: entry.visibleRect,
-        visibleSpriteProof,
-      };
-    }
-
-    function spriteIdForImageSource(src, registrations = []) {
-      const normalizedSrc = normalizeSpriteSource(src);
-      const registration = registrations.find(
-        (entry) => normalizeSpriteSource(entry.src) === normalizedSrc
-      );
-      return registration?.id || "";
-    }
-
-    function normalizeSpriteSource(src = "") {
-      try {
-        const url = new URL(src, "http://127.0.0.1");
-        return `${url.pathname}${url.search}`;
-      } catch {
-        return String(src || "");
-      }
-    }
-
-    function kindForSpriteId(id = "") {
-      if (id === "background:tower_floor" || id.startsWith("background:")) return "background";
-      if (id === "player" || id.startsWith("player:")) return "player";
-      if (id.startsWith("enemy:")) return "enemy";
-      if (id.startsWith("weapon:") || id.startsWith("weaponIcon:")) return "weapon";
-      return "unknown";
-    }
-
-    function describeCanvasDraw(context, image, args) {
-      const canvas = context.canvas;
-      const transform = context.getTransform?.();
-      const sourceWidth = image?.naturalWidth || image?.videoWidth || image?.width || 0;
-      const sourceHeight = image?.naturalHeight || image?.videoHeight || image?.height || 0;
-      const rect = destinationRect(args, sourceWidth, sourceHeight);
-      const transformedRect = transformRect(transform, rect);
-      const visibleRect = intersectRect(transformedRect, {
-        height: canvas?.height || 0,
-        width: canvas?.width || 0,
-        x: 0,
-        y: 0,
-      });
-      return {
-        dest: rect,
-        globalAlpha: context.globalAlpha,
-        globalCompositeOperation: context.globalCompositeOperation,
-        imageSrc: image?.currentSrc || image?.src || "",
-        intersectsCanvas: Boolean(visibleRect && visibleRect.width > 0 && visibleRect.height > 0),
-        source: {
-          naturalHeight: sourceHeight,
-          naturalWidth: sourceWidth,
-        },
-        visibleRect,
-      };
-    }
-
-    function destinationRect(args, sourceWidth, sourceHeight) {
-      if (args.length >= 8) {
-        return normalizeRect({
-          height: Number(args[7]) || 0,
-          width: Number(args[6]) || 0,
-          x: Number(args[4]) || 0,
-          y: Number(args[5]) || 0,
-        });
-      }
-      if (args.length >= 4) {
-        return normalizeRect({
-          height: Number(args[3]) || 0,
-          width: Number(args[2]) || 0,
-          x: Number(args[0]) || 0,
-          y: Number(args[1]) || 0,
-        });
-      }
-      return normalizeRect({
-        height: sourceHeight,
-        width: sourceWidth,
-        x: Number(args[0]) || 0,
-        y: Number(args[1]) || 0,
-      });
-    }
-
-    function normalizeRect(rect) {
-      const x1 = Math.min(rect.x, rect.x + rect.width);
-      const x2 = Math.max(rect.x, rect.x + rect.width);
-      const y1 = Math.min(rect.y, rect.y + rect.height);
-      const y2 = Math.max(rect.y, rect.y + rect.height);
-      return {
-        height: y2 - y1,
-        width: x2 - x1,
-        x: x1,
-        y: y1,
-      };
-    }
-
-    function transformRect(transform, rect) {
-      if (!transform) return rect;
-      const points = [
-        transformPoint(transform, rect.x, rect.y),
-        transformPoint(transform, rect.x + rect.width, rect.y),
-        transformPoint(transform, rect.x, rect.y + rect.height),
-        transformPoint(transform, rect.x + rect.width, rect.y + rect.height),
-      ];
-      const xs = points.map((point) => point.x);
-      const ys = points.map((point) => point.y);
-      return {
-        height: Math.max(...ys) - Math.min(...ys),
-        width: Math.max(...xs) - Math.min(...xs),
-        x: Math.min(...xs),
-        y: Math.min(...ys),
-      };
-    }
-
-    function transformPoint(transform, x, y) {
-      return {
-        x: transform.a * x + transform.c * y + transform.e,
-        y: transform.b * x + transform.d * y + transform.f,
-      };
-    }
-
-    function intersectRect(rect, bounds) {
-      const x1 = Math.max(rect.x, bounds.x);
-      const x2 = Math.min(rect.x + rect.width, bounds.x + bounds.width);
-      const y1 = Math.max(rect.y, bounds.y);
-      const y2 = Math.min(rect.y + rect.height, bounds.y + bounds.height);
-      if (x2 <= x1 || y2 <= y1) return null;
-      return {
-        height: y2 - y1,
-        width: x2 - x1,
-        x: x1,
-        y: y1,
-      };
-    }
-
-    function sampleCanvasRect(context, rect) {
-      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-      const sampleWidth = Math.min(16, Math.max(1, Math.floor(rect.width)));
-      const sampleHeight = Math.min(16, Math.max(1, Math.floor(rect.height)));
-      const startX = Math.max(0, Math.floor(rect.x + (rect.width - sampleWidth) / 2));
-      const startY = Math.max(0, Math.floor(rect.y + (rect.height - sampleHeight) / 2));
-      try {
-        const imageData = context.getImageData(startX, startY, sampleWidth, sampleHeight).data;
-        let alphaSum = 0;
-        let colorSum = 0;
-        let opaquePixels = 0;
-        for (let index = 0; index < imageData.length; index += 4) {
-          const alpha = imageData[index + 3];
-          alphaSum += alpha;
-          colorSum += imageData[index] + imageData[index + 1] + imageData[index + 2];
-          if (alpha > 0) opaquePixels += 1;
-        }
-        return {
-          alphaSum,
-          colorSum,
-          height: sampleHeight,
-          opaquePixels,
-          width: sampleWidth,
-          x: startX,
-          y: startY,
-        };
-      } catch (error) {
-        return {
-          error: error.message,
-          height: sampleHeight,
-          width: sampleWidth,
-          x: startX,
-          y: startY,
-        };
-      }
-    }
-
-    function pixelStatsDelta(beforeStats, afterStats) {
-      if (!beforeStats || !afterStats || beforeStats.error || afterStats.error) return 0;
-      return (
-        Math.abs((afterStats.alphaSum || 0) - (beforeStats.alphaSum || 0)) +
-        Math.abs((afterStats.colorSum || 0) - (beforeStats.colorSum || 0))
-      );
-    }
-  });
+  await page.addInitScript(installProductionBrowserWitnesses);
 
   page.on("console", (message) => {
     const entry = {
@@ -590,11 +301,24 @@ async function main() {
     report.pageUrl = url;
     await page.waitForTimeout(250);
 
-    report.titleVisible = await page.locator("#titleScreen").isVisible().catch(() => false);
+    report.titleVisible = await page
+      .locator("#titleScreen")
+      .isVisible()
+      .catch(() => false);
     report.titleControlDetected =
-      (await page.locator("#titleStartGame").count().catch(() => 0)) > 0 ||
-      (await page.getByRole("button", { name: /start game/i }).count().catch(() => 0)) > 0;
-    report.canvasFound = (await page.locator("#game").count().catch(() => 0)) > 0;
+      (await page
+        .locator("#titleStartGame")
+        .count()
+        .catch(() => 0)) > 0 ||
+      (await page
+        .getByRole("button", { name: /start game/i })
+        .count()
+        .catch(() => 0)) > 0;
+    report.canvasFound =
+      (await page
+        .locator("#game")
+        .count()
+        .catch(() => 0)) > 0;
     report.nonStartButtonsDetected = await detectNonStartButtons(page);
 
     const startButton = await locateStartButton(page);
@@ -605,7 +329,10 @@ async function main() {
         await startButton.click({ timeout: 5000 });
       } catch (error) {
         report.startGameClickThrew = true;
-        report.pageErrors.push({ message: `Start Game click failed: ${error.message}`, stack: error.stack });
+        report.pageErrors.push({
+          message: `Start Game click failed: ${error.message}`,
+          stack: error.stack,
+        });
       }
     }
 
@@ -622,17 +349,21 @@ async function main() {
         ) {
           throw new Error("Movement input requires a usable #game canvas bounding box.");
         }
-        const insideCanvas = (size) => Math.min(Math.max(Math.round(size / 2), 1), Math.floor(size) - 1);
+        const insideCanvas = (size) =>
+          Math.min(Math.max(Math.round(size / 2), 1), Math.floor(size) - 1);
         await canvas.click({
           position: {
             x: insideCanvas(canvasBox.width),
-            y: insideCanvas(canvasBox.height)
+            y: insideCanvas(canvasBox.height),
           },
-          timeout: 5000
+          timeout: 5000,
         });
         report.movementInputTriggered = true;
       } catch (error) {
-        report.pageErrors.push({ message: `Movement input failed: ${error.message}`, stack: error.stack });
+        report.pageErrors.push({
+          message: `Movement input failed: ${error.message}`,
+          stack: error.stack,
+        });
       }
     }
 
@@ -661,8 +392,8 @@ async function main() {
         },
         playerCanvasVisible: Boolean(
           diagnostics.playerCanvasVisible &&
-            playerWitness?.visibleSpriteProof &&
-            Number(playerWitness.sequence || 0) > Number(backgroundWitness?.sequence || 0)
+          playerWitness?.visibleSpriteProof &&
+          Number(playerWitness.sequence || 0) > Number(backgroundWitness?.sequence || 0)
         ),
         spriteDraws: diagnostics.spriteDraws || [],
         spriteLoadRequests: diagnostics.spriteLoadRequests || [],
@@ -679,19 +410,26 @@ async function main() {
 
     const spriteProof = analyzeSpriteDiagnostics(report.spriteDiagnostics);
     report.spriteProof = spriteProof;
-    const playerSpriteLoad = report.spriteDiagnostics.spriteLoads.find((entry) => entry.id === "player");
+    const playerSpriteLoad = report.spriteDiagnostics.spriteLoads.find(
+      (entry) => entry.id === "player"
+    );
     if (playerSpriteLoad?.src) {
       report.playerSpriteAssetUrl = new URL(playerSpriteLoad.src, report.pageUrl || url).href;
-      report.playerSpriteAssetResponseStatus = responseStatusByUrl.get(
-        normalizeImageSource(report.playerSpriteAssetUrl)
-      ) || null;
+      report.playerSpriteAssetResponseStatus =
+        responseStatusByUrl.get(normalizeImageSource(report.playerSpriteAssetUrl)) || null;
     }
 
-    const criticalConsoleError = report.console.error.find((entry) =>
-      isLocalUrl(entry.location?.url || "", origin) || /src\/|index\.html|Tap Survivor/i.test(entry.message)
+    const criticalConsoleError = report.console.error.find(
+      (entry) =>
+        isLocalUrl(entry.location?.url || "", origin) ||
+        /src\/|index\.html|Tap Survivor/i.test(entry.message)
     );
-    const criticalFailedRequest = report.failedRequests.find((entry) => isCriticalAsset(entry.url, origin));
-    const criticalHttpFailure = report.httpFailures.find((entry) => isCriticalAsset(entry.url, origin));
+    const criticalFailedRequest = report.failedRequests.find((entry) =>
+      isCriticalAsset(entry.url, origin)
+    );
+    const criticalHttpFailure = report.httpFailures.find((entry) =>
+      isCriticalAsset(entry.url, origin)
+    );
 
     const findings = {
       criticalConsoleError: Boolean(criticalConsoleError),
@@ -706,14 +444,18 @@ async function main() {
 
     const appFailures = [
       !report.indexLoaded ? "index.html did not load" : null,
-      !report.productionModuleAutobootLoaded ? "production-module-autoboot.js was not requested or loaded" : null,
+      !report.productionModuleAutobootLoaded
+        ? "production-module-autoboot.js was not requested or loaded"
+        : null,
       report.pageErrors.length ? `page errors captured (${report.pageErrors.length})` : null,
       criticalConsoleError ? "console error from app code" : null,
       criticalFailedRequest ? "failed local module or script request" : null,
       criticalHttpFailure ? "local app HTTP failure for script or asset" : null,
       !spriteProof.backgroundDrawSuccess ? "background floor draw never succeeded" : null,
       !spriteProof.playerDrawSuccess ? "player sprite draw was never attempted successfully" : null,
-      !spriteProof.playerCanvasVisible ? "player sprite draw did not produce visible canvas evidence" : null,
+      !spriteProof.playerCanvasVisible
+        ? "player sprite draw did not produce visible canvas evidence"
+        : null,
       report.startGameClickThrew ? "Start Game click threw" : null,
       !report.movementInputTriggered ? "movement input click did not complete" : null,
       report.retiredDiagnosticGlobalsPresent.length > 0
@@ -731,12 +473,19 @@ async function main() {
         ? `mute control strict probe failed: ${report.muteControlProbeResult?.failureDetail || "probe did not complete"}`
         : null,
       !report.canvasFound ? "no canvas found" : null,
-      !report.startGameFound && !report.titleVisible ? "no title or Start Game control found" : null,
+      !report.startGameFound && !report.titleVisible
+        ? "no title or Start Game control found"
+        : null,
     ].filter(Boolean);
 
     if (appFailures.length === 0) {
       report.appLevelResult = "pass";
-    } else if (report.indexLoaded && report.startGameFound && report.canvasFound && spriteProof.backgroundDrawSuccess) {
+    } else if (
+      report.indexLoaded &&
+      report.startGameFound &&
+      report.canvasFound &&
+      spriteProof.backgroundDrawSuccess
+    ) {
       report.appLevelResult = "partial";
     } else {
       report.appLevelResult = "fail";
@@ -836,13 +585,15 @@ async function sampleRuntime(page, report, origin) {
           }
         }
       }
-      const canvasBackingSize = canvas instanceof HTMLCanvasElement
-        ? {
-            height: canvas.height,
-            width: canvas.width,
-          }
-        : null;
-      const canvasRect = canvas instanceof HTMLCanvasElement ? canvas.getBoundingClientRect() : null;
+      const canvasBackingSize =
+        canvas instanceof HTMLCanvasElement
+          ? {
+              height: canvas.height,
+              width: canvas.width,
+            }
+          : null;
+      const canvasRect =
+        canvas instanceof HTMLCanvasElement ? canvas.getBoundingClientRect() : null;
       const canvasCssSize = canvasRect
         ? {
             height: Math.round(canvasRect.height),
@@ -893,7 +644,10 @@ async function probeButtons(page, report) {
       await page.waitForTimeout(50);
     } catch (error) {
       speedControlProbeResults.push({ clicked: false, id, present: true });
-      report.pageErrors.push({ message: `${id} click failed: ${error.message}`, stack: error.stack });
+      report.pageErrors.push({
+        message: `${id} click failed: ${error.message}`,
+        stack: error.stack,
+      });
     }
   }
 
@@ -1062,7 +816,9 @@ async function inspectMuteControlLayout(page) {
             }
           : null;
       const hitTarget = centre ? document.elementFromPoint(centre.x, centre.y) : null;
-      const centreHitsMute = Boolean(hitTarget && (hitTarget === control || control.contains(hitTarget)));
+      const centreHitsMute = Boolean(
+        hitTarget && (hitTarget === control || control.contains(hitTarget))
+      );
       let layoutError = "";
       if (!positiveVisibleRect) {
         layoutError = "#muteAudio has no positive visible rectangle";
@@ -1129,7 +885,9 @@ function describeMuteControlFailure(result) {
     result.layout.layoutError,
     result.clickError ? `mute click failed: ${result.clickError}` : "",
     result.restoreClickError ? `restore click failed: ${result.restoreClickError}` : "",
-    !result.successfulMuteTransition ? "mute state did not transition Sound/false to Muted/true" : "",
+    !result.successfulMuteTransition
+      ? "mute state did not transition Sound/false to Muted/true"
+      : "",
     !result.successfulRestoration ? "mute state did not restore to Sound/false" : "",
   ].filter(Boolean);
   return failures.join("; ");
@@ -1179,19 +937,29 @@ function emitReport(report, extras = {}) {
   console.log(`result: ${report.appLevelResult}`);
   console.log(`page url: ${report.pageUrl || "unknown"}`);
   console.log(`served root: ${report.rootDir}`);
-  console.log(`viewport: ${report.viewport.width}x${report.viewport.height} @${report.viewport.deviceScaleFactor}`);
+  console.log(
+    `viewport: ${report.viewport.width}x${report.viewport.height} @${report.viewport.deviceScaleFactor}`
+  );
   console.log(`index.html loaded: ${report.indexLoaded ? "yes" : "no"}`);
-  console.log(`production-module-autoboot.js loaded: ${report.productionModuleAutobootLoaded ? "yes" : "no"}`);
+  console.log(
+    `production-module-autoboot.js loaded: ${report.productionModuleAutobootLoaded ? "yes" : "no"}`
+  );
   console.log(`module script url: ${report.moduleScriptUrl || "unknown"}`);
   console.log(`Start Game found: ${report.startGameFound ? "yes" : "no"}`);
   console.log(`Start Game clicked: ${report.startGameClicked ? "yes" : "no"}`);
   console.log(`Start Game click threw: ${report.startGameClickThrew ? "yes" : "no"}`);
   console.log(`movement input clicked: ${report.movementInputTriggered ? "yes" : "no"}`);
   console.log(`canvas found: ${report.canvasFound ? "yes" : "no"}`);
-  console.log(`canvas css size: ${report.canvasCssSize ? `${report.canvasCssSize.width}x${report.canvasCssSize.height}` : "unknown"}`);
-  console.log(`canvas backing size: ${report.canvasBackingSize ? `${report.canvasBackingSize.width}x${report.canvasBackingSize.height}` : "unknown"}`);
+  console.log(
+    `canvas css size: ${report.canvasCssSize ? `${report.canvasCssSize.width}x${report.canvasCssSize.height}` : "unknown"}`
+  );
+  console.log(
+    `canvas backing size: ${report.canvasBackingSize ? `${report.canvasBackingSize.width}x${report.canvasBackingSize.height}` : "unknown"}`
+  );
   console.log(`player sprite asset url: ${report.playerSpriteAssetUrl || "unknown"}`);
-  console.log(`player sprite asset response: ${report.playerSpriteAssetResponseStatus ?? "unknown"}`);
+  console.log(
+    `player sprite asset response: ${report.playerSpriteAssetResponseStatus ?? "unknown"}`
+  );
   console.log(`screenshot: ${report.screenshotPath || "none"}`);
   console.log(`title visible: ${report.titleVisible ? "yes" : "no"}`);
   console.log(`non-start buttons detected: ${report.nonStartButtonsDetected.join(", ") || "none"}`);
@@ -1199,7 +967,9 @@ function emitReport(report, extras = {}) {
   console.log(`non-start probe results: ${report.nonStartButtonProbeResults.join(", ") || "none"}`);
   console.log(`speed probe results: ${JSON.stringify(report.speedControlProbeResults)}`);
   console.log(`mute control probe: ${JSON.stringify(report.muteControlProbeResult)}`);
-  console.log(`retired diagnostic globals present: ${report.retiredDiagnosticGlobalsPresent.join(", ") || "none"}`);
+  console.log(
+    `retired diagnostic globals present: ${report.retiredDiagnosticGlobalsPresent.join(", ") || "none"}`
+  );
   console.log(`retired publisher global reads: ${report.retiredPublisherGlobalReadCount}`);
   console.log(`console errors: ${report.console.error.length}`);
   console.log(`page errors: ${report.pageErrors.length}`);
@@ -1208,30 +978,37 @@ function emitReport(report, extras = {}) {
   console.log(`sprite draws: ${report.spriteDiagnostics.spriteDraws.length}`);
   console.log(`canvas draw count: ${report.spriteDiagnostics.canvasDrawCount}`);
   console.log(`runtime samples: ${report.runtimeSamples.length}`);
-  console.log("REPORT_JSON " + JSON.stringify({
-    ...summary,
-    browserImage: report.browserImage,
-    console: {
-      error: truncate(report.console.error),
-      info: truncate(report.console.info),
-      log: truncate(report.console.log),
-      warning: truncate(report.console.warning),
-    },
-    failedRequests: truncate(report.failedRequests),
-    httpFailures: truncate(report.httpFailures),
-    pageErrors: truncate(report.pageErrors),
-    runtimeSamples: report.runtimeSamples,
-    spriteDiagnostics: {
-      canvasDrawCount: report.spriteDiagnostics.canvasDrawCount,
-      canvasWitnesses: report.spriteDiagnostics.canvasWitnesses,
-      playerCanvasVisible: report.spriteDiagnostics.playerCanvasVisible,
-      spriteDraws: truncate(report.spriteDiagnostics.spriteDraws),
-      spriteLoadRequests: truncate(report.spriteDiagnostics.spriteLoadRequests),
-      spriteLoads: truncate(report.spriteDiagnostics.spriteLoads),
-      spriteRegistrations: truncate(report.spriteDiagnostics.spriteRegistrations),
-    },
-    ...extras,
-  }, null, 2));
+  console.log(
+    "REPORT_JSON " +
+      JSON.stringify(
+        {
+          ...summary,
+          browserImage: report.browserImage,
+          console: {
+            error: truncate(report.console.error),
+            info: truncate(report.console.info),
+            log: truncate(report.console.log),
+            warning: truncate(report.console.warning),
+          },
+          failedRequests: truncate(report.failedRequests),
+          httpFailures: truncate(report.httpFailures),
+          pageErrors: truncate(report.pageErrors),
+          runtimeSamples: report.runtimeSamples,
+          spriteDiagnostics: {
+            canvasDrawCount: report.spriteDiagnostics.canvasDrawCount,
+            canvasWitnesses: report.spriteDiagnostics.canvasWitnesses,
+            playerCanvasVisible: report.spriteDiagnostics.playerCanvasVisible,
+            spriteDraws: truncate(report.spriteDiagnostics.spriteDraws),
+            spriteLoadRequests: truncate(report.spriteDiagnostics.spriteLoadRequests),
+            spriteLoads: truncate(report.spriteDiagnostics.spriteLoads),
+            spriteRegistrations: truncate(report.spriteDiagnostics.spriteRegistrations),
+          },
+          ...extras,
+        },
+        null,
+        2
+      )
+  );
 }
 
 function analyzeSpriteDiagnostics(diagnostics = {}) {
@@ -1263,8 +1040,8 @@ function analyzeSpriteDiagnostics(diagnostics = {}) {
   );
   const playerCanvasVisible = Boolean(
     diagnostics.playerCanvasVisible &&
-      playerWitness?.visibleSpriteProof &&
-      Number(playerWitness.sequence || 0) > Number(backgroundWitness?.sequence || 0)
+    playerWitness?.visibleSpriteProof &&
+    Number(playerWitness.sequence || 0) > Number(backgroundWitness?.sequence || 0)
   );
   return {
     backgroundDrawSuccess,

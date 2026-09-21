@@ -12,10 +12,12 @@ tmp/final-reports/
 .env
 .env.*
 *.env
+*.key
 
 *.jks
 *.keystore
 *.pem
+*.key
 *.p12
 *.pfx
 key.properties

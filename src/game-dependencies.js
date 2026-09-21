@@ -709,6 +709,40 @@
 
   const DEFAULT_SKILL_ICON = "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
 
+  function safeAssetPath(value) {
+    if (typeof value !== "string") return "";
+    const path = value.trim();
+    const pathname = path.split(/[?#]/, 1)[0];
+    if (
+      !pathname ||
+      pathname.startsWith("/") ||
+      pathname.includes(":") ||
+      /[\\\\\u0000-\u001f\u007f]/.test(path)
+    ) {
+      return "";
+    }
+    const segments = pathname.split("/");
+    if (
+      segments.some((segment) => {
+        if (!segment) return true;
+        try {
+          const decoded = decodeURIComponent(segment);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
+        } catch {
+          return true;
+        }
+      })
+    ) {
+      return "";
+    }
+    return path;
+  }
+
   function createAssetResolver(options = {}) {
     const resolvedOptions = requireObject(options, "options");
     const assetDefs = requireObject(
@@ -717,12 +751,12 @@
     );
     const sprites = assetDefs.sprites || {};
     const fallbackSkillIcon =
-      resolvedOptions.fallbackSkillIcon || sprites.ui?.quest || DEFAULT_SKILL_ICON;
+      safeAssetPath(resolvedOptions.fallbackSkillIcon || sprites.ui?.quest) || DEFAULT_SKILL_ICON;
 
     function spriteSource(definition) {
-      if (typeof definition === "string") return definition;
+      if (typeof definition === "string") return safeAssetPath(definition);
       if (definition && typeof definition === "object") {
-        return definition.src || definition.path || definition.iconSrc || "";
+        return safeAssetPath(definition.src || definition.path || definition.iconSrc);
       }
       return "";
     }
@@ -733,7 +767,7 @@
 
     function weaponIcon(weaponId) {
       const definition = weaponSprite(weaponId);
-      return definition?.iconSrc || spriteSource(definition) || fallbackSkillIcon;
+      return safeAssetPath(definition?.iconSrc) || spriteSource(definition) || fallbackSkillIcon;
     }
 
     function runUpgradeSprite(upgradeId) {
@@ -743,15 +777,17 @@
     function runUpgradeIcon(upgradeId) {
       const definition = runUpgradeSprite(upgradeId);
       return (
-        sprites.runUpgradeIcons?.[upgradeId] ||
-        definition?.iconSrc ||
+        safeAssetPath(sprites.runUpgradeIcons?.[upgradeId]) ||
+        safeAssetPath(definition?.iconSrc) ||
         spriteSource(definition) ||
         fallbackSkillIcon
       );
     }
 
     function relicIcon(relic) {
-      return relic?.iconPath || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon;
+      return (
+        safeAssetPath(relic?.iconPath) || runUpgradeIcon(relic?.targetUpgradeId) || fallbackSkillIcon
+      );
     }
 
     function choiceIconDefinition(choice) {
@@ -4668,7 +4704,7 @@
       const save = getSave();
       game.paused = true;
       game.pauseReason = "level";
-      ui.choices.innerHTML = "";
+      ui.choices.replaceChildren();
       const maxWeapons = maxEquippedWeapons?.() || 4;
       const canEquipWeapon = game.player.equippedWeapons.length < maxWeapons;
       const weaponChoices = canEquipWeapon
@@ -6936,13 +6972,15 @@
     }
 
     function isShopVisible() {
-      return !ui.shopModal?.classList.contains("hidden") || !ui.menuShopPanel?.classList.contains("hidden");
+      return (
+        !ui.shopModal?.classList.contains("hidden") || !ui.menuShopPanel?.classList.contains("hidden")
+      );
     }
 
     function renderShopList(container, coinHud, save) {
       if (!container || !coinHud) return;
       coinHud.textContent = `Coins: ${save.coins} | Tower Floor ${Math.max(1, save.towerFloor || 1)}`;
-      container.innerHTML = "";
+      container.replaceChildren();
       if (!shopItemDefs.length) {
         const empty = documentRef.createElement("div");
         empty.className = "shop-item";
@@ -6978,31 +7016,45 @@
     }
 
     function renderShopItem(item, save) {
-        const tier = pricing.tierFor(item);
-        const maxed = tier >= item.maxTier;
-        const cost = pricing.costFor(item, tier);
-        const affordable = !maxed && save.coins >= cost;
-        const el = documentRef.createElement("div");
-        el.className = `shop-item ${affordable ? "available" : "locked"}`;
-        if (el.dataset) el.dataset.shopItemId = item.id;
-        else el.setAttribute?.("data-shop-item-id", item.id);
-        el.innerHTML = `
-          <div class="shop-item-icon">
-            ${item.spritePath ? `<img class="shop-item-sprite" src="${item.spritePath}" alt="" />` : ""}
-          </div>
-          <div class="shop-item-copy">
-            <strong>${item.name}</strong>
-            <span>${item.description}</span><br />
-            <span>Tier: ${tier}/${item.maxTier}</span><br />
-            <span>${maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`}</span>
-          </div>
-        `;
-        const button = documentRef.createElement("button");
-        button.textContent = maxed ? "Maxed" : `Buy Tier ${tier + 1}`;
-        button.disabled = maxed || !affordable;
-        button.addEventListener("click", () => buyItem(item));
-        el.appendChild(button);
-        return el;
+      const tier = pricing.tierFor(item);
+      const maxed = tier >= item.maxTier;
+      const cost = pricing.costFor(item, tier);
+      const affordable = !maxed && save.coins >= cost;
+      const el = documentRef.createElement("div");
+      el.className = `shop-item ${affordable ? "available" : "locked"}`;
+      if (el.dataset) el.dataset.shopItemId = item.id;
+      else el.setAttribute?.("data-shop-item-id", item.id);
+      const iconContainer = documentRef.createElement("div");
+      iconContainer.className = "shop-item-icon";
+      const spritePath = safeAssetPath(item.spritePath);
+      if (spritePath) {
+        const sprite = documentRef.createElement("img");
+        sprite.className = "shop-item-sprite";
+        sprite.src = spritePath;
+        sprite.alt = "";
+        iconContainer.appendChild(sprite);
+      }
+      el.appendChild(iconContainer);
+      const copy = documentRef.createElement("div");
+      copy.className = "shop-item-copy";
+      appendTextElement(documentRef, copy, "strong", item.name);
+      appendTextElement(documentRef, copy, "span", item.description);
+      copy.appendChild(documentRef.createElement("br"));
+      appendTextElement(documentRef, copy, "span", `Tier: ${tier}/${item.maxTier}`);
+      copy.appendChild(documentRef.createElement("br"));
+      appendTextElement(
+        documentRef,
+        copy,
+        "span",
+        maxed ? "Maxed" : affordable ? `Cost: ${cost} coins` : `Needs ${cost} coins`
+      );
+      el.appendChild(copy);
+      const button = documentRef.createElement("button");
+      button.textContent = maxed ? "Maxed" : `Buy Tier ${tier + 1}`;
+      button.disabled = maxed || !affordable;
+      button.addEventListener("click", () => buyItem(item));
+      el.appendChild(button);
+      return el;
     }
 
     function openShop() {
@@ -7098,6 +7150,47 @@
     return value;
   }
 
+  function appendTextElement(documentRef, parent, tagName, text) {
+    const element = documentRef.createElement(tagName);
+    element.textContent = text;
+    parent.appendChild(element);
+    return element;
+  }
+
+  function safeAssetPath(value) {
+    if (typeof value !== "string") return "";
+    const path = value.trim();
+    const pathname = path.split(/[?#]/, 1)[0];
+    if (
+      !pathname ||
+      pathname.startsWith("/") ||
+      pathname.includes(":") ||
+      /[\\\\\u0000-\u001f\u007f]/.test(path)
+    ) {
+      return "";
+    }
+    const segments = pathname.split("/");
+    if (
+      segments.some((segment) => {
+        if (!segment) return true;
+        try {
+          const decoded = decodeURIComponent(segment);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
+        } catch {
+          return true;
+        }
+      })
+    ) {
+      return "";
+    }
+    return path;
+  }
+
   const DEFAULT_RELIC_SLOT_LEVELS = Object.freeze([5, 10, 20, 30, 40, 50]);
 
   /**
@@ -7168,10 +7261,21 @@
         item.textContent = `${row.label}: ${row.value}`;
         summary.appendChild(item);
       });
-      appendText(documentRef, summary, "div", `Can equip more: ${model.canEquipMore ? "Yes" : "No"}`, {
-        className: "shell-relic-summary-row",
-      });
-      appendBonusRows(documentRef, summary, "Run-start bonuses", model.bonuses?.startingRunUpgradeTiers);
+      appendText(
+        documentRef,
+        summary,
+        "div",
+        `Can equip more: ${model.canEquipMore ? "Yes" : "No"}`,
+        {
+          className: "shell-relic-summary-row",
+        }
+      );
+      appendBonusRows(
+        documentRef,
+        summary,
+        "Run-start bonuses",
+        model.bonuses?.startingRunUpgradeTiers
+      );
       appendBonusRows(documentRef, summary, "Max-tier bonuses", model.bonuses?.maxTierBonuses);
       appendModifierRows(documentRef, summary, model.specialModifiers);
       return summary;
@@ -7187,7 +7291,8 @@
         documentRef,
         action,
         "span",
-        reward.description || "Spend 1 QP for a random locked relic, or 25 coins when all relics are owned."
+        reward.description ||
+          "Spend 1 QP for a random locked relic, or 25 coins when all relics are owned."
       );
       const button = documentRef.createElement("button");
       button.type = "button";
@@ -7255,7 +7360,9 @@
       const list = documentRef.createElement("section");
       list.className = "relic-icon-grid shell-relic-available";
       if (!model.availableRelics.length) {
-        appendText(documentRef, list, "div", "All relics are equipped.", { className: "relic-item locked" });
+        appendText(documentRef, list, "div", "All relics are equipped.", {
+          className: "relic-item locked",
+        });
         return list;
       }
       model.availableRelics.forEach((relic) => {
@@ -7277,8 +7384,10 @@
         setRelicBackground(button, relic);
         button.appendChild(createRelicImage(documentRef, relic));
         appendText(documentRef, button, "span", relic.name);
-        if (!relic.unlocked) appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
-        if (relic.linkedSkill) appendText(documentRef, button, "span", `Linked skill: ${relic.linkedSkill.name}`);
+        if (!relic.unlocked)
+          appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
+        if (relic.linkedSkill)
+          appendText(documentRef, button, "span", `Linked skill: ${relic.linkedSkill.name}`);
         button.addEventListener("click", () => {
           if (relic.unlocked) onSelect?.(relic, model);
           else {
@@ -7301,11 +7410,18 @@
       appendText(documentRef, detail, "strong", relic.name);
       appendText(documentRef, detail, "p", relic.description);
       if (relic.specialAbility) {
-        appendText(documentRef, detail, "p", `${relic.specialAbility.label}: ${relic.specialAbility.description}`, {
-          className: "relic-special-ability",
-        });
+        appendText(
+          documentRef,
+          detail,
+          "p",
+          `${relic.specialAbility.label}: ${relic.specialAbility.description}`,
+          {
+            className: "relic-special-ability",
+          }
+        );
       }
-      if (relic.linkedSkill) appendText(documentRef, detail, "p", `Linked skill: ${relic.linkedSkill.name}`);
+      if (relic.linkedSkill)
+        appendText(documentRef, detail, "p", `Linked skill: ${relic.linkedSkill.name}`);
 
       const actions = documentRef.createElement("div");
       actions.className = "relic-detail-actions";
@@ -7374,7 +7490,9 @@
     function createRelicPreview(relic) {
       const sprite = previewAdapter.runUpgradeSprite?.(relic.targetUpgradeId);
       const frames = Array.isArray(sprite?.frames) ? sprite.frames : [];
-      const source = previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || "";
+      const source = safeAssetPath(
+        previewAdapter.spriteSource?.(sprite) || sprite?.src || sprite?.path || sprite?.iconSrc || ""
+      );
       if (frames.length && source && previewAdapter.createCanvas && previewAdapter.createImage) {
         const canvas =
           previewAdapter.createCanvas({
@@ -7393,7 +7511,9 @@
     }
 
     function startAnimatedPreview({ canvas, frames, relic, source, sprite }) {
-      const context = previewAdapter.getContext?.(canvas, { willReadFrequently: true }) || canvas.getContext?.("2d", { willReadFrequently: true });
+      const context =
+        previewAdapter.getContext?.(canvas, { willReadFrequently: true }) ||
+        canvas.getContext?.("2d", { willReadFrequently: true });
       const image = previewAdapter.createImage?.({ relic, source, sprite });
       if (!context || !image) return false;
       let frameIndex = 0;
@@ -7409,14 +7529,25 @@
         context.imageSmoothingEnabled = false;
         previewAdapter.drawFrame?.({ canvas, context, frame, image, sprite });
         if (!previewAdapter.drawFrame) {
-          context.drawImage?.(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+          context.drawImage?.(
+            image,
+            frame.x,
+            frame.y,
+            frame.width,
+            frame.height,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
         }
         previewAdapter.applyTransparency?.({ canvas, context, sprite });
         timer = scheduler.setTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10)) || null;
       }
 
       const onLoad = () => drawFrame();
-      if (typeof image.addEventListener === "function") image.addEventListener("load", onLoad, { once: true });
+      if (typeof image.addEventListener === "function")
+        image.addEventListener("load", onLoad, { once: true });
       else previewAdapter.onImageLoad?.(image, onLoad) ?? onLoad();
       if ("src" in image) image.src = source;
       else previewAdapter.setImageSource?.(image, source);
@@ -7470,7 +7601,7 @@
       ui.menuRelicSlots.textContent = `Relic slots: ${slots}/${relicSlotLevels.length} unlocked. ${
         nextLevel ? `Next slot at tower level ${nextLevel}.` : "Maximum slots unlocked."
       }`;
-      ui.menuRelicInventory.innerHTML = "";
+      ui.menuRelicInventory.replaceChildren();
       const loadout = documentRef.createElement("div");
       loadout.className = "relic-loadout";
       loadout.appendChild(createCharacterPanel(save));
@@ -7504,7 +7635,9 @@
     function createQuestCacheAction(save) {
       const cost = relicSystem.questCacheCost || 1;
       const fallbackCoins = relicSystem.questCacheFallbackCoins || 25;
-      const lockedRelicCount = relicDefs.filter((relic) => !save.unlockedRelics?.includes(relic.id)).length;
+      const lockedRelicCount = relicDefs.filter(
+        (relic) => !save.unlockedRelics?.includes(relic.id)
+      ).length;
       const action = documentRef.createElement("div");
       action.className = "quest-cache-action";
       const label = documentRef.createElement("strong");
@@ -7542,11 +7675,10 @@
       setRelicBackground(button, relic);
       button.type = "button";
       button.setAttribute("aria-label", isUnlocked ? `View ${relic.name}` : `${relic.name} locked`);
-      button.innerHTML = `
-        <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
-        <span>${relic.name}</span>
-        ${isUnlocked ? "" : '<em class="relic-lock-badge">Locked</em>'}
-      `;
+      appendImage(documentRef, button, relicIconSrc(relic), "relic-icon");
+      appendText(documentRef, button, "span", relic.name);
+      if (!isUnlocked)
+        appendText(documentRef, button, "em", "Locked", { className: "relic-lock-badge" });
       button.addEventListener("click", () => {
         if (!isUnlocked) {
           showRelicLockedMessage();
@@ -7558,7 +7690,7 @@
     }
 
     function relicIconSrc(relic) {
-      return assetResolver.relicIcon(relic);
+      return safeAssetPath(assetResolver.relicIcon(relic));
     }
 
     function showRelicLockedMessage() {
@@ -7582,9 +7714,11 @@
       const slots = relicSystem.maxEquippedRelics(save);
       const equippedRelics = relicSystem.equippedRelics(save);
       const canEquip = equippedRelics.length < slots;
-      const skill = (content?.runUpgrades || []).find((upgrade) => upgrade.id === relic.targetUpgradeId);
+      const skill = (content?.runUpgrades || []).find(
+        (upgrade) => upgrade.id === relic.targetUpgradeId
+      );
       ui.menuRelicSlots.textContent = relic.name;
-      ui.menuRelicInventory.innerHTML = "";
+      ui.menuRelicInventory.replaceChildren();
 
       const detail = documentRef.createElement("div");
       detail.className = `relic-detail-screen ${relic.rarity === "green" ? "green-relic" : ""}`;
@@ -7593,13 +7727,16 @@
       detail.appendChild(preview);
       const copy = documentRef.createElement("div");
       copy.className = "relic-detail-copy";
-      copy.innerHTML = `
-        <span class="relic-slot-index">Selected relic</span>
-        <strong>${relic.name}</strong>
-        <p>${relic.description}</p>
-        ${relic.specialAbility ? `<p><strong>${relic.specialAbility.label}</strong>: ${relic.specialAbility.description}</p>` : ""}
-        ${skill ? `<p>Linked skill: ${skill.name}</p>` : ""}
-      `;
+      appendText(documentRef, copy, "span", "Selected relic", { className: "relic-slot-index" });
+      appendText(documentRef, copy, "strong", relic.name);
+      appendText(documentRef, copy, "p", relic.description);
+      if (relic.specialAbility) {
+        const ability = documentRef.createElement("p");
+        appendText(documentRef, ability, "strong", relic.specialAbility.label);
+        appendText(documentRef, ability, "span", `: ${relic.specialAbility.description}`);
+        copy.appendChild(ability);
+      }
+      if (skill) appendText(documentRef, copy, "p", `Linked skill: ${skill.name}`);
       detail.appendChild(copy);
 
       const actions = documentRef.createElement("div");
@@ -7655,7 +7792,17 @@
         frameIndex += 1;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(
+          image,
+          frame.x,
+          frame.y,
+          frame.width,
+          frame.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
         applyPreviewTransparency(ctx, canvas.width, canvas.height, sprite);
         scheduler.animationSetTimeout?.(drawFrame, 1000 / Math.max(1, sprite.fps || 10));
       }
@@ -7672,7 +7819,10 @@
         const pixels = ctx.getImageData(0, 0, width, height);
         const data = pixels.data;
         for (let index = 0; index < data.length; index += 4) {
-          const delta = Math.abs(data[index] - color[0]) + Math.abs(data[index + 1] - color[1]) + Math.abs(data[index + 2] - color[2]);
+          const delta =
+            Math.abs(data[index] - color[0]) +
+            Math.abs(data[index + 1] - color[1]) +
+            Math.abs(data[index + 2] - color[2]);
           if (delta <= tolerance) data[index + 3] = 0;
         }
         ctx.putImageData(pixels, 0, 0);
@@ -7684,14 +7834,14 @@
     function createCharacterPanel(save) {
       const panel = documentRef.createElement("div");
       panel.className = "relic-character-panel";
-      const playerSprite = content?.assets?.sprites?.player || "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
-      panel.innerHTML = `
-        <img class="relic-character-sprite" src="${playerSprite}" alt="" />
-        <span>
-          <strong>Character</strong>
-          <span>Tower level ${Math.max(1, save.towerFloor || 1)}</span>
-        </span>
-      `;
+      const playerSprite =
+        content?.assets?.sprites?.player ||
+        "assets/kenney/desert-shooter/player.png?v=kenney-20260610";
+      appendImage(documentRef, panel, safeAssetPath(playerSprite), "relic-character-sprite");
+      const copy = documentRef.createElement("span");
+      appendText(documentRef, copy, "strong", "Character");
+      appendText(documentRef, copy, "span", `Tower level ${Math.max(1, save.towerFloor || 1)}`);
+      panel.appendChild(copy);
       return panel;
     }
 
@@ -7702,30 +7852,24 @@
       slot.className = `relic-slot ${unlocked ? (relic ? "equipped" : "empty") : "locked"} ${relic?.rarity === "green" ? "green-relic" : ""}`;
       setRelicBackground(slot, relic);
       if (!unlocked) {
-        slot.innerHTML = `
-          <span class="relic-slot-index">Slot ${index + 1}</span>
-          <strong>Locked</strong>
-          <span>Unlocked at tower level ${unlockLevel}.</span>
-        `;
+        appendText(documentRef, slot, "span", `Slot ${index + 1}`, { className: "relic-slot-index" });
+        appendText(documentRef, slot, "strong", "Locked");
+        appendText(documentRef, slot, "span", `Unlocked at tower level ${unlockLevel}.`);
         return slot;
       }
       if (!relic) {
-        slot.innerHTML = `
-          <span class="relic-slot-index">Slot ${index + 1}</span>
-          <strong>Empty relic slot</strong>
-          <span>Equip an unlocked relic below.</span>
-        `;
+        appendText(documentRef, slot, "span", `Slot ${index + 1}`, { className: "relic-slot-index" });
+        appendText(documentRef, slot, "strong", "Empty relic slot");
+        appendText(documentRef, slot, "span", "Equip an unlocked relic below.");
         return slot;
       }
 
-      slot.innerHTML = `
-        <img class="relic-icon" src="${relicIconSrc(relic)}" alt="" />
-        <span>
-          <span class="relic-slot-index">Slot ${index + 1}</span>
-          <strong>${relic.name}</strong>
-          <span>${relic.description}</span>
-        </span>
-      `;
+      appendImage(documentRef, slot, relicIconSrc(relic), "relic-icon");
+      const copy = documentRef.createElement("span");
+      appendText(documentRef, copy, "span", `Slot ${index + 1}`, { className: "relic-slot-index" });
+      appendText(documentRef, copy, "strong", relic.name);
+      appendText(documentRef, copy, "span", relic.description);
+      slot.appendChild(copy);
       const button = documentRef.createElement("button");
       button.textContent = "Unequip";
       button.addEventListener("click", () => {
@@ -7750,7 +7894,9 @@
       .filter(([, value]) => value)
       .sort(([left], [right]) => left.localeCompare(right))
       .forEach(([key, value]) => {
-        appendText(documentRef, parent, "div", `${label}: ${key} +${value}`, { className: "shell-relic-bonus-row" });
+        appendText(documentRef, parent, "div", `${label}: ${key} +${value}`, {
+          className: "shell-relic-bonus-row",
+        });
       });
   }
 
@@ -7764,14 +7910,27 @@
 
   function findRelic(model, relicId) {
     if (!relicId) return null;
-    return [...(model.equippedRelics || []), ...(model.availableRelics || [])].find((relic) => relic.id === relicId) || null;
+    return (
+      [...(model.equippedRelics || []), ...(model.availableRelics || [])].find(
+        (relic) => relic.id === relicId
+      ) || null
+    );
   }
 
   function createRelicImage(documentRef, relic, className = "relic-icon") {
     const image = documentRef.createElement("img");
     image.className = className;
-    image.src = relic?.iconSrc || "";
+    image.src = safeAssetPath(relic?.iconSrc);
     image.alt = "";
+    return image;
+  }
+
+  function appendImage(documentRef, parent, src, className) {
+    const image = documentRef.createElement("img");
+    image.className = className;
+    image.src = safeAssetPath(src);
+    image.alt = "";
+    parent.appendChild(image);
     return image;
   }
 
@@ -7790,29 +7949,67 @@
 
   function setRelicBackground(element, relic) {
     if (!element?.style || !relic?.backgroundColor) return;
-    if (typeof element.style.setProperty === "function") element.style.setProperty("--relic-bg", relic.backgroundColor);
+    if (typeof element.style.setProperty === "function")
+      element.style.setProperty("--relic-bg", relic.backgroundColor);
     else element.style["--relic-bg"] = relic.backgroundColor;
   }
 
   function addClass(element, className) {
-    const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+    const current = new Set(
+      String(element.className || "")
+        .split(/\s+/)
+        .filter(Boolean)
+    );
     current.add(className);
     element.className = [...current].join(" ");
   }
 
   function removeClass(element, className) {
-    const current = new Set(String(element.className || "").split(/\s+/).filter(Boolean));
+    const current = new Set(
+      String(element.className || "")
+        .split(/\s+/)
+        .filter(Boolean)
+    );
     current.delete(className);
     element.className = [...current].join(" ");
   }
 
   function clearRoot(root) {
-    if (typeof root.replaceChildren === "function") {
-      root.replaceChildren();
-      return;
+    root.replaceChildren();
+  }
+
+  function safeAssetPath(value) {
+    if (typeof value !== "string") return "";
+    const path = value.trim();
+    const pathname = path.split(/[?#]/, 1)[0];
+    if (
+      !pathname ||
+      pathname.startsWith("/") ||
+      pathname.includes(":") ||
+      /[\\\\\u0000-\u001f\u007f]/.test(path)
+    ) {
+      return "";
     }
-    root.innerHTML = "";
-    if (Array.isArray(root.children)) root.children.length = 0;
+    const segments = pathname.split("/");
+    if (
+      segments.some((segment) => {
+        if (!segment) return true;
+        try {
+          const decoded = decodeURIComponent(segment);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
+        } catch {
+          return true;
+        }
+      })
+    ) {
+      return "";
+    }
+    return path;
   }
 
   const DEFAULT_PANELS = [
@@ -8365,10 +8562,14 @@
   }) {
     const assetResolver = assets?.createAssetResolver?.(content) || {
       relicIcon: (relic) =>
-        relic?.iconPath || content?.assets?.sprites?.ui?.quest || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
+        relic?.iconPath ||
+        content?.assets?.sprites?.ui?.quest ||
+        "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610",
       runUpgradeSprite: (upgradeId) => content?.assets?.sprites?.runUpgrades?.[upgradeId],
       spriteSource: (definition) =>
-        typeof definition === "string" ? definition : definition?.src || definition?.path || definition?.iconSrc || "",
+        typeof definition === "string"
+          ? definition
+          : definition?.src || definition?.path || definition?.iconSrc || "",
     };
     const relicUi = shellRelicUi.createShellRelicUi({
       ui,
@@ -8543,10 +8744,12 @@
       const panel = documentRef.createElement("div");
       panel.className = "relic-item available starting-weapon-panel";
       const copy = documentRef.createElement("span");
-      copy.innerHTML = `
-        <strong>MVP starting weapon</strong>
-        <span>Choose the first weapon for your next run.</span>
-      `;
+      const title = documentRef.createElement("strong");
+      title.textContent = "MVP starting weapon";
+      const description = documentRef.createElement("span");
+      description.textContent = "Choose the first weapon for your next run.";
+      copy.appendChild(title);
+      copy.appendChild(description);
 
       const select = documentRef.createElement("select");
       select.className = "starting-weapon-select";
@@ -8940,7 +9143,7 @@
       if (!container) return;
       const doc = requireDocument(documentRef);
       const save = getSave();
-      container.innerHTML = "";
+      container.replaceChildren();
       const availableWeaponUnlocks = weaponUnlocks.filter(
         (unlock) => !hasNode(unlock.id) && isNodeVisible(unlock)
       );
@@ -8948,7 +9151,8 @@
         if (!Array.isArray(upgrade.cost) || !Number.isFinite(upgrade.maxTier)) return false;
         const tier = getUpgradeTier(upgrade.id);
         if (tier >= upgrade.maxTier) return false;
-        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon)) return false;
+        if (upgrade.requiresWeapon && !save.unlockedWeapons.includes(upgrade.requiresWeapon))
+          return false;
         if (upgrade.requiresNode && !hasNode(upgrade.requiresNode)) return false;
         return !upgrade.requiresQuest || isQuestComplete(upgrade.requiresQuest);
       });
@@ -8968,12 +9172,12 @@
         const gateStatus = nodeGateStatus(unlock);
         const el = doc.createElement("div");
         el.className = `node ${gateStatus ? "locked" : "available"}`;
-        el.innerHTML = `
-          <strong>Unlock ${weapon.name}</strong>
-          <span>${weapon.description}</span><br />
-          <span>Branch: ${unlock.branch} | Cost: ${unlock.cost} QP</span><br />
-          <span>${gateStatus || "Ready to unlock"}</span>
-        `;
+        appendTextElement(doc, el, "strong", `Unlock ${weapon.name}`);
+        appendTextElement(doc, el, "span", weapon.description);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Branch: ${unlock.branch} | Cost: ${unlock.cost} QP`);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", gateStatus || "Ready to unlock");
         const iconSource = assetResolver?.weaponIcon?.(unlock.weaponId);
         if (iconSource) {
           const icon = doc.createElement("img");
@@ -8997,12 +9201,17 @@
         const canBuy = save.questPoints >= nextCost;
         const el = doc.createElement("div");
         el.className = `node ${canBuy ? "available" : "locked"}`;
-        el.innerHTML = `
-          <strong>${upgrade.name}</strong>
-          <span>${upgrade.description}</span><br />
-          <span>Tier: ${tier}/${upgrade.maxTier}</span><br />
-          <span>${canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`}</span>
-        `;
+        appendTextElement(doc, el, "strong", upgrade.name);
+        appendTextElement(doc, el, "span", upgrade.description);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Tier: ${tier}/${upgrade.maxTier}`);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(
+          doc,
+          el,
+          "span",
+          canBuy ? `Next cost: ${nextCost} QP` : `Needs ${nextCost} QP`
+        );
         const button = doc.createElement("button");
         button.textContent = `Buy Tier ${tier + 1}`;
         button.disabled = !canBuy;
@@ -9016,7 +9225,7 @@
       if (!container) return;
       const doc = requireDocument(documentRef);
       const save = getSave();
-      container.innerHTML = "";
+      container.replaceChildren();
       const activeQuestIds = Object.keys(questDefs).filter((id) => save.activeQuests.includes(id));
       if (!activeQuestIds.length) {
         const empty = doc.createElement("div");
@@ -9033,13 +9242,14 @@
         const progress = save.questProgress[id] || 0;
         const el = doc.createElement("div");
         el.className = "quest active";
-        el.innerHTML = `
-          <strong>${quest.name}</strong>
-          <span>${quest.description}</span><br />
-          <span>Status: Active</span><br />
-          <span>Progress: ${Math.floor(progress)} / ${quest.target}</span><br />
-          <span>Reward: ${quest.rewardQp} QP</span>
-        `;
+        appendTextElement(doc, el, "strong", quest.name);
+        appendTextElement(doc, el, "span", quest.description);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", "Status: Active");
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Progress: ${Math.floor(progress)} / ${quest.target}`);
+        el.appendChild(doc.createElement("br"));
+        appendTextElement(doc, el, "span", `Reward: ${quest.rewardQp} QP`);
         container.appendChild(el);
       });
     }
@@ -9067,6 +9277,13 @@
 
   function positiveIntegerOrDefault(value, fallback) {
     return Number.isInteger(value) && value > 0 ? value : fallback;
+  }
+
+  function appendTextElement(documentRef, parent, tagName, text) {
+    const element = documentRef.createElement(tagName);
+    element.textContent = text;
+    parent.appendChild(element);
+    return element;
   }
 
   const MODULE_NATIVE_WEAPON_BEHAVIORS_SLOTS = Object.freeze(["weaponBehaviors"]);
@@ -10482,7 +10699,7 @@
       ui.relicChoiceTitle.textContent =
         remainingPicks > 1 ? `Choose Relic ${awardedRelics.length + 1}` : "Choose Relic";
       ui.relicChoiceText.textContent = "Pick one reward shaped by your current weapons.";
-      ui.relicChoices.innerHTML = "";
+      ui.relicChoices.replaceChildren();
       choices.forEach((relic) => {
         const button = documentRef?.createElement?.("button");
         if (!button) {
@@ -10494,11 +10711,26 @@
         } else if (relic.backgroundColor && button.style) {
           button.style["--relic-bg"] = relic.backgroundColor;
         }
-        button.innerHTML = `
-          <img class="level-choice-icon" src="${relic.iconPath || "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"}" alt="" />
-          <strong>${relic.name}</strong><br /><span>${relic.description}</span>
-          ${relic.specialAbility ? `<br /><span>${relic.specialAbility.label}: ${relic.specialAbility.description}</span>` : ""}
-        `;
+        const icon = documentRef.createElement("img");
+        icon.className = "level-choice-icon";
+        icon.src =
+          safeAssetPath(relic.iconPath) ||
+          "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610";
+        icon.alt = "";
+        button.appendChild(icon);
+        const name = documentRef.createElement("strong");
+        name.textContent = relic.name;
+        button.appendChild(name);
+        button.appendChild(documentRef.createElement("br"));
+        const description = documentRef.createElement("span");
+        description.textContent = relic.description;
+        button.appendChild(description);
+        if (relic.specialAbility) {
+          button.appendChild(documentRef.createElement("br"));
+          const ability = documentRef.createElement("span");
+          ability.textContent = `${relic.specialAbility.label}: ${relic.specialAbility.description}`;
+          button.appendChild(ability);
+        }
         button.addEventListener("click", () => {
           const granted = relicSystem.grantRelic(save, relic);
           const nextAwarded = granted ? [...awardedRelics, granted] : awardedRelics;
@@ -10535,6 +10767,40 @@
       endRun,
       startRun,
     };
+  }
+
+  function safeAssetPath(value) {
+    if (typeof value !== "string") return "";
+    const path = value.trim();
+    const pathname = path.split(/[?#]/, 1)[0];
+    if (
+      !pathname ||
+      pathname.startsWith("/") ||
+      pathname.includes(":") ||
+      /[\\\\\u0000-\u001f\u007f]/.test(path)
+    ) {
+      return "";
+    }
+    const segments = pathname.split("/");
+    if (
+      segments.some((segment) => {
+        if (!segment) return true;
+        try {
+          const decoded = decodeURIComponent(segment);
+          return (
+            decoded === "." ||
+            decoded === ".." ||
+            decoded.includes("/") ||
+            /[\\\\\u0000-\u001f\u007f]/.test(decoded)
+          );
+        } catch {
+          return true;
+        }
+      })
+    ) {
+      return "";
+    }
+    return path;
   }
 
   function createRunStateSystem({
@@ -10699,17 +10965,23 @@
       const game = getGame();
       const save = getSave();
       if (!game) return;
-      ui.runStats.innerHTML = `
-          <p>Result: ${reason}</p>
-          <p>Tower floor: ${game.towerFloor}</p>
-          <p>Time survived: ${formatTime(game.elapsed)}</p>
-          <p>Enemies defeated: ${game.kills}</p>
-          <p>Level reached: ${game.player.level}</p>
-          <p>XP collected: ${game.xpCollected}</p>
-          <p>Coins banked: ${save.coins}</p>
-          <p>Laser damage dealt: ${Math.floor(game.laserDamage)}</p>
-          <p>Quest Points: ${save.questPoints} available</p>
-        `;
+      ui.runStats.replaceChildren(
+        ...[
+          `Result: ${reason}`,
+          `Tower floor: ${game.towerFloor}`,
+          `Time survived: ${formatTime(game.elapsed)}`,
+          `Enemies defeated: ${game.kills}`,
+          `Level reached: ${game.player.level}`,
+          `XP collected: ${game.xpCollected}`,
+          `Coins banked: ${save.coins}`,
+          `Laser damage dealt: ${Math.floor(game.laserDamage)}`,
+          `Quest Points: ${save.questPoints} available`,
+        ].map((text) => {
+          const line = ui.runStats.ownerDocument.createElement("p");
+          line.textContent = text;
+          return line;
+        })
+      );
       ui.endScreen.classList.remove("hidden");
     }
 

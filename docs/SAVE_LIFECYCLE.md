@@ -10,10 +10,11 @@ Tap Survivor uses one shared save API and one shared save schema across GitHub.i
 
 ## Schema Version
 
-- Current save schema version: `3`
+- Current save schema version: `4`
 - Save objects use `saveVersion`.
 - Version 2 migration ensures `shopPurchases`.
 - Version 3 migration ensures `seenBanners`.
+- Version 4 retires legacy permanent upgrades and records their one-time quest-point refund.
 
 ## Storage Backend Decision
 
@@ -47,7 +48,7 @@ The canonical load path is:
 
 1. Read raw save data from the storage adapter.
 2. Parse JSON.
-3. Migrate old save versions to version `3`.
+3. Migrate old save versions to version `4`.
 4. Normalize the save object.
 5. Return a valid save.
 
@@ -56,6 +57,9 @@ Missing save data returns a valid default save.
 Partial or malformed save objects are normalized. Invalid arrays and objects are replaced with safe defaults. Numeric fields are clamped where the save system already clamps them.
 
 Future or unknown top-level fields do not crash loading. Unknown fields are preserved while `saveVersion` normalizes back to the current schema version.
+
+`npm run smoke:save` includes a deterministic malformed and hostile raw-save corpus. It verifies that
+load recovery and an injected platform bootstrap fixture complete without evaluating persisted text.
 
 ## Corrupt Save Handling
 

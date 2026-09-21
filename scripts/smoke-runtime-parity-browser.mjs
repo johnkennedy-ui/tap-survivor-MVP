@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { homedir, tmpdir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const repoRoot = process.cwd();
 const localRequire = createRequire(import.meta.url);
@@ -22,6 +23,12 @@ const syntheticPages = {
   classic: `${syntheticPagePrefix}classic.html`,
   esm: `${syntheticPagePrefix}esm.html`,
 };
+export const syntheticScriptResources = Object.freeze({
+  classicHook: `${syntheticPagePrefix}classic-hook.js`,
+  classicPrelude: `${syntheticPagePrefix}classic-prelude.js`,
+  esmBoot: `${syntheticPagePrefix}esm-boot.mjs`,
+  esmPrelude: `${syntheticPagePrefix}esm-prelude.js`,
+});
 const runningDockerChild = process.env.PARITY_BROWSER_DOCKER_CHILD === "1";
 const browserDiagnosticSampleLimits = Object.freeze({
   consoleErrors: 32,
@@ -125,7 +132,10 @@ async function main() {
     report.xdgRuntimeOwned = browserLaunch.runtime.owned;
     report.xdgRuntimeSource = browserLaunch.runtime.source;
     browserProfileDir = await createBrowserProfile(browserLaunch.xdgRuntimeDir);
-    browser = await browserDriver.chromium.launchPersistentContext(browserProfileDir, browserLaunch.options);
+    browser = await browserDriver.chromium.launchPersistentContext(
+      browserProfileDir,
+      browserLaunch.options
+    );
 
     for (const surface of surfaceRoots) {
       const surfaceResult = await runSurface(browser, surface);
@@ -152,8 +162,10 @@ async function main() {
     exitCode = 1;
   } finally {
     await browser?.close().catch(() => {});
-    if (browserProfileDir) await rm(browserProfileDir, { force: true, recursive: true }).catch(() => {});
-    if (browserRuntime?.owned) await rm(browserRuntime.dir, { force: true, recursive: true }).catch(() => {});
+    if (browserProfileDir)
+      await rm(browserProfileDir, { force: true, recursive: true }).catch(() => {});
+    if (browserRuntime?.owned)
+      await rm(browserRuntime.dir, { force: true, recursive: true }).catch(() => {});
     try {
       await cleanupClassicBaseline();
     } catch (error) {
@@ -168,7 +180,10 @@ async function main() {
       report.comparison = {
         appLevelResult: "fail",
         comparisonNotes: report.comparison?.comparisonNotes || [],
-        strictFailures: [...(report.comparison?.strictFailures || []), `classic baseline cleanup failed: ${cleanupFailure}`],
+        strictFailures: [
+          ...(report.comparison?.strictFailures || []),
+          `classic baseline cleanup failed: ${cleanupFailure}`,
+        ],
       };
       report.firstDivergence ||= `classic baseline cleanup failed: ${cleanupFailure}`;
       exitCode = 1;
@@ -223,7 +238,9 @@ async function materializeClassicBaseline() {
     stdio: ["ignore", "pipe", "pipe"],
   });
   if (archive.error || archive.status !== 0 || !archive.stdout?.length) {
-    throw new Error(`Unable to archive classic baseline ${classicBaselineRevision}: ${spawnFailureMessage(archive)}`);
+    throw new Error(
+      `Unable to archive classic baseline ${classicBaselineRevision}: ${spawnFailureMessage(archive)}`
+    );
   }
 
   const extraction = spawnSync(
@@ -238,7 +255,9 @@ async function materializeClassicBaseline() {
     }
   );
   if (extraction.error || extraction.status !== 0) {
-    throw new Error(`Unable to extract classic baseline ${classicBaselineRevision}: ${spawnFailureMessage(extraction)}`);
+    throw new Error(
+      `Unable to extract classic baseline ${classicBaselineRevision}: ${spawnFailureMessage(extraction)}`
+    );
   }
   if (!existsSync(join(classicBaselineRoot, "index.html"))) {
     throw new Error(`Classic baseline archive ${classicBaselineRevision} is missing index.html`);
@@ -263,12 +282,18 @@ async function cleanupClassicBaseline() {
 }
 
 function spawnFailureMessage(result) {
-  return shortMessage(result?.error?.message || result?.stderr?.toString("utf8") || `exit ${result?.status ?? "unknown"}`);
+  return shortMessage(
+    result?.error?.message ||
+      result?.stderr?.toString("utf8") ||
+      `exit ${result?.status ?? "unknown"}`
+  );
 }
 
 async function resolveBrowserLaunch(chromiumLauncher) {
   const executable = resolveBrowserExecutable(chromiumLauncher);
-  const runtime = isSnapChromium(executable.path) ? await createSnapRuntime() : resolveHostRuntime();
+  const runtime = isSnapChromium(executable.path)
+    ? await createSnapRuntime()
+    : resolveHostRuntime();
   return {
     executablePath: executable.path,
     options: {
@@ -303,7 +328,9 @@ function resolveBrowserExecutable(chromiumLauncher) {
   const systemPath = systemPaths.find(isExistingExecutable);
   if (systemPath) return { path: systemPath, source: "system" };
 
-  throw new Error("No browser executable found: configure --browser-executable or install Playwright/system Chromium first");
+  throw new Error(
+    "No browser executable found: configure --browser-executable or install Playwright/system Chromium first"
+  );
 }
 
 function loadBrowserDriver() {
@@ -354,15 +381,18 @@ function resolveSnapRuntimeParent() {
     ? resolve(repoRoot, callerParent)
     : join(homedir(), "snap", "chromium", "common");
   const runtimeStat = statSync(runtimeParent);
-  if (!runtimeStat.isDirectory()) throw new Error(`Snap browser runtime parent is not a directory: ${runtimeParent}`);
+  if (!runtimeStat.isDirectory())
+    throw new Error(`Snap browser runtime parent is not a directory: ${runtimeParent}`);
   return { dir: runtimeParent, source: callerParent ? "caller-override" : "snap-common" };
 }
 
 function resolveHostRuntime() {
   const runtimeDir = process.env.XDG_RUNTIME_DIR || "";
-  if (!runtimeDir) throw new Error("Direct host Chromium requires a caller-supplied XDG_RUNTIME_DIR");
+  if (!runtimeDir)
+    throw new Error("Direct host Chromium requires a caller-supplied XDG_RUNTIME_DIR");
   const runtimeStat = statSync(runtimeDir);
-  if (!runtimeStat.isDirectory()) throw new Error(`XDG_RUNTIME_DIR is not a directory: ${runtimeDir}`);
+  if (!runtimeStat.isDirectory())
+    throw new Error(`XDG_RUNTIME_DIR is not a directory: ${runtimeDir}`);
   if ((runtimeStat.mode & 0o777) !== 0o700) {
     throw new Error(`XDG_RUNTIME_DIR must have mode 0700: ${runtimeDir}`);
   }
@@ -381,7 +411,10 @@ async function writeReportFile(finalReport) {
   await mkdir(dirname(reportPath), { recursive: true });
   const temporaryPath = `${reportPath}.tmp-${process.pid}-${Date.now()}`;
   const outputReport = createBoundedReport(finalReport);
-  await writeFile(temporaryPath, `${JSON.stringify(outputReport, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+  await writeFile(temporaryPath, `${JSON.stringify(outputReport, null, 2)}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
   await rename(temporaryPath, reportPath);
 }
 
@@ -454,12 +487,19 @@ async function runSurface(browser, surface) {
     if (requestPath === syntheticPages.esm) {
       return sendHtml(res, esmPage);
     }
+    const syntheticScript = getSyntheticScriptResource(requestPath);
+    if (syntheticScript) {
+      return sendSyntheticScript(res, syntheticScript);
+    }
     if (requestPath === "/favicon.ico") {
       return sendSyntheticFavicon(res);
     }
 
     if (requestPath.startsWith(classicAssetMount)) {
-      return sendStaticFile(res, resolveMountedRequestPath(requestUrl, classicAssetMount, classicBaselineRoot));
+      return sendStaticFile(
+        res,
+        resolveMountedRequestPath(requestUrl, classicAssetMount, classicBaselineRoot)
+      );
     }
     return sendStaticFile(res, resolveRequestPath(requestUrl, surface.rootDir));
   });
@@ -476,8 +516,22 @@ async function runSurface(browser, surface) {
   try {
     for (const viewportName of ["desktop", "mobile"]) {
       const runtimeViewport = resolveViewport(viewportName);
-      const classic = await runRuntime(browser, origin, "classic", syntheticPages.classic, runtimeViewport, surface);
-      const esm = await runRuntime(browser, origin, "esm", syntheticPages.esm, runtimeViewport, surface);
+      const classic = await runRuntime(
+        browser,
+        origin,
+        "classic",
+        syntheticPages.classic,
+        runtimeViewport,
+        surface
+      );
+      const esm = await runRuntime(
+        browser,
+        origin,
+        "esm",
+        syntheticPages.esm,
+        runtimeViewport,
+        surface
+      );
       const comparison = compareSnapshots(classic, esm);
       result.viewports.push({
         appLevelResult: comparison.appLevelResult,
@@ -512,373 +566,408 @@ async function runSurface(browser, surface) {
 async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surface) {
   const page = await browser.newPage({ viewport: runtimeViewport || viewport });
   const result = createRuntimeResult(mode, pagePath);
-  await page.addInitScript(({ diagnosticLimits: initDiagnosticLimits, mode: initMode }) => {
-    const root = globalThis;
-    const parity = (root.__TapSurvivorParity = root.__TapSurvivorParity || {});
-    const diagnosticLimits = initDiagnosticLimits || {};
-    parity.mode = initMode;
-    parity.diagnosticCounts = {};
-    parity.diagnosticOverflows = {};
-    parity.diagnosticSampleOrders = {};
-    parity.started = false;
-    [
-      "consoleErrors",
-      "drawCalls",
-      "failedRequests",
-      "httpFailures",
-      "moduleRequests",
-      "pageErrors",
-      "requestErrors",
-      "requests",
-      "responses",
-      "scriptRequests",
-      "spriteLoadRequests",
-      "spriteLoads",
-      "spriteRegistrations",
-      "updateCalls",
-    ].forEach((name) => resetDiagnostic(name));
-    parity.raf = { count: 0, dts: [], sampleCount: 0, sampleOverflow: 0, timestamps: [] };
-    parity.recordDiagnostic = recordDiagnostic;
+  await page.addInitScript(
+    ({ diagnosticLimits: initDiagnosticLimits, mode: initMode }) => {
+      const root = globalThis;
+      const parity = (root.__TapSurvivorParity = root.__TapSurvivorParity || {});
+      const diagnosticLimits = initDiagnosticLimits || {};
+      parity.mode = initMode;
+      parity.diagnosticCounts = {};
+      parity.diagnosticOverflows = {};
+      parity.diagnosticSampleOrders = {};
+      parity.started = false;
+      [
+        "consoleErrors",
+        "drawCalls",
+        "failedRequests",
+        "httpFailures",
+        "moduleRequests",
+        "pageErrors",
+        "requestErrors",
+        "requests",
+        "responses",
+        "scriptRequests",
+        "spriteLoadRequests",
+        "spriteLoads",
+        "spriteRegistrations",
+        "updateCalls",
+      ].forEach((name) => resetDiagnostic(name));
+      parity.raf = { count: 0, dts: [], sampleCount: 0, sampleOverflow: 0, timestamps: [] };
+      parity.recordDiagnostic = recordDiagnostic;
 
-    function diagnosticLimit(name) {
-      const configured = diagnosticLimits[name] || {};
-      const total = Math.max(1, Math.floor(Number(configured.total) || 32));
-      const first = Math.min(total, Math.max(0, Math.floor(Number(configured.first) || total)));
-      return { first, total };
-    }
-
-    function resetDiagnostic(name, target) {
-      const samples = Array.isArray(target) ? target : [];
-      samples.length = 0;
-      if (!Array.isArray(target)) parity[name] = samples;
-      parity.diagnosticCounts[name] = 0;
-      parity.diagnosticOverflows[name] = 0;
-      parity.diagnosticSampleOrders[name] = [];
-      return samples;
-    }
-
-    function recordDiagnostic(name, entry, target) {
-      const samples = Array.isArray(target) ? target : Array.isArray(parity[name]) ? parity[name] : resetDiagnostic(name);
-      const { first, total } = diagnosticLimit(name);
-      const count = Number(parity.diagnosticCounts[name] || 0) + 1;
-      const orders = parity.diagnosticSampleOrders[name] || (parity.diagnosticSampleOrders[name] = []);
-      parity.diagnosticCounts[name] = count;
-      if (samples.length < total) {
-        samples.push(entry);
-        orders.push(count);
-      } else if (first < total) {
-        const tailLength = total - first;
-        const index = first + ((count - first - 1) % tailLength);
-        samples[index] = entry;
-        orders[index] = count;
+      function diagnosticLimit(name) {
+        const configured = diagnosticLimits[name] || {};
+        const total = Math.max(1, Math.floor(Number(configured.total) || 32));
+        const first = Math.min(total, Math.max(0, Math.floor(Number(configured.first) || total)));
+        return { first, total };
       }
-      parity.diagnosticOverflows[name] = Math.max(0, count - samples.length);
-      return entry;
-    }
 
-    function recordRafSample(timestamp, delta) {
-      const raf = parity.raf;
-      const { first, total } = diagnosticLimit("rafSamples");
-      raf.count += 1;
-      raf.sampleCount = raf.count;
-      const orders = parity.diagnosticSampleOrders.rafSamples || (parity.diagnosticSampleOrders.rafSamples = []);
-      parity.diagnosticCounts.rafSamples = raf.count;
-      if (raf.dts.length < total) {
-        raf.dts.push(delta);
-        raf.timestamps.push(timestamp);
-        orders.push(raf.count);
-      } else if (first < total) {
-        const tailLength = total - first;
-        const index = first + ((raf.count - first - 1) % tailLength);
-        raf.dts[index] = delta;
-        raf.timestamps[index] = timestamp;
-        orders[index] = raf.count;
+      function resetDiagnostic(name, target) {
+        const samples = Array.isArray(target) ? target : [];
+        samples.length = 0;
+        if (!Array.isArray(target)) parity[name] = samples;
+        parity.diagnosticCounts[name] = 0;
+        parity.diagnosticOverflows[name] = 0;
+        parity.diagnosticSampleOrders[name] = [];
+        return samples;
       }
-      raf.sampleOverflow = Math.max(0, raf.count - raf.dts.length);
-      parity.diagnosticOverflows.rafSamples = raf.sampleOverflow;
-    }
 
-    const nativeRAF = root.requestAnimationFrame?.bind(root);
-    let lastTimestamp = null;
-    if (typeof nativeRAF === "function") {
-      root.requestAnimationFrame = (callback) =>
-        nativeRAF((timestamp) => {
-          recordRafSample(timestamp, lastTimestamp === null ? 0 : timestamp - lastTimestamp);
-          lastTimestamp = timestamp;
-          return callback(timestamp);
-        });
-    }
-
-    const contextProto = root.CanvasRenderingContext2D?.prototype;
-    if (contextProto && !contextProto.__tapParityPatched) {
-      const originalDrawImage = contextProto.drawImage;
-      contextProto.drawImage = function patchedDrawImage(image, ...args) {
-        const before = describeDraw(this, image, args);
-        const beforeStats = sampleCanvasRect(this, before.visibleRect);
-        let threw = false;
-        try {
-          return originalDrawImage.call(this, image, ...args);
-        } catch (error) {
-          threw = true;
-          throw error;
-        } finally {
-          const afterStats = sampleCanvasRect(this, before.visibleRect);
-          parity.recordDiagnostic("drawCalls", {
-            ...before,
-            afterStats,
-            beforeStats,
-            pixelDelta: pixelStatsDelta(beforeStats, afterStats),
-            threw,
-          });
+      function recordDiagnostic(name, entry, target) {
+        const samples = Array.isArray(target)
+          ? target
+          : Array.isArray(parity[name])
+            ? parity[name]
+            : resetDiagnostic(name);
+        const { first, total } = diagnosticLimit(name);
+        const count = Number(parity.diagnosticCounts[name] || 0) + 1;
+        const orders =
+          parity.diagnosticSampleOrders[name] || (parity.diagnosticSampleOrders[name] = []);
+        parity.diagnosticCounts[name] = count;
+        if (samples.length < total) {
+          samples.push(entry);
+          orders.push(count);
+        } else if (first < total) {
+          const tailLength = total - first;
+          const index = first + ((count - first - 1) % tailLength);
+          samples[index] = entry;
+          orders[index] = count;
         }
-      };
-      contextProto.__tapParityPatched = true;
-    }
+        parity.diagnosticOverflows[name] = Math.max(0, count - samples.length);
+        return entry;
+      }
 
-    root.addEventListener?.("error", (event) => {
-      parity.recordDiagnostic("pageErrors", {
-        message: event?.error?.message || event?.message || "window error",
-      });
-    });
-    root.addEventListener?.("unhandledrejection", (event) => {
-      parity.recordDiagnostic("pageErrors", {
-        message: event?.reason?.message || String(event?.reason || "unhandled rejection"),
-      });
-    });
+      function recordRafSample(timestamp, delta) {
+        const raf = parity.raf;
+        const { first, total } = diagnosticLimit("rafSamples");
+        raf.count += 1;
+        raf.sampleCount = raf.count;
+        const orders =
+          parity.diagnosticSampleOrders.rafSamples ||
+          (parity.diagnosticSampleOrders.rafSamples = []);
+        parity.diagnosticCounts.rafSamples = raf.count;
+        if (raf.dts.length < total) {
+          raf.dts.push(delta);
+          raf.timestamps.push(timestamp);
+          orders.push(raf.count);
+        } else if (first < total) {
+          const tailLength = total - first;
+          const index = first + ((raf.count - first - 1) % tailLength);
+          raf.dts[index] = delta;
+          raf.timestamps[index] = timestamp;
+          orders[index] = raf.count;
+        }
+        raf.sampleOverflow = Math.max(0, raf.count - raf.dts.length);
+        parity.diagnosticOverflows.rafSamples = raf.sampleOverflow;
+      }
 
-    const audio = (parity.audio = {
-      api: {
-        hasAudioContext: Boolean(root.AudioContext || root.webkitAudioContext),
-        hasAudioElement: Boolean(root.Audio),
-        hasMediaPlay: Boolean(root.HTMLMediaElement?.prototype?.play),
-      },
-      attempts: [],
-      buckets: {},
-      errors: [],
-      patchErrors: [],
-    });
-    resetDiagnostic("audioAttempts", audio.attempts);
-    resetDiagnostic("audioErrors", audio.errors);
-    resetDiagnostic("audioPatchErrors", audio.patchErrors);
-    parity.audioScope = null;
-
-    function audioBucket(scope) {
-      const key = scope === "start" || scope === "weapon" || scope === "menu" ? scope : "unscoped";
-      return (audio.buckets[key] = audio.buckets[key] || {
-        attemptCount: 0,
-        errorCount: 0,
-        firstAttempt: null,
-        operations: {},
-      });
-    }
-
-    function recordAudioAttempt(entry) {
-      parity.recordDiagnostic("audioAttempts", entry, audio.attempts);
-      const bucket = audioBucket(entry.scope);
-      bucket.attemptCount += 1;
-      bucket.firstAttempt ||= entry;
-      const operation = entry.operation || "unknown";
-      bucket.operations[operation] = Number(bucket.operations[operation] || 0) + 1;
-    }
-
-    function recordAudioError(entry) {
-      parity.recordDiagnostic("audioErrors", entry, audio.errors);
-      audioBucket(entry.scope).errorCount += 1;
-    }
-
-    const mediaProto = root.HTMLMediaElement?.prototype;
-    if (mediaProto && !mediaProto.__tapParityAudioPatched) {
-      const originalPlay = mediaProto.play;
-      if (typeof originalPlay === "function") {
-        mediaProto.play = function patchedMediaPlay(...playArgs) {
-          recordAudioAttempt({
-            operation: "play",
-            scope: parity.audioScope || null,
-            source: this?.currentSrc || this?.src || "",
-            tagName: this?.tagName || "",
+      const nativeRAF = root.requestAnimationFrame?.bind(root);
+      let lastTimestamp = null;
+      if (typeof nativeRAF === "function") {
+        root.requestAnimationFrame = (callback) =>
+          nativeRAF((timestamp) => {
+            recordRafSample(timestamp, lastTimestamp === null ? 0 : timestamp - lastTimestamp);
+            lastTimestamp = timestamp;
+            return callback(timestamp);
           });
+      }
+
+      const contextProto = root.CanvasRenderingContext2D?.prototype;
+      if (contextProto && !contextProto.__tapParityPatched) {
+        const originalDrawImage = contextProto.drawImage;
+        contextProto.drawImage = function patchedDrawImage(image, ...args) {
+          const before = describeDraw(this, image, args);
+          const beforeStats = sampleCanvasRect(this, before.visibleRect);
+          let threw = false;
           try {
-            const result = originalPlay.apply(this, playArgs);
-            result?.catch?.((error) => {
+            return originalDrawImage.call(this, image, ...args);
+          } catch (error) {
+            threw = true;
+            throw error;
+          } finally {
+            const afterStats = sampleCanvasRect(this, before.visibleRect);
+            parity.recordDiagnostic("drawCalls", {
+              ...before,
+              afterStats,
+              beforeStats,
+              pixelDelta: pixelStatsDelta(beforeStats, afterStats),
+              threw,
+            });
+          }
+        };
+        contextProto.__tapParityPatched = true;
+      }
+
+      root.addEventListener?.("error", (event) => {
+        parity.recordDiagnostic("pageErrors", {
+          message: event?.error?.message || event?.message || "window error",
+        });
+      });
+      root.addEventListener?.("unhandledrejection", (event) => {
+        parity.recordDiagnostic("pageErrors", {
+          message: event?.reason?.message || String(event?.reason || "unhandled rejection"),
+        });
+      });
+
+      const audio = (parity.audio = {
+        api: {
+          hasAudioContext: Boolean(root.AudioContext || root.webkitAudioContext),
+          hasAudioElement: Boolean(root.Audio),
+          hasMediaPlay: Boolean(root.HTMLMediaElement?.prototype?.play),
+        },
+        attempts: [],
+        buckets: {},
+        errors: [],
+        patchErrors: [],
+      });
+      resetDiagnostic("audioAttempts", audio.attempts);
+      resetDiagnostic("audioErrors", audio.errors);
+      resetDiagnostic("audioPatchErrors", audio.patchErrors);
+      parity.audioScope = null;
+
+      function audioBucket(scope) {
+        const key =
+          scope === "start" || scope === "weapon" || scope === "menu" ? scope : "unscoped";
+        return (audio.buckets[key] = audio.buckets[key] || {
+          attemptCount: 0,
+          errorCount: 0,
+          firstAttempt: null,
+          operations: {},
+        });
+      }
+
+      function recordAudioAttempt(entry) {
+        parity.recordDiagnostic("audioAttempts", entry, audio.attempts);
+        const bucket = audioBucket(entry.scope);
+        bucket.attemptCount += 1;
+        bucket.firstAttempt ||= entry;
+        const operation = entry.operation || "unknown";
+        bucket.operations[operation] = Number(bucket.operations[operation] || 0) + 1;
+      }
+
+      function recordAudioError(entry) {
+        parity.recordDiagnostic("audioErrors", entry, audio.errors);
+        audioBucket(entry.scope).errorCount += 1;
+      }
+
+      const mediaProto = root.HTMLMediaElement?.prototype;
+      if (mediaProto && !mediaProto.__tapParityAudioPatched) {
+        const originalPlay = mediaProto.play;
+        if (typeof originalPlay === "function") {
+          mediaProto.play = function patchedMediaPlay(...playArgs) {
+            recordAudioAttempt({
+              operation: "play",
+              scope: parity.audioScope || null,
+              source: this?.currentSrc || this?.src || "",
+              tagName: this?.tagName || "",
+            });
+            try {
+              const result = originalPlay.apply(this, playArgs);
+              result?.catch?.((error) => {
+                recordAudioError({
+                  message: error?.message || String(error || "media play rejected"),
+                  operation: "play",
+                  scope: parity.audioScope || null,
+                });
+              });
+              return result;
+            } catch (error) {
               recordAudioError({
-                message: error?.message || String(error || "media play rejected"),
+                message: error?.message || String(error || "media play failed"),
                 operation: "play",
                 scope: parity.audioScope || null,
               });
-            });
-            return result;
-          } catch (error) {
-            recordAudioError({
-              message: error?.message || String(error || "media play failed"),
-              operation: "play",
+              throw error;
+            }
+          };
+        }
+        const audioContextProto = (root.AudioContext || root.webkitAudioContext)?.prototype;
+        if (audioContextProto && typeof audioContextProto.resume === "function") {
+          const originalResume = audioContextProto.resume;
+          audioContextProto.resume = function patchedAudioResume(...resumeArgs) {
+            recordAudioAttempt({
+              operation: "resume",
               scope: parity.audioScope || null,
+              state: this?.state || "",
             });
-            throw error;
-          }
-        };
-      }
-      const audioContextProto = (root.AudioContext || root.webkitAudioContext)?.prototype;
-      if (audioContextProto && typeof audioContextProto.resume === "function") {
-        const originalResume = audioContextProto.resume;
-        audioContextProto.resume = function patchedAudioResume(...resumeArgs) {
-          recordAudioAttempt({
-            operation: "resume",
-            scope: parity.audioScope || null,
-            state: this?.state || "",
-          });
-          try {
-            const result = originalResume.apply(this, resumeArgs);
-            result?.catch?.((error) => {
+            try {
+              const result = originalResume.apply(this, resumeArgs);
+              result?.catch?.((error) => {
+                recordAudioError({
+                  message: error?.message || String(error || "audio resume rejected"),
+                  operation: "resume",
+                  scope: parity.audioScope || null,
+                });
+              });
+              return result;
+            } catch (error) {
               recordAudioError({
-                message: error?.message || String(error || "audio resume rejected"),
+                message: error?.message || String(error || "audio resume failed"),
                 operation: "resume",
                 scope: parity.audioScope || null,
               });
-            });
-            return result;
-          } catch (error) {
-            recordAudioError({
-              message: error?.message || String(error || "audio resume failed"),
-              operation: "resume",
-              scope: parity.audioScope || null,
-            });
-            throw error;
-          }
-        };
+              throw error;
+            }
+          };
+        }
+        mediaProto.__tapParityAudioPatched = true;
       }
-      mediaProto.__tapParityAudioPatched = true;
-    }
 
-    function describeDraw(context, image, args) {
-      const canvas = context.canvas;
-      const transform = context.getTransform?.();
-      const sourceWidth = image?.naturalWidth || image?.videoWidth || image?.width || 0;
-      const sourceHeight = image?.naturalHeight || image?.videoHeight || image?.height || 0;
-      const dest = destinationRect(args, sourceWidth, sourceHeight);
-      const transformedRect = transformRect(transform, dest);
-      const visibleRect = intersectRect(transformedRect, {
-        height: canvas?.height || 0,
-        width: canvas?.width || 0,
-        x: 0,
-        y: 0,
-      });
-      return {
-        canvas: {
+      function describeDraw(context, image, args) {
+        const canvas = context.canvas;
+        const transform = context.getTransform?.();
+        const sourceWidth = image?.naturalWidth || image?.videoWidth || image?.width || 0;
+        const sourceHeight = image?.naturalHeight || image?.videoHeight || image?.height || 0;
+        const dest = destinationRect(args, sourceWidth, sourceHeight);
+        const transformedRect = transformRect(transform, dest);
+        const visibleRect = intersectRect(transformedRect, {
           height: canvas?.height || 0,
           width: canvas?.width || 0,
-        },
-        dest,
-        globalAlpha: context.globalAlpha,
-        globalCompositeOperation: context.globalCompositeOperation,
-        imageSrc: image?.currentSrc || image?.src || "",
-        intersectsCanvas: Boolean(visibleRect && visibleRect.width > 0 && visibleRect.height > 0),
-        source: {
-          naturalHeight: sourceHeight,
-          naturalWidth: sourceWidth,
-        },
-        transformedRect,
-        transform: transform
-          ? { a: transform.a, b: transform.b, c: transform.c, d: transform.d, e: transform.e, f: transform.f }
-          : null,
-        visibleRect,
-      };
-    }
-
-    function destinationRect(args, sourceWidth, sourceHeight) {
-      if (args.length >= 8) {
-        return normalizeRect({
-          height: Number(args[7]) || 0,
-          width: Number(args[6]) || 0,
-          x: Number(args[4]) || 0,
-          y: Number(args[5]) || 0,
+          x: 0,
+          y: 0,
         });
+        return {
+          canvas: {
+            height: canvas?.height || 0,
+            width: canvas?.width || 0,
+          },
+          dest,
+          globalAlpha: context.globalAlpha,
+          globalCompositeOperation: context.globalCompositeOperation,
+          imageSrc: image?.currentSrc || image?.src || "",
+          intersectsCanvas: Boolean(visibleRect && visibleRect.width > 0 && visibleRect.height > 0),
+          source: {
+            naturalHeight: sourceHeight,
+            naturalWidth: sourceWidth,
+          },
+          transformedRect,
+          transform: transform
+            ? {
+                a: transform.a,
+                b: transform.b,
+                c: transform.c,
+                d: transform.d,
+                e: transform.e,
+                f: transform.f,
+              }
+            : null,
+          visibleRect,
+        };
       }
-      if (args.length >= 4) {
+
+      function destinationRect(args, sourceWidth, sourceHeight) {
+        if (args.length >= 8) {
+          return normalizeRect({
+            height: Number(args[7]) || 0,
+            width: Number(args[6]) || 0,
+            x: Number(args[4]) || 0,
+            y: Number(args[5]) || 0,
+          });
+        }
+        if (args.length >= 4) {
+          return normalizeRect({
+            height: Number(args[3]) || 0,
+            width: Number(args[2]) || 0,
+            x: Number(args[0]) || 0,
+            y: Number(args[1]) || 0,
+          });
+        }
         return normalizeRect({
-          height: Number(args[3]) || 0,
-          width: Number(args[2]) || 0,
+          height: sourceHeight,
+          width: sourceWidth,
           x: Number(args[0]) || 0,
           y: Number(args[1]) || 0,
         });
       }
-      return normalizeRect({
-        height: sourceHeight,
-        width: sourceWidth,
-        x: Number(args[0]) || 0,
-        y: Number(args[1]) || 0,
-      });
-    }
 
-    function normalizeRect(rect) {
-      const x1 = Math.min(rect.x, rect.x + rect.width);
-      const x2 = Math.max(rect.x, rect.x + rect.width);
-      const y1 = Math.min(rect.y, rect.y + rect.height);
-      const y2 = Math.max(rect.y, rect.y + rect.height);
-      return { height: y2 - y1, width: x2 - x1, x: x1, y: y1 };
-    }
-
-    function transformRect(transform, rect) {
-      if (!transform) return rect;
-      const points = [
-        transformPoint(transform, rect.x, rect.y),
-        transformPoint(transform, rect.x + rect.width, rect.y),
-        transformPoint(transform, rect.x, rect.y + rect.height),
-        transformPoint(transform, rect.x + rect.width, rect.y + rect.height),
-      ];
-      const xs = points.map((point) => point.x);
-      const ys = points.map((point) => point.y);
-      return {
-        height: Math.max(...ys) - Math.min(...ys),
-        width: Math.max(...xs) - Math.min(...xs),
-        x: Math.min(...xs),
-        y: Math.min(...ys),
-      };
-    }
-
-    function transformPoint(transform, x, y) {
-      return { x: transform.a * x + transform.c * y + transform.e, y: transform.b * x + transform.d * y + transform.f };
-    }
-
-    function intersectRect(rect, bounds) {
-      const x1 = Math.max(rect.x, bounds.x);
-      const x2 = Math.min(rect.x + rect.width, bounds.x + bounds.width);
-      const y1 = Math.max(rect.y, bounds.y);
-      const y2 = Math.min(rect.y + rect.height, bounds.y + bounds.height);
-      if (x2 <= x1 || y2 <= y1) return null;
-      return { height: y2 - y1, width: x2 - x1, x: x1, y: y1 };
-    }
-
-    function sampleCanvasRect(context, rect) {
-      if (!rect || rect.width <= 0 || rect.height <= 0) return null;
-      const sampleWidth = Math.min(16, Math.max(1, Math.floor(rect.width)));
-      const sampleHeight = Math.min(16, Math.max(1, Math.floor(rect.height)));
-      const startX = Math.max(0, Math.floor(rect.x + (rect.width - sampleWidth) / 2));
-      const startY = Math.max(0, Math.floor(rect.y + (rect.height - sampleHeight) / 2));
-      try {
-        const imageData = context.getImageData(startX, startY, sampleWidth, sampleHeight).data;
-        let alphaSum = 0;
-        let colorSum = 0;
-        let opaquePixels = 0;
-        for (let index = 0; index < imageData.length; index += 4) {
-          const alpha = imageData[index + 3];
-          alphaSum += alpha;
-          colorSum += imageData[index] + imageData[index + 1] + imageData[index + 2];
-          if (alpha > 0) opaquePixels += 1;
-        }
-        return { alphaSum, colorSum, height: sampleHeight, opaquePixels, width: sampleWidth, x: startX, y: startY };
-      } catch (error) {
-        return { error: error.message, height: sampleHeight, width: sampleWidth, x: startX, y: startY };
+      function normalizeRect(rect) {
+        const x1 = Math.min(rect.x, rect.x + rect.width);
+        const x2 = Math.max(rect.x, rect.x + rect.width);
+        const y1 = Math.min(rect.y, rect.y + rect.height);
+        const y2 = Math.max(rect.y, rect.y + rect.height);
+        return { height: y2 - y1, width: x2 - x1, x: x1, y: y1 };
       }
-    }
 
-    function pixelStatsDelta(beforeStats, afterStats) {
-      if (!beforeStats || !afterStats || beforeStats.error || afterStats.error) return 0;
-      return (
-        Math.abs((afterStats.alphaSum || 0) - (beforeStats.alphaSum || 0)) +
-        Math.abs((afterStats.colorSum || 0) - (beforeStats.colorSum || 0))
-      );
-    }
-  }, { diagnosticLimits: pageDiagnosticSampleLimits, mode });
+      function transformRect(transform, rect) {
+        if (!transform) return rect;
+        const points = [
+          transformPoint(transform, rect.x, rect.y),
+          transformPoint(transform, rect.x + rect.width, rect.y),
+          transformPoint(transform, rect.x, rect.y + rect.height),
+          transformPoint(transform, rect.x + rect.width, rect.y + rect.height),
+        ];
+        const xs = points.map((point) => point.x);
+        const ys = points.map((point) => point.y);
+        return {
+          height: Math.max(...ys) - Math.min(...ys),
+          width: Math.max(...xs) - Math.min(...xs),
+          x: Math.min(...xs),
+          y: Math.min(...ys),
+        };
+      }
+
+      function transformPoint(transform, x, y) {
+        return {
+          x: transform.a * x + transform.c * y + transform.e,
+          y: transform.b * x + transform.d * y + transform.f,
+        };
+      }
+
+      function intersectRect(rect, bounds) {
+        const x1 = Math.max(rect.x, bounds.x);
+        const x2 = Math.min(rect.x + rect.width, bounds.x + bounds.width);
+        const y1 = Math.max(rect.y, bounds.y);
+        const y2 = Math.min(rect.y + rect.height, bounds.y + bounds.height);
+        if (x2 <= x1 || y2 <= y1) return null;
+        return { height: y2 - y1, width: x2 - x1, x: x1, y: y1 };
+      }
+
+      function sampleCanvasRect(context, rect) {
+        if (!rect || rect.width <= 0 || rect.height <= 0) return null;
+        const sampleWidth = Math.min(16, Math.max(1, Math.floor(rect.width)));
+        const sampleHeight = Math.min(16, Math.max(1, Math.floor(rect.height)));
+        const startX = Math.max(0, Math.floor(rect.x + (rect.width - sampleWidth) / 2));
+        const startY = Math.max(0, Math.floor(rect.y + (rect.height - sampleHeight) / 2));
+        try {
+          const imageData = context.getImageData(startX, startY, sampleWidth, sampleHeight).data;
+          let alphaSum = 0;
+          let colorSum = 0;
+          let opaquePixels = 0;
+          for (let index = 0; index < imageData.length; index += 4) {
+            const alpha = imageData[index + 3];
+            alphaSum += alpha;
+            colorSum += imageData[index] + imageData[index + 1] + imageData[index + 2];
+            if (alpha > 0) opaquePixels += 1;
+          }
+          return {
+            alphaSum,
+            colorSum,
+            height: sampleHeight,
+            opaquePixels,
+            width: sampleWidth,
+            x: startX,
+            y: startY,
+          };
+        } catch (error) {
+          return {
+            error: error.message,
+            height: sampleHeight,
+            width: sampleWidth,
+            x: startX,
+            y: startY,
+          };
+        }
+      }
+
+      function pixelStatsDelta(beforeStats, afterStats) {
+        if (!beforeStats || !afterStats || beforeStats.error || afterStats.error) return 0;
+        return (
+          Math.abs((afterStats.alphaSum || 0) - (beforeStats.alphaSum || 0)) +
+          Math.abs((afterStats.colorSum || 0) - (beforeStats.colorSum || 0))
+        );
+      }
+    },
+    { diagnosticLimits: pageDiagnosticSampleLimits, mode }
+  );
 
   page.on("console", (message) => {
     if (message.type() === "error") {
@@ -893,12 +982,19 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     recordRuntimeDiagnostic(result, "pageErrors", { message: error.message, stack: error.stack });
   });
   page.on("request", (request) => {
-    const entry = { method: request.method(), resourceType: request.resourceType(), url: request.url() };
+    const entry = {
+      method: request.method(),
+      resourceType: request.resourceType(),
+      url: request.url(),
+    };
     recordRuntimeDiagnostic(result, "requests", entry);
     if (entry.resourceType === "script" || entry.resourceType === "document") {
       recordRuntimeDiagnostic(result, "scriptUrls", entry.url);
     }
-    if (entry.url.includes("/src/app/production-module-entrypoint.js") || entry.url.includes("/src/app/production-module-autoboot.js")) {
+    if (
+      entry.url.includes("/src/app/production-module-entrypoint.js") ||
+      entry.url.includes("/src/app/production-module-autoboot.js")
+    ) {
       recordRuntimeDiagnostic(result, "moduleUrls", entry.url);
     }
   });
@@ -927,10 +1023,20 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
     result.indexLoaded = Boolean(response && response.ok());
     await page.waitForTimeout(350);
 
-    result.canvasFound = (await page.locator("#game").count().catch(() => 0)) > 0;
+    result.canvasFound =
+      (await page
+        .locator("#game")
+        .count()
+        .catch(() => 0)) > 0;
     result.titleControlDetected =
-      (await page.locator("#titleStartGame").count().catch(() => 0)) > 0 ||
-      (await page.getByRole("button", { name: /start game/i }).count().catch(() => 0)) > 0;
+      (await page
+        .locator("#titleStartGame")
+        .count()
+        .catch(() => 0)) > 0 ||
+      (await page
+        .getByRole("button", { name: /start game/i })
+        .count()
+        .catch(() => 0)) > 0;
     result.uiDetected = await detectUi(page);
     result.startGameFound = result.titleControlDetected;
 
@@ -942,7 +1048,10 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       await setAudioScope(page, "start");
       await startButton.click({ timeout: 5000 }).catch((error) => {
         result.startGameClickThrew = true;
-        recordRuntimeDiagnostic(result, "pageErrors", { message: `Start Game click failed: ${error.message}`, stack: error.stack });
+        recordRuntimeDiagnostic(result, "pageErrors", {
+          message: `Start Game click failed: ${error.message}`,
+          stack: error.stack,
+        });
       });
     }
 
@@ -952,7 +1061,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         () => {
           const root = globalThis;
           const parity = root.__TapSurvivorParity || {};
-          const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+          const game =
+            parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
           return Boolean(game?.running && game.awaitingFirstMoveInput);
         },
         null,
@@ -996,7 +1106,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         root,
         "TapSurvivorContent"
       );
-      const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+      const game =
+        parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
       const retiredPublisherNames = [
         "TapSurvivorEffects",
         "TapSurvivorUpgrades",
@@ -1006,14 +1117,26 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         "TapSurvivorRunUpdate",
       ];
       const retiredPublisherPresence = Object.fromEntries(
-        retiredPublisherNames.map((name) => [name, Object.prototype.hasOwnProperty.call(root, name)])
+        retiredPublisherNames.map((name) => [
+          name,
+          Object.prototype.hasOwnProperty.call(root, name),
+        ])
       );
       const diagnostics = snapshotDiagnostics(parity);
-      const spriteSnapshot = snapshotSpriteIndex(content.assets?.sprites || {}, diagnostics.drawCalls);
+      const spriteSnapshot = snapshotSpriteIndex(
+        content.assets?.sprites || {},
+        diagnostics.drawCalls
+      );
       return {
         assetsLoaded: Boolean(content.assets),
         contentLoaded: Boolean(content.assets),
-        canvas: canvas instanceof HTMLCanvasElement ? { backing: { height: canvas.height, width: canvas.width }, css: rectSize(canvas.getBoundingClientRect()) } : null,
+        canvas:
+          canvas instanceof HTMLCanvasElement
+            ? {
+                backing: { height: canvas.height, width: canvas.width },
+                css: rectSize(canvas.getBoundingClientRect()),
+              }
+            : null,
         controls: {
           fullscreenButton: Boolean(fullscreenButton),
           menuButton: Boolean(openMenu),
@@ -1060,7 +1183,9 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           projectileSource: projectileCollections.source,
           player: player
             ? {
-                equippedWeapons: Array.isArray(player.equippedWeapons) ? [...player.equippedWeapons] : [],
+                equippedWeapons: Array.isArray(player.equippedWeapons)
+                  ? [...player.equippedWeapons]
+                  : [],
                 hp: Number.isFinite(player.hp) ? player.hp : null,
                 maxHp: Number.isFinite(player.maxHp) ? player.maxHp : null,
                 radius: Number.isFinite(player.radius) ? player.radius : null,
@@ -1092,18 +1217,62 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
             sampleOverflow: diagnosticOverflow(parityState, "rafSamples", rafDts),
             timestamps: rafTimestamps,
           },
-          requestErrorCount: diagnosticCount(parityState, "requestErrors", parityState.requestErrors),
-          requestErrorOverflow: diagnosticOverflow(parityState, "requestErrors", parityState.requestErrors),
-          requestErrors: orderedDiagnosticSamples(parityState, "requestErrors", parityState.requestErrors),
-          spriteLoadRequestCount: diagnosticCount(parityState, "spriteLoadRequests", parityState.spriteLoadRequests),
-          spriteLoadRequestOverflow: diagnosticOverflow(parityState, "spriteLoadRequests", parityState.spriteLoadRequests),
-          spriteLoadRequests: orderedDiagnosticSamples(parityState, "spriteLoadRequests", parityState.spriteLoadRequests),
+          requestErrorCount: diagnosticCount(
+            parityState,
+            "requestErrors",
+            parityState.requestErrors
+          ),
+          requestErrorOverflow: diagnosticOverflow(
+            parityState,
+            "requestErrors",
+            parityState.requestErrors
+          ),
+          requestErrors: orderedDiagnosticSamples(
+            parityState,
+            "requestErrors",
+            parityState.requestErrors
+          ),
+          spriteLoadRequestCount: diagnosticCount(
+            parityState,
+            "spriteLoadRequests",
+            parityState.spriteLoadRequests
+          ),
+          spriteLoadRequestOverflow: diagnosticOverflow(
+            parityState,
+            "spriteLoadRequests",
+            parityState.spriteLoadRequests
+          ),
+          spriteLoadRequests: orderedDiagnosticSamples(
+            parityState,
+            "spriteLoadRequests",
+            parityState.spriteLoadRequests
+          ),
           spriteLoadCount: diagnosticCount(parityState, "spriteLoads", parityState.spriteLoads),
-          spriteLoadOverflow: diagnosticOverflow(parityState, "spriteLoads", parityState.spriteLoads),
-          spriteLoads: orderedDiagnosticSamples(parityState, "spriteLoads", parityState.spriteLoads),
-          spriteRegistrationCount: diagnosticCount(parityState, "spriteRegistrations", parityState.spriteRegistrations),
-          spriteRegistrationOverflow: diagnosticOverflow(parityState, "spriteRegistrations", parityState.spriteRegistrations),
-          spriteRegistrations: orderedDiagnosticSamples(parityState, "spriteRegistrations", parityState.spriteRegistrations),
+          spriteLoadOverflow: diagnosticOverflow(
+            parityState,
+            "spriteLoads",
+            parityState.spriteLoads
+          ),
+          spriteLoads: orderedDiagnosticSamples(
+            parityState,
+            "spriteLoads",
+            parityState.spriteLoads
+          ),
+          spriteRegistrationCount: diagnosticCount(
+            parityState,
+            "spriteRegistrations",
+            parityState.spriteRegistrations
+          ),
+          spriteRegistrationOverflow: diagnosticOverflow(
+            parityState,
+            "spriteRegistrations",
+            parityState.spriteRegistrations
+          ),
+          spriteRegistrations: orderedDiagnosticSamples(
+            parityState,
+            "spriteRegistrations",
+            parityState.spriteRegistrations
+          ),
         };
       }
 
@@ -1115,7 +1284,11 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       function diagnosticOverflow(parityState, name, samples) {
         const overflow = Number(parityState?.diagnosticOverflows?.[name]);
         if (Number.isFinite(overflow)) return overflow;
-        return Math.max(0, diagnosticCount(parityState, name, samples) - (Array.isArray(samples) ? samples.length : 0));
+        return Math.max(
+          0,
+          diagnosticCount(parityState, name, samples) -
+            (Array.isArray(samples) ? samples.length : 0)
+        );
       }
 
       function orderedDiagnosticSamples(parityState, name, samples) {
@@ -1131,7 +1304,11 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
 
       function snapshotAudio(parityState) {
         const audioState = parityState.audio || {};
-        const attempts = orderedDiagnosticSamples(parityState, "audioAttempts", audioState.attempts);
+        const attempts = orderedDiagnosticSamples(
+          parityState,
+          "audioAttempts",
+          audioState.attempts
+        );
         const errors = orderedDiagnosticSamples(parityState, "audioErrors", audioState.errors);
         const attemptCount = diagnosticCount(parityState, "audioAttempts", attempts);
         const errorCount = diagnosticCount(parityState, "audioErrors", errors);
@@ -1158,7 +1335,9 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
 
       function summarizeAudioBucket(audioState, attempts, scope) {
         const bucket = audioState.buckets?.[scope] || {};
-        const fallbackAttempts = attempts.filter((attempt) => (attempt?.scope || "unscoped") === scope);
+        const fallbackAttempts = attempts.filter(
+          (attempt) => (attempt?.scope || "unscoped") === scope
+        );
         return {
           attemptCount: Number(bucket.attemptCount || fallbackAttempts.length),
           errorCount: Number(bucket.errorCount || 0),
@@ -1179,7 +1358,9 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         ];
         const maxEntriesPerGroup = 64;
         const observedSources = new Set(
-          (drawCalls || []).map((entry) => normalizeSpriteSource(entry?.imageSrc || "")).filter(Boolean)
+          (drawCalls || [])
+            .map((entry) => normalizeSpriteSource(entry?.imageSrc || ""))
+            .filter(Boolean)
         );
         const definitions = Object.fromEntries(groupNames.map((name) => [name, {}]));
         const counts = {};
@@ -1203,7 +1384,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         counts.player = spriteGroups?.player ? 1 : 0;
         overflows.player = 0;
         const playerDefinition = compactSpriteDefinition(spriteGroups?.player);
-        if (spriteDefinitionMatches(playerDefinition, observedSources)) definitions.player = playerDefinition;
+        if (spriteDefinitionMatches(playerDefinition, observedSources))
+          definitions.player = playerDefinition;
 
         return {
           counts,
@@ -1219,7 +1401,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         if (!definition || typeof definition !== "object") return {};
         const compact = {};
         for (const field of ["src", "path", "iconSrc"]) {
-          if (typeof definition[field] === "string" && definition[field]) compact[field] = definition[field];
+          if (typeof definition[field] === "string" && definition[field])
+            compact[field] = definition[field];
         }
         return compact;
       }
@@ -1268,7 +1451,8 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
           ["enemyProjectiles", gameState.enemyProjectiles],
           ["weaponProjectiles", gameState.weaponProjectiles],
         ].filter((entry) => Array.isArray(entry[1]));
-        const firstNonEmpty = candidates.find((entry) => entry[1].length > 0) || candidates[0] || null;
+        const firstNonEmpty =
+          candidates.find((entry) => entry[1].length > 0) || candidates[0] || null;
         const collection = firstNonEmpty?.[1] || [];
         return {
           collections: Object.fromEntries(candidates.map(([name, items]) => [name, items.length])),
@@ -1324,7 +1508,9 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
         return {
           id: stringOrNull(entity.id ?? entity.name ?? entity.kind ?? ""),
           kind: stringOrNull(entity.kind ?? entity.type ?? ""),
-          spriteId: stringOrNull(entity.spriteId ?? entity.sprite ?? entity.spriteName ?? entity.assetId ?? ""),
+          spriteId: stringOrNull(
+            entity.spriteId ?? entity.sprite ?? entity.spriteName ?? entity.assetId ?? ""
+          ),
           type: stringOrNull(entity.type ?? entity.kind ?? ""),
           hp: numberOrNull(entity.hp),
           radius: numberOrNull(entity.radius),
@@ -1343,13 +1529,17 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
 
       function spriteSource(definition) {
         if (typeof definition === "string") return definition;
-        if (definition && typeof definition === "object") return definition.src || definition.path || definition.iconSrc || "";
+        if (definition && typeof definition === "object")
+          return definition.src || definition.path || definition.iconSrc || "";
         return "";
       }
     }, mode === "classic");
     await setAudioScope(page, "menu");
 
-    result.classified = classifyDraws(result.snapshot?.diagnostics?.drawCalls || [], result.snapshot?.registeredSpriteGroupDefs || {});
+    result.classified = classifyDraws(
+      result.snapshot?.diagnostics?.drawCalls || [],
+      result.snapshot?.registeredSpriteGroupDefs || {}
+    );
     result.enemyEvidence = {
       count: result.snapshot?.game?.enemies || 0,
       sample: result.snapshot?.game?.enemySample || null,
@@ -1362,9 +1552,18 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
       source: result.snapshot?.game?.projectileSource || null,
     };
     result.playerDraw = findPlayerDraw(result.classified.drawCalls);
-    result.backgroundDraw = result.classified.drawCalls.find((entry) => entry.kind === "background" && entry.intersectsCanvas) || null;
-    result.enemyDraw = result.classified.drawCalls.find((entry) => entry.kind === "enemy" && entry.intersectsCanvas) || null;
-    result.weaponDraw = result.classified.drawCalls.find((entry) => entry.kind === "weapon" && entry.intersectsCanvas) || null;
+    result.backgroundDraw =
+      result.classified.drawCalls.find(
+        (entry) => entry.kind === "background" && entry.intersectsCanvas
+      ) || null;
+    result.enemyDraw =
+      result.classified.drawCalls.find(
+        (entry) => entry.kind === "enemy" && entry.intersectsCanvas
+      ) || null;
+    result.weaponDraw =
+      result.classified.drawCalls.find(
+        (entry) => entry.kind === "weapon" && entry.intersectsCanvas
+      ) || null;
     result.menuEvidence = await collectMenuEvidence(page);
     result.controlEvidence = await collectControlEvidence(page, mode, result.menuEvidence);
     await setAudioScope(page, null);
@@ -1415,7 +1614,9 @@ async function runRuntime(browser, origin, mode, pagePath, runtimeViewport, surf
 
     if (cli.screenshotDir) {
       await mkdir(cli.screenshotDir, { recursive: true });
-      await page.screenshot({ path: join(cli.screenshotDir, `${mode}.png`), fullPage: true }).catch(() => {});
+      await page
+        .screenshot({ path: join(cli.screenshotDir, `${mode}.png`), fullPage: true })
+        .catch(() => {});
     }
   } catch (error) {
     infraFailure = error?.stack || error?.message || String(error);
@@ -1497,7 +1698,9 @@ function appendRuntimeDiagnosticSamples(result, name, samples, totalCount) {
   const retained = Array.isArray(result[name]) ? result[name] : (result[name] = []);
   const incoming = Array.isArray(samples) ? samples : [];
   const reportedCount = Number(totalCount);
-  const count = Number.isFinite(reportedCount) ? Math.max(incoming.length, Math.floor(reportedCount)) : incoming.length;
+  const count = Number.isFinite(reportedCount)
+    ? Math.max(incoming.length, Math.floor(reportedCount))
+    : incoming.length;
   const limit = Number(browserDiagnosticSampleLimits[name] || 32);
   let inserted = 0;
   for (const sample of incoming) {
@@ -1508,7 +1711,8 @@ function appendRuntimeDiagnosticSamples(result, name, samples, totalCount) {
   result.diagnosticCounts ||= {};
   result.diagnosticOverflows ||= {};
   result.diagnosticCounts[name] = Number(result.diagnosticCounts[name] || 0) + count;
-  result.diagnosticOverflows[name] = Number(result.diagnosticOverflows[name] || 0) + Math.max(0, count - inserted);
+  result.diagnosticOverflows[name] =
+    Number(result.diagnosticOverflows[name] || 0) + Math.max(0, count - inserted);
 }
 
 function runtimeDiagnosticCount(result, name) {
@@ -1519,7 +1723,10 @@ function runtimeDiagnosticCount(result, name) {
 function runtimeDiagnosticOverflow(result, name) {
   const overflow = Number(result?.diagnosticOverflows?.[name]);
   if (Number.isFinite(overflow)) return overflow;
-  return Math.max(0, runtimeDiagnosticCount(result, name) - (Array.isArray(result?.[name]) ? result[name].length : 0));
+  return Math.max(
+    0,
+    runtimeDiagnosticCount(result, name) - (Array.isArray(result?.[name]) ? result[name].length : 0)
+  );
 }
 
 function compareSnapshots(classic, esm) {
@@ -1534,9 +1741,14 @@ function compareSnapshots(classic, esm) {
   const classicPlayerVisible = Boolean(classic.playerVisible);
   const esmPlayerVisible = Boolean(esm.playerVisible);
   const classicEnemyCount = Number(
-    classic.enemyEvidenceObserved?.count ?? classic.enemyEvidence?.count ?? classic.snapshot?.game?.enemies ?? 0
+    classic.enemyEvidenceObserved?.count ??
+      classic.enemyEvidence?.count ??
+      classic.snapshot?.game?.enemies ??
+      0
   );
-  const esmEnemyCount = Number(esm.enemyEvidenceObserved?.count ?? esm.enemyEvidence?.count ?? esm.snapshot?.game?.enemies ?? 0);
+  const esmEnemyCount = Number(
+    esm.enemyEvidenceObserved?.count ?? esm.enemyEvidence?.count ?? esm.snapshot?.game?.enemies ?? 0
+  );
   const classicProjectileCount = Number(
     classic.projectileEvidenceObserved?.count ??
       classic.projectileEvidence?.count ??
@@ -1553,15 +1765,32 @@ function compareSnapshots(classic, esm) {
   const esmMenu = esm.menuEvidence?.tabs || esm.snapshot?.menu?.tabs || {};
   const classicAudio = classic.audioEvidence || classic.snapshot?.audio || null;
   const esmAudio = esm.audioEvidence || esm.snapshot?.audio || null;
-  const classicStartAudio = classicAudio?.startGesture || { attemptCount: 0, errorCount: 0, operations: {} };
-  const esmStartAudio = esmAudio?.startGesture || { attemptCount: 0, errorCount: 0, operations: {} };
-  const classicWeaponAudio = classicAudio?.weaponFire || { attemptCount: 0, errorCount: 0, operations: {} };
+  const classicStartAudio = classicAudio?.startGesture || {
+    attemptCount: 0,
+    errorCount: 0,
+    operations: {},
+  };
+  const esmStartAudio = esmAudio?.startGesture || {
+    attemptCount: 0,
+    errorCount: 0,
+    operations: {},
+  };
+  const classicWeaponAudio = classicAudio?.weaponFire || {
+    attemptCount: 0,
+    errorCount: 0,
+    operations: {},
+  };
   const esmWeaponAudio = esmAudio?.weaponFire || { attemptCount: 0, errorCount: 0, operations: {} };
-  const classicMenuAudio = classicAudio?.menuShop || { attemptCount: 0, errorCount: 0, operations: {} };
+  const classicMenuAudio = classicAudio?.menuShop || {
+    attemptCount: 0,
+    errorCount: 0,
+    operations: {},
+  };
   const esmMenuAudio = esmAudio?.menuShop || { attemptCount: 0, errorCount: 0, operations: {} };
   const classicEnemyDraw = classic.enemyDraw || null;
   const esmEnemyDraw = esm.enemyDraw || null;
-  const classicFireEvidence = classic.fireEvidence || classic.snapshot?.game?.weaponFireEvidence || null;
+  const classicFireEvidence =
+    classic.fireEvidence || classic.snapshot?.game?.weaponFireEvidence || null;
   const esmFireEvidence = esm.fireEvidence || esm.snapshot?.game?.weaponFireEvidence || null;
   const classicFireObserved = hasWeaponFireEvidence(classicFireEvidence);
   const esmFireObserved = hasWeaponFireEvidence(esmFireEvidence);
@@ -1579,8 +1808,10 @@ function compareSnapshots(classic, esm) {
 
   if (!classic.indexLoaded) strictFailures.push("classic runtime page did not load");
   if (!esm.indexLoaded) strictFailures.push("esm runtime page did not load");
-  if (!classic.contentLoaded) strictFailures.push("classic runtime did not load its historical content fixture");
-  if (!esm.contentLoaded) strictFailures.push("ESM runtime did not expose injected generated content");
+  if (!classic.contentLoaded)
+    strictFailures.push("classic runtime did not load its historical content fixture");
+  if (!esm.contentLoaded)
+    strictFailures.push("ESM runtime did not expose injected generated content");
   if (esm.snapshot?.legacyContentPublisherPresent) {
     strictFailures.push("ESM runtime published the retired TapSurvivorContent namespace");
   }
@@ -1610,18 +1841,36 @@ function compareSnapshots(classic, esm) {
       strictFailures.push(`ESM runtime retained retired publisher ${name}`);
     }
   }
-  if (classicCanvas && esmCanvas && (classicCanvas.width !== esmCanvas.width || classicCanvas.height !== esmCanvas.height)) {
-    strictFailures.push(`canvas backing mismatch: classic ${describeSize(classicCanvas)} vs esm ${describeSize(esmCanvas)}`);
+  if (
+    classicCanvas &&
+    esmCanvas &&
+    (classicCanvas.width !== esmCanvas.width || classicCanvas.height !== esmCanvas.height)
+  ) {
+    strictFailures.push(
+      `canvas backing mismatch: classic ${describeSize(classicCanvas)} vs esm ${describeSize(esmCanvas)}`
+    );
   }
-  if (classic.canvasCssSize && esm.canvasCssSize && (classic.canvasCssSize.width !== esm.canvasCssSize.width || classic.canvasCssSize.height !== esm.canvasCssSize.height)) {
-    strictFailures.push(`canvas CSS mismatch: classic ${describeSize(classic.canvasCssSize)} vs esm ${describeSize(esm.canvasCssSize)}`);
+  if (
+    classic.canvasCssSize &&
+    esm.canvasCssSize &&
+    (classic.canvasCssSize.width !== esm.canvasCssSize.width ||
+      classic.canvasCssSize.height !== esm.canvasCssSize.height)
+  ) {
+    strictFailures.push(
+      `canvas CSS mismatch: classic ${describeSize(classic.canvasCssSize)} vs esm ${describeSize(esm.canvasCssSize)}`
+    );
   }
 
-  if (classic.startControlFound && !esm.startControlFound) strictFailures.push("classic found Start Game but ESM did not");
-  if (classic.startGameClicked && !esm.startGameClicked) strictFailures.push("classic clicked Start Game but ESM did not");
-  if (classic.canvasFound && !esm.canvasFound) strictFailures.push("classic has canvas but ESM does not");
-  if (classicBackground && !esmBackground) strictFailures.push("classic recorded background draw but ESM did not");
-  if (classicPlayerVisible && !esmPlayerVisible) strictFailures.push("classic recorded visible player draw but ESM did not");
+  if (classic.startControlFound && !esm.startControlFound)
+    strictFailures.push("classic found Start Game but ESM did not");
+  if (classic.startGameClicked && !esm.startGameClicked)
+    strictFailures.push("classic clicked Start Game but ESM did not");
+  if (classic.canvasFound && !esm.canvasFound)
+    strictFailures.push("classic has canvas but ESM does not");
+  if (classicBackground && !esmBackground)
+    strictFailures.push("classic recorded background draw but ESM did not");
+  if (classicPlayerVisible && !esmPlayerVisible)
+    strictFailures.push("classic recorded visible player draw but ESM did not");
   if (classicEnemyDraw && !esmEnemyDraw) {
     strictFailures.push("classic recorded enemy draw evidence but ESM did not");
   }
@@ -1631,9 +1880,17 @@ function compareSnapshots(classic, esm) {
     notes.push(`enemy count differs: classic ${classicEnemyCount} vs esm ${esmEnemyCount}`);
   }
   if (classicProjectileCount > 0 && esmProjectileCount === 0) {
-    strictFailures.push(`classic sampled ${classicProjectileCount} projectiles but ESM sampled none`);
-  } else if (classicProjectileCount > 0 && esmProjectileCount > 0 && classicProjectileCount !== esmProjectileCount) {
-    notes.push(`projectile count differs: classic ${classicProjectileCount} vs esm ${esmProjectileCount}`);
+    strictFailures.push(
+      `classic sampled ${classicProjectileCount} projectiles but ESM sampled none`
+    );
+  } else if (
+    classicProjectileCount > 0 &&
+    esmProjectileCount > 0 &&
+    classicProjectileCount !== esmProjectileCount
+  ) {
+    notes.push(
+      `projectile count differs: classic ${classicProjectileCount} vs esm ${esmProjectileCount}`
+    );
   }
   if (classicFireObserved && !esmFireObserved) {
     strictFailures.push("classic observed a weapon fire attempt but ESM did not");
@@ -1641,7 +1898,9 @@ function compareSnapshots(classic, esm) {
     const classicFireCount = Number(classicFireEvidence?.burstCount || 0);
     const esmFireCount = Number(esmFireEvidence?.burstCount || 0);
     if (classicFireCount > 0 && esmFireCount > 0 && classicFireCount !== esmFireCount) {
-      notes.push(`weapon fire burst count differs: classic ${classicFireCount} vs esm ${esmFireCount}`);
+      notes.push(
+        `weapon fire burst count differs: classic ${classicFireCount} vs esm ${esmFireCount}`
+      );
     }
   }
   for (const tabName of ["progress", "shop", "inventory"]) {
@@ -1651,8 +1910,14 @@ function compareSnapshots(classic, esm) {
       strictFailures.push(
         `classic menu ${tabName} tab has content but ESM tab is ${esmTab.placeholderOnly ? "placeholder-only" : "blank"}`
       );
-    } else if (classicTab.meaningful && esmTab.meaningful && classicTab.textLength !== esmTab.textLength) {
-      notes.push(`menu ${tabName} text length differs: classic ${classicTab.textLength} vs esm ${esmTab.textLength}`);
+    } else if (
+      classicTab.meaningful &&
+      esmTab.meaningful &&
+      classicTab.textLength !== esmTab.textLength
+    ) {
+      notes.push(
+        `menu ${tabName} text length differs: classic ${classicTab.textLength} vs esm ${esmTab.textLength}`
+      );
     }
     if (classicTab.exists && !esmTab.exists) {
       strictFailures.push(`classic menu ${tabName} tab exists but ESM tab is missing`);
@@ -1681,7 +1946,9 @@ function compareSnapshots(classic, esm) {
     classicMenuAudio.attemptCount === 0 &&
     esmMenuAudio.attemptCount === 0
   ) {
-    notes.push("audio remained diagnostic-only; no safe start, weapon, or menu audio attempt observed");
+    notes.push(
+      "audio remained diagnostic-only; no safe start, weapon, or menu audio attempt observed"
+    );
   }
   if (classicConsoleErrorCount === 0 && esmConsoleErrorCount > 0) {
     strictFailures.push("classic had no console errors but ESM did");
@@ -1704,18 +1971,24 @@ function compareSnapshots(classic, esm) {
       notes.push(`player position diverged by ${delta.toFixed(2)}px`);
     }
     if (classicPlayer.radius !== esmPlayer.radius) {
-      notes.push(`player radius differs: classic ${classicPlayer.radius} vs esm ${esmPlayer.radius}`);
+      notes.push(
+        `player radius differs: classic ${classicPlayer.radius} vs esm ${esmPlayer.radius}`
+      );
     }
     if (classicPlayer.maxHp !== esmPlayer.maxHp) {
       notes.push(`player maxHp differs: classic ${classicPlayer.maxHp} vs esm ${esmPlayer.maxHp}`);
-      strictFailures.push(`player maxHp mismatch: classic ${classicPlayer.maxHp} vs esm ${esmPlayer.maxHp}`);
+      strictFailures.push(
+        `player maxHp mismatch: classic ${classicPlayer.maxHp} vs esm ${esmPlayer.maxHp}`
+      );
     }
   }
 
   const classicDeterministic = classic.raf?.count || 0;
   const esmDeterministic = esm.raf?.count || 0;
   if (classicDeterministic && esmDeterministic && classicDeterministic !== esmDeterministic) {
-    notes.push(`RAF frame count differs: classic ${classicDeterministic} vs esm ${esmDeterministic}`);
+    notes.push(
+      `RAF frame count differs: classic ${classicDeterministic} vs esm ${esmDeterministic}`
+    );
   }
 
   const appLevelResult = strictFailures.length === 0 ? "pass" : notes.length ? "partial" : "fail";
@@ -1745,18 +2018,23 @@ function appendRuntimeControlFailures(strictFailures, runtime, controls) {
   const mute = controls.mute || {};
   if (!mute.found) strictFailures.push(`${runtime} runtime is missing #muteAudio`);
   if (!mute.clicked) strictFailures.push(`${runtime} runtime did not click #muteAudio`);
-  if (!mute.succeeded) strictFailures.push(`${runtime} runtime #muteAudio did not prove a state transition`);
+  if (!mute.succeeded)
+    strictFailures.push(`${runtime} runtime #muteAudio did not prove a state transition`);
 
   const runMenu = controls.runMenu || {};
   const menuOpen = runMenu.open || {};
   const menuClose = runMenu.close || {};
   if (!menuOpen.action?.found) strictFailures.push(`${runtime} runtime is missing #openMenu`);
   if (!menuOpen.action?.clicked) strictFailures.push(`${runtime} runtime did not click #openMenu`);
-  if (!menuOpen.succeeded) strictFailures.push(`${runtime} runtime #openMenu did not make #runMenu visible`);
+  if (!menuOpen.succeeded)
+    strictFailures.push(`${runtime} runtime #openMenu did not make #runMenu visible`);
   if (!menuClose.action?.found) strictFailures.push(`${runtime} runtime is missing #closeMenu`);
-  if (!menuClose.action?.clicked) strictFailures.push(`${runtime} runtime did not click #closeMenu`);
+  if (!menuClose.action?.clicked)
+    strictFailures.push(`${runtime} runtime did not click #closeMenu`);
   if (!menuClose.succeeded) {
-    strictFailures.push(`${runtime} runtime #closeMenu did not make #runMenu hidden with #openMenu aria-expanded=false`);
+    strictFailures.push(
+      `${runtime} runtime #closeMenu did not make #runMenu hidden with #openMenu aria-expanded=false`
+    );
   }
 
   for (const [controlName, control] of Object.entries({
@@ -1770,14 +2048,26 @@ function appendRuntimeControlFailures(strictFailures, runtime, controls) {
     const setup = control.setup || {};
     const action = control.action || {};
     const final = control.final || {};
-    if (!setup.sourceCaptured) strictFailures.push(`${runtime} runtime ${controlName} setup did not capture its source-owned shop system`);
-    if (!setup.methodAvailable) strictFailures.push(`${runtime} runtime ${controlName} setup has no callable openShop boundary`);
-    if (!setup.called) strictFailures.push(`${runtime} runtime ${controlName} setup did not call openShop`);
-    if (!setup.succeeded) strictFailures.push(`${runtime} runtime ${controlName} setup did not make #shopModal visible and pause the game`);
+    if (!setup.sourceCaptured)
+      strictFailures.push(
+        `${runtime} runtime ${controlName} setup did not capture its source-owned shop system`
+      );
+    if (!setup.methodAvailable)
+      strictFailures.push(
+        `${runtime} runtime ${controlName} setup has no callable openShop boundary`
+      );
+    if (!setup.called)
+      strictFailures.push(`${runtime} runtime ${controlName} setup did not call openShop`);
+    if (!setup.succeeded)
+      strictFailures.push(
+        `${runtime} runtime ${controlName} setup did not make #shopModal visible and pause the game`
+      );
     if (!action.found) strictFailures.push(`${runtime} runtime is missing ${controlName}`);
     if (!action.clicked) strictFailures.push(`${runtime} runtime did not click ${controlName}`);
     if (!final.succeeded) {
-      strictFailures.push(`${runtime} runtime ${controlName} did not hide #shopModal and restore an unpaused empty-reason game`);
+      strictFailures.push(
+        `${runtime} runtime ${controlName} did not hide #shopModal and restore an unpaused empty-reason game`
+      );
     }
   }
 }
@@ -1806,16 +2096,26 @@ function summarizeRuntime(result, origin) {
     loadedModuleUrls: result.loadedModuleUrls.filter((url) => isLocalUrl(url, origin)),
     player: game?.player || null,
     enemies: game?.enemies || [],
-    enemyCount: Number(result.enemyEvidenceObserved?.count ?? result.enemyEvidence?.count ?? game?.enemies?.length ?? 0),
+    enemyCount: Number(
+      result.enemyEvidenceObserved?.count ??
+        result.enemyEvidence?.count ??
+        game?.enemies?.length ??
+        0
+    ),
     enemySample: game?.enemySample || null,
     fireEvidence: game?.weaponFireEvidence || null,
     projectileCount: Number(
-      result.projectileEvidenceObserved?.count ?? result.projectileEvidence?.count ?? game?.projectileCount ?? 0
+      result.projectileEvidenceObserved?.count ??
+        result.projectileEvidence?.count ??
+        game?.projectileCount ??
+        0
     ),
     projectileSample: game?.projectileSample || null,
     projectileSource: result.projectileEvidenceObserved?.source || game?.projectileSource || null,
     menuTabs,
-    menuOpen: Boolean(result.menuEvidence?.runMenuVisible ?? snapshot.menu?.runMenuVisible ?? false),
+    menuOpen: Boolean(
+      result.menuEvidence?.runMenuVisible ?? snapshot.menu?.runMenuVisible ?? false
+    ),
     controls: result.controlEvidence || snapshot.controls || null,
     audioAttempts: Number(audio?.attemptCount || 0),
     audioErrors: Number(audio?.errorCount || 0),
@@ -1921,7 +2221,9 @@ function emitReport(finalReport) {
   console.log("# Runtime Parity Harness");
   console.log(`mode: ${outputReport.strictMode ? "strict" : "diagnostic"}`);
   console.log(`root: ${outputReport.rootDir}`);
-  console.log(`viewport: ${outputReport.viewport.width}x${outputReport.viewport.height} @${outputReport.viewport.deviceScaleFactor}`);
+  console.log(
+    `viewport: ${outputReport.viewport.width}x${outputReport.viewport.height} @${outputReport.viewport.deviceScaleFactor}`
+  );
   console.log(`app result: ${outputReport.appLevelResult}`);
   console.log("REPORT_JSON " + JSON.stringify(outputReport, null, 2));
 }
@@ -1931,14 +2233,16 @@ async function waitForFrameBudget(page, result, frameCount, stepMs) {
   const target = startCount + Math.max(0, frameCount);
   if (target <= startCount) return;
   const timeoutMs = Math.max(2500, frameCount * stepMs * 8);
-  await page.waitForFunction(
-    (expected) => {
-      const root = globalThis;
-      return (root.__TapSurvivorParity?.raf?.count || 0) >= expected;
-    },
-    target,
-    { polling: 16, timeout: timeoutMs }
-  ).catch(() => {});
+  await page
+    .waitForFunction(
+      (expected) => {
+        const root = globalThis;
+        return (root.__TapSurvivorParity?.raf?.count || 0) >= expected;
+      },
+      target,
+      { polling: 16, timeout: timeoutMs }
+    )
+    .catch(() => {});
 }
 
 async function waitForPlayerState(page) {
@@ -1947,9 +2251,15 @@ async function waitForPlayerState(page) {
       () => {
         const root = globalThis;
         const parity = root.__TapSurvivorParity || {};
-        const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+        const game =
+          parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
         const player = game?.player || null;
-        return Number.isFinite(player?.hp) && Number.isFinite(player?.maxHp) && Number.isFinite(player?.x) && Number.isFinite(player?.y);
+        return (
+          Number.isFinite(player?.hp) &&
+          Number.isFinite(player?.maxHp) &&
+          Number.isFinite(player?.x) &&
+          Number.isFinite(player?.y)
+        );
       },
       null,
       { polling: 16, timeout: 10000 }
@@ -1958,8 +2268,8 @@ async function waitForPlayerState(page) {
 }
 
 async function waitForRuntimeReady(page) {
-    await page
-      .waitForFunction(
+  await page
+    .waitForFunction(
       () => {
         const body = document?.body;
         return body?.dataset?.gameSpeed === "1";
@@ -1976,7 +2286,8 @@ async function waitForEnemyEvidence(page, result, timeoutMs = 5000) {
       () => {
         const root = globalThis;
         const parity = root.__TapSurvivorParity || {};
-        const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+        const game =
+          parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
         if (!Array.isArray(game?.enemies) || game.enemies.length === 0) return null;
         const enemy = game.enemies[0] || null;
         return {
@@ -1985,7 +2296,9 @@ async function waitForEnemyEvidence(page, result, timeoutMs = 5000) {
             ? {
                 id: String(enemy.id || enemy.name || enemy.kind || ""),
                 kind: String(enemy.kind || enemy.type || ""),
-                spriteId: String(enemy.spriteId || enemy.sprite || enemy.spriteName || enemy.assetId || ""),
+                spriteId: String(
+                  enemy.spriteId || enemy.sprite || enemy.spriteName || enemy.assetId || ""
+                ),
                 type: String(enemy.type || enemy.kind || ""),
                 hp: Number.isFinite(enemy.hp) ? enemy.hp : null,
                 radius: Number.isFinite(enemy.radius) ? enemy.radius : null,
@@ -2010,7 +2323,8 @@ async function waitForProjectileEvidence(page, result, timeoutMs = 3000) {
       () => {
         const root = globalThis;
         const parity = root.__TapSurvivorParity || {};
-        const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+        const game =
+          parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
         if (!game) return null;
         const candidates = [
           ["projectiles", game.projectiles],
@@ -2088,13 +2402,12 @@ async function collectControlEvidence(page, mode, menuEvidence) {
 }
 
 async function setAudioScope(page, scope) {
-  await page.evaluate(
-    (nextScope) => {
+  await page
+    .evaluate((nextScope) => {
       const parity = (window["__TapSurvivorParity"] = window["__TapSurvivorParity"] || {});
       parity.audioScope = nextScope ?? null;
-    },
-    scope
-  ).catch(() => {});
+    }, scope)
+    .catch(() => {});
 }
 
 async function collectMuteControlEvidence(page) {
@@ -2162,7 +2475,9 @@ async function openRunMenuControl(page) {
     action,
     final,
     initial,
-    succeeded: Boolean(action.found && action.clicked && final.visible && final.ariaExpanded === "true"),
+    succeeded: Boolean(
+      action.found && action.clicked && final.visible && final.ariaExpanded === "true"
+    ),
   };
 }
 
@@ -2188,7 +2503,9 @@ async function closeRunMenuControl(page) {
     action,
     final,
     initial,
-    succeeded: Boolean(action.found && action.clicked && final.hidden && final.ariaExpanded === "false"),
+    succeeded: Boolean(
+      action.found && action.clicked && final.hidden && final.ariaExpanded === "false"
+    ),
   };
 }
 
@@ -2234,7 +2551,12 @@ async function exerciseShopCloseControl(page, mode, selector) {
   await page.waitForTimeout(100);
   const final = await readShopControlState(page);
   final.succeeded = Boolean(
-    action.found && action.clicked && final.modalHidden && final.gamePresent && final.paused === false && final.pauseReason === ""
+    action.found &&
+    action.clicked &&
+    final.modalHidden &&
+    final.gamePresent &&
+    final.paused === false &&
+    final.pauseReason === ""
   );
   return {
     action,
@@ -2264,7 +2586,10 @@ async function openShopFromSourceBoundary(page, mode) {
         methodAvailable: typeof shopSystem?.openShop === "function",
         sourceCaptured:
           runtimeMode === "classic"
-            ? Boolean(classicCapture.captured && classicCapture.factory === "TapSurvivorShop.createShopSystem")
+            ? Boolean(
+                classicCapture.captured &&
+                classicCapture.factory === "TapSurvivorShop.createShopSystem"
+              )
             : Boolean(parity.esmApi?.dependencies?.shopSystem),
       };
       if (!result.methodAvailable) return result;
@@ -2277,7 +2602,10 @@ async function openShopFromSourceBoundary(page, mode) {
       return result;
     }, mode)
     .catch((error) => ({
-      boundary: mode === "classic" ? "TapSurvivorShop.createShopSystem return" : "__TapSurvivorParity.esmApi.dependencies.shopSystem",
+      boundary:
+        mode === "classic"
+          ? "TapSurvivorShop.createShopSystem return"
+          : "__TapSurvivorParity.esmApi.dependencies.shopSystem",
       callError: shortMessage(error?.message || String(error)),
       called: false,
       methodAvailable: false,
@@ -2290,12 +2618,12 @@ async function openShopFromSourceBoundary(page, mode) {
     state,
     succeeded: Boolean(
       invocation.sourceCaptured &&
-        invocation.methodAvailable &&
-        invocation.called &&
-        state.modalVisible &&
-        state.gamePresent &&
-        state.paused === true &&
-        state.pauseReason === "shop"
+      invocation.methodAvailable &&
+      invocation.called &&
+      state.modalVisible &&
+      state.gamePresent &&
+      state.paused === true &&
+      state.pauseReason === "shop"
     ),
   };
 }
@@ -2305,7 +2633,8 @@ async function readShopControlState(page) {
     .evaluate(() => {
       const root = globalThis;
       const parity = root.__TapSurvivorParity || {};
-      const game = parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
+      const game =
+        parity.classicGame || parity.game || parity.esmApi?.dependencies?.getGame?.() || null;
       const shopModal = document.getElementById("shopModal");
       const menuShopPanel = document.getElementById("menuShopPanel");
       const modalHidden = shopModal ? shopModal.classList.contains("hidden") : null;
@@ -2339,68 +2668,76 @@ async function selectMenuTab(page, tab) {
   const tabExists = (await tabLocator.count().catch(() => 0)) > 0;
   const tabClicked = tabExists ? await clickMenuTab(tabLocator) : false;
   await page.waitForTimeout(100);
-  return page.evaluate(
-    ({ panelId, tabId, tabExists, tabClicked, tab }) => {
-      const panel = document.getElementById(panelId);
-      const button = document.getElementById(tabId);
-      const text = normalizeText(panel?.textContent || "");
-      const controlCount = panel
-        ? panel.querySelectorAll("button,input,select,textarea,a[href],[role='button']").length
-        : 0;
-      const itemCount = panel
-        ? panel.querySelectorAll(".shop-item,.relic-item,.quest-item,.module-shell-panel-item,li,article,details").length
-        : 0;
-      const visible = Boolean(panel && !panel.hidden && !panel.classList.contains("hidden"));
-      const placeholderText = placeholderFor(tab);
-      const placeholderOnly = Boolean(
-        text &&
+  return page
+    .evaluate(
+      ({ panelId, tabId, tabExists, tabClicked, tab }) => {
+        const panel = document.getElementById(panelId);
+        const button = document.getElementById(tabId);
+        const text = normalizeText(panel?.textContent || "");
+        const controlCount = panel
+          ? panel.querySelectorAll("button,input,select,textarea,a[href],[role='button']").length
+          : 0;
+        const itemCount = panel
+          ? panel.querySelectorAll(
+              ".shop-item,.relic-item,.quest-item,.module-shell-panel-item,li,article,details"
+            ).length
+          : 0;
+        const visible = Boolean(panel && !panel.hidden && !panel.classList.contains("hidden"));
+        const placeholderText = placeholderFor(tab);
+        const placeholderOnly = Boolean(
+          text &&
           placeholderText.some((entry) => text.includes(entry)) &&
           controlCount === 0 &&
           itemCount === 0
-      );
-      const blank = !text || ((text.length <= 40 || placeholderOnly) && controlCount === 0 && itemCount === 0);
-      return {
-        active: Boolean(button?.classList.contains("active")),
-        blank,
-        controlCount,
-        exists: tabExists,
-        hidden: Boolean(panel?.hidden || panel?.classList.contains("hidden")),
-        itemCount,
-        meaningful: !placeholderOnly && (controlCount > 0 || itemCount > 0 || text.length > 40),
-        placeholderOnly,
-        tab,
-        tabClicked,
-        text,
-        textLength: text.length,
-        visible,
-      };
+        );
+        const blank =
+          !text ||
+          ((text.length <= 40 || placeholderOnly) && controlCount === 0 && itemCount === 0);
+        return {
+          active: Boolean(button?.classList.contains("active")),
+          blank,
+          controlCount,
+          exists: tabExists,
+          hidden: Boolean(panel?.hidden || panel?.classList.contains("hidden")),
+          itemCount,
+          meaningful: !placeholderOnly && (controlCount > 0 || itemCount > 0 || text.length > 40),
+          placeholderOnly,
+          tab,
+          tabClicked,
+          text,
+          textLength: text.length,
+          visible,
+        };
 
-      function normalizeText(value) {
-        return String(value || "").replace(/\s+/g, " ").trim();
-      }
+        function normalizeText(value) {
+          return String(value || "")
+            .replace(/\s+/g, " ")
+            .trim();
+        }
 
-      function placeholderFor(tabName) {
-        if (tabName === "shop") return ["Browser shop ready.", "Shop panel"];
-        if (tabName === "inventory") return ["Relic inventory"];
-        return ["Progress panel"];
-      }
-    },
-    { panelId, tab, tabId, tabClicked, tabExists }
-  ).catch(() => ({
-    active: false,
-    blank: true,
-    controlCount: 0,
-    exists: tabExists,
-    hidden: true,
-    itemCount: 0,
-    meaningful: false,
-    placeholderOnly: false,
-    tab,
-    tabClicked,
-    text: "",
-    textLength: 0,
-    visible: false,
-  }));
+        function placeholderFor(tabName) {
+          if (tabName === "shop") return ["Browser shop ready.", "Shop panel"];
+          if (tabName === "inventory") return ["Relic inventory"];
+          return ["Progress panel"];
+        }
+      },
+      { panelId, tab, tabId, tabClicked, tabExists }
+    )
+    .catch(() => ({
+      active: false,
+      blank: true,
+      controlCount: 0,
+      exists: tabExists,
+      hidden: true,
+      itemCount: 0,
+      meaningful: false,
+      placeholderOnly: false,
+      tab,
+      tabClicked,
+      text: "",
+      textLength: 0,
+      visible: false,
+    }));
 }
 
 async function clickMenuTab(tabLocator) {
@@ -2419,18 +2756,45 @@ function capitalize(value) {
 
 async function detectUi(page) {
   return {
-    fullscreenButton: (await page.locator("#fullscreenButton").count().catch(() => 0)) > 0,
-    menuButton: (await page.locator("#openMenu").count().catch(() => 0)) > 0,
-    menuInventoryTab: (await page.locator("#menuInventoryTab").count().catch(() => 0)) > 0,
-    menuProgressTab: (await page.locator("#menuProgressTab").count().catch(() => 0)) > 0,
-    menuShopTab: (await page.locator("#menuShopTab").count().catch(() => 0)) > 0,
-    muteAudio: (await page.locator("#muteAudio").count().catch(() => 0)) > 0,
-    speedButtons: await page.locator("[data-speed]").evaluateAll((buttons) =>
-      buttons.map((button) => ({
-        active: button.classList.contains("active"),
-        speed: button.getAttribute("data-speed"),
-      }))
-    ).catch(() => []),
+    fullscreenButton:
+      (await page
+        .locator("#fullscreenButton")
+        .count()
+        .catch(() => 0)) > 0,
+    menuButton:
+      (await page
+        .locator("#openMenu")
+        .count()
+        .catch(() => 0)) > 0,
+    menuInventoryTab:
+      (await page
+        .locator("#menuInventoryTab")
+        .count()
+        .catch(() => 0)) > 0,
+    menuProgressTab:
+      (await page
+        .locator("#menuProgressTab")
+        .count()
+        .catch(() => 0)) > 0,
+    menuShopTab:
+      (await page
+        .locator("#menuShopTab")
+        .count()
+        .catch(() => 0)) > 0,
+    muteAudio:
+      (await page
+        .locator("#muteAudio")
+        .count()
+        .catch(() => 0)) > 0,
+    speedButtons: await page
+      .locator("[data-speed]")
+      .evaluateAll((buttons) =>
+        buttons.map((button) => ({
+          active: button.classList.contains("active"),
+          speed: button.getAttribute("data-speed"),
+        }))
+      )
+      .catch(() => []),
   };
 }
 
@@ -2447,40 +2811,42 @@ async function locateStartButton(page) {
   return null;
 }
 
-function buildClassicPage() {
-  const hookScript = renderClassicHookScript();
-  const scripts = [...classicScripts];
-  const gameIndex = scripts.findIndex((src) => /src\/game\.js(\?|$)/.test(src));
-  const renderedScripts = scripts
+export function buildClassicPage(shellPage = classicShellPage, scripts = classicScripts) {
+  const renderedScripts = [...scripts];
+  const gameIndex = renderedScripts.findIndex((src) => /src\/game\.js(\?|$)/.test(src));
+  const scriptTags = renderedScripts
     .flatMap((src, index) => {
       const tags = [];
-      if (index === gameIndex) tags.push(hookScript);
-      tags.push(`<script src="${src}"></script>`);
+      if (index === gameIndex) tags.push(externalScriptTag(syntheticScriptResources.classicHook));
+      tags.push(externalScriptTag(src));
       return tags;
     })
     .join("\n    ");
-  return classicShellPage.replace(
+  return shellPage.replace(
     "</body>",
-    `\n    <script>${renderParityPrelude("classic")}</script>\n    ${renderedScripts}\n  </body>`
+    `\n    ${externalScriptTag(syntheticScriptResources.classicPrelude)}\n    ${scriptTags}\n  </body>`
   );
 }
 
-function buildEsmPage(surface) {
+export function buildEsmPage(surface) {
   const indexPath = join(surface.rootDir, "index.html");
   if (!existsSync(indexPath)) {
     throw new Error(`ESM surface index is missing: ${indexPath}`);
   }
   const shellPage = injectBase(stripScripts(readFileSync(indexPath, "utf8")), "/");
-  const bootScript = renderEsmBootScript();
   return shellPage.replace(
     "</body>",
-    `\n    <script>${renderParityPrelude("esm")}</script>\n    <script type="module">\n${bootScript}\n    </script>\n  </body>`
+    `\n    ${externalScriptTag(syntheticScriptResources.esmPrelude)}\n    ${externalScriptTag(syntheticScriptResources.esmBoot, "module")}\n  </body>`
   );
 }
 
+function externalScriptTag(src, type = "") {
+  const typeAttribute = type ? ` type="${type}"` : "";
+  return `<script${typeAttribute} src="${src}"></script>`;
+}
+
 function renderClassicHookScript() {
-  return `<script>
-(() => {
+  return `(() => {
   const parity = globalThis.__TapSurvivorParity = globalThis.__TapSurvivorParity || {};
   parity.classicHooks = parity.classicHooks || {};
   wrapGlobal("TapSurvivorRunState", "createRunStateSystem", (original, args, context) => {
@@ -2517,8 +2883,7 @@ function renderClassicHookScript() {
     patched.__tapParityWrapped = true;
     namespace[methodName] = patched;
   }
-})();
-</script>`;
+})();`;
 }
 
 function renderParityPrelude(mode) {
@@ -2553,6 +2918,21 @@ globalThis.__TapSurvivorParity.esmApi = bootProductionModuleEntrypoint({
 `;
 }
 
+export function getSyntheticScriptResource(requestPath) {
+  const scripts = {
+    [syntheticScriptResources.classicHook]: renderClassicHookScript,
+    [syntheticScriptResources.classicPrelude]: () => renderParityPrelude("classic"),
+    [syntheticScriptResources.esmBoot]: renderEsmBootScript,
+    [syntheticScriptResources.esmPrelude]: () => renderParityPrelude("esm"),
+  };
+  const render = scripts[requestPath];
+  if (!render) return null;
+  return {
+    body: render(),
+    contentType: contentTypeFor(requestPath),
+  };
+}
+
 function injectBase(html, baseHref) {
   return html.replace("<head>", `<head><base href="${baseHref}" />`);
 }
@@ -2571,7 +2951,9 @@ function resolveClassicScripts(classicIndexSource) {
     throw new Error(`Classic baseline ${classicBaselineRevision} has no classic game entrypoint`);
   }
   if (parsed.some((src) => /production-module-autoboot\.js/.test(src))) {
-    throw new Error(`Classic baseline ${classicBaselineRevision} unexpectedly includes the ESM autoboot entrypoint`);
+    throw new Error(
+      `Classic baseline ${classicBaselineRevision} unexpectedly includes the ESM autoboot entrypoint`
+    );
   }
   return parsed;
 }
@@ -2583,7 +2965,8 @@ function classifyDraws(drawCalls, spriteGroups = {}) {
     const kind = inferSpriteKind(id);
     const visibleCoverage =
       entry.dest?.width > 0 && entry.dest?.height > 0 && entry.visibleRect
-        ? (entry.visibleRect.width * entry.visibleRect.height) / (entry.dest.width * entry.dest.height)
+        ? (entry.visibleRect.width * entry.visibleRect.height) /
+          (entry.dest.width * entry.dest.height)
         : 0;
     return {
       ...entry,
@@ -2592,15 +2975,24 @@ function classifyDraws(drawCalls, spriteGroups = {}) {
       sequence,
       visibleCoverage,
       visibleSpriteProof:
-        kind === "player" && entry.intersectsCanvas && visibleCoverage >= 0.9 && (entry.pixelDelta || 0) > 0 && entry.globalAlpha > 0,
+        kind === "player" &&
+        entry.intersectsCanvas &&
+        visibleCoverage >= 0.9 &&
+        (entry.pixelDelta || 0) > 0 &&
+        entry.globalAlpha > 0,
     };
   });
   const latestBackgroundSequence = Math.max(
     -1,
-    ...classified.filter((entry) => entry.kind === "background" && entry.intersectsCanvas).map((entry) => entry.sequence)
+    ...classified
+      .filter((entry) => entry.kind === "background" && entry.intersectsCanvas)
+      .map((entry) => entry.sequence)
   );
   const playerCanvasVisible = classified.some(
-    (entry) => entry.kind === "player" && entry.visibleSpriteProof && entry.sequence > latestBackgroundSequence
+    (entry) =>
+      entry.kind === "player" &&
+      entry.visibleSpriteProof &&
+      entry.sequence > latestBackgroundSequence
   );
   return { drawCalls: classified, playerCanvasVisible };
 }
@@ -2611,11 +3003,21 @@ function buildSpriteIndex(spriteGroups = {}) {
     const src = spriteSource(value);
     if (id && src) entries.push({ id, src: normalizeImageSource(src) });
   };
-  Object.entries(spriteGroups.backgrounds || {}).forEach(([id, value]) => addEntry(`background:${id}`, value));
-  Object.entries(spriteGroups.enemies || {}).forEach(([id, value]) => addEntry(`enemy:${id}`, value));
-  Object.entries(spriteGroups.playerAnimations || {}).forEach(([id, value]) => addEntry(`player:${id}`, value));
-  Object.entries(spriteGroups.runUpgradeIcons || {}).forEach(([id, value]) => addEntry(`runUpgradeIcon:${id}`, value));
-  Object.entries(spriteGroups.runUpgrades || {}).forEach(([id, value]) => addEntry(`runUpgrade:${id}`, value));
+  Object.entries(spriteGroups.backgrounds || {}).forEach(([id, value]) =>
+    addEntry(`background:${id}`, value)
+  );
+  Object.entries(spriteGroups.enemies || {}).forEach(([id, value]) =>
+    addEntry(`enemy:${id}`, value)
+  );
+  Object.entries(spriteGroups.playerAnimations || {}).forEach(([id, value]) =>
+    addEntry(`player:${id}`, value)
+  );
+  Object.entries(spriteGroups.runUpgradeIcons || {}).forEach(([id, value]) =>
+    addEntry(`runUpgradeIcon:${id}`, value)
+  );
+  Object.entries(spriteGroups.runUpgrades || {}).forEach(([id, value]) =>
+    addEntry(`runUpgrade:${id}`, value)
+  );
   Object.entries(spriteGroups.ui || {}).forEach(([id, value]) => addEntry(`ui:${id}`, value));
   Object.entries(spriteGroups.weapons || {}).forEach(([id, value]) => {
     addEntry(`weapon:${id}`, value);
@@ -2623,7 +3025,11 @@ function buildSpriteIndex(spriteGroups = {}) {
       addEntry(`weaponIcon:${id}`, value.iconSrc);
     }
   });
-  if (spriteGroups.player) addEntry("player", Array.isArray(spriteGroups.player) ? spriteGroups.player[0] : spriteGroups.player);
+  if (spriteGroups.player)
+    addEntry(
+      "player",
+      Array.isArray(spriteGroups.player) ? spriteGroups.player[0] : spriteGroups.player
+    );
   return entries;
 }
 
@@ -2636,7 +3042,14 @@ function inferSpriteKind(id) {
   if (id === "player" || id.startsWith("player:")) return "player";
   if (id.startsWith("background:")) return "background";
   if (id.startsWith("enemy:")) return "enemy";
-  if (id.startsWith("weapon:") || id.startsWith("weaponIcon:") || id.startsWith("runUpgradeIcon:") || id.startsWith("runUpgrade:") || id.startsWith("ui:")) return "weapon";
+  if (
+    id.startsWith("weapon:") ||
+    id.startsWith("weaponIcon:") ||
+    id.startsWith("runUpgradeIcon:") ||
+    id.startsWith("runUpgrade:") ||
+    id.startsWith("ui:")
+  )
+    return "weapon";
   return "unknown";
 }
 
@@ -2647,7 +3060,8 @@ function findPlayerDraw(drawCalls) {
 function spriteSource(definition) {
   if (Array.isArray(definition)) return spriteSource(definition[0]);
   if (typeof definition === "string") return definition;
-  if (definition && typeof definition === "object") return definition.src || definition.path || definition.iconSrc || "";
+  if (definition && typeof definition === "object")
+    return definition.src || definition.path || definition.iconSrc || "";
   return "";
 }
 
@@ -2733,6 +3147,14 @@ function sendHtml(res, html) {
     "content-type": "text/html; charset=utf-8",
   });
   res.end(html);
+}
+
+function sendSyntheticScript(res, resource) {
+  res.writeHead(200, {
+    "cache-control": "no-store",
+    "content-type": resource.contentType,
+  });
+  res.end(resource.body);
 }
 
 function sendSyntheticFavicon(res) {
@@ -2861,7 +3283,9 @@ function resolveViewport(name) {
 }
 
 function shortMessage(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function describeSize(size) {
@@ -2921,62 +3345,68 @@ async function failBeforeMain(message) {
 }
 
 const dockerBinary = existsSync("/usr/bin/docker") ? "/usr/bin/docker" : "docker";
+const invokedAsScript =
+  process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const invokedByStrictWrapper = Boolean(globalThis["__TapSurvivorParityFailOnDiff__"]);
 
-if (cli.docker && !runningDockerChild) {
+if ((invokedAsScript || invokedByStrictWrapper) && cli.docker && !runningDockerChild) {
   const dockerVersion = spawnSync(dockerBinary, ["version"], { encoding: "utf8", stdio: "ignore" });
   if (dockerVersion.status !== 0) {
     void failBeforeMain("Docker parity mode was requested but Docker is unavailable");
   } else {
-  const image = process.env.PLAYWRIGHT_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble";
-  const smokeArgs = process.argv.slice(2);
-  const result = spawnSync(
-    dockerBinary,
-    [
-      "run",
-      "--rm",
-      "--init",
-      "--shm-size=1g",
-      "-e",
-      "CI=1",
-      "-e",
-      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1",
-      "-e",
-      "PARITY_BROWSER_DOCKER_CHILD=1",
-      "-e",
-      `SMOKE_PARITY_BROWSER_STRICT=${process.env.SMOKE_PARITY_BROWSER_STRICT || "0"}`,
-      "-v",
-      `${repoRoot}:/repo:ro`,
-      image,
-      "bash",
-      "-lc",
+    const image =
+      process.env.PLAYWRIGHT_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble";
+    const smokeArgs = process.argv.slice(2);
+    const result = spawnSync(
+      dockerBinary,
       [
-        "set -euo pipefail",
-        'workdir="$(mktemp -d /tmp/tap-survivor-parity.XXXXXX)"',
-        'runtime_dir="$(mktemp -d /tmp/tap-survivor-parity-runtime.XXXXXX)"',
-        'trap \'rm -rf "$workdir" "$runtime_dir"\' EXIT',
-        'mkdir -p "$workdir/repo"',
-        'cp -a /repo/. "$workdir/repo"/',
-        'cd "$workdir/repo"',
-        "npm ci --ignore-scripts --no-audit --no-fund",
-        'chmod 700 "$runtime_dir"',
-        'export XDG_RUNTIME_DIR="$runtime_dir"',
-        ["node", "scripts/smoke-runtime-parity-browser.mjs", ...smokeArgs.map(shellQuote)].join(" "),
-      ].join("; "),
-    ],
-    {
-      encoding: "utf8",
-      stdio: "inherit",
-    }
-  );
+        "run",
+        "--rm",
+        "--init",
+        "--shm-size=1g",
+        "-e",
+        "CI=1",
+        "-e",
+        "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1",
+        "-e",
+        "PARITY_BROWSER_DOCKER_CHILD=1",
+        "-e",
+        `SMOKE_PARITY_BROWSER_STRICT=${process.env.SMOKE_PARITY_BROWSER_STRICT || "0"}`,
+        "-v",
+        `${repoRoot}:/repo:ro`,
+        image,
+        "bash",
+        "-lc",
+        [
+          "set -euo pipefail",
+          'workdir="$(mktemp -d /tmp/tap-survivor-parity.XXXXXX)"',
+          'runtime_dir="$(mktemp -d /tmp/tap-survivor-parity-runtime.XXXXXX)"',
+          'trap \'rm -rf "$workdir" "$runtime_dir"\' EXIT',
+          'mkdir -p "$workdir/repo"',
+          'cp -a /repo/. "$workdir/repo"/',
+          'cd "$workdir/repo"',
+          "npm ci --ignore-scripts --no-audit --no-fund",
+          'chmod 700 "$runtime_dir"',
+          'export XDG_RUNTIME_DIR="$runtime_dir"',
+          ["node", "scripts/smoke-runtime-parity-browser.mjs", ...smokeArgs.map(shellQuote)].join(
+            " "
+          ),
+        ].join("; "),
+      ],
+      {
+        encoding: "utf8",
+        stdio: "inherit",
+      }
+    );
 
-  if (result.error) {
-    console.error(result.error.stack || result.error.message || String(result.error));
-    process.exitCode = 1;
-    process.exit(1);
+    if (result.error) {
+      console.error(result.error.stack || result.error.message || String(result.error));
+      process.exitCode = 1;
+      process.exit(1);
+    }
+    process.exit(result.status ?? 1);
   }
-  process.exit(result.status ?? 1);
-  }
-} else {
+} else if (invokedAsScript || invokedByStrictWrapper) {
   void main();
 }
 

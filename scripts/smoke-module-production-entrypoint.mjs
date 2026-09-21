@@ -26,13 +26,34 @@ const root = new URL("..", import.meta.url).pathname;
 const indexHtmlBefore = readFileSync(join(root, "index.html"), "utf8");
 const candidateSource = readFileSync(join(root, "src/app/production-module-entrypoint.js"), "utf8");
 const autobootSource = readFileSync(join(root, "src/app/production-module-autoboot.js"), "utf8");
-const browserDependencyBagSource = readFileSync(join(root, "src/app/browser-dependency-bag.js"), "utf8");
-const browserPlatformAdaptersSource = readFileSync(join(root, "src/app/browser-platform-adapters.js"), "utf8");
-const browserGameplayAdaptersSource = readFileSync(join(root, "src/app/browser-gameplay-adapters.js"), "utf8");
-const browserProgressionAdaptersSource = readFileSync(join(root, "src/app/browser-progression-adapters.js"), "utf8");
-const browserAudioAdaptersSource = readFileSync(join(root, "src/app/browser-audio-adapters.js"), "utf8");
-const browserRenderingAdaptersSource = readFileSync(join(root, "src/app/browser-rendering-adapters.js"), "utf8");
-const browserSpriteSystemSource = readFileSync(join(root, "src/app/browser-sprite-system.js"), "utf8");
+const browserDependencyBagSource = readFileSync(
+  join(root, "src/app/browser-dependency-bag.js"),
+  "utf8"
+);
+const browserPlatformAdaptersSource = readFileSync(
+  join(root, "src/app/browser-platform-adapters.js"),
+  "utf8"
+);
+const browserGameplayAdaptersSource = readFileSync(
+  join(root, "src/app/browser-gameplay-adapters.js"),
+  "utf8"
+);
+const browserProgressionAdaptersSource = readFileSync(
+  join(root, "src/app/browser-progression-adapters.js"),
+  "utf8"
+);
+const browserAudioAdaptersSource = readFileSync(
+  join(root, "src/app/browser-audio-adapters.js"),
+  "utf8"
+);
+const browserRenderingAdaptersSource = readFileSync(
+  join(root, "src/app/browser-rendering-adapters.js"),
+  "utf8"
+);
+const browserSpriteSystemSource = readFileSync(
+  join(root, "src/app/browser-sprite-system.js"),
+  "utf8"
+);
 const browserUiAdaptersSource = readFileSync(join(root, "src/app/browser-ui-adapters.js"), "utf8");
 const browserDependencyAdapterSources = Object.freeze([
   browserDependencyBagSource,
@@ -149,8 +170,14 @@ const calls = [];
 const beforeTapGlobals = tapSurvivorGlobalNames();
 const MISSING_PLATFORM_CAPABILITY_ERROR = "Missing Tap Survivor platform capability: globalRef";
 
-check("production module entrypoint candidate imports successfully", typeof createProductionModuleEntrypoint === "function");
-check("production module runtime autoboot export imports successfully", typeof bootProductionModuleRuntime === "function");
+check(
+  "production module entrypoint candidate imports successfully",
+  typeof createProductionModuleEntrypoint === "function"
+);
+check(
+  "production module runtime autoboot export imports successfully",
+  typeof bootProductionModuleRuntime === "function"
+);
 check(
   "production module entrypoint candidate imports compose runtime helper",
   candidateSource.includes("./compose-runtime.js")
@@ -207,7 +234,9 @@ check(
   ].every(
     ([source, name]) =>
       !source.includes(`globalThis.${name} =`) &&
-      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+      source.includes(
+        `// Retired global: ${name}. Exports are supplied through the game dependency bag.`
+      )
   )
 );
 check(
@@ -222,7 +251,9 @@ check(
   ].every(
     ([source, name]) =>
       !source.includes(`globalThis.${name} =`) &&
-      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+      source.includes(
+        `// Retired global: ${name}. Exports are supplied through the game dependency bag.`
+      )
   )
 );
 check(
@@ -231,15 +262,25 @@ check(
     const source = classicRetiredPublisherSources[name];
     return (
       !source.includes(`globalThis.${name} =`) &&
-      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+      source.includes(
+        `// Retired global: ${name}. Exports are supplied through the game dependency bag.`
+      )
     );
   })
 );
 check(
   "production module entrypoint candidate exposes expected proof slots",
-  ["boot", "createDependencyBag", "createLifecycleOwner", "init", "startRun", "tick", "render", "persist", "dispose"].every(
-    (slot) => PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes(slot)
-  )
+  [
+    "boot",
+    "createDependencyBag",
+    "createLifecycleOwner",
+    "init",
+    "startRun",
+    "tick",
+    "render",
+    "persist",
+    "dispose",
+  ].every((slot) => PRODUCTION_MODULE_ENTRYPOINT_PROOF_SLOTS.includes(slot))
 );
 check(
   "production module entrypoint candidate has no classic TapSurvivor global reads",
@@ -263,7 +304,8 @@ check(
 );
 check(
   "production ESM boot source has no direct or string-key TapSurvivorContent global read",
-  !hasTapSurvivorContentGlobalRead(candidateSource) && !hasTapSurvivorContentGlobalRead(autobootSource)
+  !hasTapSurvivorContentGlobalRead(candidateSource) &&
+    !hasTapSurvivorContentGlobalRead(autobootSource)
 );
 check(
   "production ESM browser dependency adapter group has no direct, string-key, or dynamic TapSurvivorRelics access",
@@ -276,19 +318,25 @@ check(
     browserProgressionAdaptersSource.includes(
       'import { createUiProgressionRenderer } from "../modules/ui-progression.js";'
     ) &&
-    browserDependencyAdapterSources.every((source) => !hasTapSurvivorUiProgressionGlobalRead(source)) &&
+    browserDependencyAdapterSources.every(
+      (source) => !hasTapSurvivorUiProgressionGlobalRead(source)
+    ) &&
     !browserDependencyAdapterSource.includes("TapSurvivorUiProgression")
 );
 check(
   "production ESM browser progression adapter statically imports native Progression without classic global access",
   browserDependencyBagSource.includes('from "./browser-progression-adapters.js"') &&
-    browserProgressionAdaptersSource.includes('import { createProgressionSystem } from "../modules/progression.js";') &&
+    browserProgressionAdaptersSource.includes(
+      'import { createProgressionSystem } from "../modules/progression.js";'
+    ) &&
     !browserDependencyAdapterSource.includes("TapSurvivorProgression")
 );
 check(
   "production ESM browser progression adapter statically imports native Upgrades without classic global access",
   browserDependencyBagSource.includes('from "./browser-progression-adapters.js"') &&
-    browserProgressionAdaptersSource.includes('import { createUpgradeContent } from "../modules/upgrades.js";') &&
+    browserProgressionAdaptersSource.includes(
+      'import { createUpgradeContent } from "../modules/upgrades.js";'
+    ) &&
     browserProgressionAdaptersSource.includes("upgrades: { createUpgradeContent }") &&
     !browserDependencyAdapterSource.includes("TapSurvivorUpgrades")
 );
@@ -338,9 +386,7 @@ check(
       !BATCH_2_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name) &&
       !BATCH_3_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name) &&
       !BATCH_4_RETIRED_CLASSIC_PUBLISHER_NAMES.includes(name)
-  ).every((name) =>
-    classicRetiredPublisherSources[name].includes(`globalThis.${name} =`)
-  )
+  ).every((name) => classicRetiredPublisherSources[name].includes(`globalThis.${name} =`))
 );
 check(
   "classic root publishers for Batch 1 enemy namespaces are retired",
@@ -360,7 +406,9 @@ check(
     const source = classicB1RetiredPublisherSources[name];
     return (
       !source.includes(`globalThis.${name} =`) &&
-      source.includes(`// Retired global: ${name}. Exports are supplied through the game dependency bag.`)
+      source.includes(
+        `// Retired global: ${name}. Exports are supplied through the game dependency bag.`
+      )
     );
   })
 );
@@ -422,7 +470,7 @@ const documentRef = {
   createdTags: [],
   createElement(tagName) {
     this.createdTags.push(tagName);
-    return createFixtureElement(tagName);
+    return createFixtureElement(tagName, this);
   },
   visibilityState: "visible",
   addEventListener(type) {
@@ -543,26 +591,60 @@ function createVisibilityNode(label) {
   return node;
 }
 
-function createFixtureElement(tagName) {
+function createFixtureElement(tagName, ownerDocument = documentRef) {
   const listeners = new Map();
-  return {
+  let renderedText = "";
+  const element = {
     children: [],
+    childNodes: [],
     className: "",
     disabled: false,
-    innerHTML: "",
     tagName,
-    textContent: "",
+    ownerDocument,
     addEventListener(type, handler) {
       listeners.set(type, handler);
     },
     appendChild(child) {
+      this.childNodes.push(child);
       this.children.push(child);
       return child;
+    },
+    replaceChildren(...children) {
+      this.children = [];
+      this.childNodes = [];
+      renderedText = "";
+      for (const child of children) {
+        if (typeof child === "string") {
+          this.childNodes.push({ textContent: child });
+        } else {
+          this.appendChild(child);
+        }
+      }
     },
     click() {
       listeners.get("click")?.({ type: "click" });
     },
   };
+  Object.defineProperties(element, {
+    innerHTML: {
+      get() {
+        return renderedText;
+      },
+      set() {
+        throw new Error("Test fixtures forbid innerHTML writes; use textContent instead.");
+      },
+    },
+    textContent: {
+      get() {
+        return [renderedText, ...this.childNodes.map((child) => child.textContent || "")].join("");
+      },
+      set(value) {
+        this.replaceChildren();
+        renderedText = String(value);
+      },
+    },
+  });
+  return element;
 }
 check(
   "production browser dependency bag factory exposes expected adapter slots",
@@ -586,9 +668,14 @@ check(
 );
 check(
   "production browser render and sprite defaults expose expected slots",
-  ["clearFrame", "renderEnemies", "renderFrame", "renderHud", "renderPlayer", "renderSkillRail"].every((slot) =>
-    BROWSER_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)
-  ) &&
+  [
+    "clearFrame",
+    "renderEnemies",
+    "renderFrame",
+    "renderHud",
+    "renderPlayer",
+    "renderSkillRail",
+  ].every((slot) => BROWSER_RENDERING_ADAPTER_PROOF_SLOTS.includes(slot)) &&
     ["drawImage", "drawSprite", "loadSprites"].every((slot) =>
       BROWSER_SPRITE_ADAPTER_PROOF_SLOTS.includes(slot)
     )
@@ -642,7 +729,7 @@ const uiSurface = {
   exitRun: createVisibilityNode("browser-ui:exit-run"),
   runMenu: createVisibilityNode("browser-ui:run-menu"),
   runHud: { textContent: "" },
-  runStats: { innerHTML: "" },
+  runStats: createFixtureElement("div"),
   speedButtons,
   shopModal: createVisibilityNode("browser-ui:shop-modal"),
   startTransition: createVisibilityNode("browser-ui:start-transition"),
@@ -841,7 +928,8 @@ const browserGameAfterStart = browserEntrypoint.dependencies.getGame();
 canvas.listeners.get("mousedown")({ clientX: 240, clientY: 270 });
 const browserMovementTargetUpdated =
   browserGameAfterStart?.modeId === "climb" &&
-  browserGameAfterStart?.player?.targetX === 1248 && browserGameAfterStart?.player?.targetY === 810 &&
+  browserGameAfterStart?.player?.targetX === 1248 &&
+  browserGameAfterStart?.player?.targetY === 810 &&
   browserGameAfterStart?.awaitingFirstMoveInput === false;
 const browserAudioMutedBeforeClick = browserEntrypoint.dependencies.audioSystem.isMuted();
 uiSurface.muteAudio.click();
@@ -929,7 +1017,7 @@ const browserExitRunUsesModuleEndRun =
   browserGameAfterStart.endReason === "Run exited" &&
   uiSurface.runMenu.hidden === true &&
   uiSurface.endScreen.hidden === false &&
-  uiSurface.runStats.innerHTML.includes("Result: Run exited");
+  uiSurface.runStats.textContent.includes("Result: Run exited");
 uiSurface.closeEnd.click();
 const browserEndClosedFromTop = uiSurface.endScreen.hidden && !uiSurface.titleScreen.hidden;
 const browserExitStateAfterEndClose = JSON.stringify({
@@ -965,7 +1053,9 @@ injectedBrowserHostGlobalGuard.restore();
 
 check(
   "production module entrypoint boots without explicit dependencyBagOptions",
-  Boolean(browserEntrypoint.dependencies.moduleSystems?.moduleRuntimeStorageAdapter?.storageAdapter) &&
+  Boolean(
+    browserEntrypoint.dependencies.moduleSystems?.moduleRuntimeStorageAdapter?.storageAdapter
+  ) &&
     Boolean(browserEntrypoint.dependencies.moduleSystems?.moduleRuntimeRenderingAdapter?.rendering)
 );
 check(
@@ -1005,7 +1095,7 @@ check(
     typeof browserUiAdapters.shellUiAdapter?.showTitleScreen === "function" &&
     typeof browserUiAdapters.shopSystemAdapter?.closeShop === "function" &&
     uiSurface.runHud.textContent.includes("Speed x5") &&
-    uiSurface.runStats.innerHTML.includes("browser-entrypoint") &&
+    uiSurface.runStats.textContent.includes("browser-entrypoint") &&
     uiSurface.endScreen.hidden === true &&
     uiSurface.titleScreen.hidden === false &&
     uiSurface.startTransition.hidden === true &&
@@ -1027,7 +1117,9 @@ check(
 );
 check(
   "production module browser mute updates the native audio state and button presentation",
-  browserAudioMutedBeforeClick === false && browserAudioMuteStateAfterClick === true && browserMuteButtonUpdated
+  browserAudioMutedBeforeClick === false &&
+    browserAudioMuteStateAfterClick === true &&
+    browserMuteButtonUpdated
 );
 check(
   "production module browser menu preserves an existing non-menu pause",
@@ -1285,8 +1377,8 @@ check(
 const uiProgressionParityDocument = createUiProgressionParityDocument();
 const uiProgressionParityUi = {
   menuQpHud: { textContent: "" },
-  menuQuests: createUiProgressionParityContainer(),
-  menuTree: createUiProgressionParityContainer(),
+  menuQuests: createUiProgressionParityContainer(uiProgressionParityDocument),
+  menuTree: createUiProgressionParityContainer(uiProgressionParityDocument),
 };
 const uiProgressionParitySystems = createBrowserDependencyBagOptions({
   canvas,
@@ -1296,28 +1388,29 @@ const uiProgressionParitySystems = createBrowserDependencyBagOptions({
   storage: createMemoryStorage(),
   ui: uiProgressionParityUi,
 }).adapters.progressionAdapters.progressionSystems;
-const uiProgressionParityRenderer = uiProgressionParitySystems.uiProgression.createUiProgressionRenderer({
-  buyUpgrade: () => {},
-  buyWeaponUnlock: () => {},
-  getSave: () => ({
-    activeQuests: [],
-    coins: 21,
-    questPoints: 3,
-    questProgress: {},
-    totalQuestPoints: 8,
-    unlockedWeapons: [],
-  }),
-  getUpgradeTier: () => 0,
-  hasNode: () => false,
-  isNodeVisible: () => false,
-  isQuestComplete: () => false,
-  nodeGateStatus: () => null,
-  questDefs: {},
-  ui: uiProgressionParityUi,
-  upgradeDefs: [],
-  weaponDefs: {},
-  weaponUnlocks: [],
-});
+const uiProgressionParityRenderer =
+  uiProgressionParitySystems.uiProgression.createUiProgressionRenderer({
+    buyUpgrade: () => {},
+    buyWeaponUnlock: () => {},
+    getSave: () => ({
+      activeQuests: [],
+      coins: 21,
+      questPoints: 3,
+      questProgress: {},
+      totalQuestPoints: 8,
+      unlockedWeapons: [],
+    }),
+    getUpgradeTier: () => 0,
+    hasNode: () => false,
+    isNodeVisible: () => false,
+    isQuestComplete: () => false,
+    nodeGateStatus: () => null,
+    questDefs: {},
+    ui: uiProgressionParityUi,
+    upgradeDefs: [],
+    weaponDefs: {},
+    weaponUnlocks: [],
+  });
 uiProgressionParityRenderer.renderTree(uiProgressionParityUi.menuTree);
 uiProgressionParityRenderer.renderQuests(uiProgressionParityUi.menuQuests);
 check(
@@ -1373,7 +1466,9 @@ const malformedSchemaEntrypoint = createProductionModuleEntrypoint({
 });
 check(
   "production module entrypoint ignores a malformed schema global",
-  Boolean(malformedSchemaEntrypoint.dependencies.moduleSystems.contentRegistry.weaponDefs.spark_bolt) &&
+  Boolean(
+    malformedSchemaEntrypoint.dependencies.moduleSystems.contentRegistry.weaponDefs.spark_bolt
+  ) &&
     Object.prototype.hasOwnProperty.call(
       malformedSchemaEntrypoint.dependencies.moduleSystems.effects.emptyShopBonuses(),
       "speed"
@@ -1381,9 +1476,19 @@ check(
 );
 malformedSchemaEntrypoint.dispose();
 delete runtimeGlobal.TapSurvivorContentSchema;
-const autobootGlobalRestore = installAutobootGlobals({ canvas, documentRef, storage: createMemoryStorage() });
-const autobootContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(globalThis, "autoboot globalThis");
-const autobootQuestsGlobalGuard = installTapSurvivorQuestsGlobalReadGuard(globalThis, "autoboot globalThis");
+const autobootGlobalRestore = installAutobootGlobals({
+  canvas,
+  documentRef,
+  storage: createMemoryStorage(),
+});
+const autobootContentGlobalGuard = installTapSurvivorContentGlobalReadGuard(
+  globalThis,
+  "autoboot globalThis"
+);
+const autobootQuestsGlobalGuard = installTapSurvivorQuestsGlobalReadGuard(
+  globalThis,
+  "autoboot globalThis"
+);
 const autobootProgressionGlobalGuard = installTapSurvivorProgressionGlobalReadGuard(
   globalThis,
   "autoboot globalThis"
@@ -1427,11 +1532,13 @@ check(
 );
 check(
   "production module boot completes without reading guarded TapSurvivorProgression globals",
-  runtimeProgressionGlobalGuard.readAttempts() === 0 && autobootProgressionGlobalGuard.readAttempts() === 0
+  runtimeProgressionGlobalGuard.readAttempts() === 0 &&
+    autobootProgressionGlobalGuard.readAttempts() === 0
 );
 check(
   "production module boot completes without reading guarded TapSurvivorUiProgression globals",
-  runtimeUiProgressionGlobalGuard.readAttempts() === 0 && autobootUiProgressionGlobalGuard.readAttempts() === 0
+  runtimeUiProgressionGlobalGuard.readAttempts() === 0 &&
+    autobootUiProgressionGlobalGuard.readAttempts() === 0
 );
 check(
   "production module boot completes without reading guarded TapSurvivorUpgrades globals",
@@ -1642,29 +1749,18 @@ function createMemoryStorage() {
 }
 
 function createUiProgressionParityDocument() {
-  return {
+  const parityDocument = {
     createdTags: [],
     createElement(tagName) {
       this.createdTags.push(tagName);
-      return {
-        addEventListener() {},
-        className: "",
-        disabled: false,
-        innerHTML: "",
-        textContent: "",
-      };
+      return createFixtureElement(tagName, this);
     },
   };
+  return parityDocument;
 }
 
-function createUiProgressionParityContainer() {
-  return {
-    children: [],
-    innerHTML: "",
-    appendChild(child) {
-      this.children.push(child);
-    },
-  };
+function createUiProgressionParityContainer(ownerDocument) {
+  return createFixtureElement("div", ownerDocument);
 }
 
 function tapSurvivorGlobalNames() {
@@ -1714,7 +1810,9 @@ function classicPublisherFile(name) {
 function hasTapSurvivorContentGlobalRead(source) {
   return (
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorContent\b/u.test(source) ||
-    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorContent["']\s*\]/u.test(source)
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorContent["']\s*\]/u.test(
+      source
+    )
   );
 }
 
@@ -1763,14 +1861,18 @@ function classicContentArtifactLifecycleProof(source) {
 function hasTapSurvivorRelicsGlobalRead(source) {
   return (
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorRelics\b/u.test(source) ||
-    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorRelics["']\s*\]/u.test(source)
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorRelics["']\s*\]/u.test(
+      source
+    )
   );
 }
 
 function hasTapSurvivorUiProgressionGlobalRead(source) {
   return (
     /\b(?:globalThis|window|globalRef)\s*(?:\?\.|\.)\s*TapSurvivorUiProgression\b/u.test(source) ||
-    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorUiProgression["']\s*\]/u.test(source)
+    /\b(?:globalThis|window|globalRef)\s*(?:\?\.)?\s*\[\s*["']TapSurvivorUiProgression["']\s*\]/u.test(
+      source
+    )
   );
 }
 
@@ -1798,7 +1900,10 @@ function installThrowingGlobalReadGuards(target, names, label) {
     readAttempts: () => guards.reduce((total, guard) => total + guard.reads(), 0),
     readAttemptsFor: (name) => guards.find((guard) => guard.key === name)?.reads() ?? 0,
     restore() {
-      guards.slice().reverse().forEach((guard) => guard.restore());
+      guards
+        .slice()
+        .reverse()
+        .forEach((guard) => guard.restore());
     },
   };
 }
@@ -1905,8 +2010,17 @@ function installTapSurvivorUpgradesGlobalReadGuard(target, label) {
 
 function installAutobootGlobals({ canvas, documentRef, storage }) {
   let rafCount = 0;
-  const keys = ["document", "localStorage", "requestAnimationFrame", "addEventListener", "clearTimeout", "setTimeout"];
-  const previous = new Map(keys.map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const keys = [
+    "document",
+    "localStorage",
+    "requestAnimationFrame",
+    "addEventListener",
+    "clearTimeout",
+    "setTimeout",
+  ];
+  const previous = new Map(
+    keys.map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)])
+  );
   Object.defineProperties(globalThis, {
     document: {
       configurable: true,

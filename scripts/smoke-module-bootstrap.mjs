@@ -17,6 +17,7 @@ import {
   createBrowserPlatform,
 } from "../src/app/compose-runtime.js";
 import { createModuleRuntimeStorageAdapter } from "../src/modules/module-runtime-storage-adapter.js";
+import { createRunLifecycle } from "../src/modules/run-lifecycle.js";
 import { createShellRelicUi as createClassicShellRelicUi } from "../src/modules/shell-relic-ui.js";
 
 const root = new URL("..", import.meta.url).pathname;
@@ -168,9 +169,15 @@ const shellRelicPresentation = composeShellRelicPresentation({
 });
 const trainingBoots = shopEconomy.shopItemDefs.find((item) => item.id === "training_boots");
 const coinMagnet = shopEconomy.shopItemDefs.find((item) => item.id === "coin_magnet");
-const moveSpeedFocusRelic = relicProgression.relicDefs.find((relic) => relic.id === "move_speed_focus_relic");
-const fireRateMasteryRelic = relicProgression.relicDefs.find((relic) => relic.id === "fire_rate_mastery_relic");
-const splitOnHitMasteryRelic = relicProgression.relicDefs.find((relic) => relic.id === "split_on_hit_mastery_relic");
+const moveSpeedFocusRelic = relicProgression.relicDefs.find(
+  (relic) => relic.id === "move_speed_focus_relic"
+);
+const fireRateMasteryRelic = relicProgression.relicDefs.find(
+  (relic) => relic.id === "fire_rate_mastery_relic"
+);
+const splitOnHitMasteryRelic = relicProgression.relicDefs.find(
+  (relic) => relic.id === "split_on_hit_mastery_relic"
+);
 
 saveStorage.store.set(
   legacySaveKey,
@@ -384,7 +391,10 @@ contentBalanceEffects.effects.applyRelicSpecialEffects(effectGame, {
   maxHpBonus: 10,
   speedBonus: 5,
 });
-check("module bootstrap applies relic special effects", effectGame.player.maxHp === 110 && effectGame.player.speed === 115);
+check(
+  "module bootstrap applies relic special effects",
+  effectGame.player.maxHp === 110 && effectGame.player.speed === 115
+);
 check(
   "module bootstrap reads relic content through module registry",
   moveSpeedFocusRelic?.targetUpgradeId === "run_move_speed" &&
@@ -431,8 +441,16 @@ check(
 );
 const shellRelicViewModel = shellRelicPresentation.createInventoryViewModel({
   towerFloor: 30,
-  unlockedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
-  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+  unlockedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "split_on_hit_mastery_relic",
+  ],
+  equippedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "split_on_hit_mastery_relic",
+  ],
 });
 check(
   "module bootstrap builds shell relic presentation model",
@@ -487,7 +505,11 @@ const shellRelicUiSave = {
     "pickup_radius_focus_relic",
     "split_on_hit_mastery_relic",
   ],
-  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+  equippedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "split_on_hit_mastery_relic",
+  ],
 };
 const fakeLockScheduler = createFakeScheduler();
 const shellRelicUiAdapter = composeShellRelicUiAdapter({
@@ -524,8 +546,23 @@ const shellRelicUiAdapter = composeShellRelicUiAdapter({
       context.clearRect(0, 0, canvas.width, canvas.height);
     },
     drawFrame({ canvas, context, frame, image }) {
-      shellRelicPreviewDraws.push({ frame, height: canvas.height, imageSource: image.src, width: canvas.width });
-      context.drawImage(image, frame.x, frame.y, frame.width, frame.height, 0, 0, canvas.width, canvas.height);
+      shellRelicPreviewDraws.push({
+        frame,
+        height: canvas.height,
+        imageSource: image.src,
+        width: canvas.width,
+      });
+      context.drawImage(
+        image,
+        frame.x,
+        frame.y,
+        frame.width,
+        frame.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
     },
     applyTransparency({ sprite }) {
       shellRelicPreviewTransparency.push(sprite.transparentTolerance);
@@ -543,14 +580,27 @@ const shellRelicUiText = collectText(fakeShellRelicRoot);
 const animatedPreviewCanvas = findFirst(fakeShellRelicRoot, (element) =>
   element.className.includes("relic-detail-canvas")
 );
-const availablePickupButton = findByDataset(fakeShellRelicRoot, "relicId", "pickup_radius_focus_relic");
-const equippedMoveSpeedSlot = findByDataset(fakeShellRelicRoot, "relicId", "move_speed_focus_relic");
-const lockedRelicButton = findFirst(fakeShellRelicRoot, (element) => element.dataset?.unlocked === "false");
+const availablePickupButton = findByDataset(
+  fakeShellRelicRoot,
+  "relicId",
+  "pickup_radius_focus_relic"
+);
+const equippedMoveSpeedSlot = findByDataset(
+  fakeShellRelicRoot,
+  "relicId",
+  "move_speed_focus_relic"
+);
+const lockedRelicButton = findFirst(
+  fakeShellRelicRoot,
+  (element) => element.dataset?.unlocked === "false"
+);
 const equipPickupButton = findByDataset(fakeShellRelicRoot, "action", "equip");
 const unequipMoveSpeedButton = findByDataset(equippedMoveSpeedSlot, "action", "unequip");
 availablePickupButton?.eventListeners?.click?.[0]?.();
 lockedRelicButton?.eventListeners?.click?.[0]?.();
-const lockPopup = findFirst(fakeShellRelicRoot, (element) => element.className.includes("relic-lock-popup"));
+const lockPopup = findFirst(fakeShellRelicRoot, (element) =>
+  element.className.includes("relic-lock-popup")
+);
 lockedRelicButton?.eventListeners?.click?.[0]?.();
 fakeLockScheduler.runLatest();
 const lockPopupHiddenAfterTimer = lockPopup?.className.includes("hidden");
@@ -568,7 +618,7 @@ check(
 check(
   "module bootstrap renders shell relic UI adapter equipped and available rows",
   equippedMoveSpeedSlot?.className.includes("equipped") &&
-  shellRelicUiText.includes("Pickup Radius Focus") &&
+    shellRelicUiText.includes("Pickup Radius Focus") &&
     availablePickupButton?.className.includes("available") &&
     shellRelicUiSelections.includes("pickup_radius_focus_relic")
 );
@@ -644,7 +694,11 @@ const nativeQuestCacheAdapter = composeShellRelicUiAdapter({
 nativeQuestCacheAdapter.renderShellRelics(nativeQuestCacheSave);
 const nativeQuestCacheButton = findByDataset(nativeQuestCacheRoot, "action", "claim-quest-cache");
 nativeQuestCacheButton?.eventListeners?.click?.[0]?.();
-const nativeQuestCacheDisabledButton = findByDataset(nativeQuestCacheRoot, "action", "claim-quest-cache");
+const nativeQuestCacheDisabledButton = findByDataset(
+  nativeQuestCacheRoot,
+  "action",
+  "claim-quest-cache"
+);
 nativeQuestCacheAdapter.dispose();
 check(
   "module bootstrap renders and invokes the native Quest Cache action",
@@ -738,7 +792,11 @@ const shellRelicOwnerSave = {
     "pickup_radius_focus_relic",
     "split_on_hit_mastery_relic",
   ],
-  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+  equippedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "split_on_hit_mastery_relic",
+  ],
 };
 const shellRelicOwner = composeShellRelicController({
   presenter: shellRelicPresentation,
@@ -790,10 +848,17 @@ const shellRelicOwnerSelectedText = collectText(fakeShellRelicOwnerRoot);
 const ownerEquipPickupButton = findByDataset(fakeShellRelicOwnerRoot, "action", "equip");
 const firstOwnerPreviewTimer = shellRelicOwnerScheduler.timers[0];
 ownerEquipPickupButton?.eventListeners?.click?.[0]?.();
-const ownerEquippedPickupSlot = findByDataset(fakeShellRelicOwnerRoot, "relicId", "pickup_radius_focus_relic");
+const ownerEquippedPickupSlot = findByDataset(
+  fakeShellRelicOwnerRoot,
+  "relicId",
+  "pickup_radius_focus_relic"
+);
 const ownerUnequipPickupButton = findByDataset(ownerEquippedPickupSlot, "action", "unequip");
 ownerUnequipPickupButton?.eventListeners?.click?.[0]?.();
-const shellRelicOwnerUpdatedModel = shellRelicOwner.update({ ...shellRelicOwnerSave, towerFloor: 50 });
+const shellRelicOwnerUpdatedModel = shellRelicOwner.update({
+  ...shellRelicOwnerSave,
+  towerFloor: 50,
+});
 shellRelicOwner.selectRelic("pickup_radius_focus_relic");
 shellRelicOwner.dispose();
 check(
@@ -907,8 +972,9 @@ check(
 );
 check(
   "module bootstrap shell UI model is serializable and stable",
-  JSON.parse(JSON.stringify(shellUiPresentationModel)).panels.map((panel) => panel.id).join(",") ===
-    "progress,shop,inventory"
+  JSON.parse(JSON.stringify(shellUiPresentationModel))
+    .panels.map((panel) => panel.id)
+    .join(",") === "progress,shop,inventory"
 );
 const shellUiAdapterRoot = createFakeElement("div");
 const shellUiAdapterCallbacks = [];
@@ -928,7 +994,8 @@ const shellUiAdapter = composeShellUiDomAdapter({
   onOpenShop: () => shellUiAdapterCallbacks.push("open-shop"),
   onResetSave: () => shellUiAdapterCallbacks.push("reset"),
   onSetGameSpeed: (speed) => shellUiAdapterCallbacks.push(`speed:${speed}`),
-  onStartRun: (modeId, model) => shellUiAdapterCallbacks.push(`start:${modeId}:${model.activePanel}`),
+  onStartRun: (modeId, model) =>
+    shellUiAdapterCallbacks.push(`start:${modeId}:${model.activePanel}`),
   onToggleFullscreen: () => shellUiAdapterCallbacks.push("fullscreen"),
 });
 const shellUiAdapterInitialModel = shellUiAdapter.render({
@@ -949,7 +1016,8 @@ const shellUiAdapterInventorySection = findFirst(
 );
 const shellUiAdapterProgressSection = findFirst(
   shellUiAdapterRoot,
-  (element) => element.dataset?.panelId === "progress" && element.dataset?.sectionType === "progress"
+  (element) =>
+    element.dataset?.panelId === "progress" && element.dataset?.sectionType === "progress"
 );
 findByDataset(shellUiAdapterRoot, "action", "open-shop")?.eventListeners?.click?.[0]?.();
 findByDataset(shellUiAdapterRoot, "action", "reset-save")?.eventListeners?.click?.[0]?.();
@@ -1050,7 +1118,11 @@ const shellUiDelegatedSave = {
     "pickup_radius_focus_relic",
     "split_on_hit_mastery_relic",
   ],
-  equippedRelics: ["move_speed_focus_relic", "fire_rate_mastery_relic", "split_on_hit_mastery_relic"],
+  equippedRelics: [
+    "move_speed_focus_relic",
+    "fire_rate_mastery_relic",
+    "split_on_hit_mastery_relic",
+  ],
 };
 const shellUiDelegatedRelicOwner = composeShellRelicController({
   presenter: shellRelicPresentation,
@@ -1093,8 +1165,16 @@ shellUiDelegatedOwner.openPanel("inventory");
 shellUiDelegatedOwner.selectRelic("pickup_radius_focus_relic");
 const shellUiDelegatedEquipButton = findByDataset(shellUiDelegatedRelicRoot, "action", "equip");
 shellUiDelegatedEquipButton?.eventListeners?.click?.[0]?.();
-const shellUiDelegatedEquippedSlot = findByDataset(shellUiDelegatedRelicRoot, "relicId", "pickup_radius_focus_relic");
-const shellUiDelegatedUnequipButton = findByDataset(shellUiDelegatedEquippedSlot, "action", "unequip");
+const shellUiDelegatedEquippedSlot = findByDataset(
+  shellUiDelegatedRelicRoot,
+  "relicId",
+  "pickup_radius_focus_relic"
+);
+const shellUiDelegatedUnequipButton = findByDataset(
+  shellUiDelegatedEquippedSlot,
+  "action",
+  "unequip"
+);
 shellUiDelegatedUnequipButton?.eventListeners?.click?.[0]?.();
 shellUiDelegatedOwner.startRun();
 shellUiDelegatedOwner.dispose();
@@ -1133,13 +1213,28 @@ check(
 check("module bootstrap loads save through real save subsystem", currentSave.coins === 12);
 check("module bootstrap migrates save to current version", currentSave.saveVersion === 4);
 check("module bootstrap refunds legacy permanent upgrades", currentSave.questPoints === 1);
-check("module bootstrap clamps save shop purchases", currentSave.shopPurchases.training_boots === 3);
-check("module bootstrap removes unknown shop purchases", currentSave.shopPurchases.missing_item === undefined);
+check(
+  "module bootstrap clamps save shop purchases",
+  currentSave.shopPurchases.training_boots === 3
+);
+check(
+  "module bootstrap removes unknown shop purchases",
+  currentSave.shopPurchases.missing_item === undefined
+);
 check("module bootstrap opens starter quest", currentSave.activeQuests.includes("starter_quest"));
-check("module bootstrap reopens completed quest follow-up", currentSave.activeQuests.includes("rapid_growth"));
+check(
+  "module bootstrap reopens completed quest follow-up",
+  currentSave.activeQuests.includes("rapid_growth")
+);
 check("module bootstrap reopens unlock quest", currentSave.activeQuests.includes("use_laser_run"));
-check("module bootstrap retires legacy upgrade tiers", Object.keys(currentSave.upgradeTiers).length === 0);
-check("module bootstrap retires legacy unlocked upgrades", currentSave.unlockedUpgrades.length === 0);
+check(
+  "module bootstrap retires legacy upgrade tiers",
+  Object.keys(currentSave.upgradeTiers).length === 0
+);
+check(
+  "module bootstrap retires legacy unlocked upgrades",
+  currentSave.unlockedUpgrades.length === 0
+);
 check(
   "module bootstrap binds shell/debug/input",
   calls.includes("shell:bind") && calls.includes("debug:bind") && calls.includes("input:bind")
@@ -1160,7 +1255,10 @@ check(
 );
 
 listeners.get("mousedown")({ clientX: 480, clientY: 270 });
-check("module bootstrap movement gate uses injected canvas", currentGame.awaitingFirstMoveInput === false);
+check(
+  "module bootstrap movement gate uses injected canvas",
+  currentGame.awaitingFirstMoveInput === false
+);
 check(
   "module bootstrap movement gate updates player target",
   currentGame.player.targetX === 480 && currentGame.player.targetY === 270
@@ -1177,13 +1275,25 @@ check(
 );
 const persisted = JSON.parse(saveStorage.store.get(saveKey));
 check("module bootstrap persists through in-memory storage", persisted.coins === 12);
-check("module bootstrap persistence keeps retired upgrade list empty", persisted.unlockedUpgrades.length === 0);
+check(
+  "module bootstrap persistence keeps retired upgrade list empty",
+  persisted.unlockedUpgrades.length === 0
+);
 
 saveStorage.store.set(saveKey, "{broken json");
 const corruptSave = saveSystem.loadSave();
-check("module bootstrap corrupt save defaults safely", corruptSave.unlockedWeapons.includes("spark_bolt"));
-check("module bootstrap corrupt save warning is exposed", saveSystem.getLastLoadWarning() === "corrupt-save");
-check("module bootstrap corrupt raw is backed up", saveStorage.store.get(corruptBackupKey) === "{broken json");
+check(
+  "module bootstrap corrupt save defaults safely",
+  corruptSave.unlockedWeapons.includes("spark_bolt")
+);
+check(
+  "module bootstrap corrupt save warning is exposed",
+  saveSystem.getLastLoadWarning() === "corrupt-save"
+);
+check(
+  "module bootstrap corrupt raw is backed up",
+  saveStorage.store.get(corruptBackupKey) === "{broken json"
+);
 
 runtime.resetSave();
 check(
@@ -1229,6 +1339,81 @@ check(
   composeRuntimeSource.includes('from "../modules/shell-ui-presenter.js"') &&
     composeRuntimeSource.includes('from "../modules/shell-ui-dom-adapter.js"') &&
     !composeRuntimeSource.includes("globalThis.TapSurvivorShellUi")
+);
+
+const hostileLifecycleChoices = createFakeElement("div");
+const hostileLifecycle = createRunLifecycle({
+  documentRef: createFakeDocument(),
+  getGame: () => ({ player: { equippedWeapons: [] }, towerFloor: 1 }),
+  getSave: () => ({}),
+  persist() {},
+  relicSystem: {
+    relicChoices: () => [
+      {
+        description: "Fixture",
+        iconPath: "assets/%2e%2e/outside.png",
+        name: "Hostile fixture",
+      },
+    ],
+  },
+  renderMeta() {},
+  resetGameState: () => ({}),
+  runUi: { hideEndScreen() {} },
+  shellUi: { closeRunMenu() {}, closeStartFlow() {} },
+  shopSystem: { closeShop() {} },
+  showMovementGateBanner() {},
+  ui: {
+    levelUp: { classList: { add() {} } },
+    relicChoice: { classList: { remove() {} } },
+    relicChoiceText: createFakeElement("p"),
+    relicChoiceTitle: createFakeElement("h2"),
+    relicChoices: hostileLifecycleChoices,
+  },
+  updateRunHud() {},
+});
+hostileLifecycle.advanceTowerFloor();
+check(
+  "run lifecycle caller rejects encoded traversal relic assets",
+  hostileLifecycleChoices.children[0]?.children[0]?.src ===
+    "assets/kenney/desert-shooter/ui-quest.png?v=kenney-20260610"
+);
+
+const hostileClassicRelic = {
+  description: "Fixture",
+  id: "hostile_asset_fixture",
+  name: "Hostile fixture",
+};
+const hostileClassicRelicInventory = createFakeElement("div");
+const hostileClassicRelicUi = createClassicShellRelicUi({
+  assetResolver: {
+    relicIcon: () => "assets/ui/\u0000icon.png",
+    runUpgradeSprite: () => null,
+    spriteSource: () => "",
+  },
+  content: { assets: { sprites: { player: "assets/ui/player.png" } } },
+  documentRef: createFakeDocument(),
+  getSave: () => ({
+    equippedRelics: [hostileClassicRelic.id],
+    questPoints: 0,
+    unlockedRelics: [hostileClassicRelic.id],
+  }),
+  imageFactory: () => null,
+  relicDefs: [hostileClassicRelic],
+  relicSystem: {
+    equippedRelics: () => [hostileClassicRelic],
+    maxEquippedRelics: () => 1,
+    relicSlotLevels: [5],
+  },
+  ui: {
+    menuRelicInventory: hostileClassicRelicInventory,
+    menuRelicSlots: createFakeElement("p"),
+  },
+});
+hostileClassicRelicUi.renderInventory();
+check(
+  "shell relic caller rejects control-character icon assets",
+  findFirst(hostileClassicRelicInventory, (element) => element.className === "relic-icon")?.src ===
+    ""
 );
 
 frameCallback(1234);
@@ -1287,7 +1472,9 @@ function createFakeElement(tagName) {
       this.eventListeners[type].push(handler);
     },
     removeEventListener(type, handler) {
-      this.eventListeners[type] = (this.eventListeners[type] || []).filter((listener) => listener !== handler);
+      this.eventListeners[type] = (this.eventListeners[type] || []).filter(
+        (listener) => listener !== handler
+      );
     },
     replaceChildren(...children) {
       this.children = children;
@@ -1332,7 +1519,9 @@ function createFakeScheduler() {
 }
 
 function collectText(element) {
-  return [element.textContent || "", ...element.children.map(collectText)].filter(Boolean).join(" ");
+  return [element.textContent || "", ...element.children.map(collectText)]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function findByDataset(element, key, value) {
